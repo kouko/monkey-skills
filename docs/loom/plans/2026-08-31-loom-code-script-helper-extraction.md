@@ -7,7 +7,7 @@ Goal: Six git wrappers pinned by characterization tests, then collapsed onto one
     language hooks plus `lang_detect.py` under test — serves PURPOSE: a fix to
     one git call now reaches every git call in the plugin instead of being
     silently re-lost in five sibling copies
-Stage: review:round-1
+Stage: finishing
 Steps:
     1. 釘住現況：六個 git 包裝的特性測試、新 helper 本體、hook 測試
     2. 搬遷：六個 git 包裝逐檔接上 git_exec、三個 oracle 載入器逐檔接上 helper
@@ -16,7 +16,7 @@ Steps:
 Total tasks: 19
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-31, round 3; DL-1 amendment PASS; DL-2 amendment PASS; DL-3 amendment PASS; DL-4 amendment PASS round 2)
+Plan-document-reviewer verdict: PASS (2026-08-31, round 3; DL-1 amendment PASS; DL-2 amendment PASS; DL-3 amendment PASS; DL-4 amendment PASS round 2; DL-5 amendment PASS)
 
 ## Task-flow diagram
 
@@ -88,7 +88,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-9
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(95b306e76a9a98efee762412f6c8a09eb9414034)
+- **Status**: done(95b306e76a9a98efee762412f6c8a09eb9414034)
 - **Gloss**: 把三個「失敗回 None」包裝的現況釘成可執行契約，之後搬家有網可接。
 
 ## Task 2 — 釘住 raise 家族與 PacketRefused 的失敗行為
@@ -113,7 +113,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-10
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(4eb1e6de9f7ed9050d026976f33f85f3fb4bec0d)
+- **Status**: done(4eb1e6de9f7ed9050d026976f33f85f3fb4bec0d)
 - **Gloss**: 把「失敗就拋例外」的三個包裝釘住例外型別，搬家後不得變成靜默。
 
 ## Task 3 — 新增共用 git 本體 git_exec.py
@@ -140,7 +140,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(7645a42d2a16d06d0181d0db2bb56153f195efa3)
+- **Status**: done(7645a42d2a16d06d0181d0db2bb56153f195efa3)
 - **Gloss**: 一份 git 呼叫本體，三種回答形狀由 check／text 參數表達，UTF-8 處理只寫一次。
 
 ## Task 4 — loom_gate_markers 改接 git_exec
@@ -163,7 +163,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-11
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(3d7b90ea97f7b6636ac15d75201f518304e87d1a)
+- **Status**: done(3d7b90ea97f7b6636ac15d75201f518304e87d1a)
 - **Gloss**: gate marker 的 git 包裝搬到共用本體，None 契約不變，補一個 UTF-8 紅燈。
 
 ## Task 5 — review_context 改接 git_exec
@@ -186,7 +186,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-12
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(27740591c10db3f32b2f7a56c4cb9dc599422697)
+- **Status**: done(27740591c10db3f32b2f7a56c4cb9dc599422697)
 - **Gloss**: review_context 的 git 包裝搬到共用本體，None 契約不變，補一個 UTF-8 紅燈。
 
 ## Task 6 — review_scope 改接 git_exec
@@ -209,7 +209,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-13
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(9d22a1c6b6cfd99d61a20f074f42aa6e8aa11f5c)
+- **Status**: done(4dd88abde1e1c7fa16b47674a71061f8396785c9)
 - **Gloss**: review_scope 的 git 包裝搬到共用本體，timeout→None 契約不變，補一個 UTF-8 紅燈。
 
 ## Task 7 — live_gate_station_receipt 改接 git_exec
@@ -232,7 +232,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-14
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(4d76d958866226fa1c8ee19296efab50aa268c43)
+- **Status**: done(4d76d958866226fa1c8ee19296efab50aa268c43)
 - **Gloss**: station receipt 的 git 包裝改用共用本體，「失敗就炸」一字不變。
 
 ## Task 8 — live_host_review_gate 改接 git_exec
@@ -255,7 +255,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-15
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(3eca76ff92962234c32362271ad5845f86e62baf)
+- **Status**: done(3eca76ff92962234c32362271ad5845f86e62baf)
 - **Gloss**: live gate 的 git 包裝改用共用本體，「失敗就炸」一字不變。
 
 ## Task 9 — batch_review_cli 改接 git_exec
@@ -264,9 +264,8 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - `_committed_bytes` keeps receiving `bytes` via `text=False`.
   - Every existing `test_batch_review_cli.py` test — including `test_run_subprocess_hands_git_utf8_bytes_argv` and `test_packet_seals_non_ascii_path_under_c_locale` — must pass unchanged; they are this task's behavior oracle.
 - **Module**: loom-code/scripts/batch_review_cli.py
-- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py
+- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py, loom-code/scripts/git_exec.py
 - **Context paths**:
-  - loom-code/scripts/git_exec.py
   - loom-code/scripts/test_batch_review_cli.py
   - loom-code/scripts/test_git_wrapper_characterization_strict.py
 - **Acceptance**:
@@ -280,7 +279,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-7
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: implemented(5ab940806083811e5681787988c9f1e305710693)
+- **Status**: done(f1a29be4b8336ca5965f024ad812f612a9c11548)
 - **Gloss**: 最嚴格的那一份（拒收 packet）也改用共用本體，#769 的測試原封不動當驗收。
 
 ## Task 10 — 新增共用兄弟載入 helper sibling_import.py
@@ -302,7 +301,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Brief item covered**: BI-16
 - **Not batched because**: the proposer pairs Task 10 with Task 9 through the Task 9 → Task 14 edge only; the sibling loader answers a different verdict question (module-name / exception-type preservation) from the git body's return/raise contract, so it anchors the sibling-loader batch instead.
 - **Review disposition**: batch(sibling-loader)
-- **Status**: implemented(26d0aaf3804100d782b0bf3fa2ba3ed147368b6f)
+- **Status**: done(26d0aaf3804100d782b0bf3fa2ba3ed147368b6f)
 - **Gloss**: 一個載入兄弟模組的 helper，五份複製的唯一模組名與例外型別都保得住。
 
 ## Task 11 — plan_card 的 oracle 載入器改接 helper
@@ -325,7 +324,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Brief item covered**: BI-17
 - **Not batched because**: the proposer chains Task 11 to Task 9 through topological chunking only; Task 11's verdict question is loader-side (module name / exception type), not the git body's return/raise contract, so it stays in the sibling-loader batch.
 - **Review disposition**: batch(sibling-loader)
-- **Status**: implemented(5f3b13034cdf4702a2601afce482dcee2cac676e)
+- **Status**: done(5f3b13034cdf4702a2601afce482dcee2cac676e)
 - **Gloss**: plan_card 的 oracle 載入器改用 helper，唯一模組名與 ValueError 不變。
 
 ## Task 12 — review_batch 的 oracle 載入器改接 helper
@@ -348,7 +347,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Brief item covered**: BI-18
 - **Not batched because**: same as Task 11 — paired with Task 9 by chunk order, not by a shared verdict question; it belongs to the sibling-loader batch.
 - **Review disposition**: batch(sibling-loader)
-- **Status**: implemented(90598f69467b89a41e69f12ca00ea42de8978148)
+- **Status**: done(7b94bfd64df504d0e599f275ec301fa02de8b572)
 - **Gloss**: review_batch 的 oracle 載入器改用 helper，唯一模組名與 PacketRefused 不變；舊本體刪除。
 
 ## Task 13 — propose_review_batches 的 oracle 載入器改接 helper
@@ -370,7 +369,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-19
 - **Review disposition**: batch(sibling-loader)
-- **Status**: implemented(159765df73cf7ff7937b47ae703330ddba81d49c)
+- **Status**: done(159765df73cf7ff7937b47ae703330ddba81d49c)
 - **Gloss**: proposer 的 oracle 載入器改用 helper，唯一模組名與 ValueError 不變。
 
 ## Task 14 — batch_review_cli 的 `_load` 改接 helper
@@ -392,7 +391,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: false
 - **Brief item covered**: BI-20
 - **Review disposition**: batch(sibling-loader)
-- **Status**: implemented(01f5352a569d7dfae97b834eef2c48dcb97846a0)
+- **Status**: done(a2890d291d3c46be3fe06d3374cdf227c07ff3b6)
 - **Gloss**: batch_review_cli 的 `_load` 改成呼叫 helper，排在 Task 9 之後避免同檔衝突；舊本體刪除。
 
 ## Task 15 — task_batch_replay 的 `_load` 改接 helper
@@ -413,7 +412,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-21
 - **Review disposition**: batch(sibling-loader)
-- **Status**: implemented(90d3b04288e4f81a43b698e28bc27c930c9b9f83)
+- **Status**: done(90d3b04288e4f81a43b698e28bc27c930c9b9f83)
 - **Gloss**: task_batch_replay 的 `_load` 改成呼叫 helper。
 
 ## Task 16 — lang_detect.py 補測試
@@ -493,7 +492,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - Last step, after every other loom-code byte is final: re-pin the `loom-code candidate SHA-256:` line in `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md` to `_tracked_worktree_fingerprint("loom-code")` from `scripts/test_stage_specific_complexity_behavior_evidence.py` (DL-2).
   - Reference: `loom-code/CHANGELOG.md` `## [0.108.0] — 2026-08-31` entry shape.
 - **Module**: loom-code/.claude-plugin/plugin.json
-- **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md, docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md, docs/loom/INDEX.md
+- **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md, docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md, docs/loom/INDEX.md, loom-code/scripts/test_docs_review_blocking_class.py
 - **Context paths**:
   - scripts/sync_codex_manifests.py
   - loom-code/CHANGELOG.md
@@ -520,7 +519,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Brief item covered**: BI-6
 - **Not batched because**: release administration closes after every other task; it has no shared verdict question with the hook tests the proposer chunked it beside.
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(9b9132b5c72b2b770abe29c8edcd4c19dfe07cfc)
 - **Gloss**: 收尾：版本號三個表面同步、CHANGELOG 記下這次交付。
 
 ## Review Batches
@@ -563,11 +562,24 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - Fact (orchestrator, `batch_review_cli.py packet --batch git-exec-extraction`): refused with `ownership proof contains duplicate requirement authority` — members citing one Brief item (BI-1 ×2, BI-3 ×5; sibling-loader would hit BI-4 ×4, BI-8 ×2). Known defect, backlog `2026-08-31-one-owner-per-requirement-refuses-same-item-batches`, whose remedy is per-task clauses.
 - Decision: split the brief items per the brief-format identifier rules (split retires both sides): BI-1 → BI-9/BI-10; BI-3 → BI-11…BI-15; BI-4 → BI-16…BI-19; BI-8 → BI-20/BI-21; Tasks 1, 2, 4–8, 10–15 re-cite accordingly. No task scope, RED, or file changes. Plan-document-reviewer amendment review requested; packets re-sealed after PASS.
 
+### DL-5 — Encoding rationale moves into git_exec.py; Task 9 owns that edit (2026-08-31, batch review git-exec-extraction round 1)
+- Class: review-discovered documentation gap, below kickoff threshold (docstring text; no behavior change).
+- Fact (code-quality-reviewer 🟡 on Task 9, ground BI-7): `git_exec.py` cites `batch_review_cli._run_subprocess`'s docstring as the SSOT for the `encoding=`/`text=False` rule, and Task 9 deleted that text and pointed back at `git_exec` — the rationale now exists nowhere.
+- Decision: the rationale lives in `git_exec.py`'s docstring (the shared body is the natural SSOT); Task 9's repair writes it there, so Task 9's `Files touched` gains `loom-code/scripts/git_exec.py` (Task 3's declaration is unchanged; Task 3 is `implemented`, not being edited). Plan-document-reviewer amendment review requested.
+
+### DL-6 — The shipping-version pin test is retargeted on every bump (2026-08-31, SDD wave 3)
+- Class: implementation-discovered stated-fact gap, below kickoff threshold (a pinned literal the test's own docstring says to retarget per bump).
+- Fact (Task 19 implementer's full-suite run): `loom-code/scripts/test_docs_review_blocking_class.py::test_plugin_version_and_changelog_at_0_108_0` pins the shipping version and CHANGELOG entry and is designed to be retargeted on each bump ("touching this test is what forces the changelog entry to be written").
+- Decision: Task 19 retargets it to 0.108.1 as part of release administration; its `Files touched` gains that test file. Recorded after the fact; the individual reviewers for Task 19 judge the deviation.
+
 ## Notes
+
+- Observed fan-outs (close-out, task_batch_replay observe): observed reviewer fan-outs: 8 (rounds 7, batch reopens 2). Individual tasks (16–19): 8 reviewer dispatches; whole-branch panel: 2 arms × 3 rounds via delta confirmation.
 
 - Tasks 16–18 are individual review: each is a hook test file with its own contract and no shared verdict window with the extraction batches.
 - Task 19 runs the full triad: the CHANGELOG entry is authored prose, so `Review-weight: mechanical` does not apply (plan-document-reviewer round 1, Check 16).
 - Out of scope, recorded for a follow-up entry: `loom_gate_markers.py` carries five direct `subprocess.run(["git", ...])` calls outside `_git` (`cat-file -t`, `show`, `diff`, `patch-id --stable` with stdin, and one more near `main`), and `live_host_review_gate.py` two (`git clone` at `subprocess.run(["git", "clone", "-q"`, and one near its `TimeoutExpired` handler). They need stdin / bytes shapes `run_git` does not offer in this brief; they keep their current encoding behavior in Phase 1.
+- DL-5 amendment reviewed PASS (2026-08-31) — verdict stamped, no re-review.
 - DL-4 amendment reviewed PASS round 2 (2026-08-31) — verdict stamped, no re-review.
 - DL-3 amendment reviewed PASS (2026-08-31) — verdict stamped, no re-review.
 - DL-2 amendment reviewed PASS (2026-08-31) — verdict stamped, no re-review.
