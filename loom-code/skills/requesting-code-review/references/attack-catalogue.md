@@ -76,9 +76,9 @@ watching it refuse (or not) is.
 ## Verdict vocabulary
 
 - `reproduced` — the auditor ran a command that demonstrates the attack
-  (or the gate's refusal of it) and is quoting that command's actual
-  output. This is the only verdict that counts as a hole found or a hole
-  closed.
+  actually succeeding, and is quoting that command's actual output. A
+  gate's refusal is never `reproduced` — that outcome is `held`. This is
+  the only verdict that counts as a hole found.
 - `held` — the auditor tried to reproduce the attack on a given date and
   the gate refused it; recorded as a dated record of that one attempt,
   never as coverage. A `held` entry says "this specific probe failed to
