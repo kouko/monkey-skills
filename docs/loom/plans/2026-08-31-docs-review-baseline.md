@@ -66,7 +66,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-99
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(38d5ef5710a0289265493bc45440f1de5d61cd94)
+- **Status**: done(38d5ef5710a0289265493bc45440f1de5d61cd94)
 - **Gloss**: 只有真的找得回當時文件的案例，才能成為考題。
 
 ## Task 3 — 凍結人工 oracle revision
@@ -85,7 +85,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-100
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(9dc0cdcdbd8551e0e4ef378ddaca176f0e2bda2f)
+- **Status**: done(9dc0cdcdbd8551e0e4ef378ddaca176f0e2bda2f)
 - **Gloss**: 人工答案先凍結，實驗後才不會因結果而改題。
 
 ## Task 4 — 凍結 corpus manifest
@@ -104,7 +104,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-101
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(804922851b975077d904400891a0ddb1dae43fc4)
+- **Status**: done(804922851b975077d904400891a0ddb1dae43fc4)
 - **Gloss**: 每次弱模型重跑都面對同一份不會漂移的考卷。
 
 ## Task 5 — 綁定弱模型 execution profile
@@ -143,7 +143,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-103
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(9e2b13dd4ae7867b5a6f32c5ac337c5f45e0e9c1)
+- **Status**: done(9e2b13dd4ae7867b5a6f32c5ac337c5f45e0e9c1)
 - **Gloss**: 失敗與中斷也會算進成本，不會被假裝成 reviewer 沒找到問題。
 
 ## Task 7 — 分離 observation 與人工 attribution
@@ -162,7 +162,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-104
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(d87da21d13948d450bdd46f21764da1d48f7c708)
+- **Status**: done(d87da21d13948d450bdd46f21764da1d48f7c708)
 - **Gloss**: 模型說了什麼與人最後判定什麼分開，才能看出 false alarm。
 
 ## Task 8 — 建立可比較 repeat cohorts
@@ -257,7 +257,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-109
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(01c1020981243c4b6a963e1cb9d7b00c1b278f54)
+- **Status**: done(01c1020981243c4b6a963e1cb9d7b00c1b278f54)
 - **Gloss**: 初稿問題與修復後新增問題會由 diff 證據分開，不靠印象。
 
 ## Task 13 — 凍結 reviewer contract 與 runtime
@@ -315,7 +315,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-112
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(9d448314087f0b273bca6a113944daf7dfdc1b9b)
+- **Status**: done(9d448314087f0b273bca6a113944daf7dfdc1b9b)
 - **Gloss**: 寫文件、寫答案與裁決的人是誰會被記錄，避免自己給自己過關。
 
 ## Task 16 — 限制 run 與 campaign 成本
