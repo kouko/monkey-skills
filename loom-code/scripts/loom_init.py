@@ -15,6 +15,12 @@ skeleton from the templates shipped beside this script:
   docs/loom/PURPOSE.md          — purpose skeleton (templates/PURPOSE.md);
                                   a prompt for the author to fill in, never
                                   pre-filled prose — see its own file header
+  docs/loom/ATTACK-CATALOGUE.md — attack-catalogue store skeleton
+                                  (templates/ATTACK-CATALOGUE.md); the
+                                  prose-contract globs pre-filled in
+                                  `## Guarded paths`, an empty `## Instances`,
+                                  one example `## Prose temptations` line —
+                                  grammar owned by check_attack_catalogue.py
   docs/loom/plans/.gitkeep      — git cannot track an empty directory;
   docs/loom/specs/.gitkeep        without the keep-file the scaffolded dirs
                                   would silently vanish from the target
@@ -120,6 +126,7 @@ def main(argv: list[str]) -> int:
     memory_store = target / "docs" / "loom" / "memory"
     kickoff_defaults = target / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
     purpose = target / "docs" / "loom" / "PURPOSE.md"
+    attack_catalogue = target / "docs" / "loom" / "ATTACK-CATALOGUE.md"
     if store.is_dir():
         print(
             f"loom-init: refusing — {store} already exists; this repo has "
@@ -159,6 +166,13 @@ def main(argv: list[str]) -> int:
             "is human-owned and loom-init never overwrites it"
         )
         return 1
+    if attack_catalogue.exists():
+        print(
+            f"loom-init: refusing — {attack_catalogue} already exists; this "
+            "repo has adopted the attack-catalogue store and loom-init "
+            "never overwrites it"
+        )
+        return 1
     # Whole-branch review 🟡 (2026-08-10): precheck EVERY path the
     # scaffold will touch BEFORE the first write — a stray file at any
     # of them used to crash mid-scaffold, leaving residue that later
@@ -183,6 +197,7 @@ def main(argv: list[str]) -> int:
     _instantiate(TEMPLATES_DIR / "memory-README.md", memory_store / "README.md", stamp)
     _instantiate(TEMPLATES_DIR / "KICKOFF-DEFAULTS.md", kickoff_defaults, stamp)
     _instantiate(TEMPLATES_DIR / "PURPOSE.md", purpose, stamp)
+    _instantiate(TEMPLATES_DIR / "ATTACK-CATALOGUE.md", attack_catalogue, stamp)
 
     if _self_verify(target) != 0:
         return 1

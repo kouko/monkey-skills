@@ -39,6 +39,8 @@ from pathlib import Path
 
 import pytest
 
+from check_attack_catalogue import parse_store, guarded_path_globs
+
 SCRIPTS = Path(__file__).resolve().parent
 LOOM_INIT = SCRIPTS / "loom_init.py"
 BACKLOG_INDEX = SCRIPTS / "backlog_index.py"
@@ -647,3 +649,83 @@ def test_scaffold_refuses_a_stray_file_at_the_memory_store_path(tmp_path):
     assert result.returncode == 1, result.stdout + result.stderr
     assert "exists but is not a" in result.stdout, result.stdout
     assert "has adopted" not in result.stdout, result.stdout
+
+
+# The prose-contract globs Task 3's own store table pre-fills, quoted here
+# only to assert the scaffold matches them in order — the checker
+# (check_attack_catalogue.py) remains the sole grammar authority.
+PROSE_CONTRACT_GLOBS = (
+    "**/SKILL.md",
+    "**/agents/*.md",
+    "**/hooks/*.md",
+    "**/references/*-packet.md",
+    "**/references/*-prompt.md",
+)
+
+
+def test_scaffold_creates_attack_catalogue_store_that_passes_checker(tmp_path):
+    """Task 4: loom_init scaffolds docs/loom/ATTACK-CATALOGUE.md with the
+    prose-contract globs pre-filled, and the checker that owns the store
+    grammar (check_attack_catalogue.py, Task 2) accepts it unchanged."""
+    target = tmp_path / "repo"
+    result = _scaffold_ok(target)
+
+    catalogue = target / "docs" / "loom" / "ATTACK-CATALOGUE.md"
+    assert catalogue.is_file(), "ATTACK-CATALOGUE.md not scaffolded"
+
+    expected_version = json.loads(
+        (REPO_ROOT / "loom-code" / ".claude-plugin" / "plugin.json").read_text(
+            encoding="utf-8"
+        )
+    )["version"]
+    stamp = f"<!-- scaffolded by loom-init (loom-code {expected_version}) -->"
+    first_line = catalogue.read_text(encoding="utf-8").splitlines()[0]
+    assert first_line == stamp, (
+        f"ATTACK-CATALOGUE.md first line is {first_line!r}, expected {stamp!r}"
+    )
+
+    checker = ACTIVE_SCRIPTS / "check_attack_catalogue.py"
+    validate = subprocess.run(
+        [sys.executable, str(checker), str(catalogue), "--repo", str(target)],
+        capture_output=True,
+        text=True,
+    )
+    assert validate.returncode == 0, validate.stdout + validate.stderr
+    assert "OK" in validate.stdout, validate.stdout + validate.stderr
+
+    store = parse_store(catalogue.read_text(encoding="utf-8"))
+    assert guarded_path_globs(store) == list(PROSE_CONTRACT_GLOBS), (
+        f"scaffolded guarded-path globs {guarded_path_globs(store)} do not "
+        f"match the prose-contract globs {list(PROSE_CONTRACT_GLOBS)}"
+    )
+    assert "Instances" in store.sections_present, (
+        "scaffolded store must carry an (empty) '## Instances' section"
+    )
+    assert store.instances == [], "scaffolded store must start with no instances"
+    assert len(store.prose_temptations) == 1, (
+        "scaffolded store must carry exactly one example prose temptation"
+    )
+
+
+def test_scaffold_refuses_when_the_attack_catalogue_already_exists(tmp_path):
+    """Mirrors the KICKOFF-DEFAULTS.md guard: a store already adopted by
+    the target repo (e.g. hand-authored `## Instances` findings) must
+    never be clobbered by a fresh scaffold — same refuse-before-any-write
+    shape, exercised BEFORE any of the other artifacts are written."""
+    target = tmp_path / "repo"
+    loom = target / "docs" / "loom"
+    loom.mkdir(parents=True)
+    catalogue = loom / "ATTACK-CATALOGUE.md"
+    original = "# Attack Catalogue\n\nhand-authored findings\n"
+    catalogue.write_text(original, encoding="utf-8")
+
+    result = _run_init(target)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "ATTACK-CATALOGUE.md" in result.stdout, result.stdout + result.stderr
+    assert catalogue.read_text(encoding="utf-8") == original, (
+        "loom-init must never touch an existing hand-authored ATTACK-CATALOGUE.md"
+    )
+    assert not (target / "docs" / "loom" / "KICKOFF-DEFAULTS.md").exists(), (
+        "refusal must write nothing at all"
+    )
