@@ -223,7 +223,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - from Task 7: payload: none
   - (ordering only: same script; `--check` consumes the in-process proposal, no serialized shape crosses)
 - **Independent**: false
-- **Brief item covered**: BI-3
+- **Brief item covered**: "its `--check` mode exits non-zero when (a) a proposed pair is not in the same declared batch and the later task lacks a `- **Not batched because**: <reason>` line, or (b) a declared batch has more than 4 members and lacks an `- **Oversized because**: <reason>` line" (BI-3 clause)
 - **Review disposition**: batch(proposer)
 - **Status**: implemented(7964ade9b8091b45cb5e8f9cf29e1a759c990c0b)
 - **Gloss**: 保守不再免費：不合批要說為什麼，合太大也要說為什麼。
@@ -249,7 +249,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Seam**:
   - from Task 8: payload: the two field-name constants and the `--check` CLI contract; owner: Task 8; probe: test_writing_plans_documents_batch_nudge_fields_and_gate
 - **Independent**: false
-- **Brief item covered**: BI-3
+- **Brief item covered**: "writing-plans' gate list runs `--check` before review; plan-format documents both fields and the cap" (BI-3 clause)
 - **Review disposition**: batch(proposer)
 - **Status**: implemented(c7d7553220e158b29f96766d9d8b2e62016e9b23)
 - **Gloss**: 規劃者和 reviewer 讀的契約裡有這兩個欄位和這一道閘。
@@ -364,3 +364,4 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - Plan-review round count: round 1 NEEDS_REVISION (4 ⚠️ — double Module values, prose weight with a `.py` test, Task 7 Reuse-adequacy, Task 12 sealed-plan race — plus the CSV note that exposed the uncommitted variant-C run), round 2 PASS at 0cf007e2. Verdict stamped — stamping the verdict, no re-review.
 - Task 7 `Files touched` amended during SDD (2026-08-31): `test_gate_scripts_fail_loud_on_unreadable_input.py` added — its script registry fails the floor for any unclassified `loom-code/scripts/*.py`, so the new proposer needs one EXEMPT line there (precedent: check_review_batches.py). Scope change → delta re-review by the plan-document-reviewer, not a silent skip.
 - Task 9 `Files touched` amended during SDD (2026-08-31): three existing tests pin the reviewer prompt's check count (`test_plan_obligation_sweep.py`, `test_sdd_review_weight_marker.py`, `test_writing_plans_complexity.py`) and each new Check refreshes them by their own docstrings (Check 22 precedent) — one-line pin bumps 22→23 / `<20>`→`<21>`. Scope change → delta re-review by the plan-document-reviewer.
+- Tasks 8 and 9 `Brief item covered` amended during SDD (2026-08-31): all three `proposer` members cited `BI-3`, and `batch_review_cli.py packet` refuses a batch whose ownership proof carries the same requirement twice (`ownership proof contains duplicate requirement authority`). Tasks 8 and 9 now cite the BI-3 clauses they deliver verbatim (plan-format referent kind (a)); Task 7 keeps `BI-3`. Filling a schema field with brief wording — but recorded here and sent for delta re-review because the batch mechanism, not the plan, forced it; a backlog entry records the collision between the module rule and one-owner-per-requirement.
