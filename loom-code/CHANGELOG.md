@@ -5,6 +5,33 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.108.1] — 2026-08-31 — Shared git body and sibling loader (Phase 1 script helper extraction)
+
+Collapses two duplicated shapes across `scripts/` onto two new shared
+helpers, with no behavior change at any call site.
+
+### Added
+
+- `git_exec.py`: shared `run_git` body extracted from the six `_git` /
+  `_run_git` wrappers (`batch_review_cli`, `live_host_review_gate`,
+  `live_gate_station_receipt`, `review_scope`, `review_context`,
+  `loom_gate_markers`). Each wrapper now delegates to `run_git` while
+  keeping its own return/raise/timeout contract unchanged; all six pass
+  git argv as UTF-8 bytes with UTF-8 decoding (the fix #769 shipped for
+  `batch_review_cli` alone now applies uniformly).
+- `sibling_import.py`: shared `load_sibling` body extracted from the five
+  `spec_from_file_location` sibling-module loaders (`batch_review_cli`,
+  `task_batch_replay`, `plan_card`, `review_batch`, `propose_review_batches`).
+  Each host still registers its own `sys.modules` name and raises its own
+  exception type on a missing sibling.
+- Characterization tests `test_git_wrapper_characterization_none.py` and
+  `test_git_wrapper_characterization_strict.py` pin the three `_git` /
+  `_run_git` failure families across the wrapper trio before the
+  extraction.
+- New hook test coverage: `hooks/language-anchor.py`,
+  `hooks/language-stop-check.py`, and branch-coverage backfill for
+  `hooks/lang_detect.py`.
+
 ## [0.108.0] — 2026-08-31 — Batch review measurement + batching nudge
 
 Replaces the hand-typed reviewer fan-out counts of 0.106.0's pilot with
