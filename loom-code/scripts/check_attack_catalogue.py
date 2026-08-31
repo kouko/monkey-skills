@@ -305,7 +305,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     store = parse_store(text)
-    errors = check_store(store, args.repo)
+    try:
+        errors = check_store(store, args.repo)
+    except OSError as exc:
+        print(f"Error: cannot scan repo '{args.repo}': {exc}", file=sys.stderr)
+        return 1
 
     if errors:
         for err in errors:

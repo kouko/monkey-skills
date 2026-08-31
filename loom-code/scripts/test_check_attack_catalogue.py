@@ -183,6 +183,37 @@ def test_checker_refuses_missing_section(tmp_path):
     assert "incomplete" in result.stderr
 
 
+def _assert_fails_loud(result: subprocess.CompletedProcess, offending: str) -> None:
+    combined = result.stdout + result.stderr
+    assert result.returncode != 0, combined
+    assert "Traceback" not in result.stderr, result.stderr
+    assert offending in combined, combined
+
+
+def test_checker_fails_loud_on_unreadable_store_path(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    # a directory where a store file is expected
+    store_dir = tmp_path / "store-is-a-dir"
+    store_dir.mkdir()
+    _assert_fails_loud(_run(store_dir, repo), str(store_dir))
+
+    # a store path that does not exist at all
+    missing_store = tmp_path / "does-not-exist.md"
+    _assert_fails_loud(_run(missing_store, repo), str(missing_store))
+
+
+# No behavioral case exercises an unreadable --repo directory: on this
+# repo's Python (3.12), pathlib's rglob() silently swallows OSError while
+# scanning (glob's traditional behavior, carried into pathlib) — chmod
+# 0o000 on a directory produces zero matches, not an exception, so no
+# subprocess-level case can observe the guard firing. The CLI boundary in
+# main() still wraps the check_store() call in try/except OSError as a
+# defensive guard against any OSError a future change to the scan logic
+# might introduce (e.g. a stat() call added to the walk).
+
+
 def test_parse_store_round_trips_fixture_and_guarded_path_globs_order():
     store = parse_store(_VALID_STORE)
     assert guarded_path_globs(store) == [

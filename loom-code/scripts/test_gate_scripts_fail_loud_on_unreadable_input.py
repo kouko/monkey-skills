@@ -141,6 +141,9 @@ EXEMPT = {
     "loom_init.py": "scaffolds a new store; has no store to read yet",
     "plan_card.py": "reads plans, not the store",
     "post_pr_ci.py": "waits for GitHub PR checks, not the store or a brief",
+    "check_attack_catalogue.py": "checks the attack-catalogue store, not the "
+                                 "backlog store or handoff brief; its own "
+                                 "tests pin unreadable-input handling",
 }
 
 FAMILY = (
