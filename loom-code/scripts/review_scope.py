@@ -94,6 +94,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from git_exec import run_git
 from loom_gate_markers import default_branch_ref
 
 # The fetch is the only network call on this path. Unbounded, a dead
@@ -121,18 +122,7 @@ class FreshnessResult:
 def _git(repo: Path, *args: str, timeout: float | None = None) -> str | None:
     """Run git in `repo`; return stripped stdout, or None on any failure
     (non-zero exit, timeout, or the git binary failing to launch)."""
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), *args],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if result.returncode != 0:
-        return None
-    return result.stdout.strip()
+    return run_git(repo, *args, timeout=timeout, check=False)
 
 
 def _is_full_object_id(repo: Path, candidate: str) -> bool:
