@@ -652,3 +652,113 @@ def test_signal_prose_hit_fires_cold_reader(tmp_path):
     assert f"cold reader: fired — base={base_sha}; changed=1; prose-hits=1" in (
         result.stdout
     )
+
+
+# ---------------------------------------------------------------------------
+# F2 — a malformed `## Instances` bullet must never silently vanish; C8 —
+# a future reproduced/held date; F3 — a non-UTF-8 store; C9 — memoized AST
+# parse.
+# ---------------------------------------------------------------------------
+
+
+def test_instances_bullet_with_no_pipes_is_malformed_not_dropped(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "store.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- forge an artifact reproduced without any pipes at all\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert "malformed" in result.stderr
+
+
+def test_instances_bullet_with_one_pipe_is_malformed_not_dropped(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "store.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- forge | reproduced totally-bogus\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert "malformed" in result.stderr
+
+
+def test_checker_refuses_future_reproduced_date(tmp_path):
+    repo = tmp_path / "repo"
+    vendor_dir = repo / "tests"
+    vendor_dir.mkdir(parents=True)
+    (vendor_dir / "test_x.py").write_text(
+        "def test_future():\n    pass\n", encoding="utf-8"
+    )
+    store = tmp_path / "store.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2099-12-31 — pinned by test_future\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert "malformed" in result.stderr
+
+
+def test_checker_refuses_future_held_date(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "store.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | held 2099-12-31\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert "malformed" in result.stderr
+
+
+def test_checker_fails_loud_on_non_utf8_store(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "store.md"
+    store.write_bytes(b"## Guarded paths\n- x\n\n## Instances\n- caf\xe9\n")
+
+    result = _run(store, repo)
+
+    _assert_fails_loud(result, str(store))
+
+
+def test_defined_function_names_is_memoized_per_path_and_mtime(tmp_path):
+    from check_attack_catalogue import _defined_function_names_cached
+
+    _defined_function_names_cached.cache_clear()
+    test_file = tmp_path / "test_memo.py"
+    test_file.write_text("def test_one():\n    pass\n", encoding="utf-8")
+
+    from check_attack_catalogue import _defined_function_names
+
+    _defined_function_names(test_file)
+    _defined_function_names(test_file)
+
+    info = _defined_function_names_cached.cache_info()
+    assert info.hits >= 1, info

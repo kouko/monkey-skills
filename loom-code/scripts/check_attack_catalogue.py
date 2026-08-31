@@ -96,6 +96,7 @@ from __future__ import annotations
 import argparse
 import ast
 import datetime
+import functools
 import re
 import subprocess
 import sys
@@ -202,6 +203,17 @@ def _is_iso_date(value: str) -> bool:
     return True
 
 
+def _is_future_date(value: str) -> bool:
+    """True when `value` (already confirmed `_is_iso_date`) is strictly
+    after today's UTC calendar date — a `reproduced`/`held` date has no
+    business being in the future; without this a typo'd year makes an
+    entry look freshly re-verified forever."""
+    return (
+        datetime.date.fromisoformat(value)
+        > datetime.datetime.now(datetime.timezone.utc).date()
+    )
+
+
 def parse_store(text: str) -> Store:
     """Parse the store's raw text into a `Store`. Does not validate — a
     missing section simply leaves the corresponding list empty and its
@@ -218,8 +230,13 @@ def parse_store(text: str) -> Store:
         m = _INSTANCE_LINE.match(raw)
         if not m:
             # Not a well-formed `<class> | <target> | <status>` line at
-            # all — no status to classify, so it cannot be "malformed"
-            # in the sense check_store reports; skip as before.
+            # all (fewer than two `|`) — this must still surface as a
+            # refusal, never silently drop the bullet from the count
+            # (deleting a `|` must not be a way to make an inconvenient
+            # entry disappear).
+            store.instances.append(
+                Instance(klass="", target="", verdict="malformed", line=raw)
+            )
             continue
         klass = m.group("klass").strip()
         target = m.group("target").strip()
@@ -232,7 +249,12 @@ def parse_store(text: str) -> Store:
             # "pinned by" was attempted but named nothing (a bypass CQ-2
             # closes: that must never resolve as a legal unpinned entry),
             # and a real value otherwise.
-            if rm is None or rm.group("test") == "" or not _is_iso_date(rm.group("date")):
+            if (
+                rm is None
+                or rm.group("test") == ""
+                or not _is_iso_date(rm.group("date"))
+                or _is_future_date(rm.group("date"))
+            ):
                 store.instances.append(
                     Instance(klass=klass, target=target, verdict="malformed", line=raw)
                 )
@@ -251,7 +273,13 @@ def parse_store(text: str) -> Store:
 
         if status.startswith("held"):
             hm = _HELD_STATUS.match(status)
-            if hm is None or (hm.group("date") is not None and not _is_iso_date(hm.group("date"))):
+            if hm is None or (
+                hm.group("date") is not None
+                and (
+                    not _is_iso_date(hm.group("date"))
+                    or _is_future_date(hm.group("date"))
+                )
+            ):
                 store.instances.append(
                     Instance(klass=klass, target=target, verdict="malformed", line=raw)
                 )
@@ -303,15 +331,30 @@ def _defined_function_names(path: Path) -> set[str]:
     body in `path`, resolved by parsing the AST — so a `def` sitting
     inside a docstring, a comment, or any other string literal can never
     satisfy a `pinned by` claim the way a raw-text scan would. Unreadable
-    or unparsable files resolve to no names rather than raising."""
+    or unparsable files resolve to no names rather than raising.
+
+    Memoized on (path, mtime) — `_test_name_defined_under_repo` walks
+    every `test_*.py` under `--repo` PER instance, so an N-instance store
+    re-parsed every test file N times without this; keying on mtime (not
+    path alone) means an edit between two calls in the same process is
+    still picked up rather than serving a stale parse."""
     try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+        mtime_ns = path.stat().st_mtime_ns
+    except OSError:
         return set()
+    return set(_defined_function_names_cached(str(path), mtime_ns))
+
+
+@functools.lru_cache(maxsize=None)
+def _defined_function_names_cached(path_str: str, mtime_ns: int) -> frozenset[str]:
+    try:
+        text = Path(path_str).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return frozenset()
     try:
         tree = ast.parse(text)
     except SyntaxError:
-        return set()
+        return frozenset()
 
     names: set[str] = set()
     for node in tree.body:
@@ -321,7 +364,7 @@ def _defined_function_names(path: Path) -> set[str]:
             for item in node.body:
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     names.add(item.name)
-    return names
+    return frozenset(names)
 
 
 def _strip_sh_comments(text: str) -> str:
@@ -655,7 +698,7 @@ def _main_legacy(argv: list[str]) -> int:
     try:
         text = args.store.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
-        print(f"Error: cannot read store '{args.store}': {exc}", file=sys.stderr)
+        print(f"Error: unreadable — {args.store}: {exc}", file=sys.stderr)
         return 1
 
     try:
