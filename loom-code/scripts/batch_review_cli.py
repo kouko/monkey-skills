@@ -682,11 +682,16 @@ def _recover_settled_receipt(args) -> dict | None:
 
 def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
     """Refuse unless the dispatch receipt is the one issued for THIS packet:
-    same batch_id, same member set, every member's rebuilt sha equal to the
-    receipt's recorded `member_shas[member]`, and the same `packet_identity`.
-    Raises ValueError naming the first drifted member (the audit's F1 shape:
-    a PASS given for commit A applied after the ledger moved to commit B)
-    or the foreign identity (F6: a receipt from another batch flipped).
+    same batch_id, same member set, `member_shas` present and keyed exactly
+    to that member set, every member's rebuilt sha equal to the receipt's
+    recorded `member_shas[member]`, the same `packet_identity`, and not
+    already applied. Raises ValueError naming the first drifted member (the
+    audit's F1 shape: a PASS given for commit A applied after the ledger
+    moved to commit B), the foreign identity (F6: a receipt from another
+    batch flipped), or the already-applied receipt (F1/F6 residue: without
+    this check a stale, already-flipped receipt could still bind and be
+    reused, its `result_applied` clobbered back to true with no new dispatch
+    cycle behind it).
 
     Ordering: this runs after the packet is rebuilt and BEFORE the reviewer
     result file is parsed, so an unbound receipt is refused without reading
@@ -708,10 +713,11 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
             f"do not match batch {batch_id!r} members {sorted(rebuilt)}"
         )
     member_shas = stored.get("member_shas")
-    if type(member_shas) is not dict:
+    if type(member_shas) is not dict or set(member_shas) != set(rebuilt):
         raise ValueError(
-            f"dispatch receipt {receipt_path} has no member_shas; re-send the "
-            "dispatch (record-dispatch) so the result can be bound to it"
+            f"dispatch receipt {receipt_path} has no member_shas matching "
+            f"batch {batch_id!r} members; re-send the dispatch (record-dispatch) "
+            "so the result can be bound to it"
         )
     for member_id, sha in rebuilt.items():
         if member_shas.get(member_id) != sha:
@@ -724,6 +730,11 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
         raise ValueError(
             f"dispatch receipt {receipt_path} packet_identity does not match "
             "the rebuilt packet; re-send the dispatch"
+        )
+    if stored["result_applied"]:
+        raise ValueError(
+            f"dispatch receipt {receipt_path} already applied; run "
+            "record-dispatch for a fresh cycle"
         )
     return stored
 
