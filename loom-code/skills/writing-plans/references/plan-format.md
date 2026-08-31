@@ -396,6 +396,27 @@ Run `python3 loom-code/scripts/check_review_batches.py <plan-path>` after the
 second pass. It is the mandatory schema oracle for DAG completeness, exact
 dispositions, membership, lane agreement, and the six Batch fields.
 
+**Proposer and the two reason lines.** Start the second pass from
+`python3 loom-code/scripts/propose_review_batches.py <plan-path>`: it proposes
+Batches under the edge rule *same review lane AND (dependency edge OR identical
+`Module`)*, split into groups of at most 4 members. Both the rule and the cap
+of 4 are planning-time constants sized once from a measured simulation — not a
+runtime setting, and not the "configurable size limit" the paragraph above
+rules out. A declared layout may deviate from the proposal only with a stated
+reason, in one of two places:
+
+- `- **Not batched because**: <reason>` — a Task field, in the later Task's
+  block among its other `- **…**:` fields, when the proposer paired that Task
+  with an earlier one and the plan keeps them apart.
+- `- **Oversized because**: <reason>` — a Review Batch field, inside the
+  `### Review Batch: <id>` block after `Boundary`, when the Batch declares
+  more than 4 members.
+
+`python3 loom-code/scripts/propose_review_batches.py --check <plan-path>` exits
+0 when every deviation carries a non-empty reason line and prints one line per
+missing one. Neither line is required when the declaration matches the
+proposal.
+
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 
 A plan is a technical SSOT that nothing validates: every downstream station judges the artifact **against the plan**, so a fact the plan states wrongly is implemented faithfully, reviewed as conformant, and typically surfaces only at close-out — the most expensive point to catch it. This rule makes the copy unnecessary — it is not extra ceremony on top of it.

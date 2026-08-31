@@ -1,7 +1,7 @@
 ---
 name: 2026-08-31-batch-eligibility-should-push-toward-batching
 description: Review Batch eligibility only refuses, never nudges — make the planner pay for NOT batching homogeneous tasks, via three escalating knobs (reverse check, default flip, mechanical criterion) evaluated in that order with observed dispatch counts
-status: open
+status: closed
 origin: 2026-08-31 — kouko, reading the batch-review-hardening plan (one 2-member batch out of 7 tasks) asked whether the loom mechanism itself was the cause; the orchestrator's assessment — enforcement is one-directional, so plans drift toward individual review — became this entry
 start: event — F10 (docs/loom/backlog/2026-08-31-batch-cost-numbers-are-declared-not-observed.md) ships harness-emitted dispatch counts, so a change in batching behaviour can be measured rather than declared
 ---
@@ -50,3 +50,5 @@ Sequence: knob 1 → F10 lands → measure two or three arcs → decide on 2, th
 3. Without observed counts none of the three can be shown to have saved
 anything, which is exactly the trap the 2026-08-31 pilot's declared 10→2
 fell into.
+
+Closed 2026-08-31 — knobs ① (`propose_review_batches.py --check`, reason lines, writing-plans gate, Check 23) and ② (`propose`, module rule, cap 4) shipped by branch batch-review-measurement-and-nudge (loom-code 0.108.0); knob ③ stays out by decision — see the two sibling entries filed from its pilot (one-owner-per-requirement collision; sink-linked chunking)

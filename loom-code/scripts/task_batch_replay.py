@@ -6,8 +6,19 @@ discovers sessions, plans, repositories, or other paths.  The corpus contains
 identifiers and measurement oracles, not source content; both result files
 must bind to its exact canonical digest before any comparison is made.
 
-Exit 0 means cost fell without a safety regression, exit 1 is a valid FAIL
-comparison, and exit 2 means an input could not be read or validate.
+Exit 0 proves the cost claim (review dispatches fell; rounds and reopens are
+reported, never compared); the safety checks run only over evidence
+``observe`` does not yet collect, so they cannot fire on the sanctioned path.
+Exit 1 is a valid FAIL comparison, and exit 2 means an input could not be
+read or validate.
+
+``observe`` derives a ``task-batch-replay-result/v2`` file from the dispatch
+log ``review_context.py`` appends per reviewer fan-out and from the dispatch
+receipts ``batch_review_cli.py`` writes, so the review counts are observed,
+never typed.  ``--summary`` prints the one-line count instead of writing.
+``compare`` reads only those observed v2 files: a ``task-batch-replay-result/v1``
+file (the hand-typed pilot shape) or any file whose ``provenance`` is not
+``"observed"`` is refused by name.
 """
 
 from __future__ import annotations
@@ -15,6 +26,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -22,9 +34,27 @@ import sys
 from typing import Any
 
 
+def _load(name: str, filename: str):
+    """Load a sibling script module without cwd or sys.path coupling."""
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(filename))
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load {filename}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+review_context = _load("review_context_for_task_batch_replay", "review_context.py")
+
 CORPUS_SCHEMA = "task-batch-replay-corpus/v1"
 RESULT_SCHEMA = "task-batch-replay-result/v1"
+RESULT_SCHEMA_V2 = "task-batch-replay-result/v2"
 REPORT_SCHEMA = "task-batch-replay-report/v1"
+OBSERVED_PROVENANCE = "observed"
+SUMMARY_NO_LOG = "observed reviewer fan-outs: N/A — no dispatch log"
+
+_DISPATCH_LOG_KEYS = {"schema", "recorded_at", "branch", "reviewed_sha", "plugin_version"}
 
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
 _DIGEST = re.compile(r"^[0-9a-f]{64}$")
@@ -40,7 +70,7 @@ _CORPUS_CASE_KEYS = {
     "expected_candidate_path",
     "expected_fallback_causes",
 }
-_RESULT_KEYS = {"schema", "mode", "corpus_identity", "cases"}
+_RESULT_KEYS_V2 = {"schema", "provenance", "corpus_identity", "branch", "cases"}
 _RESULT_CASE_KEYS = {
     "case_id",
     "review_dispatches",
@@ -53,6 +83,7 @@ _RESULT_CASE_KEYS = {
     "requirement_to_tests",
     "package_gates",
 }
+_RESULT_CASE_KEYS_V2 = _RESULT_CASE_KEYS | {"batch_reopens"}
 
 
 class ReplayInputError(ValueError):
@@ -182,6 +213,7 @@ def _validate_result_case(
     for field in (
         "review_dispatches",
         "review_rounds",
+        "batch_reopens",
         "elapsed_work_ms",
         "maximum_aggregate_diff_bytes",
     ):
@@ -219,7 +251,9 @@ def _validate_result_case(
         _fail(f"{context}.package_gates", "expected an object")
     if not all(type(key) is str for key in gates):
         _fail(f"{context}.package_gates", "object keys must be strings")
-    if list(gates) != oracle["required_package_gates"]:
+    # `observe` writes no gate verdicts (it measures only review counts), so an
+    # empty object means "unmeasured"; anything else must match the oracle.
+    if gates and list(gates) != oracle["required_package_gates"]:
         _fail(
             f"{context}.package_gates",
             "gate keys and order must exactly match the corpus oracle",
@@ -246,6 +280,32 @@ def _validate_result_case(
             )
 
 
+def _refuse_unobserved(result: object, label: str) -> None:
+    """Refuse any result that is not an `observe`-written v2 file, by name.
+
+    Checked before the closed-schema comparison so a declared v1 pilot file
+    (or a v2 file with edited provenance) is refused on `schema` /
+    `provenance` rather than on a generic key mismatch.
+    """
+    if type(result) is not dict:
+        _fail(label, "expected an object")
+    schema = result.get("schema", "<missing>")
+    if schema != RESULT_SCHEMA_V2:
+        _fail(
+            f"{label}.schema",
+            f"refused {schema!r} (the declared shape is {RESULT_SCHEMA!r}); "
+            f"compare accepts only {RESULT_SCHEMA_V2!r} results written by "
+            f"observe (provenance {OBSERVED_PROVENANCE!r})",
+        )
+    provenance = result.get("provenance", "<missing>")
+    if provenance != OBSERVED_PROVENANCE:
+        _fail(
+            f"{label}.provenance",
+            f"refused {provenance!r}; compare accepts only provenance "
+            f"{OBSERVED_PROVENANCE!r} results written by observe",
+        )
+
+
 def _validate_result(
     result: object,
     *,
@@ -254,9 +314,10 @@ def _validate_result(
     identity: str,
     corpus_cases: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    root = _object(result, _RESULT_KEYS, label)
-    _choice(root["schema"], {RESULT_SCHEMA}, f"{label}.schema")
-    _choice(root["mode"], {expected_mode}, f"{label}.mode")
+    _refuse_unobserved(result, label)
+    root = _object(result, _RESULT_KEYS_V2, label)
+    if type(root["branch"]) is not str or not root["branch"]:
+        _fail(f"{label}.branch", "expected a non-empty branch name")
     if type(root["corpus_identity"]) is not str or _DIGEST.fullmatch(
         root["corpus_identity"]
     ) is None:
@@ -267,7 +328,7 @@ def _validate_result(
         _fail(f"{label}.cases", "expected a list")
 
     result_cases = [
-        _object(raw_case, _RESULT_CASE_KEYS, f"{label}.cases[{index}]")
+        _object(raw_case, _RESULT_CASE_KEYS_V2, f"{label}.cases[{index}]")
         for index, raw_case in enumerate(root["cases"])
     ]
     expected_case_ids = [case["case_id"] for case in corpus_cases]
@@ -436,9 +497,11 @@ def compare(corpus: object, baseline: object, candidate: object) -> dict[str, An
             )
         )
         for gate_id in oracle["required_package_gates"]:
-            if before["package_gates"][gate_id] != "PASS":
+            # An unmeasured gate (empty object from observe) is neither PASS
+            # nor FAIL; only a recorded verdict can regress.
+            if before["package_gates"].get(gate_id, "PASS") == "FAIL":
                 safety.append(f"baseline_package_gate_failure:{case_id}:{gate_id}")
-            if after["package_gates"][gate_id] != "PASS":
+            if after["package_gates"].get(gate_id, "PASS") == "FAIL":
                 safety.append(f"package_gate_failure:{case_id}:{gate_id}")
         if oracle["expected_candidate_path"] == "individual_fallback":
             missing = set(oracle["expected_fallback_causes"]) - set(
@@ -490,6 +553,135 @@ def _read_json(path: Path, label: str) -> object:
         raise ReplayInputError(f"{label}: invalid JSON: {exc}") from exc
 
 
+def read_dispatch_log(path: Path) -> list[dict[str, Any]]:
+    """Return every ``review-dispatch-log/v1`` line of ``path``, validated.
+
+    The only reader of the dispatch log in this module: a malformed line
+    refuses, naming its 1-based line number.
+    """
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ReplayInputError(f"dispatch log: cannot read {path}: {exc}") from exc
+    entries: list[dict[str, Any]] = []
+    for number, line in enumerate(raw.splitlines(), start=1):
+        context = f"dispatch log line {number}"
+        try:
+            entry = json.loads(line, object_pairs_hook=_unique_json_object)
+        except ReplayInputError as exc:
+            raise ReplayInputError(f"{context}: {exc}") from exc
+        except json.JSONDecodeError as exc:
+            raise ReplayInputError(f"{context}: invalid JSON: {exc}") from exc
+        _object(entry, _DISPATCH_LOG_KEYS, context)
+        _choice(entry["schema"], {review_context.DISPATCH_LOG_SCHEMA}, f"{context}.schema")
+        for key in ("recorded_at", "branch", "plugin_version"):
+            if type(entry[key]) is not str or not entry[key]:
+                _fail(f"{context}.{key}", "expected a non-empty string")
+        if type(entry["reviewed_sha"]) is not str or (
+            review_context.SHA_PATTERN.fullmatch(entry["reviewed_sha"]) is None
+        ):
+            _fail(f"{context}.reviewed_sha", "expected a 40-hex commit sha")
+        entries.append(entry)
+    return entries
+
+
+def _count_reopens(receipts_dir: Path | None) -> int:
+    """Count receipts under ``receipts_dir`` whose applied action was reopen."""
+    if receipts_dir is None:
+        return 0
+    if not receipts_dir.is_dir():
+        _fail("receipts", f"{receipts_dir} is not a directory")
+    reopens = 0
+    for receipt_path in sorted(receipts_dir.glob("*.json")):
+        receipt = _read_json(receipt_path, f"receipt {receipt_path.name}")
+        if type(receipt) is not dict:
+            _fail(f"receipt {receipt_path.name}", "expected an object")
+        if receipt.get("applied_action") == "reopen":
+            reopens += 1
+    return reopens
+
+
+def _observed_counts(
+    log: Path, branch: str, receipts_dir: Path | None
+) -> dict[str, int]:
+    matching = [entry for entry in read_dispatch_log(log) if entry["branch"] == branch]
+    return {
+        "review_dispatches": len(matching),
+        "review_rounds": len({entry["reviewed_sha"] for entry in matching}),
+        "batch_reopens": _count_reopens(receipts_dir),
+    }
+
+
+def _summary_line(counts: dict[str, int], reopens_measured: bool) -> str:
+    # Without `--receipts` nobody counted reopens; the relayed line must not
+    # read as a measured zero (the v2 file still carries 0 by schema).
+    reopens = counts["batch_reopens"] if reopens_measured else "unmeasured"
+    return (
+        f"observed reviewer fan-outs: {counts['review_dispatches']} "
+        f"(rounds {counts['review_rounds']}, batch reopens {reopens})"
+    )
+
+
+def observe(corpus: object, branch: str, counts: dict[str, int]) -> dict[str, Any]:
+    """Return the v2 result binding observed counts to the corpus's one case."""
+    cases = _validate_corpus(corpus)
+    if len(cases) != 1:
+        _fail("corpus.cases", "observe attributes counts to exactly one case")
+    (oracle,) = cases
+    # Only the review counts are observed; every other v1 case field stays at
+    # its empty value rather than carrying a number nobody measured.
+    case = {
+        "case_id": oracle["case_id"],
+        **counts,
+        "fallback_causes": [],
+        "false_scope_expansions": [],
+        "detected_known_defects": [],
+        "elapsed_work_ms": 0,
+        "maximum_aggregate_diff_bytes": 0,
+        "requirement_to_tests": {req: [] for req in oracle["requirements"]},
+        "package_gates": {},
+    }
+    return {
+        "schema": RESULT_SCHEMA_V2,
+        "provenance": OBSERVED_PROVENANCE,
+        "corpus_identity": corpus_identity(corpus),
+        "branch": branch,
+        "cases": [case],
+    }
+
+
+def _run_observe(args: argparse.Namespace) -> int:
+    if args.summary:
+        if not args.log.exists():
+            print(SUMMARY_NO_LOG)
+            return 0
+        counts = _observed_counts(args.log, args.branch, args.receipts)
+        print(_summary_line(counts, args.receipts is not None))
+        return 0
+    if args.corpus is None or args.out is None:
+        _fail("observe", "--corpus and --out are required without --summary")
+    result = observe(
+        _read_json(args.corpus, "corpus"),
+        args.branch,
+        _observed_counts(args.log, args.branch, args.receipts),
+    )
+    args.out.write_text(
+        json.dumps(result, ensure_ascii=True, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return 0
+
+
+def _run_compare(args: argparse.Namespace) -> int:
+    report = compare(
+        _read_json(args.corpus, "corpus"),
+        _read_json(args.baseline, "baseline"),
+        _read_json(args.candidate, "candidate"),
+    )
+    print(json.dumps(report, ensure_ascii=True, sort_keys=True, separators=(",", ":")))
+    return 0 if report["verdict"] == "PASS" else 1
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -499,22 +691,33 @@ def _parser() -> argparse.ArgumentParser:
     compare_parser.add_argument("--corpus", type=Path, required=True)
     compare_parser.add_argument("--baseline", type=Path, required=True)
     compare_parser.add_argument("--candidate", type=Path, required=True)
+    observe_parser = subparsers.add_parser(
+        "observe", help="derive an observed v2 result file from the dispatch log"
+    )
+    observe_parser.add_argument("--log", type=Path, required=True)
+    observe_parser.add_argument("--branch", required=True)
+    observe_parser.add_argument("--corpus", type=Path)
+    observe_parser.add_argument("--out", type=Path)
+    observe_parser.add_argument("--receipts", type=Path)
+    observe_parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="print the one-line count instead of writing a result file",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
-        report = compare(
-            _read_json(args.corpus, "corpus"),
-            _read_json(args.baseline, "baseline"),
-            _read_json(args.candidate, "candidate"),
-        )
-    except ReplayInputError as exc:
+        if args.command == "observe":
+            return _run_observe(args)
+        return _run_compare(args)
+    except (ReplayInputError, OSError) as exc:
+        # OSError: an observe path (log / receipts / --out) the OS refused;
+        # fail loud at the CLI boundary rather than tracebacking.
         print(f"task-batch-replay: {exc}", file=sys.stderr)
         return 2
-    print(json.dumps(report, ensure_ascii=True, sort_keys=True, separators=(",", ":")))
-    return 0 if report["verdict"] == "PASS" else 1
 
 
 if __name__ == "__main__":

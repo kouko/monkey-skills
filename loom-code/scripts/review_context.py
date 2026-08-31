@@ -3,6 +3,17 @@
 Run as ``python3 review_context.py [--repo <path>]``.  The JSON packet is
 read-only: it identifies the target repository and its current commit while
 all review resources are derived from this installed script's location.
+
+Every successful ``--repo`` emission also appends one
+``review-dispatch-log/v1`` JSON line to ``<git-dir>/loom/review-dispatches.jsonl``
+(``--validate`` never appends).  This is the observation point because
+``subagent-driven-development/SKILL.md`` runs this script exactly once
+per reviewer fan-out, so one line == one dispatch.  The directory is
+``git rev-parse --git-dir`` resolved relative to ``--repo``
+(git-rev-parse(1): a worktree reports its own private git dir), the
+same idiom as ``loom_gate_markers.resolve_marker_dir``.  A failed append
+is reported on stderr and never changes the exit code: the packet is
+the product, the log is a side record.
 """
 from __future__ import annotations
 
@@ -11,7 +22,12 @@ import json
 import re
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
+
+
+DISPATCH_LOG_SCHEMA = "review-dispatch-log/v1"
+DISPATCH_LOG_NAME = "review-dispatches.jsonl"
 
 
 PACKET_KEYS = ("target_repo", "reviewed_sha", "plugin_version", "resources")
@@ -106,6 +122,46 @@ def resolve_context(repo: Path) -> dict[str, object]:
         "plugin_version": plugin_version,
         "resources": _resources(plugin_root),
     }
+
+
+def _dispatch_log_path(repo: Path) -> Path | None:
+    """``<git-dir>/loom/review-dispatches.jsonl`` for ``repo``, or None."""
+    # `rev-parse --git-dir` may answer relative to `repo` — git-rev-parse(1).
+    git_dir = _git(repo, "rev-parse", "--git-dir")
+    if git_dir is None:
+        return None
+    git_path = Path(git_dir)
+    if not git_path.is_absolute():
+        git_path = repo / git_path
+    return git_path / "loom" / DISPATCH_LOG_NAME
+
+
+def _dispatch_log_line(repo: Path, context: dict[str, object]) -> str:
+    """One review-dispatch-log/v1 line for the packet just emitted."""
+    # `symbolic-ref --short -q HEAD` fails on a detached HEAD — git-symbolic-ref(1).
+    branch = _git(repo, "symbolic-ref", "--short", "-q", "HEAD")
+    entry = {
+        "schema": DISPATCH_LOG_SCHEMA,
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "branch": branch if branch else "DETACHED",
+        "reviewed_sha": context["reviewed_sha"],
+        "plugin_version": context["plugin_version"],
+    }
+    return json.dumps(entry, sort_keys=True)
+
+
+def append_dispatch_log(repo: Path, context: dict[str, object]) -> str | None:
+    """Append one dispatch line; return an error message instead of raising."""
+    path = _dispatch_log_path(repo)
+    if path is None:
+        return f"could not resolve git dir for {repo}"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(_dispatch_log_line(repo, context) + "\n")
+    except OSError as error:
+        return f"could not append {path}: {error}"
+    return None
 
 
 def _containing_plugin_root(path: Path) -> Path | None:
@@ -230,6 +286,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"review-context: refused — {error}", file=sys.stderr)
         return 1
     print(json.dumps(context, sort_keys=True))
+    log_error = append_dispatch_log(Path(context["target_repo"]), context)
+    if log_error is not None:
+        print(f"review-context: dispatch log not written — {log_error}", file=sys.stderr)
     return 0
 
 

@@ -511,6 +511,8 @@ def _read_dispatch_receipt(receipt_path: str) -> dict:
     ):
         raise ValueError(f"{receipt_path} is not a batch-dispatch-receipt-v1")
     stored.setdefault("result_applied", False)
+    # `applied_action` (finalize / reopen) is optional: receipts flipped
+    # before the key existed carry none, and an unapplied receipt has none.
     return stored
 
 
@@ -697,6 +699,7 @@ def _recover_settled_receipt(args) -> dict | None:
         action = "reopen"
 
     stored["result_applied"] = True
+    stored["applied_action"] = action
     Path(receipt_path).write_text(
         json.dumps(stored, sort_keys=True), encoding="utf-8"
     )
@@ -732,7 +735,17 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
     the result at all — the same batch_id -> members -> member_shas check
     order `_recover_settled_receipt` already uses on the crash-recovery
     path; the two paths must never disagree about what "this receipt
-    belongs to this batch" means."""
+    belongs to this batch" means.
+
+    Within that order the identity check runs after the per-member sha
+    check, so reaching it means every member sha is unchanged and only the
+    plan text outside the members moved (a ledger flip or notes edit
+    elsewhere in the same file — the packet identity covers the whole plan
+    text). That branch names the cause and the recovery
+    `references/conditional-operations.md` §Result file states: re-seal
+    (`packet`), re-record the dispatch, rebind the unchanged reviewer
+    results to the new identity. The per-member "drifted after dispatch"
+    message stays for the sha case."""
     stored = _read_dispatch_receipt(receipt_path)
     batch_id = packet.declaration.batch_id
     if stored["batch_id"] != batch_id:
@@ -761,13 +774,24 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
                 "never saw this commit — re-send the dispatch"
             )
     if stored["packet_identity"] != packet.identity:
+        # Every member sha matched above, so the identity moved because the
+        # plan text changed outside the batch members (a ledger line flipping
+        # elsewhere, a notes edit). Name that cause and the recovery the
+        # reference states; the per-member message above stays for sha drift.
         raise ValueError(
             f"dispatch receipt {receipt_path} packet_identity does not match "
-            "the rebuilt packet; re-send the dispatch"
+            "the rebuilt packet: the plan text changed outside the batch "
+            "members (a ledger flip or notes edit elsewhere in the plan) "
+            "while every member sha is unchanged; re-seal (`packet`), "
+            "re-record the dispatch (record-dispatch), and rebind the "
+            "unchanged reviewer results to the new identity before retrying"
         )
     if stored["result_applied"]:
+        applied = (
+            f" ({stored['applied_action']})" if "applied_action" in stored else ""
+        )
         raise ValueError(
-            f"dispatch receipt {receipt_path} already applied; run "
+            f"dispatch receipt {receipt_path} already applied{applied}; run "
             "record-dispatch for a fresh cycle"
         )
     return stored
@@ -888,6 +912,12 @@ def _cmd_apply_result(args) -> int:
             # already-validated dict, instead of re-reading the receipt file
             # a second time (residue of F1/F6).
             stored["result_applied"] = True
+            # `applied_action` is the resolution's own action string
+            # (`finalize` / `reopen`): an observer counts batch reopens from
+            # the receipts alone. Non-mutating outcomes never reach here, so
+            # they write no key; receipts written before this key existed
+            # are read without it.
+            stored["applied_action"] = resolution.action
             Path(args.receipt).write_text(
                 json.dumps(stored, sort_keys=True), encoding="utf-8"
             )

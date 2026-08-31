@@ -192,3 +192,90 @@ def test_context_refuses_damaged_or_escaping_installed_resources(
         assert result.returncode == 1
         assert "Traceback" not in result.stderr
         assert "review-context: refused" in result.stderr
+
+
+def _dispatch_log(repo: Path) -> Path:
+    git_dir = Path(_git(repo, "rev-parse", "--git-dir"))
+    if not git_dir.is_absolute():
+        git_dir = repo / git_dir
+    return git_dir / "loom" / "review-dispatches.jsonl"
+
+
+def test_main_appends_one_dispatch_log_line_per_invocation(
+    tmp_path: Path, capsys
+) -> None:
+    """Every `--repo` packet emission is one reviewer fan-out: log it once."""
+    from review_context import main
+
+    consumer = _consumer_repo(tmp_path)
+    _git(consumer, "checkout", "-b", "feat/x")
+    head = _git(consumer, "rev-parse", "HEAD")
+    log = _dispatch_log(consumer)
+    assert not log.parent.exists()
+
+    assert main(["--repo", str(consumer)]) == 0
+    first_stdout = capsys.readouterr().out
+    assert main(["--repo", str(consumer)]) == 0
+    assert capsys.readouterr().out == first_stdout
+
+    lines = log.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    for line in lines:
+        entry = json.loads(line)
+        assert set(entry) == {
+            "schema", "recorded_at", "branch", "reviewed_sha", "plugin_version",
+        }
+        assert entry["schema"] == "review-dispatch-log/v1"
+        assert entry["branch"] == "feat/x"
+        assert entry["reviewed_sha"] == head
+        assert entry["plugin_version"] == json.loads(first_stdout)["plugin_version"]
+        assert entry["recorded_at"].endswith("+00:00")
+
+
+def test_validate_appends_nothing_and_detached_head_logs_detached(
+    tmp_path: Path, capsys
+) -> None:
+    """`--validate` is not a fan-out; a detached HEAD still records a line."""
+    from review_context import main, resolve_context
+
+    consumer = _consumer_repo(tmp_path)
+    packet = tmp_path / "packet.json"
+    packet.write_text(json.dumps(resolve_context(consumer)), encoding="utf-8")
+    log = _dispatch_log(consumer)
+
+    assert main(["--validate", str(packet)]) == 0
+    assert not log.exists()
+
+    head = _git(consumer, "rev-parse", "HEAD")
+    _git(consumer, "checkout", "--detach", head)
+    assert main(["--repo", str(consumer)]) == 0
+    capsys.readouterr()
+    (entry,) = [json.loads(l) for l in log.read_text(encoding="utf-8").splitlines()]
+    assert entry["branch"] == "DETACHED"
+    assert entry["reviewed_sha"] == head
+
+
+def test_dispatch_log_append_failure_keeps_packet_and_exit_code(
+    tmp_path: Path, capsys
+) -> None:
+    """The packet is the product; a read-only log dir only warns on stderr."""
+    import os
+
+    from review_context import main
+
+    if os.geteuid() == 0:  # root ignores directory modes
+        import pytest
+
+        pytest.skip("permission bits are not enforced for root")
+    consumer = _consumer_repo(tmp_path)
+    log = _dispatch_log(consumer)
+    log.parent.mkdir(parents=True)
+    log.parent.chmod(0o500)
+    try:
+        assert main(["--repo", str(consumer)]) == 0
+    finally:
+        log.parent.chmod(0o700)
+    captured = capsys.readouterr()
+    assert json.loads(captured.out)["reviewed_sha"] == _git(consumer, "rev-parse", "HEAD")
+    assert "dispatch log not written" in captured.err
+    assert not log.exists()
