@@ -103,27 +103,31 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
    splicing-into-a-pinned-sentence-creates-false-readings).
 3.5. Adversarial-audit station (CONDITIONAL). Look up `docs/loom/ATTACK-CATALOGUE.md`
    in the target repo. Absent → print `attack catalogue: absent` loudly, no
-   dispatch, continue to Step 4.
-   - Code signal: `safety_bearing(plan_text)` (`scripts/plan_card.py`) says `yes`,
-     OR any path in `git diff --name-only <merge-base>..HEAD` (merge-base against
-     the default branch) matches a `## Guarded paths` glob via `guarded_path_globs`
-     (`scripts/check_attack_catalogue.py`). A `no` header does not override a
-     guarded-path hit — that combination is a STOP naming both facts.
-   - Prose signal: any changed path matches the prose-contract globs the store
-     lists (`**/SKILL.md`, `**/agents/*.md`, `**/hooks/*.md`,
-     `**/references/*-packet.md`, `**/references/*-prompt.md`, `rules/*.md`).
-   - Dispatch is **orchestrator-run**, never nested inside a subagent (stalls):
-     code signal → `references/adversarial-audit-packet.md` (fresh context,
-     `opus` default, paths only); prose signal → `references/cold-reader-packet.md`
-     (fresh context, `sonnet` default; one scenario you derive from the changed
-     contract + one temptation from the store's `## Prose temptations`).
-   - Verdict routing: `reproduced` (or a cold reader's `taken`) → STOP until a RED
-     test is committed and `## Instances` reads `reproduced <date> — pinned by
-     <test>`; then `python3 scripts/check_attack_catalogue.py
-     docs/loom/ATTACK-CATALOGUE.md --repo <root>` must exit 0 before continuing —
-     Step 5's review-driven-fixes re-run rule then applies. `held` → append
-     `held <date>` to `## Instances`. `not-applicable` → Step 11's close-out card
-     only (no `## Instances` line).
+   dispatch, continue to Step 5.
+   - Code signal: `safety_bearing(plan_text)` (`scripts/plan_card.py`) → `yes`
+     dispatches, `no` skips unless a guarded-path hit (below), absent →
+     `None` (header N/A; path signal still runs). Path check: `git diff
+     --name-only "$(git merge-base HEAD origin/main 2>/dev/null || git
+     merge-base HEAD main)"..HEAD` against a `## Guarded paths` glob via
+     `guarded_path_globs` (`scripts/check_attack_catalogue.py`); neither base
+     resolves → STOP loud (`attack catalogue: base unresolved`). `no` + a
+     guarded hit does not override — STOP naming both; only the user (flip
+     the header, or narrow `## Guarded paths`) resumes it, never the
+     orchestrator alone.
+   - Prose signal: any changed path matches a prose-shaped glob in the
+     store's `## Guarded paths` (or `rules/*.md`).
+   - Dispatch is **orchestrator-run** (never nested — subagent dispatch
+     stalls): code signal → `references/adversarial-audit-packet.md` (fresh,
+     `opus`, paths only); prose signal → `references/cold-reader-packet.md`
+     (fresh, `sonnet`; one scenario from the changed contract + one
+     temptation from the store's `## Prose temptations`).
+   - Verdict routing: `reproduced` (or a cold reader's `taken`) → STOP until a
+     RED test is committed and `## Instances` reads `reproduced <date> —
+     pinned by <test>`; then `python3 scripts/check_attack_catalogue.py
+     docs/loom/ATTACK-CATALOGUE.md --repo <root>` must exit 0 before
+     continuing — Step 8's review-driven-fixes re-run rule then applies.
+     `held` → append `held <date>` to `## Instances`. `not-applicable` →
+     Step 8's close-out card only (no `## Instances` line).
 5. Dispatch verification-before-completion
    - MANDATORY even if tests were run immediately before invoking this skill. Step 3
      fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.
@@ -189,7 +193,7 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
    - Compound `git push && gh pr create` must be two separate Bash calls, and any rebase-conflict
      resolution uses Read+Edit (not Bash `cat`+`Write`) — details in
      [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S2/§D1.
-   - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion
+   - If any review-driven fixes were applied in Steps 3–4 or 3.5, re-run verification-before-completion
      here (Step 5 result is stale) before committing.
 9. git commit (only after Step 7's privacy gate PASSes, or after the
    user resolves a Step-7 BLOCK)

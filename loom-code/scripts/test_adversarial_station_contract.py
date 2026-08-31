@@ -153,3 +153,29 @@ def test_close_out_card_has_audit_and_cold_reader_rows():
     assert any("N/A —" in r for r in cold_rows), (
         "cold-reader row must show the N/A — form"
     )
+
+
+def _step_3_5_slice(skill_text: str) -> str:
+    start = skill_text.index("3.5. Adversarial-audit station")
+    end = skill_text.index("5. Dispatch verification-before-completion", start)
+    return skill_text[start:end]
+
+
+def test_step_3_5_stop_sentences_are_inside_the_step():
+    skill_text = FINISHING_SKILL.read_text(encoding="utf-8")
+    slice_text = _step_3_5_slice(skill_text)
+    flat = " ".join(slice_text.split())
+
+    assert "STOP until a RED test" in flat
+    assert "attack catalogue: absent" in flat
+    assert "continue to Step 5" in flat
+    assert "attack catalogue: base unresolved" in flat
+    # the `no` + guarded-hit STOP sentence must live inside the step, not
+    # merely somewhere in the file
+    assert "does not override" in flat
+    assert "STOP naming both" in flat
+    assert "orchestrator-run" in flat
+    assert (
+        'git diff --name-only "$(git merge-base HEAD origin/main '
+        '2>/dev/null || git merge-base HEAD main)"..HEAD'
+    ) in flat
