@@ -627,7 +627,13 @@ def _expand_status_sha_ref(status: str, plan_path: Path) -> str:
     is not inside any git repo (an isolated fixture, e.g.), the ref is
     left exactly as typed — there is no repository to resolve it
     against, and refusing here would reject the CLI's own test
-    fixtures, not the operator's real plan files."""
+    fixtures, not the operator's real plan files.
+
+    Grounding (external-surface category 4, CLI flag): the
+    `git rev-parse --verify <ref>^{commit}` form mirrors the in-repo
+    idiom at `loom-code/scripts/review_scope.py` (`_git(repo,
+    "rev-parse", "--verify", f"{sha}^{{commit}}")`) — the `^{commit}`
+    peel rejects trees/blobs and neutralises flag-shaped refs."""
     match = _STATUS_SHA_REF.fullmatch(status)
     if match is None:
         return status
