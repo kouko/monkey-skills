@@ -25,10 +25,14 @@ another batch whose dispatch receipt has no terminal result applied yet;
 ``apply-result --receipt`` marks that receipt's result applied, which unblocks
 both the next ``ready`` and a fresh dispatch cycle.  ``record-dispatch`` refuses
 (fail-loud) a second dispatch for a batch whose receipt exists without an
-applied terminal result — re-collect instead of re-send.  A crash between the
-ledger write and the receipt flip inside one ``apply-result --receipt`` run
-does not strand the receipt: re-running the same command recognizes every
-member already sitting at ``done(<sha>)`` and flips the receipt idempotently
+applied terminal result — re-collect instead of re-send, keyed on the
+batch_id across every receipt file in ``--out``'s directory, not merely the
+exact ``--out`` path.  A crash between the ledger write and the receipt flip
+inside one ``apply-result --receipt`` run does not strand the receipt: for
+either resolution shape (finalize or reopen), re-running the same command
+recognizes every member already sitting at its resolution's settled status
+(finalize: every member ``done(<sha>)``; reopen: owners ``pending``,
+non-owners still ``implemented(<sha>)``) and flips the receipt idempotently
 instead of re-running the ledger write (see ``_recover_settled_receipt``).
 
 The plan's ``Aggregate verification`` prose is declaration identity only and
@@ -74,15 +78,22 @@ _IMPLEMENTED_ANY_SHA = re.compile(r"^implemented\((.*)\)$")
 _DONE = re.compile(r"^done\(([0-9a-f]{40})\)$")
 
 
-def _run_git(repo_root: Path, *args: str) -> str:
-    """Run git in repo_root; fail loud with stderr on any non-zero exit."""
+def _run_subprocess(args: list[str], *, text: bool = True) -> subprocess.CompletedProcess:
+    """Shared subprocess.run wrapper: one place translates a hung external
+    process into the fail-loud PacketRefused every git call in this module
+    must surface as (Task 18d — folds what were three separate
+    TimeoutExpired->PacketRefused copies)."""
     try:
-        result = subprocess.run(
-            ["git", "-C", str(repo_root), *args],
-            capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS,
+        return subprocess.run(
+            args, capture_output=True, text=text, timeout=_GIT_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired:
-        raise rb.PacketRefused(f"git {' '.join(args)} timed out")
+        raise rb.PacketRefused(f"{' '.join(args)} timed out")
+
+
+def _run_git(repo_root: Path, *args: str) -> str:
+    """Run git in repo_root; fail loud with stderr on any non-zero exit."""
+    result = _run_subprocess(["git", "-C", str(repo_root), *args])
     if result.returncode != 0:
         raise rb.PacketRefused(
             f"git {' '.join(args)} failed: {result.stderr.strip()}"
@@ -102,22 +113,14 @@ def _committed_bytes(repo_root: Path, sha: str, path: str) -> bytes:
     real blob content, so the type must be checked as `blob` first."""
     if not rb._safe_repo_path(path):
         raise rb.PacketRefused(f"{path} is not a safe repo-relative path")
-    try:
-        kind = subprocess.run(
-            ["git", "-C", str(repo_root), "cat-file", "-t", f"{sha}:{path}"],
-            capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS,
-        )
-    except subprocess.TimeoutExpired:
-        raise rb.PacketRefused(f"git cat-file -t {sha}:{path} timed out")
+    kind = _run_subprocess(
+        ["git", "-C", str(repo_root), "cat-file", "-t", f"{sha}:{path}"]
+    )
     if kind.returncode != 0 or kind.stdout.strip() != "blob":
         raise rb.PacketRefused(f"{path} is not a committed blob at {sha}")
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo_root), "show", f"{sha}:{path}"],
-            capture_output=True, timeout=_GIT_TIMEOUT_SECONDS,
-        )
-    except subprocess.TimeoutExpired:
-        raise rb.PacketRefused(f"git show {sha}:{path} timed out")
+    result = _run_subprocess(
+        ["git", "-C", str(repo_root), "show", f"{sha}:{path}"], text=False,
+    )
     if result.returncode != 0:
         raise rb.PacketRefused(f"{path} is not present at commit {sha}")
     return result.stdout
@@ -127,12 +130,16 @@ def _tree_identity(repo_root: Path, sha: str) -> str:
     return _run_git(repo_root, "rev-parse", f"{sha}^{{tree}}").strip()
 
 
-def _repository_identity(repo_root: Path) -> str:
-    """Deterministic repository identity: a sha256 digest over the repo's
-    sorted root-commit sha(s) (git rev-list --max-parents=0 HEAD). A repo
-    with one linear history has exactly one root commit, so this is stable
-    across invocations without depending on a remote URL or local config."""
-    roots = sorted(_run_git(repo_root, "rev-list", "--max-parents=0", "HEAD").split())
+def _repository_identity(repo_root: Path, sha: str) -> str:
+    """Deterministic repository identity: a sha256 digest over the sorted
+    root-commit sha(s) reachable from <sha> (git rev-list --max-parents=0
+    <sha>) — anchored on the frozen member commit, NOT the repo's current
+    HEAD, so moving HEAD to an unrelated second-root branch after a member
+    was committed cannot change that member's already-issued identity
+    (Task 18c). A repo with one linear history has exactly one root commit,
+    so this is stable across invocations without depending on a remote URL
+    or local config."""
+    roots = sorted(_run_git(repo_root, "rev-list", "--max-parents=0", sha).split())
     if not roots:
         raise rb.PacketRefused("repository has no root commit")
     return rb.text_digest(",".join(roots))
@@ -253,17 +260,17 @@ def build_packet(
     root = Path(repo_root)
     plan_identity = _plan_identity(plan_path, root)
     spec_identity = _spec_identity(plan_path, root)
-    repository_identity = _repository_identity(root)
     scope_issuer = rb._trusted_scope_issuer(
         issuer="git-scope-resolver",
         source_identity="git:sha1:v1",
         hash_algorithm="sha1",
     )
+    statuses = _member_statuses(
+        plan_text, tuple(projected["task_id"] for projected in fields["members"])
+    )
     members = []
     for projected in fields["members"]:
-        match = _IMPLEMENTED.fullmatch(
-            _member_statuses(plan_text, (projected["task_id"],))[projected["task_id"]]
-        )
+        match = _IMPLEMENTED.fullmatch(statuses[projected["task_id"]])
         if match is None:
             raise rb.PacketRefused(
                 f"{projected['task_id']} is not exactly implemented(<sha>)"
@@ -283,7 +290,7 @@ def build_packet(
             future_requirements=projected["future_requirements"],
             acceptance=projected["acceptance"],
             scope_proof=scope_issuer.issue(
-                repository_identity=repository_identity,
+                repository_identity=_repository_identity(root, sha),
                 commit_sha=sha,
                 tree_identity=_tree_identity(root, sha),
                 files=files,
@@ -418,6 +425,28 @@ def _read_dispatch_receipt(receipt_path: str) -> dict:
     return stored
 
 
+def _sibling_unapplied_receipt(out_path: Path, batch_id: str) -> dict | None:
+    """Scan ``out_path``'s parent directory for any other
+    batch-dispatch-receipt-v1 file carrying the same batch_id with no
+    terminal result applied yet (Task 18a). The idempotency refusal must
+    key off batch_id, not off the exact ``--out`` path — a caller
+    re-sending dispatch for the same batch under a different filename must
+    still be refused."""
+    parent = out_path.parent
+    if not parent.is_dir():
+        return None
+    for candidate in sorted(parent.iterdir()):
+        if not candidate.is_file() or candidate == out_path:
+            continue
+        try:
+            stored = _read_dispatch_receipt(str(candidate))
+        except (OSError, ValueError):
+            continue
+        if stored["batch_id"] == batch_id and not stored["result_applied"]:
+            return stored
+    return None
+
+
 def _cmd_record_dispatch(args) -> int:
     try:
         packet = json.loads(Path(args.packet_file).read_text(encoding="utf-8"))
@@ -437,6 +466,14 @@ def _cmd_record_dispatch(args) -> int:
                 "with no terminal result yet; re-collect the reviewer result "
                 "(apply-result) instead of re-sending the dispatch"
             ]})
+    declaration = packet.get("declaration")
+    batch_id = declaration.get("batch_id") if type(declaration) is dict else None
+    if batch_id and _sibling_unapplied_receipt(out_path, batch_id) is not None:
+        return _fail({"recorded": False, "reasons": [
+            f"batch {batch_id} already has a dispatch receipt "
+            "with no terminal result yet; re-collect the reviewer result "
+            "(apply-result) instead of re-sending the dispatch"
+        ]})
     try:
         receipt = {
             "schema": "batch-dispatch-receipt-v1",
@@ -486,30 +523,37 @@ def _recover_settled_receipt(args) -> dict | None:
     """Crash-window recovery for `apply-result --receipt`: the ledger CAS
     write (`plan_card.atomic_batch_status_update`) and the dispatch-receipt
     flip are two separate writes, in that order. A crash between them
-    leaves every batch member already `done(<sha>)` on the plan but the
-    receipt's `result_applied` still False — re-running `apply-result`
-    then fails at `_readiness` (no member is `implemented(<sha>)` any
-    more), so the receipt is stuck forever and `ready --receipt` refuses
-    any other batch sharing a member.
+    leaves every batch member already at the resolution's replacement
+    status on the plan but the receipt's `result_applied` still False —
+    re-running `apply-result` then fails at `_readiness` (no member is
+    `implemented(<sha>)` any more), so the receipt is stuck forever and
+    `ready --receipt` refuses any other batch sharing a member. Both
+    resolution shapes are recovered, symmetrically (Task 18b):
 
-    Returns the recovered result payload (receipt flipped, exit 0) when
-    every declared member's CURRENT plan status is already `done(<sha>)`
-    — the only replacement a finalize resolution ever produces — the
-    receipt is present and unapplied, AND the receipt's own identity
-    matches: `batch_id` equals the batch this call resolves to, `members`
-    is set-equal to the declaration's members, and the receipt's
-    `member_shas` (required for recovery — an older receipt written before
-    this field existed cannot be recovered) has each member's sha equal to
-    the sha the plan's `done(<sha>)` actually recorded. Without this check
-    a stale receipt for an unrelated batch could be flipped using this
-    batch's finalized statuses, with no ledger write ever happening for
-    the batch the receipt claims to cover.
+    - finalize: every declared member's CURRENT plan status is `done(<sha>)`
+      — the only replacement a finalize resolution ever produces.
+    - reopen: every reopen owner's CURRENT plan status is `pending` and
+      every non-owner is still `implemented(<sha>)` — the only replacement
+      a reopen resolution ever produces.
+
+    Either shape additionally requires the receipt is present and
+    unapplied, AND the receipt's own identity matches: `batch_id` equals
+    the batch this call resolves to, `members` is set-equal to the
+    declaration's members, and the receipt's `member_shas` (required for
+    recovery — an older receipt written before this field existed cannot
+    be recovered) has each non-owner member's sha equal to the sha the
+    plan's `implemented(<sha>)`/`done(<sha>)` status actually recorded.
+    Without this check a stale receipt for an unrelated batch could be
+    flipped using this batch's already-settled statuses, with no ledger
+    write ever happening for the batch the receipt claims to cover.
 
     Returns None (caller re-raises the original readiness error) for
-    every other case, including a genuine not-ready plan (members still
-    `pending`/`claimed`/`blocked`) and a reopen resolution's `pending`
-    replacement, which this recovery does not attempt to distinguish from
-    an unrelated not-ready state."""
+    every other case, including a genuine not-ready plan (no member
+    reaches either settled shape above) and a plan that just happens to
+    have every member `pending` for an unrelated reason (no reopen owner
+    found), which this recovery does not attempt to distinguish from a
+    recovered reopen with zero owners — an impossible resolution shape, so
+    it is refused rather than guessed at."""
     receipt_path = getattr(args, "receipt", None)
     if not receipt_path or not Path(receipt_path).exists():
         return None
@@ -533,21 +577,47 @@ def _recover_settled_receipt(args) -> dict | None:
     statuses = _member_statuses(plan_text, declared_members)
     if not statuses:
         return None
-    for member_id, status in statuses.items():
-        match = _DONE.fullmatch(status)
-        if match is None or match.group(1) != member_shas[member_id]:
+
+    if all(
+        _DONE.fullmatch(status) is not None
+        and _DONE.fullmatch(status).group(1) == member_shas[member_id]
+        for member_id, status in statuses.items()
+    ):
+        action, reopen_owners = "finalize", []
+    else:
+        # Reopen recovery, symmetric with finalize (Task 18b): every owner
+        # is already `pending` (the replacement `atomic_batch_status_update`
+        # would have written) and every non-owner is still `implemented(<sha>)`
+        # matching the receipt's recorded sha, unchanged by the reopen. A
+        # crash between that CAS write and the receipt flip is otherwise
+        # indistinguishable from this recovered state, so this is the only
+        # signal available to recognize it.
+        reopen_owners = [
+            member_id for member_id, status in statuses.items()
+            if status == "pending"
+        ]
+        non_owners_settled = all(
+            member_id in reopen_owners or (
+                _IMPLEMENTED.fullmatch(status) is not None
+                and _IMPLEMENTED.fullmatch(status).group(1) == member_shas[member_id]
+            )
+            for member_id, status in statuses.items()
+        )
+        if not reopen_owners or not non_owners_settled:
             return None
+        action = "reopen"
+
     stored["result_applied"] = True
     Path(receipt_path).write_text(
         json.dumps(stored, sort_keys=True), encoding="utf-8"
     )
     return {
-        "action": "finalize",
-        "reopen_owners": [],
+        "action": action,
+        "reopen_owners": reopen_owners,
         "ledger_mutation_allowed": True,
         "ledger_written": True,
         "reasons": [
-            "recovered: ledger already finalized before an earlier crash; "
+            f"recovered: ledger already {action}d before an earlier crash; "
             "receipt now applied",
         ],
         "recovered": True,

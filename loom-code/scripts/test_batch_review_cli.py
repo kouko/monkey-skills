@@ -912,3 +912,127 @@ def test_ready_accepts_unbolded_status_field(tmp_path, capsys) -> None:
     capsys.readouterr()
     assert code == 0
     assert out["ready"] is True
+
+
+def test_record_dispatch_refuses_same_batch_different_out_path(
+    tmp_path, capsys,
+) -> None:
+    """The idempotency refusal must key off batch_id across the receipt
+    directory, not off the exact --out path — a caller re-sending dispatch
+    for the same batch under a different filename must still be refused
+    (Task 18a)."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    first_out = tmp_path / "dispatch-receipt-first.json"
+    assert cli.main([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(first_out),
+    ]) == 0
+    capsys.readouterr()
+    second_out = tmp_path / "dispatch-receipt-second.json"
+    code, out = _run([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(second_out),
+    ])
+    capsys.readouterr()
+    assert code != 0
+    assert out["recorded"] is False
+    assert "re-collect" in " ".join(out["reasons"])
+    assert not second_out.exists()
+
+
+def test_apply_result_recovers_reopen_receipt_stuck_after_ledger_crash(
+    tmp_path, capsys, monkeypatch,
+) -> None:
+    """Symmetric with the finalize crash recovery: a crash between the
+    reopen ledger CAS write (owner Task 2 -> pending) and the
+    dispatch-receipt flip must not strand the receipt either — re-running
+    apply-result --receipt must recover the reopen action idempotently
+    (Task 18b)."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    result_path = _result_file(tmp_path, reopen=True)
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    assert cli.main([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ]) == 0
+    capsys.readouterr()
+
+    real_write_text = Path.write_text
+
+    def _crash_on_receipt_write(self, *call_args, **call_kwargs):
+        if self == dispatch_receipt:
+            raise OSError("simulated crash before receipt flip")
+        return real_write_text(self, *call_args, **call_kwargs)
+
+    monkeypatch.setattr(Path, "write_text", _crash_on_receipt_write)
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    capsys.readouterr()
+    assert code != 0
+    plan_after_crash = plan_path.read_text(encoding="utf-8")
+    assert f"- **Status**: implemented({sha1})" in plan_after_crash
+    task_2_block = plan_after_crash.split("## Task 2")[1].split(
+        "## Review Batches"
+    )[0]
+    assert "- **Status**: pending" in task_2_block
+    stored_after_crash = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored_after_crash.get("result_applied", False) is False
+
+    monkeypatch.setattr(Path, "write_text", real_write_text)
+    code2 = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    out2 = json.loads(capsys.readouterr().out)
+    assert code2 == 0
+    assert out2["action"] == "reopen"
+    assert out2["reopen_owners"] == ["Task 2"]
+    assert out2["recovered"] is True
+    stored_after_recovery = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored_after_recovery["result_applied"] is True
+    assert plan_path.read_text(encoding="utf-8") == plan_after_crash
+
+
+def test_repository_identity_anchored_on_member_sha_not_head(tmp_path) -> None:
+    """_repository_identity must anchor on the member's own commit sha, not
+    the repo's current HEAD — otherwise moving HEAD to an unrelated
+    second-root branch changes the identity of an already-frozen member
+    commit (Task 18c)."""
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    sha = _git_commit_file(repo_root, "src/1.py", b"member 1")
+    baseline = cli._repository_identity(repo_root, sha)
+
+    subprocess.run(
+        ["git", "-C", str(repo_root), "checkout", "-q", "--orphan", "second-root"],
+        check=True,
+    )
+    (repo_root / "other.txt").write_bytes(b"unrelated second root")
+    subprocess.run(
+        ["git", "-C", str(repo_root), "add", "other.txt"], check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(repo_root), "commit", "-q", "-m", "second root"],
+        check=True,
+    )
+
+    after_head_moved = cli._repository_identity(repo_root, sha)
+    assert after_head_moved == baseline
