@@ -172,6 +172,20 @@ equal the identity the `packet` subcommand emitted for this Batch. A missing
 or mismatched value refuses the whole file before any finding is interpreted;
 a result given for another packet means re-send the dispatch.
 
+The packet identity covers the whole plan file's text, not only the Batch's
+members, so the plan must not be written between `packet` and
+`apply-result`. An unrelated ledger line flipping elsewhere in the same file
+refuses the receipt binding with "packet_identity does not match the rebuilt
+packet"; when that happens, re-seal (`packet`), re-record the dispatch, and
+rebind the unchanged reviewer results to the new identity before retrying.
+
+A `findings` entry with `blocking: true` is only meaningful under
+`verdict: NEEDS_REVISION`. The same combination under `PASS` or
+`PASS_WITH_NOTES` classifies as `unassignable_finding` and routes the whole
+Batch to `individual_fallback`, so a reviewer arm must not emit a blocking
+finding without also returning `NEEDS_REVISION`; an arm that returns the
+contradictory pair is asked to resolve it, never edited by the orchestrator.
+
 A finding's `ground_ref` must equal the referent its `ground` names
 **verbatim**: for `owned_requirement`, one string of the owner's
 `owned_requirements` exactly as the plan ledger states it; for
