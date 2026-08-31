@@ -93,6 +93,7 @@ EXEMPT = {
     "living_spec_gitref.py": "helper module, no CLI entry point",
     "living_spec_index.py": "helper module, no CLI entry point",
     "living_spec_tags.py": "helper module, no CLI entry point",
+    "docs_review_baseline_store.py": "helper module, no CLI entry point",
     "heading_window.py": "helper module, no CLI entry point; reads no store "
                          "or brief, only an in-memory string a caller passes in",
     "sibling_import.py": "helper module, no CLI entry point; reads no store "
