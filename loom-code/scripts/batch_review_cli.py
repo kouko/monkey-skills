@@ -136,9 +136,13 @@ def _commit_changed_paths(repo_root: Path, sha: str) -> tuple[str, ...]:
     Grounding (external-surface category 4, CLI flag): `git diff
     --name-only <sha>^ <sha>` (git-diff(1)) lists the paths changed between
     the first parent and the commit; a root commit has no `<sha>^`, so
-    git-diff(1) fails there and the fallback `git diff-tree --no-commit-id
-    --name-only -r <sha>` (git-diff-tree(1)) compares a root commit against
-    the empty tree, listing every path it introduced. Both invocations pass
+    git-diff(1) fails there and the fallback uses `git diff-tree --no-commit-id
+    --name-only -r --root <sha>` (git-diff-tree(1)) instead — without
+    `--root` a root commit is not diffed against anything and the listing
+    is silently empty (fail-open); git-diff-tree(1) documents `--root`:
+    "when --root is specified the initial commit will be shown as a big
+    creation event", i.e. compared against the empty tree, listing every
+    path it introduced. Both invocations pass
     `-c core.quotePath=false` ahead of the subcommand: git-config(1)
     documents `core.quotePath` as defaulting to true, under which "bytes
     higher than 0x80 ... are quoted" — so a non-ASCII path (e.g. `日本.py`)
@@ -155,7 +159,7 @@ def _commit_changed_paths(repo_root: Path, sha: str) -> tuple[str, ...]:
     else:
         listing = _run_git(
             repo_root, "-c", "core.quotePath=false", "diff-tree",
-            "--no-commit-id", "--name-only", "-r", sha,
+            "--no-commit-id", "--name-only", "-r", "--root", sha,
         )
     return tuple(line for line in listing.splitlines() if line)
 
