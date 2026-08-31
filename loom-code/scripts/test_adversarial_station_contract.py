@@ -198,6 +198,19 @@ def test_step_3_5_stop_sentences_are_inside_the_step():
     assert "attack catalogue: absent" in flat
     assert "continue to Step 5" in flat
     assert "attack catalogue: base unresolved" in flat
+
+    # exit 1 (a store that EXISTS but is broken, or a broken plan header)
+    # is a STOP, never a silent continue — and "absent" (the exit-0,
+    # no-store-yet case) must appear only in the exit-0 branch, not be
+    # reused to describe a broken-but-present store.
+    exit_1_bullet = flat[flat.index("- 1 —"): flat.index("- 2 —")]
+    assert "STOP" in exit_1_bullet
+    assert "never skipped" in exit_1_bullet
+    assert "absent" not in exit_1_bullet
+    assert flat.count("absent") == 1, (
+        "'absent' must appear exactly once in Step 3.5 — the exit-0 "
+        "no-store-yet case — never reused for the exit-1 broken-store case"
+    )
     # the `no` + guarded-hit STOP sentence must live inside the step, not
     # merely somewhere in the file
     assert "does not override" in flat
