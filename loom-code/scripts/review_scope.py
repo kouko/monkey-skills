@@ -53,10 +53,12 @@ Exit codes:
       `FreshnessResult` describes it — the verdict was already fresh),
       and prints no rebase remedy either.
 
-This module writes its own stdlib `subprocess` git helper rather than
-importing `loom_gate_markers._git` — that name is private, and reaching
-for a second private cross-module name would recommit the dependency the
-`default_branch_ref` promotion (this repo's Task 1) exists to remove.
+This module's `_git` wrapper delegates to the shared `git_exec.run_git`
+body rather than importing `loom_gate_markers._git` — that name is
+private, and reaching for a second private cross-module name would
+recommit the dependency the `default_branch_ref` promotion (this repo's
+Task 1) exists to remove. `_git` keeps this module's own None-on-failure
+contract by calling `run_git` with `check=False`.
 
 A successful fetch of `default_branch_ref`'s ref is not, by itself,
 proof that the ref is still the remote's *current* default branch: a
@@ -89,7 +91,7 @@ fresh verdict.
 from __future__ import annotations
 
 import argparse
-import subprocess
+import subprocess  # kept: test_git_wrapper_characterization_none monkeypatches review_scope.subprocess.run
 import sys
 from dataclasses import dataclass
 from pathlib import Path
