@@ -56,6 +56,11 @@ def test_implementer_has_prose_edit_self_sweep_rule():
     assert "output the checklist" not in rule
     assert "emit a checklist" not in rule
 
+    # Out-link guard: the firing condition's referents (`Files touched`,
+    # `Review-weight`) must resolve to plan-format.md for a cold reader.
+    assert "plan-format.md" in rule
+    assert "Review-weight" in rule
+
     # Position guard: rule 14 must live before the managed baseline block,
     # in the hand-written section distribute.py never overwrites.
     text = AGENT.read_text(encoding="utf-8")

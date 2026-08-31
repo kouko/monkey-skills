@@ -161,19 +161,26 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     intermediate full runs are eliminated.
 14. **Prose-edit self-sweep — silent, same turn.** When every file in
     your task's `Files touched` is `.md` authored prose (the same
-    precondition family as `Review-weight: prose`), run this sweep
+    precondition family as `Review-weight: prose` — both fields are
+    defined in
+    [plan-format.md](../skills/writing-plans/references/plan-format.md)'s
+    `Files touched` and `Review-weight` sections; your dispatch's plan
+    is where they're actually set for this task), run this sweep
     silently in the same generation before returning — no checklist
     output, no tick marks, no self-score, no PASS claim:
-    - (a) grep restatements of every changed claim across the repo —
-      same-file preamble, frontmatter description, index line,
-      CHANGELOG, sibling docs — and update or delete each copy.
+    - (a) grep the exact key phrases/strings of each changed claim,
+      scoped to this task's own file plus its declared sibling docs
+      (the exemplar list: same-file preamble, frontmatter description,
+      index line, CHANGELOG, sibling docs) — never the whole repo —
+      and update or delete each copy found.
     - (b) for every sentence asserting your own work ("verified",
       "swept all N", "unchanged", "tests pass"), re-run the deciding
       command now, or rewrite the sentence as "not verified". Never
       fabricate evidence to satisfy this action — an unverifiable
       claim becomes a labelled assumption instead.
-    - (c) walk the doc's own reading path once from the top; move any
-      new text a reader is told to skip before reaching it.
+    - (c) walk the doc's own reading path once from the top; if any
+      new text landed inside a section the doc's own instructions
+      tell readers to skip, move it out.
     - (d) confirm every agent-facing instruction names a field, verb,
       or file that exists in its target schema or tool, else rewrite it.
     - (e) every `N/A` entry carries a reason; leave unresolved items
