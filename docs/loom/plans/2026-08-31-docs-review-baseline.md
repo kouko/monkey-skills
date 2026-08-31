@@ -104,7 +104,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-101
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(01e57790f383eec56ccf0a30ceacc6f416d9136c)
+- **Status**: pending
 - **Gloss**: 每次弱模型重跑都面對同一份不會漂移的考卷。
 
 ## Task 5 — 綁定弱模型 execution profile
