@@ -112,8 +112,10 @@ Dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-documen
 complete acyclic Task DAG, including each Task's requirement traceability,
 RED/GREEN acceptance, module, files, dependencies, and review lane. Only after
 that graph is complete, derive review dispositions without merging or enlarging
-Tasks. Every Task declares exactly one `Review disposition`: `individual` or
-`batch(<id>)`.
+Tasks, starting from the proposal printed by
+`python3 loom-code/scripts/propose_review_batches.py <plan-path>` (edge rule
+and cap: `references/plan-format.md` §Review Batches). Every Task declares exactly one
+`Review disposition`: `individual` or `batch(<id>)`.
 
 A Review Batch is eligible only when all members share the same review lane, one
 end-to-end verdict question, and the same closable review window. A user
@@ -159,7 +161,10 @@ plan may instead declare that section's reasoned exemption.
 authored and the second-pass dispositions are derived, run
 `python3 loom-code/scripts/check_review_batches.py <plan-path>` before review.
 This mandatory schema oracle must exit 0; otherwise assign uncertain groups to
-individual review or repair the closed Batch metadata, then rerun it.
+individual review or repair the closed Batch metadata, then rerun it. Then run
+`python3 loom-code/scripts/propose_review_batches.py --check <plan-path>`; each
+printed line is a deviation from the proposal missing its reason line — add the
+line or adopt the proposal, then rerun.
 
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Before that re-dispatch, re-run the **Pre-patch before dispatch** self-screen on the revision delta itself — every line the fix added or changed — because three consecutive arcs' round-2 findings were defects the round-2 revision itself introduced. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
