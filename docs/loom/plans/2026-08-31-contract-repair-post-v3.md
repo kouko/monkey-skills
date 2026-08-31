@@ -7,7 +7,7 @@ Goal: Repair the defects #765/#766 introduced without reverting either —
     batch-review adapter entrypoint — serves map family-relocation: its live
     tickets and map are the repaired artifacts (R5)
 Stage: sdd:wave-1
-Total tasks: 17
+Total tasks: 19
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-08-31, round 3; R11 amendment PASS round 2)
@@ -29,6 +29,8 @@ T1 --> T12
 T8 --> T10
 T14[T14 referent grammar] --> T17[T17 pilot] --> T13
 T15[T15 plan_card 40-hex] --> T16[T16 ledger write-back] --> T17
+T16 --> T18[T18 adapter hardening] --> T13
+T19[T19 hygiene sweep] --> T13
 T8 --> T16
 T9 --> T16
 T5 --> T17
@@ -118,7 +120,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Brief item covered**: "R3 (b) the user-ratified: line validator rejects empty
     values"
 - **Review disposition**: batch(map-side-invariants)
-- **Status**: implemented(164e04fb2a59024e37ce9be7438bd2bae95e48e4)
+- **Status**: done(b9e791b08c7b487080da3eda494223334c78949e)
 - **Gloss**: 批准行不可再被空殼矇混。
 
 ## Task 4 — DA evidence must be a resolvable pointer (R3c)
@@ -137,7 +139,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     pointer (existing commit SHA / PR number / artifact path — non-empty string
     no longer suffices)"
 - **Review disposition**: batch(map-side-invariants)
-- **Status**: pending
+- **Status**: done(ab217ef093f2d3c7e04d8abb95eea3bb27ce98ae)
 - **Gloss**: 驗收證據必須真的查得到，不是一句話。
 
 ## Task 5 — Migration manifest for nonterminal tickets (R4)
@@ -159,7 +161,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     via an explicit classification manifest (ticket slug → target type,
     authored at migration time) instead of demanding closure evidence"
 - **Review disposition**: batch(map-side-invariants)
-- **Status**: pending
+- **Status**: done(401d8731fe84ef85cb574c724c30ddfdfcab76fb)
 - **Gloss**: 讓遷移器真的能遷移自家的活票。
 
 ## Task 6 — Cross-store boundary restored (R6)
@@ -205,7 +207,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     Acceptance entries … the two live tickets migrate under R4's manifest; the
     retired relay remnant … is rewritten to direct-execution semantics"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(1ec9ce3a410bbf31e1ea84af98559f866e376c48)
 - **Gloss**: 修復唯一活著的 map，讓它在新不變量下合法。
 
 ## Task 8 — Batch review adapter subcommands (R7)
@@ -233,7 +235,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     as the executable call contract in subagent-driven-development SKILL.md's
     batch checkpoint"
 - **Review disposition**: batch(adapter-cli)
-- **Status**: implemented(915071604d1b3affa729a6973324858d8a6f6252)
+- **Status**: done(ef51a81c9120142d85369592e3937516588e123c)
 - **Gloss**: 給 batch review 一條不用 agent 自行拼裝的可執行路徑。
 
 ## Task 9 — Dispatch receipt idempotency + readiness rules (R8)
@@ -257,7 +259,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     the dispatch receipt — re-entry refuses a second dispatch … Multi-batch
     readiness is operationalized inside the ready subcommand"
 - **Review disposition**: batch(adapter-cli)
-- **Status**: implemented(465c5a06d84c9b4e74b3b76f028194c305bfdf0f)
+- **Status**: done(ef51a81c9120142d85369592e3937516588e123c)
 - **Gloss**: crash 後不再重派 reviewer；多批交錯有明確 ready 判準。
 
 ## Task 10 — Whole-branch entry disambiguation (R9)
@@ -331,7 +333,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Acceptance**:
   - **RED**: `python3 scripts/check_version_bump.py --base origin/main --head HEAD` exits non-zero at task start — Tasks 1–12 changed skill content while plugin.json versions stay at the pre-arc values (it exits 0 today because no skill content changed yet on this branch).
   - **GREEN**: both plugin.json versions bumped; CHANGELOGs carry dated entries; sync script exits 0; grep shows no stale version string in README version tables.
-- **Dependencies**: Tasks 1, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17 complete first
+- **Dependencies**: Tasks 1, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19 complete first
 - **Seam**:
   - from Task 1: payload: none
   - from Task 6: payload: none
@@ -344,6 +346,8 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
   - from Task 15: payload: none
   - from Task 16: payload: none
   - from Task 17: payload: none
+  - from Task 18: payload: none
+  - from Task 19: payload: none
 - **Independent**: false
 - **Brief item covered**: "Execution order 6: Version bumps: loom-workflow +
     loom-code (skill/scripts content changed in both; codex mirror manifests
@@ -370,7 +374,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     non-empty is the only requirement — in both check_review_batches.py and
     review_batch.py's projection validator"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(881da48ba4fab9b7b0ecf2265c15ea907f65f2ac)
 - **Gloss**: 讓引 brief 原句的 plan 也能發出 sealed Packet。
 
 ## Task 15 — plan_card writes 40-hex SHAs by construction (R11b)
@@ -390,7 +394,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     implemented(<short>)/done(<short>) to the 40-hex form via git rev-parse at
     write time"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(45a495fd8ad02594e6026e1070e715d22ce656d5)
 - **Gloss**: ledger 一寫進去就是 CLI 認得的完整 SHA，不用人手展開。
 
 ## Task 16 — apply-result writes the ledger; plan_card single-sourced (R11c)
@@ -421,7 +425,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     repo-root scripts/plan_card.py stays the exec shim onto
     loom-code/scripts/plan_card.py it already is … pinned by a test"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: implemented(e3becda489a3cd949b0a54ef797b36e37d2111fb)
 - **Gloss**: 審完自動翻 ledger；repo-root plan_card 釘死為 shim。
 
 ## Task 17 — Pilot: this arc's map-side batch through the CLI (R11d)
@@ -448,6 +452,52 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Status**: pending
 - **Gloss**: 用本弧自己的批次真跑一遍，證明省成本的路走得通。
 
+## Task 18 — Adapter hardening: batch_id-keyed refusal, reopen recovery, identity anchor (R12a)
+- **Description**: batch_review_cli.py refuses re-dispatch by batch_id across the receipt directory, recovers a reopen-path crash symmetrically with finalize, anchors repository identity on the member sha, and folds the triplicated timeout wrapper and the per-member status re-parse into one each.
+- **Module**: loom-code/scripts/batch_review_cli.py
+- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py
+- **Context paths**:
+  - loom-code/scripts/batch_review_cli.py (`_cmd_record_dispatch`, `_recover_settled_receipt`, `_repository_identity`, `_run_git`)
+- **Acceptance**:
+  - **RED**: new tests — record-dispatch with a different `--out` while an unapplied receipt for the same batch sits in that directory succeeds today; a reopen crash (owners pending, receipt unapplied) is not recoverable today; repository identity differs when HEAD moves to a second-root branch today.
+  - **GREEN**: same-batch refusal fires regardless of `--out` name; reopen crash recovers idempotently (owners `pending`, non-owners still `implemented(<sha>)` matching the packet); identity is stable under HEAD movement; existing 27 CLI tests green.
+    - One timeout wrapper helper; `_member_statuses` called once per build.
+- **External surfaces**: git via subprocess (grounded in the file's existing cites).
+- **Dependencies**: Task 16 completes first
+- **Seam**:
+  - from Task 16: payload: none
+- **Independent**: false
+- **Brief item covered**: "R12 (a) Adapter hardening in batch_review_cli.py: dispatch-receipt
+    refusal keyed on batch_id … reopen-path crash recovery symmetric with
+    finalize … _repository_identity anchored on the member sha … one shared
+    TimeoutExpired→PacketRefused wrapper; _member_statuses computed once"
+- **Review disposition**: individual
+- **Status**: pending
+- **Gloss**: 把審查抓到的 adapter 殘缺一次補齊，讓冪等保護與崩潰恢復在兩條路徑上對稱。
+
+## Task 19 — Hygiene sweep from per-task review notes (R12b)
+- **Description**: Land the five small review notes: bare-`ratified` test case, DA artifact-path symlink-escape test, plan_card passthrough file-content assertion, governance test trailing newline + shared extractor, decision-map SKILL.md "Read all three" wording.
+- **Module**: loom-code/scripts (tests) + one SKILL.md sentence
+- **Files touched**: loom-code/scripts/test_check_proposal_status.py, loom-workflow/skills/decision-map/scripts/test_map_store.py, loom-code/scripts/test_plan_card.py, loom-workflow/skills/decision-map/scripts/test_governance_ratification.py, loom-workflow/skills/decision-map/SKILL.md
+- **Context paths**:
+  - loom-code/scripts/check_proposal_status.py
+  - loom-workflow/skills/decision-map/scripts/map_store.py (`_da_evidence_is_resolvable`)
+- **Acceptance**:
+  - **RED**: `Status: ratified` (no name/date) has no parametrized case today; no test drives a symlinked artifact path through `_da_evidence_is_resolvable`.
+    - `test_set_status_full_forty_hex_sha_passes_through_unchanged` asserts stdout only; test_governance_ratification.py lacks a trailing newline and duplicates the Decision-Log extraction; SKILL.md says "Read all three" while naming two files.
+  - **GREEN**: each case added and green; SKILL.md sentence names the two files and the boundary section; both package suites green; `check_contract_citations.py --repo-root .` exit 0.
+- **Dependencies**: none
+- **Seam**: payload: none
+- **Independent**: true
+- **Brief item covered**: "R12 (b) Hygiene sweep: bare Status: ratified … symlink-escape test …
+    plan_card 40-hex passthrough test asserts file content …
+    test_governance_ratification trailing newline + shared Decision-Log
+    extractor; decision-map SKILL.md Read all three → names the two files and
+    the boundary section"
+- **Review disposition**: individual
+- **Status**: pending
+- **Gloss**: 把每個任務審查留下的小備註一次掃乾淨，不留給下一弧。
+
 ## Review Batches
 
 ### Review Batch: map-side-invariants
@@ -472,3 +522,8 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - Second seam found on the same run: `batch_review_cli.py:66` `_IMPLEMENTED` demands a 40-hex SHA while `plan_card.py --set-status` accepts short SHAs — ledger values were expanded to full SHAs by the orchestrator.
 - Superseded 2026-08-31 by brief R11 (kouko: "做吧") — Tasks 14–17 fix the three seams and re-run the map-side batch through the CLI as the pilot; `adapter-cli` stays on individual fallback (its members are the CLI under repair).
 - Decision (original): `adapter-cli` and `map-side-invariants` both take `individual_fallback` (zero Batch ledger mutation; per-task triads). Not fixed here — widening the projection's referent grammar is a change to #766's contract, out of this brief's scope. Filed as follow-up debt in the final summary.
+
+### DL-2 — Task 7's migration leg is moot; DA + relay rewrite remain (2026-08-31, SDD wave 3)
+- Class: implementation-discovered stated-fact drift, below kickoff threshold (no product consequence; scope shrinks).
+- Fact (Task 5 spec-reviewer, verified by the orchestrator): docs/loom/maps/family-relocation/MAP.md is already `schema_version: 3` and every ticket carries a v3 type (task-inventory-consumers = research/claimed, task-relocate-family-hooks = delivery/open) — #765 shipped them migrated. `preview_migration` short-circuits on already-applied maps, so R5's "the two live tickets migrate under R4's manifest" has nothing to act on.
+- Decision: Task 7 delivers the two live defects that remain — zero DA entries on an active map (validate exit 2 today) and the retired relay sentence in task-inventory-consumers.md. R4's manifest path stays shipped and tested (Task 5) for the next v2 map. Task 7's RED/GREEN as written still hold (validate fails today → passes; relay grep empty).
