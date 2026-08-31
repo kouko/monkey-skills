@@ -138,6 +138,7 @@ state: active
 
 Preserve immutable delivery history.
 user-ratified: kouko, 2026-08-30
+- DA-1: Delivery history stays intact | state: open | kind: objective
 
 ## Notes
 

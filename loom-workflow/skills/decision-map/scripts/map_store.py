@@ -1233,6 +1233,12 @@ def _check_destination_acceptance(doc: MapDocument) -> None:
         raise SchemaViolation(
             "schema-v3 Destination acceptance requires stable DA-<n> entries"
         )
+    if doc.frontmatter.state == "active" and not doc.destination_acceptance:
+        raise SchemaViolation(
+            f"{doc.path}: activation requires a Destination acceptance "
+            "criterion (map-format.md §Frontmatter and lifecycle); "
+            "add at least one DA-<n> entry before state: active"
+        )
     seen: set[str] = set()
     previous = 0
     for criterion in doc.destination_acceptance:

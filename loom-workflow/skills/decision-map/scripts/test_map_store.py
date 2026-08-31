@@ -492,7 +492,8 @@ def _make_v3_active_map(tmp_path: Path) -> Path:
         .replace(
             "Chart the decision-map layer.",
             "Chart the decision-map layer.\n\n"
-            "user-ratified: kouko, 2026-08-30",
+            "user-ratified: kouko, 2026-08-30\n"
+            "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
         ),
         encoding="utf-8",
     )
@@ -532,10 +533,9 @@ def test_clear_history_is_immutable_and_active_regression_is_followup(
         map_md.read_text(encoding="utf-8")
         .replace("state: active", "state: clear")
         .replace(
-            "user-ratified: kouko, 2026-08-30",
-            "user-ratified: kouko, 2026-08-30\n"
-            "- DA-1: Supported inputs parse | state: satisfied | "
-            "kind: objective | evidence: docs/loom/results/parser.md",
+            "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
+            "- DA-1: Parser delivered | state: satisfied | kind: objective | "
+            "evidence: docs/loom/results/parser.md",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", "")
     )
@@ -736,8 +736,7 @@ def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) ->
         map_path.read_text(encoding="utf-8")
         .replace("state: active", "state: clear")
         .replace(
-            "user-ratified: kouko, 2026-08-30",
-            "user-ratified: kouko, 2026-08-30\n"
+            "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
             "- DA-1: Parser delivered | state: satisfied | kind: objective | "
             "evidence: docs/loom/results/parser.md",
         )
@@ -787,8 +786,7 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
         map_path.read_text(encoding="utf-8")
         .replace("state: active", "state: clear")
         .replace(
-            "user-ratified: kouko, 2026-08-30",
-            "user-ratified: kouko, 2026-08-30\n"
+            "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
             "- DA-1: Parser delivered | state: satisfied | kind: objective | "
             "evidence: docs/loom/results/parser.md",
         )
@@ -1623,7 +1621,9 @@ def test_validate_accepts_active_map_with_destination_ratification(
         .replace("state: charting", "state: active")
         .replace(
             "Chart the decision-map layer.",
-            "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29",
+            "Chart the decision-map layer.\n\n"
+            "user-ratified: kouko, 2026-08-29\n"
+            "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
         ),
         encoding="utf-8",
     )
@@ -1684,8 +1684,8 @@ def test_da_ids_states_evidence_and_evaluative_ratification(tmp_path: Path) -> N
     )
     map_path.write_text(
         map_path.read_text(encoding="utf-8").replace(
-            "user-ratified: kouko, 2026-08-30",
-            "user-ratified: kouko, 2026-08-30\n" + destination,
+            "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
+            destination,
         ),
         encoding="utf-8",
     )
@@ -1769,8 +1769,7 @@ def test_v3_monotonic_ids_and_exactly_one_closed_ticket_gist(
     map_path.write_text(
         map_path.read_text(encoding="utf-8")
         .replace(
-            "user-ratified: kouko, 2026-08-30",
-            "user-ratified: kouko, 2026-08-30\n"
+            "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
             "- DA-3: Parser remains reliable | state: open | kind: objective",
         )
         .replace(
@@ -1901,3 +1900,27 @@ def test_blockers_reject_cross_map_self_duplicate_cycle_and_early_claim(
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 0, message
     assert closed.is_file()
+
+
+def test_validate_rejects_active_map_without_destination_acceptance(
+    tmp_path: Path,
+) -> None:
+    """map-format.md §Frontmatter and lifecycle: activation requires a
+    ratified Destination — and since v3 that ratification must include
+    at least one Destination acceptance entry. An active map with zero
+    DA entries is exit 2, naming the map and the missing requirement."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8")
+        .replace("state: charting", "state: active")
+        .replace(
+            "Chart the decision-map layer.",
+            "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "wayfinder" in message
+    assert "Destination acceptance" in message
