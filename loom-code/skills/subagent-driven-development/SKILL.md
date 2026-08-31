@@ -214,6 +214,18 @@ mutation; use the existing verification recovery path. Read
 [`references/conditional-operations.md`](references/conditional-operations.md)
 §Batch review and individual fallback for the ordered fail-closed sequence.
 
+The executable form of that sequence is the adapter CLI
+`python3 loom-code/scripts/batch_review_cli.py` with its four subcommands:
+`ready` (checker-gated batch readiness), `packet` (materialize the sealed
+`ReviewPacket`; refuses unless `check_review_batches.py` exits 0 on the plan),
+`record-dispatch` (write the reviewer dispatch receipt), and `apply-result`
+(feed the terminal verdicts through `resolve_aggregate_review`). Use it instead
+of hand-assembling `review_batch.py` library calls; its call contract is
+`ready --plan <p> [--batch <id>]`, `packet --plan <p> --repo-root <r>
+--verification-receipt <resolver json>`, `record-dispatch --packet-file <json>
+--out <json>`, and `apply-result --plan <p> --repo-root <r>
+--verification-receipt <json> --result-file <json>`.
+
 Dispatch one reviewer fan-out for the whole Batch, never one fan-out per
 member. The full lane uses spec-reviewer plus code-quality-reviewer. The prose
 lane uses the existing record-class narrowing: spec-reviewer alone for an

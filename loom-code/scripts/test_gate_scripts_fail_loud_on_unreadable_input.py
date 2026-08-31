@@ -120,6 +120,9 @@ EXEMPT = {
     "task_batch_replay.py": "compares three explicitly named replay JSON "
                             "inputs, not a backlog store or handoff brief; "
                             "its own CLI test pins unreadable-input handling",
+    "batch_review_cli.py": "adapts explicitly named plan/receipt/result "
+                           "files, not a backlog store or handoff brief; "
+                           "its own CLI test pins unreadable-input handling",
     "review_context.py": "resolves a review packet from local git and plugin files",
     "review_scope.py": "resolves a review's changed-file set from git",
     "live_gate_station_receipt.py": "writes a live-gate receipt; its own atomic "
