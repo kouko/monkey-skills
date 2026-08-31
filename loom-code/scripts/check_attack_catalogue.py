@@ -40,8 +40,11 @@ Exit codes:
                        `test_*.py` under --repo (module-level or a
                        class-body method, resolved by parsing the AST —
                        a `def` sitting inside a docstring or comment
-                       never counts), nor a name inside a `.sh` file
-                       under a `tests/` directory
+                       never counts), nor a name on a real command line
+                       in a `.sh` file under a `tests/` directory (a
+                       `.sh` line is comment-stripped first — a name
+                       appearing only after `#`, or on a line whose
+                       first non-space character is `#`, never counts)
         undated     — a `held` entry has no date
         unguarded   — `## Guarded paths` is empty or absent
         incomplete  — any of the three sections is missing
@@ -258,6 +261,21 @@ def _defined_function_names(path: Path) -> set[str]:
     return names
 
 
+def _strip_sh_comments(text: str) -> str:
+    """A simple line-based comment strip for a `.sh` file: a line whose
+    first non-space character is `#` is dropped entirely, and the `#…`
+    tail of any other line is dropped too. Not a shell parser — it does
+    not know about `#` inside a quoted string — but good enough to keep
+    a name that appears only in a comment from grounding a `pinned by`
+    claim, which is the only thing this search needs."""
+    kept_lines = []
+    for line in text.splitlines():
+        if line.strip().startswith("#"):
+            continue
+        kept_lines.append(line.split("#", 1)[0])
+    return "\n".join(kept_lines)
+
+
 def _test_name_defined_under_repo(name: str, repo: Path) -> bool:
     for path in repo.rglob("test_*.py"):
         if name in _defined_function_names(path):
@@ -271,7 +289,7 @@ def _test_name_defined_under_repo(name: str, repo: Path) -> bool:
                 text = sh_path.read_text(encoding="utf-8")
             except (OSError, UnicodeDecodeError):
                 continue
-            if re.search(rf"\b{re.escape(name)}\b", text):
+            if re.search(rf"\b{re.escape(name)}\b", _strip_sh_comments(text)):
                 return True
 
     return False

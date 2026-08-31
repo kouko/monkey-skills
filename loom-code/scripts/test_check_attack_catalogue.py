@@ -194,6 +194,57 @@ def test_checker_accepts_test_name_inside_sh_under_tests_dir(tmp_path):
     assert result.returncode == 0, result.stderr
 
 
+def test_checker_refuses_test_name_that_appears_only_in_a_sh_comment(tmp_path):
+    repo = tmp_path / "repo"
+    tests_dir = repo / "tests"
+    tests_dir.mkdir(parents=True)
+    (tests_dir / "run.sh").write_text(
+        "#!/bin/sh\n"
+        "# run_case test_commented_only_case is not really invoked\n"
+        "run_case test_shell_pinned_case  # test_commented_only_case\n",
+        encoding="utf-8",
+    )
+    store = tmp_path / "ATTACK-CATALOGUE.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2026-08-31 — pinned by test_commented_only_case\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0
+    assert "dangling" in result.stderr
+    assert "test_commented_only_case" in result.stderr
+
+
+def test_checker_treats_names_in_an_unparsable_test_file_as_dangling(tmp_path):
+    repo = tmp_path / "repo"
+    tests_dir = repo / "tests_fixture"
+    tests_dir.mkdir(parents=True)
+    (tests_dir / "test_x.py").write_text(
+        "def test_broken_syntax(:\n"  # SyntaxError: unparsable
+        "    pass\n",
+        encoding="utf-8",
+    )
+    store = tmp_path / "ATTACK-CATALOGUE.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2026-08-31 — pinned by test_broken_syntax\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0
+    assert "dangling" in result.stderr
+    assert "test_broken_syntax" in result.stderr
+
+
 def test_checker_refuses_undated_held_entry(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
