@@ -14,6 +14,10 @@
 
 - test_req_103_attempt_ledger_preserves_failures
 
+### REQ-104
+
+- test_req_104_observation_and_attribution_are_separate
+
 ### REQ-99
 
 - test_req_99_historical_case_admission
@@ -445,7 +449,6 @@
 ### reqs with no tests
 
 - REQ-102
-- REQ-104
 - REQ-105
 - REQ-106
 - REQ-107

@@ -340,6 +340,147 @@ def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
         )
 
 
+def test_req_104_observation_and_attribution_are_separate(tmp_path) -> None:
+    # @req: REQ-104
+    """Model claims stay lossless; only named humans ratify judgments."""
+    attempt = store.prepare_dispatch_attempt(
+        tmp_path,
+        "attempt-observation-1",
+        sequence=1,
+        profile_id="codex:gpt-5.6-luna:economy",
+        corpus_id="corpus-abc",
+        case_id="case-1",
+    )
+    outcome = store.record_dispatch_outcome(
+        tmp_path,
+        attempt.record_id,
+        outcome="success",
+        raw_response_bytes=b'{"finding":"Missing bounded rollout","severity":"high"}',
+        resource_telemetry={"dispatches": 1},
+    )
+    observation = store.capture_finding_observation(
+        tmp_path,
+        "observation-1",
+        outcome_record_id=outcome.record_id,
+        finding_identity="finding:missing-bounded-rollout",
+        raw_span=b'Missing bounded rollout',
+        payload_hash="b" * 64,
+        wording="Missing bounded rollout",
+        location="docs/strategy.md#rollout",
+        severity="high",
+        reviewer_verdict="must_fix",
+    )
+    observation_bytes = observation.path.read_bytes()
+
+    assert observation.record == {
+        "finding_identity": "finding:missing-bounded-rollout",
+        "kind": "finding_observation",
+        "location": "docs/strategy.md#rollout",
+        "attempt_digest": attempt.digest,
+        "attempt_record_id": attempt.record_id,
+        "outcome_digest": outcome.digest,
+        "outcome_record_id": outcome.record_id,
+        "payload_hash": "b" * 64,
+        "raw_span": {
+            "bytes_base64": "TWlzc2luZyBib3VuZGVkIHJvbGxvdXQ=",
+            "digest": "43eb032f346b33891a7fdd7e037e91bc65a2b1f82d9059ddb2c8fe33a6a6cd9f",
+        },
+        "reviewer_verdict": "must_fix",
+        "schema_version": 1,
+        "severity": "high",
+        "wording": "Missing bounded rollout",
+    }
+    assert "human_verdict" not in observation.record
+
+    corrected_observation = store.correct_finding_observation(
+        tmp_path,
+        observation.record_id,
+        finding_identity="finding:missing-bounded-rollout",
+        raw_span=b'Missing bounded rollout',
+        payload_hash="c" * 64,
+        wording="Missing bounded rollout",
+        location="docs/strategy.md#bounded-rollout",
+        severity="high",
+        reviewer_verdict="must_fix",
+        reason="The parser selected the containing section instead of the line.",
+    )
+    assert corrected_observation.record["parent_observation_id"] == observation.record_id
+    assert corrected_observation.record["parent_digest"] == observation.digest
+    assert corrected_observation.record["attempt_record_id"] == attempt.record_id
+    assert corrected_observation.record["outcome_record_id"] == outcome.record_id
+    assert observation.path.read_bytes() == observation_bytes
+
+    unknown = store.ratify_attribution(
+        tmp_path,
+        "attribution-observation-1-r1",
+        observation_id=observation.record_id,
+        oracle_revision_id="oracle-case-1-r1",
+        oracle_matches=[],
+        human_verdict="unknown",
+        defect_origin="unknown",
+        rationale="The historical evidence is insufficient to adjudicate it.",
+        dispute_evidence=[],
+        ratifier="maintainer:kuku",
+    )
+    assert unknown.record["human_verdict"] == "unknown"
+    assert unknown.record["observation_digest"] == observation.digest
+    assert unknown.record["status"] == "ratified"
+    assert unknown.record["ratifier"] == "maintainer:kuku"
+    assert unknown.record["oracle_matches"] == []
+    assert unknown.record["excluded_from_false_alarm_denominator"] is True
+
+    corrected = store.correct_attribution(
+        tmp_path,
+        unknown.record_id,
+        oracle_matches=["oracle-finding:missing-risk"],
+        human_verdict="true_positive",
+        defect_origin="initial_writing",
+        rationale="The located claim matches the ratified expected finding.",
+        dispute_evidence=[],
+        reason="The missing historical review comment was recovered.",
+        ratifier="human:second-rater",
+    )
+    assert corrected.record["parent_revision_id"] == unknown.record_id
+    assert corrected.record["parent_digest"] == unknown.digest
+    assert corrected.record["observation_id"] == observation.record_id
+    assert corrected.record["observation_digest"] == observation.digest
+    assert corrected.record["human_verdict"] == "true_positive"
+    assert corrected.record["excluded_from_false_alarm_denominator"] is False
+    assert observation.path.read_bytes() == observation_bytes
+    assert read_record(tmp_path, unknown.record_id) == unknown
+
+    with pytest.raises(ValueError, match="human ratifier"):
+        store.ratify_attribution(
+            tmp_path,
+            "attribution-model-self-rating",
+            observation_id=observation.record_id,
+            oracle_revision_id="oracle-case-1-r1",
+            oracle_matches=[],
+            human_verdict="false_positive",
+            defect_origin="unknown",
+            rationale="The model tried to grade its own finding.",
+            dispute_evidence=[],
+            ratifier="model:gpt-5.6-luna",
+        )
+
+    disputed = store.ratify_attribution(
+        tmp_path,
+        "attribution-observation-1-disputed",
+        observation_id=observation.record_id,
+        oracle_revision_id="oracle-case-1-r1",
+        oracle_matches=[],
+        human_verdict="disputed",
+        defect_origin="unknown",
+        rationale="Two human interpretations conflict.",
+        dispute_evidence=["review-note:first-rater", "review-note:second-rater"],
+        ratifier="human:tie-breaker",
+    )
+    assert disputed.record["excluded_from_false_alarm_denominator"] is True
+    assert disputed.record["dispute_evidence"] == [
+        "review-note:first-rater",
+        "review-note:second-rater",
+    ]
+
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
     """A record ID chooses one canonical payload without rewriting history."""
     first = {"kind": "oracle", "labels": ["a"], "version": 1}

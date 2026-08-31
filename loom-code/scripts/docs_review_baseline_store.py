@@ -417,6 +417,19 @@ _DISPATCH_OUTCOMES = {
     "quota_exhaustion",
 }
 
+_HUMAN_VERDICTS = {
+    "true_positive",
+    "false_positive",
+    "duplicate",
+    "new_defect",
+    "oracle_escape",
+    "unscorable",
+    "unknown",
+    "disputed",
+}
+
+_DEFECT_ORIGINS = {"initial_writing", "fix_introduced", "unknown"}
+
 
 def prepare_dispatch_attempt(
     store_root: Path,
@@ -490,6 +503,245 @@ def record_dispatch_outcome(
             "digest": hashlib.sha256(raw_response_bytes).hexdigest(),
         }
     return publish_record(store_root, f"{attempt_id}--outcome", record)
+
+
+def capture_finding_observation(
+    store_root: Path,
+    observation_id: str,
+    *,
+    outcome_record_id: str,
+    finding_identity: str,
+    raw_span: bytes,
+    payload_hash: str,
+    wording: str,
+    location: str,
+    severity: str,
+    reviewer_verdict: str,
+) -> PublishedRecord:
+    """Preserve one reviewer-stated finding without adjudicating its truth."""
+    record = _observation_fields(
+        store_root,
+        outcome_record_id=outcome_record_id,
+        finding_identity=finding_identity,
+        raw_span=raw_span,
+        payload_hash=payload_hash,
+        wording=wording,
+        location=location,
+        severity=severity,
+        reviewer_verdict=reviewer_verdict,
+    )
+    return publish_record(store_root, observation_id, record)
+
+
+def _observation_fields(
+    store_root: Path,
+    *,
+    outcome_record_id: str,
+    finding_identity: str,
+    raw_span: bytes,
+    payload_hash: str,
+    wording: str,
+    location: str,
+    severity: str,
+    reviewer_verdict: str,
+) -> dict[str, object]:
+    outcome = read_record(store_root, outcome_record_id)
+    if outcome.record.get("kind") != "dispatch_outcome":
+        raise ValueError("observation parent must be a dispatch outcome")
+    attempt_record_id = _required_text(
+        outcome.record.get("parent_attempt_id"), "parent_attempt_id"
+    )
+    attempt = read_record(store_root, attempt_record_id)
+    if outcome.record.get("parent_digest") != attempt.digest:
+        raise ValueError("dispatch outcome does not match its attempt parent")
+    raw_response = outcome.record.get("raw_response")
+    if not isinstance(raw_response, Mapping):
+        raise ValueError("observation parent must retain raw response bytes")
+    if not isinstance(raw_span, bytes) or not raw_span:
+        raise ValueError("raw_span must be non-empty bytes")
+    try:
+        response_bytes = base64.b64decode(
+            _required_text(raw_response.get("bytes_base64"), "raw response bytes"),
+            validate=True,
+        )
+    except ValueError as error:
+        raise ValueError("observation parent raw response is invalid") from error
+    if raw_span not in response_bytes:
+        raise ValueError("raw_span must occur in the parent raw response")
+    payload_hash = _required_text(payload_hash, "payload_hash")
+    if re.fullmatch(r"[0-9a-f]{64}", payload_hash) is None:
+        raise ValueError("payload_hash must be a lowercase SHA-256 digest")
+    record: dict[str, object] = {
+        "attempt_digest": attempt.digest,
+        "attempt_record_id": attempt.record_id,
+        "finding_identity": _required_text(finding_identity, "finding_identity"),
+        "kind": "finding_observation",
+        "location": _required_text(location, "location"),
+        "outcome_digest": outcome.digest,
+        "outcome_record_id": outcome_record_id,
+        "payload_hash": payload_hash,
+        "raw_span": {
+            "bytes_base64": base64.b64encode(raw_span).decode("ascii"),
+            "digest": hashlib.sha256(raw_span).hexdigest(),
+        },
+        "reviewer_verdict": _required_text(reviewer_verdict, "reviewer_verdict"),
+        "schema_version": 1,
+        "severity": _required_text(severity, "severity"),
+        "wording": _required_text(wording, "wording"),
+    }
+    return record
+
+
+def correct_finding_observation(
+    store_root: Path,
+    parent_observation_id: str,
+    *,
+    finding_identity: str,
+    raw_span: bytes,
+    payload_hash: str,
+    wording: str,
+    location: str,
+    severity: str,
+    reviewer_verdict: str,
+    reason: str,
+) -> PublishedRecord:
+    """Preserve a parser correction as a child observation revision."""
+    parent = read_record(store_root, parent_observation_id)
+    if parent.record.get("kind") != "finding_observation":
+        raise ValueError("observation correction parent must be an observation")
+    outcome_record_id = _required_text(
+        parent.record.get("outcome_record_id"), "outcome_record_id"
+    )
+    child = _observation_fields(
+        store_root,
+        outcome_record_id=outcome_record_id,
+        finding_identity=finding_identity,
+        raw_span=raw_span,
+        payload_hash=payload_hash,
+        wording=wording,
+        location=location,
+        severity=severity,
+        reviewer_verdict=reviewer_verdict,
+    )
+    child["correction_reason"] = _required_text(reason, "reason")
+    child["parent_observation_id"] = parent_observation_id
+    return append_revision(store_root, parent_observation_id, child)
+
+
+def _human_ratifier(value: object) -> str:
+    ratifier = _required_text(value, "ratifier")
+    if ratifier.lower().startswith(("model:", "reviewer:", "assistant:")):
+        raise ValueError("human ratifier must not identify a model or reviewer")
+    return ratifier
+
+
+def _attribution_fields(
+    *,
+    observation: PublishedRecord,
+    oracle_revision_id: object,
+    oracle_matches: object,
+    human_verdict: object,
+    defect_origin: object,
+    rationale: object,
+    dispute_evidence: object,
+    ratifier: object,
+) -> dict[str, object]:
+    if not isinstance(oracle_matches, list) or any(
+        not isinstance(match, str) or not match.strip() for match in oracle_matches
+    ):
+        raise ValueError("oracle_matches must be a list of non-empty strings")
+    if not isinstance(dispute_evidence, list) or any(
+        not isinstance(item, str) or not item.strip() for item in dispute_evidence
+    ):
+        raise ValueError("dispute_evidence must be a list of non-empty strings")
+    verdict = _required_text(human_verdict, "human_verdict")
+    if verdict not in _HUMAN_VERDICTS:
+        raise ValueError(f"unsupported human_verdict: {verdict!r}")
+    origin = _required_text(defect_origin, "defect_origin")
+    if origin not in _DEFECT_ORIGINS:
+        raise ValueError(f"unsupported defect_origin: {origin!r}")
+    if verdict == "disputed" and not dispute_evidence:
+        raise ValueError("disputed attribution requires dispute_evidence")
+    return {
+        "defect_origin": origin,
+        "dispute_evidence": list(dispute_evidence),
+        "excluded_from_false_alarm_denominator": verdict in {"unknown", "disputed"},
+        "human_verdict": verdict,
+        "kind": "attribution_revision",
+        "observation_digest": observation.digest,
+        "observation_id": observation.record_id,
+        "oracle_matches": list(oracle_matches),
+        "oracle_revision_id": _required_text(oracle_revision_id, "oracle_revision_id"),
+        "ratifier": _human_ratifier(ratifier),
+        "rationale": _required_text(rationale, "rationale"),
+        "schema_version": 1,
+        "status": "ratified",
+    }
+
+
+def ratify_attribution(
+    store_root: Path,
+    revision_id: str,
+    *,
+    observation_id: str,
+    oracle_revision_id: str,
+    oracle_matches: list[str],
+    human_verdict: str,
+    defect_origin: str,
+    rationale: str,
+    dispute_evidence: list[str],
+    ratifier: str,
+) -> PublishedRecord:
+    """Freeze a named human judgment separately from model observations."""
+    observation = read_record(store_root, observation_id)
+    if observation.record.get("kind") != "finding_observation":
+        raise ValueError("attribution target must be a finding observation")
+    record = _attribution_fields(
+        observation=observation,
+        oracle_revision_id=oracle_revision_id,
+        oracle_matches=oracle_matches,
+        human_verdict=human_verdict,
+        defect_origin=defect_origin,
+        rationale=rationale,
+        dispute_evidence=dispute_evidence,
+        ratifier=ratifier,
+    )
+    return publish_record(store_root, revision_id, record)
+
+
+def correct_attribution(
+    store_root: Path,
+    parent_revision_id: str,
+    *,
+    oracle_matches: list[str],
+    human_verdict: str,
+    defect_origin: str,
+    rationale: str,
+    dispute_evidence: list[str],
+    reason: str,
+    ratifier: str,
+) -> PublishedRecord:
+    """Freeze a reason-bearing attribution child while preserving its parent."""
+    parent = read_record(store_root, parent_revision_id)
+    if parent.record.get("kind") != "attribution_revision" or parent.record.get(
+        "status"
+    ) != "ratified":
+        raise ValueError("attribution correction parent must be ratified")
+    observation_id = _required_text(parent.record.get("observation_id"), "observation_id")
+    observation = read_record(store_root, observation_id)
+    child = _attribution_fields(
+        observation=observation,
+        oracle_revision_id=parent.record.get("oracle_revision_id"),
+        oracle_matches=oracle_matches,
+        human_verdict=human_verdict,
+        defect_origin=defect_origin,
+        rationale=rationale,
+        dispute_evidence=dispute_evidence,
+        ratifier=ratifier,
+    )
+    child["correction_reason"] = _required_text(reason, "reason")
+    child["parent_revision_id"] = parent_revision_id
+    return append_revision(store_root, parent_revision_id, child)
 
 
 def append_revision(
