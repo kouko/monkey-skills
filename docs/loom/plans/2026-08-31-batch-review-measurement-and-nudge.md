@@ -7,7 +7,7 @@ Goal: Every reviewer fan-out leaves a harness-written record, the replay
     say why, and the packet-identity refusal names its cause — serves
     PURPOSE: a cost claim about review cannot ship unverified, and a
     silent conservative default must pay for itself in one sentence
-Stage: review:round-1
+Stage: review:round-2
 Total tasks: 12
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
