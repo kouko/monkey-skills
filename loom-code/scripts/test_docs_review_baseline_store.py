@@ -93,6 +93,10 @@ def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
     assert oracle.record["negative_control_intent"] == (
         "Do not reward generic requests for more detail."
     )
+    assert oracle.record["status"] == "ratified"
+    assert oracle.record["governance_status"] == "unbound"
+    assert oracle.record["eligible_for_official_metrics"] is False
+    assert "authority_revision_id" not in oracle.record
     assert oracle.digest == record_digest(oracle.record)
     with pytest.raises(RecordConflictError):
         ratify_oracle(
@@ -131,6 +135,10 @@ def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
     assert correction.record["parent_revision_id"] == oracle.record_id
     assert correction.record["parent_digest"] == oracle.digest
     assert correction.record["correction_reason"]
+    assert correction.record["status"] == "ratified"
+    assert correction.record["governance_status"] == "unbound"
+    assert correction.record["eligible_for_official_metrics"] is False
+    assert "authority_revision_id" not in correction.record
     assert correction.digest != oracle.digest
     assert correction.record_id != oracle.record_id
     assert oracle.path.read_bytes() == frozen_bytes
