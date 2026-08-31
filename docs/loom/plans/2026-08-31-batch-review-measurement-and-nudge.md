@@ -152,7 +152,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(replay-observed)
-- **Status**: pending
+- **Status**: implemented(03ddd0fa129be01fa1ec576852920a37f1033182)
 - **Gloss**: 從紀錄算出派工數、輪數、退回數——數字不再是人打的。
 
 ## Task 6 — compare 拒收 v1 或非 observed 的結果檔
