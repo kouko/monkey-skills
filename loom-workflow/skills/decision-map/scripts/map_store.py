@@ -1236,7 +1236,45 @@ def _check_map_structure(doc: MapDocument) -> None:
         )
 
 
-def _check_destination_acceptance(doc: MapDocument) -> None:
+def _da_evidence_is_resolvable(evidence: str, repo_root: Path | None) -> bool:
+    """A satisfied objective criterion's evidence must be a pointer a
+    reviewer can actually open, per R3c: an existing commit SHA, a
+    well-formed PR reference, or an artifact path that exists inside
+    the repo. A bare non-pointer string ("looks done") is not
+    evidence."""
+    pr_match = _PR_EVIDENCE.fullmatch(evidence)
+    if pr_match is not None:
+        return True
+    commit_match = _COMMIT_EVIDENCE.fullmatch(evidence)
+    if commit_match is not None:
+        sha = evidence.split()[-1]
+        if repo_root is None:
+            return False
+        try:
+            subprocess.run(
+                ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+                cwd=repo_root,
+                capture_output=True,
+                check=True,
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+            return False
+        return True
+    if _ARTIFACT_PATH_EVIDENCE.fullmatch(evidence) is not None:
+        if repo_root is None:
+            return False
+        candidate = (repo_root / evidence).resolve()
+        try:
+            repo_root_resolved = repo_root.resolve()
+        except OSError:
+            return False
+        if repo_root_resolved not in candidate.parents and candidate != repo_root_resolved:
+            return False
+        return candidate.is_file()
+    return False
+
+
+def _check_destination_acceptance(doc: MapDocument, repo_root: Path | None = None) -> None:
     if doc.frontmatter.schema_version != 3:
         return
     if any(
@@ -1276,6 +1314,18 @@ def _check_destination_acceptance(doc: MapDocument) -> None:
         if criterion.state == "satisfied" and criterion.evidence is None:
             raise SchemaViolation(
                 f"satisfied Destination acceptance {criterion.id} requires evidence"
+            )
+        if (
+            criterion.kind == "objective"
+            and criterion.state == "satisfied"
+            and criterion.evidence is not None
+            and not _da_evidence_is_resolvable(criterion.evidence, repo_root)
+        ):
+            raise SchemaViolation(
+                f"satisfied objective Destination acceptance {criterion.id} "
+                "requires a resolvable evidence pointer (existing commit SHA, "
+                "PR reference, or artifact path within the repo), not "
+                f"{criterion.evidence!r}"
             )
         if criterion.kind == "evaluative" and criterion.state == "satisfied":
             if criterion.ratification is None or not _DATED_HUMAN.fullmatch(
@@ -1534,11 +1584,16 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     violation — the exit-code split map-format.md §Command surface
     pins for every checker in the family.
 
-    `repo_root` is accepted for arg-shape parity with the other
-    §Command surface scripts; this function does not use it."""
+    `repo_root` resolves objective Destination acceptance evidence
+    pointers (R3c); when omitted it falls back to `resolve_repo_root`
+    from `target`'s directory, the same precedent every other
+    §Command surface script uses."""
     map_dir = Path(target)
     if not map_dir.is_dir():
         return 1, f"map directory not found: {map_dir}"
+    resolved_repo_root = (
+        Path(repo_root) if repo_root is not None else resolve_repo_root(None, map_dir)
+    )
     try:
         doc = read_map(map_dir)
     except MapStoreError as exc:
@@ -1549,7 +1604,7 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     try:
         _check_schema_version(doc.frontmatter.schema_version)
         _check_map_structure(doc)
-        _check_destination_acceptance(doc)
+        _check_destination_acceptance(doc, resolved_repo_root)
         _check_v3_clear_acceptance(doc)
         _check_tickets(
             map_dir, doc.frontmatter.state, doc.frontmatter.schema_version

@@ -384,7 +384,7 @@ def test_clear_requires_terminal_tickets_empty_fog_and_satisfied_da(
             "Chart the decision-map layer.\n\n"
             "user-ratified: kouko, 2026-08-30\n\n"
             "- DA-1: The parser remains stdlib-only | state: satisfied | "
-            "kind: objective | evidence: docs/loom/results/probe.md",
+            "kind: objective | evidence: PR #123",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", "")
     )
@@ -423,7 +423,7 @@ reason: replaced by narrower work
     assert "satisfied" in message.lower()
 
     map_md.write_text(
-        clear_map.replace(" | evidence: docs/loom/results/probe.md", ""), encoding="utf-8"
+        clear_map.replace(" | evidence: PR #123", ""), encoding="utf-8"
     )
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 2
@@ -433,7 +433,7 @@ reason: replaced by narrower work
     map_md.write_text(
         clear_map.replace(
             "- DA-1: The parser remains stdlib-only | state: satisfied | "
-            "kind: objective | evidence: docs/loom/results/probe.md",
+            "kind: objective | evidence: PR #123",
             "",
         ),
         encoding="utf-8",
@@ -444,8 +444,8 @@ reason: replaced by narrower work
 
     map_md.write_text(
         clear_map.replace(
-            "docs/loom/results/probe.md",
-            "docs/loom/results/probe.md | trailing field",
+            "evidence: PR #123",
+            "evidence: PR #123 | trailing field",
         ),
         encoding="utf-8",
     )
@@ -535,7 +535,7 @@ def test_clear_history_is_immutable_and_active_regression_is_followup(
         .replace(
             "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
             "- DA-1: Parser delivered | state: satisfied | kind: objective | "
-            "evidence: docs/loom/results/parser.md",
+            "evidence: PR #123",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", "")
     )
@@ -738,7 +738,7 @@ def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) ->
         .replace(
             "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
             "- DA-1: Parser delivered | state: satisfied | kind: objective | "
-            "evidence: docs/loom/results/parser.md",
+            "evidence: PR #123",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", ""),
         encoding="utf-8",
@@ -788,7 +788,7 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
         .replace(
             "- DA-1: Parser remains stdlib-only | state: open | kind: objective",
             "- DA-1: Parser delivered | state: satisfied | kind: objective | "
-            "evidence: docs/loom/results/parser.md",
+            "evidence: PR #123",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", ""),
         encoding="utf-8",
@@ -1632,7 +1632,7 @@ def test_clear_rejects_non_closed_tickets_and_fog(tmp_path: Path) -> None:
             "Chart the decision-map layer.",
             "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29\n\n"
             "- DA-1: parser remains stdlib-only | state: satisfied | "
-            "kind: objective | evidence: docs/loom/results/probe.md",
+            "kind: objective | evidence: PR #123",
         )
     )
 
