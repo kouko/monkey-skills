@@ -603,6 +603,68 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
             )
 
 
+def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
+    tmp_path,
+) -> None:
+    # @req: REQ-113
+    attempt_id = "attempt-output-ceiling"
+    prepared = _binding("codex", "gpt-5.6-luna")
+    runner.admit_bounded_run(
+        store_root=tmp_path,
+        campaign_id="campaign-output-ceiling",
+        attempt_id=attempt_id,
+        case_id="case-output-ceiling",
+        is_retry=False,
+        artifact=b"whole",
+        policy={
+            "max_runs": 1,
+            "max_retries_per_case": 0,
+            "max_concurrency": 1,
+            "max_wall_seconds_per_run": 1,
+            "max_input_bytes": 5,
+            "max_output_bytes": 1,
+            "max_usage_units": 1,
+        },
+        requested_wall_seconds=1,
+        requested_output_bytes=1,
+        reserved_usage_units=1,
+    )
+    lease = runner.claim_dispatch(
+        tmp_path,
+        attempt_id,
+        "owner-output-ceiling",
+        prepared_profile=prepared,
+        dispatch_attestation={"attempt_id": attempt_id, **prepared},
+    )
+    raw_bytes = b"x" * 4096
+    capture = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id=attempt_id,
+        owner_id=lease["owner_id"],
+        fence_generation=lease["fence_generation"],
+        raw_bytes=raw_bytes,
+        completeness="complete",
+        outcome="completed",
+        capture_attestation={"attempt_id": attempt_id, **prepared},
+    )
+
+    assert {
+        "capture_scoreable": capture["scoreable"],
+        "capture_status": capture["scoreability_status"],
+        "stored_bytes": runner.read_dispatch_captures(tmp_path, attempt_id)[0][
+            "raw_bytes"
+        ],
+        "stored_scoreable": runner.read_dispatch_captures(
+            tmp_path, attempt_id
+        )[0]["scoreable"],
+    } == {
+        "capture_scoreable": False,
+        "capture_status": "ineligible-output-limit",
+        "stored_bytes": raw_bytes,
+        "stored_scoreable": False,
+    }
+
+
 def test_req_115_actual_model_identity_is_verified_twice(tmp_path) -> None:
     # @req: REQ-115
     prepared = _binding("codex", "gpt-5.6-luna")

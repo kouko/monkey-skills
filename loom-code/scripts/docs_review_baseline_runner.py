@@ -1044,6 +1044,24 @@ def finish_bounded_run(
         connection.close()
 
 
+def _reserved_output_ceiling(
+    store_root: Path, attempt_id: str
+) -> int | None:
+    database = store_root / "campaign-resources.sqlite3"
+    if not database.exists():
+        return None
+    connection = _resource_database(store_root)
+    try:
+        row = connection.execute(
+            "SELECT requested_output_bytes FROM resource_reservations "
+            "WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+    finally:
+        connection.close()
+    return None if row is None else int(row[0])
+
+
 def read_resource_events(
     store_root: Path, campaign_id: str
 ) -> list[dict[str, object]]:
@@ -1444,10 +1462,15 @@ def capture_dispatch_bytes(
             capture_attestation=captured_identity,
         )
         identity_reason = identity["reason"]
+        output_ceiling = _reserved_output_ceiling(store_root, attempt_id)
+        output_within_limit = (
+            output_ceiling is None or len(raw_bytes) <= output_ceiling
+        )
         scoreable = (
             authoritative
             and outcome == "completed"
             and identity["scoreable"] is True
+            and output_within_limit
         )
         if late:
             terminal_status = "late-evidence"
@@ -1456,6 +1479,8 @@ def capture_dispatch_bytes(
             terminal_status = outcome
             if scoreable:
                 scoreability_status = "eligible"
+            elif outcome == "completed" and not output_within_limit:
+                scoreability_status = "ineligible-output-limit"
             elif outcome == "completed" and identity_reason is not None:
                 scoreability_status = "ineligible-identity"
             elif outcome in {
