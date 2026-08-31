@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: execution — store-records batch / Task 3 oracle ratification
+Stage: execution — store-records batch / Task 4 corpus manifest
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -85,7 +85,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-100
 - **Review disposition**: batch(store-records)
-- **Status**: pending
+- **Status**: implemented(63e6b37a0f1807441cd4663bd1b8b7b3df882ca7)
 - **Gloss**: 人工答案先凍結，實驗後才不會因結果而改題。
 
 ## Task 4 — 凍結 corpus manifest
