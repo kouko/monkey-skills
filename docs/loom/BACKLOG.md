@@ -4,6 +4,7 @@
 
 ## open
 - [2026-08-30-task-review-packets-lack-requirement-ownership](backlog/2026-08-30-task-review-packets-lack-requirement-ownership.md) — Per-task review packets cannot distinguish owned requirements from later-task requirements
+- [2026-08-31-adversarial-audit-as-a-loom-mechanism](backlog/2026-08-31-adversarial-audit-as-a-loom-mechanism.md) — Decide whether a post-merge adversarial audit (break-it, zero-context, reproduce-or-hold) becomes a loom-code mechanism for safety-bearing changes, or stays an ad-hoc dispatch
 
 ## closed
 - [2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci](backlog/2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci.md) — #468 reviewer next-touch nits (loom-code TECH-SPEC + CI)
