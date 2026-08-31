@@ -181,7 +181,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-105
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
+- **Status**: implemented(6477d52bdad7346c007b796912aaff73f71d4aa9)
 - **Gloss**: 只有同模型、同設定的重跑才能回答 reviewer 穩不穩。
 
 ## Task 9 — 計算帶 population 的 metrics
