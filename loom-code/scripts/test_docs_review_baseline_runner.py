@@ -17,6 +17,7 @@ def _binding(host: str, model: str) -> dict[str, str]:
         "model": model,
         "tier": "economy",
         "requested_effort": "low",
+        "effective_effort": "low",
         "contract_revision_id": "docs-review-contract-r1",
         "runtime_revision_id": "docs-review-runtime-r1",
         "configuration_fingerprint": "sha256:configuration-r1",
@@ -561,39 +562,177 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
             )
 
 
-def test_req_115_actual_model_identity_is_verified_twice() -> None:
+def test_req_115_actual_model_identity_is_verified_twice(tmp_path) -> None:
     # @req: REQ-115
     prepared = _binding("codex", "gpt-5.6-luna")
-    exact = {"host": "codex", "model": "gpt-5.6-luna", "tier": "economy"}
-    verified = runner.verify_execution_identity(
-        prepared=prepared,
+    identity_fields = tuple(prepared)
+
+    def attestation(attempt_id: str) -> dict[str, str]:
+        return {"attempt_id": attempt_id, **prepared}
+
+    exact_attempt = "attempt-exact"
+    exact = attestation(exact_attempt)
+    lease = runner.claim_dispatch(
+        tmp_path,
+        exact_attempt,
+        "owner-exact",
+        prepared_profile=prepared,
         dispatch_attestation=exact,
+    )
+    assert lease["identity_verified"] is True
+    assert lease["identity_reason"] is None
+    assert runner.read_dispatch_identity(tmp_path, exact_attempt) == {
+        "attempt_id": exact_attempt,
+        "dispatch_attestation": exact,
+        "prepared_profile": prepared,
+    }
+    verified = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id=exact_attempt,
+        owner_id=lease["owner_id"],
+        fence_generation=lease["fence_generation"],
+        raw_bytes=b"exact response",
+        completeness="complete",
+        outcome="completed",
         capture_attestation=exact,
     )
     assert verified["scoreable"] is True
-    assert verified["reason"] is None
+    assert verified["identity_reason"] is None
+    assert runner.read_dispatch_captures(tmp_path, exact_attempt)[0][
+        "capture_attestation"
+    ] == exact
 
-    for dispatch, capture, reason in (
-        ({"host": "codex", "model": "gpt-5.6-sol", "tier": "frontier"},
-         exact, "dispatch identity mismatch"),
-        (exact, {"host": "codex", "model": "gpt-5.6-sol",
-                 "tier": "frontier"}, "capture identity mismatch"),
-        (exact, {"host": "codex", "model": None, "tier": "economy"},
-         "capture identity unavailable"),
-    ):
-        result = runner.verify_execution_identity(
-            prepared=prepared,
-            dispatch_attestation=dispatch,
-            capture_attestation=capture,
-        )
-        assert result["scoreable"] is False
-        assert result["reason"] == reason
-        assert result["dispatch_attestation"] == dispatch
-        assert result["capture_attestation"] == capture
+    mismatch_values = {
+        "host": "claude-code",
+        "model": "gpt-5.6-sol",
+        "tier": "frontier",
+        "requested_effort": "high",
+        "effective_effort": "high",
+        "contract_revision_id": "docs-review-contract-r2",
+        "runtime_revision_id": "docs-review-runtime-r2",
+        "configuration_fingerprint": "sha256:configuration-r2",
+    }
+    for stage in ("dispatch", "capture"):
+        for field in identity_fields:
+            for condition, value in (
+                ("unavailable", None),
+                ("mismatch", mismatch_values[field]),
+            ):
+                attempt_id = f"attempt-{stage}-{field}-{condition}"
+                expected = attestation(attempt_id)
+                observed = {**expected, field: value}
+                dispatch = observed if stage == "dispatch" else expected
+                capture = observed if stage == "capture" else expected
+                lease = runner.claim_dispatch(
+                    tmp_path,
+                    attempt_id,
+                    f"owner-{attempt_id}",
+                    prepared_profile=prepared,
+                    dispatch_attestation=dispatch,
+                )
+                if stage == "dispatch":
+                    assert lease["identity_verified"] is False
+                    assert lease["identity_reason"] == (
+                        f"dispatch {field} {condition}"
+                    )
+                else:
+                    assert lease["identity_verified"] is True
+                    assert lease["identity_reason"] is None
+                result = runner.capture_dispatch_bytes(
+                    tmp_path,
+                    attempt_id=attempt_id,
+                    owner_id=lease["owner_id"],
+                    fence_generation=lease["fence_generation"],
+                    raw_bytes=b"preserved response",
+                    completeness="complete",
+                    outcome="completed",
+                    capture_attestation=capture,
+                )
+                assert result["scoreable"] is False
+                assert result["identity_reason"] == (
+                    f"{stage} {field} {condition}"
+                )
+                assert runner.read_dispatch_identity(tmp_path, attempt_id)[
+                    "dispatch_attestation"
+                ] == dispatch
+                stored = runner.read_dispatch_captures(tmp_path, attempt_id)[0]
+                assert stored["raw_bytes"] == b"preserved response"
+                assert stored["capture_attestation"] == capture
+                assert stored["identity_reason"] == result["identity_reason"]
+
+    dispatch_replay_attempt = "attempt-dispatch-replay-target"
+    dispatch_replay_lease = runner.claim_dispatch(
+        tmp_path,
+        dispatch_replay_attempt,
+        "owner-dispatch-replay",
+        prepared_profile=prepared,
+        dispatch_attestation=attestation("attempt-exact"),
+    )
+    assert dispatch_replay_lease["identity_verified"] is False
+    assert dispatch_replay_lease["identity_reason"] == (
+        "dispatch attempt_id mismatch"
+    )
+    dispatch_replayed = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id=dispatch_replay_attempt,
+        owner_id=dispatch_replay_lease["owner_id"],
+        fence_generation=dispatch_replay_lease["fence_generation"],
+        raw_bytes=b"dispatch-replayed attestation response",
+        completeness="complete",
+        outcome="completed",
+        capture_attestation=attestation(dispatch_replay_attempt),
+    )
+    assert dispatch_replayed["scoreable"] is False
+    assert dispatch_replayed["identity_reason"] == (
+        "dispatch attempt_id mismatch"
+    )
+
+    replay_attempt = "attempt-capture-replay-target"
+    replay_lease = runner.claim_dispatch(
+        tmp_path,
+        replay_attempt,
+        "owner-replay",
+        prepared_profile=prepared,
+        dispatch_attestation=attestation(replay_attempt),
+    )
+    replayed = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id=replay_attempt,
+        owner_id=replay_lease["owner_id"],
+        fence_generation=replay_lease["fence_generation"],
+        raw_bytes=b"replayed attestation response",
+        completeness="complete",
+        outcome="completed",
+        capture_attestation=attestation("attempt-exact"),
+    )
+    assert replayed["scoreable"] is False
+    assert replayed["identity_reason"] == "capture attempt_id mismatch"
+
+    unattested_attempt = "attempt-unattested"
+    unattested_lease = runner.claim_dispatch(
+        tmp_path, unattested_attempt, "owner-unattested"
+    )
+    unattested = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id=unattested_attempt,
+        owner_id=unattested_lease["owner_id"],
+        fence_generation=unattested_lease["fence_generation"],
+        raw_bytes=b"unattested response",
+        completeness="complete",
+        outcome="completed",
+    )
+    assert unattested["scoreable"] is False
+    assert unattested["identity_reason"] == "prepared host unavailable"
+    assert unattested["scoreability_status"] == "ineligible-identity"
 
 
 def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
     # @req: REQ-114
+    prepared = _binding("codex", "gpt-5.6-luna")
+
+    def attestation(attempt_id: str) -> dict[str, str]:
+        return {"attempt_id": attempt_id, **prepared}
+
     outside = tmp_path / "outside"
     outside.mkdir()
     linked_root = tmp_path / "linked-store"
@@ -642,7 +781,13 @@ def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
         },
     ]
 
-    first = runner.claim_dispatch(tmp_path, "attempt-takeover", "owner-a")
+    first = runner.claim_dispatch(
+        tmp_path,
+        "attempt-takeover",
+        "owner-a",
+        prepared_profile=prepared,
+        dispatch_attestation=attestation("attempt-takeover"),
+    )
     acknowledgement_unknown = runner.capture_dispatch_bytes(
         tmp_path,
         attempt_id="attempt-takeover",
@@ -689,6 +834,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
         raw_bytes=b"authoritative complete bytes",
         completeness="complete",
         outcome="completed",
+        capture_attestation=attestation("attempt-takeover"),
     )
     assert final["late"] is False
     assert final["scoreable"] is True
@@ -774,7 +920,11 @@ def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
         "state"
     ] == "cancellation-uncertain"
     retry_owner = runner.claim_dispatch(
-        tmp_path, "attempt-retry", "owner-retry"
+        tmp_path,
+        "attempt-retry",
+        "owner-retry",
+        prepared_profile=prepared,
+        dispatch_attestation=attestation("attempt-retry"),
     )
     retry = runner.capture_dispatch_bytes(
         tmp_path,
@@ -784,6 +934,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
         raw_bytes=b"retry bytes",
         completeness="complete",
         outcome="completed",
+        capture_attestation=attestation("attempt-retry"),
     )
     assert retry["scoreability_status"] == "eligible"
     cancelled_late = runner.capture_dispatch_bytes(

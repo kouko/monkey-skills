@@ -30,6 +30,7 @@ _IDENTITY_FIELDS = (
     "model",
     "tier",
     "requested_effort",
+    "effective_effort",
     "contract_revision_id",
     "runtime_revision_id",
     "configuration_fingerprint",
@@ -1038,31 +1039,61 @@ def read_resource_events(
     ]
 
 
+def _identity_stage_reason(
+    *,
+    prepared: Mapping[str, object],
+    attestation: Mapping[str, object],
+    stage: str,
+    attempt_id: str | None,
+) -> str | None:
+    expected = {field: prepared.get(field) for field in _IDENTITY_FIELDS}
+    reason = next(
+        (
+            f"prepared {field} unavailable"
+            for field, value in expected.items()
+            if not isinstance(value, str) or not value.strip()
+        ),
+        None,
+    )
+    if reason is not None:
+        return reason
+    if attempt_id is not None:
+        actual_attempt = attestation.get("attempt_id")
+        if not isinstance(actual_attempt, str) or not actual_attempt.strip():
+            return f"{stage} attempt_id unavailable"
+        if actual_attempt != attempt_id:
+            return f"{stage} attempt_id mismatch"
+    for field, expected_value in expected.items():
+        actual_value = attestation.get(field)
+        if not isinstance(actual_value, str) or not actual_value.strip():
+            return f"{stage} {field} unavailable"
+        if actual_value != expected_value:
+            return f"{stage} {field} mismatch"
+    return None
+
+
 def verify_execution_identity(
     *,
     prepared: Mapping[str, object],
     dispatch_attestation: Mapping[str, object],
     capture_attestation: Mapping[str, object],
+    attempt_id: str | None = None,
 ) -> dict[str, object]:
     """Verify prepared weak identity at dispatch and again at capture."""
-    expected = {field: prepared.get(field) for field in ("host", "model", "tier")}
-
-    def verdict(
-        stage: str, attestation: Mapping[str, object]
-    ) -> str | None:
-        if any(
-            not isinstance(attestation.get(field), str)
-            or not str(attestation[field]).strip()
-            for field in expected
-        ):
-            return f"{stage} identity unavailable"
-        if any(attestation[field] != expected[field] for field in expected):
-            return f"{stage} identity mismatch"
-        return None
-
-    reason = verdict("dispatch", dispatch_attestation)
+    expected = {field: prepared.get(field) for field in _IDENTITY_FIELDS}
+    reason = _identity_stage_reason(
+        prepared=prepared,
+        attestation=dispatch_attestation,
+        stage="dispatch",
+        attempt_id=attempt_id,
+    )
     if reason is None:
-        reason = verdict("capture", capture_attestation)
+        reason = _identity_stage_reason(
+            prepared=prepared,
+            attestation=capture_attestation,
+            stage="capture",
+            attempt_id=attempt_id,
+        )
     return {
         "capture_attestation": dict(capture_attestation),
         "dispatch_attestation": dict(dispatch_attestation),
@@ -1125,7 +1156,49 @@ def _dispatch_database(store_root: Path) -> sqlite3.Connection:
         )
         """
     )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dispatch_identity_bindings (
+            attempt_id TEXT PRIMARY KEY,
+            prepared_profile TEXT NOT NULL,
+            dispatch_attestation TEXT NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dispatch_capture_identities (
+            capture_sequence INTEGER PRIMARY KEY,
+            attempt_id TEXT NOT NULL,
+            capture_attestation TEXT NOT NULL,
+            identity_reason TEXT
+        )
+        """
+    )
     return connection
+
+
+def _identity_json(value: Mapping[str, object] | None) -> str:
+    return json.dumps(
+        dict(value or {}),
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+
+
+def _read_identity_binding(
+    connection: sqlite3.Connection, attempt_id: str
+) -> tuple[dict[str, object], dict[str, object]]:
+    row = connection.execute(
+        "SELECT prepared_profile, dispatch_attestation "
+        "FROM dispatch_identity_bindings WHERE attempt_id = ?",
+        (attempt_id,),
+    ).fetchone()
+    if row is None:
+        return {}, {}
+    return json.loads(row[0]), json.loads(row[1])
 
 
 def _append_dispatch_event(
@@ -1159,6 +1232,8 @@ def claim_dispatch(
     owner_id: str,
     *,
     takeover_expected_generation: int | None = None,
+    prepared_profile: Mapping[str, object] | None = None,
+    dispatch_attestation: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     """Claim one dispatch owner or fence an explicitly uncertain predecessor."""
     if not attempt_id.strip() or not owner_id.strip():
@@ -1187,6 +1262,14 @@ def claim_dispatch(
                 )
             else:
                 generation = 1
+                connection.execute(
+                    "INSERT INTO dispatch_identity_bindings VALUES (?, ?, ?)",
+                    (
+                        attempt_id,
+                        _identity_json(prepared_profile),
+                        _identity_json(dispatch_attestation),
+                    ),
+                )
                 connection.execute(
                     "INSERT INTO dispatch_leases VALUES (?, ?, ?, 'active')",
                     (attempt_id, owner_id, generation),
@@ -1247,12 +1330,25 @@ def claim_dispatch(
                     reason=None,
                     state="active",
                 )
+        identity_reason: str | None = None
+        if refusal is None:
+            bound_profile, bound_attestation = _read_identity_binding(
+                connection, attempt_id
+            )
+            identity_reason = _identity_stage_reason(
+                prepared=bound_profile,
+                attestation=bound_attestation,
+                stage="dispatch",
+                attempt_id=attempt_id,
+            )
         connection.execute("COMMIT")
         if refusal is not None:
             raise ValueError(refusal)
         return {
             "attempt_id": attempt_id,
             "fence_generation": generation,
+            "identity_reason": identity_reason,
+            "identity_verified": identity_reason is None,
             "owner_id": owner_id,
             "state": "active",
         }
@@ -1273,6 +1369,7 @@ def capture_dispatch_bytes(
     raw_bytes: bytes,
     completeness: str,
     outcome: str,
+    capture_attestation: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     """Atomically retain every byte stream while fencing stale owners."""
     if outcome not in _DISPATCH_OUTCOMES:
@@ -1304,7 +1401,22 @@ def capture_dispatch_bytes(
             and state == "active"
         )
         late = not authoritative
-        scoreable = authoritative and outcome == "completed"
+        prepared_profile, dispatch_attestation = _read_identity_binding(
+            connection, attempt_id
+        )
+        captured_identity = dict(capture_attestation or {})
+        identity = verify_execution_identity(
+            attempt_id=attempt_id,
+            prepared=prepared_profile,
+            dispatch_attestation=dispatch_attestation,
+            capture_attestation=captured_identity,
+        )
+        identity_reason = identity["reason"]
+        scoreable = (
+            authoritative
+            and outcome == "completed"
+            and identity["scoreable"] is True
+        )
         if late:
             terminal_status = "late-evidence"
             scoreability_status = "ineligible-late-evidence"
@@ -1312,6 +1424,8 @@ def capture_dispatch_bytes(
             terminal_status = outcome
             if scoreable:
                 scoreability_status = "eligible"
+            elif outcome == "completed" and identity_reason is not None:
+                scoreability_status = "ineligible-identity"
             elif outcome in {
                 "acknowledgement-uncertain",
                 "cancellation-uncertain",
@@ -1341,6 +1455,15 @@ def capture_dispatch_bytes(
                 scoreability_status,
             ),
         )
+        connection.execute(
+            "INSERT INTO dispatch_capture_identities VALUES (?, ?, ?, ?)",
+            (
+                cursor.lastrowid,
+                attempt_id,
+                _identity_json(captured_identity),
+                identity_reason,
+            ),
+        )
         if authoritative:
             connection.execute(
                 "UPDATE dispatch_leases SET state = ? WHERE attempt_id = ?",
@@ -1350,6 +1473,8 @@ def capture_dispatch_bytes(
         return {
             "capture_sequence": cursor.lastrowid,
             "completeness": completeness,
+            "capture_attestation": captured_identity,
+            "identity_reason": identity_reason,
             "late": late,
             "outcome": outcome,
             "raw_digest": digest,
@@ -1372,10 +1497,15 @@ def read_dispatch_captures(
     connection = _dispatch_database(store_root)
     try:
         rows = connection.execute(
-            "SELECT sequence, owner_id, fence_generation, outcome, raw_bytes, "
-            "raw_digest, completeness, terminal_status, late, scoreable, "
-            "scoreability_status FROM dispatch_captures "
-            "WHERE attempt_id = ? ORDER BY sequence",
+            "SELECT captures.sequence, captures.owner_id, "
+            "captures.fence_generation, captures.outcome, captures.raw_bytes, "
+            "captures.raw_digest, captures.completeness, "
+            "captures.terminal_status, captures.late, captures.scoreable, "
+            "captures.scoreability_status, identities.capture_attestation, "
+            "identities.identity_reason FROM dispatch_captures AS captures "
+            "LEFT JOIN dispatch_capture_identities AS identities "
+            "ON identities.capture_sequence = captures.sequence "
+            "WHERE captures.attempt_id = ? ORDER BY captures.sequence",
             (attempt_id,),
         ).fetchall()
     finally:
@@ -1393,9 +1523,33 @@ def read_dispatch_captures(
             "late": bool(row[8]),
             "scoreable": bool(row[9]),
             "scoreability_status": row[10],
+            "capture_attestation": json.loads(row[11]) if row[11] else {},
+            "identity_reason": row[12],
         }
         for row in rows
     ]
+
+
+def read_dispatch_identity(
+    store_root: Path, attempt_id: str
+) -> dict[str, object]:
+    """Read the immutable prepared and dispatch-time identity binding."""
+    connection = _dispatch_database(store_root)
+    try:
+        row = connection.execute(
+            "SELECT prepared_profile, dispatch_attestation "
+            "FROM dispatch_identity_bindings WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+    finally:
+        connection.close()
+    if row is None:
+        raise ValueError("dispatch attempt has no identity binding")
+    return {
+        "attempt_id": attempt_id,
+        "dispatch_attestation": json.loads(row[1]),
+        "prepared_profile": json.loads(row[0]),
+    }
 
 
 def read_dispatch_events(
