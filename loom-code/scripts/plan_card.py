@@ -120,6 +120,7 @@ import importlib.util
 import fcntl
 import os
 import re
+import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -587,6 +588,67 @@ def set_status(text: str, task_number: int, status: str) -> tuple[str, str, str]
     label = "- **Status**:" if old_line.startswith("- **Status**:") else "- Status:"
     new_line = f"{label} {status}"
     return text[:start] + new_line + text[end:], old_line, new_line
+
+
+# SHA-payload expansion (R11b): the writer never lets an operator-typed
+# short ref reach the ledger — `done(<ref>)` / `implemented(<ref>)` are
+# expanded to the ref's full 40-hex SHA at write time, so every write
+# already satisfies batch_review_cli._IMPLEMENTED's 40-hex-only rule.
+_STATUS_SHA_REF = re.compile(r"(done|implemented)\(([^()\s]+)\)")
+_FULL_SHA = re.compile(r"[0-9a-f]{40}")
+
+
+def _git_repo_root(start: Path) -> Path | None:
+    """The git worktree root containing directory `start`, or None when
+    `start` is not inside a git repo (or `git` is not runnable) — SHA
+    expansion is then skipped rather than crashing the writer."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    if result.returncode != 0:
+        return None
+    return Path(result.stdout.strip())
+
+
+def _expand_status_sha_ref(status: str, plan_path: Path) -> str:
+    """`status` with a `done(<ref>)` / `implemented(<ref>)` payload
+    expanded to the ref's full 40-hex SHA via `git rev-parse`, resolved
+    against the git repo containing `plan_path`. Every other status
+    (`pending` / `claimed(@<agent>)` / `blocked`) and an already-40-hex
+    payload pass through unchanged (no git call needed for the latter).
+    Raises ValueError, naming the ref, when the plan sits inside a git
+    repo but the ref does not resolve to a commit there. When the plan
+    is not inside any git repo (an isolated fixture, e.g.), the ref is
+    left exactly as typed — there is no repository to resolve it
+    against, and refusing here would reject the CLI's own test
+    fixtures, not the operator's real plan files."""
+    match = _STATUS_SHA_REF.fullmatch(status)
+    if match is None:
+        return status
+    kind, ref = match.groups()
+    if _FULL_SHA.fullmatch(ref) is not None:
+        return status
+    repo_root = _git_repo_root(plan_path.resolve().parent)
+    if repo_root is None:
+        return status
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "--verify", f"{ref}^{{commit}}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ValueError(
+            f"--set-status: ref '{ref}' does not resolve to a commit in "
+            f"{repo_root}"
+        )
+    return f"{kind}({result.stdout.strip()})"
 
 
 def dependency_is_ready(
@@ -1070,6 +1132,11 @@ def main() -> int:
 
     try:
         if set_status_ref is not None:
+            task_number, status = set_status_ref
+            set_status_ref = (
+                task_number,
+                _expand_status_sha_ref(status, plan_path),
+            )
             new_text, old_line, new_line = _publish_cli_mutation(
                 plan_path,
                 lambda current: set_status(current, *set_status_ref),

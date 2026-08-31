@@ -1385,6 +1385,70 @@ def test_set_status_blocked_with_parenthetical_exits_1(tmp_path):
     assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
 
 
+def _init_tmp_git_repo(tmp_path: Path) -> tuple[Path, str]:
+    """A fresh git repo (under `tmp_path`) with one commit; returns the
+    repo dir and that commit's full 40-hex SHA."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"], cwd=repo, check=True
+    )
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+    (repo / "f.txt").write_text("x", encoding="utf-8")
+    subprocess.run(["git", "add", "f.txt"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=repo, check=True)
+    sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True
+    ).stdout.strip()
+    return repo, sha
+
+
+def test_set_status_expands_short_sha_to_forty_hex(tmp_path):
+    """(R11b) `implemented(<short>)` is expanded to the ref's full
+    40-hex SHA via `git rev-parse` at write time, so the ledger already
+    satisfies batch_review_cli's 40-hex-only `_IMPLEMENTED` rule — no
+    operator hand-expansion between plan_card and the batch CLI."""
+    repo, sha = _init_tmp_git_repo(tmp_path)
+    plan_path = _write_plan(repo, _plan_text(tasks=[("parser", "pending")]))
+    short = sha[:7]
+
+    result = _run_card(plan_path, "--set-status", f"T1=implemented({short})")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"new: - Status: implemented({sha})\n" in result.stdout
+    written = plan_path.read_text(encoding="utf-8")
+    assert f"- Status: implemented({sha})" in written
+    assert f"implemented({short})" not in written
+
+
+def test_set_status_full_forty_hex_sha_passes_through_unchanged(tmp_path):
+    """A status already carrying a 40-hex SHA is written verbatim —
+    already conformant, no git call needed to leave it unchanged."""
+    repo, sha = _init_tmp_git_repo(tmp_path)
+    plan_path = _write_plan(repo, _plan_text(tasks=[("parser", "pending")]))
+
+    result = _run_card(plan_path, "--set-status", f"T1=done({sha})")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"new: - Status: done({sha})\n" in result.stdout
+
+
+def test_set_status_bogus_ref_exits_1_naming_it(tmp_path):
+    """A ref that does not resolve to a commit in the plan's own repo
+    refuses loud, naming the ref; the file is never partially written."""
+    repo, _sha = _init_tmp_git_repo(tmp_path)
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(repo, text)
+
+    result = _run_card(plan_path, "--set-status", "T1=implemented(deadbee)")
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "deadbee" in result.stdout
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
+
+
 def test_set_status_and_detail_are_mutually_exclusive(tmp_path):
     """Passing both --detail and --set-status → usage error (exit 2) whose
     message names both flags; the file is not modified."""
