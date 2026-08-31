@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: runner-boundaries: Task 13 implementation
+Stage: runner-boundaries: Task 14 implementation
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -296,7 +296,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-111
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
+- **Status**: implemented(6757c954b2d172593141fb733074705519e8d9b3)
 - **Gloss**: 歷史文件裡的指令只是待審內容，不能操作電腦或外送資料。
 
 ## Task 15 — 執行 authority 與 ratifier independence
