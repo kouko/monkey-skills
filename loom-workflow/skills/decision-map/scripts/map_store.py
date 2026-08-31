@@ -1241,7 +1241,13 @@ def _da_evidence_is_resolvable(evidence: str, repo_root: Path | None) -> bool:
     reviewer can actually open, per R3c: an existing commit SHA, a
     well-formed PR reference, or an artifact path that exists inside
     the repo. A bare non-pointer string ("looks done") is not
-    evidence."""
+    evidence.
+
+    Grounding (external-surface category 4, CLI flag): the
+    `git cat-file -e <sha>^{commit}` form mirrors the in-repo idiom
+    at `loom-code/scripts/review_context.py` — the `^{commit}` peel
+    asserts commit-ness (gitrevisions(7)) and neutralises
+    flag-shaped refs."""
     pr_match = _PR_EVIDENCE.fullmatch(evidence)
     if pr_match is not None:
         return True
@@ -1263,14 +1269,12 @@ def _da_evidence_is_resolvable(evidence: str, repo_root: Path | None) -> bool:
     if _ARTIFACT_PATH_EVIDENCE.fullmatch(evidence) is not None:
         if repo_root is None:
             return False
-        candidate = (repo_root / evidence).resolve()
+        candidate = repo_root / evidence
         try:
-            repo_root_resolved = repo_root.resolve()
-        except OSError:
+            _assert_contained(repo_root, candidate)
+        except SchemaViolation:
             return False
-        if repo_root_resolved not in candidate.parents and candidate != repo_root_resolved:
-            return False
-        return candidate.is_file()
+        return candidate.resolve().is_file()
     return False
 
 
