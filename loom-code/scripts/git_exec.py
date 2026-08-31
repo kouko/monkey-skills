@@ -8,9 +8,13 @@ variants that those six call sites (`loom_gate_markers._git`,
 independently collapse into one body here. This docstring is the SSOT for
 the encoding/argv rationale below -- other scripts/ modules that wrap
 `run_git` (e.g. `batch_review_cli._run_subprocess`) point back here rather
-than restating it. A handful of direct `subprocess.run(["git", ...])`
-calls with stdin/bytes needs remain outside this wrapper, in
-`loom_gate_markers.py` and `live_host_review_gate.py`.
+than restating it. Direct `subprocess.run(["git", ...])` calls that were
+never one of those six wrappers still exist in other scripts/ modules
+(`loom_gate_markers.py`, `live_host_review_gate.py`, `plan_card.py`,
+`check_doc_citations.py`, `loom_init.py`, `living_spec_gitref.py`,
+`check_onramp_choice.py`, `check_queue_relation.py`); they stay outside
+this wrapper and keep their own encoding behavior -- routing them here is
+a separate change, not something this module claims to have done.
 
 Encoding: `encoding="utf-8", errors="surrogateescape"` is passed explicitly
 rather than the locale-dependent default `text=True` picks up
