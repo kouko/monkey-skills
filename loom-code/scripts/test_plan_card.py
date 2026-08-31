@@ -1977,8 +1977,15 @@ def test_fence_scanning_matches_loom_gate_markers_behaviour():
         ("plain text", ("`", 3)),
         ("   ```", ("`", 3)),
         ("``` info-string", None),
+        ("    ```", None),
+        ("``` info", ("`", 3)),
+        ("~~~", ("`", 3)),
     ]
     for line, fence_in in cases:
         assert plan_card._fence_toggle(line, fence_in) == (
             loom_gate_markers._fence_toggle(line, fence_in)
         )
+    assert (
+        plan_card._FENCED_CODE_DELIMITER_RE.pattern
+        == loom_gate_markers._FENCED_CODE_DELIMITER_RE.pattern
+    )
