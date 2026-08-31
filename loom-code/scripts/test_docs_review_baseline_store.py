@@ -201,15 +201,21 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         negative_control_intent="Do not reward generic requests for detail.",
         ratifier="maintainer:oracle-ratifier",
         authority_revision_id=authority.record_id,
+        trusted_authority_revision_digest=authority.digest,
     )
     bindings = [("case-1", snapshot_digest, oracle.record_id)]
 
-    manifest = store.freeze_corpus_manifest(tmp_path, bindings)
+    manifest = store.freeze_corpus_manifest(
+        tmp_path,
+        bindings,
+        trusted_authority_revision_digests=[authority.digest],
+    )
     frozen_bytes = manifest.path.read_bytes()
 
     assert manifest.record == {
         "bindings": [
             {
+                "authority_revision_digest": authority.digest,
                 "case_id": "case-1",
                 "oracle_revision_id": "oracle-case-1-r1",
                 "snapshot_digest": snapshot_digest,
@@ -217,24 +223,37 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         ],
         "kind": "corpus_manifest",
         "schema_version": 1,
+        "trusted_authority_revision_digests": [authority.digest],
     }
     assert manifest.record_id == f"corpus-{manifest.digest}"
-    assert store.freeze_corpus_manifest(tmp_path, bindings) == manifest
+    assert store.freeze_corpus_manifest(
+        tmp_path,
+        bindings,
+        trusted_authority_revision_digests=[authority.digest],
+    ) == manifest
     assert manifest.path.read_bytes() == frozen_bytes
 
     with pytest.raises(ValueError, match="non-empty"):
-        store.freeze_corpus_manifest(tmp_path, [])
+        store.freeze_corpus_manifest(
+            tmp_path, [], trusted_authority_revision_digests=[authority.digest]
+        )
     with pytest.raises(ValueError, match="latest"):
         store.freeze_corpus_manifest(
-            tmp_path, [("case-1", snapshot_digest, "latest")]
+            tmp_path,
+            [("case-1", snapshot_digest, "latest")],
+            trusted_authority_revision_digests=[authority.digest],
         )
     with pytest.raises(ValueError, match="ratified"):
         store.freeze_corpus_manifest(
-            tmp_path, [("case-1", snapshot_digest, case.record_id)]
+            tmp_path,
+            [("case-1", snapshot_digest, case.record_id)],
+            trusted_authority_revision_digests=[authority.digest],
         )
     with pytest.raises(ValueError, match="snapshot digest"):
         store.freeze_corpus_manifest(
-            tmp_path, [("case-1", "b" * 64, oracle.record_id)]
+            tmp_path,
+            [("case-1", "b" * 64, oracle.record_id)],
+            trusted_authority_revision_digests=[authority.digest],
         )
 
     unbound = ratify_oracle(
@@ -248,7 +267,9 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
     )
     with pytest.raises(ValueError, match="governance"):
         store.freeze_corpus_manifest(
-            tmp_path, [("case-1", snapshot_digest, unbound.record_id)]
+            tmp_path,
+            [("case-1", snapshot_digest, unbound.record_id)],
+            trusted_authority_revision_digests=[authority.digest],
         )
 
     ineligible_record = dict(oracle.record)
@@ -258,7 +279,9 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
     )
     with pytest.raises(ValueError, match="official metrics"):
         store.freeze_corpus_manifest(
-            tmp_path, [("case-1", snapshot_digest, ineligible.record_id)]
+            tmp_path,
+            [("case-1", snapshot_digest, ineligible.record_id)],
+            trusted_authority_revision_digests=[authority.digest],
         )
 
     forged_record = dict(oracle.record)
@@ -281,7 +304,9 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
     )
     with pytest.raises(ValueError, match="authority does not authorize ratifier"):
         store.freeze_corpus_manifest(
-            tmp_path, [("case-1", snapshot_digest, forged.record_id)]
+            tmp_path,
+            [("case-1", snapshot_digest, forged.record_id)],
+            trusted_authority_revision_digests=[authority.digest],
         )
 
 
@@ -691,10 +716,15 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         negative_control_intent="Do not reward generic detail requests.",
         ratifier="maintainer:oracle-ratifier",
         authority_revision_id=authority.record_id,
+        trusted_authority_revision_digest=authority.digest,
     )
 
     assert oracle.record["authority_revision_id"] == authority.record_id
     assert oracle.record["authority_revision_digest"] == authority.digest
+    assert oracle.record["authority_trust"] == {
+        "rule": "campaign-bootstrap-digest-v1",
+        "trusted_authority_revision_digest": authority.digest,
+    }
     assert oracle.record["role_identities"] == roles
     assert oracle.record["independence_evidence"]["status"] == "satisfied"
     assert oracle.record["eligible_for_official_metrics"] is True
@@ -702,9 +732,11 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     manifest = store.freeze_corpus_manifest(
         tmp_path,
         [("case-governed", "a" * 64, oracle.record_id)],
+        trusted_authority_revision_digests=[authority.digest],
     )
     assert manifest.record["bindings"] == [
         {
+            "authority_revision_digest": authority.digest,
             "case_id": "case-governed",
             "oracle_revision_id": oracle.record_id,
             "snapshot_digest": "a" * 64,
@@ -726,6 +758,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-governed", "a" * 64, legacy_oracle.record_id)],
+            trusted_authority_revision_digests=[authority.digest],
         )
 
     denied = store.ratify_governed_oracle(
@@ -737,6 +770,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         negative_control_intent="Do not reward generic detail requests.",
         ratifier="maintainer:intruder",
         authority_revision_id=authority.record_id,
+        trusted_authority_revision_digest=authority.digest,
     )
     assert denied.record["kind"] == "governance_audit_event"
     assert denied.record["outcome"] == "refused_unauthorized"
@@ -763,6 +797,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         negative_control_intent="Do not reward generic detail requests.",
         ratifier=conflicted_roles["oracle_ratifier"],
         authority_revision_id=conflicted.record_id,
+        trusted_authority_revision_digest=conflicted.digest,
     )
     assert disputed.record["status"] == "disputed"
     assert disputed.record["excluded_from_affected_denominators"] is True
@@ -772,6 +807,43 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-governed", "a" * 64, disputed.record_id)],
+            trusted_authority_revision_digests=[conflicted.digest],
+        )
+
+    forged_roles = dict(roles)
+    forged_roles["oracle_author"] = "maintainer:self-authorizer"
+    forged_roles["oracle_ratifier"] = "maintainer:self-authorizer"
+    forged_authority = store.publish_authority_assignment(
+        tmp_path,
+        "authority-self-authored-r1",
+        campaign_policy_revision_id="policy-forged-r1",
+        role_identities=forged_roles,
+        action_authorities={"ratify_oracle": ["maintainer:self-authorizer"]},
+        allowed_self_ratification=["oracle_ratifier=oracle_author"],
+    )
+    records_before_refusal = sorted(
+        path.name for path in (tmp_path / "records").iterdir()
+    )
+    with pytest.raises(ValueError, match="trusted authority revision digest"):
+        store.ratify_governed_oracle(
+            tmp_path,
+            "oracle-self-authorized-r1",
+            case_id="case-governed",
+            snapshot_digest="a" * 64,
+            findings=oracle.record["findings"],
+            negative_control_intent="Do not reward generic detail requests.",
+            ratifier="maintainer:self-authorizer",
+            authority_revision_id=forged_authority.record_id,
+            trusted_authority_revision_digest=authority.digest,
+        )
+    assert sorted(path.name for path in (tmp_path / "records").iterdir()) == (
+        records_before_refusal
+    )
+    with pytest.raises(ValueError, match="trusted authority revision digest"):
+        store.freeze_corpus_manifest(
+            tmp_path,
+            [("case-governed", "a" * 64, oracle.record_id)],
+            trusted_authority_revision_digests=[forged_authority.digest],
         )
 
     revised = store.revise_authority_assignment(

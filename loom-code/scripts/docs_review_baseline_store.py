@@ -453,6 +453,7 @@ def ratify_governed_defect_origin(
     claimed_origin: str,
     ratifier: str,
     authority_revision_id: str,
+    trusted_authority_revision_digest: str,
 ) -> PublishedRecord:
     """Bind an origin judgment to frozen authority before it becomes official."""
     governance = _ratification_governance(
@@ -461,6 +462,7 @@ def ratify_governed_defect_origin(
         action="ratify_defect_origin",
         actor=ratifier,
         target=revision_id,
+        trusted_authority_revision_digest=trusted_authority_revision_digest,
     )
     if isinstance(governance, PublishedRecord):
         return governance
@@ -621,10 +623,20 @@ def _ratification_authority_evidence(
     authority_revision_id: str,
     action: str,
     actor: str,
+    trusted_authority_revision_digest: str,
 ) -> tuple[PublishedRecord, dict[str, object], bool]:
     authority = read_record(store_root, authority_revision_id)
     if authority.record.get("kind") != "authority_assignment":
         raise ValueError("authority_revision_id must name an authority assignment")
+    trusted_digest = _required_text(
+        trusted_authority_revision_digest, "trusted_authority_revision_digest"
+    )
+    if re.fullmatch(r"[0-9a-f]{64}", trusted_digest) is None:
+        raise ValueError(
+            "trusted_authority_revision_digest must be a lowercase SHA-256 digest"
+        )
+    if authority.digest != trusted_digest:
+        raise ValueError("authority assignment does not match trusted authority revision digest")
     actor = _human_ratifier(actor)
     try:
         assignment = _authority_fields(
@@ -670,12 +682,14 @@ def _ratification_governance(
     action: str,
     actor: str,
     target: str,
+    trusted_authority_revision_digest: str,
 ) -> tuple[PublishedRecord, dict[str, object]] | PublishedRecord:
     authority, evidence, authorized = _ratification_authority_evidence(
         store_root,
         authority_revision_id=authority_revision_id,
         action=action,
         actor=actor,
+        trusted_authority_revision_digest=trusted_authority_revision_digest,
     )
     if not authorized:
         audit = {
@@ -767,6 +781,7 @@ def ratify_governed_oracle(
     negative_control_intent: str,
     ratifier: str,
     authority_revision_id: str,
+    trusted_authority_revision_digest: str,
 ) -> PublishedRecord:
     """Ratify an oracle only through frozen authority and independence rules."""
     governance = _ratification_governance(
@@ -775,6 +790,7 @@ def ratify_governed_oracle(
         action="ratify_oracle",
         actor=ratifier,
         target=revision_id,
+        trusted_authority_revision_digest=trusted_authority_revision_digest,
     )
     if isinstance(governance, PublishedRecord):
         return governance
@@ -820,9 +836,26 @@ def correct_oracle(
 
 
 def freeze_corpus_manifest(
-    store_root: Path, bindings: list[tuple[str, str, str]]
+    store_root: Path,
+    bindings: list[tuple[str, str, str]],
+    *,
+    trusted_authority_revision_digests: list[str],
 ) -> PublishedRecord:
     """Freeze an exact ordered corpus and return its digest-bound revision."""
+    if not isinstance(trusted_authority_revision_digests, list) or not (
+        trusted_authority_revision_digests
+    ):
+        raise ValueError("trusted_authority_revision_digests must be a non-empty list")
+    trusted_digests = sorted(
+        {
+            _required_text(digest, "trusted_authority_revision_digests")
+            for digest in trusted_authority_revision_digests
+        }
+    )
+    if any(re.fullmatch(r"[0-9a-f]{64}", digest) is None for digest in trusted_digests):
+        raise ValueError(
+            "trusted_authority_revision_digests must contain lowercase SHA-256 digests"
+        )
     if not isinstance(bindings, list) or not bindings:
         raise ValueError("corpus bindings must be a non-empty list")
     manifest_bindings: list[dict[str, str]] = []
@@ -875,12 +908,30 @@ def freeze_corpus_manifest(
             oracle.record.get("authority_revision_id"),
             f"binding {case_id} oracle authority_revision_id",
         )
+        authority_revision_digest = _required_text(
+            oracle.record.get("authority_revision_digest"),
+            f"binding {case_id} oracle authority_revision_digest",
+        )
+        if authority_revision_digest not in trusted_digests:
+            raise ValueError(
+                f"binding {case_id} oracle does not match a trusted authority revision digest: "
+                f"{oracle_revision_id}"
+            )
+        if oracle.record.get("authority_trust") != {
+            "rule": "campaign-bootstrap-digest-v1",
+            "trusted_authority_revision_digest": authority_revision_digest,
+        }:
+            raise ValueError(
+                f"binding {case_id} oracle trust decision does not match authority: "
+                f"{oracle_revision_id}"
+            )
         authority, recomputed_independence, authorized = (
             _ratification_authority_evidence(
                 store_root,
                 authority_revision_id=authority_revision_id,
                 action="ratify_oracle",
                 actor=oracle.record.get("ratifier"),
+                trusted_authority_revision_digest=authority_revision_digest,
             )
         )
         if oracle.record.get("authority_revision_digest") != authority.digest:
@@ -918,6 +969,7 @@ def freeze_corpus_manifest(
         manifest_bindings.append(
             {
                 "case_id": case_id,
+                "authority_revision_digest": authority_revision_digest,
                 "oracle_revision_id": oracle_revision_id,
                 "snapshot_digest": snapshot_digest,
             }
@@ -926,6 +978,7 @@ def freeze_corpus_manifest(
         "bindings": manifest_bindings,
         "kind": "corpus_manifest",
         "schema_version": 1,
+        "trusted_authority_revision_digests": trusted_digests,
     }
     return publish_record(store_root, f"corpus-{record_digest(record)}", record)
 
@@ -1247,6 +1300,7 @@ def ratify_governed_attribution(
     dispute_evidence: list[str],
     ratifier: str,
     authority_revision_id: str,
+    trusted_authority_revision_digest: str,
 ) -> PublishedRecord:
     """Ratify an attribution through the same frozen campaign authority."""
     governance = _ratification_governance(
@@ -1255,6 +1309,7 @@ def ratify_governed_attribution(
         action="ratify_attribution",
         actor=ratifier,
         target=revision_id,
+        trusted_authority_revision_digest=trusted_authority_revision_digest,
     )
     if isinstance(governance, PublishedRecord):
         return governance
@@ -1288,6 +1343,10 @@ def _bind_governance(
         {
             "authority_revision_digest": authority.digest,
             "authority_revision_id": authority.record_id,
+            "authority_trust": {
+                "rule": "campaign-bootstrap-digest-v1",
+                "trusted_authority_revision_digest": authority.digest,
+            },
             "campaign_policy_revision_id": authority.record[
                 "campaign_policy_revision_id"
             ],
