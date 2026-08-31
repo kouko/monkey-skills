@@ -9,7 +9,7 @@ Goal: One symlink-guard body in `map_lock.py` parameterized by exception
     loom-workflow bumped to 3.1.1 — serves PURPOSE: a path-safety fix lands
     once instead of drifting across three copies, and a documented behavior
     nothing implements stops being a promise a session could act on
-Stage: planning
+Stage: sdd:wave-1
 Steps:
     1. 守衛三合一：map_lock 公開版本、map_store 與 map_transaction 各改一行委派
     2. 拆掉 reclaim：刪 claim_ticket、改寫 map-format 與 REQ-97、補 REQ-97 的真實測試
@@ -68,7 +68,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-1
 - **Review disposition**: batch(symlink-guard)
-- **Status**: pending
+- **Status**: implemented(b50433ffc861b47221bb49c501b50eba1e22d56a)
 - **Gloss**: 守衛本體只剩這一份，要丟哪種例外由呼叫者說了算。
 
 ## Task 2 — map_store 的守衛改成一行委派
@@ -91,7 +91,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(symlink-guard)
-- **Status**: pending
+- **Status**: claimed(@loom-script-refactor-phase2)
 - **Gloss**: map_store 不再自己走路徑，交給 map_lock，丟的還是 SchemaViolation。
 
 ## Task 3 — map_transaction 的守衛改成一行委派
@@ -130,7 +130,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Brief item covered**: BI-4
 - **Not batched because**: the proposer paired it with Tasks 1–3 by lane and module directory, but a deletion of an orphan module shares no verdict question with the guard extraction.
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@loom-script-refactor-phase2)
 - **Gloss**: 拿掉沒人呼叫、也不可能成功的搶票工具。
 
 ## Task 5 — map-format.md：認領不可轉手
@@ -149,7 +149,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-10
 - **Review disposition**: batch(reclaim-prose)
-- **Status**: pending
+- **Status**: implemented(39efd994f34ac00f49fed878d51e37a2129a6fb6)
 - **Gloss**: 格式文件不再承諾搶票；棄票只有 Withdrawal 一條路。
 
 ## Task 6 — 活規格 REQ-97 改寫
@@ -169,7 +169,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-11
 - **Review disposition**: batch(reclaim-prose)
-- **Status**: pending
+- **Status**: implemented(383d53090ed76da7f267ba94754cbc7d8d014b70)
 - **Gloss**: 活規格跟著改：REQ-97 從「可保守搶回」變成「不可轉手」。
 
 ## Task 7 — REQ-97 的真實測試
@@ -211,7 +211,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-13
 - **Review disposition**: batch(backlog-entries)
-- **Status**: pending
+- **Status**: implemented(2fd12171156467c225ccdbc1edc22b09848fe7ae)
 - **Gloss**: Phase 3 第一項立案：1389 行的 gate marker 檔該拆三段。
 
 ## Task 9 — backlog：batch_queue 拆分
@@ -229,7 +229,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-14
 - **Review disposition**: batch(backlog-entries)
-- **Status**: pending
+- **Status**: implemented(c8cd893547ef3148a26a2764f10a22e66517db0d)
 - **Gloss**: Phase 3 第二項立案：1369 行的 batch_queue 檔混了六種責任。
 
 ## Task 10 — backlog：loom-design 統一 pytest root
@@ -249,7 +249,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-15
 - **Review disposition**: batch(backlog-entries)
-- **Status**: pending
+- **Status**: implemented(6960225bac63aa431a1b386aac78902539af4e9b)
 - **Gloss**: Phase 3 第三項立案：loom-design 的測試該有一個共同的 pytest 根。
 
 ## Task 11 — backlog：Map 認領在合併時衝突
@@ -269,7 +269,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-16
 - **Review disposition**: batch(backlog-entries)
-- **Status**: pending
+- **Status**: implemented(46545009300388c03fa373703a6113f7de86c1c5)
 - **Gloss**: 把你真正的多 worktree 問題記下來：認領會在合併時撞，不是執行期。
 
 ## Task 12 — BACKLOG.md 索引重生
@@ -352,7 +352,10 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 
 ## Decision Log
 
-(empty at plan time)
+### DL-1 — Deletion task's reviewer packet cannot satisfy the cat-file existence check (2026-08-31, SDD wave 1)
+- Class: packet-side contract collision, below kickoff threshold (review mechanics; no product consequence).
+- Fact (orchestrator): SDD step 3 requires `git cat-file -e <reviewed_sha>:<path>` for every declared `Files touched`; Task 4's two paths are deleted at every SHA after its commit, so the check fails by construction for any deletion task.
+- Decision: dispatch Task 4's reviewers with the deletion commit as the artifact scope — cross-read the removed content at `<commit>~1:<path>` and prove absence at `<commit>:<path>` — instead of refusing the fan-out; the immutable-SHA principle (no working-tree reads) is preserved. Recorded here rather than briefed; a follow-up to the SDD contract text is a candidate memory/backlog item at close-out.
 
 ## Notes
 
