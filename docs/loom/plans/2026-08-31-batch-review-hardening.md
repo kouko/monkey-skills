@@ -52,7 +52,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-1
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: claimed(@implementer-t1)
+- **Status**: implemented(61c633fed0b302ece85f2a59e63934bf1d3dfd78)
 - **Gloss**: 讓 reviewer 的 PASS 只能套在它當初看到的那組 commit 上；沒收據就不准套。
 
 ## Task 2 — apply-result 從結果檔讀 packet_identity 比對，CLI 不再自行注入
