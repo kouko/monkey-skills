@@ -2,14 +2,23 @@
 from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
 import re
 import sqlite3
-from typing import Mapping
+from typing import Any, Callable, Mapping
 
-from docs_review_baseline_store import PublishedRecord, publish_record, read_record
+import docs_review_baseline_store as _store
+from docs_review_baseline_store import (
+    CampaignCapability,
+    PublishedRecord,
+    authorize_governed_action_with_capability,
+    load_campaign_capability,
+    publish_record,
+    read_record,
+)
 
 
 _ECONOMY_MODELS = {
@@ -57,6 +66,32 @@ _RESOURCE_LIMIT_FIELDS = (
 _DISPATCH_OUTCOMES = frozenset(
     {"completed", "partial", "cancelled", "cancellation-uncertain", "failed"}
 )
+_REPLAY_BOUNDARY_SEAL = object()
+
+
+@dataclass(frozen=True, init=False)
+class ReplayBoundary:
+    """Data-only reviewer input minted from governed records."""
+
+    content: bytes
+    snapshot_digest: str
+    classification: str
+    allowed_capabilities: tuple[str, ...]
+    isolation_events: tuple[dict[str, object], ...]
+    _seal: object
+
+
+class ReplayCapabilityBroker:
+    """The sole capability interface available to a reviewer adapter."""
+
+    def __init__(self, allowed: tuple[str, ...]) -> None:
+        self._allowed = frozenset(allowed)
+        self.events: list[dict[str, object]] = []
+
+    def request(self, capability: str) -> None:
+        if capability not in self._allowed:
+            self.events.append({"event": "capability-denied", "capability": capability})
+            raise PermissionError(f"replay capability is denied: {capability}")
 
 
 def _identity(record: Mapping[str, object]) -> str:
@@ -269,61 +304,265 @@ def freeze_reviewer_revision(
     return publish_record(store_root, record_id, record)
 
 
-def build_isolated_replay_envelope(
+def _freeze_governed_replay_record(
+    store_root: Path,
+    *,
+    record_id: str,
+    record: Mapping[str, object],
+    capability: CampaignCapability,
+    actor: str,
+) -> PublishedRecord:
+    receipt = authorize_governed_action_with_capability(
+        store_root,
+        capability=capability,
+        action="freeze_evidence_population",
+        actor=actor,
+        target=record_id,
+    )
+    governed = {
+        **dict(record),
+        "actor": actor,
+        "audit_record_id": receipt.audit_record_id,
+        "authorization_nonce": receipt.nonce,
+        "authority_revision_digest": receipt.authority_revision_digest,
+        "authority_revision_id": receipt.authority_revision_id,
+        "trust_root_digest": receipt.trust_root_digest,
+    }
+    return _store._publish_record_with_authorization_receipt(
+        store_root,
+        receipt,
+        action="freeze_evidence_population",
+        actor=actor,
+        target=record_id,
+        record_id=record_id,
+        record=governed,
+    )
+
+
+def freeze_replay_policy(
+    store_root: Path,
+    *,
+    record_id: str,
+    approved_classifications: list[str],
+    allowed_capabilities: list[str],
+    capability: CampaignCapability,
+    actor: str,
+) -> PublishedRecord:
+    """Freeze the classifications and capabilities allowed for replay."""
+    if not approved_classifications or not all(
+        isinstance(value, str) and value.strip() for value in approved_classifications
+    ):
+        raise ValueError("approved replay classifications are required")
+    if not all(isinstance(value, str) and value.strip() for value in allowed_capabilities):
+        raise ValueError("allowed replay capabilities must be names")
+    return _freeze_governed_replay_record(
+        store_root,
+        record_id=record_id,
+        capability=capability,
+        actor=actor,
+        record={
+            "allowed_capabilities": sorted(set(allowed_capabilities)),
+            "approved_classifications": sorted(set(approved_classifications)),
+            "kind": "replay_policy",
+            "schema_version": 1,
+        },
+    )
+
+
+def freeze_replay_classification(
+    store_root: Path,
+    *,
+    record_id: str,
+    snapshot_digest: str,
+    classification: str,
+    classifier: str,
+    approver: str,
+    handling_basis: str,
+    policy_record_id: str,
+    capability: CampaignCapability,
+    actor: str,
+) -> PublishedRecord:
+    """Freeze one classification decision for exact bytes and policy."""
+    values = (snapshot_digest, classification, classifier, approver, handling_basis)
+    if not all(isinstance(value, str) and value.strip() for value in values):
+        raise ValueError("classification decision fields are required")
+    policy = read_record(store_root, policy_record_id)
+    return _freeze_governed_replay_record(
+        store_root,
+        record_id=record_id,
+        capability=capability,
+        actor=actor,
+        record={
+            "approver": approver,
+            "classification": classification,
+            "classifier": classifier,
+            "handling_basis": handling_basis,
+            "kind": "replay_classification",
+            "policy_digest": policy.digest,
+            "policy_record_id": policy.record_id,
+            "schema_version": 1,
+            "snapshot_digest": snapshot_digest,
+        },
+    )
+
+
+def _publication_marker(store_root: Path, record: PublishedRecord) -> dict[str, object]:
+    nonce = record.record.get("authorization_nonce")
+    if not isinstance(nonce, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", nonce) is None:
+        raise ValueError("governed publication evidence is invalid")
+    marker_name = f"{nonce}.json"
+    try:
+        with _store._receipt_consumption_lock(store_root) as directory_fd:
+            payload = _store._read_regular_file(
+                directory_fd,
+                marker_name,
+                Path(_store._RECEIPT_NAMESPACE) / marker_name,
+            )
+        marker = json.loads(payload.decode("utf-8"))
+    except (FileNotFoundError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("governed publication evidence is invalid") from error
+    if not isinstance(marker, dict):
+        raise ValueError("governed publication evidence is invalid")
+    return marker
+
+
+def _validate_governed_replay_record(
+    store_root: Path, record: PublishedRecord
+) -> None:
+    capability = load_campaign_capability(store_root)
+    audit_id = record.record.get("audit_record_id")
+    try:
+        audit = read_record(store_root, str(audit_id))
+    except (FileNotFoundError, ValueError) as error:
+        raise ValueError("governed publication evidence is invalid") from error
+    expected_audit = {
+        "action": "freeze_evidence_population",
+        "actor": record.record.get("actor"),
+        "authority_revision_digest": capability.authority_revision_digest,
+        "authority_revision_id": capability.authority_revision_id,
+        "outcome": "authorized",
+        "target": record.record_id,
+        "trust_root_digest": capability.trust_root_digest,
+    }
+    marker = _publication_marker(store_root, record)
+    expected_marker = {
+        "action": "freeze_evidence_population",
+        "actor": record.record.get("actor"),
+        "audit_record_id": audit.record_id,
+        "kind": "authorization_receipt_consumption",
+        "nonce": record.record.get("authorization_nonce"),
+        "published_digest": record.digest,
+        "published_record_id": record.record_id,
+        "schema_version": 1,
+        "target": record.record_id,
+    }
+    authority_fields_match = all(
+        record.record.get(field) == value
+        for field, value in {
+            "authority_revision_digest": capability.authority_revision_digest,
+            "authority_revision_id": capability.authority_revision_id,
+            "trust_root_digest": capability.trust_root_digest,
+        }.items()
+    )
+    if (
+        not authority_fields_match
+        or any(audit.record.get(field) != value for field, value in expected_audit.items())
+        or marker != expected_marker
+    ):
+        raise ValueError("governed publication evidence is invalid")
+
+
+def _load_replay_record(
+    store_root: Path, record_id: str, *, missing_message: str
+) -> PublishedRecord:
+    try:
+        record = read_record(store_root, record_id)
+    except (FileNotFoundError, ValueError) as error:
+        raise ValueError(missing_message) from error
+    _validate_governed_replay_record(store_root, record)
+    return record
+
+
+def _seal_replay_boundary(
     snapshot: bytes,
     *,
-    classification: Mapping[str, object] | None,
-    campaign_policy: Mapping[str, object],
-    reviewer_contract: Mapping[str, object],
-) -> dict[str, object]:
-    """Bind approved bytes as data and expose only jointly allowed capabilities."""
-    digest = bytes_digest(snapshot)
-    if classification is None:
-        raise ValueError("classification decision is required")
-    required_decision_fields = (
-        "snapshot_digest",
-        "classification",
-        "classifier",
-        "approver",
-        "handling_basis",
-        "campaign_policy_revision_id",
-    )
-    if classification.get("ratified") is not True or any(
-        not isinstance(classification.get(field), str)
-        or not str(classification[field]).strip()
-        for field in required_decision_fields
-    ):
-        raise ValueError("ratified classification decision is incomplete")
-    if classification["snapshot_digest"] != digest:
-        raise ValueError("classification decision does not bind snapshot digest")
-    policy_revision = campaign_policy.get("revision_id")
-    if classification["campaign_policy_revision_id"] != policy_revision:
-        raise ValueError("classification decision does not bind campaign policy")
-    approved = campaign_policy.get("approved_classifications", [])
-    if (
-        not isinstance(approved, list)
-        or classification["classification"] not in approved
-    ):
-        raise ValueError("snapshot classification is not approved for replay")
-    allowed = campaign_policy.get("allowed_capabilities", [])
-    required = reviewer_contract.get("required_capabilities", [])
-    if not isinstance(allowed, list) or not all(isinstance(x, str) for x in allowed):
-        raise ValueError("campaign capability policy is malformed")
-    if not isinstance(required, list) or not all(isinstance(x, str) for x in required):
-        raise ValueError("reviewer capability contract is malformed")
-    denied = sorted(set(required) - set(allowed))
-    if denied:
-        raise ValueError("reviewer contract requests a capability denied by policy")
-    events = []
+    classification: str,
+    required_capabilities: list[str],
+) -> ReplayBoundary:
+    events: tuple[dict[str, object], ...] = ()
     if _ARTIFACT_INSTRUCTION.search(snapshot):
-        events.append({"event": "artifact-instruction-denied", "count": 1})
-    return {
-        "allowed_capabilities": sorted(set(required)),
-        "artifact_role": "untrusted-review-content",
-        "classification": classification["classification"],
+        events = ({"event": "artifact-instruction-denied", "count": 1},)
+    boundary = object.__new__(ReplayBoundary)
+    for field, value in {
+        "allowed_capabilities": tuple(sorted(set(required_capabilities))),
+        "classification": classification,
         "content": snapshot,
         "isolation_events": events,
-        "snapshot_digest": digest,
+        "snapshot_digest": bytes_digest(snapshot),
+        "_seal": _REPLAY_BOUNDARY_SEAL,
+    }.items():
+        object.__setattr__(boundary, field, value)
+    return boundary
+
+
+def build_isolated_replay_envelope(
+    store_root: Path,
+    snapshot: bytes,
+    *,
+    classification_record_id: str,
+    policy_record_id: str,
+    reviewer_contract: Mapping[str, object],
+) -> ReplayBoundary:
+    """Seal approved bytes as data behind a governed capability boundary."""
+    classification = _load_replay_record(
+        store_root,
+        classification_record_id,
+        missing_message="classification decision is required",
+    )
+    policy = _load_replay_record(
+        store_root, policy_record_id, missing_message="replay policy is required"
+    )
+    digest = bytes_digest(snapshot)
+    if classification.record.get("kind") != "replay_classification":
+        raise ValueError("classification decision is required")
+    if policy.record.get("kind") != "replay_policy":
+        raise ValueError("replay policy is required")
+    if classification.record.get("snapshot_digest") != digest:
+        raise ValueError("classification decision does not bind snapshot digest")
+    if (
+        classification.record.get("policy_record_id") != policy.record_id
+        or classification.record.get("policy_digest") != policy.digest
+    ):
+        raise ValueError("classification decision does not bind replay policy")
+    approved = policy.record.get("approved_classifications", [])
+    if classification.record.get("classification") not in approved:
+        raise ValueError("snapshot classification is not approved for replay")
+    allowed = policy.record.get("allowed_capabilities", [])
+    required = reviewer_contract.get("required_capabilities", [])
+    if not isinstance(required, list) or not all(isinstance(x, str) for x in required):
+        raise ValueError("reviewer capability contract is malformed")
+    if sorted(set(required) - set(allowed)):
+        raise ValueError("reviewer contract requests a capability denied by policy")
+    return _seal_replay_boundary(
+        snapshot,
+        classification=str(classification.record["classification"]),
+        required_capabilities=required,
+    )
+
+
+def run_isolated_reviewer(
+    boundary: ReplayBoundary,
+    reviewer: Callable[[bytes, ReplayCapabilityBroker], Any],
+) -> dict[str, object]:
+    """Invoke a trusted adapter with bytes plus the sole capability broker."""
+    if not isinstance(boundary, ReplayBoundary) or boundary._seal is not _REPLAY_BOUNDARY_SEAL:
+        raise TypeError("replay boundary must come from governed envelope construction")
+    broker = ReplayCapabilityBroker(boundary.allowed_capabilities)
+    result = reviewer(boundary.content, broker)
+    return {
+        "isolation_events": [*boundary.isolation_events, *broker.events],
+        "result": result,
+        "snapshot_digest": boundary.snapshot_digest,
     }
 
 
