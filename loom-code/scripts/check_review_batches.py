@@ -73,7 +73,7 @@ _PROJECTION_FIELD = re.compile(
 # cross-script import would depend on sys.path state none of those callers
 # guarantee.
 _NONE_REFERENT = re.compile(
-    r"^[\"'`]?\s*none(?:\s*[–—]|\s+-(?=\s|$))?.*?[\"'`]?\s*$", re.IGNORECASE
+    r"^[\"'`]?\s*none(?:(?:\s*[–—]|\s+-(?=\s|$)).*?)?[\"'`]?\s*$", re.IGNORECASE
 )
 
 

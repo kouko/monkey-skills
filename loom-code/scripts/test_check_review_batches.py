@@ -458,3 +458,65 @@ def test_owned_requirements_excludes_none_value_release_administration() -> None
     owned = {member["task_id"]: member["owned_requirements"] for member in fields["members"]}
     assert owned["Task 1"] == ()
     assert owned["Task 2"] == ("REQ-9",)
+
+
+def test_owned_requirements_keeps_brief_quotes_starting_with_none() -> None:
+    """A legitimate brief quote that happens to start with "None"/"none"
+    must NOT be mistaken for the `none — <reason>` sentinel — only the
+    exact `none — <reason>` / `none - <reason>` forms are the sentinel;
+    bare "none ..." prose is an ordinary quote referent."""
+    module = _module()
+    quote_capital = '"None of the export buttons currently render on Settings"'
+    quote_lower = '"none of the delete confirmations fire twice"'
+    plan = (
+        _task(1, disposition="batch(renderers)", brief=quote_capital)
+        + "\n"
+        + _task(
+            2,
+            dependencies="Task 1 completes first",
+            disposition="batch(renderers)",
+            brief=quote_lower,
+        )
+        + "\n"
+        + _task(3)
+        + "\n"
+        + _batch()
+    )
+    fields = module.execution_projection_fields(plan, "renderers")
+    owned = {member["task_id"]: member["owned_requirements"] for member in fields["members"]}
+    assert owned["Task 1"] == (quote_capital,)
+    assert owned["Task 2"] == (quote_lower,)
+
+
+def test_none_referent_matches_none_value_differentially() -> None:
+    """`_NONE_REFERENT` must agree with `check_scenario_coverage._NONE_VALUE`
+    on every case in this table — it claims to mirror that grammar
+    structurally, so a differential test (the same discipline the file's
+    own `iter_lines_outside_fences` precedent uses) is the only thing that
+    actually proves it, rather than trusting the comment."""
+    module = _module()
+    coverage_spec = importlib.util.spec_from_file_location(
+        "check_scenario_coverage", SCRIPT.with_name("check_scenario_coverage.py")
+    )
+    assert coverage_spec and coverage_spec.loader
+    coverage = importlib.util.module_from_spec(coverage_spec)
+    sys.modules[coverage_spec.name] = coverage
+    coverage_spec.loader.exec_module(coverage)
+
+    cases = [
+        "none — reason",
+        "none - reason",
+        "none",
+        "None",
+        "none of the tests",
+        '"None of the buttons"',
+        "nonexistent",
+        "REQ-1",
+        "BI-2",
+    ]
+    for case in cases:
+        is_sentinel = module._NONE_REFERENT.fullmatch(case) is not None
+        is_none_value = coverage._NONE_VALUE.fullmatch(case) is not None
+        assert is_sentinel == is_none_value, (
+            f"{case!r}: _NONE_REFERENT={is_sentinel} but _NONE_VALUE={is_none_value}"
+        )
