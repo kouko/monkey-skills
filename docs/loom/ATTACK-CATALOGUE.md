@@ -25,6 +25,10 @@ check. Seeded from the 2026-08-31 adversarial audit's six findings.
 - bypass a gate by editing its input | plan_card.py --set-status (F4) | reproduced 2026-08-31 — pinned by test_set_status_refuses_done_for_declared_batch_member
 - forge an artifact the gate trusts | batch_review_cli.py packet — undeclared file smuggling (F5) | reproduced 2026-08-31 — pinned by test_packet_refuses_member_commit_touching_undeclared_file
 - forge an artifact the gate trusts | batch_review_cli.py apply-result — foreign-batch receipt (F6) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_receipt_bound_to_another_batch
+- bypass a gate by editing its input | check_attack_catalogue.py duplicate `## Instances` / `## Guarded paths` heading shadows the earlier section | reproduced 2026-08-31 — pinned by test_checker_refuses_duplicate_section_heading
+- forge an artifact the gate trusts | check_attack_catalogue.py date field accepts any token | reproduced 2026-08-31 — pinned by test_checker_refuses_non_iso_or_impossible_dates
+- replay a stale artifact | check_attack_catalogue.py `held` accepts an impossible date as a dated record | reproduced 2026-08-31 — pinned by test_checker_refuses_non_iso_or_impossible_dates
+- cross a trust boundary (repo / worktree / process) | check_attack_catalogue.py `pinned by` resolved under a vendored dir no runner collects | reproduced 2026-08-31 — pinned by test_checker_refuses_pin_defined_only_under_a_vendored_dir
 
 ## Prose temptations
 
