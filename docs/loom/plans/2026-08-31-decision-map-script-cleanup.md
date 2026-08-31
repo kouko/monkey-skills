@@ -211,7 +211,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-13
 - **Review disposition**: batch(backlog-entries)
-- **Status**: implemented(2fd12171156467c225ccdbc1edc22b09848fe7ae)
+- **Status**: done(2fd12171156467c225ccdbc1edc22b09848fe7ae)
 - **Gloss**: Phase 3 第一項立案：1389 行的 gate marker 檔該拆三段。
 
 ## Task 9 — backlog：batch_queue 拆分
@@ -229,7 +229,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-14
 - **Review disposition**: batch(backlog-entries)
-- **Status**: implemented(c8cd893547ef3148a26a2764f10a22e66517db0d)
+- **Status**: done(c8cd893547ef3148a26a2764f10a22e66517db0d)
 - **Gloss**: Phase 3 第二項立案：1369 行的 batch_queue 檔混了六種責任。
 
 ## Task 10 — backlog：loom-design 統一 pytest root
@@ -249,7 +249,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-15
 - **Review disposition**: batch(backlog-entries)
-- **Status**: implemented(6960225bac63aa431a1b386aac78902539af4e9b)
+- **Status**: done(6960225bac63aa431a1b386aac78902539af4e9b)
 - **Gloss**: Phase 3 第三項立案：loom-design 的測試該有一個共同的 pytest 根。
 
 ## Task 11 — backlog：Map 認領在合併時衝突
@@ -269,7 +269,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-16
 - **Review disposition**: batch(backlog-entries)
-- **Status**: implemented(46545009300388c03fa373703a6113f7de86c1c5)
+- **Status**: done(46545009300388c03fa373703a6113f7de86c1c5)
 - **Gloss**: 把你真正的多 worktree 問題記下來：認領會在合併時撞，不是執行期。
 
 ## Task 12 — BACKLOG.md 索引重生
