@@ -174,7 +174,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-9
 - **Review disposition**: batch(replay-observed)
-- **Status**: pending
+- **Status**: implemented(ecf80c7778e47aca391c14d5e851c244a94d2dba)
 - **Gloss**: 手填數字的比較從此跑不過。
 
 ## Task 7 — propose_review_batches.py：模組規則聚類、上限 4、依賴序切批
@@ -274,7 +274,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-5
 - **Review disposition**: batch(replay-observed)
-- **Status**: pending
+- **Status**: implemented(8e7e899bc37429f41a4404702c9f5b1926f024c8)
 - **Gloss**: 每個弧收尾時都印出真實的派工次數，並留在 plan 裡。
 
 ## Task 11 — loom-code 版本 bump 0.107.1→0.108.0＋dogfood 指紋刷新
