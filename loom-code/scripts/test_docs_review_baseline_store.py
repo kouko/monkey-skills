@@ -21,6 +21,46 @@ from docs_review_baseline_store import (
 )
 
 
+_CAMPAIGN_ACTION_ROLES = {
+    "nominate_historical_case": "case_nominator",
+    "ratify_oracle": "oracle_ratifier",
+    "ratify_attribution": "attribution_ratifier",
+    "ratify_defect_origin": "attribution_ratifier",
+    "dispatch_replay_run": "run_dispatcher",
+    "adjudicate_finding": "dispute_adjudicator",
+    "freeze_evidence_population": "evidence_freezer",
+    "invalidate_run": "run_invalidator",
+    "inspect_raw_evidence": "raw_evidence_inspector",
+    "publish_metric_report": "report_publisher",
+}
+
+
+def _campaign_roles() -> dict[str, str]:
+    return {
+        "execution_actor": "executor:weak-runner",
+        "document_author": "author:writer",
+        "oracle_author": "author:oracle-drafter",
+        "oracle_ratifier": "maintainer:oracle-ratifier",
+        "attribution_ratifier": "maintainer:attribution-ratifier",
+        "reviewer_output_author": "model:weak-reviewer",
+        "policy_owner": "maintainer:campaign-owner",
+        "case_nominator": "maintainer:case-nominator",
+        "run_dispatcher": "operator:run-dispatcher",
+        "dispute_adjudicator": "maintainer:dispute-adjudicator",
+        "evidence_freezer": "maintainer:evidence-freezer",
+        "run_invalidator": "operator:run-invalidator",
+        "raw_evidence_inspector": "auditor:raw-evidence-inspector",
+        "report_publisher": "maintainer:report-publisher",
+    }
+
+
+def _campaign_action_authorities(roles: dict[str, str]) -> dict[str, list[str]]:
+    return {
+        action: [roles[role]]
+        for action, role in _CAMPAIGN_ACTION_ROLES.items()
+    }
+
+
 def test_req_99_historical_case_admission(tmp_path) -> None:
     # @req: REQ-99
     """Only explicit snapshot bytes can admit a scoreable replay candidate."""
@@ -166,23 +206,13 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         evidence_locators=["review:abc123#finding-1"],
     )
     snapshot_digest = case.record["snapshot"]["digest"]
-    roles = {
-        "execution_actor": "executor:weak-runner",
-        "document_author": "author:writer",
-        "oracle_author": "author:oracle-drafter",
-        "oracle_ratifier": "maintainer:oracle-ratifier",
-        "attribution_ratifier": "maintainer:attribution-ratifier",
-        "reviewer_output_author": "model:weak-reviewer",
-        "policy_owner": "maintainer:campaign-owner",
-    }
+    roles = _campaign_roles()
     authority = store.publish_authority_assignment(
         tmp_path,
         "authority-corpus-r1",
         campaign_policy_revision_id="policy-r1",
         role_identities=roles,
-        action_authorities={
-            "ratify_oracle": ["maintainer:oracle-ratifier"],
-        },
+        action_authorities=_campaign_action_authorities(roles),
         allowed_self_ratification=[],
     )
     oracle = store.ratify_governed_oracle(
@@ -679,25 +709,13 @@ def test_req_109_origin_requires_document_revision_evidence(tmp_path) -> None:
 def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     # @req: REQ-112
     """Official human judgments bind authority and fail closed on conflicts."""
-    roles = {
-        "execution_actor": "executor:weak-runner",
-        "document_author": "author:writer",
-        "oracle_author": "author:oracle-drafter",
-        "oracle_ratifier": "maintainer:oracle-ratifier",
-        "attribution_ratifier": "maintainer:attribution-ratifier",
-        "reviewer_output_author": "model:weak-reviewer",
-        "policy_owner": "maintainer:campaign-owner",
-    }
+    roles = _campaign_roles()
     authority = store.publish_authority_assignment(
         tmp_path,
         "authority-r1",
         campaign_policy_revision_id="policy-r1",
         role_identities=roles,
-        action_authorities={
-            "ratify_oracle": ["maintainer:oracle-ratifier"],
-            "ratify_attribution": ["maintainer:attribution-ratifier"],
-            "ratify_defect_origin": ["maintainer:attribution-ratifier"],
-        },
+        action_authorities=_campaign_action_authorities(roles),
         allowed_self_ratification=[],
     )
     oracle = store.ratify_governed_oracle(
@@ -778,6 +796,66 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     with pytest.raises(ValueError, match="does not exist"):
         read_record(tmp_path, "oracle-unauthorized-r1")
 
+    assert store.GOVERNED_ACTION_ROLES == _CAMPAIGN_ACTION_ROLES
+    assert authority.record["action_authorities"] == (
+        _campaign_action_authorities(roles)
+    )
+    for action, role in _CAMPAIGN_ACTION_ROLES.items():
+        audit = store.authorize_governed_action(
+            tmp_path,
+            authority_revision_id=authority.record_id,
+            action=action,
+            actor=roles[role],
+            target=f"probe-{action}",
+            trusted_authority_revision_digest=authority.digest,
+        )
+        assert audit.record["outcome"] == "authorized"
+        assert audit.record["action"] == action
+    with pytest.raises(ValueError, match="unsupported governed action"):
+        store.authorize_governed_action(
+            tmp_path,
+            authority_revision_id=authority.record_id,
+            action="delete_campaign",
+            actor=roles["policy_owner"],
+            target="campaign-r1",
+            trusted_authority_revision_digest=authority.digest,
+        )
+
+    authorized_dispatch = store.authorize_governed_action(
+        tmp_path,
+        authority_revision_id=authority.record_id,
+        action="dispatch_replay_run",
+        actor=roles["run_dispatcher"],
+        target="run-not-created-yet",
+        trusted_authority_revision_digest=authority.digest,
+    )
+    assert authorized_dispatch.record == {
+        "action": "dispatch_replay_run",
+        "actor": roles["run_dispatcher"],
+        "authority_revision_digest": authority.digest,
+        "authority_revision_id": authority.record_id,
+        "campaign_policy_revision_id": "policy-r1",
+        "kind": "governance_audit_event",
+        "outcome": "authorized",
+        "schema_version": 1,
+        "target": "run-not-created-yet",
+    }
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "run-not-created-yet")
+
+    refused_dispatch = store.authorize_governed_action(
+        tmp_path,
+        authority_revision_id=authority.record_id,
+        action="dispatch_replay_run",
+        actor="operator:intruder",
+        target="run-still-not-created",
+        trusted_authority_revision_digest=authority.digest,
+    )
+    assert refused_dispatch.record["outcome"] == "refused_unauthorized"
+    assert refused_dispatch.record["campaign_policy_revision_id"] == "policy-r1"
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "run-still-not-created")
+
     conflicted_roles = dict(roles)
     conflicted_roles["oracle_ratifier"] = conflicted_roles["document_author"]
     conflicted = store.publish_authority_assignment(
@@ -785,7 +863,10 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         "authority-conflicted-r1",
         campaign_policy_revision_id="policy-r1",
         role_identities=conflicted_roles,
-        action_authorities={"ratify_oracle": [conflicted_roles["oracle_ratifier"]]},
+        action_authorities={
+            **_campaign_action_authorities(conflicted_roles),
+            "ratify_oracle": [conflicted_roles["oracle_ratifier"]],
+        },
         allowed_self_ratification=[],
     )
     disputed = store.ratify_governed_oracle(
@@ -818,7 +899,10 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         "authority-self-authored-r1",
         campaign_policy_revision_id="policy-forged-r1",
         role_identities=forged_roles,
-        action_authorities={"ratify_oracle": ["maintainer:self-authorizer"]},
+        action_authorities={
+            **_campaign_action_authorities(forged_roles),
+            "ratify_oracle": ["maintainer:self-authorizer"],
+        },
         allowed_self_ratification=["oracle_ratifier=oracle_author"],
     )
     records_before_refusal = sorted(

@@ -499,19 +499,33 @@ def _required_text(value: object, field: str) -> str:
 
 
 _AUTHORITY_ROLES = {
+    "case_nominator",
+    "dispute_adjudicator",
     "execution_actor",
+    "evidence_freezer",
     "document_author",
     "oracle_author",
     "oracle_ratifier",
     "attribution_ratifier",
+    "raw_evidence_inspector",
+    "report_publisher",
     "reviewer_output_author",
+    "run_dispatcher",
+    "run_invalidator",
     "policy_owner",
 }
 
-_RATIFICATION_ROLE = {
+GOVERNED_ACTION_ROLES = {
+    "nominate_historical_case": "case_nominator",
     "ratify_oracle": "oracle_ratifier",
     "ratify_attribution": "attribution_ratifier",
     "ratify_defect_origin": "attribution_ratifier",
+    "dispatch_replay_run": "run_dispatcher",
+    "adjudicate_finding": "dispute_adjudicator",
+    "freeze_evidence_population": "evidence_freezer",
+    "invalidate_run": "run_invalidator",
+    "inspect_raw_evidence": "raw_evidence_inspector",
+    "publish_metric_report": "report_publisher",
 }
 
 _CONFLICT_ROLES = {
@@ -543,12 +557,17 @@ def _authority_fields(
     actions: dict[str, list[str]] = {}
     for action, identities in action_authorities.items():
         action = _required_text(action, "action")
-        if action not in _RATIFICATION_ROLE:
+        if action not in GOVERNED_ACTION_ROLES:
             raise ValueError(f"unsupported governed action: {action!r}")
         if not isinstance(identities, list) or not identities:
             raise ValueError(f"action_authorities.{action} must be a non-empty list")
         actions[action] = sorted(
             {_required_text(identity, f"action_authorities.{action}") for identity in identities}
+        )
+    missing_actions = sorted(GOVERNED_ACTION_ROLES.keys() - actions.keys())
+    if missing_actions:
+        raise ValueError(
+            f"action_authorities missing required governed actions: {missing_actions}"
         )
     if not isinstance(allowed_self_ratification, list) or any(
         not isinstance(item, str) or "=" not in item
@@ -617,14 +636,16 @@ def revise_authority_assignment(
     return append_revision(store_root, parent_revision_id, child)
 
 
-def _ratification_authority_evidence(
+def _governed_action_authority(
     store_root: Path,
     *,
     authority_revision_id: str,
     action: str,
     actor: str,
     trusted_authority_revision_digest: str,
-) -> tuple[PublishedRecord, dict[str, object], bool]:
+) -> tuple[PublishedRecord, dict[str, object], str, bool]:
+    if action not in GOVERNED_ACTION_ROLES:
+        raise ValueError(f"unsupported governed action: {action!r}")
     authority = read_record(store_root, authority_revision_id)
     if authority.record.get("kind") != "authority_assignment":
         raise ValueError("authority_revision_id must name an authority assignment")
@@ -637,7 +658,7 @@ def _ratification_authority_evidence(
         )
     if authority.digest != trusted_digest:
         raise ValueError("authority assignment does not match trusted authority revision digest")
-    actor = _human_ratifier(actor)
+    actor = _required_text(actor, "actor")
     try:
         assignment = _authority_fields(
             campaign_policy_revision_id=authority.record.get(
@@ -657,8 +678,30 @@ def _ratification_authority_evidence(
     roles = assignment["role_identities"]
     exceptions = assignment["allowed_self_ratification"]
     permitted = actions.get(action, [])
-    ratifier_role = _RATIFICATION_ROLE[action]
-    authorized = actor in permitted and roles.get(ratifier_role) == actor
+    action_role = GOVERNED_ACTION_ROLES[action]
+    authorized = actor in permitted and roles.get(action_role) == actor
+    return authority, assignment, actor, authorized
+
+
+def _ratification_authority_evidence(
+    store_root: Path,
+    *,
+    authority_revision_id: str,
+    action: str,
+    actor: str,
+    trusted_authority_revision_digest: str,
+) -> tuple[PublishedRecord, dict[str, object], bool]:
+    actor = _human_ratifier(actor)
+    authority, assignment, actor, authorized = _governed_action_authority(
+        store_root,
+        authority_revision_id=authority_revision_id,
+        action=action,
+        actor=actor,
+        trusted_authority_revision_digest=trusted_authority_revision_digest,
+    )
+    roles = assignment["role_identities"]
+    exceptions = assignment["allowed_self_ratification"]
+    ratifier_role = GOVERNED_ACTION_ROLES[action]
     conflicts = sorted(
         role
         for role in _CONFLICT_ROLES
@@ -673,6 +716,39 @@ def _ratification_authority_evidence(
         "status": "insufficient" if conflicts else "satisfied",
     }
     return authority, evidence, authorized
+
+
+def authorize_governed_action(
+    store_root: Path,
+    *,
+    authority_revision_id: str,
+    action: str,
+    actor: str,
+    target: str,
+    trusted_authority_revision_digest: str,
+) -> PublishedRecord:
+    """Audit one authority decision before a caller mutates its target."""
+    authority, _assignment, actor, authorized = _governed_action_authority(
+        store_root,
+        authority_revision_id=authority_revision_id,
+        action=action,
+        actor=actor,
+        trusted_authority_revision_digest=trusted_authority_revision_digest,
+    )
+    audit = {
+        "action": action,
+        "actor": actor,
+        "authority_revision_digest": authority.digest,
+        "authority_revision_id": authority.record_id,
+        "campaign_policy_revision_id": authority.record[
+            "campaign_policy_revision_id"
+        ],
+        "kind": "governance_audit_event",
+        "outcome": "authorized" if authorized else "refused_unauthorized",
+        "schema_version": 1,
+        "target": _required_text(target, "target"),
+    }
+    return publish_record(store_root, f"audit-{record_digest(audit)}", audit)
 
 
 def _ratification_governance(
