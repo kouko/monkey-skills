@@ -66,6 +66,7 @@
 ### REQ-115
 
 - test_req_115_actual_model_identity_is_verified_twice
+- test_req_115_execution_identity_is_verified_at_point_of_use
 
 ### REQ-99
 

@@ -27,6 +27,28 @@ def _binding(host: str, model: str) -> dict[str, str]:
     }
 
 
+def _codex_receipt(monkeypatch, attempt_id: str, raw_jsonl: bytes):
+    boundary = runner._seal_replay_boundary(
+        b"review input",
+        classification="internal-project",
+        required_capabilities=[],
+    )
+
+    def fake_run(command, **kwargs):
+        if command == ["codex", "--version"]:
+            return subprocess.CompletedProcess(
+                command, 0, stdout=b"codex-cli 1.2.3\n", stderr=b""
+            )
+        return subprocess.CompletedProcess(
+            command, 0, stdout=raw_jsonl, stderr=b""
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    return runner.run_isolated_reviewer(
+        boundary, attempt_id=attempt_id
+    )["invocation_receipt"]
+
+
 def _replay_authority(store_root):
     roles = {
         "case_nominator": "maintainer:case-nominator",
@@ -295,6 +317,11 @@ def test_req_111_replay_content_is_untrusted_and_data_bound(
     jsonl = b'{"type":"thread.started","thread_id":"review-r1"}\n'
 
     def fake_run(command, **kwargs):
+        if command == ["codex", "--version"]:
+            assert kwargs == {"capture_output": True, "check": True}
+            return subprocess.CompletedProcess(
+                command, 0, stdout=b"codex-cli 1.2.3\n", stderr=b""
+            )
         assert command == [
             "codex",
             "exec",
@@ -330,7 +357,7 @@ def test_req_111_replay_content_is_untrusted_and_data_bound(
         ]
         assert kwargs["input"] == snapshot
         assert kwargs["capture_output"] is True
-        assert kwargs["check"] is True
+        assert kwargs["check"] is False
         assert list(Path(kwargs["cwd"]).iterdir()) == []
         return subprocess.CompletedProcess(command, 0, stdout=jsonl, stderr=b"")
 
@@ -339,7 +366,7 @@ def test_req_111_replay_content_is_untrusted_and_data_bound(
     assert "reviewer" not in inspect.signature(
         runner.run_isolated_reviewer
     ).parameters
-    replay = runner.run_isolated_reviewer(boundary)
+    replay = runner.run_isolated_reviewer(boundary, attempt_id="attempt-r1")
     assert replay["jsonl"] == jsonl
     assert replay["snapshot_digest"] == digest
     assert replay["isolation_events"] == [
@@ -677,7 +704,9 @@ def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
     }
 
 
-def test_req_115_actual_model_identity_is_verified_twice(tmp_path) -> None:
+def test_req_115_actual_model_identity_is_verified_twice(
+    tmp_path, monkeypatch
+) -> None:
     # @req: REQ-115
     prepared = _binding("codex", "gpt-5.6-luna")
     identity_fields = tuple(prepared)
@@ -710,12 +739,22 @@ def test_req_115_actual_model_identity_is_verified_twice(tmp_path) -> None:
         completeness="complete",
         outcome="completed",
         capture_attestation=exact,
+        invocation_receipt=_codex_receipt(
+            monkeypatch, exact_attempt, b"exact response"
+        ),
     )
     assert verified["scoreable"] is True
     assert verified["identity_reason"] is None
-    assert runner.read_dispatch_captures(tmp_path, exact_attempt)[0][
-        "capture_attestation"
-    ] == exact
+    stored_identity = runner.read_dispatch_captures(
+        tmp_path, exact_attempt
+    )[0]["capture_attestation"]
+    assert {field: stored_identity[field] for field in exact} == exact
+    assert stored_identity["runner_invocation_receipt"][
+        "backend_model_identity"
+    ] is None
+    assert "does not directly echo model identity" in stored_identity[
+        "runner_invocation_receipt"
+    ]["identity_limitation"]
 
     mismatch_values = {
         "host": "claude-code",
@@ -841,7 +880,37 @@ def test_req_115_actual_model_identity_is_verified_twice(tmp_path) -> None:
     assert unattested["scoreability_status"] == "ineligible-identity"
 
 
-def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
+def test_req_115_execution_identity_is_verified_at_point_of_use(tmp_path) -> None:
+    # @req: REQ-115
+    attempt_id = "attempt-fabricated-identity"
+    prepared = _binding("codex", "gpt-5.6-luna")
+    fabricated = {"attempt_id": attempt_id, **prepared}
+    lease = runner.claim_dispatch(
+        tmp_path,
+        attempt_id,
+        "owner-fabricated",
+        prepared_profile=prepared,
+        dispatch_attestation=fabricated,
+    )
+
+    captured = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id=attempt_id,
+        owner_id=lease["owner_id"],
+        fence_generation=lease["fence_generation"],
+        raw_bytes=b"caller-controlled bytes",
+        completeness="complete",
+        outcome="completed",
+        capture_attestation=fabricated,
+    )
+
+    assert captured["scoreable"] is False
+    assert captured["identity_reason"] == "runner invocation receipt unavailable"
+
+
+def test_req_114_dispatch_and_capture_are_crash_safe(
+    tmp_path, monkeypatch
+) -> None:
     # @req: REQ-114
     prepared = _binding("codex", "gpt-5.6-luna")
 
@@ -950,6 +1019,11 @@ def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
         completeness="complete",
         outcome="completed",
         capture_attestation=attestation("attempt-takeover"),
+        invocation_receipt=_codex_receipt(
+            monkeypatch,
+            "attempt-takeover",
+            b"authoritative complete bytes",
+        ),
     )
     assert final["late"] is False
     assert final["scoreable"] is True
@@ -1050,6 +1124,9 @@ def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
         completeness="complete",
         outcome="completed",
         capture_attestation=attestation("attempt-retry"),
+        invocation_receipt=_codex_receipt(
+            monkeypatch, "attempt-retry", b"retry bytes"
+        ),
     )
     assert retry["scoreability_status"] == "eligible"
     cancelled_late = runner.capture_dispatch_bytes(
