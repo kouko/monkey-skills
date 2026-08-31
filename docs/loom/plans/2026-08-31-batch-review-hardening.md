@@ -99,7 +99,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-5
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: claimed(@implementer-t3)
+- **Status**: implemented(5e467c47f6bbd9b7f6eff4b0ac1d6321527e610c)
 - **Gloss**: 批次審查看得到成員 commit 偷改的檔案，不比逐任務審查弱。
 
 ## Task 4 — 結果檔格式與 ground_ref 逐字規則寫進契約；SKILL.md 改指向
