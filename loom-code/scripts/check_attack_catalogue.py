@@ -37,11 +37,19 @@ Exit codes:
 
         unpinned    — a `reproduced` entry has no `pinned by`
         dangling    — the named test resolves to no `def <name>` in any
-                       `test_*.py` under --repo, nor a name inside a
-                       `.sh` file under a `tests/` directory
+                       `test_*.py` under --repo (module-level or a
+                       class-body method, resolved by parsing the AST —
+                       a `def` sitting inside a docstring or comment
+                       never counts), nor a name inside a `.sh` file
+                       under a `tests/` directory
         undated     — a `held` entry has no date
         unguarded   — `## Guarded paths` is empty or absent
         incomplete  — any of the three sections is missing
+        malformed   — an `## Instances` status starts with `reproduced`
+                       / `held` / `not-applicable` but does not fully
+                       match that status's grammar (e.g. `pinned by`
+                       with no name after it), or matches none of the
+                       three tokens at all
 
 Stdlib only.
 """
@@ -49,6 +57,7 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import sys
 from dataclasses import dataclass, field
@@ -65,21 +74,20 @@ _INSTANCE_LINE = re.compile(
 )
 
 _REPRODUCED_STATUS = re.compile(
-    r"^reproduced\s+(?P<date>\S+)(?:\s*—\s*pinned by\s*(?P<test>\S+))?\s*$"
+    r"^reproduced\s+(?P<date>\S+)(?:\s*—\s*pinned by\s*(?P<test>\S*))?\s*$"
 )
 _HELD_STATUS = re.compile(r"^held(?:\s+(?P<date>\S+))?\s*$")
 _NOT_APPLICABLE_STATUS = re.compile(
     r"^not-applicable\s*—\s*(?P<reason>.+)$"
 )
 
-_DEF_LINE = re.compile(r"^def\s+(\w+)\s*\(", re.MULTILINE)
 
 
 @dataclass
 class Instance:
     klass: str
     target: str
-    verdict: str  # "reproduced" | "held" | "not-applicable"
+    verdict: str  # "reproduced" | "held" | "not-applicable" | "malformed"
     line: str  # the raw bullet text, for diagnostics
     date: str | None = None
     pinned_by: str | None = None
@@ -143,57 +151,77 @@ def parse_store(text: str) -> Store:
     for raw in sections.get("Instances", []):
         m = _INSTANCE_LINE.match(raw)
         if not m:
-            # Not a well-formed instance line; skip — malformed lines
-            # are not this parser's concern beyond the named refusals.
+            # Not a well-formed `<class> | <target> | <status>` line at
+            # all — no status to classify, so it cannot be "malformed"
+            # in the sense check_store reports; skip as before.
             continue
         klass = m.group("klass").strip()
         target = m.group("target").strip()
         status = m.group("status").strip()
 
-        rm = _REPRODUCED_STATUS.match(status)
-        if rm:
-            store.instances.append(
-                Instance(
-                    klass=klass,
-                    target=target,
-                    verdict="reproduced",
-                    line=raw,
-                    date=rm.group("date"),
-                    pinned_by=rm.group("test"),
+        if status.startswith("reproduced"):
+            rm = _REPRODUCED_STATUS.match(status)
+            # `test` is None when "— pinned by" was never attempted (the
+            # legal unpinned case check_store flags separately), "" when
+            # "pinned by" was attempted but named nothing (a bypass CQ-2
+            # closes: that must never resolve as a legal unpinned entry),
+            # and a real value otherwise.
+            if rm is None or rm.group("test") == "":
+                store.instances.append(
+                    Instance(klass=klass, target=target, verdict="malformed", line=raw)
                 )
-            )
+            else:
+                store.instances.append(
+                    Instance(
+                        klass=klass,
+                        target=target,
+                        verdict="reproduced",
+                        line=raw,
+                        date=rm.group("date"),
+                        pinned_by=rm.group("test"),
+                    )
+                )
             continue
 
-        hm = _HELD_STATUS.match(status)
-        if hm and status.startswith("held"):
-            store.instances.append(
-                Instance(
-                    klass=klass,
-                    target=target,
-                    verdict="held",
-                    line=raw,
-                    date=hm.group("date"),
+        if status.startswith("held"):
+            hm = _HELD_STATUS.match(status)
+            if hm is None:
+                store.instances.append(
+                    Instance(klass=klass, target=target, verdict="malformed", line=raw)
                 )
-            )
+            else:
+                store.instances.append(
+                    Instance(
+                        klass=klass,
+                        target=target,
+                        verdict="held",
+                        line=raw,
+                        date=hm.group("date"),
+                    )
+                )
             continue
 
-        nm = _NOT_APPLICABLE_STATUS.match(status)
-        if nm:
-            store.instances.append(
-                Instance(
-                    klass=klass,
-                    target=target,
-                    verdict="not-applicable",
-                    line=raw,
-                    reason=nm.group("reason").strip(),
+        if status.startswith("not-applicable"):
+            nm = _NOT_APPLICABLE_STATUS.match(status)
+            if nm is None:
+                store.instances.append(
+                    Instance(klass=klass, target=target, verdict="malformed", line=raw)
                 )
-            )
+            else:
+                store.instances.append(
+                    Instance(
+                        klass=klass,
+                        target=target,
+                        verdict="not-applicable",
+                        line=raw,
+                        reason=nm.group("reason").strip(),
+                    )
+                )
             continue
 
-        # Unrecognized status — record as-is with no verdict so the
-        # checker can still see it exists; verdict left as raw status.
+        # Status names none of the three tokens at all.
         store.instances.append(
-            Instance(klass=klass, target=target, verdict=status, line=raw)
+            Instance(klass=klass, target=target, verdict="malformed", line=raw)
         )
 
     return store
@@ -204,15 +232,36 @@ def guarded_path_globs(store: Store) -> list[str]:
     return list(store.guarded_paths)
 
 
+def _defined_function_names(path: Path) -> set[str]:
+    """Every `def`/`async def` name at module level or inside a class
+    body in `path`, resolved by parsing the AST — so a `def` sitting
+    inside a docstring, a comment, or any other string literal can never
+    satisfy a `pinned by` claim the way a raw-text scan would. Unreadable
+    or unparsable files resolve to no names rather than raising."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return set()
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return set()
+
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.ClassDef):
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    names.add(item.name)
+    return names
+
+
 def _test_name_defined_under_repo(name: str, repo: Path) -> bool:
     for path in repo.rglob("test_*.py"):
-        try:
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
-            continue
-        for m in _DEF_LINE.finditer(text):
-            if m.group(1) == name:
-                return True
+        if name in _defined_function_names(path):
+            return True
 
     for tests_dir in repo.rglob("tests"):
         if not tests_dir.is_dir():
@@ -255,7 +304,16 @@ def check_store(store: Store, repo: Path) -> list[StoreError]:
         )
 
     for inst in store.instances:
-        if inst.verdict == "reproduced":
+        if inst.verdict == "malformed":
+            errors.append(
+                StoreError(
+                    "malformed",
+                    f"Error: malformed — status does not match the "
+                    f"reproduced/held/not-applicable grammar "
+                    f"— line: '{inst.line}'",
+                )
+            )
+        elif inst.verdict == "reproduced":
             if not inst.pinned_by:
                 errors.append(
                     StoreError(

@@ -110,6 +110,69 @@ def test_checker_refuses_dangling_test_name(tmp_path):
     assert "test_does_not_exist_anywhere" in result.stderr
 
 
+def test_checker_refuses_test_name_that_exists_only_inside_a_docstring(tmp_path):
+    repo = tmp_path / "repo"
+    tests_dir = repo / "tests_fixture"
+    tests_dir.mkdir(parents=True)
+    (tests_dir / "test_x.py").write_text(
+        '"""Example usage:\n\ndef test_fake():\n    pass\n"""\n'
+        "def test_real():\n    pass\n",
+        encoding="utf-8",
+    )
+    store = tmp_path / "ATTACK-CATALOGUE.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2026-08-31 — pinned by test_fake\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0
+    assert "dangling" in result.stderr
+    assert "test_fake" in result.stderr
+
+
+def test_checker_refuses_reproduced_with_empty_pinned_by(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "ATTACK-CATALOGUE.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2026-08-31 — pinned by\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0
+    assert "malformed" in result.stderr
+    assert "reproduced 2026-08-31" in result.stderr
+
+
+def test_checker_refuses_unknown_status_token(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "ATTACK-CATALOGUE.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | some-other-status\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0
+    assert "malformed" in result.stderr
+    assert "some-other-status" in result.stderr
+
+
 def test_checker_accepts_test_name_inside_sh_under_tests_dir(tmp_path):
     repo = tmp_path / "repo"
     tests_dir = repo / "tests"
