@@ -112,7 +112,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(symlink-guard)
-- **Status**: pending
+- **Status**: implemented(9259e6c43114840858d87a7e2eb6f6c17f38dae1)
 - **Gloss**: map_transaction 同樣交給 map_lock，丟的還是 CloseTransactionError。
 
 ## Task 4 — 刪除孤兒 claim_ticket 與其測試
