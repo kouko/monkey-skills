@@ -1,6 +1,7 @@
 """Tests for the docs-review historical replay runner boundaries."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 import docs_review_baseline_runner as runner
@@ -323,3 +324,70 @@ def test_req_115_actual_model_identity_is_verified_twice() -> None:
         assert result["reason"] == reason
         assert result["dispatch_attestation"] == dispatch
         assert result["capture_attestation"] == capture
+
+
+def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
+    # @req: REQ-114
+    def claim(owner: str):
+        try:
+            return runner.claim_dispatch(tmp_path, "attempt-r1", owner)
+        except ValueError as error:
+            return str(error)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        claims = list(pool.map(claim, ["owner-a", "owner-b"]))
+    leases = [item for item in claims if isinstance(item, dict)]
+    refusals = [item for item in claims if isinstance(item, str)]
+    assert len(leases) == 1
+    assert len(refusals) == 1
+    assert "already has an active owner" in refusals[0]
+
+    first = leases[0]
+    partial = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-r1",
+        owner_id=first["owner_id"],
+        fence_generation=first["fence_generation"],
+        raw_bytes=b"partial bytes",
+        outcome="cancellation-uncertain",
+    )
+    assert partial["scoreable"] is False
+    assert partial["late"] is False
+
+    second = runner.claim_dispatch(
+        tmp_path,
+        "attempt-r1",
+        "owner-c",
+        takeover_expected_generation=first["fence_generation"],
+    )
+    assert second["fence_generation"] == first["fence_generation"] + 1
+
+    late = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-r1",
+        owner_id=first["owner_id"],
+        fence_generation=first["fence_generation"],
+        raw_bytes=b"late complete bytes",
+        outcome="completed",
+    )
+    assert late["late"] is True
+    assert late["scoreable"] is False
+
+    final = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-r1",
+        owner_id="owner-c",
+        fence_generation=second["fence_generation"],
+        raw_bytes=b"authoritative complete bytes",
+        outcome="completed",
+    )
+    assert final["late"] is False
+    assert final["scoreable"] is True
+
+    captures = runner.read_dispatch_captures(tmp_path, "attempt-r1")
+    assert [item["raw_bytes"] for item in captures] == [
+        b"partial bytes",
+        b"late complete bytes",
+        b"authoritative complete bytes",
+    ]
+    assert len({item["raw_digest"] for item in captures}) == 3

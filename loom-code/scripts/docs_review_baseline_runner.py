@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sqlite3
 from typing import Mapping
 
 from docs_review_baseline_store import PublishedRecord, publish_record, read_record
@@ -52,6 +53,9 @@ _RESOURCE_LIMIT_FIELDS = (
     "max_input_bytes",
     "max_output_bytes",
     "max_usage_units",
+)
+_DISPATCH_OUTCOMES = frozenset(
+    {"completed", "partial", "cancelled", "cancellation-uncertain", "failed"}
 )
 
 
@@ -354,3 +358,194 @@ def verify_execution_identity(
         "reason": reason,
         "scoreable": reason is None,
     }
+
+
+def _dispatch_database(store_root: Path) -> sqlite3.Connection:
+    store_root.mkdir(parents=True, exist_ok=True)
+    database = store_root / "dispatch-state.sqlite3"
+    if database.is_symlink():
+        raise ValueError("dispatch state database must not be a symlink")
+    connection = sqlite3.connect(database, timeout=30, isolation_level=None)
+    connection.execute("PRAGMA busy_timeout=30000")
+    connection.execute("PRAGMA synchronous=FULL")
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dispatch_leases (
+            attempt_id TEXT PRIMARY KEY,
+            owner_id TEXT NOT NULL,
+            fence_generation INTEGER NOT NULL,
+            state TEXT NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dispatch_captures (
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+            attempt_id TEXT NOT NULL,
+            owner_id TEXT NOT NULL,
+            fence_generation INTEGER NOT NULL,
+            outcome TEXT NOT NULL,
+            raw_bytes BLOB NOT NULL,
+            raw_digest TEXT NOT NULL,
+            late INTEGER NOT NULL,
+            scoreable INTEGER NOT NULL
+        )
+        """
+    )
+    return connection
+
+
+def claim_dispatch(
+    store_root: Path,
+    attempt_id: str,
+    owner_id: str,
+    *,
+    takeover_expected_generation: int | None = None,
+) -> dict[str, object]:
+    """Claim one dispatch owner or fence an explicitly uncertain predecessor."""
+    if not attempt_id.strip() or not owner_id.strip():
+        raise ValueError("attempt_id and owner_id are required")
+    connection = _dispatch_database(store_root)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        row = connection.execute(
+            "SELECT owner_id, fence_generation, state FROM dispatch_leases "
+            "WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+        if row is None:
+            if takeover_expected_generation is not None:
+                raise ValueError("takeover has no predecessor lease")
+            generation = 1
+            connection.execute(
+                "INSERT INTO dispatch_leases VALUES (?, ?, ?, 'active')",
+                (attempt_id, owner_id, generation),
+            )
+        else:
+            _prior_owner, prior_generation, state = row
+            if takeover_expected_generation is None:
+                raise ValueError("attempt already has an active owner")
+            if (
+                state != "uncertain"
+                or prior_generation != takeover_expected_generation
+            ):
+                raise ValueError("takeover does not match an uncertain lease")
+            generation = prior_generation + 1
+            connection.execute(
+                "UPDATE dispatch_leases SET owner_id = ?, fence_generation = ?, "
+                "state = 'active' WHERE attempt_id = ?",
+                (owner_id, generation, attempt_id),
+            )
+        connection.execute("COMMIT")
+        return {
+            "attempt_id": attempt_id,
+            "fence_generation": generation,
+            "owner_id": owner_id,
+            "state": "active",
+        }
+    except BaseException:
+        if connection.in_transaction:
+            connection.execute("ROLLBACK")
+        raise
+    finally:
+        connection.close()
+
+
+def capture_dispatch_bytes(
+    store_root: Path,
+    *,
+    attempt_id: str,
+    owner_id: str,
+    fence_generation: int,
+    raw_bytes: bytes,
+    outcome: str,
+) -> dict[str, object]:
+    """Atomically retain every byte stream while fencing stale owners."""
+    if outcome not in _DISPATCH_OUTCOMES:
+        raise ValueError(f"unsupported dispatch outcome: {outcome}")
+    if not isinstance(raw_bytes, bytes):
+        raise TypeError("raw_bytes must be bytes")
+    connection = _dispatch_database(store_root)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        row = connection.execute(
+            "SELECT owner_id, fence_generation, state FROM dispatch_leases "
+            "WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+        if row is None:
+            raise ValueError("dispatch attempt has no lease")
+        current_owner, current_generation, state = row
+        authoritative = (
+            owner_id == current_owner
+            and fence_generation == current_generation
+            and state == "active"
+        )
+        late = not authoritative
+        scoreable = authoritative and outcome == "completed"
+        digest = bytes_digest(raw_bytes)
+        cursor = connection.execute(
+            "INSERT INTO dispatch_captures "
+            "(attempt_id, owner_id, fence_generation, outcome, raw_bytes, "
+            "raw_digest, late, scoreable) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                attempt_id,
+                owner_id,
+                fence_generation,
+                outcome,
+                raw_bytes,
+                digest,
+                int(late),
+                int(scoreable),
+            ),
+        )
+        if authoritative:
+            next_state = "completed" if outcome == "completed" else "uncertain"
+            connection.execute(
+                "UPDATE dispatch_leases SET state = ? WHERE attempt_id = ?",
+                (next_state, attempt_id),
+            )
+        connection.execute("COMMIT")
+        return {
+            "capture_sequence": cursor.lastrowid,
+            "late": late,
+            "outcome": outcome,
+            "raw_digest": digest,
+            "scoreable": scoreable,
+        }
+    except BaseException:
+        if connection.in_transaction:
+            connection.execute("ROLLBACK")
+        raise
+    finally:
+        connection.close()
+
+
+def read_dispatch_captures(
+    store_root: Path, attempt_id: str
+) -> list[dict[str, object]]:
+    """Read immutable capture evidence in commit order."""
+    connection = _dispatch_database(store_root)
+    try:
+        rows = connection.execute(
+            "SELECT sequence, owner_id, fence_generation, outcome, raw_bytes, "
+            "raw_digest, late, scoreable FROM dispatch_captures "
+            "WHERE attempt_id = ? ORDER BY sequence",
+            (attempt_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+    return [
+        {
+            "capture_sequence": row[0],
+            "owner_id": row[1],
+            "fence_generation": row[2],
+            "outcome": row[3],
+            "raw_bytes": bytes(row[4]),
+            "raw_digest": row[5],
+            "late": bool(row[6]),
+            "scoreable": bool(row[7]),
+        }
+        for row in rows
+    ]

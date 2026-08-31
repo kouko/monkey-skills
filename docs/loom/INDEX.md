@@ -57,6 +57,10 @@
 
 - test_req_113_campaign_resource_use_is_bounded
 
+### REQ-114
+
+- test_req_114_dispatch_and_capture_are_crash_safe
+
 ### REQ-115
 
 - test_req_115_actual_model_identity_is_verified_twice
@@ -498,7 +502,6 @@
 - REQ-106
 - REQ-107
 - REQ-108
-- REQ-114
 - REQ-116
 - REQ-117
 - REQ-118
