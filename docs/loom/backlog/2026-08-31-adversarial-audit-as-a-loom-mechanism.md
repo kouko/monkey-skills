@@ -1,7 +1,7 @@
 ---
 name: 2026-08-31-adversarial-audit-as-a-loom-mechanism
 description: Decide whether a post-merge adversarial audit (break-it, zero-context, reproduce-or-hold) becomes a loom-code mechanism for safety-bearing changes, or stays an ad-hoc dispatch
-status: open
+status: closed
 origin: 2026-08-31 — an ad-hoc opus adversarial audit of main 96a56d8b (loom-code 0.106.0), dispatched by the orchestrator outside any loom skill, reproduced four 🔴 in the batch-review adapter one hour after #767 merged with every per-task triad and the whole-branch review PASS
 start: event — the batch-review-hardening arc (docs/loom/specs/2026-08-31-batch-review-hardening.md) closes, so the value of the audit that produced it can be weighed against its cost with the fix arc's numbers in hand
 ---
@@ -35,3 +35,8 @@ reads as an extra dimension without a separate dispatch. The choice needs
 the fix arc's outcome first — if the seven closures land cheaply, the audit
 paid for itself and (a) or (b) is worth a brief; if they sprawl, the
 finding is that the audit should run before merge, not after.
+
+Closed 2026-08-31 — the station ships pre-merge, not post-merge as this
+entry proposed: shapes (a) (plan-level flag) and (c) (a catalogue read by
+the reviewer) were adopted; (b) the standalone post-merge skill was not.
+See `docs/loom/specs/2026-08-31-adversarial-audit-station.md`.
