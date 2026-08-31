@@ -702,19 +702,30 @@ def _validated_batch_snapshot(
 
 
 _BATCH_DISPOSITION = re.compile(r"batch\(([a-z0-9][a-z0-9-]*)\)")
+_REVIEW_BATCHES_SECTION = re.compile(r"^## Review Batches\s*$", re.MULTILINE)
 
 
 def _batch_member_done_refusal(
     text: str, task_number: int, status: str
 ) -> str | None:
-    """None when `--set-status` may write `status` to task T<task_number>;
-    otherwise the refusal message. Fires only for a `done(<sha>)` write
-    to a task whose own `- Review disposition:` line is `batch(<id>)` —
-    `batch_review_cli.py apply-result` is the only legitimate writer of
-    a declared batch member's `done`, so crash recovery can trust a
-    `done` it finds (plan Task 5). Fails closed on a schema-invalid or
-    unknown batch (the oracle's `ValueError`) — refuse rather than let
-    a broken plan through."""
+    """None when `--set-status` may write `status` to task T<task_number>
+    of the given locked `text`; otherwise the refusal message. Fires
+    only for a `done(<sha>)` write to a task whose own `- Review
+    disposition:` line is `batch(<id>)` — `batch_review_cli.py
+    apply-result` is the only legitimate writer of a declared batch
+    member's `done`, so crash recovery can trust a `done` it finds
+    (plan Task 5). Fails closed: a missing `- Review disposition:`
+    line refuses when the plan declares a `## Review Batches` section
+    (schema-invalid — a member could be hiding behind the missing
+    line) and passes through when it does not (an old-format plan
+    predating the disposition field); an unknown/schema-invalid batch
+    id (the oracle's `ValueError`) also refuses.
+
+    Callers pass the SAME `text` they are about to mutate, evaluated
+    from inside `_publish_cli_mutation`'s lock (the `mutation`
+    callable idiom already used by `set_status`/`set_stage`) — the
+    guard and the write must see identical bytes, never a read taken
+    outside that lock."""
     if _DONE_STATUS.fullmatch(status) is None:
         return None
     for number, _name, block in _task_blocks(text):
@@ -724,6 +735,13 @@ def _batch_member_done_refusal(
     else:
         return None
     if disposition is None:
+        if _REVIEW_BATCHES_SECTION.search(text) is not None:
+            return (
+                f"task T{task_number} has no '- Review disposition:' line "
+                "while the plan declares a '## Review Batches' section — "
+                "schema-invalid, refusing rather than risk a hidden batch "
+                "member"
+            )
         return None
     match = _BATCH_DISPOSITION.fullmatch(disposition)
     if match is None:
@@ -1189,15 +1207,15 @@ def main() -> int:
                 task_number,
                 _expand_status_sha_ref(status, plan_path),
             )
-            refusal = _batch_member_done_refusal(
-                plan_path.read_text(encoding="utf-8"), *set_status_ref
-            )
-            if refusal is not None:
-                print(f"plan_card: FAIL — {refusal}", file=sys.stderr)
-                return 1
+
+            def _guarded_set_status(current: str) -> tuple[str, str, str]:
+                refusal = _batch_member_done_refusal(current, *set_status_ref)
+                if refusal is not None:
+                    raise ValueError(refusal)
+                return set_status(current, *set_status_ref)
+
             new_text, old_line, new_line = _publish_cli_mutation(
-                plan_path,
-                lambda current: set_status(current, *set_status_ref),
+                plan_path, _guarded_set_status
             )
             print(f"old: {old_line}")
             print(f"new: {new_line}")
