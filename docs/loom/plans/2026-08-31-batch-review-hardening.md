@@ -98,7 +98,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
   - (ordering only: same file, different function; sequential to avoid concurrent edits of `batch_review_cli.py`)
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Review disposition**: individual
+- **Review disposition**: batch(apply-result-binding)
 - **Status**: pending
 - **Gloss**: 批次審查看得到成員 commit 偷改的檔案，不比逐任務審查弱。
 
@@ -202,10 +202,10 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 ## Review Batches
 
 ### Review Batch: apply-result-binding
-- **Members**: Task 1, Task 2
-- **Verdict question**: Does `apply-result` now refuse everything not bound to the dispatched packet — a drifted member sha, a foreign receipt, a missing receipt, and a result file whose packet identity is absent or belongs to another packet — with no ledger write and no receipt flip on refusal, each pinned by a RED test that reproduces the audit's attack?
+- **Members**: Task 1, Task 2, Task 3
+- **Verdict question**: Do `packet` and `apply-result` together refuse everything not bound to the reviewed bytes — a member commit touching undeclared files at packet time, and at apply time a drifted member sha, a foreign receipt, a missing receipt, or a result file whose packet identity is absent or belongs to another packet — with no ledger write and no receipt flip on refusal, each pinned by a RED test that reproduces the audit's attack?
 - **Review lane**: full
-- **Aggregate verification**: inert description — run the batch CLI test module and confirm the four new refusal tests plus the pre-existing finalize, reopen and recovery tests pass, then re-run the audit's F1 and F2 reproduction steps against the fixed CLI and observe non-zero exits.
+- **Aggregate verification**: inert description — run the batch CLI test module and confirm the five new refusal tests plus the pre-existing finalize, reopen and recovery tests pass, then re-run the audit's F1, F2 and F5 reproduction steps against the fixed CLI and observe non-zero exits.
 - **Boundary**: capability: batch-review apply-result binding; exclusions: none; consumable: yes
 
 ## Notes
@@ -213,4 +213,4 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - Change-folder binding: none — no non-archived `docs/loom/<change-id>/` folder matches branch `batch-review-hardening`, and the caller handed a brainstorming brief; the plan derives from the brief (BI- ids).
 - BI-7 (each closure lands with a RED test) is cross-cutting: every task's Acceptance RED is the audit's reproduction step, so no single task is its primary referent. BI-3 (`--receipt` required) is delivered inside Task 1 (its GREEN names the argparse case) because the receipt comparison presupposes a receipt; Task 1's primary referent stays BI-1 per the tie-break rule. BI-8 (Decision umbrella) is the sum of Tasks 1–5; BI-9 and BI-10 (What Becomes Obsolete) are delivered by Task 4's rewording and by the contract superseding the pilot Notes. The coverage checker reports these five as warnings, not errors, by design.
 - Plan-review round count: round 1 🔴 (Task 5 lacked `Reuse-adequacy`), round 2 🔴 (the round-2 `Intended` slot claimed an all-batches oracle call that does not exist — a defect the revision itself introduced). Round 3 was run past writing-plans' two-round cap because the round-2 finding was a wording defect in the revision, not a brief defect (the cap's stated reason); recorded here so the deviation is visible.
-- Review disposition rationale: Tasks 1–2 share one verdict question and one file; Task 3 is a different function with its own git-surface risk and stays individual; Task 4 is prose lane; Tasks 5–7 are separate modules.
+- Review disposition rationale: Tasks 1–3 share one file, one lane and one safety claim (only reviewed bytes can be finalized) — Task 3 was initially individual on risk aversion and was folded in at kouko's request (2026-08-31, "本次實作也請積極合併 batch"); Task 4 is prose lane; Tasks 5–7 are separate modules (Task 5's individual reviewers were already dispatched when the request arrived).
