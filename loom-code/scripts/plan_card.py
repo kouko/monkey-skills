@@ -126,10 +126,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable
 
-# Sibling resolves off sys.path[0], its own directory (same idiom as
-# check_scenario_coverage.py's `from adjudication_split import ...`).
-from loom_gate_markers import _FENCED_CODE_DELIMITER_RE, _fence_toggle
-
 _TASK_HEADING = re.compile(r"^## Task (\d+) — (.+?)\s*$", re.MULTILINE)
 _STATUS_BULLET = re.compile(r"^- \*{0,2}Status\*{0,2}:\s*(\S.*?)\s*$", re.MULTILINE)
 _STEPS_TITLE_LINE = re.compile(r"^\s+\d+\.\s+(.+?)\s*$")
@@ -217,14 +213,53 @@ def _reject_indented_header_key(header: str) -> None:
             )
 
 
+# Deliberately duplicated from loom_gate_markers.py, byte-for-byte,
+# rather than imported: plan_card.py is deployed as a lone standalone
+# copy in adopting repos with no sibling script present (CLAUDE.md
+# Contract Citations; test_plan_card_batch_states.py's
+# `_standalone_plan_card_copy` pins exactly this), so it cannot import
+# a plugin sibling. test_plan_card.py's
+# `test_fence_scanning_matches_loom_gate_markers_behaviour` is the
+# differential guard the two copies stay in step (same reasoning
+# `adjudication_split.iter_lines_outside_fences`'s docstring gives for
+# ITS merge, inverted here because the standalone constraint forbids
+# the merge).
+_FENCED_CODE_DELIMITER_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+
+
+def _fence_toggle(
+    line: str, fence: tuple[str, int] | None
+) -> tuple[str, int] | None:
+    """The fence state after `line`, given the state before it — see
+    loom_gate_markers._fence_toggle (same logic, duplicated per the
+    module comment above)."""
+    delimiter = _FENCED_CODE_DELIMITER_RE.match(line)
+    if not delimiter:
+        return fence
+    run = delimiter.group(1)
+    if fence is None:
+        return (run[0], len(run))
+    if (
+        run[0] == fence[0]
+        and len(run) >= fence[1]
+        and not line[delimiter.end() :].strip(" \t")
+    ):
+        return None
+    return fence
+
+
 def _find_misplaced_safety_bearing_line(outside: str) -> str | None:
     """The first `safety-bearing:` line (any case, any indent — an
     INDENTED line in the body is content elsewhere but must not be
     invisible to this scan either, C1 whole-branch review) in the plan
     body (everything after the header block), or None. Fence tracking
-    reuses `loom_gate_markers._fence_toggle`/`_FENCED_CODE_DELIMITER_RE`
-    (F4/C6, whole-branch review) rather than a third hand-rolled scanner
-    — lines inside a fenced code block (backtick or `~`, closing must
+    uses this module's `_fence_toggle`/`_FENCED_CODE_DELIMITER_RE` — the
+    same CommonMark rules as `loom_gate_markers._fence_toggle`, kept in
+    step by a differential test rather than an import (module comment
+    above `_FENCED_CODE_DELIMITER_RE`: plan_card.py has no sibling-script
+    imports) (F4/C6, whole-branch review) — rather than a third,
+    independently-derived hand-rolled scanner. Lines inside a fenced
+    code block (backtick or `~`, closing must
     reuse the SAME character with run length >= the opener's, per
     CommonMark) are skipped: a quoted grammar example is content, not a
     misplaced header declaration (review round 2). A fence still open at

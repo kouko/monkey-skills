@@ -1961,8 +1961,24 @@ def test_tilde_horizontal_rule_is_not_a_fence():
         plan_card._find_misplaced_safety_bearing_line(text)
 
 
-def test_fence_scanning_shares_loom_gate_markers_toggle():
-    """plan_card's fence scan and loom_gate_markers' agree because they
-    are now the SAME function — a differential regression guard: if a
-    future edit re-forks the two, this fails."""
-    assert plan_card._fence_toggle is loom_gate_markers._fence_toggle
+def test_fence_scanning_matches_loom_gate_markers_behaviour():
+    """plan_card._fence_toggle is a deliberate byte-for-byte duplicate of
+    loom_gate_markers._fence_toggle (plan_card.py has no sibling-script
+    imports — it ships as a standalone copy, per
+    test_plan_card_batch_states.py's `_standalone_plan_card_copy`). This
+    differential guard is the substitute for importing one from the
+    other: run the SAME cases through both and require identical
+    results, so a future edit that re-forks the two fails here."""
+    cases = [
+        ("```", None),
+        ("~~~", None),
+        ("````", ("`", 3)),
+        ("~~~~~~~~~~", None),
+        ("plain text", ("`", 3)),
+        ("   ```", ("`", 3)),
+        ("``` info-string", None),
+    ]
+    for line, fence_in in cases:
+        assert plan_card._fence_toggle(line, fence_in) == (
+            loom_gate_markers._fence_toggle(line, fence_in)
+        )
