@@ -31,6 +31,12 @@ D2 = f"done({B_SHA})"
 
 
 def _transition_authority(replacements, *, force_reopen_owners=None):
+    # force_reopen_owners: this fixture infers reopen-vs-finalize from
+    # set(replacements) != {1, 2} — the SAME keyset heuristic the
+    # production bug used (fixed by _replacements_are_finalization). A
+    # full-membership reopen (replacements covering both members, all
+    # "pending") must pass this flag to mint a genuine reopen authority,
+    # or the fixture would mint a finalize authority instead.
     declaration = review_batch.BatchDeclaration(
         "capability",
         ("Task 1", "Task 2"),
@@ -363,6 +369,31 @@ def test_reopen_of_every_member_is_validated_as_reopen_not_finalize(tmp_path):
     assert changed is True
     text = plan_path.read_text(encoding="utf-8")
     assert text.count("- **Status**: pending") == 3
+
+
+def test_partial_done_replacements_are_refused_as_malformed_not_keyerror(tmp_path):
+    # A done-valued replacement dict that omits a member is malformed, not a
+    # finalize on a subset — it must raise ValueError (naming the missing
+    # member) rather than a bare KeyError from the finalizing branch's
+    # replacements[number] lookup, and it must mutate nothing.
+    implemented = {1: I1, 2: I2}
+    plan_path = tmp_path / "plan.md"
+    original = _plan({**implemented, 3: "pending"})
+    plan_path.write_text(original, encoding="utf-8")
+
+    partial_done = {1: D1}
+    with pytest.raises(ValueError):
+        plan_card.atomic_batch_status_update(
+            plan_path,
+            "capability",
+            implemented,
+            partial_done,
+            # A genuine finalize authority (minted over the full done-dict)
+            # so the authority gate passes and the malformed-partial check
+            # is what actually refuses this — not an authority mismatch.
+            transition_authority=_transition_authority({1: D1, 2: D2}),
+        )
+    assert plan_path.read_text(encoding="utf-8") == original
 
 
 def test_locked_reader_releases_descriptor_after_invalid_utf8(tmp_path):

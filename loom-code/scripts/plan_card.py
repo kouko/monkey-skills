@@ -970,14 +970,16 @@ def _plan_directory_lock(path: Path):
         os.close(descriptor)
 
 
-def _batch_replacements_finalize(replacements: dict[int, str]) -> bool:
+def _replacements_are_finalization(replacements: dict[int, str]) -> bool:
     """True iff every replacement value is a done(<sha>) status.
 
     ``set(replacements) == member_set`` looks like "every member changes"
     but says nothing about the direction of that change — a reopen whose
     owner union happens to be the whole membership (every replacement is
     ``pending``) matches it too. Only the replacement VALUES tell finalize
-    and reopen apart.
+    and reopen apart. This alone does not prove full membership coverage;
+    ``_validate_batch_transition`` raises separately when a done-valued
+    dict omits a member instead of silently misreading it.
     """
     return bool(replacements) and all(
         _DONE_STATUS.fullmatch(status) is not None
@@ -994,7 +996,14 @@ def _validate_batch_transition(
 ) -> bool:
     """Validate one authorized finalization or owner-union reopen."""
     member_set = set(members)
-    finalizing = _batch_replacements_finalize(replacements)
+    attempted_finalize = _replacements_are_finalization(replacements)
+    finalizing = attempted_finalize and set(replacements) == member_set
+    if attempted_finalize and not finalizing and set(replacements) < member_set:
+        missing = sorted(member_set - set(replacements))
+        raise ValueError(
+            "finalize replacements must cover every member; missing: "
+            f"{missing}"
+        )
     action = "finalize" if finalizing else "reopen"
     owners = (
         tuple(f"Task {number}" for number in members if number in replacements)
@@ -1069,7 +1078,7 @@ def _atomic_batch_status_update_locked(
             transition_authority,
         ):
             return False
-        finalizing = _batch_replacements_finalize(replacements)
+        finalizing = _replacements_are_finalization(replacements)
 
         current = _task_statuses(text)
         current_snapshot = {number: current[number] for number in members}
