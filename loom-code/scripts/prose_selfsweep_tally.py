@@ -46,13 +46,21 @@ def load_records(path: Path) -> list[dict]:
 
 
 def validate(records: list[dict]) -> None:
-    """Fail loud on an unknown cause code or a duplicate (case_id, arm,
-    rep) triple, naming the offending record in the message."""
+    """Fail loud on an unknown arm, an unknown cause code, or a duplicate
+    (case_id, arm, rep) triple, naming the offending record in the
+    message."""
     seen: set[tuple] = set()
     for record in records:
         case_id = record.get("case_id")
         arm = record.get("arm")
         rep = record.get("rep")
+
+        if arm not in ARMS:
+            raise ValueError(
+                f"record case_id={case_id!r} rep={rep!r}: "
+                f"unknown arm {arm!r} (must be one of {sorted(ARMS)})"
+            )
+
         key = (case_id, arm, rep)
         if key in seen:
             raise ValueError(

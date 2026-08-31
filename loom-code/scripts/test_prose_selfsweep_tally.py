@@ -68,6 +68,32 @@ def test_valid_two_arm_fixture_prints_table_with_both_arms_totals(tmp_path):
         assert banned not in result.stdout.lower(), (
             f"output contains interpretive wording {banned!r}:\n{result.stdout}"
         )
+    # Value-level assertions on per-arm computed totals — catches an
+    # aggregation mutant that folds every record into one arm's bucket.
+    # Arm A: findings [A,B],[A] -> total 3, cause A=2, cause B=1;
+    #   hedge_marks 2+1=3; draft_tokens mean (100+200)/2=150.0.
+    # Arm B: findings [C],[] -> total 1, cause C=1; hedge_marks 0+1=1;
+    #   draft_tokens mean (150+150)/2=150.0.
+    assert "| gating findings (total) | 3 | 1 |" in result.stdout
+    assert "| gating findings (cause A) | 2 | 0 |" in result.stdout
+    assert "| gating findings (cause C) | 0 | 1 |" in result.stdout
+    assert "| hedge marks (total) | 3 | 1 |" in result.stdout
+    assert "| draft tokens (mean) | 150.0 | 150.0 |" in result.stdout
+
+
+def test_unknown_arm_exits_nonzero_naming_the_record(tmp_path):
+    records = [
+        _record(case_id="c1", arm="C", rep=1, causes=["A"]),
+    ]
+    fixture = _write(tmp_path, records)
+
+    result = _run(fixture)
+
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    combined = result.stdout + result.stderr
+    assert "c1" in combined
+    assert "C" in combined
 
 
 def test_unknown_cause_code_exits_nonzero_naming_the_record(tmp_path):
