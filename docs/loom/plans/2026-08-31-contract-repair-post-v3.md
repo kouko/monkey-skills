@@ -7,8 +7,8 @@ Goal: Repair the defects #765/#766 introduced without reverting either —
     batch-review adapter entrypoint — serves map family-relocation: its live
     tickets and map are the repaired artifacts (R5)
 Stage: sdd:wave-1
-Total tasks: 13
-Critical-path depth: 4 (≤5)
+Total tasks: 17
+Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-08-31, round 3)
 
@@ -25,6 +25,11 @@ T8[T8 adapter subcommands] --> T9[T9 receipt idempotency] --> T13
 T10[T10 SDD prose] --> T13
 T11[T11 amend 4 plans] --> T13
 T12[T12 proposal gate] --> T13
+T14[T14 referent grammar] --> T17[T17 pilot] --> T13
+T15[T15 plan_card 40-hex] --> T16[T16 ledger write-back] --> T17
+T8 --> T16
+T9 --> T16
+T5 --> T17
 ```
 
 ## Open Questions
@@ -68,7 +73,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     is filled with the itemized v3 semantic decisions, each tagged
     user-ratified"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(96eed0df)
 - **Gloss**: 把 v3 的空白批准紀錄補成有署名日期的正式裁決軌跡。
 
 ## Task 2 — Active requires a Destination Acceptance entry (R3a)
@@ -86,7 +91,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Brief item covered**: "R3 v3 invariant enforcement (a) state: active requires
     ≥1 Destination Acceptance entry"
 - **Review disposition**: batch(map-side-invariants)
-- **Status**: pending
+- **Status**: done(7715c6c76fed6fa132e6e8aec20c3973cd7b5f31)
 - **Gloss**: 修掉「活著的 map 沒有驗收準則仍然合法」的文件與實作矛盾。
 
 ## Task 3 — user-ratified line must be non-empty (R3b)
@@ -104,7 +109,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Brief item covered**: "R3 (b) the user-ratified: line validator rejects empty
     values"
 - **Review disposition**: batch(map-side-invariants)
-- **Status**: pending
+- **Status**: implemented(164e04fb2a59024e37ce9be7438bd2bae95e48e4)
 - **Gloss**: 批准行不可再被空殼矇混。
 
 ## Task 4 — DA evidence must be a resolvable pointer (R3c)
@@ -167,7 +172,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     -entries-on-archive — defined at ONE point in map-format, cited by
     decision-map SKILL.md, with regression tests asserting both … contracts"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(79ef44b2)
 - **Gloss**: 把被刪掉的 map↔backlog 邊界契約補回雙側。
 
 ## Task 7 — Live map repair (R5)
@@ -198,7 +203,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Description**: New loom-code/scripts CLI entrypoint exposing ready / packet / record-dispatch / apply-result, wiring review_batch.py's existing sealed-packet and resolve functions behind a CLI on a new call path; tests drive it via a synthetic validated plan.
     - Also documents the subcommand call contract as the executable path in SDD SKILL.md's batch checkpoint (R7's documentation clause).
 - **Module**: loom-code/scripts (new entrypoint + replay refactor)
-- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/task_batch_replay.py, loom-code/scripts/test_batch_review_cli.py, loom-code/skills/subagent-driven-development/SKILL.md
+- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py, loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py, loom-code/skills/subagent-driven-development/SKILL.md
 - **Context paths**:
   - loom-code/scripts/review_batch.py
   - loom-code/scripts/check_review_batches.py
@@ -219,7 +224,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     as the executable call contract in subagent-driven-development SKILL.md's
     batch checkpoint"
 - **Review disposition**: batch(adapter-cli)
-- **Status**: pending
+- **Status**: implemented(915071604d1b3affa729a6973324858d8a6f6252)
 - **Gloss**: 給 batch review 一條不用 agent 自行拼裝的可執行路徑。
 
 ## Task 9 — Dispatch receipt idempotency + readiness rules (R8)
@@ -243,7 +248,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     the dispatch receipt — re-entry refuses a second dispatch … Multi-batch
     readiness is operationalized inside the ready subcommand"
 - **Review disposition**: batch(adapter-cli)
-- **Status**: pending
+- **Status**: implemented(465c5a06d84c9b4e74b3b76f028194c305bfdf0f)
 - **Gloss**: crash 後不再重派 reviewer；多批交錯有明確 ready 判準。
 
 ## Task 10 — Whole-branch entry disambiguation (R9)
@@ -263,7 +268,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     resolved), the run necessarily enters the existing whole-branch review —
     stated as an unconditional sequence step"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(381fc3e786a817e3a35e74e95a491573bbb4c690)
 - **Gloss**: 消除 interactive 模式是否必然進整支審查的歧義。
 
 ## Task 11 — Amend the four live plans (R10)
@@ -282,7 +287,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     individual review dispositions + a minimal ## Review Batches section.
     Historical/terminal plans are NOT touched"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(74c3ee2b)
 - **Gloss**: 解開被 #766 擋住的四個活 plan。
 
 ## Task 12 — Proposal-status intake gate (R2)
@@ -304,7 +309,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     source proposal carries a non-ratified status; wired as one line into the
     existing writing-plans intake contract"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(1022d71521176074346b243c4726468f99a2d2cb)
 - **Gloss**: 讓未經批准的 proposal 狀態從此進不了計畫階段。
 
 ## Task 13 — Version bumps + codex mirror sync
@@ -317,7 +322,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Acceptance**:
   - **RED**: `python3 scripts/check_version_bump.py --base origin/main --head HEAD` exits non-zero at task start — Tasks 1–12 changed skill content while plugin.json versions stay at the pre-arc values (it exits 0 today because no skill content changed yet on this branch).
   - **GREEN**: both plugin.json versions bumped; CHANGELOGs carry dated entries; sync script exits 0; grep shows no stale version string in README version tables.
-- **Dependencies**: Tasks 1, 6, 7, 9, 10, 11, 12 complete first
+- **Dependencies**: Tasks 1, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17 complete first
 - **Seam**:
   - from Task 1: payload: none
   - from Task 6: payload: none
@@ -326,6 +331,10 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
   - from Task 10: payload: none
   - from Task 11: payload: none
   - from Task 12: payload: none
+  - from Task 14: payload: none
+  - from Task 15: payload: none
+  - from Task 16: payload: none
+  - from Task 17: payload: none
 - **Independent**: false
 - **Brief item covered**: "Execution order 6: Version bumps: loom-workflow +
     loom-code (skill/scripts content changed in both; codex mirror manifests
@@ -333,6 +342,100 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: 版本三表面同步：plugin.json、CHANGELOG、README 版本列。
+## Task 14 — Referent grammar widened for batch projections (R11a)
+- **Description**: `owned_requirements` accepts every `Brief item covered` referent plan-format admits — REQ-<n>, BI-<n>, or a quote — with non-empty as the only rule, in both the checker's projection and review_batch's projection validator.
+- **Module**: loom-code/scripts/review_batch.py (+ its projection feeder check_review_batches.py)
+- **Files touched**: loom-code/scripts/review_batch.py, loom-code/scripts/check_review_batches.py, loom-code/scripts/test_review_batch.py, loom-code/scripts/test_check_review_batches.py
+- **Context paths**:
+  - loom-code/skills/writing-plans/references/plan-format.md (§Brief item covered — referent kinds a–d)
+  - loom-code/scripts/batch_review_cli.py (consumer of the projection)
+- **Acceptance**:
+  - **RED**: new test — a validated plan whose members cite brief quotes (no REQ- id) is refused by `_validate_execution_projection` with "execution authority member is malformed" today; after the fix it seals.
+  - **GREEN**: quote / BI-<n> / REQ-<n> referents all project into owned_requirements; empty referent still refuses; existing REQ-based tests stay green.
+- **External surfaces**: stdlib only.
+- **Dependencies**: none
+- **Seam**: payload: none
+- **Independent**: true
+- **Brief item covered**: "R11 (a) Referent grammar: owned_requirements accepts every
+    Brief item covered referent plan-format admits (REQ-<n>, BI-<n>, quote) —
+    non-empty is the only requirement — in both check_review_batches.py and
+    review_batch.py's projection validator"
+- **Review disposition**: individual
+- **Status**: pending
+- **Gloss**: 讓引 brief 原句的 plan 也能發出 sealed Packet。
+
+## Task 15 — plan_card writes 40-hex SHAs by construction (R11b)
+- **Description**: `plan_card.py --set-status` expands `implemented(<short>)` / `done(<short>)` to the full 40-hex SHA via `git rev-parse` at write time, refusing an unresolvable ref, so the CLI's 40-hex rule is met without operator expansion.
+- **Module**: loom-code/scripts/plan_card.py
+- **Files touched**: loom-code/scripts/plan_card.py, loom-code/scripts/test_plan_card.py
+- **Context paths**:
+  - loom-code/scripts/batch_review_cli.py (`_IMPLEMENTED` 40-hex rule)
+- **Acceptance**:
+  - **RED**: new test — `--set-status "T1=implemented(<7-char sha of a real commit in a tmp repo>)"` writes the short form today; after the fix the ledger holds the 40-hex form and a bogus ref exits non-zero.
+  - **GREEN**: short refs expand; 40-hex input passes through unchanged; bogus ref refuses with a message naming the ref; existing plan_card tests green.
+- **External surfaces**: git CLI via subprocess (stdlib subprocess; follow the repo's existing git-invocation idiom).
+- **Dependencies**: none
+- **Seam**: payload: none
+- **Independent**: true
+- **Brief item covered**: "R11 (b) SHA grammar: plan_card.py --set-status expands
+    implemented(<short>)/done(<short>) to the 40-hex form via git rev-parse at
+    write time"
+- **Review disposition**: individual
+- **Status**: pending
+- **Gloss**: ledger 一寫進去就是 CLI 認得的完整 SHA，不用人手展開。
+
+## Task 16 — apply-result writes the ledger; plan_card single-sourced (R11c)
+- **Description**: `apply-result` performs the atomic Batch status update through plan_card's `atomic_batch_status_update` (finalize → members done(<sha>), reopen → owner union pending), and the repo-root scripts/plan_card.py becomes a verified copy of loom-code/scripts/plan_card.py with a drift test.
+- **Module**: loom-code/scripts/batch_review_cli.py
+- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py, scripts/plan_card.py, scripts/test_plan_card_ssot_drift.py
+- **Context paths**:
+  - loom-code/scripts/plan_card.py (`atomic_batch_status_update` :878, `_transition_authority_validator` :636)
+  - loom-code/scripts/review_batch.py (`resolve_aggregate_review` :1101 — transition_authority on the resolution)
+  - scripts/verify-drift.py (existing drift-test idiom)
+- **Acceptance**:
+  - **RED**: new test — `apply-result` on a finalize result leaves member statuses at implemented(<sha>) today; after the fix the plan file reads done(<sha>) for every member under the plan lock, and a reopen result flips owners to pending; new drift test fails today because the two plan_card copies differ.
+  - **GREEN**: ledger write-back on finalize/reopen with the sealed transition authority; wait_refuse writes nothing; drift test passes with the repo-root copy byte-identical to the loom-code copy.
+- **External surfaces**: stdlib only.
+- **Dependencies**: Tasks 8, 9, 15 complete first
+- **Seam**:
+  - from Task 8: payload: none
+  - from Task 9: payload: none
+  - from Task 15: payload: the 40-hex status grammar plan_card writes; owner: Task 15; probe: done(<sha>) for every member
+- **Reuse-adequacy**:
+  - **Observed**: atomic_batch_status_update takes plan_path, batch_id, expected_statuses, replacements and a sealed transition_authority, runs the CAS under the shared plan-directory lock, and returns whether the write happened; no CLI calls it today. read loom-code/scripts/plan_card.py:878
+  - **Intended**: apply-result builds expected_statuses from the Packet's member snapshot and replacements from the resolution action, passes the resolution's transition_authority through unchanged, and exits non-zero when the CAS declines.
+- **Independent**: false
+- **Brief item covered**: "R11 (c) Ledger write-back: apply-result performs the atomic
+    Batch status update … through plan_card's atomic_batch_status_update; the
+    repo-root scripts/plan_card.py and loom-code/scripts/plan_card.py are
+    reconciled to one SSOT (the loom-code copy) with a drift test"
+- **Review disposition**: individual
+- **Status**: pending
+- **Gloss**: 審完自動翻 ledger；兩份 plan_card 不再分叉。
+
+## Task 17 — Pilot: this arc's map-side batch through the CLI (R11d)
+- **Description**: Drive this plan's own `map-side-invariants` Batch through ready → packet → record-dispatch → apply-result with a real reviewer fan-out result, as the end-to-end acceptance proof; the run transcript lands in the plan's Notes.
+- **Module**: docs/loom/plans (this plan's ledger)
+- **Files touched**: docs/loom/plans/2026-08-31-contract-repair-post-v3.md
+- **Context paths**:
+  - loom-code/scripts/batch_review_cli.py
+  - loom-code/skills/subagent-driven-development/SKILL.md (batch checkpoint call contract)
+- **Acceptance**:
+  - **RED**: `batch_review_cli.py packet --batch map-side-invariants` on this plan refuses today (referent grammar, T14) or the ledger is not written after apply-result (T16).
+  - **GREEN**: all four subcommands exit 0 in sequence on this plan; the plan's Task 2–5 statuses read done(<sha>) written by apply-result, not by hand; a `## Notes` entry records the four command lines and their exit codes.
+- **Dependencies**: Tasks 5, 14, 15, 16 complete first
+- **Seam**:
+  - from Task 5: payload: none
+  - from Task 14: payload: none
+  - from Task 15: payload: none
+  - from Task 16: payload: none
+- **Independent**: false
+- **Brief item covered**: "R11 (d) Pilot: this arc's own map-side-invariants Batch is
+    driven through the four CLI steps end to end as the acceptance proof"
+- **Review disposition**: individual
+- **Status**: pending
+- **Gloss**: 用本弧自己的批次真跑一遍，證明省成本的路走得通。
+
 ## Review Batches
 
 ### Review Batch: map-side-invariants
@@ -348,3 +451,12 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Review lane**: full
 - **Aggregate verification**: inert description — run the batch CLI test suite plus task_batch_replay.py through the CLI entrypoint and confirm the double-dispatch refusal and the not-ready member cases fail closed.
 - **Boundary**: capability: batch-review adapter; exclusions: none; consumable: yes
+
+## Decision Log
+
+### DL-1 — Both batches route to individual fallback (2026-08-31, SDD wave 1)
+- Class: implementation-discovered, below kickoff threshold (reversal cost: none — fallback is the documented fail-closed path; deliverables unchanged).
+- Trigger: first real `batch_review_cli.py packet` run on this plan refused with `execution authority member is malformed`. Root cause: `review_batch.py:1261` requires every member `owned_requirements` reference to start with `REQ-`, while plan-format.md §Brief item covered admits quotes, `BI-<n>`, and `REQ-<n>`. This plan cites brief quotes, so no sealed Packet can be issued for it.
+- Second seam found on the same run: `batch_review_cli.py:66` `_IMPLEMENTED` demands a 40-hex SHA while `plan_card.py --set-status` accepts short SHAs — ledger values were expanded to full SHAs by the orchestrator.
+- Superseded 2026-08-31 by brief R11 (kouko: "做吧") — Tasks 14–17 fix the three seams and re-run the map-side batch through the CLI as the pilot; `adapter-cli` stays on individual fallback (its members are the CLI under repair).
+- Decision (original): `adapter-cli` and `map-side-invariants` both take `individual_fallback` (zero Batch ledger mutation; per-task triads). Not fixed here — widening the projection's referent grammar is a change to #766's contract, out of this brief's scope. Filed as follow-up debt in the final summary.
