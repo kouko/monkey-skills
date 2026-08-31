@@ -72,7 +72,13 @@ not a formula:
    person acting or answering. A condition that resolves only when someone
    takes an action or replies to a question is not decidable by the run
    itself; it is decidable by that person, which makes it their goal, not
-   the run's.
+   the run's. Such a condition never becomes a Stop-when branch — it has
+   exactly two legitimate destinations instead. The goal can pre-decide it
+   in `Constraints`, fixing the choice before the run starts. Or the goal
+   can delegate it to the run itself, under the **Standing decision rule**
+   in `goal-shape.md` §2, which lets the run decide, record, and continue
+   without stopping to ask. Only an irreversible or outward-facing act
+   still sits outside the run, reserved for the user.
 
 ## 5 — Provenance tags
 
