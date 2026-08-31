@@ -160,10 +160,24 @@ def _packet_json(plan_path: Path, repo_root: Path, receipt_path: Path, capsys) -
     return json.loads(capsys.readouterr().out)
 
 
-def _result_file(tmp_path: Path, *, reopen: bool = False) -> Path:
+def _packet_identity(tmp_path: Path) -> str:
+    """Identity of the packet `_recorded_dispatch_receipt` (or an inline
+    `packet` call) wrote to tmp_path/packet.json."""
+    return json.loads((tmp_path / "packet.json").read_text(encoding="utf-8"))["identity"]
+
+
+# Sentinel for paths that never parse the result file (receipt refused,
+# recovery, argparse error): the value is irrelevant but must be explicit.
+_UNREAD_PACKET = "packet:never-read"
+
+
+def _result_file(
+    tmp_path: Path, packet_identity: str, *, reopen: bool = False,
+) -> Path:
     arms = ("spec-reviewer", "code-quality-reviewer")
     finding = {
         "finding_id": "finding:task-2",
+        "packet_identity": packet_identity,
         "arm": "spec-reviewer",
         "dispatch_identity": "dispatch:spec-reviewer",
         "evidence_identity": "result-proof:spec-reviewer",
@@ -177,13 +191,15 @@ def _result_file(tmp_path: Path, *, reopen: bool = False) -> Path:
     }
     payload = {
         "arm_bindings": [
-            {"arm": arm,
+            {"packet_identity": packet_identity,
+             "arm": arm,
              "dispatch_identity": f"dispatch:{arm}",
              "evidence_identity": f"dispatch-proof:{arm}"}
             for arm in arms
         ],
         "terminal_results": [
-            {"arm": arm,
+            {"packet_identity": packet_identity,
+             "arm": arm,
              "dispatch_identity": f"dispatch:{arm}",
              "dispatch_evidence_identity": f"dispatch-proof:{arm}",
              "result_identity": f"result:{arm}:{'reopen' if reopen else 'pass'}",
@@ -492,11 +508,11 @@ def test_record_dispatch_allows_new_cycle_after_result_applied(
 ) -> None:
     plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
-    result_path = _result_file(tmp_path)
     packet_file = tmp_path / "packet.json"
     packet_file.write_text(json.dumps(
         _packet_json(plan_path, repo_root, receipt_path, capsys)
     ), encoding="utf-8")
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path))
     dispatch_receipt = tmp_path / "dispatch-receipt.json"
     argv = [
         "record-dispatch", "--packet-file", str(packet_file),
@@ -570,7 +586,7 @@ def test_apply_result_finalizes(tmp_path, capsys) -> None:
     dispatch_receipt = _recorded_dispatch_receipt(
         tmp_path, plan_path, repo_root, capsys,
     )
-    result_path = _result_file(tmp_path)
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path))
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
@@ -591,7 +607,7 @@ def test_apply_result_reopens_with_owner_union(tmp_path, capsys) -> None:
     dispatch_receipt = _recorded_dispatch_receipt(
         tmp_path, plan_path, repo_root, capsys,
     )
-    result_path = _result_file(tmp_path, reopen=True)
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path), reopen=True)
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
@@ -614,7 +630,7 @@ def test_apply_result_writes_ledger_on_finalize(tmp_path, capsys) -> None:
     dispatch_receipt = _recorded_dispatch_receipt(
         tmp_path, plan_path, repo_root, capsys,
     )
-    result_path = _result_file(tmp_path)
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path))
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
@@ -639,7 +655,7 @@ def test_apply_result_writes_ledger_on_reopen(tmp_path, capsys) -> None:
     dispatch_receipt = _recorded_dispatch_receipt(
         tmp_path, plan_path, repo_root, capsys,
     )
-    result_path = _result_file(tmp_path, reopen=True)
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path), reopen=True)
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
@@ -663,7 +679,7 @@ def test_apply_result_wait_refuse_writes_nothing(tmp_path, capsys) -> None:
     dispatch_receipt = _recorded_dispatch_receipt(
         tmp_path, plan_path, repo_root, capsys,
     )
-    result_path = _incomplete_result_file(tmp_path)
+    result_path = _incomplete_result_file(tmp_path, _packet_identity(tmp_path))
     before = plan_path.read_text(encoding="utf-8")
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
@@ -677,20 +693,23 @@ def test_apply_result_wait_refuse_writes_nothing(tmp_path, capsys) -> None:
     assert plan_path.read_text(encoding="utf-8") == before
 
 
-def _incomplete_result_file(tmp_path: Path) -> Path:
+def _incomplete_result_file(tmp_path: Path, packet_identity: str) -> Path:
     """Only one of the two expected arms carries a terminal result —
     resolve_aggregate_review returns a non-mutating wait_refuse."""
     payload = {
         "arm_bindings": [
-            {"arm": "spec-reviewer",
+            {"packet_identity": packet_identity,
+             "arm": "spec-reviewer",
              "dispatch_identity": "dispatch:spec-reviewer",
              "evidence_identity": "dispatch-proof:spec-reviewer"},
-            {"arm": "code-quality-reviewer",
+            {"packet_identity": packet_identity,
+             "arm": "code-quality-reviewer",
              "dispatch_identity": "dispatch:code-quality-reviewer",
              "evidence_identity": "dispatch-proof:code-quality-reviewer"},
         ],
         "terminal_results": [
-            {"arm": "spec-reviewer",
+            {"packet_identity": packet_identity,
+             "arm": "spec-reviewer",
              "dispatch_identity": "dispatch:spec-reviewer",
              "dispatch_evidence_identity": "dispatch-proof:spec-reviewer",
              "result_identity": "result:spec-reviewer:only",
@@ -712,11 +731,11 @@ def test_apply_result_does_not_flip_receipt_on_non_terminal_resolution(
     leave the dispatch receipt's result_applied unset (T9 spec gap)."""
     plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
-    result_path = _incomplete_result_file(tmp_path)
     packet_file = tmp_path / "packet.json"
     packet_file.write_text(json.dumps(
         _packet_json(plan_path, repo_root, receipt_path, capsys)
     ), encoding="utf-8")
+    result_path = _incomplete_result_file(tmp_path, _packet_identity(tmp_path))
     dispatch_receipt = tmp_path / "dispatch-receipt.json"
     assert cli.main([
         "record-dispatch", "--packet-file", str(packet_file),
@@ -748,11 +767,11 @@ def test_apply_result_recovers_receipt_stuck_after_ledger_crash(
     review round-1 finding)."""
     plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
-    result_path = _result_file(tmp_path)
     packet_file = tmp_path / "packet.json"
     packet_file.write_text(json.dumps(
         _packet_json(plan_path, repo_root, receipt_path, capsys)
     ), encoding="utf-8")
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path))
     dispatch_receipt = tmp_path / "dispatch-receipt.json"
     assert cli.main([
         "record-dispatch", "--packet-file", str(packet_file),
@@ -826,7 +845,7 @@ def test_apply_result_recovery_refuses_wrong_batch_receipt(tmp_path, capsys) -> 
         "member_shas": {"Task 1": sha1, "Task 2": sha2},
         "result_applied": False,
     }), encoding="utf-8")
-    result_path = _result_file(tmp_path)
+    result_path = _result_file(tmp_path, _UNREAD_PACKET)
     receipt_path = tmp_path / "verification-receipt.json"
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
@@ -859,7 +878,7 @@ def test_apply_result_recovery_refuses_sha_mismatch(tmp_path, capsys) -> None:
         "member_shas": {"Task 1": sha1, "Task 2": "f" * 40},
         "result_applied": False,
     }), encoding="utf-8")
-    result_path = _result_file(tmp_path)
+    result_path = _result_file(tmp_path, _UNREAD_PACKET)
     receipt_path = tmp_path / "verification-receipt.json"
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
@@ -975,11 +994,11 @@ def test_apply_result_recovers_reopen_receipt_stuck_after_ledger_crash(
     (Task 18b)."""
     plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
-    result_path = _result_file(tmp_path, reopen=True)
     packet_file = tmp_path / "packet.json"
     packet_file.write_text(json.dumps(
         _packet_json(plan_path, repo_root, receipt_path, capsys)
     ), encoding="utf-8")
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path), reopen=True)
     dispatch_receipt = tmp_path / "dispatch-receipt.json"
     assert cli.main([
         "record-dispatch", "--packet-file", str(packet_file),
@@ -1110,7 +1129,7 @@ def test_apply_result_refuses_when_member_sha_drifted_after_dispatch(
         encoding="utf-8",
     )
     before = plan_path.read_text(encoding="utf-8")
-    result_path = _result_file(tmp_path)
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path))
     code = cli.main(_apply_result_argv(
         plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
     ))
@@ -1131,7 +1150,7 @@ def test_apply_result_refuses_receipt_bound_to_another_batch(
     member_shas happen to match."""
     plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
     before = plan_path.read_text(encoding="utf-8")
-    result_path = _result_file(tmp_path)
+    result_path = _result_file(tmp_path, _UNREAD_PACKET)
     for foreign in (
         {"batch_id": "other-capability", "packet_identity": "packet:other"},
         {"batch_id": "capability", "packet_identity": "packet:other"},
@@ -1160,7 +1179,7 @@ def test_apply_result_requires_receipt_flag(tmp_path, capsys) -> None:
     """F3: apply-result without --receipt is an argparse usage error
     (exit 2) — there is nothing to bind the result to."""
     plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
-    result_path = _result_file(tmp_path)
+    result_path = _result_file(tmp_path, _UNREAD_PACKET)
     with pytest.raises(SystemExit) as exc_info:
         cli.main([
             "apply-result", "--plan", str(plan_path),
@@ -1170,3 +1189,61 @@ def test_apply_result_requires_receipt_flag(tmp_path, capsys) -> None:
         ])
     capsys.readouterr()
     assert exc_info.value.code == 2
+
+
+def test_apply_result_refuses_result_file_bound_to_another_packet(
+    tmp_path, capsys,
+) -> None:
+    """F2 replay: a PASS result file whose every packet_identity names a
+    different packet (same file, different plan) applied with a valid
+    receipt must refuse — non-zero, no ledger write, no receipt flip.
+    Today the CLI overwrites the file's identity with the packet's own, so
+    the file finalizes any plan in any repo."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    before = plan_path.read_text(encoding="utf-8")
+    result_path = _result_file(tmp_path, "packet:other-plan")
+    code = cli.main(_apply_result_argv(
+        plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+    ))
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["action"] is None
+    assert "packet_identity" in " ".join(out["reasons"])
+    assert plan_path.read_text(encoding="utf-8") == before
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored["result_applied"] is False
+
+
+def test_apply_result_refuses_result_file_missing_packet_identity(
+    tmp_path, capsys,
+) -> None:
+    """A result file that omits packet_identity on any binding, terminal
+    result or finding is malformed (it cannot prove which packet it
+    answers) — refused with the malformed message, not silently bound."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    before = plan_path.read_text(encoding="utf-8")
+    for section in ("arm_bindings", "terminal_results", "findings"):
+        result_path = _result_file(
+            tmp_path, _packet_identity(tmp_path), reopen=True,
+        )
+        payload = json.loads(result_path.read_text(encoding="utf-8"))
+        if section == "findings":
+            del payload["terminal_results"][0]["findings"][0]["packet_identity"]
+        else:
+            del payload[section][0]["packet_identity"]
+        result_path.write_text(json.dumps(payload), encoding="utf-8")
+        code = cli.main(_apply_result_argv(
+            plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+        ))
+        out = json.loads(capsys.readouterr().out)
+        assert code != 0, section
+        assert out["reasons"] == ["reviewer result file is malformed"], section
+        assert plan_path.read_text(encoding="utf-8") == before
+        stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+        assert stored["result_applied"] is False
