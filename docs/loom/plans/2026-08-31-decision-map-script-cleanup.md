@@ -68,7 +68,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-1
 - **Review disposition**: batch(symlink-guard)
-- **Status**: implemented(605fcb26295dc060329076e1dba7a062480eb9f9)
+- **Status**: done(605fcb26295dc060329076e1dba7a062480eb9f9)
 - **Gloss**: 守衛本體只剩這一份，要丟哪種例外由呼叫者說了算。
 
 ## Task 2 — map_store 的守衛改成一行委派
@@ -91,7 +91,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(symlink-guard)
-- **Status**: implemented(88ef209f09366cb6420333ebde86c997d7880796)
+- **Status**: done(88ef209f09366cb6420333ebde86c997d7880796)
 - **Gloss**: map_store 不再自己走路徑，交給 map_lock，丟的還是 SchemaViolation。
 
 ## Task 3 — map_transaction 的守衛改成一行委派
@@ -112,7 +112,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(symlink-guard)
-- **Status**: implemented(9259e6c43114840858d87a7e2eb6f6c17f38dae1)
+- **Status**: done(9259e6c43114840858d87a7e2eb6f6c17f38dae1)
 - **Gloss**: map_transaction 同樣交給 map_lock，丟的還是 CloseTransactionError。
 
 ## Task 4 — 刪除孤兒 claim_ticket 與其測試
@@ -191,7 +191,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-12
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@loom-script-refactor-phase2)
 - **Gloss**: 讓 REQ-97 有一個真的在測「不可轉手」的測試，不是靠別的測試順帶掛名。
 
 ## Task 8 — backlog：loom_gate_markers 拆分
