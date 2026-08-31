@@ -10,6 +10,10 @@
 
 - test_req_101_corpus_manifest_is_exact_and_immutable
 
+### REQ-102
+
+- test_req_102_scored_replay_uses_explicit_weak_bindings
+
 ### REQ-103
 
 - test_req_103_attempt_ledger_preserves_failures
@@ -471,7 +475,6 @@
 
 ### reqs with no tests
 
-- REQ-102
 - REQ-105
 - REQ-106
 - REQ-107
