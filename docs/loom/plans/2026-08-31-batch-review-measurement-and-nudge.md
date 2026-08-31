@@ -57,7 +57,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: true
 - **Brief item covered**: BI-6
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(a0a6f10f9b28ceb216da22596e435aedf2f6adc3)
 - **Gloss**: 把 hotfix 學到的教訓寫進持久記憶，下次不用再在 CI 上發現。
 
 ## Task 2 — review_context.py 每次派工在 git-dir 追加一行記錄
@@ -103,7 +103,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-4
 - **Review disposition**: batch(cli-receipt)
-- **Status**: pending
+- **Status**: implemented(fef328581d510398528e616daaef982103c20909)
 - **Gloss**: 被拒時一眼看出是誰動了什麼，照訊息做就能復原。
 
 ## Task 4 — apply-result 把套用的動作寫進收據（applied_action）
@@ -183,7 +183,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - Split each connected component into batches of at most 4 tasks filled in dependency (topological) order; output `{"batches": [{"members": [...], "lane": …, "reason": "module:<value>" | "dependency"}], "singletons": [...]}`.
   - The edge rule and the cap are two module-level constants with a docstring naming the simulation record they were sized from and stating they are planning-time constants, not runtime settings.
 - **Module**: loom-code/scripts (propose_review_batches)
-- **Files touched**: loom-code/scripts/propose_review_batches.py, loom-code/scripts/test_propose_review_batches.py
+- **Files touched**: loom-code/scripts/propose_review_batches.py, loom-code/scripts/test_propose_review_batches.py, loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py
 - **Context paths**:
   - loom-code/scripts/check_review_batches.py (`def _parse_tasks`, `def _projection_files`, `_projection_field_block` — reuse, do not re-implement the grammar)
   - docs/loom/dogfood/2026-08-31-batch-knob-simulation.py (the clustering the simulation ran — the proposer must reproduce variant C at cap 4 on the same input)
@@ -200,7 +200,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: true
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(proposer)
-- **Status**: pending
+- **Status**: implemented(441c9ecfc429fbb6a088ba965560738234a67e59)
 - **Gloss**: 腳本先提議怎麼分批，規劃者從提議出發而不是從全拆出發。
 
 ## Task 8 — propose_review_batches.py --check：沒合批與超大批次都要一行理由
@@ -362,3 +362,4 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - Review disposition rationale (authored under the brief's own rule — same lane AND (dependency edge OR same Module), cap 4): Tasks 3+4 (batch_review_cli), 5+6+10 (task_batch_replay and the finishing row that relays its `--summary` line, dependency edge 5→10) and 7+8+9 (propose_review_batches and the writing-plans contract that names it, dependency edge 8→9) are same-lane dependency chains and batch; Task 2 is a one-task module; Task 12 is prose lane with no same-lane neighbour; Task 1 is record-class; Task 11 is release administration. Tasks 9 and 10 carry a `.py` contract test in Files touched, so they run the full lane rather than `Review-weight: prose` (plan-format: prose requires every file to be `.md`). Planned fan-outs: 7 for 12 tasks.
 - BI-8 (Decision umbrella), BI-10 (hand-counted Notes line pattern obsolete), BI-11 (simulation record, already committed with the brief at 96af10c9) are delivered by the sum of Tasks 5–12 and by the brief commit; the coverage checker reports them as warnings by design.
 - Plan-review round count: round 1 NEEDS_REVISION (4 ⚠️ — double Module values, prose weight with a `.py` test, Task 7 Reuse-adequacy, Task 12 sealed-plan race — plus the CSV note that exposed the uncommitted variant-C run), round 2 PASS at 0cf007e2. Verdict stamped — stamping the verdict, no re-review.
+- Task 7 `Files touched` amended during SDD (2026-08-31): `test_gate_scripts_fail_loud_on_unreadable_input.py` added — its script registry fails the floor for any unclassified `loom-code/scripts/*.py`, so the new proposer needs one EXEMPT line there (precedent: check_review_batches.py). Scope change → delta re-review by the plan-document-reviewer, not a silent skip.
