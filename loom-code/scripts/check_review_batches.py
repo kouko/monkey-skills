@@ -64,7 +64,17 @@ _PROJECTION_FIELD = re.compile(
     r"^-\s*(?:\*\*)?(?P<name>[A-Za-z][A-Za-z -]*?)(?:\*\*)?"
     r"\s*:[ \t]*(?P<value>[^\n]*)$"
 )
-_REQ_REFERENCE = re.compile(r"^REQ-\d+$")
+# The `none — <reason>` release-administration referent (plan-format.md
+# §Brief item covered) is a legal citation but must NOT count as an owned
+# requirement — see `_NONE_VALUE` in check_scenario_coverage.py, whose
+# grammar this mirrors. Kept local rather than imported: check_review_batches
+# is loaded via importlib.util.spec_from_file_location from more than one
+# caller (review_batch.py's oracle, direct CLI, test harnesses) and a plain
+# cross-script import would depend on sys.path state none of those callers
+# guarantee.
+_NONE_REFERENT = re.compile(
+    r"^[\"'`]?\s*none(?:\s*[–—]|\s+-(?=\s|$))?.*?[\"'`]?\s*$", re.IGNORECASE
+)
 
 
 @dataclass(frozen=True)
@@ -476,12 +486,18 @@ def execution_projection_fields(text: str, batch_id: str) -> dict[str, object]:
         )
         briefs = _projection_references(block, f"Task {number}", body_errors)
         # The existing executable plan schema has one authority source:
-        # Brief item covered.  Its REQ identifiers are the owned requirements;
-        # BI identifiers remain traceability references, and there is no
-        # separate future-requirement field to infer or invent.  Therefore the
-        # canonical future mapping is the empty tuple until that schema grows a
+        # Brief item covered.  R11a widens owned_requirements to every
+        # referent kind plan-format.md admits (quote, BI-<n>, REQ-<n>) —
+        # non-empty is the only rule — except the `none — <reason>`
+        # release-administration value, which cites no brief outcome and so
+        # contributes zero owned requirements.  There is no separate
+        # future-requirement field to infer or invent, so the canonical
+        # future mapping stays the empty tuple until that schema grows a
         # validated source for it.
-        owned = tuple(reference for reference in briefs if _REQ_REFERENCE.fullmatch(reference))
+        owned = tuple(
+            reference for reference in briefs
+            if _NONE_REFERENT.fullmatch(reference) is None
+        )
         members.append({
             "task_id": f"Task {number}",
             "dependencies": tuple(f"Task {dep}" for dep in task.dependencies),

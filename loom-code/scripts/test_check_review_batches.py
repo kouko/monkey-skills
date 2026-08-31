@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import os
 from pathlib import Path
 import subprocess
@@ -14,12 +15,23 @@ SCRIPT = Path(__file__).with_name("check_review_batches.py")
 _ENV = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
 
 
+def _module():
+    """Import check_review_batches.py directly for in-process unit tests."""
+    spec = importlib.util.spec_from_file_location("check_review_batches", SCRIPT)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def _task(
     number: int,
     *,
     dependencies: str = "none",
     disposition: str | None = "individual",
     review_weight: str | None = None,
+    brief: str | None = None,
 ) -> str:
     disposition_line = (
         f"- **Review disposition**: {disposition}\n"
@@ -31,6 +43,7 @@ def _task(
         if review_weight is not None
         else ""
     )
+    brief_line = f"- **Brief item covered**: {brief}\n" if brief is not None else ""
     return f"""\
 ## Task {number} — Task {number}
 
@@ -41,7 +54,7 @@ def _task(
   - **RED**: fails before Task {number}.
   - **GREEN**: passes after Task {number}.
 - **Dependencies**: {dependencies}
-{weight_line}{disposition_line}- **Status**: pending
+{brief_line}{weight_line}{disposition_line}- **Status**: pending
 """
 
 
@@ -369,3 +382,79 @@ def test_aggregate_verification_is_inert_but_structural_fields_are_not(
         structural_result = _run(tmp_path, structural)
         assert structural_result.returncode == 1
         assert "shell-control syntax" in structural_result.stderr
+
+
+def test_owned_requirements_accepts_every_referent_kind_r11a() -> None:
+    """R11a: owned_requirements is every non-empty Brief item covered
+    referent (quote, BI-<n>, REQ-<n>) — not only REQ-<n> — matching
+    plan-format.md's four accepted referent kinds."""
+    module = _module()
+    quote = '"the CSV export button appears on Settings"'
+    plan = (
+        _task(1, disposition="batch(renderers)", brief=quote)
+        + "\n"
+        + _task(
+            2,
+            dependencies="Task 1 completes first",
+            disposition="batch(renderers)",
+            brief="BI-7",
+        )
+        + "\n"
+        + _task(3)
+        + "\n"
+        + _batch()
+    )
+    fields = module.execution_projection_fields(plan, "renderers")
+    owned = {member["task_id"]: member["owned_requirements"] for member in fields["members"]}
+    assert owned["Task 1"] == (quote,)
+    assert owned["Task 2"] == ("BI-7",)
+
+
+def test_owned_requirements_still_accepts_req_referents() -> None:
+    """Existing REQ-<n> referents must keep projecting as owned (no
+    regression from widening the accepted referent grammar)."""
+    module = _module()
+    plan = (
+        _task(1, disposition="batch(renderers)", brief="REQ-3")
+        + "\n"
+        + _task(
+            2,
+            dependencies="Task 1 completes first",
+            disposition="batch(renderers)",
+            brief="REQ-4",
+        )
+        + "\n"
+        + _task(3)
+        + "\n"
+        + _batch()
+    )
+    fields = module.execution_projection_fields(plan, "renderers")
+    owned = {member["task_id"]: member["owned_requirements"] for member in fields["members"]}
+    assert owned["Task 1"] == ("REQ-3",)
+    assert owned["Task 2"] == ("REQ-4",)
+
+
+def test_owned_requirements_excludes_none_value_release_administration() -> None:
+    """The `none — <reason>` release-administration value is a legal
+    referent (plan-format.md §Brief item covered) but must NOT count as
+    an owned requirement — a task whose only referent is `none — ...`
+    delivers no brief outcome and stays refused for batching."""
+    module = _module()
+    plan = (
+        _task(1, disposition="batch(renderers)", brief="none — release administration only")
+        + "\n"
+        + _task(
+            2,
+            dependencies="Task 1 completes first",
+            disposition="batch(renderers)",
+            brief="REQ-9",
+        )
+        + "\n"
+        + _task(3)
+        + "\n"
+        + _batch()
+    )
+    fields = module.execution_projection_fields(plan, "renderers")
+    owned = {member["task_id"]: member["owned_requirements"] for member in fields["members"]}
+    assert owned["Task 1"] == ()
+    assert owned["Task 2"] == ("REQ-9",)

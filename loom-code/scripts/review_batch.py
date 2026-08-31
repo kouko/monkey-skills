@@ -1257,10 +1257,6 @@ def _validate_execution_projection(projection: object) -> ExecutionAuthorityProj
             and len(set(member.owned_requirements)) == len(member.owned_requirements)
             and len(set(member.future_requirements)) == len(member.future_requirements)
             and not set(member.owned_requirements) & set(member.future_requirements)
-            and all(
-                _exact_text(reference) and reference.startswith("REQ-")
-                for reference in member.owned_requirements
-            )
         ):
             raise PacketRefused("execution authority member is malformed")
     return projection
