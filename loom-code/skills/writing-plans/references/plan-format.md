@@ -41,6 +41,8 @@ Goal: <one sentence transcribed from the brief's Smallest End State at
 Stage: <planning | sdd:wave-N | review:round-N | blocked:user-decision |
     finishing — updated by the orchestrator at each transition,
     committed with the nearest ledger or close-out commit>
+Safety-bearing: <OPTIONAL — yes — <reason> | no — <reason>; see
+    §Safety-bearing below>
 Steps: <OPTIONAL numbered block, one line per derived dependency
     level, titles in the user's conversation language; when present
     the count must equal the plan's dependency-level count —
@@ -222,6 +224,55 @@ always present — a bare Goal line with neither clause is invalid. No
 script enforces this clause; the plan-document-reviewer's Check 22 is
 its gate. `plan_card.py` prints `Goal:` verbatim, so every progress card
 inherits the direction clause with no script change.
+
+#### Safety-bearing (v0.109.0+)
+
+`Safety-bearing:` is an OPTIONAL header line, placed beside `Stage:`,
+declaring whether this plan's work touches safety-relevant machinery.
+It takes exactly two forms — `Safety-bearing: yes — <reason>` or
+`Safety-bearing: no — <reason>` — each with a required reason after the
+em dash. When the header is absent, the progress card renders
+`safety-bearing: N/A — header absent` instead of failing — absence is
+a valid, distinct third state, not an error.
+
+`plan_card.py` refuses loudly, nonzero, on every shape below rather
+than silently accepting it or rendering it as absent:
+
+- a bare `yes`/`no` with no reason, a typo'd value, or an empty reason
+  after the em dash;
+- a `Safety-bearing:` line anywhere OUTSIDE the plan's header block —
+  including in the plan body, not only beside `Stage:` — is rejected as
+  misplaced, never silently read as absent;
+- an INDENTED `Safety-bearing:` line inside the header block — a
+  continuation line may not start a new header key;
+- a MISCASED key (`safety-bearing:`, `SAFETY-BEARING:`, or any casing
+  other than the exact `Safety-bearing:`);
+- an unclosed ``` or ~~~ code fence anywhere in the plan body — this
+  fails the whole card, not just the header, because an open fence can
+  swallow the header block itself;
+- a plan whose very first line is a `## ` heading (no `# ` title line
+  first) — the header block is then empty, so `plan_card.py` refuses
+  loud rather than silently reading that first section as the header
+  (the hole a live adversarial audit found and this fix closes): via
+  `build_card` it is the missing `Goal:` line that fires first, before
+  `Safety-bearing:` is ever evaluated; via `safety_bearing()` on its
+  own, a `Safety-bearing:` line written inside that now-headerless first
+  section is caught as "outside the plan's header block", the same
+  message any other misplaced line gets.
+
+A `no` header is a plan author's declared judgment call, not a
+mechanical guarantee — it does not silence a guarded-path hit.
+`finishing-a-development-branch`'s Step 3.5 is the gate that owns this:
+it STOPs and surfaces both facts (the header's `no` and the guarded-path
+match) rather than letting either one override the other. See that
+skill for the trigger rule itself; this section only defines the header
+grammar and its rendering.
+
+Worked example header line:
+
+```
+Safety-bearing: yes — touches git-guard
+```
 
 #### `Files touched` and `Independent` (v0.8.0+)
 

@@ -23,6 +23,7 @@ finishing-a-development-branch (this skill)
   ├─→ Phase 1: requesting-code-review
   │     four-way: record-only / docs-only / mixed / code-only;
   │     docs-only → requesting-docs-review; PASS_WITH_NOTES auto-proceeds
+  │     Step 3.5: adversarial-audit station (conditional)
   ├─→ Phase 2: verification-before-completion + conditional ui-verification
   ├─→ Phase 3: loom-workflow:git-memory (P3-D MANDATORY)
   ├─→ Phase 4: git commit; memory-grep.sh --verify HEAD
@@ -57,6 +58,7 @@ and reasoned **explicit overrides**. They waive close-out but **NEVER
 | Step | Delegate |
 |---|---|
 | 1 | `requesting-code-review` four-way dispatch; docs-only → `requesting-docs-review` |
+| 3.5 | `check_attack_catalogue.py signal`; `fired` → `adversarial-audit-packet.md` (opus) / `cold-reader-packet.md` (sonnet) |
 | 2/2b | `verification-before-completion`; conditional `ui-verification` |
 | 3 | `loom-workflow:git-memory` |
 | 7 | Post-PR CI: `post_pr_ci.py` + `systematic-debugging` |
@@ -100,6 +102,36 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
    In prose contracts, place fixes in their OWN sentence or governed placeholder;
    never spliced into pinned/enumerated sentences (memory:
    splicing-into-a-pinned-sentence-creates-false-readings).
+3.5. Adversarial-audit station (CONDITIONAL), **orchestrator-run**, never
+   nested — one command: `python3 scripts/check_attack_catalogue.py
+   signal --repo <root> --store docs/loom/ATTACK-CATALOGUE.md --plan
+   <plan>` (repo-root); else
+   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_attack_catalogue.py"
+   signal` (same args). Never pass `--base` at close-out.
+   - 0 — two stdout lines — `adversarial audit`/`cold reader`: `fired —
+     …` or `N/A —`; exact fields per Step 8's close-out rows; relay
+     both verbatim. `fired` audit →
+     dispatch `references/adversarial-audit-packet.md` (opus); `fired`
+     cold-reader → dispatch `references/cold-reader-packet.md`
+     (sonnet; scenario+temptation from `## Prose temptations`). `N/A —
+     attack catalogue: absent` (stderr same) = no store yet: no
+     dispatch, continue to Step 5.
+   - 1 — STOP: a store that EXISTS but is broken (unreadable/malformed),
+     or a broken `--plan` header — never skipped; only the user resumes
+     after repair (`check_attack_catalogue.py <store> --repo <root>`
+     exit 0, or fixing the header).
+   - 2 — `attack catalogue: base unresolved` → STOP.
+   - 3 — `Safety-bearing: no` with a guarded-path hit (`no` does not override
+     the hit) → STOP naming both; only the user (flip the header, or
+     narrow `## Guarded paths`) resumes it, never the orchestrator alone.
+   Prose signal: any changed contract-class `.md` per
+   `requesting-code-review` §Classification, plus `rules/**/*.md` (or
+   the store's `## Guarded paths`).
+   Verdict routing: `reproduced`/cold-reader `taken` → STOP until a
+   RED test is committed and `## Instances` reads `reproduced <date> —
+   pinned by <test>`; `signal` must then exit 0 (Step 8 re-run rule).
+   `held` → append `held <date>`. `not-applicable` → close-out card
+   only; both are legal store lines.
 5. Dispatch verification-before-completion
    - MANDATORY even if tests were run immediately before invoking this skill. Step 3
      fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.
@@ -147,10 +179,13 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
      | Map delivery-progress check | The closing plan carries a decision-map delivery binding; use the public `loom-workflow:decision-map` delivery-progress query to derive the plan's map-owned progress state, never infer ownership from topic similarity. | Before the close-out commit, query the map's delivery progress and report the derived plan state in the close-out card. This is read-only: it never writes `MAP.md` or maintains a second progress table. If the public query is not yet available, say loudly, never silently skip: "map delivery-progress: N/A — delivery-progress query not available". |
      | Stale-scan relay | Every close-out where the repo has a `docs/loom/plans/` directory. | Run `python3 scripts/plan_card.py --stale-scan docs/loom/plans` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" --stale-scan docs/loom/plans` (a load-time substitution, not a run-time shell variable). Relay its stdout VERBATIM and loudly to the user — including the single `stale-scan: clean` line. A candidate plan belonging to an already-merged arc gets fixed on the spot: the same `--set-stage "finishing"` flip, staged into THIS close-out commit. A candidate belonging to a live parallel arc is named and passed through untouched. The scan is advisory by design — it always exits 0, because all-done at `review:round-N` is a legitimate transient state of a live arc; never harden a candidate line into a block or a STOP. | No `docs/loom/plans/` directory → skip silently (nothing to scan, auditable from the tree). |
      | Observed fan-outs | The branch has a plan. | Run `python3 loom-code/scripts/task_batch_replay.py observe --log <git-dir>/loom/review-dispatches.jsonl --branch <branch> [--receipts <dir>] --summary` (`<git-dir>` = `git rev-parse --git-dir`; pass the directory holding this branch's applied dispatch receipts when one exists — without it the line says `batch reopens unmeasured`), or, absent the repo-root copy, `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/task_batch_replay.py"` with the same arguments (a load-time substitution, not a run-time shell variable). Relay the line VERBATIM into the close-out card AND the plan's `## Notes` before the close-out commit. | No plan → skip silently. Absent log → it prints `observed reviewer fan-outs: N/A — no dispatch log`; relay it loudly, never silently. |
+     | Adversarial audit | Step 3.5's line is `adversarial audit: fired —…`. | Relay it plus the auditor's verdict lines, verbatim, into the card AND `## Notes`; `reproduced` STOP gate: `check_attack_catalogue.py signal` exit 0. | Else → relay Step 3.5's line: `adversarial audit: N/A — header=<yes\|no\|absent>; base=<sha>; changed=<n>; guarded-hits=<k>; prose-hits=<j>`. |
+     | Cold reader | Step 3.5's line is `cold reader: fired —…`. | Relay it plus the cold reader's two verdict lines, verbatim, into the card AND `## Notes`. | Else → relay Step 3.5's line: `cold reader: N/A — base=<sha>; changed=<n>; prose-hits=<j>`. |
    - **Purpose-linked betting.** Never list or promote automatically. Only AFTER the user explicitly requests choosing or promoting a bet, and before listing betting candidates, print `docs/loom/PURPOSE.md`; if absent, offer to write one: guide the user to answer the repo's purpose in one sentence directly in the file; if you have the `loom-workflow:goal-create` skill installed, it can walk you through this instead (its ARC mode drafts the `Why` and `Done when` for the user to land) — never silently skip the print. After promotion run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_north_star_link.py" <backlog-store>` (load-time substitution, not a run-time shell variable). Exit 0 means every live bet is linked. Exit 1 means an unreadable store or status outside its vocabulary; fix that entry's frontmatter. Exit 2 means unresolved `PURPOSE.md` is absent, unanswered, or `serves` is malformed. STOP-and-ask: relay the printed question, wait, record it where that question asks (`PURPOSE.md` itself when applicable), then re-run.
    - **N/A consolidation (close-out report)**: one N/A gets one line; two or more
      consolidate inapplicable checks into one summary line after the plain conclusion:
      "N inapplicable checks skipped: <list>; details on request." Each check still runs and names its reason.
+     Exempt: the two `signal` N/A lines — always relayed verbatim, never folded in.
    - Attached-HEAD check: `git symbolic-ref -q HEAD` must name the branch being
      finished. Detached/different HEAD → STOP, reattach and fast-forward landed
      commits; never commit the close-out on a detached HEAD.
@@ -163,7 +198,7 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
    - Compound `git push && gh pr create` must be two separate Bash calls, and any rebase-conflict
      resolution uses Read+Edit (not Bash `cat`+`Write`) — details in
      [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S2/§D1.
-   - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion
+   - If any review-driven fixes were applied in Steps 3–4 or 3.5, re-run verification-before-completion
      here (Step 5 result is stale) before committing.
 9. git commit (only after Step 7's privacy gate PASSes, or after the
    user resolves a Step-7 BLOCK)

@@ -5,6 +5,71 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.109.0] — 2026-08-31 — Adversarial audit station
+
+Ships an attack-catalogue store and a fail-loud checker for it, a
+`Safety-bearing:` header for plan cards, and the branch-close-out step
+that dispatches an adversarial audit before a security-relevant branch
+merges. Findings are recorded in
+`docs/loom/dogfood/2026-08-31-adversarial-audit-station.md` (13 instances
+pinned, 7 reproduced live on the branch that built the station).
+
+### Added
+
+- `docs/loom/ATTACK-CATALOGUE.md` reference + the `loom_init` scaffold
+  that seeds it in an adopting repo.
+- `check_attack_catalogue.py` + a CI step, resolving a `pinned by` test
+  name against the AST (a class-body method included) rather than a
+  text scan, and stripping `.sh` comments before scanning so a
+  commented-out example doesn't count as a live entry.
+- `plan_card.py` gains a `Safety-bearing:` header.
+- `finishing-a-development-branch` Step 3.5 plus two close-out card rows
+  and two new packets — `adversarial-audit-packet.md` and
+  `cold-reader-packet.md`.
+- `check_attack_catalogue.py signal` — the Step 3.5 signal command:
+  `--base` defaults to `git merge-base HEAD origin/main`, falling back
+  to `HEAD main`; a git error or an unresolvable base fails CLOSED
+  (exit 2), as does a `--store`/`--plan` living outside `--repo`. It
+  runs the full store check (grammar/pinning/dating) before answering
+  its own question — an absent store degrades both stdout lines to an
+  N/A pair (exit 0), while a broken store or a plan whose
+  `Safety-bearing:` header raises exits 1. `Safety-bearing: no` plus a
+  guarded-path hit anyway exits 3.
+- `code-reviewer` gains an `attack-class:` tag (read via a new
+  `resources.attack_catalogue` key on `review_context.py`);
+  `plan-format.md` documents the `Safety-bearing` grammar.
+
+### Changed
+
+- `plan_card.py` now raises, for any plan, on a `Safety-bearing:` line
+  written outside the header block, an indented header key, a miscased
+  key, and — header or not — an unclosed ``` / ~~~ fence anywhere in the
+  body, instead of silently rendering the header as absent. The header
+  split now anchors on the first `^## ` line wherever it falls,
+  including a plan's very first line — previously that line was never
+  split at all, silently exempting a `Safety-bearing:` line written
+  inside it; a body `Safety-bearing:` line is now caught even when
+  indented.
+- `check_attack_catalogue.py` now refuses a `reproduced` store line
+  carrying an empty `pinned by`, a non-ISO date, or a section heading
+  that duplicates an earlier one in the same store, instead of accepting
+  it. `parse_store` is fence-aware — a bullet inside a ``` / ~~~ fence
+  is never counted, and an unclosed fence is `malformed` — and `signal`
+  WARNs when no guarded glob matches the store's own path, so the store
+  guards itself (verified against this repo's own store, whose
+  `## Instances` section now carries 19 entries). Step 3.5 no longer
+  enumerates its own prose-contract globs; they are now defined by
+  `requesting-code-review` §Classification plus `rules/**/*.md`,
+  replacing the old single-level set that missed a reference file one
+  directory deeper.
+
+### Fixed
+
+- Batch-CAS full-reopen fix: `loom-code/scripts/plan_card.py`
+  (`_replacements_are_finalization`, `_validate_batch_transition`,
+  `_atomic_batch_status_update_locked`) — a batch where every member is
+  reopened was misjudged as a finalization.
+
 ## [0.108.1] — 2026-08-31 — Shared git body and sibling loader (Phase 1 script helper extraction)
 
 Collapses two duplicated shapes across `scripts/` onto two new shared

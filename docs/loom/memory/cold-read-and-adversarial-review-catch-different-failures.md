@@ -35,3 +35,10 @@ agent skip a safety step under some condition, treat it as
 security-relevant and get an adversarial whole-branch review — a
 cold-read alone is not sufficient evidence the change is safe to ship,
 even if it passes cleanly.
+
+`finishing-a-development-branch`'s Step 3.5 (the adversarial audit
+station, `docs/loom/specs/2026-08-31-adversarial-audit-station.md`) is
+this trigger rule's mechanical form: a plan-level `safety-bearing: yes`
+flag plus a guarded-path signal fires the audit before merge, rather
+than leaving "does this touch an exemption/gate/self-check" to be
+recognized by prose alone.

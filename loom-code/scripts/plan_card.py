@@ -153,6 +153,25 @@ _CLAIMED_STATUS = re.compile(r"claimed\([^()\s]+\)")
 _BLOCKED_STATUS = re.compile(r"blocked(?:\([^()\s]+\))?")
 
 
+_FIRST_H2_RE = re.compile(r"(?m)^## ")
+
+
+def _split_header(text: str) -> tuple[str, str, str]:
+    """(header, sep, rest) split at the FIRST `## ` heading line,
+    wherever it falls — including when it is the document's very first
+    line. `plan_text.partition("\\n## ")` (the shape this replaces at
+    every call site) needs a LEADING newline before `## `, so a plan
+    whose first line IS a `## ` heading was never split at all: the
+    entire first section was read as `header`, silently exempting any
+    `Safety-bearing:` line written inside it (live adversarial audit).
+    header + sep + rest always reconstructs `text` exactly — this is a
+    plain three-way slice, not a rewrite of `text`."""
+    match = _FIRST_H2_RE.search(text)
+    if match is None:
+        return text, "", ""
+    return text[: match.start()], text[match.start() : match.end()], text[match.end() :]
+
+
 def _header_value(header: str, key: str) -> str | None:
     """The value of a `<key>: ...` header line, with indented continuation
     lines folded in (N1 pins the wrapped shape: continuations are
@@ -170,6 +189,157 @@ def _header_value(header: str, key: str) -> str | None:
                 break
         return " ".join(part for part in parts if part)
     return None
+
+
+_SAFETY_BEARING_KEY_CI = re.compile(r"^(safety-bearing):", re.IGNORECASE)
+_KNOWN_HEADER_KEYS_CI = re.compile(r"^(safety-bearing|goal|stage|steps):", re.IGNORECASE)
+
+
+def _reject_indented_header_key(header: str) -> None:
+    """Fail loud when a header-block line is indented — `_header_value`'s
+    continuation shape (N1's folded convention) — but its stripped text
+    starts with a known header key (Safety-bearing:/Goal:/Stage:/Steps:,
+    case-insensitive). Such a line used to be silently folded into the
+    PRECEDING field's value instead of being read as its own field (live
+    adversarial audit, review round 2)."""
+    for line in header.splitlines():
+        if line[:1] not in (" ", "\t"):
+            continue
+        stripped = line.strip()
+        if stripped and _KNOWN_HEADER_KEYS_CI.match(stripped) is not None:
+            raise ValueError(
+                f"'{stripped}' — a header key may not start a continuation "
+                "line (it is indented under the preceding field)"
+            )
+
+
+# Deliberately duplicated from loom_gate_markers.py, byte-for-byte,
+# rather than imported: plan_card.py is deployed as a lone standalone
+# copy in adopting repos with no sibling script present (CLAUDE.md
+# Contract Citations; test_plan_card_batch_states.py's
+# `_standalone_plan_card_copy` pins exactly this), so it cannot import
+# a plugin sibling. test_plan_card.py's
+# `test_fence_scanning_matches_loom_gate_markers_behaviour` is the
+# differential guard the two copies stay in step (same reasoning
+# `adjudication_split.iter_lines_outside_fences`'s docstring gives for
+# ITS merge, inverted here because the standalone constraint forbids
+# the merge).
+_FENCED_CODE_DELIMITER_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+
+
+def _fence_toggle(
+    line: str, fence: tuple[str, int] | None
+) -> tuple[str, int] | None:
+    """The fence state after `line`, given the state before it — see
+    loom_gate_markers._fence_toggle (same logic, duplicated per the
+    module comment above)."""
+    delimiter = _FENCED_CODE_DELIMITER_RE.match(line)
+    if not delimiter:
+        return fence
+    run = delimiter.group(1)
+    if fence is None:
+        return (run[0], len(run))
+    if (
+        run[0] == fence[0]
+        and len(run) >= fence[1]
+        and not line[delimiter.end() :].strip(" \t")
+    ):
+        return None
+    return fence
+
+
+def _find_misplaced_safety_bearing_line(outside: str) -> str | None:
+    """The first `safety-bearing:` line (any case, any indent — an
+    INDENTED line in the body is content elsewhere but must not be
+    invisible to this scan either, C1 whole-branch review) in the plan
+    body (everything after the header block), or None. Fence tracking
+    uses this module's `_fence_toggle`/`_FENCED_CODE_DELIMITER_RE` — the
+    same CommonMark rules as `loom_gate_markers._fence_toggle`, kept in
+    step by a differential test rather than an import (module comment
+    above `_FENCED_CODE_DELIMITER_RE`: plan_card.py has no sibling-script
+    imports) (F4/C6, whole-branch review) — rather than a third,
+    independently-derived hand-rolled scanner. Lines inside a fenced
+    code block (backtick or `~`, closing must
+    reuse the SAME character with run length >= the opener's, per
+    CommonMark) are skipped: a quoted grammar example is content, not a
+    misplaced header declaration (review round 2). A fence still open at
+    EOF is itself malformed: raises ValueError naming the opening line,
+    rather than silently treating every remaining line as fenced content
+    (review round 3) — an unclosed fence must never be able to hide a
+    genuine misplaced header line from this scan."""
+    fence: tuple[str, int] | None = None
+    fence_open_line: int | None = None
+    for lineno, line in enumerate(outside.splitlines(), start=1):
+        delimiter = _FENCED_CODE_DELIMITER_RE.match(line)
+        new_fence = _fence_toggle(line, fence)
+        if delimiter:
+            if fence is None and new_fence is not None:
+                fence_open_line = lineno
+            elif new_fence is None:
+                fence_open_line = None
+            fence = new_fence
+            continue
+        if fence is not None:
+            continue
+        if re.match(r"^safety-bearing:", line.strip(), re.IGNORECASE):
+            return line
+    if fence is not None:
+        raise ValueError(
+            f"unclosed code fence opened at line {fence_open_line} of the "
+            "plan body — a misplaced 'Safety-bearing:' line could be "
+            "hiding inside it"
+        )
+    return None
+
+
+def safety_bearing(plan_text: str) -> tuple[str, str] | None:
+    """The parsed `Safety-bearing:` header value as (kind, reason), where
+    kind is `"yes"` or `"no"` — None when the header is absent (Task 6 of
+    docs/loom/plans/2026-08-31-adversarial-audit-station.md; consumed by
+    `finishing-a-development-branch`'s trigger). Raises ValueError, naming
+    the accepted forms, when the header is present but its value does not
+    start with `yes — ` or `no — `.
+
+    Fail-loud guard against a self-exemption vector (live adversarial
+    audit, review-driven fix rounds): a `safety-bearing:` line (any case)
+    written OUTSIDE the header block — e.g. under a later `## ` section,
+    but not inside a fenced code block quoting the grammar — used to be
+    invisible to `_header_value`'s header-only scan and silently rendered
+    as an absent header (N/A, exit 0); same for a miscased key
+    (`safety-bearing:`) or an INDENTED key line (folded as a
+    continuation of the preceding field) INSIDE the header block, both of
+    which `_header_value`'s exact-case, unindented `startswith` also
+    silently missed. All now raise here, the one helper both `build_card`
+    and direct callers share, so no surface can be exempted by a
+    misplaced, miscased, or indented line."""
+    header, sep, rest = _split_header(plan_text)
+    outside = sep + rest
+    outside_line = _find_misplaced_safety_bearing_line(outside)
+    if outside_line is not None:
+        raise ValueError(
+            f"'{outside_line}' is outside the plan's header block — the "
+            "'Safety-bearing:' header belongs above the first '## ' "
+            "section"
+        )
+    _reject_indented_header_key(header)
+    for line in header.splitlines():
+        key_match = _SAFETY_BEARING_KEY_CI.match(line)
+        if key_match is not None and key_match.group(1) != "Safety-bearing":
+            raise ValueError(
+                f"'{line.strip()}' uses a miscased key — the accepted "
+                "spelling is 'Safety-bearing:'"
+            )
+    value = _header_value(header, "Safety-bearing")
+    if value is None:
+        return None
+    for kind in ("yes", "no"):
+        prefix = f"{kind} — "
+        if value.startswith(prefix):
+            return kind, value[len(prefix):]
+    raise ValueError(
+        f"'Safety-bearing:' value '{value}' outside 'yes — <reason>' / "
+        "'no — <reason>'"
+    )
 
 
 def _parse_steps(header: str) -> list[str] | None:
@@ -358,7 +528,7 @@ def build_card(text: str) -> str:
     Raises ValueError (never exits the process itself — the caller
     decides exit codes) when the plan cannot render a complete card.
     """
-    header, _, _ = text.partition("\n## ")
+    header, _, _ = _split_header(text)
 
     goal = _header_value(header, "Goal")
     if not goal:
@@ -366,6 +536,7 @@ def build_card(text: str) -> str:
     stage = _header_value(header, "Stage")
     if not stage:
         raise ValueError("plan has no 'Stage:' header line")
+    safety = safety_bearing(text)
 
     tasks = _parse_tasks(text)
     if not tasks:
@@ -432,6 +603,10 @@ def build_card(text: str) -> str:
     else:
         next_task = "close-out"
     lines.append(f"next: {next_task}")
+    if safety is not None:
+        lines.append(f"safety-bearing: {safety[0]} — {safety[1]}")
+    else:
+        lines.append("safety-bearing: N/A — header absent")
 
     return "\n".join(lines) + "\n"
 
@@ -944,6 +1119,23 @@ def _plan_directory_lock(path: Path):
         os.close(descriptor)
 
 
+def _replacements_are_finalization(replacements: dict[int, str]) -> bool:
+    """True iff every replacement value is a done(<sha>) status.
+
+    ``set(replacements) == member_set`` looks like "every member changes"
+    but says nothing about the direction of that change — a reopen whose
+    owner union happens to be the whole membership (every replacement is
+    ``pending``) matches it too. Only the replacement VALUES tell finalize
+    and reopen apart. This alone does not prove full membership coverage;
+    ``_validate_batch_transition`` raises separately when a done-valued
+    dict omits a member instead of silently misreading it.
+    """
+    return bool(replacements) and all(
+        _DONE_STATUS.fullmatch(status) is not None
+        for status in replacements.values()
+    )
+
+
 def _validate_batch_transition(
     members: tuple[int, ...],
     execution_projection_fields: tuple[object, ...],
@@ -953,7 +1145,14 @@ def _validate_batch_transition(
 ) -> bool:
     """Validate one authorized finalization or owner-union reopen."""
     member_set = set(members)
-    finalizing = set(replacements) == member_set
+    attempted_finalize = _replacements_are_finalization(replacements)
+    finalizing = attempted_finalize and set(replacements) == member_set
+    if attempted_finalize and not finalizing and set(replacements) < member_set:
+        missing = sorted(member_set - set(replacements))
+        raise ValueError(
+            "finalize replacements must cover every member; missing: "
+            f"{missing}"
+        )
     action = "finalize" if finalizing else "reopen"
     owners = (
         tuple(f"Task {number}" for number in members if number in replacements)
@@ -1028,7 +1227,7 @@ def _atomic_batch_status_update_locked(
             transition_authority,
         ):
             return False
-        finalizing = set(replacements) == set(members)
+        finalizing = _replacements_are_finalization(replacements)
 
         current = _task_statuses(text)
         current_snapshot = {number: current[number] for number in members}
@@ -1129,7 +1328,7 @@ def set_stage(text: str, new_value: str) -> tuple[str, str, str]:
     every continuation line — never just the first line, which would
     leave a stale orphan continuation that `_header_value` folds back in
     on the next read (Finding 2, fix round)."""
-    header, sep, rest = text.partition("\n## ")
+    header, sep, rest = _split_header(text)
     match = re.search(r"^Stage:.*$(?:\n[ \t]+\S.*$)*", header, re.MULTILINE)
     if match is None:
         raise ValueError("plan has no 'Stage:' header line")
@@ -1168,7 +1367,7 @@ def build_stale_scan(
     for filename, text in plans:
         if _STATUS_BULLET.search(text) is None:
             continue
-        header, _, _ = text.partition("\n## ")
+        header, _, _ = _split_header(text)
         stage = _header_value(header, "Stage")
         if not stage:
             continue  # pre-Stage-era plan — cannot be stage-stale

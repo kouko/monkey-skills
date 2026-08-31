@@ -31,6 +31,8 @@ plan_card = importlib.util.module_from_spec(_SPEC)
 sys.modules["plan_card"] = plan_card
 _SPEC.loader.exec_module(plan_card)
 
+import loom_gate_markers
+
 
 def _plan_text(
     *,
@@ -113,6 +115,7 @@ def test_happy_path_mixed_statuses_renders_the_exact_card(tmp_path):
         "[!] T4 docs\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -130,6 +133,181 @@ def test_card_labels_the_goal_field_end_state(tmp_path):
     first_line = result.stdout.splitlines()[0]
     assert first_line.startswith("end-state: "), first_line
     assert not any(line.startswith("goal: ") for line in result.stdout.splitlines())
+
+
+def test_card_renders_safety_bearing_header_and_na_when_absent(tmp_path):
+    """(Task 6) An optional `Safety-bearing: yes|no — <reason>` header
+    line renders on the card as `safety-bearing: <value>` verbatim; its
+    absence renders `safety-bearing: N/A — header absent` (every other
+    existing fixture in this file omits the header and already pins
+    this N/A line). A value outside the `yes — `/`no — ` grammar raises
+    ValueError naming the accepted forms, and the pure `safety_bearing()`
+    helper (Task 10's consumer) returns the parsed (kind, reason) pair."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    text = text.replace(
+        "Stage: sdd:wave-1\n",
+        "Stage: sdd:wave-1\nSafety-bearing: yes — touches git-guard\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: yes — touches git-guard\n" in result.stdout
+    assert plan_card.safety_bearing(text) == ("yes", "touches git-guard")
+
+    absent_dir = tmp_path / "absent"
+    absent_dir.mkdir()
+    absent_text = _plan_text(tasks=[("parser", "pending")])
+    absent_plan_path = _write_plan(absent_dir, absent_text)
+
+    absent_result = _run_card(absent_plan_path)
+
+    assert absent_result.returncode == 0, absent_result.stdout + absent_result.stderr
+    assert "safety-bearing: N/A — header absent\n" in absent_result.stdout
+    assert plan_card.safety_bearing(absent_text) is None
+
+    with pytest.raises(ValueError, match="Safety-bearing"):
+        plan_card.safety_bearing(
+            absent_text.replace("Stage: sdd:wave-1\n", "Stage: sdd:wave-1\nSafety-bearing: maybe\n")
+        )
+
+
+def test_safety_bearing_line_outside_header_or_miscased_fails_loud(tmp_path):
+    """(review-driven fix, live adversarial audit) A `Safety-bearing:`
+    line written OUTSIDE the header block (e.g. under a later `## `
+    section) or with a miscased key inside the header block must never
+    silently render `safety-bearing: N/A — header absent` at exit 0 —
+    that is a self-exemption vector for a safety-relevant field. Both
+    forms fail loud, naming the offending line, from both the CLI card
+    render and the pure `safety_bearing()` helper directly."""
+    misplaced_text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "Safety-bearing: yes — touches git-guard\n",
+    )
+    misplaced_path = _write_plan(tmp_path, misplaced_text)
+
+    misplaced_result = _run_card(misplaced_path)
+
+    assert misplaced_result.returncode == 1, misplaced_result.stdout + misplaced_result.stderr
+    assert misplaced_result.stdout.startswith("plan_card: FAIL —"), misplaced_result.stdout
+    assert "Safety-bearing: yes — touches git-guard" in misplaced_result.stdout
+    assert "header" in misplaced_result.stdout
+    assert misplaced_result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="header"):
+        plan_card.safety_bearing(misplaced_text)
+
+    miscased_dir = tmp_path / "miscased"
+    miscased_dir.mkdir()
+    miscased_text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "Stage: sdd:wave-1\n",
+        "Stage: sdd:wave-1\nsafety-bearing: yes — touches git-guard\n",
+    )
+    miscased_path = _write_plan(miscased_dir, miscased_text)
+
+    miscased_result = _run_card(miscased_path)
+
+    assert miscased_result.returncode == 1, miscased_result.stdout + miscased_result.stderr
+    assert miscased_result.stdout.startswith("plan_card: FAIL —"), miscased_result.stdout
+    assert "Safety-bearing:" in miscased_result.stdout
+    assert miscased_result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="Safety-bearing:"):
+        plan_card.safety_bearing(miscased_text)
+
+
+def test_indented_safety_bearing_line_in_header_fails_loud(tmp_path):
+    """(review round 2, live adversarial audit) A `Safety-bearing:` line
+    written INDENTED inside the header block — e.g. directly under
+    `Stage:` — is `_header_value`'s continuation shape (N1's folded
+    convention), so it used to be silently swallowed into the preceding
+    field's value instead of being read as its own field, rendering
+    `safety-bearing: N/A — header absent` at exit 0. A header-region
+    continuation line whose stripped text starts with a known header key
+    (Safety-bearing:/Goal:/Stage:/Steps:, case-insensitive) is malformed
+    and must fail loud, naming the line, from both the CLI card render
+    and the pure `safety_bearing()` helper directly."""
+    indented_text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "Stage: sdd:wave-1\n",
+        "Stage: sdd:wave-1\n  Safety-bearing: yes — touches git-guard\n",
+    )
+    plan_path = _write_plan(tmp_path, indented_text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "Safety-bearing:" in result.stdout
+    assert "continuation" in result.stdout
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="continuation"):
+        plan_card.safety_bearing(indented_text)
+
+
+def test_safety_bearing_mention_inside_fenced_block_is_ignored(tmp_path):
+    """(review round 2, live adversarial audit) A `Safety-bearing:` line
+    quoted inside a fenced code block (triple backtick) in the plan body
+    — e.g. documentation showing the grammar — is content, not a
+    misplaced header declaration; the outside-header scan must skip
+    fenced lines and the plan still renders its normal card (N/A here,
+    since no real header is present)."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n```\nSafety-bearing: yes — touches git-guard\n```\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: N/A — header absent\n" in result.stdout
+    assert plan_card.safety_bearing(text) is None
+
+
+def test_unclosed_fence_before_misplaced_header_fails_loud(tmp_path):
+    """(review round 3, live adversarial audit) A fenced code block
+    opened in the plan body and never closed used to leave the scan's
+    `in_fence` state True through EOF, so a genuine misplaced
+    `Safety-bearing:` line written after the opening fence marker was
+    silently treated as fenced content and skipped — exit 0, N/A. An
+    unclosed fence is itself malformed: it must fail loud naming the
+    opening line, never silently swallow the rest of the document."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n```\nSafety-bearing: yes — touches git-guard\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "unclosed" in result.stdout.lower()
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="unclosed"):
+        plan_card.safety_bearing(text)
+
+
+def test_tilde_fenced_safety_bearing_mention_is_ignored(tmp_path):
+    """(review round 3, live adversarial audit) `~~~` is markdown's
+    other fence delimiter, alongside triple-backtick — a
+    `Safety-bearing:` line quoted inside a properly closed `~~~` fence
+    is content, not a misplaced header declaration, same as the
+    backtick case."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n~~~\nSafety-bearing: yes — touches git-guard\n~~~\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: N/A — header absent\n" in result.stdout
+    assert plan_card.safety_bearing(text) is None
 
 
 def test_all_done_plan_renders_next_close_out(tmp_path):
@@ -153,6 +331,7 @@ def test_all_done_plan_renders_next_close_out(tmp_path):
         "[v] T2 renderer\n"
         "stage: finishing\n"
         "next: close-out\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -294,6 +473,7 @@ def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
         "[~] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -386,6 +566,7 @@ def test_titled_steps_with_glosses_render_the_exact_stepped_card(tmp_path):
         "      讓卡片直接在終端機看得懂\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -419,6 +600,7 @@ def test_deps_without_steps_render_untitled_separators(tmp_path):
         "[ ] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -474,6 +656,7 @@ def test_needs_list_sorts_ascending_and_parallel_form_parses(tmp_path):
         "[ ] T400 cli wiring\n"
         "stage: sdd:wave-1\n"
         "next: T400 cli wiring\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -505,6 +688,7 @@ def test_depless_glossless_plan_output_byte_identical_to_flat_card(tmp_path):
         "[!] T4 docs\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -533,6 +717,7 @@ def test_all_none_deps_without_steps_render_flat_no_separator(tmp_path):
         "[ ] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -563,6 +748,7 @@ def test_all_none_deps_with_declared_one_line_steps_renders_titled_step(tmp_path
         "[ ] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -1051,6 +1237,7 @@ def test_set_status_rewrites_in_place(tmp_path):
         "[v] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: close-out\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "- Status: pending", "- Status: done(abc1234)"
@@ -1088,6 +1275,7 @@ def test_set_status_preserves_bold_field_markup(tmp_path):
         "[v] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: close-out\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "- **Status**: pending", "- **Status**: done(abc1234)"
@@ -1113,6 +1301,7 @@ def test_set_status_pending_kind(tmp_path):
         "[ ] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert "- Status: pending" in plan_path.read_text(encoding="utf-8")
 
@@ -1135,6 +1324,7 @@ def test_set_status_claimed_kind(tmp_path):
         "[~] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert "- Status: claimed(@implementer)" in plan_path.read_text(
         encoding="utf-8"
@@ -1160,6 +1350,7 @@ def test_set_status_blocked_kind(tmp_path):
         "[!] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert "- Status: blocked" in plan_path.read_text(encoding="utf-8")
 
@@ -1490,6 +1681,7 @@ def test_set_stage_happy_path_rewrites_and_prints_card(tmp_path):
         "[ ] T1 parser\n"
         "stage: sdd:wave-2\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "Stage: sdd:wave-1", "Stage: sdd:wave-2"
@@ -1699,3 +1891,101 @@ def test_plan_card_oracle_keeps_name_and_exception_type(monkeypatch):
     sys.modules.pop("plan_card_review_batch_oracle", None)
     plan_card._review_batch_oracle()
     assert "plan_card_review_batch_oracle" in sys.modules
+
+
+# ---------------------------------------------------------------------------
+# F1/C1 — the header/body split anchors on ANY `^## ` line, including the
+# document's very first line; an indented body-line mention is not invisible
+# either. F4/C6 — fence scanning shares loom_gate_markers' toggle rules.
+# ---------------------------------------------------------------------------
+
+
+def test_plan_starting_with_h2_heading_has_empty_header_misplaced_line_raises():
+    """(F1, whole-branch review) `plan_text.partition("\\n## ")` needs a
+    LEADING newline before `## `, so a plan whose very first line IS a
+    `## ` heading was never split there — the whole first section was
+    read as `header`, and a `Safety-bearing:` line inside it rendered
+    N/A instead of raising. After the fix the header is EMPTY (the
+    split happens at position 0) and the line is scanned as body content
+    — outside the header block — so it must raise as misplaced, never
+    silently render N/A."""
+    text = (
+        "## Context\n\n"
+        "Safety-bearing: no — routine docs touch-up\n\n"
+        "## Task 1 — t\n\n- Status: pending\n"
+    )
+    with pytest.raises(ValueError, match="outside the plan's header block"):
+        plan_card.safety_bearing(text)
+
+
+def test_normal_plan_header_split_is_unchanged(tmp_path):
+    """A plan with a real preamble before the first `## ` still renders
+    its normal card — the F1 fix must not disturb the common case."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: N/A — header absent\n" in result.stdout
+
+
+def test_indented_safety_bearing_line_in_body_fails_loud():
+    """(C1, whole-branch review) An INDENTED `Safety-bearing:` line
+    written in the plan BODY (outside the header block, e.g. under a
+    later `## ` section) used to be invisible to the outside-header scan
+    — `re.match(r"^safety-bearing:", line, ...)` never matches a line
+    with leading whitespace — so it rendered N/A silently, the same
+    self-exemption class this module pins three other ways."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n  Safety-bearing: no — trivial\n",
+    )
+    with pytest.raises(ValueError, match="outside the plan's header block"):
+        plan_card.safety_bearing(text)
+
+
+def test_tilde_horizontal_rule_is_not_a_fence():
+    """(F4/C6, whole-branch review) Pin the shared
+    `loom_gate_markers._FENCED_CODE_DELIMITER_RE`/`_fence_toggle`
+    behaviour for a lone `~~~~~~~~~~` line, rather than assuming it: the
+    shared regex matches ANY run of 3+ of the same fence character at
+    line start regardless of what (if anything) follows, so a bare run
+    of tildes IS read as a fence-open delimiter — same as a genuine
+    ```/~~~ opener. Left unclosed, it fails loud naming the opening
+    line, exactly like any other unclosed fence (never silently hides
+    the rest of the document)."""
+    text = "## Notes\n\nFixture notes.\n\n~~~~~~~~~~\n\nMore text.\n"
+    with pytest.raises(ValueError, match="unclosed"):
+        plan_card._find_misplaced_safety_bearing_line(text)
+
+
+def test_fence_scanning_matches_loom_gate_markers_behaviour():
+    """plan_card._fence_toggle is a deliberate byte-for-byte duplicate of
+    loom_gate_markers._fence_toggle (plan_card.py has no sibling-script
+    imports — it ships as a standalone copy, per
+    test_plan_card_batch_states.py's `_standalone_plan_card_copy`). This
+    differential guard is the substitute for importing one from the
+    other: run the SAME cases through both and require identical
+    results, so a future edit that re-forks the two fails here."""
+    cases = [
+        ("```", None),
+        ("~~~", None),
+        ("````", ("`", 3)),
+        ("~~~~~~~~~~", None),
+        ("plain text", ("`", 3)),
+        ("   ```", ("`", 3)),
+        ("``` info-string", None),
+        ("    ```", None),
+        ("``` info", ("`", 3)),
+        ("~~~", ("`", 3)),
+    ]
+    for line, fence_in in cases:
+        assert plan_card._fence_toggle(line, fence_in) == (
+            loom_gate_markers._fence_toggle(line, fence_in)
+        )
+    assert (
+        plan_card._FENCED_CODE_DELIMITER_RE.pattern
+        == loom_gate_markers._FENCED_CODE_DELIMITER_RE.pattern
+    )

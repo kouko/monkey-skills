@@ -141,6 +141,9 @@ EXEMPT = {
     "loom_init.py": "scaffolds a new store; has no store to read yet",
     "plan_card.py": "reads plans, not the store",
     "post_pr_ci.py": "waits for GitHub PR checks, not the store or a brief",
+    "check_attack_catalogue.py": "checks the attack-catalogue store, not the "
+                                 "backlog store or handoff brief; its own "
+                                 "tests pin unreadable-input handling",
 }
 
 FAMILY = (
@@ -501,7 +504,7 @@ def test_every_script_here_is_classified() -> None:
 # said fourteen, and no round ran the metric against the sentence quoting
 # it. Anything that changes this number must also update the backlog entry
 # that sizes the follow-up work.
-EXEMPT_LEAK_COUNT = 16
+EXEMPT_LEAK_COUNT = 17
 EXEMPT_LEAK_LEDGER = (
     "docs/loom/backlog/"
     "2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates.md"
