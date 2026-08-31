@@ -36,10 +36,6 @@ def assert_no_symlink_components(
             break
 
 
-def _assert_no_symlink_components(path: Path) -> None:
-    assert_no_symlink_components(path)
-
-
 def _assert_contained(map_dir: Path, candidate: Path) -> None:
     try:
         candidate.resolve(strict=False).relative_to(map_dir.resolve(strict=True))
@@ -72,7 +68,7 @@ def _open_lock_file(directory_fd: int) -> int:
 def _prepare_lock_directory(map_dir: Path) -> Path:
     transactions = map_dir / ".transactions"
     lock_path = transactions / ".map.lock"
-    _assert_no_symlink_components(map_dir)
+    assert_no_symlink_components(map_dir)
     try:
         if not stat.S_ISDIR(map_dir.lstat().st_mode):
             raise MapLockError(f"transaction lock Map is not a directory: {map_dir}")
@@ -83,7 +79,7 @@ def _prepare_lock_directory(map_dir: Path) -> Path:
             )
     except OSError as exc:
         raise MapLockError(f"cannot prepare transaction lock: {exc}") from exc
-    _assert_no_symlink_components(transactions)
+    assert_no_symlink_components(transactions)
     _assert_contained(map_dir, lock_path)
     return transactions
 

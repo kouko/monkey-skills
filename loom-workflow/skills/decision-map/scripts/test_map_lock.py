@@ -46,3 +46,7 @@ def test_assert_no_symlink_components_defaults_to_map_lock_error(
 
     with pytest.raises(map_lock.MapLockError):
         map_lock.assert_no_symlink_components(target)
+
+
+def test_private_guard_name_is_gone() -> None:
+    assert not hasattr(map_lock, "_assert_no_symlink_components")
