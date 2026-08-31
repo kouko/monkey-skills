@@ -261,6 +261,29 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
             tmp_path, [("case-1", snapshot_digest, ineligible.record_id)]
         )
 
+    forged_record = dict(oracle.record)
+    forged_record.update(
+        {
+            "ratifier": "maintainer:intruder",
+            "governance_status": "bound",
+            "independence_evidence": {
+                "allowed_exceptions": [],
+                "conflicting_roles": [],
+                "ratifier_role": "oracle_ratifier",
+                "rule": "distinct-role-identity-v1",
+                "status": "satisfied",
+            },
+            "eligible_for_official_metrics": True,
+        }
+    )
+    forged = store.publish_record(
+        tmp_path, "oracle-case-1-forged-governance-r1", forged_record
+    )
+    with pytest.raises(ValueError, match="authority does not authorize ratifier"):
+        store.freeze_corpus_manifest(
+            tmp_path, [("case-1", snapshot_digest, forged.record_id)]
+        )
+
 
 def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
     # @req: REQ-103

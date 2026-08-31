@@ -615,6 +615,54 @@ def revise_authority_assignment(
     return append_revision(store_root, parent_revision_id, child)
 
 
+def _ratification_authority_evidence(
+    store_root: Path,
+    *,
+    authority_revision_id: str,
+    action: str,
+    actor: str,
+) -> tuple[PublishedRecord, dict[str, object], bool]:
+    authority = read_record(store_root, authority_revision_id)
+    if authority.record.get("kind") != "authority_assignment":
+        raise ValueError("authority_revision_id must name an authority assignment")
+    actor = _human_ratifier(actor)
+    try:
+        assignment = _authority_fields(
+            campaign_policy_revision_id=authority.record.get(
+                "campaign_policy_revision_id"
+            ),
+            role_identities=authority.record.get("role_identities"),
+            action_authorities=authority.record.get("action_authorities"),
+            allowed_self_ratification=authority.record.get(
+                "allowed_self_ratification"
+            ),
+        )
+    except ValueError as error:
+        raise ValueError("authority assignment is malformed") from error
+    if any(authority.record.get(field) != value for field, value in assignment.items()):
+        raise ValueError("authority assignment is malformed")
+    actions = assignment["action_authorities"]
+    roles = assignment["role_identities"]
+    exceptions = assignment["allowed_self_ratification"]
+    permitted = actions.get(action, [])
+    ratifier_role = _RATIFICATION_ROLE[action]
+    authorized = actor in permitted and roles.get(ratifier_role) == actor
+    conflicts = sorted(
+        role
+        for role in _CONFLICT_ROLES
+        if roles.get(role) == actor
+        and f"{ratifier_role}={role}" not in exceptions
+    )
+    evidence = {
+        "allowed_exceptions": list(exceptions),
+        "conflicting_roles": conflicts,
+        "ratifier_role": ratifier_role,
+        "rule": "distinct-role-identity-v1",
+        "status": "insufficient" if conflicts else "satisfied",
+    }
+    return authority, evidence, authorized
+
+
 def _ratification_governance(
     store_root: Path,
     *,
@@ -623,19 +671,13 @@ def _ratification_governance(
     actor: str,
     target: str,
 ) -> tuple[PublishedRecord, dict[str, object]] | PublishedRecord:
-    authority = read_record(store_root, authority_revision_id)
-    if authority.record.get("kind") != "authority_assignment":
-        raise ValueError("authority_revision_id must name an authority assignment")
-    actor = _human_ratifier(actor)
-    actions = authority.record.get("action_authorities")
-    roles = authority.record.get("role_identities")
-    exceptions = authority.record.get("allowed_self_ratification")
-    if not isinstance(actions, Mapping) or not isinstance(roles, Mapping) or not isinstance(
-        exceptions, list
-    ):
-        raise ValueError("authority assignment is malformed")
-    permitted = actions.get(action, [])
-    if actor not in permitted:
+    authority, evidence, authorized = _ratification_authority_evidence(
+        store_root,
+        authority_revision_id=authority_revision_id,
+        action=action,
+        actor=actor,
+    )
+    if not authorized:
         audit = {
             "action": action,
             "actor": actor,
@@ -650,20 +692,6 @@ def _ratification_governance(
             "target": target,
         }
         return publish_record(store_root, f"audit-{record_digest(audit)}", audit)
-    ratifier_role = _RATIFICATION_ROLE[action]
-    conflicts = sorted(
-        role
-        for role in _CONFLICT_ROLES
-        if roles.get(role) == actor
-        and f"{ratifier_role}={role}" not in exceptions
-    )
-    evidence = {
-        "allowed_exceptions": list(exceptions),
-        "conflicting_roles": conflicts,
-        "ratifier_role": ratifier_role,
-        "rule": "distinct-role-identity-v1",
-        "status": "insufficient" if conflicts else "satisfied",
-    }
     return authority, evidence
 
 
@@ -841,6 +869,40 @@ def freeze_corpus_manifest(
         if oracle.record.get("eligible_for_official_metrics") is not True:
             raise ValueError(
                 f"binding {case_id} oracle is not eligible for official metrics: "
+                f"{oracle_revision_id}"
+            )
+        authority_revision_id = _required_text(
+            oracle.record.get("authority_revision_id"),
+            f"binding {case_id} oracle authority_revision_id",
+        )
+        authority, recomputed_independence, authorized = (
+            _ratification_authority_evidence(
+                store_root,
+                authority_revision_id=authority_revision_id,
+                action="ratify_oracle",
+                actor=oracle.record.get("ratifier"),
+            )
+        )
+        if oracle.record.get("authority_revision_digest") != authority.digest:
+            raise ValueError(
+                f"binding {case_id} oracle authority revision digest does not match: "
+                f"{oracle_revision_id}"
+            )
+        if not authorized:
+            raise ValueError(
+                f"binding {case_id} oracle authority does not authorize ratifier: "
+                f"{oracle_revision_id}"
+            )
+        if dict(independence) != recomputed_independence:
+            raise ValueError(
+                f"binding {case_id} oracle independence evidence does not match "
+                f"authority: {oracle_revision_id}"
+            )
+        if oracle.record.get("role_identities") != authority.record.get(
+            "role_identities"
+        ):
+            raise ValueError(
+                f"binding {case_id} oracle role assignment does not match authority: "
                 f"{oracle_revision_id}"
             )
         if oracle.record.get("case_id") != case_id:
