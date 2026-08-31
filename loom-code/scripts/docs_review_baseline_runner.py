@@ -586,7 +586,17 @@ def run_isolated_reviewer(
     *,
     attempt_id: str,
 ) -> dict[str, object]:
-    """Run the frozen snapshot through a closed, ephemeral Codex reviewer."""
+    """Run the frozen snapshot through a closed, ephemeral Codex reviewer.
+
+    CLI grounding (checked 2026-08-31): `codex-cli 0.151.0` and live
+    `codex exec --help` cover `--model`, `--ephemeral`,
+    `--ignore-user-config`, `--ignore-rules`, `--json`, and `-C/--cd`.
+    The config reference checked that date covers `features.shell_tool`,
+    `features.multi_agent`, `web_search`, and `apps._default.enabled`;
+    see https://developers.openai.com/codex/cli/reference and
+    https://developers.openai.com/codex/config-reference. These establish
+    requested CLI/configuration semantics, not the actual backend model identity.
+    """
     if not isinstance(boundary, ReplayBoundary) or boundary._seal is not _REPLAY_BOUNDARY_SEAL:
         raise TypeError("replay boundary must come from governed envelope construction")
     if not attempt_id.strip():
