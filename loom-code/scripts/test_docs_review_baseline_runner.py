@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 import docs_review_baseline_runner as runner
-from docs_review_baseline_store import read_record
+from docs_review_baseline_store import publish_record, read_record
 
 
 def _binding(host: str, model: str) -> dict[str, str]:
@@ -59,36 +59,73 @@ def test_req_102_scored_replay_uses_explicit_weak_bindings() -> None:
         runner.resolve_scored_execution_profile(_binding("other", "tiny"))
 
 
-def _run(run_id: str, host: str, model: str) -> dict[str, object]:
-    return {
-        "run_id": run_id,
-        "valid": True,
-        "scoreable": True,
-        "corpus_digest": "sha256:corpus-r1",
+def _run(
+    tmp_path,
+    run_id: str,
+    host: str,
+    model: str,
+    *,
+    outcome: str = "success",
+    contract_digest: str = "sha256:contract-r1",
+    runtime_digest: str = "sha256:runtime-r1",
+) -> dict[str, object]:
+    profile = publish_record(tmp_path, f"{run_id}--profile", {
         "artifact_digest": "sha256:artifact-r1",
-        "contract_digest": "sha256:contract-r1",
-        "runtime_digest": "sha256:runtime-r1",
         "configuration_fingerprint": "sha256:configuration-r1",
+        "contract_digest": contract_digest,
+        "corpus_digest": "sha256:corpus-r1",
         "host": host,
+        "kind": "scored_execution_binding",
         "model": model,
-        "tier": "economy",
         "requested_effort": "low",
+        "runtime_digest": runtime_digest,
+        "tier": "economy",
+    })
+    attempt = publish_record(tmp_path, run_id, {
+        "attempt_id": run_id,
+        "case_id": "case-r1",
+        "corpus_id": "corpus-r1",
+        "kind": "dispatch_attempt",
+        "profile_id": profile.record_id,
+        "schema_version": 1,
+        "sequence": 1,
+        "status": "prepared",
+    })
+    outcome_record = publish_record(tmp_path, f"{run_id}--outcome", {
+        "kind": "dispatch_outcome",
+        "outcome": outcome,
+        "parent_attempt_id": attempt.record_id,
+        "parent_digest": attempt.digest,
+        "resource_telemetry": {},
+        "schema_version": 1,
+    })
+    return {
+        "attempt_digest": attempt.digest,
+        "attempt_record_id": attempt.record_id,
+        "outcome_digest": outcome_record.digest,
+        "outcome_record_id": outcome_record.record_id,
+        "profile_digest": profile.digest,
+        "profile_record_id": profile.record_id,
+        "run_id": run_id,
     }
 
 
-def test_req_105_repeat_cohorts_never_mix_execution_identities() -> None:
+def test_req_105_repeat_cohorts_never_mix_execution_identities(tmp_path) -> None:
     # @req: REQ-105
     codex = runner.build_repeat_cohorts(
-        [_run("codex-1", "codex", "gpt-5.6-luna"),
-         _run("codex-2", "codex", "gpt-5.6-luna")]
+        tmp_path,
+        [_run(tmp_path, "codex-1", "codex", "gpt-5.6-luna"),
+         _run(tmp_path, "codex-2", "codex", "gpt-5.6-luna")]
     )
     assert len(codex["cohorts"]) == 1
     assert codex["cohorts"][0]["run_ids"] == ["codex-1", "codex-2"]
     assert codex["insufficient"] == []
 
+    split_root = tmp_path / "split"
     split = runner.build_repeat_cohorts(
-        [_run("claude-1", "claude-code", "haiku"),
-         _run("codex-1", "codex", "gpt-5.6-luna")]
+        split_root,
+        [_run(split_root, "claude-1", "claude-code", "haiku"),
+         _run(split_root, "codex-1", "codex", "gpt-5.6-luna")]
     )
     assert split["cohorts"] == []
     assert [item["run_ids"] for item in split["insufficient"]] == [
@@ -98,14 +135,23 @@ def test_req_105_repeat_cohorts_never_mix_execution_identities() -> None:
     assert all(item["reason"] == "repeat cohort requires at least two runs"
                for item in split["insufficient"])
 
-    excluded = runner.build_repeat_cohorts([
-        {**_run("bad-1", "codex", "gpt-5.6-luna"), "scoreable": False},
-        _run("codex-2", "codex", "gpt-5.6-luna"),
+    excluded_root = tmp_path / "excluded"
+    excluded = runner.build_repeat_cohorts(excluded_root, [
+        _run(excluded_root, "bad-1", "codex", "gpt-5.6-luna",
+             outcome="parse_failure"),
+        _run(excluded_root, "codex-2", "codex", "gpt-5.6-luna"),
     ])
     assert excluded["excluded"] == [
         {"run_id": "bad-1", "reason": "run is not valid and scoreable"}
     ]
     assert excluded["insufficient"][0]["run_ids"] == ["codex-2"]
+
+    cloned = _run(tmp_path / "clone", "attempt-one", "codex", "gpt-5.6-luna")
+    with pytest.raises(ValueError, match="same immutable attempt"):
+        runner.build_repeat_cohorts(
+            tmp_path / "clone",
+            [cloned, {**cloned, "run_id": "renamed-copy"}],
+        )
 
 
 def test_req_110_contract_and_runtime_are_independent_inputs(tmp_path) -> None:
@@ -142,12 +188,17 @@ def test_req_110_contract_and_runtime_are_independent_inputs(tmp_path) -> None:
     assert runtime_2.record["parent_revision_id"] == runtime_1.record_id
     assert read_record(tmp_path, "runtime-r1") == runtime_1
 
-    base = _run("run-1", "codex", "gpt-5.6-luna")
-    separated = runner.build_repeat_cohorts([
-        {**base, "contract_digest": contract.digest,
-         "runtime_digest": runtime_1.digest},
-        {**base, "run_id": "run-2", "contract_digest": contract.digest,
-         "runtime_digest": runtime_2.digest},
+    base = _run(
+        tmp_path, "run-1", "codex", "gpt-5.6-luna",
+        contract_digest=contract.digest, runtime_digest=runtime_1.digest,
+    )
+    run_2 = _run(
+        tmp_path, "run-2", "codex", "gpt-5.6-luna",
+        contract_digest=contract.digest, runtime_digest=runtime_2.digest,
+    )
+    separated = runner.build_repeat_cohorts(tmp_path, [
+        base,
+        run_2,
     ])
     assert separated["cohorts"] == []
     assert len(separated["insufficient"]) == 2

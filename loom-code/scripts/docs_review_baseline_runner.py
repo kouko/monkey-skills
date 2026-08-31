@@ -127,11 +127,14 @@ def resolve_scored_execution_profile(
     }
 
 
-def build_repeat_cohorts(runs: list[Mapping[str, object]]) -> dict[str, object]:
-    """Partition valid independent runs by every repeatability identity."""
+def build_repeat_cohorts(
+    store_root: Path, runs: list[Mapping[str, object]]
+) -> dict[str, object]:
+    """Partition runs only after resolving distinct immutable attempts."""
     groups: dict[str, dict[str, object]] = {}
     excluded: list[dict[str, str]] = []
     seen_run_ids: set[str] = set()
+    seen_attempt_digests: set[str] = set()
     for run in runs:
         run_value = run.get("run_id")
         run_id = run_value.strip() if isinstance(run_value, str) else ""
@@ -140,14 +143,62 @@ def build_repeat_cohorts(runs: list[Mapping[str, object]]) -> dict[str, object]:
         if run_id in seen_run_ids:
             raise ValueError(f"repeat run_id is not independent: {run_id}")
         seen_run_ids.add(run_id)
-        if run.get("valid") is not True or run.get("scoreable") is not True:
+        attempt_record_id = run.get("attempt_record_id")
+        attempt_digest = run.get("attempt_digest")
+        if not isinstance(attempt_record_id, str) or not attempt_record_id.strip():
+            raise ValueError(f"run {run_id} is missing immutable attempt identity")
+        if not isinstance(attempt_digest, str) or not attempt_digest.strip():
+            raise ValueError(f"run {run_id} is missing immutable attempt digest")
+        if attempt_digest in seen_attempt_digests:
+            raise ValueError("repeat runs resolve to the same immutable attempt")
+        attempt = read_record(store_root, attempt_record_id)
+        if attempt.digest != attempt_digest:
+            raise ValueError(f"run {run_id} attempt digest does not match storage")
+        if (
+            attempt.record.get("kind") != "dispatch_attempt"
+            or attempt.record.get("attempt_id") != attempt_record_id
+            or attempt.record.get("status") != "prepared"
+            or run_id != attempt_record_id
+        ):
+            raise ValueError(f"run {run_id} does not bind a prepared dispatch attempt")
+        seen_attempt_digests.add(attempt_digest)
+        outcome_record_id = run.get("outcome_record_id")
+        outcome_digest = run.get("outcome_digest")
+        if not isinstance(outcome_record_id, str) or not outcome_record_id.strip():
+            raise ValueError(f"run {run_id} is missing immutable outcome identity")
+        if not isinstance(outcome_digest, str) or not outcome_digest.strip():
+            raise ValueError(f"run {run_id} is missing immutable outcome digest")
+        outcome = read_record(store_root, outcome_record_id)
+        if outcome.digest != outcome_digest:
+            raise ValueError(f"run {run_id} outcome digest does not match storage")
+        if (
+            outcome.record.get("kind") != "dispatch_outcome"
+            or outcome.record.get("parent_attempt_id") != attempt.record_id
+            or outcome.record.get("parent_digest") != attempt.digest
+        ):
+            raise ValueError(f"run {run_id} outcome does not bind its attempt")
+        if outcome.record.get("outcome") != "success":
             excluded.append(
                 {"run_id": run_id, "reason": "run is not valid and scoreable"}
             )
             continue
+        profile_record_id = run.get("profile_record_id")
+        profile_digest = run.get("profile_digest")
+        if not isinstance(profile_record_id, str) or not profile_record_id.strip():
+            raise ValueError(f"run {run_id} is missing immutable profile identity")
+        if not isinstance(profile_digest, str) or not profile_digest.strip():
+            raise ValueError(f"run {run_id} is missing immutable profile digest")
+        profile = read_record(store_root, profile_record_id)
+        if profile.digest != profile_digest:
+            raise ValueError(f"run {run_id} profile digest does not match storage")
+        if (
+            profile.record.get("kind") != "scored_execution_binding"
+            or attempt.record.get("profile_id") != profile.record_id
+        ):
+            raise ValueError(f"run {run_id} profile does not bind its attempt")
         identity: dict[str, str] = {}
         for field in _COHORT_FIELDS:
-            value = run.get(field)
+            value = profile.record.get(field)
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"run {run_id} is missing cohort field: {field}")
             identity[field] = value.strip()
