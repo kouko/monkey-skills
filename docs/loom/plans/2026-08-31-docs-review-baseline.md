@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: execution — store-records batch / Task 6 dispatch attempts
+Stage: execution — store-records batch / Task 7 attribution separation
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -143,7 +143,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-103
 - **Review disposition**: batch(store-records)
-- **Status**: claimed(@codex)
+- **Status**: implemented(6a654d644297b7708dc4395104b66adc737c577b)
 - **Gloss**: 失敗與中斷也會算進成本，不會被假裝成 reviewer 沒找到問題。
 
 ## Task 7 — 分離 observation 與人工 attribution
@@ -162,7 +162,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-104
 - **Review disposition**: batch(store-records)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 模型說了什麼與人最後判定什麼分開，才能看出 false alarm。
 
 ## Task 8 — 建立可比較 repeat cohorts
