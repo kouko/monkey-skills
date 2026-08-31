@@ -41,6 +41,8 @@ Goal: <one sentence transcribed from the brief's Smallest End State at
 Stage: <planning | sdd:wave-N | review:round-N | blocked:user-decision |
     finishing — updated by the orchestrator at each transition,
     committed with the nearest ledger or close-out commit>
+Safety-bearing: <OPTIONAL — yes — <reason> | no — <reason>; see
+    §Safety-bearing below>
 Steps: <OPTIONAL numbered block, one line per derived dependency
     level, titles in the user's conversation language; when present
     the count must equal the plan's dependency-level count —
@@ -222,6 +224,32 @@ always present — a bare Goal line with neither clause is invalid. No
 script enforces this clause; the plan-document-reviewer's Check 22 is
 its gate. `plan_card.py` prints `Goal:` verbatim, so every progress card
 inherits the direction clause with no script change.
+
+#### Safety-bearing (v0.109.0+)
+
+`Safety-bearing:` is an OPTIONAL header line, placed beside `Stage:`,
+declaring whether this plan's work touches safety-relevant machinery.
+It takes exactly two forms — `Safety-bearing: yes — <reason>` or
+`Safety-bearing: no — <reason>` — each with a required reason after the
+em dash; any other value (a bare `yes`/`no`, a typo, an empty reason) is
+refused loudly by `plan_card.py` rather than silently accepted. When the
+header is absent, the progress card renders `safety-bearing: N/A —
+header absent` instead of failing — absence is a valid, distinct third
+state, not an error.
+
+A `no` header is a plan author's declared judgment call, not a
+mechanical guarantee — it does not silence a guarded-path hit.
+`finishing-a-development-branch`'s Step 3.5 is the gate that owns this:
+it STOPs and surfaces both facts (the header's `no` and the guarded-path
+match) rather than letting either one override the other. See that
+skill for the trigger rule itself; this section only defines the header
+grammar and its rendering.
+
+Worked example header line:
+
+```
+Safety-bearing: yes — touches git-guard
+```
 
 #### `Files touched` and `Independent` (v0.8.0+)
 
