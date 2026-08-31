@@ -53,6 +53,10 @@
 - test_req_112_authority_and_independence_are_explicit
 - test_req_112_bootstrap_capability_and_single_purpose_receipt
 
+### REQ-113
+
+- test_req_113_campaign_resource_use_is_bounded
+
 ### REQ-99
 
 - test_req_99_concurrent_admission_consumes_receipt_once
@@ -490,7 +494,6 @@
 - REQ-106
 - REQ-107
 - REQ-108
-- REQ-113
 - REQ-114
 - REQ-115
 - REQ-116

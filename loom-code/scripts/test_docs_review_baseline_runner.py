@@ -221,3 +221,74 @@ def test_req_111_replay_content_is_untrusted_and_data_bound() -> None:
             reviewer_contract={"required_capabilities": []},
         )
     assert "TOP-SECRET-VALUE" not in str(error.value)
+
+
+def test_req_113_campaign_resource_use_is_bounded() -> None:
+    # @req: REQ-113
+    policy = {
+        "max_runs": 4,
+        "max_retries_per_case": 1,
+        "max_concurrency": 2,
+        "max_wall_seconds_per_run": 120,
+        "max_input_bytes": 100,
+        "max_output_bytes": 200,
+        "max_usage_units": 1000,
+    }
+    admitted = runner.admit_bounded_run(
+        artifact=b"complete historical document",
+        policy=policy,
+        usage={
+            "runs_started": 1,
+            "case_retries": 0,
+            "active_runs": 0,
+            "usage_units": 100,
+        },
+        requested_wall_seconds=60,
+        requested_output_bytes=150,
+        reserved_usage_units=200,
+    )
+    assert admitted == {
+        "artifact_bytes": 28,
+        "limits": policy,
+        "whole_artifact": True,
+    }
+
+    exhausted = [
+        ({"runs_started": 4, "case_retries": 0, "active_runs": 0,
+          "usage_units": 0}, "run budget exhausted"),
+        ({"runs_started": 0, "case_retries": 1, "active_runs": 0,
+          "usage_units": 0}, "retry budget exhausted"),
+        ({"runs_started": 0, "case_retries": 0, "active_runs": 2,
+          "usage_units": 0}, "concurrency budget exhausted"),
+        ({"runs_started": 0, "case_retries": 0, "active_runs": 0,
+          "usage_units": 900}, "usage budget exhausted"),
+    ]
+    for usage, reason in exhausted:
+        with pytest.raises(ValueError, match=reason):
+            runner.admit_bounded_run(
+                artifact=b"whole",
+                policy=policy,
+                usage=usage,
+                requested_wall_seconds=60,
+                requested_output_bytes=150,
+                reserved_usage_units=200,
+            )
+
+    with pytest.raises(ValueError, match="whole artifact exceeds input limit"):
+        runner.admit_bounded_run(
+            artifact=b"x" * 101,
+            policy=policy,
+            usage={"runs_started": 0, "case_retries": 0,
+                   "active_runs": 0, "usage_units": 0},
+            requested_wall_seconds=60,
+            requested_output_bytes=150,
+            reserved_usage_units=200,
+        )
+    with pytest.raises(ValueError, match="wall-time request exceeds limit"):
+        runner.admit_bounded_run(
+            artifact=b"whole", policy=policy,
+            usage={"runs_started": 0, "case_retries": 0,
+                   "active_runs": 0, "usage_units": 0},
+            requested_wall_seconds=121, requested_output_bytes=150,
+            reserved_usage_units=200,
+        )

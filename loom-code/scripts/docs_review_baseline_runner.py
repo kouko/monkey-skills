@@ -44,6 +44,15 @@ _ARTIFACT_INSTRUCTION = re.compile(
     rb"(?:call|invoke|use)\s+(?:an?\s+)?(?:external\s+)?tool)",
     re.IGNORECASE,
 )
+_RESOURCE_LIMIT_FIELDS = (
+    "max_runs",
+    "max_retries_per_case",
+    "max_concurrency",
+    "max_wall_seconds_per_run",
+    "max_input_bytes",
+    "max_output_bytes",
+    "max_usage_units",
+)
 
 
 def _identity(record: Mapping[str, object]) -> str:
@@ -260,4 +269,54 @@ def build_isolated_replay_envelope(
         "content": snapshot,
         "isolation_events": events,
         "snapshot_digest": digest,
+    }
+
+
+def admit_bounded_run(
+    *,
+    artifact: bytes,
+    policy: Mapping[str, object],
+    usage: Mapping[str, object],
+    requested_wall_seconds: int,
+    requested_output_bytes: int,
+    reserved_usage_units: int,
+) -> dict[str, object]:
+    """Admit one whole-artifact run only within every finite campaign limit."""
+    limits: dict[str, int] = {}
+    for field in _RESOURCE_LIMIT_FIELDS:
+        value = policy.get(field)
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            raise ValueError(f"resource policy requires positive integer {field}")
+        limits[field] = value
+    counters: dict[str, int] = {}
+    for field in ("runs_started", "case_retries", "active_runs", "usage_units"):
+        value = usage.get(field)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ValueError(f"resource usage requires non-negative integer {field}")
+        counters[field] = value
+    for name, value in (
+        ("requested_wall_seconds", requested_wall_seconds),
+        ("requested_output_bytes", requested_output_bytes),
+        ("reserved_usage_units", reserved_usage_units),
+    ):
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            raise ValueError(f"{name} must be a positive integer")
+    if counters["runs_started"] >= limits["max_runs"]:
+        raise ValueError("run budget exhausted")
+    if counters["case_retries"] >= limits["max_retries_per_case"]:
+        raise ValueError("retry budget exhausted")
+    if counters["active_runs"] >= limits["max_concurrency"]:
+        raise ValueError("concurrency budget exhausted")
+    if counters["usage_units"] + reserved_usage_units > limits["max_usage_units"]:
+        raise ValueError("usage budget exhausted")
+    if requested_wall_seconds > limits["max_wall_seconds_per_run"]:
+        raise ValueError("wall-time request exceeds limit")
+    if requested_output_bytes > limits["max_output_bytes"]:
+        raise ValueError("output request exceeds limit")
+    if len(artifact) > limits["max_input_bytes"]:
+        raise ValueError("whole artifact exceeds input limit; truncation is forbidden")
+    return {
+        "artifact_bytes": len(artifact),
+        "limits": dict(policy),
+        "whole_artifact": True,
     }
