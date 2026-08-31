@@ -315,7 +315,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-112
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(fda0634aab2896c30141ef5fcf08c2f489bc291f)
+- **Status**: pending
 - **Gloss**: 寫文件、寫答案與裁決的人是誰會被記錄，避免自己給自己過關。
 
 ## Task 16 — 限制 run 與 campaign 成本
