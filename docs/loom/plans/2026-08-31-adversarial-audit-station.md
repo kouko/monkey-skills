@@ -8,7 +8,7 @@ Goal: One conditional close-out station fires on a guarded-path hit or a
     pinned by a named test — serves PURPOSE: a claim that a gate prevents
     something cannot ship unverified, and a hole found once cannot be
     silently re-lost
-Stage: sdd:wave-1
+Stage: review:round-1
 Safety-bearing: yes — this arc adds check_attack_catalogue.py, edits plan_card.py and finishing-a-development-branch/SKILL.md (guarded paths)
 Steps:
   1. 目錄、checker、header、兩份派工包、關票——彼此獨立的地基
@@ -406,7 +406,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Brief item covered**: BI-10
 - **Review disposition**: individual
 - **Not batched because**: proposer pairs it with Tasks 10, 11, 12 — it is the orchestrator-run pilot that exercises their output; its window closes only after real opus/sonnet dispatches whose outcome may reopen Task 10, a failure boundary that disqualifies aggregate review
-- **Status**: pending
+- **Status**: done(db6085d54eb8873bb456647aa0b686a64d1dfda2)
 - **Gloss**: 機制第一次真跑就是跑在自己身上：先證明會擋，再證明會抓。
 
 ## Task 15 — loom-code 0.108.0→0.109.0＋dogfood 指紋刷新
@@ -435,7 +435,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Independent**: false
 - **Brief item covered**: none — release administration (version bump + fingerprint refresh) delivers no brief outcome
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(20726acfe1686b4810c8b0612a4f210e20d3ff14)
 - **Gloss**: 版本進位讓 marketplace 真的發佈；指紋跟著最後的樹一起刷。
 
 ## Task 16 — plan_card：整批全員 reopen 被誤判成 finalize
@@ -457,7 +457,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Brief item covered**: none — plan_card.py Batch CAS repair surfaced by running this arc's own SDD execution, not an attack-catalogue-station deliverable
 - **Review disposition**: individual
 - **Not batched because**: discovered mid-arc from the station-prose reopen; a CAS bug in a guarded path reviewed on its own — its verdict question (is the finalize/reopen discriminator correct) is not shared with any batch
-- **Status**: claimed(@adversarial-auditing)
+- **Status**: done(d1fa5e07c51491028a57fd5205734f97418bc0be)
 - **Gloss**: 一批裡每個成員都被打回時也能真的打回，不會卡成永遠寫不進帳的狀態。
 
 ## Review Batches
@@ -498,3 +498,5 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - Round-7 fixes (2026-08-31): Task 16 cites `none — …`, is `Independent: false` (shares plan_card.py with done Task 6), appears in the task-flow diagram, and is a dependency of Task 15's release sink (ordering only).
 - Plan-document-reviewer verdict re-stamped PASS (2026-08-31, round 8) after Task 16 — stamping the verdict, no re-review.
 - Safety-bearing header filled (2026-08-31) — filling a schema field with the wording the Notes already carried, no re-review.
+- Step 3.5 first live firing (2026-08-31, Task 14): header=yes; base=33681e5093be2b1324ef44743814630952774245; changed=28; guarded-hits=6; prose-hits=4 → adversarial audit (opus) 11 vectors: 7 reproduced / 3 held / 1 not-applicable, regression 6 held; cold reader (sonnet): scenario: followed / temptation: refused. All 5 pinnable reproduced vectors + 2 review-found variants pinned (store 6 → 13 instances); residual: pin relevance is not machine-checkable (documented non-goal). Record: docs/loom/dogfood/2026-08-31-adversarial-audit-station.md.
+- Autonomy note (2026-08-31): the plan_card Safety-bearing fix took three review rounds (d04659d6 → 09bb3c4a → 51724162), one past continuous-mode's two-round-trip halt; the orchestrator judged each round a new variant with a deterministic fix rather than a spec gap and proceeded — recorded here so the whole-branch reviewer and kouko can contest it.
