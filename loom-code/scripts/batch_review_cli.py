@@ -82,17 +82,16 @@ def _run_subprocess(args: list[str], *, text: bool = True) -> subprocess.Complet
     TimeoutExpired->PacketRefused copies).
 
     Every call site in this module builds `args` as the fixed
-    `["git", "-C", <repo_root>, *git_args]` shape, so the actual
-    subprocess invocation — argv-as-UTF-8-bytes encoding, `text=`/
-    `encoding=`/`errors=` handling — delegates to `git_exec.run_git`
-    (Task 9), which owns that logic for every scripts/ caller now (see
-    its docstring for the "why"). This wrapper's own job is just: peel
-    the `git -C <repo>` prefix back off, delegate with `check=True` so
-    a non-zero exit reaches us as `CalledProcessError` instead of being
-    swallowed, and re-wrap either outcome as the `CompletedProcess` this
-    module's three call sites (`_run_git`, `_committed_bytes`,
-    `_commit_changed_paths`) already read `.returncode`/`.stdout`/
-    `.stderr` off of — so none of them need to change."""
+    `["git", "-C", <repo_root>, *git_args]` shape; the actual subprocess
+    invocation — argv encoding, `text=`/`encoding=`/`errors=` handling —
+    delegates to `git_exec.run_git` (see its docstring for the "why").
+    This wrapper's own job is just: peel the `git -C <repo>` prefix back
+    off, delegate with `check=True` so a non-zero exit reaches us as
+    `CalledProcessError` instead of being swallowed, and re-wrap either
+    outcome as the `CompletedProcess` this module's three call sites
+    (`_run_git`, `_committed_bytes`, `_commit_changed_paths`) already
+    read `.returncode`/`.stdout`/`.stderr` off of — so none of them need
+    to change."""
     repo_root = Path(args[2])
     git_args = args[3:]
     try:

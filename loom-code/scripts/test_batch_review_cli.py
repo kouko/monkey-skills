@@ -1728,6 +1728,20 @@ def test_run_git_delegates_to_git_exec(monkeypatch) -> None:
     assert captured["kwargs"].get("check") is True
 
 
+def test_run_git_packet_refused_message_carries_git_stderr(tmp_path) -> None:
+    """`_run_git`'s `PacketRefused` on a failing git command must carry the
+    real git stderr text, not a placeholder -- the operator reading the
+    refusal needs to see *why* git failed (e.g. `fatal: ... unknown
+    revision`), not just that it did. Mutating `stderr=exc.stderr` to a
+    constant in `_run_subprocess` must turn this red."""
+    _, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    with pytest.raises(cli.rb.PacketRefused) as excinfo:
+        cli._run_git(repo_root, "rev-parse", "--verify", "no-such-ref-xyz")
+    message = str(excinfo.value)
+    assert "fatal:" in message
+    assert "no-such-ref-xyz" in message
+
+
 def test_run_subprocess_hands_git_utf8_bytes_argv(monkeypatch) -> None:
     """Platform-independent pin for the argv half of the locale fix (#768
     hotfix): `_run_subprocess` must hand every argv element to
