@@ -10,7 +10,7 @@ Stage: sdd:wave-1
 Total tasks: 19
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-31, round 3; R11 amendment PASS round 2)
+Plan-document-reviewer verdict: PASS (2026-08-31, round 3; R11 amendment PASS round 2; R12 amendment PASS round 2)
 
 ## Task-flow diagram
 
@@ -30,7 +30,11 @@ T8 --> T10
 T14[T14 referent grammar] --> T17[T17 pilot] --> T13
 T15[T15 plan_card 40-hex] --> T16[T16 ledger write-back] --> T17
 T16 --> T18[T18 adapter hardening] --> T13
-T19[T19 hygiene sweep] --> T13
+T1 --> T19[T19 hygiene sweep] --> T13
+T4 --> T19
+T6 --> T19
+T12 --> T19
+T15 --> T19
 T8 --> T16
 T9 --> T16
 T5 --> T17
@@ -48,7 +52,8 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
   manifest option in the migrator. R11 (amendment): a git subprocess inside
   plan_card's --set-status write path (T15); apply-result becomes a ledger
   writer (T16); the sealed projection's referent grammar widens from REQ-only
-  to every plan-format referent (T14).
+  to every plan-format referent (T14). R12: receipt refusal scans the
+  receipt directory by batch_id (T18).
 - Why it is worthwhile: closes five confirmed governance/operation holes in
   contracts merged <48h ago, before any further arc builds on them; the
   adapter converts the batch-review pipeline from prose-assembly to a single
@@ -64,7 +69,9 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
   git checkout or on an unresolvable ref (accepted — the ledger is always
   inside a repo); apply-result's writes are bounded by the existing CAS +
   plan-directory lock; a wider referent grammar means a typo'd quote still
-  seals — the reviewer, not the grammar, catches that.
+  seals — the reviewer, not the grammar, catches that. R12: a stale
+  unapplied receipt from an abandoned run blocks re-dispatch of that batch
+  regardless of --out until applied or removed (accepted — that is the guard).
 
 ## Task 1 — Governance ratification records (R1)
 - **Description**: Update the v3 proposal status to a ratified line and fill the v3 plan's empty Decision Log with the itemized semantic decisions, each carrying a user-ratified line.
@@ -477,7 +484,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 
 ## Task 19 — Hygiene sweep from per-task review notes (R12b)
 - **Description**: Land the five small review notes: bare-`ratified` test case, DA artifact-path symlink-escape test, plan_card passthrough file-content assertion, governance test trailing newline + shared extractor, decision-map SKILL.md "Read all three" wording.
-- **Module**: loom-code/scripts (tests) + one SKILL.md sentence
+- **Module**: review-note hygiene (test files + decision-map SKILL.md)
 - **Files touched**: loom-code/scripts/test_check_proposal_status.py, loom-workflow/skills/decision-map/scripts/test_map_store.py, loom-code/scripts/test_plan_card.py, loom-workflow/skills/decision-map/scripts/test_governance_ratification.py, loom-workflow/skills/decision-map/SKILL.md
 - **Context paths**:
   - loom-code/scripts/check_proposal_status.py
@@ -486,9 +493,14 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
   - **RED**: `Status: ratified` (no name/date) has no parametrized case today; no test drives a symlinked artifact path through `_da_evidence_is_resolvable`.
     - `test_set_status_full_forty_hex_sha_passes_through_unchanged` asserts stdout only; test_governance_ratification.py lacks a trailing newline and duplicates the Decision-Log extraction; SKILL.md says "Read all three" while naming two files.
   - **GREEN**: each case added and green; SKILL.md sentence names the two files and the boundary section; both package suites green; `check_contract_citations.py --repo-root .` exit 0.
-- **Dependencies**: none
-- **Seam**: payload: none
-- **Independent**: true
+- **Dependencies**: Tasks 1, 4, 6, 12, 15 complete first
+- **Seam**:
+  - from Task 1: payload: none
+  - from Task 4: payload: none
+  - from Task 6: payload: none
+  - from Task 12: payload: none
+  - from Task 15: payload: none
+- **Independent**: false
 - **Brief item covered**: "R12 (b) Hygiene sweep: bare Status: ratified … symlink-escape test …
     plan_card 40-hex passthrough test asserts file content …
     test_governance_ratification trailing newline + shared Decision-Log
