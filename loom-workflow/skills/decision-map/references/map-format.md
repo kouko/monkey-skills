@@ -169,9 +169,12 @@ Ticket is open, unclaimed, and has only closed blockers. A blocker graph is
 same-Map, unique, complete, and acyclic; missing, cross-Map, self, duplicate,
 or cyclic edges fail. A claim is allowed only on the current frontier.
 
-Claims use `<owner>, <YYYY-MM-DD>`. Reclaim is conservative: only a dated
-claimed Ticket with observable repository evidence of no post-claim work may
-change owners; unavailable or contradictory evidence preserves the owner.
+Claims use `<owner>, <YYYY-MM-DD>`. A claim is not transferable: no edit
+reassigns a claimed Ticket to a different owner. An abandoned claimed
+Ticket leaves `claimed` only through Withdrawal, recorded as
+`withdrawn-from: claimed`.
+Absent a recorded `withdrawn-from: claimed`, the Ticket remains claimed
+by its original owner.
 
 Terminal Tickets are immutable. Withdrawal records a `## Withdrawal` with
 `reason:` and named, dated `user-ratified:` evidence, carries no Resolution,
