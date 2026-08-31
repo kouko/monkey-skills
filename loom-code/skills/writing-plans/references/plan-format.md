@@ -231,11 +231,30 @@ inherits the direction clause with no script change.
 declaring whether this plan's work touches safety-relevant machinery.
 It takes exactly two forms — `Safety-bearing: yes — <reason>` or
 `Safety-bearing: no — <reason>` — each with a required reason after the
-em dash; any other value (a bare `yes`/`no`, a typo, an empty reason) is
-refused loudly by `plan_card.py` rather than silently accepted. When the
-header is absent, the progress card renders `safety-bearing: N/A —
-header absent` instead of failing — absence is a valid, distinct third
-state, not an error.
+em dash. When the header is absent, the progress card renders
+`safety-bearing: N/A — header absent` instead of failing — absence is
+a valid, distinct third state, not an error.
+
+`plan_card.py` refuses loudly, nonzero, on every shape below rather
+than silently accepting it or rendering it as absent:
+
+- a bare `yes`/`no` with no reason, a typo'd value, or an empty reason
+  after the em dash;
+- a `Safety-bearing:` line anywhere OUTSIDE the plan's header block —
+  including in the plan body, not only beside `Stage:` — is rejected as
+  misplaced, never silently read as absent;
+- an INDENTED `Safety-bearing:` line inside the header block — a
+  continuation line may not start a new header key;
+- a MISCASED key (`safety-bearing:`, `SAFETY-BEARING:`, or any casing
+  other than the exact `Safety-bearing:`);
+- an unclosed ``` or ~~~ code fence anywhere in the plan body — this
+  fails the whole card, not just the header, because an open fence can
+  swallow the header block itself;
+- a plan whose very first line is a `## ` heading (no `# ` title line
+  first) — the header block is then empty, so `plan_card.py` refuses
+  loud on the missing `Goal:` line before `Safety-bearing:` is ever
+  evaluated, rather than silently reading that first section as the
+  header (the hole a live adversarial audit found and this fix closes).
 
 A `no` header is a plan author's declared judgment call, not a
 mechanical guarantee — it does not silence a guarded-path hit.

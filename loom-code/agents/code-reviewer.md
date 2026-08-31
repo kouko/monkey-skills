@@ -421,6 +421,8 @@ Every path artifact in the review is read from the immutable commit snapshot:
 
 ### Checklists (load via Read; required)
 - {resources.security_checklist}
+- {resources.attack_catalogue} — loaded for every `security`-dimension
+  finding's `attack-class:` tag
 
 ### Standards (load on cite, not upfront)
 The standards files named by the packet's approved absolute resource
@@ -492,7 +494,7 @@ findings:
     note: <1-2 sentence finding>
     origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED on code-arm findings only (docs-arm exempt) — see below
     evidence_needed: craft | domain-convention | project-local  # OPTIONAL
-    class: <attack class> | none  # REQUIRED on security-dimension findings only — see below
+    attack-class: <attack class> | none  # REQUIRED on security-dimension findings only — see below
 
 summary:
   - <≤5 bullet observations about the branch as a whole — patterns, themes, what the branch achieves well, what concerns dominate>
@@ -526,12 +528,17 @@ none there is an ordinary `none`, not a defect: no dimension scores the
 branch against a plan, and the reviewer must not search harder to
 manufacture a hit.
 
-`class:` (REQUIRED on every `dimension: security` finding; absent on every
-other dimension): name which attack class from `references/attack-catalogue.md`
-the finding's diff falls into, using the class name verbatim from that
-catalogue's `### Class:` heading — cross-read `docs/loom/ATTACK-CATALOGUE.md`
-too when it exists in the target repo's reviewed snapshot, since a repo may
-extend the plugin catalogue with local classes. The closed vocabulary as of
+`attack-class:` (REQUIRED on every `dimension: security` finding; absent on
+every other dimension — distinct from `docs-reviewer`'s `class: instruction
+| evidence` blocking field, a different vocabulary on a different finding
+kind): name which attack class from `{resources.attack_catalogue}` the
+finding's diff falls into, using the class name verbatim from that
+catalogue's `### Class:` heading. When `<target_repo>/docs/loom/ATTACK-CATALOGUE.md`
+exists in the target repo's reviewed snapshot, cross-read it too — that
+store carries this repo's own dated instances against the same six classes,
+never a locally-declared class of its own. Never derive that store path
+from the plugin resource map or the working directory; it is always
+`<target_repo>/docs/loom/ATTACK-CATALOGUE.md`. The closed vocabulary as of
 this contract's writing is the six plugin classes:
 
 - `forge an artifact the gate trusts`
@@ -542,9 +549,9 @@ this contract's writing is the six plugin classes:
 - `race a concurrent writer`
 
 When a `security` finding does not match any catalogue class, write
-`class: none` — never invent a class name outside the catalogue's headings.
-This field adds no new dimension and no new verdict value; it only tags an
-existing `dimension: security` finding.
+`attack-class: none` — never invent a class name outside the catalogue's
+headings. This field adds no new dimension and no new verdict value; it
+only tags an existing `dimension: security` finding.
 
 ### Aggregation rule
 
@@ -568,7 +575,7 @@ findings using the same 🔴 / 🟡 / 🟢 taxonomy.
 
 | Dimension | Branch-scope scoring source |
 |---|---|
-| security | `checklists/security-checklist.md` applied to all diff; `standards/app-security-standard.md` + `standards/character-encoding-security.md` for branch-wide patterns; also read `references/attack-catalogue.md` (plugin) and, when present in the target repo's reviewed snapshot, `docs/loom/ATTACK-CATALOGUE.md` (store) — every `security`-dimension finding names which catalogue class the diff belongs to |
+| security | `checklists/security-checklist.md` applied to all diff; `standards/app-security-standard.md` + `standards/character-encoding-security.md` for branch-wide patterns; also read `{resources.attack_catalogue}` (plugin) and, when present in the target repo's reviewed snapshot, `<target_repo>/docs/loom/ATTACK-CATALOGUE.md` (store) — every `security`-dimension finding names which catalogue class the diff belongs to via `attack-class:` |
 | architecture | `rubrics/arch-gate.md` + `standards/solid-principles.md` — at branch scope, evaluate the architectural shape the diff produces, not just per-file |
 | correctness | `rubrics/quality-gate.md` + test results in branch history (commits should show RED-then-GREEN evidence per task) |
 | naming | `standards/naming-and-functions.md` — consistency across tasks in the branch is the branch-scope concern |
@@ -852,7 +859,7 @@ returns, flags, orderings and exit codes are the rest.
 ## See also
 
 - `loom-code/skills/requesting-code-review/references/design-evidence.md` — author-facing provenance for the rules in this contract; not loaded at runtime. Where a rule's reason was sourced from a dated record, that record is named there rather than in this contract, which a reader in another repository cannot open.
-- `loom-code/skills/requesting-code-review/references/attack-catalogue.md` — the six attack classes the `security` dimension's `class:` field draws from; loaded at runtime per the security row above.
+- `{resources.attack_catalogue}` (`skills/requesting-code-review/references/attack-catalogue.md`) — the six attack classes the `security` dimension's `attack-class:` field draws from; loaded at runtime per the security row above, never a path derived outside `resources`.
 
 - `loom-code/skills/requesting-code-review/SKILL.md` — orchestration spec.
 - `loom-code/agents/code-quality-reviewer.md` — per-task evaluator

@@ -45,12 +45,21 @@ def test_code_reviewer_reads_attack_catalogue_and_tags_class():
         "code-reviewer.md must cite the target-repo store path "
         "docs/loom/ATTACK-CATALOGUE.md"
     )
+    assert "attack-class:" in agent_text, (
+        "code-reviewer.md's finding field must be attack-class:, not the "
+        "bare class: field docs-reviewer's class: instruction|evidence "
+        "already owns"
+    )
+    assert "resources.attack_catalogue" in agent_text, (
+        "code-reviewer.md must read the plugin catalogue via "
+        "resources.attack_catalogue, not a derived plugin path"
+    )
 
     class_names = _catalogue_class_names()
     for name in class_names:
         assert name in agent_text, (
             f"catalogue class {name!r} must appear verbatim in the "
-            "agent's class: vocabulary"
+            "agent's attack-class: vocabulary"
         )
 
 
