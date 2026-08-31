@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: runner-boundaries: aggregate verification
+Stage: 第四輪 runner-boundaries：atomic invoke-and-capture 與完整路徑 confinement
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -181,7 +181,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-105
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(48e2281a10c1cb5a19d9d6ad6527282e25e13b89)
+- **Status**: implemented(8c2912213c5de5b1f45ce597cfa19646f8ac151e)
 - **Gloss**: 只有同模型、同設定的重跑才能回答 reviewer 穩不穩。
 
 ## Task 9 — 計算帶 population 的 metrics
@@ -296,7 +296,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-111
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(c243d12818b5b8997dfbb1d999e88eaa1203194a)
+- **Status**: pending
 - **Gloss**: 歷史文件裡的指令只是待審內容，不能操作電腦或外送資料。
 
 ## Task 15 — 執行 authority 與 ratifier independence
@@ -334,7 +334,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-113
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(0aaa8a08fc25ed41df00378165f91942f41b42db)
+- **Status**: pending
 - **Gloss**: 重跑不會因超時、無限 retry 或過長文件變成無底洞。
 
 ## Task 17 — 保證 crash-safe dispatch 與 capture
@@ -353,26 +353,26 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-114
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(2d4892d3da3feb77512cd60fc1c043da3cd6f7db)
+- **Status**: pending
 - **Gloss**: 當 host 斷線或回應晚到，每筆成本與輸出仍有正確落點。
 
 ## Task 18 — 在 dispatch 與 capture 驗證實際 model identity
 
-- **Description**: Compare prepared economy identity with dispatch-time and host-reported execution identity; preserve mismatches and unknown attestations as unscoreable.
+- **Description**: Compare the prepared economy binding with a store-local atomic Codex CLI execution record; preserve mismatches, forged or replayed records, and unknown attestations as unscoreable while labeling the approved no-backend-attestation limitation.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
 - **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/using-loom-code/references/dispatch-profile.md`
 - **Acceptance**:
   - **RED**: `test_docs_review_baseline_runner.py::test_req_115_execution_identity_is_verified_at_point_of_use` fails for drift and unattested execution.
-  - **GREEN**: Drifted or unattested attempts retain evidence but never enter scored cohorts or silently update their bindings.
+- **GREEN**: Only a one-time runner-controlled CLI record may support requested-model evidence; drifted, forged, replayed, or otherwise unattested attempts retain evidence but never enter scored cohorts or silently update their bindings.
 - **Dependencies**: Task 1 completes first
 - **Seam**:
   - from Task 1: payload: immutable prepared and captured identities; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_115_execution_identity_is_verified_at_point_of_use`
 - **Independent**: false
 - **Brief item covered**: REQ-115
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(ce93a4a94bf88c9220f4497123e308aa4526b3cf)
+- **Status**: pending
 - **Gloss**: 記錄的弱模型必須和真正跑的一樣，否則只保留不計分。
 
 ## Task 19 — 分開 zero 與 partial populations
@@ -484,6 +484,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 ## Notes
 
 - User-approved intervention boundary: checklist-enabled authoring starts after `2026-08-31T14:20:27Z`; the untreated baseline corpus may include only exact document snapshots and authoring/review events at or before that UTC cutoff, bounded by repository commit `82b6adf798b4d3745242669b2885c0ee92a56869`. Any first-authored or modified document after the cutoff belongs to a treated/post-intervention population. Task 21 must persist this cutoff and boundary commit in the frozen corpus/report rather than relying on session memory.
+- User-approved identity evidence policy A (2026-09-01): the internal baseline may score a Codex/Luna run without backend-reported actual-model identity only through one atomic, store-local, one-time runner operation binding the approved model argument, exact CLI version and closed-tool argv, input/output digests, and subprocess result. Reports must label it requested-model CLI evidence and explicitly state that the backend did not attest the actual model. This supersedes the earlier fail-closed no-attestation wording in REQ-115; forged, replayed, drifted, or caller-supplied records remain unscoreable.
 - Kickoff decision: tracked-byte fingerprint re-pin → after each Task's final `loom-code/` edit, recompute the `loom-code candidate SHA-256` with `scripts/test_stage_specific_complexity_behavior_evidence.py::_tracked_worktree_fingerprint` and update `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md` in the same commit; source: `docs/loom/memory/tracked-byte-pin-tests-repin-in-the-same-commit-as-the-bytes.md` phrase `re-pin belongs in the wave's final content commit`.
 - Tasks 2–20 remain sequential for implementation because they share one of three module/test-file pairs, but their atomic commits park at `implemented(<sha>)` until the corresponding module-level review Batch is complete.
 - Task 1 and Task 21 remain individual checkpoints: the first establishes the shared storage seam, while the last crosses all three modules plus external command boundaries.

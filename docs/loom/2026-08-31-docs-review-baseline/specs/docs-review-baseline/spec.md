@@ -302,10 +302,17 @@ attempt.
 - THEN the run records cancellation-unknown with existing bytes and completeness, and it is neither retried automatically nor scored
 
 ### Requirement: REQ-115 — execution identity is verified at the point of use
-The resolved economy mapping and actual host-reported execution identity MUST
-match the run binding at dispatch and capture. A profile change, router change,
-or identity mismatch after preparation MUST make that attempt unscoreable and
-MUST NOT silently update the existing run or substitute a stronger model.
+The resolved economy mapping MUST match the execution binding at dispatch and
+capture. Host-reported actual model identity is the strongest evidence. For
+this internal baseline, when Codex does not report it, a runner-controlled CLI
+invocation MAY be scoreable only when one atomic store-local operation binds
+the approved weak-model argument, exact CLI version and closed-tool argv,
+input and output digests, subprocess outcome, and a one-time execution record.
+The report MUST label this evidence as requested-model CLI evidence and MUST
+state that the backend did not directly attest the actual model. A profile
+change, router change, binding mismatch, forged record, or replayed record
+MUST make that attempt unscoreable and MUST NOT silently update the existing
+run or substitute a stronger model.
 
 #### Scenario: the economy mapping drifts after preparation
 - GIVEN a run was prepared for weak model A but dispatch resolves or reports model B
@@ -315,7 +322,7 @@ MUST NOT silently update the existing run or substitute a stronger model.
 #### Scenario: the host cannot attest the actual model
 - GIVEN the configured alias resolves locally but the host cannot report a trustworthy actual model identity
 - WHEN capture completes
-- THEN the attempt is retained with identity unavailable and does not enter a scored cohort
+- THEN the attempt enters a scored cohort only through the atomic runner-controlled CLI evidence path, is labeled requested-model CLI evidence, and preserves the explicit no-backend-attestation limitation; otherwise it is retained with identity unavailable and excluded
 
 ### Requirement: REQ-116 — zero and partial populations have explicit meaning
 A deliberately empty oracle MUST be ratified as a negative control with a
