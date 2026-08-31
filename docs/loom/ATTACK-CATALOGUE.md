@@ -19,12 +19,12 @@ check. Seeded from the 2026-08-31 adversarial audit's six findings.
 
 ## Instances
 
-- forge an artifact the gate trusts | batch_review_cli.py apply-result — foreign-batch receipt (F1) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_receipt_bound_to_another_batch
-- replay a stale artifact | batch_review_cli.py apply-result — packet_identity replay (F2) | reproduced 2026-08-31 — pinned by test_repository_identity_anchored_on_member_sha_not_head
+- bypass a gate by editing its input | batch_review_cli.py apply-result — member sha re-point (F1) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_when_member_sha_drifted_after_dispatch
+- replay a stale artifact | batch_review_cli.py apply-result — result-file packet_identity replay (F2) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_result_file_bound_to_another_packet
 - self-exempt via a prose condition | batch_review_cli.py apply-result --receipt (F3) | reproduced 2026-08-31 — pinned by test_apply_result_requires_receipt_flag
-- bypass a gate by editing its input | plan_card.py --set-status (F4) | reproduced 2026-08-31 — pinned by test_apply_result_recovers_receipt_stuck_after_ledger_crash
+- bypass a gate by editing its input | plan_card.py --set-status (F4) | reproduced 2026-08-31 — pinned by test_set_status_refuses_done_for_declared_batch_member
 - forge an artifact the gate trusts | batch_review_cli.py packet — undeclared file smuggling (F5) | reproduced 2026-08-31 — pinned by test_packet_refuses_member_commit_touching_undeclared_file
-- bypass a gate by editing its input | batch_review_cli.py apply-result — member sha re-point (F6) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_when_member_sha_drifted_after_dispatch
+- forge an artifact the gate trusts | batch_review_cli.py apply-result — foreign-batch receipt (F6) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_receipt_bound_to_another_batch
 
 ## Prose temptations
 
