@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Sequence
 
+import git_exec
 from review_context import RESOURCE_RELATIVE_PATHS
 
 
@@ -153,14 +154,7 @@ def _canonical_claude_config_path(path: Path) -> Path:
 
 
 def _git(repo: Path, *args: str) -> str:
-    completed = subprocess.run(
-        ["git", "-C", str(repo), *args],
-        check=True,
-        capture_output=True,
-        text=True,
-        timeout=20,
-    )
-    return completed.stdout.strip()
+    return git_exec.run_git(repo, *args, timeout=20, check=True)
 
 
 def _make_consumer(root: Path) -> tuple[Path, str]:

@@ -33,7 +33,7 @@ def _named_claude_test_profile(
 def _candidate(tmp_path: Path) -> Path:
     root = tmp_path / "source" / "loom-code"
     source_root = Path(__file__).resolve().parents[1]
-    for relative in {"scripts/review_context.py", *gate.RESOURCE_RELATIVE_PATHS.values()}:
+    for relative in {"scripts/review_context.py", "scripts/git_exec.py", *gate.RESOURCE_RELATIVE_PATHS.values()}:
         target = root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source_root / relative, target)
@@ -80,6 +80,31 @@ def _main_args(
         "--codex-auth-source", str(auth),
         "--report", str(report),
     ]
+
+
+# ---------------------------------------------------------------------------
+# live_host_review_gate._git
+# ---------------------------------------------------------------------------
+
+
+def test_live_host_review_gate_git_hands_utf8_bytes_argv(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    captured: dict[str, object] = {}
+
+    def _capture(argv, **kwargs):
+        captured["argv"] = argv
+        captured["kwargs"] = kwargs
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(gate.subprocess, "run", _capture)
+    gate._git(tmp_path, "show", "HEAD:src/日本.py")
+
+    argv = captured["argv"]
+    assert all(isinstance(item, bytes) for item in argv), argv
+    assert argv[-1] == "HEAD:src/日本.py".encode("utf-8")
+    kwargs = captured["kwargs"]
+    assert kwargs["encoding"] == "utf-8"
 
 
 def test_live_gate_uses_only_named_claude_test_profile_without_home_rewrite(

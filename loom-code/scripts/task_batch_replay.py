@@ -26,23 +26,18 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import hashlib
-import importlib.util
 import json
 from pathlib import Path
 import re
 import sys
 from typing import Any
 
+import sibling_import
+
 
 def _load(name: str, filename: str):
     """Load a sibling script module without cwd or sys.path coupling."""
-    spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(filename))
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load {filename}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
+    return sibling_import.load_sibling(filename, name=name)
 
 
 review_context = _load("review_context_for_task_batch_replay", "review_context.py")

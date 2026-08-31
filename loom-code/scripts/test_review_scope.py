@@ -705,3 +705,23 @@ def test_branch_creation_sha_none_when_oldest_entry_not_creation(tmp_path):
     reflog_path.write_text("".join(lines))
 
     assert review_scope.branch_creation_sha(repo) is None
+
+
+def test_review_scope_git_hands_utf8_bytes_argv(tmp_path, monkeypatch):
+    # RED (Task 6): review_scope._git must delegate to git_exec.run_git,
+    # which invokes subprocess.run with UTF-8-encoded bytes argv and
+    # encoding="utf-8" (surrogateescape) under text=True — not the str
+    # argv / no-encoding call review_scope._git makes on HEAD.
+    captured = {}
+
+    def fake_run(argv, **kwargs):
+        captured["argv"] = argv
+        captured["kwargs"] = kwargs
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    review_scope._git(tmp_path, "rev-parse", "HEAD")
+
+    assert all(isinstance(part, bytes) for part in captured["argv"])
+    assert captured["kwargs"].get("encoding") == "utf-8"

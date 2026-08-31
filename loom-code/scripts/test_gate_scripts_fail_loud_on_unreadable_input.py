@@ -95,6 +95,10 @@ EXEMPT = {
     "living_spec_tags.py": "helper module, no CLI entry point",
     "heading_window.py": "helper module, no CLI entry point; reads no store "
                          "or brief, only an in-memory string a caller passes in",
+    "sibling_import.py": "helper module, no CLI entry point; reads no store "
+                         "or brief, only the filename a caller passes in",
+    "git_exec.py": "helper module, no CLI entry point; reads no store or "
+                   "brief, only the repo path and git argv a caller passes in",
     "adjudication_lint.py": "renders a document view; reads no store or brief",
     "adjudication_render.py": "renders a document view; reads no store or brief",
     "adjudication_split.py": "renders a document view; reads no store or brief",

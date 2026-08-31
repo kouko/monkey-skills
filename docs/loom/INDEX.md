@@ -419,6 +419,7 @@
 
 - test_baseline_candidate_comparison_is_same_corpus_and_safety_gated
 - test_malformed_types_paths_and_duplicate_keys_fail_closed
+- test_task_batch_replay_load_delegates_to_load_sibling
 
 ### REQ-99
 

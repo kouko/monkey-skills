@@ -14,12 +14,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 import hashlib
-import importlib.util
 import json
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 import re
-import sys
 from typing import Mapping
+
+from sibling_import import load_sibling
 
 
 _SHA = re.compile(r"^[0-9a-f]{40}$")
@@ -276,14 +276,10 @@ def _trusted_execution_projection_issuer(
 
 def _review_batch_oracle():
     """Load the mandatory sibling checker without cwd or sys.path coupling."""
-    path = Path(__file__).with_name("check_review_batches.py")
-    spec = importlib.util.spec_from_file_location("review_batch_schema_oracle", path)
-    if spec is None or spec.loader is None:
-        raise PacketRefused("Review Batch schema oracle cannot be loaded")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+    try:
+        return load_sibling("check_review_batches.py", name="review_batch_schema_oracle")
+    except ImportError as exc:
+        raise PacketRefused("Review Batch schema oracle cannot be loaded") from exc
 
 
 def _issue_execution_projection_from_validated_plan(

@@ -30,6 +30,7 @@ from pathlib import Path
 
 import pytest
 
+import git_exec
 import loom_gate_markers
 from loom_gate_markers import _origin_path_quote, main
 
@@ -2729,3 +2730,20 @@ def test_mint_verb_and_flag_appear_in_help_text():
         text=True,
     )
     assert "--review-na-record-only" in sub.stdout
+
+
+def test_loom_gate_markers_git_hands_utf8_bytes_argv(monkeypatch, tmp_path) -> None:
+    captured: dict[str, object] = {}
+
+    def _capture(argv, **kwargs):
+        captured["argv"] = argv
+        captured["kwargs"] = kwargs
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(git_exec.subprocess, "run", _capture)
+    loom_gate_markers._git(tmp_path, "show", "HEAD:src/日本.py")
+
+    argv = captured["argv"]
+    assert all(isinstance(item, bytes) for item in argv), argv
+    assert argv[-1] == "HEAD:src/日本.py".encode("utf-8")
+    assert captured["kwargs"]["encoding"] == "utf-8"

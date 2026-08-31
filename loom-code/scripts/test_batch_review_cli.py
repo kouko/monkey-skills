@@ -35,6 +35,24 @@ cli = _load("batch_review_cli", "batch_review_cli.py")
 review_batch = _load("review_batch_cli_lib", "review_batch.py")
 
 
+def test_batch_review_cli_load_delegates_to_load_sibling(monkeypatch) -> None:
+    """`_load` delegates to `sibling_import.load_sibling` (Task 14 of
+    docs/loom/plans/2026-08-31-loom-code-script-helper-extraction.md)
+    instead of hand-rolling `importlib.util.spec_from_file_location`."""
+    import sibling_import
+
+    sentinel = object()
+
+    def _fake(filename, *, name=None, anchor=None):
+        assert filename == "review_batch.py"
+        assert name == "x"
+        return sentinel
+
+    monkeypatch.setattr(sibling_import, "load_sibling", _fake)
+
+    assert cli._load("x", "review_batch.py") is sentinel
+
+
 _IMPLEMENTED_1 = "implemented(" + "a" * 40 + ")"
 _IMPLEMENTED_2 = "implemented(" + "b" * 40 + ")"
 
@@ -1685,6 +1703,51 @@ def test_packet_seals_non_ascii_path_under_c_locale(tmp_path) -> None:
     member_1 = emitted["members"][0]
     assert member_1["sha"] == sha1
     assert [f["path"] for f in member_1["files"]] == ["src/日本.py"]
+
+
+def test_run_git_delegates_to_git_exec(monkeypatch) -> None:
+    """`_run_git` (via `_run_subprocess`) must route the actual subprocess
+    call through `git_exec.run_git` (Task 9) rather than building its own
+    argv/encoding -- patching `git_exec.run_git` with a sentinel-returning
+    fake must be visible in `_run_git`'s return value, and the sentinel's
+    args must reach it as the trailing git args (repo/-C stripped)."""
+    sentinel = object()
+    captured: dict[str, object] = {}
+
+    def _fake_run_git(repo, *args, **kwargs):
+        captured["repo"] = repo
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return sentinel
+
+    monkeypatch.setattr(cli.git_exec, "run_git", _fake_run_git)
+    result = cli._run_git(Path("/tmp/some-repo"), "status")
+    assert result is sentinel
+    assert captured["repo"] == Path("/tmp/some-repo")
+    assert captured["args"] == ("status",)
+    assert captured["kwargs"].get("check") is True
+
+
+def test_run_git_packet_refused_message_carries_git_stderr(tmp_path) -> None:
+    """`_run_git`'s `PacketRefused` on a failing git command must carry the
+    real git stderr text, not a placeholder -- the operator reading the
+    refusal needs to see *why* git failed (e.g. `fatal: ... unknown
+    revision`), not just that it did. Mutating `stderr=exc.stderr` to a
+    constant in `_run_subprocess` must turn this red."""
+    _, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    with pytest.raises(cli.rb.PacketRefused) as excinfo:
+        cli._run_git(repo_root, "rev-parse", "--verify", "no-such-ref-xyz")
+    message = str(excinfo.value)
+    assert "fatal:" in message
+    assert "no-such-ref-xyz" in message
+
+
+def test_run_subprocess_rejects_argv_not_shaped_git_dash_c() -> None:
+    """`_run_subprocess` silently reads args[2] as a repo path; a caller
+    that doesn't build the `["git", "-C", <repo>, ...]` prefix must get a
+    loud ValueError, not a confusing downstream failure."""
+    with pytest.raises(ValueError):
+        cli._run_subprocess(["git", "--no-pager", "log"])
 
 
 def test_run_subprocess_hands_git_utf8_bytes_argv(monkeypatch) -> None:

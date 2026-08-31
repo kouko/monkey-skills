@@ -53,10 +53,12 @@ Exit codes:
       `FreshnessResult` describes it — the verdict was already fresh),
       and prints no rebase remedy either.
 
-This module writes its own stdlib `subprocess` git helper rather than
-importing `loom_gate_markers._git` — that name is private, and reaching
-for a second private cross-module name would recommit the dependency the
-`default_branch_ref` promotion (this repo's Task 1) exists to remove.
+This module's `_git` wrapper delegates to the shared `git_exec.run_git`
+body rather than importing `loom_gate_markers._git` — that name is
+private, and reaching for a second private cross-module name would
+recommit the dependency the `default_branch_ref` promotion (this repo's
+Task 1) exists to remove. `_git` keeps this module's own None-on-failure
+contract by calling `run_git` with `check=False`.
 
 A successful fetch of `default_branch_ref`'s ref is not, by itself,
 proof that the ref is still the remote's *current* default branch: a
@@ -89,11 +91,11 @@ fresh verdict.
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from git_exec import run_git
 from loom_gate_markers import default_branch_ref
 
 # The fetch is the only network call on this path. Unbounded, a dead
@@ -121,18 +123,7 @@ class FreshnessResult:
 def _git(repo: Path, *args: str, timeout: float | None = None) -> str | None:
     """Run git in `repo`; return stripped stdout, or None on any failure
     (non-zero exit, timeout, or the git binary failing to launch)."""
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), *args],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    if result.returncode != 0:
-        return None
-    return result.stdout.strip()
+    return run_git(repo, *args, timeout=timeout, check=False)
 
 
 def _is_full_object_id(repo: Path, candidate: str) -> bool:

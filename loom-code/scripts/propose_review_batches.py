@@ -33,10 +33,11 @@ oracle, imported by file path; this script never re-implements it.
 
 from __future__ import annotations
 
-import importlib.util
 import json
 from pathlib import Path
 import sys
+
+from sibling_import import load_sibling
 
 
 # Planning-time constants, not runtime settings. Both were sized from the
@@ -67,14 +68,13 @@ _PRE_BATCH_ERA_ERRORS = (
 
 def _oracle():
     """Load the sibling schema oracle without relying on cwd/sys.path."""
-    path = Path(__file__).with_name("check_review_batches.py")
-    spec = importlib.util.spec_from_file_location("propose_review_batch_oracle", path)
-    if spec is None or spec.loader is None:
-        raise ValueError("Review Batch schema oracle cannot be loaded")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+    try:
+        return load_sibling(
+            "check_review_batches.py",
+            name="propose_review_batch_oracle",
+        )
+    except ImportError as exc:
+        raise ValueError("Review Batch schema oracle cannot be loaded") from exc
 
 
 def _normalize_module(value: str) -> str:

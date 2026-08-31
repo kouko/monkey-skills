@@ -48,6 +48,27 @@ def _git(repo: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
+def test_review_context_git_hands_utf8_bytes_argv(monkeypatch, tmp_path: Path) -> None:
+    """`review_context._git` must delegate to `git_exec.run_git`'s UTF-8-bytes
+    argv + `encoding="utf-8"` body, not its own bare-`str` `subprocess.run`."""
+    import git_exec
+    import review_context
+
+    captured: dict[str, object] = {}
+
+    def _capture(argv, **kwargs):
+        captured["argv"] = argv
+        captured["kwargs"] = kwargs
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(git_exec.subprocess, "run", _capture)
+    review_context._git(tmp_path, "rev-parse", "HEAD")
+
+    argv = captured["argv"]
+    assert all(isinstance(item, bytes) for item in argv), argv
+    assert captured["kwargs"]["encoding"] == "utf-8"
+
+
 def _consumer_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "consumer"
     repo.mkdir()

@@ -1673,3 +1673,29 @@ def test_set_stage_degrades_to_card_unavailable_when_goal_missing(tmp_path):
     assert "new: Stage: sdd:wave-2\n" in result.stdout
     assert "plan_card: card unavailable —" in result.stdout
     assert "Stage: sdd:wave-2" in plan_path.read_text(encoding="utf-8")
+
+
+def test_plan_card_oracle_keeps_name_and_exception_type(monkeypatch):
+    """`_review_batch_oracle` delegates to `sibling_import.load_sibling`
+    (Task 11 of docs/loom/plans/2026-08-31-loom-code-script-helper-extraction.md)
+    while preserving two pre-existing contracts: an `ImportError` from
+    the loader surfaces as `ValueError` (callers only ever catch
+    ValueError, per the module's own docstring), and the module still
+    registers in `sys.modules` under the unique name
+    `"plan_card_review_batch_oracle"` (other code keys off that name)."""
+    import sibling_import
+
+    def _boom(filename, *, name=None, anchor=None):
+        raise ImportError(f"cannot load {filename}")
+
+    monkeypatch.setattr(sibling_import, "load_sibling", _boom)
+
+    with pytest.raises(ValueError) as exc_info:
+        plan_card._review_batch_oracle()
+    assert isinstance(exc_info.value.__cause__, ImportError)
+
+    monkeypatch.undo()
+
+    sys.modules.pop("plan_card_review_batch_oracle", None)
+    plan_card._review_batch_oracle()
+    assert "plan_card_review_batch_oracle" in sys.modules

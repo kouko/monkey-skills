@@ -116,7 +116,6 @@ rewrite, or missing plans directory, 2 = usage error.
 
 from __future__ import annotations
 
-import importlib.util
 import fcntl
 import os
 import re
@@ -678,15 +677,21 @@ def dependency_is_ready(
 
 
 def _review_batch_oracle():
-    """Load the sibling schema oracle without relying on cwd/sys.path."""
-    path = Path(__file__).with_name("check_review_batches.py")
-    spec = importlib.util.spec_from_file_location("plan_card_review_batch_oracle", path)
-    if spec is None or spec.loader is None:
-        raise ValueError("Review Batch schema oracle cannot be loaded")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+    """Load the sibling schema oracle without relying on cwd/sys.path.
+
+    Deferred import: a standalone `plan_card.py` copy without its
+    `sibling_import.py` sibling (this repo's plan-card shim/standalone
+    convention, module docstring) must still import cleanly for every
+    batch-free plan — only a plan declaring `## Review Batches` ever
+    reaches this function."""
+    try:
+        import sibling_import
+
+        return sibling_import.load_sibling(
+            "check_review_batches.py", name="plan_card_review_batch_oracle"
+        )
+    except ImportError as exc:
+        raise ValueError("Review Batch schema oracle cannot be loaded") from exc
 
 
 def _validated_batch_snapshot(

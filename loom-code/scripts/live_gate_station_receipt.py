@@ -14,6 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from git_exec import run_git
 from review_context import RESOURCE_RELATIVE_PATHS
 
 
@@ -23,14 +24,7 @@ NONCE_PATTERN = re.compile(r"[0-9a-f]{32}")
 
 
 def _git(repo: Path, *args: str) -> str:
-    result = subprocess.run(
-        ["git", "-C", str(repo), *args],
-        check=True,
-        capture_output=True,
-        text=True,
-        timeout=20,
-    )
-    return result.stdout.strip()
+    return run_git(repo, *args, timeout=20, check=True)
 
 
 def _validated_packet(packet_path: Path, plugin_root: Path, repo: Path) -> dict[str, object]:
