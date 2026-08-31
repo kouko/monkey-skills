@@ -628,7 +628,7 @@ def test_req_109_origin_requires_document_revision_evidence(tmp_path) -> None:
     assert "parent_revision_id" not in unknown.record
 
 
-def test_req_112_authority_and_ratifier_independence(tmp_path) -> None:
+def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     # @req: REQ-112
     """Official human judgments bind authority and fail closed on conflicts."""
     roles = {
@@ -676,6 +676,34 @@ def test_req_112_authority_and_ratifier_independence(tmp_path) -> None:
     assert oracle.record["independence_evidence"]["status"] == "satisfied"
     assert oracle.record["eligible_for_official_metrics"] is True
     assert oracle.record["status"] == "ratified"
+    manifest = store.freeze_corpus_manifest(
+        tmp_path,
+        [("case-governed", "a" * 64, oracle.record_id)],
+    )
+    assert manifest.record["bindings"] == [
+        {
+            "case_id": "case-governed",
+            "oracle_revision_id": oracle.record_id,
+            "snapshot_digest": "a" * 64,
+        }
+    ]
+
+    legacy_oracle = store.ratify_oracle(
+        tmp_path,
+        "oracle-unbound-r1",
+        case_id="case-governed",
+        snapshot_digest="a" * 64,
+        findings=oracle.record["findings"],
+        negative_control_intent="Do not reward generic detail requests.",
+        ratifier="maintainer:oracle-ratifier",
+    )
+    assert legacy_oracle.record["governance_status"] == "unbound"
+    assert legacy_oracle.record["eligible_for_official_metrics"] is False
+    with pytest.raises(ValueError, match="governance is not bound and satisfied"):
+        store.freeze_corpus_manifest(
+            tmp_path,
+            [("case-governed", "a" * 64, legacy_oracle.record_id)],
+        )
 
     denied = store.ratify_governed_oracle(
         tmp_path,
@@ -717,6 +745,11 @@ def test_req_112_authority_and_ratifier_independence(tmp_path) -> None:
     assert disputed.record["excluded_from_affected_denominators"] is True
     assert disputed.record["eligible_for_official_metrics"] is False
     assert disputed.record["independence_evidence"]["status"] == "insufficient"
+    with pytest.raises(ValueError, match="oracle revision is not ratified"):
+        store.freeze_corpus_manifest(
+            tmp_path,
+            [("case-governed", "a" * 64, disputed.record_id)],
+        )
 
     revised = store.revise_authority_assignment(
         tmp_path,

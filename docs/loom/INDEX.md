@@ -24,7 +24,7 @@
 
 ### REQ-112
 
-- test_req_112_authority_and_ratifier_independence
+- test_req_112_authority_and_independence_are_explicit
 
 ### REQ-99
 
