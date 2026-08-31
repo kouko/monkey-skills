@@ -681,6 +681,36 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
     return stored
 
 
+
+def _result_packet_identity(record: dict, packet: rb.ReviewPacket) -> str:
+    """Return the result file's OWN `packet_identity` for one arm binding,
+    terminal result or blocking finding, refusing unless it equals the
+    rebuilt packet's identity. Absence is "reviewer result file is
+    malformed": a record that cannot say which packet it answers is not a
+    result. The value returned is what gets constructed, so the library's
+    `_valid_binding` / `_result_matches_binding` / `_finding_attributable`
+    checks in review_batch.py compare the reviewer's claim, never the
+    packet to itself (the audit's F2: one hand-written PASS finalized any
+    plan because the CLI injected `packet.identity`).
+
+    Ordering: runs after `_bind_receipt_to_packet` (receipt -> packet) and
+    after the top-level shape check, before any dataclass is built — the
+    same outside-in order that function uses (identity before payload), so
+    a foreign file is refused before its findings are interpreted. Same
+    invariant as GitHub's "dismiss stale approvals": an approval binds to
+    the exact reviewed artifact, not to whichever plan is applied next."""
+    if "packet_identity" not in record:
+        raise ValueError("reviewer result file is malformed")
+    identity = record["packet_identity"]
+    if identity != packet.identity:
+        raise ValueError(
+            f"reviewer result file packet_identity {identity!r} does not "
+            "match the rebuilt packet; the result was given for another "
+            "packet — re-send the dispatch"
+        )
+    return identity
+
+
 def _cmd_apply_result(args) -> int:
     try:
         try:
@@ -700,14 +730,14 @@ def _cmd_apply_result(args) -> int:
         expected_arms = rb.expected_reviewer_arms(packet.declaration.review_lane)
         bindings = tuple(
             rb.ReviewerArmBinding(
-                packet.identity, binding["arm"],
+                _result_packet_identity(binding, packet), binding["arm"],
                 binding["dispatch_identity"], binding["evidence_identity"],
             )
             for binding in payload["arm_bindings"]
         )
         results = tuple(
             rb.ReviewerTerminalResult(
-                packet_identity=packet.identity,
+                packet_identity=_result_packet_identity(result, packet),
                 arm=result["arm"],
                 dispatch_identity=result["dispatch_identity"],
                 dispatch_evidence_identity=result["dispatch_evidence_identity"],
@@ -718,7 +748,7 @@ def _cmd_apply_result(args) -> int:
                 findings=tuple(
                     rb.BlockingFinding(
                         finding_id=finding["finding_id"],
-                        packet_identity=packet.identity,
+                        packet_identity=_result_packet_identity(finding, packet),
                         arm=result["arm"],
                         dispatch_identity=result["dispatch_identity"],
                         evidence_identity=result["evidence_identity"],

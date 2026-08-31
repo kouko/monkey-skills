@@ -1214,7 +1214,7 @@ def test_apply_result_refuses_result_file_bound_to_another_packet(
     assert "packet_identity" in " ".join(out["reasons"])
     assert plan_path.read_text(encoding="utf-8") == before
     stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
-    assert stored["result_applied"] is False
+    assert stored.get("result_applied", False) is False
 
 
 def test_apply_result_refuses_result_file_missing_packet_identity(
@@ -1246,4 +1246,4 @@ def test_apply_result_refuses_result_file_missing_packet_identity(
         assert out["reasons"] == ["reviewer result file is malformed"], section
         assert plan_path.read_text(encoding="utf-8") == before
         stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
-        assert stored["result_applied"] is False
+        assert stored.get("result_applied", False) is False
