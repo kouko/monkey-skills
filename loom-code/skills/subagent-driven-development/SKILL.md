@@ -26,7 +26,7 @@ Pause points the user **does** see:
 - Plan approval, before any task dispatch.
 - A `NEEDS_CONTEXT` from any implementer that survives the step-2 triage (orchestrator surfaces the question, waits for an answer; task-scoped checkable facts are resolved and re-dispatched without pausing).
 - A `BLOCKED` from any implementer that the orchestrator cannot unblock by re-dispatch (e.g. missing dependency the user must install).
-- After all tasks `DONE` (or `DONE_WITH_CONCERNS` triaged), an autonomous run with a human-approved frozen entry automatically invokes [`finishing-a-development-branch`](../finishing-a-development-branch/SKILL.md). It runs review + verification + push + PR-open in one pass; `一站一站來` keeps the final summary as the user-controlled pause point. Surface peer alternatives only when the user explicitly defers close-out.
+- After all tasks `DONE` (or `DONE_WITH_CONCERNS` triaged), an autonomous run with a human-approved frozen entry automatically invokes [`finishing-a-development-branch`](../finishing-a-development-branch/SKILL.md). It runs review + verification + push + PR-open in one pass; `一站一站來` keeps the final summary as the user-controlled pause point — that pause is `finishing-a-development-branch`'s own entry confirmation, not a block on entering whole-branch review (see the Batch review checkpoint's closing sentence). Surface peer alternatives only when the user explicitly defers close-out.
 
 Everything else — RED-GREEN-REFACTOR cycles, reviewer rounds, re-dispatch on `NEEDS_REVISION` — runs without user intervention.
 
@@ -221,10 +221,12 @@ The executable form of that sequence is the adapter CLI
 `record-dispatch` (write the reviewer dispatch receipt), and `apply-result`
 (feed the terminal verdicts through `resolve_aggregate_review`). Use it instead
 of hand-assembling `review_batch.py` library calls; its call contract is
-`ready --plan <p> [--batch <id>]`, `packet --plan <p> --repo-root <r>
---verification-receipt <resolver json>`, `record-dispatch --packet-file <json>
---out <json>`, and `apply-result --plan <p> --repo-root <r>
---verification-receipt <json> --result-file <json>`.
+`ready --plan <p> [--batch <id>] [--receipt <other-batch receipt>]...`,
+`packet --plan <p> --repo-root <r> --verification-receipt <resolver json>`,
+`record-dispatch --packet-file <json> --out <json>`, and `apply-result --plan
+<p> --repo-root <r> --verification-receipt <json> --result-file <json>
+--receipt <this-batch receipt>` — always pass `--receipt`: it is the
+idempotency record that refuses a re-send and recovers a crash.
 
 Dispatch one reviewer fan-out for the whole Batch, never one fan-out per
 member. The full lane uses spec-reviewer plus code-quality-reviewer. The prose
