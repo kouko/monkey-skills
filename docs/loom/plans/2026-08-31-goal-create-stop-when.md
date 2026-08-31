@@ -9,7 +9,7 @@ Goal: A goal drafted by goal-create carries exactly one mechanical Stop-when
     names one claim per test — serves PURPOSE: a contract whose real use
     contradicts its text is a claim that shipped unverified; this arc
     re-grounds the goal contract on seven observed runs and one experiment
-Stage: planning
+Stage: finishing
 Total tasks: 6
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
@@ -60,7 +60,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-5, BI-6
 - **Review disposition**: batch(shape-prose)
-- **Status**: pending
+- **Status**: done(e8dec41ea54150b19cbe54df2d000ee796ca977c)
 - **Gloss**: 讓評估器把「上限到了」讀成「run 完成」，run 才會真的在上限停下——這是今天實驗證明有效的那個措辭。
 
 ## Task 2 — goal-shape §2：常設決策規則成為 SESSION 預設帶出的 Constraints 條目
@@ -86,7 +86,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 - **Independent**: false
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(shape-prose)
-- **Status**: pending
+- **Status**: done(db8a8714c563506b24241bf4437b9bb5a86df1d6)
 - **Gloss**: 以後每份 goal 自帶「分岔自己查、自己決、留紀錄、不回頭問」，不用你每次記得寫。
 
 ## Task 3 — input-floor §4 第 3 項：依賴人的分岔有兩個去處、永不當出口
@@ -113,7 +113,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(shape-prose)
-- **Status**: pending
+- **Status**: done(70ad0009f293375bc1cfa81646f66856ec1e0e36)
 - **Gloss**: 把「不准依賴人」補成「那要放哪」——起草 agent 不再把人的裁決塞進 Stop-when 當出口。
 
 ## Task 4 — goal_lint：Stop-when 沒有數字就警告（不失敗）
@@ -135,7 +135,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
 - **Not batched because**: no dependency edge and a different Module from every other task; its verdict question (does the linter warn on a digit-less Stop-when without ever failing) shares nothing with the prose batch
-- **Status**: pending
+- **Status**: done(c89e082d101ad4d46c8e94fb5315225066ca86fd)
 - **Gloss**: 起草時漏掉回合數上限會被提醒，但不會擋住合法寫法。
 
 ## Task 5 — 拆 test_input_floor 的 359 行測試函式：一個主張一個測試
@@ -161,7 +161,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 - **Brief item covered**: BI-8
 - **Review disposition**: individual
 - **Not batched because**: the proposer pairs it with Task 3 on the shared file, but its verdict question (a pure regrouping that drops no assertion) is a different one from the prose batch's (do the two references now say the right thing), and a review that must count assertions should not be diluted by prose findings
-- **Status**: pending
+- **Status**: done(eea902081971e362a5179e9edd8bd7fa1e0fd6cb)
 - **Gloss**: 測試壞掉時會直接說是哪一條主張壞了，而不是一個 359 行的名字。
 
 ## Task 6 — loom-workflow 版本 bump 3.1.0→3.2.0
@@ -169,7 +169,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
   - Surfaces: `loom-workflow/.claude-plugin/plugin.json`, `loom-workflow/.codex-plugin/plugin.json` (via `scripts/sync_codex_manifests.py`), `loom-workflow/CHANGELOG.md`, root `README.md` version table row.
   - Minor bump: skill behaviour changes (goal shape contract + linter warning), no breaking schema change.
 - **Module**: loom-workflow plugin manifest (version surfaces)
-- **Files touched**: loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json, loom-workflow/CHANGELOG.md, README.md
+- **Files touched**: loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json, loom-workflow/CHANGELOG.md, README.md, loom-workflow/skills/decision-map/scripts/test_skill_doc.py
 - **Context paths**:
   - scripts/check_version_bump.py, scripts/sync_codex_manifests.py
   - loom-workflow/CHANGELOG.md (3.1.0 entry format)
@@ -188,7 +188,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 - **Brief item covered**: none — release administration (version bump) delivers no brief outcome
 - **Review disposition**: individual
 - **Not batched because**: release administration — it is the dependency sink of both chains, so any proposed pairing exists only because it closes the branch, not because it shares a verdict question
-- **Status**: pending
+- **Status**: done(7956778a2c5f69433c133ba1b23a5321fd7982af)
 - **Gloss**: 版本進 marketplace，`plugin update` 才拿得到新契約。
 
 ## Review Batches
@@ -208,3 +208,9 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 - Plan-review round 1 (2026-08-31): NEEDS_REVISION — one gap (Check 8: BI-5/BI-6 uncited); fixed by the Task 1 citation above. Round 2: PASS 21/21. Verdict stamped — stamping the verdict, no re-review. Reviewer notes recorded for schema follow-up (not this plan's defects): `plan-format.md`'s two worked examples count critical-path depth by different conventions (nodes vs edges); Task 6's conceptual `Module` name differs from the one-concrete-path precedent.
 - Kickoff sweep (2026-08-31, kickoff-briefing §a/§b): no one-way-door decision found — the rule's name, the digit warning, and the default-emitted Constraints entry are each reversible by a prose edit; no researchable fork left open (Axis 4 already researched the bound-phrasing alternatives). No kickoff briefing beyond the progress card and document view.
 - Language: task titles, Gloss and Notes in zh-Hant per the session; Description / Acceptance in English per writing-plans §Language policy.
+- Task 6 `Files touched` amended during SDD (2026-08-31): `loom-workflow/skills/decision-map/scripts/test_skill_doc.py` added — its `test_v3_public_surface_commands_templates_and_version_are_synchronized` pins both manifests' version string (3.1.0 → 3.2.0). The plan's Description anticipated exactly this conditional ("only if the full floor proves a version-pin test exists"); recorded here for the whole-branch reviewer rather than sent for a plan delta re-review.
+- Review outcomes (2026-08-31): batch `shape-prose` (T1–T3) spec PASS + quality PASS_WITH_NOTES → finalize; T4 PASS + PASS; T5 PASS + PASS_WITH_NOTES; T6 PASS + PASS (🟢 the CHANGELOG's trailing "Grounding:" paragraph departs from the 3.1.0 entry's format). Planned fan-outs 4 for 6 tasks; run as 1 batch fan-out + 3 individual fan-outs = 4 (8 reviewer dispatches). Accumulated non-blocking debt, surfaced at the PR: 🟡 `_negation_binds` in test_input_floor.py rejects a backtick-adjacent target, so item 3 writes bare `Stop-when` while its neighbours are backticked (fix: allow markdown punctuation before the target, restore the backticks); 🟡 `test_constraints_and_stop_when_source_is_stated` keeps an inner `_paragraph_containing` closure duplicating the new module-level helper; 🟢 divergent second `_negation_binds` copy in test_goal_shape.py; 🟢 three section extractors across the two test modules; 🟢 `no-numeric-bound` message over-claims for spelled-out bounds; 🟢 the empty-Stop-when guard in goal_lint is unpinned; 🟢 `_code_line_count` filters raw lines textually inside multi-line strings; 🟢 the 50-line guard's docstring does not state what it cannot catch.
+- Rebase before close-out (2026-08-31): branch rebased onto origin/main 3ef8922a (loom-code 0.108.1/0.109.0 landed upstream); the `done(<sha>)` values above are the pre-rebase task commits — post-rebase map: T1 e8dec41e→ef9b7dbe, T2 db8a8714→d2de710c, T3 70ad0009→4c776f87, T4 c89e082d→37192e0b, T5 eea90208→85a515cd, T6 7956778a→c41b8199. Same bytes, reviewed as such.
+- Whole-branch review (2026-08-31, mixed branch: code arm ×2 on the 7 non-`.md` files, docs arm ×2 on the 2 contract-class references; record-class README/CHANGELOG/docs exempt). Round 1 at c41b8199: code arms NEEDS_REVISION (union 🟡×4: `test_skill_doc.py` CHANGELOG assertion still pinned to 3.1.0; `test_goal_shape.py`'s `_negation_binds` lacked the trailing `\b` and `\W*` of the sanctioned copy so `never … asked` satisfied a never-asks check; `test_goal_lint.py` comment mislabelled an ASCII digit in CJK text as a "CJK numeric bound"; plus the divergence itself), docs arms NEEDS_REVISION + PASS_WITH_NOTES (union 🟡 instruction ×2: default-emitted entry tagged `derived` contradicted input-floor §2's "drafted from evidence"; "Stop-when material" vs "Stop-when branch" across the mutual cross-reference; 🟡 evidence: attribution ¶ still presented "or stop after 20 turns" as usable; 🟢 bare `Stop-when`). One fix cycle (98b09245): both files say "branch"; input-floor §2 names the standing entry as the one anchored exception; attribution gains an appended disclaimer; both `_negation_binds` copies share one regex body with a `[`*_]*` markdown tolerance and trailing `\b`; CHANGELOG assertion derives from the manifest; comment reworded. Delta confirmation via the same four named arms: all CONFIRMED_RESOLVED → panel PASS; remaining 🟢 debt: two `_negation_binds` copies still exist (same body, gap 6 vs 4); 50-line guard reaches only its own file (`test_defines_four_fields_budget_and_surfacing` 125 code lines, `test_floor_fails_structure_and_warns_on_judgment` 71 — pre-existing); `_paragraph_containing` now at three locations. Pre-existing drift noted by arm B, not this branch's: `loom-workflow/README{,.ja,.zh-TW}.md` and `README.{ja,zh-TW}.md` still say 1.0.0.
+- Close-out `Observed fan-outs` row (2026-08-31): `observed reviewer fan-outs: 7 (rounds 7, batch reopens 0)` — verbatim `task_batch_replay.py observe --summary` with `--receipts` over the applied `shape-prose` receipt: 1 batch fan-out + 3 individual fan-outs + the whole-branch context packet + 2 individual packets built for T4/T5 = 7 harness-observed packets; the delta confirmations reused the round-1 arms and built no new packet. Planned 4 for 6 tasks.
+- Memory-timing check (close-out): one durable gotcha filed — `docs/loom/memory/a-pin-that-cannot-see-markdown-reshapes-the-prose-it-pins.md`; backlog `2026-08-28-one-test-function-bundles-fifteen-independent-claims` given its closing evidence line.
