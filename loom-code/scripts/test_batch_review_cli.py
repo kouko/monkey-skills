@@ -523,6 +523,40 @@ def test_packet_seals_root_commit_member_touching_exactly_declared_files(
     assert [f["path"] for f in member_1["files"]] == ["src/1.py"]
 
 
+def test_packet_refuses_root_commit_member_touching_undeclared_file(
+    tmp_path, capsys,
+) -> None:
+    """Root-commit scope check is fail-open: `git diff-tree --no-commit-id
+    --name-only -r <sha>` without `--root` (git-diff-tree(1)) returns an
+    EMPTY listing for a root commit, so the undeclared-path subset check
+    trivially passes and a root member commit that smuggles an undeclared
+    file seals unnoticed. Refuses once `--root` is added."""
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    sha1 = _git_commit_files(
+        repo_root, {"src/1.py": b"member 1", "src/backdoor.py": b"smuggled"},
+    )
+    sha2 = _git_commit_file(repo_root, "src/2.py", b"member 2")
+    plan_path = repo_root / "plan.md"
+    plan_path.write_text(
+        _plan_text(f"implemented({sha1})", f"implemented({sha2})"),
+        encoding="utf-8",
+    )
+    receipt_path = tmp_path / "verification-receipt.json"
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+    code = cli.main([
+        "packet", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["packet"] is None
+    reasons = " ".join(out["reasons"])
+    assert "Task 1" in reasons
+    assert "src/backdoor.py" in reasons
+
+
 def test_git_timeout_refuses_instead_of_raising(tmp_path, capsys, monkeypatch) -> None:
     """A hung git subprocess must surface as a PacketRefused-driven CLI
     refusal, not an uncaught TimeoutExpired traceback (T8 round-2 🟢)."""
