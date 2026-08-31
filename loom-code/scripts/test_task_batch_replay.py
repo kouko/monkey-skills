@@ -500,3 +500,133 @@ def test_fallback_cost_cannot_create_or_hide_batch_savings(tmp_path: Path) -> No
     assert passing["cost_attribution"]["eligible_batch"][
         "saved_review_dispatches"
     ] > 0
+
+
+def _single_case_corpus() -> dict:
+    corpus = _corpus()
+    corpus["cases"] = corpus["cases"][:1]
+    return corpus
+
+
+def _log_line(branch: str, sha: str) -> str:
+    return json.dumps(
+        {
+            "schema": "review-dispatch-log/v1",
+            "recorded_at": "2026-08-31T05:26:11+00:00",
+            "branch": branch,
+            "reviewed_sha": sha,
+            "plugin_version": "0.107.1",
+        },
+        sort_keys=True,
+    )
+
+
+_SHA_A = "a" * 40
+_SHA_B = "b" * 40
+
+
+def _observe_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
+    log = tmp_path / "review-dispatches.jsonl"
+    log.write_text(
+        "\n".join(
+            [
+                _log_line("b", _SHA_A),
+                _log_line("b", _SHA_A),
+                _log_line("other", _SHA_B),
+                _log_line("b", _SHA_B),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    receipts = tmp_path / "receipts"
+    receipts.mkdir()
+    _write(receipts / "one.json", {"schema": "batch-dispatch-receipt-v1", "applied_action": "reopen"})
+    _write(receipts / "two.json", {"schema": "batch-dispatch-receipt-v1", "applied_action": "finalize"})
+    _write(receipts / "three.json", {"schema": "batch-dispatch-receipt-v1"})
+    corpus = tmp_path / "corpus.json"
+    _write(corpus, _single_case_corpus())
+    return log, receipts, corpus
+
+
+# No registered REQ-id names the observe subcommand in this dispatch; tag omitted.
+def test_observe_counts_dispatches_rounds_and_reopens_from_log_and_receipts(
+    tmp_path: Path,
+) -> None:
+    log, receipts, corpus = _observe_fixture(tmp_path)
+    out = tmp_path / "result.json"
+    code = replay.main(
+        [
+            "observe",
+            "--log", str(log),
+            "--branch", "b",
+            "--corpus", str(corpus),
+            "--out", str(out),
+            "--receipts", str(receipts),
+        ]
+    )
+    assert code == 0
+    result = json.loads(out.read_text(encoding="utf-8"))
+    assert result["schema"] == "task-batch-replay-result/v2"
+    assert result["provenance"] == "observed"
+    assert result["corpus_identity"] == replay.corpus_identity(_single_case_corpus())
+    (case,) = result["cases"]
+    assert case["case_id"] == "eligible-capability"
+    assert case["review_dispatches"] == 3
+    assert case["review_rounds"] == 2
+    assert case["batch_reopens"] == 1
+    # v2 keeps the whole v1 case shape underneath the observed counts.
+    assert set(case) == replay._RESULT_CASE_KEYS | {"batch_reopens"}
+
+
+# No registered REQ-id names the observe subcommand in this dispatch; tag omitted.
+def test_observe_refuses_malformed_log_and_summarizes_without_writing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log, receipts, corpus = _observe_fixture(tmp_path)
+    out = tmp_path / "result.json"
+
+    # `--receipts` omitted -> batch_reopens is 0, never guessed.
+    assert replay.main(
+        ["observe", "--log", str(log), "--branch", "b", "--corpus", str(corpus), "--out", str(out)]
+    ) == 0
+    assert json.loads(out.read_text(encoding="utf-8"))["cases"][0]["batch_reopens"] == 0
+    out.unlink()
+
+    # `--summary` prints exactly the close-out line and writes no result file.
+    assert replay.main(
+        ["observe", "--log", str(log), "--branch", "b", "--receipts", str(receipts), "--summary"]
+    ) == 0
+    assert capsys.readouterr().out == "observed reviewer fan-outs: 3 (rounds 2, batch reopens 1)\n"
+    assert not out.exists()
+
+    # Zero matching lines on an existing log -> the zero line; absent log -> N/A, exit 0.
+    assert replay.main(["observe", "--log", str(log), "--branch", "nobody", "--summary"]) == 0
+    assert capsys.readouterr().out == "observed reviewer fan-outs: 0 (rounds 0, batch reopens 0)\n"
+    assert replay.main(
+        ["observe", "--log", str(tmp_path / "missing.jsonl"), "--branch", "b", "--summary"]
+    ) == 0
+    assert capsys.readouterr().out == "observed reviewer fan-outs: N/A — no dispatch log\n"
+
+    # A malformed line refuses, naming its line number.
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text(_log_line("b", _SHA_A) + "\n" + '{"schema": "x"}' + "\n", encoding="utf-8")
+    with pytest.raises(replay.ReplayInputError, match="line 2"):
+        replay.read_dispatch_log(bad)
+    assert replay.main(["observe", "--log", str(bad), "--branch", "b", "--summary"]) == 2
+    assert "line 2" in capsys.readouterr().err
+
+    # A multi-case corpus cannot receive single-case attribution.
+    multi = tmp_path / "multi.json"
+    _write(multi, _corpus())
+    assert replay.main(
+        ["observe", "--log", str(log), "--branch", "b", "--corpus", str(multi), "--out", str(out)]
+    ) == 2
+    assert "exactly one case" in capsys.readouterr().err
+
+    # `read_dispatch_log` is the module's only reader of the log: observe sees its view.
+    monkeypatch.setattr(
+        replay, "read_dispatch_log", lambda path: [json.loads(_log_line("b", _SHA_B))]
+    )
+    assert replay.main(["observe", "--log", str(log), "--branch", "b", "--summary"]) == 0
+    assert capsys.readouterr().out == "observed reviewer fan-outs: 1 (rounds 1, batch reopens 0)\n"
