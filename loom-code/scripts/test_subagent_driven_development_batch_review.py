@@ -88,6 +88,12 @@ def test_batch_dispatch_and_fallback_contract() -> None:
     assert "SDD orchestrator is the only ledger writer" in batch
     assert "reviewers and implementers never mutate the ledger" in batch
 
+    # R9: whole-branch review entry after Batch finalize / individual
+    # resolution is an unconditional sequence step — no interactive-mode
+    # exception.
+    assert "necessarily proceeds to the existing whole-branch review" in batch
+    assert "no mode exception" in batch
+
     # The durable ledger contract describes implemented as a Task state, not a
     # second Batch lifecycle, and keeps owner-only repair atomic.
     for phrase in (

@@ -255,6 +255,12 @@ a fresh Packet. `wait_refuse` changes nothing and waits or follows the failure's
 existing recovery rule. The SDD orchestrator is the only ledger writer;
 reviewers and implementers never mutate the ledger.
 
+Once every Batch reaches `finalize` (or a Task resolves through the existing
+individual reviewer loop), the run necessarily proceeds to the existing
+whole-branch review via `finishing-a-development-branch` — this holds for
+`一站一站來` interactive mode exactly as for an autonomous run, with no mode
+exception.
+
 **Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger. Perform every ledger flip via `python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py` exists at the repo root — it validates the task, the status grammar, and refuses duplicate or missing `Status` lines; hand-edit only when the script is absent. When only the repo-root copy is missing, run the plugin-shipped copy instead — `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path> --set-status "T<N>=<status>"` — "absent" means neither copy is present.
 
 **Decision Log maintenance.** SDD appends non-briefed, classified engineering decisions to the plan's `## Decision Log` during execution: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Decision Log maintenance.
