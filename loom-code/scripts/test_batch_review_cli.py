@@ -733,6 +733,39 @@ def test_apply_result_finalizes(tmp_path, capsys) -> None:
     assert out["ledger_mutation_allowed"] is True
 
 
+def test_apply_result_reads_dispatch_receipt_exactly_once(
+    tmp_path, capsys, monkeypatch,
+) -> None:
+    """_cmd_apply_result must parse the dispatch receipt exactly once: the
+    dict `_bind_receipt_to_packet` already validated and returned is what
+    gets mutated and rewritten at the flip, not a second independent
+    `_read_dispatch_receipt` call on the same file."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path))
+    real_read = cli._read_dispatch_receipt
+    calls: list[str] = []
+
+    def _counting(path):
+        calls.append(path)
+        return real_read(path)
+
+    monkeypatch.setattr(cli, "_read_dispatch_receipt", _counting)
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    capsys.readouterr()
+    assert code == 0
+    assert calls == [str(dispatch_receipt)]
+
+
 def test_apply_result_reopens_with_owner_union(tmp_path, capsys) -> None:
     plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
