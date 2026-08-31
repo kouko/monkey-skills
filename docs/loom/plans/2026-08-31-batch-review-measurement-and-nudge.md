@@ -225,7 +225,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(proposer)
-- **Status**: pending
+- **Status**: implemented(7964ade9b8091b45cb5e8f9cf29e1a759c990c0b)
 - **Gloss**: 保守不再免費：不合批要說為什麼，合太大也要說為什麼。
 
 ## Task 9 — plan-format 兩個欄位、writing-plans 閘門行、reviewer Check 23
