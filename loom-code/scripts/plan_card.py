@@ -701,8 +701,13 @@ def _validated_batch_snapshot(
     ), fields
 
 
-_BATCH_DISPOSITION = re.compile(r"batch\(([a-z0-9][a-z0-9-]*)\)")
-_REVIEW_BATCHES_SECTION = re.compile(r"^## Review Batches\s*$", re.MULTILINE)
+def _bullet_count(block: str, key: str) -> int:
+    """How many primary `- <key>: ...` bullet lines appear in block (the
+    pattern mirrors `_bullet_lines`, but counts every occurrence rather
+    than stopping at the first — used to detect a duplicated bullet
+    `_bullet_value`'s single-first-match would otherwise hide)."""
+    pattern = re.compile(rf"^- \*{{0,2}}{re.escape(key)}\*{{0,2}}:\s*(.*?)\s*$")
+    return sum(1 for line in block.splitlines() if pattern.match(line))
 
 
 def _batch_member_done_refusal(
@@ -714,12 +719,19 @@ def _batch_member_done_refusal(
     disposition:` line is `batch(<id>)` — `batch_review_cli.py
     apply-result` is the only legitimate writer of a declared batch
     member's `done`, so crash recovery can trust a `done` it finds
-    (plan Task 5). Fails closed: a missing `- Review disposition:`
-    line refuses when the plan declares a `## Review Batches` section
-    (schema-invalid — a member could be hiding behind the missing
-    line) and passes through when it does not (an old-format plan
-    predating the disposition field); an unknown/schema-invalid batch
-    id (the oracle's `ValueError`) also refuses.
+    (plan Task 5). Fails closed: a missing or duplicated `- Review
+    disposition:` line refuses when the plan declares a `## Review
+    Batches` section (schema-invalid — a member could be hiding behind
+    the missing/duplicated line, and `_bullet_value` only ever returns
+    the first match) and passes through when there is no such section
+    (an old-format plan predating the disposition field); a disposition
+    value that does not fullmatch the oracle's own disposition grammar,
+    an unknown/schema-invalid batch id (the oracle's `ValueError`), and
+    a disposition naming a batch whose `Members` omit this task all
+    refuse too. The disposition and section regexes are the sibling
+    schema oracle's `_DISPOSITION` / `_BATCH_SECTION` (mirrored, not
+    reimplemented) so a grammar change there cannot silently widen what
+    this guard accepts.
 
     Callers pass the SAME `text` they are about to mutate, evaluated
     from inside `_publish_cli_mutation`'s lock (the `mutation`
@@ -731,24 +743,40 @@ def _batch_member_done_refusal(
     for number, _name, block in _task_blocks(text):
         if number == task_number:
             disposition = _bullet_value(block, "Review disposition")
+            disposition_count = _bullet_count(block, "Review disposition")
             break
     else:
         return None
-    if disposition is None:
-        if _REVIEW_BATCHES_SECTION.search(text) is not None:
+    oracle = _review_batch_oracle()
+    has_batches_section = oracle._BATCH_SECTION.search(text) is not None
+    if disposition is None or disposition_count != 1:
+        if has_batches_section:
+            if disposition is None:
+                return (
+                    f"task T{task_number} has no '- Review disposition:' line "
+                    "while the plan declares a '## Review Batches' section — "
+                    "schema-invalid, refusing rather than risk a hidden batch "
+                    "member"
+                )
             return (
-                f"task T{task_number} has no '- Review disposition:' line "
-                "while the plan declares a '## Review Batches' section — "
-                "schema-invalid, refusing rather than risk a hidden batch "
-                "member"
+                f"task T{task_number} has {disposition_count} "
+                "'- Review disposition:' lines while the plan declares a "
+                "'## Review Batches' section — schema-invalid, refusing "
+                "rather than trust only the first"
             )
         return None
-    match = _BATCH_DISPOSITION.fullmatch(disposition)
+    match = oracle._DISPOSITION.fullmatch(disposition)
     if match is None:
-        return None
+        return (
+            f"task T{task_number} has '- Review disposition: {disposition}' "
+            "which does not match the plan schema's disposition grammar — "
+            "schema-invalid, refusing rather than risk a hidden batch member"
+        )
     batch_id = match.group(1)
+    if batch_id is None:
+        return None
     try:
-        fields = _review_batch_oracle().execution_projection_fields(text, batch_id)
+        fields = oracle.execution_projection_fields(text, batch_id)
     except ValueError as exc:
         return (
             f"batch '{batch_id}' schema invalid ({exc}) — refusing the "
@@ -757,7 +785,12 @@ def _batch_member_done_refusal(
         )
     members = {int(member["task_id"].split()[1]) for member in fields["members"]}
     if task_number not in members:
-        return None
+        return (
+            f"task T{task_number} declares '- Review disposition: "
+            f"batch({batch_id})' but batch '{batch_id}'s Members do not "
+            "list it — schema-invalid, fix the plan; only "
+            "`batch_review_cli.py apply-result` writes a member's done"
+        )
     return (
         f"task T{task_number} is a declared member of batch '{batch_id}' — "
         "done(<sha>) may only be written by `batch_review_cli.py "
