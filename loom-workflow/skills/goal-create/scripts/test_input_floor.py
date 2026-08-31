@@ -32,6 +32,7 @@ only risks a false failure on a legitimate rewording that happens to be a
 few characters longer. Scope to structure, not to distance.
 """
 
+import ast
 import re
 from pathlib import Path
 
@@ -252,6 +253,56 @@ def test_no_unbound_negation_regex_in_this_file() -> None:
         "Found a bare '<negation>.*<target>' regex passed directly to "
         "re.search/re.match — route it through _negation_binds() "
         f"instead: {offenders!r}"
+    )
+
+
+def _code_line_count(node: ast.FunctionDef, lines: list) -> int:
+    """Count a function's body lines, excluding its docstring, comments,
+    and blank lines.
+
+    This is the measure that matches naming-and-functions.md's 50-line
+    hard ceiling, which is about CODE complexity, not the prose that
+    documents a regex trap or a structural rationale — a function like
+    `test_no_unbound_negation_regex_in_this_file` carries a long,
+    load-bearing docstring but little actual code, and should not be
+    flagged on docstring length alone.
+    """
+    body = node.body
+    has_docstring = (
+        bool(body)
+        and isinstance(body[0], ast.Expr)
+        and isinstance(getattr(body[0], "value", None), ast.Constant)
+        and isinstance(body[0].value.value, str)
+    )
+    if has_docstring:
+        start = body[1].lineno if len(body) > 1 else body[0].end_lineno + 1
+    else:
+        start = body[0].lineno if body else node.lineno + 1
+    segment = lines[start - 1 : node.end_lineno]
+    return sum(1 for line in segment if line.strip() and not line.strip().startswith("#"))
+
+
+def test_no_test_function_exceeds_fifty_lines() -> None:
+    """Guard against reproducing the bundled-claims defect this file hit
+    once already (`test_defines_slots_refusal_bar_and_provenance` grew to
+    359 lines bundling ~15 independent claims behind one name, so a
+    failure inside named nothing). This guard reads THIS FILE'S OWN
+    SOURCE and fails the moment any `def test_...` function's code body
+    (docstring/comments/blank lines excluded — see `_code_line_count`)
+    exceeds the 50-line hard ceiling (naming-and-functions.md).
+    """
+    source = Path(__file__).read_text(encoding="utf-8")
+    lines = source.splitlines()
+    tree = ast.parse(source)
+    offenders = [
+        (node.name, code_len)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+        for code_len in [_code_line_count(node, lines)]
+        if code_len > 50
+    ]
+    assert not offenders, (
+        f"Test function(s) exceed the 50-line hard ceiling: {offenders!r}"
     )
 
 
