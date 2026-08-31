@@ -20,10 +20,12 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
+import subprocess  # kept: test_git_wrapper_characterization_none monkeypatches review_context.subprocess.run
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+from git_exec import run_git
 
 
 DISPATCH_LOG_SCHEMA = "review-dispatch-log/v1"
@@ -39,17 +41,7 @@ SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 def _git(repo: Path, *args: str) -> str | None:
     """Return stripped git stdout, or None when the command cannot succeed."""
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), *args],
-            capture_output=True,
-            text=True,
-        )
-    except OSError:
-        return None
-    if result.returncode != 0:
-        return None
-    return result.stdout.strip()
+    return run_git(repo, *args, check=False)
 
 
 def _plugin_root() -> Path:
