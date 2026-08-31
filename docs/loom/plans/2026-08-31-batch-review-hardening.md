@@ -76,7 +76,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: pending
+- **Status**: claimed(@implementer-t2)
 - **Gloss**: 手寫或搬來的 PASS 檔換一個 plan 就失效；密封不再由 CLI 自己補上。
 
 ## Task 3 — build_packet 檢查成員 commit 實際改動檔案 ⊆ 宣告檔案
@@ -171,7 +171,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: true
 - **Brief item covered**: BI-11
 - **Review disposition**: individual
-- **Status**: claimed(@implementer-t6)
+- **Status**: done(a76f95c68acfab59380eda0553678b2110ea2a56)
 - **Gloss**: 三條沒修的發現有案可查，不會被遺忘。
 
 ## Task 7 — loom-code 版本 bump 0.106.0→0.107.0＋dogfood 指紋刷新
