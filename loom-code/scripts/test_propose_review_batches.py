@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -41,10 +42,17 @@ def _task(
     dependencies: str = "none",
     module: str | None = "`pkg/core.py`",
     review_weight: str | None = None,
+    disposition: str = "individual",
+    not_batched_because: str | None = None,
 ) -> str:
     module_line = f"- **Module**: {module}\n" if module is not None else ""
     weight_line = (
         f"- **Review-weight**: {review_weight}\n" if review_weight is not None else ""
+    )
+    reason_line = (
+        f"- **Not batched because**: {not_batched_because}\n"
+        if not_batched_because is not None
+        else ""
     )
     return f"""\
 ## Task {number} — Task {number}
@@ -52,14 +60,38 @@ def _task(
 - **Description**: Implement Task {number}.
 {module_line}- **Files touched**: `module_{number}.py`
 - **Dependencies**: {dependencies}
-{weight_line}- **Review disposition**: individual
-- **Status**: pending
+{weight_line}- **Review disposition**: {disposition}
+{reason_line}- **Status**: pending
 
 """
 
 
-def _plan(*tasks: str) -> str:
-    return "# Plan\n\n" + "".join(tasks) + "## Review Batches\n\nnone\n"
+def _batch(batch_id: str, members: list[int], *, oversized_because: str | None = None) -> str:
+    member_list = ", ".join(f"Task {n}" for n in members)
+    reason_line = (
+        f"- **Oversized because**: {oversized_because}\n"
+        if oversized_because is not None
+        else ""
+    )
+    return f"""\
+### Review Batch: {batch_id}
+- **Members**: {member_list}
+- **Verdict question**: Does batch {batch_id} hold?
+- **Review lane**: full
+- **Aggregate verification**: run the module's test file
+- **Boundary**: capability: {batch_id} surface; exclusions: none; consumable: yes
+{reason_line}
+"""
+
+
+def _plan(*tasks: str, batches: str = "none\n") -> str:
+    return "# Plan\n\n" + "".join(tasks) + "## Review Batches\n\n" + batches
+
+
+def _check(plan_text: str, tmp_path: Path) -> subprocess.CompletedProcess[str]:
+    plan = tmp_path / "plan.md"
+    plan.write_text(plan_text, encoding="utf-8")
+    return _run("--check", str(plan))
 
 
 def _member_lists(proposal: dict) -> list[list[int]]:
@@ -154,3 +186,56 @@ def test_structural_oracle_errors_refuse_with_named_errors(tmp_path):
 def test_usage_error_on_wrong_argument_count(args):
     result = _run(*args)
     assert result.returncode == 2
+
+
+def test_field_name_constants_are_exported():
+    # Task 9's prose-contract test imports these names; the strings are the
+    # exact plan field names the check reads.
+    spec = importlib.util.spec_from_file_location("proposer_under_test", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.NOT_BATCHED_FIELD == "Not batched because"
+    assert module.OVERSIZED_FIELD == "Oversized because"
+
+
+def test_check_flags_unbatched_proposed_pair_without_reason(tmp_path):
+    # Same lane + same Module -> proposed together; both declared individual
+    # with no reason is the silent conservatism the check exists to refuse.
+    result = _check(_plan(_task(1), _task(2)), tmp_path)
+    assert result.returncode != 0
+    assert "Task 1, Task 2" in result.stdout
+    assert "Not batched because" in result.stdout
+
+    with_reason = _check(
+        _plan(_task(1), _task(2, not_batched_because="separate release points")),
+        tmp_path,
+    )
+    assert with_reason.returncode == 0, with_reason.stdout + with_reason.stderr
+
+
+def test_check_flags_oversized_declared_batch_without_reason(tmp_path):
+    tasks = [_task(n, disposition="batch(big)") for n in range(1, 6)]
+    without = _check(
+        _plan(*tasks, batches=_batch("big", [1, 2, 3, 4, 5])), tmp_path
+    )
+    assert without.returncode != 0
+    assert "big" in without.stdout
+    assert "Oversized because" in without.stdout
+
+    with_reason = _check(
+        _plan(*tasks, batches=_batch("big", [1, 2, 3, 4, 5], oversized_because="one release")),
+        tmp_path,
+    )
+    assert with_reason.returncode == 0, with_reason.stdout + with_reason.stderr
+
+
+def test_check_passes_when_declared_batches_equal_proposal(tmp_path):
+    result = _check(
+        _plan(
+            _task(1, disposition="batch(pair)"),
+            _task(2, disposition="batch(pair)"),
+            batches=_batch("pair", [1, 2]),
+        ),
+        tmp_path,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

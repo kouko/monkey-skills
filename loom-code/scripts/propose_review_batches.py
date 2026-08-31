@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
 """Propose review batches for one plan under the module rule.
 
-Usage: ``python3 loom-code/scripts/propose_review_batches.py <plan-path>``
+Usage::
 
-Prints one JSON object on stdout::
+    python3 loom-code/scripts/propose_review_batches.py <plan-path>
+    python3 loom-code/scripts/propose_review_batches.py --check <plan-path>
+
+``propose`` (no flag) prints one JSON object on stdout::
 
     {"batches": [{"members": [1, 2], "lane": "full",
                   "reason": "module:<value>" | "dependency"}, ...],
      "singletons": [3, ...]}
+
+``--check`` exits non-zero, one stdout line per violation, when the plan's
+declared ``## Review Batches`` deviate from the proposal without a reason:
+(a) two tasks proposed together are not in the same declared batch and the
+later task lacks a non-empty ``- **Not batched because**: <reason>`` line;
+(b) a declared batch has more than ``BATCH_CAP`` members and lacks a
+non-empty ``- **Oversized because**: <reason>`` line in its block.
 
 Two non-mechanical tasks are joined when they share a review lane AND
 (one lists the other in ``Dependencies`` OR both carry an identical
@@ -39,6 +49,12 @@ EDGE_RULE = "same lane AND (dependency edge OR identical Module)"
 BATCH_CAP = 4
 """Maximum members per proposed batch (Variant C ran at cap 4)."""
 
+NOT_BATCHED_FIELD = "Not batched because"
+"""Task field excusing a proposed pair the planner kept apart."""
+
+OVERSIZED_FIELD = "Oversized because"
+"""Review Batch field excusing a declared batch above ``BATCH_CAP``."""
+
 # Oracle errors a plan written before the Review Batches contract always
 # carries. They say nothing about the Task DAG, so the proposer still
 # clusters such a plan; every other oracle error is structural and refuses.
@@ -65,16 +81,28 @@ def _normalize_module(value: str) -> str:
     return value.strip().strip("`").strip().rstrip(".,;")
 
 
-def _module_values(oracle, text: str) -> dict[int, str]:
-    """First `Module` value per Task, read with the oracle's field grammar."""
+def _task_blocks(oracle, text: str) -> dict[int, str]:
+    """Each Task's block, cut before the Review Batches section."""
     review_section = oracle._BATCH_SECTION.search(text)
-    modules: dict[int, str] = {}
+    blocks: dict[int, str] = {}
     for match, block in oracle._blocks(oracle._TASK_HEADING, text):
         if review_section is not None and review_section.start() > match.start():
             block = block[: max(0, review_section.start() - match.end())]
+        blocks[int(match.group(1))] = block
+    return blocks
+
+
+def _module_values(oracle, text: str) -> dict[int, str]:
+    """First `Module` value per Task, read with the oracle's field grammar."""
+    modules: dict[int, str] = {}
+    for number, block in _task_blocks(oracle, text).items():
         values = oracle._field_values(block, "Module")
-        modules[int(match.group(1))] = _normalize_module(values[0]) if values else ""
+        modules[number] = _normalize_module(values[0]) if values else ""
     return modules
+
+
+def _has_reason(oracle, block: str, field: str) -> bool:
+    return any(value for value in oracle._field_values(block, field))
 
 
 def _components(tasks: dict, modules: dict[int, str]) -> list[list[int]]:
@@ -169,10 +197,71 @@ def propose(text: str) -> tuple[dict[str, object], list[str]]:
     return {"batches": batches, "singletons": singletons}, []
 
 
+def _declared_batches(oracle, text: str) -> tuple[dict[str, object], dict[str, str], list[str]]:
+    """Declared batches and their blocks via the oracle; a missing section is
+    an empty declaration (the check then asks every proposed pair to explain)."""
+    if oracle._BATCH_SECTION.search(text) is None:
+        return {}, {}, []
+    errors: list[str] = []
+    body = oracle._review_batch_body(text, errors)
+    batches = oracle._parse_batches(body, errors)
+    blocks = {
+        match.group(1).strip(): block
+        for match, block in oracle._blocks(oracle._BATCH_HEADING, body)
+    }
+    return batches, blocks, errors
+
+
+def check(text: str) -> tuple[list[str], list[str]]:
+    """Violations of the two reason-line duties, or the oracle's errors."""
+    proposal, errors = propose(text)
+    if errors:
+        return [], errors
+    oracle = _oracle()
+    batches, blocks, errors = _declared_batches(oracle, text)
+    if errors:
+        return [], errors
+    task_blocks = _task_blocks(oracle, text)
+    membership = {
+        member: batch_id
+        for batch_id, batch in batches.items()
+        for member in batch.members
+    }
+    violations: list[str] = []
+    for batch in proposal["batches"]:
+        members = sorted(batch["members"])
+        for index, later in enumerate(members):
+            for earlier in members[:index]:
+                same = membership.get(earlier) is not None and (
+                    membership.get(earlier) == membership.get(later)
+                )
+                if same or _has_reason(oracle, task_blocks.get(later, ""), NOT_BATCHED_FIELD):
+                    continue
+                violations.append(
+                    f"Task {earlier}, Task {later}: proposed as one batch but not "
+                    f"declared in the same Review Batch; Task {later} lacks a "
+                    f"non-empty '- **{NOT_BATCHED_FIELD}**: <reason>' line"
+                )
+    for batch_id, batch in batches.items():
+        if len(batch.members) <= BATCH_CAP:
+            continue
+        if _has_reason(oracle, blocks.get(batch_id, ""), OVERSIZED_FIELD):
+            continue
+        violations.append(
+            f"Review Batch {batch_id}: {len(batch.members)} members exceed the "
+            f"cap of {BATCH_CAP}; lacks a non-empty "
+            f"'- **{OVERSIZED_FIELD}**: <reason>' line"
+        )
+    return violations, []
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
+    checking = args[:1] == ["--check"]
+    if checking:
+        args = args[1:]
     if len(args) != 1:
-        print("Usage: propose_review_batches.py <plan-path>", file=sys.stderr)
+        print("Usage: propose_review_batches.py [--check] <plan-path>", file=sys.stderr)
         return 2
     plan_path = Path(args[0])
     try:
@@ -180,12 +269,22 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, UnicodeError) as exc:
         print(f"Error: cannot read plan {plan_path}: {exc}", file=sys.stderr)
         return 1
-    proposal, errors = propose(text)
+    if checking:
+        violations, errors = check(text)
+    else:
+        proposal, errors = propose(text)
     if errors:
         for error in errors:
             print(f"Error: {error}", file=sys.stderr)
         return 1
-    print(json.dumps(proposal, indent=2))
+    if not checking:
+        print(json.dumps(proposal, indent=2))
+        return 0
+    for violation in violations:
+        print(violation)
+    if violations:
+        return 1
+    print(f"Review Batches in {plan_path} conform to the proposal or explain each deviation.")
     return 0
 
 
