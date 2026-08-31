@@ -118,9 +118,13 @@ A third `safety_bearing` self-exemption variant was found by the fix's own
 review, not by either packet: reviewing `d04659d6` reproduced an INDENTED
 `  Safety-bearing: yes — …` line inside the header, which `_header_value`
 folds as a continuation and renders `N/A — header absent` at exit 0. It is
-pinned by `test_indented_safety_bearing_line_in_header_fails_loud`
-(`loom-code/scripts/test_plan_card.py`) with its own store line; the pin
-commit was pending at record time.
+pinned by `test_indented_safety_bearing_line_in_header_fails_loud`, fixed
+and RED-pinned together with `test_safety_bearing_mention_inside_fenced_block_is_ignored`
+(a review-found refinement: a `Safety-bearing:` mention inside a fenced
+code block must NOT be read as the header) at `09bb3c4a`
+(`fix(loom-code): plan_card refuses an indented header key and ignores
+fenced mentions`); the store line was pinned at `18ce4e72`
+(`docs(loom): ATTACK-CATALOGUE pins the indented-header vector`).
 
 The one un-pinnable `reproduced` vector — `check_attack_catalogue.py`
 `pinned by` resolution (relevance): "a name that exists proves nothing
@@ -189,10 +193,10 @@ on this branch:
 | point | sha256 |
 |---|---|
 | `5721b1fe` (before the station fired) | `565ac1fb41242ddf52d32bd8f8a69196008c26ce7962fbbf2d4f78760578ed1a` |
-| `HEAD` (after) | `1652425f3624691f77edaed04f85378ffa3d90d920f0aff70b5fc1d4a5182e7b` |
+| `HEAD` (after) | `4e3cc9ae00b7e7e7a2904fb1f829e46bf489b7b137b2e6c8e3cec4bd1d363cdf` |
 
 `check_attack_catalogue.py … --repo .` at both points: `exit=0`,
-`10 guarded path(s)`; instance count `6` (`5721b1fe`) → `11` (`HEAD`).
+`10 guarded path(s)`; instance count `6` (`5721b1fe`) → `12` (`HEAD`).
 
 ## 8. Dispatch tiers and cost
 
