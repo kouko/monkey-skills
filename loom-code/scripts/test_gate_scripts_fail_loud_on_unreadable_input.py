@@ -142,6 +142,7 @@ FAMILY = (
     "check_onramp_choice.py",
     "check_queue_relation.py",
     "check_north_star_link.py",
+    "check_proposal_status.py",
 )
 
 _ENTRY = (
@@ -171,6 +172,9 @@ def _repo(tmp_path: Path) -> Path:
         "## On-ramp standing choices\n\n- none\n", encoding="utf-8"
     )
     (tmp_path / "brief.md").write_text(_BRIEF, encoding="utf-8")
+    (tmp_path / "proposal.md").write_text(
+        "Status: ratified — kouko, 2026-08-31\n", encoding="utf-8"
+    )
     return tmp_path
 
 
@@ -205,6 +209,9 @@ _CASES_BY_SCRIPT: dict[str, list[tuple[str, tuple[str, ...]]]] = {
         (_ENTRY_REL, ()),
         ("docs/loom/PURPOSE.md", ()),
     ],
+    "check_proposal_status.py": [
+        ("proposal.md", ()),
+    ],
 }
 
 
@@ -221,6 +228,8 @@ def _argv(script: str, repo: Path, extra: tuple[str, ...]) -> list[str]:
         return [str(brief), "--repo-root", str(repo)]
     if script == "check_north_star_link.py":
         return [str(store)]
+    if script == "check_proposal_status.py":
+        return [str(repo / "proposal.md")]
     raise AssertionError(f"no argv recipe for {script!r}")
 
 
