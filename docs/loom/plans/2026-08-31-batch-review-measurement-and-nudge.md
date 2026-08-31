@@ -81,6 +81,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: true
 - **Brief item covered**: BI-1
 - **Review disposition**: individual
+- **Not batched because**: proposer pairs it with Task 1 — no dependency edge and a different Module (review_context vs the docs/loom/memory store); the two reach each other only through the Task 11 release sink, and review_context is a one-task module
 - **Status**: done(b8e9c733b7e811e9cebddc945ffc6553a377f2d3)
 - **Gloss**: 派工發生的那一刻自動留一行紀錄，沒人需要手填。
 
@@ -103,6 +104,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-4
 - **Review disposition**: batch(cli-receipt)
+- **Not batched because**: proposer pairs it with Tasks 1 and 2 — no dependency edge and a different Module (batch_review_cli vs the memory store / review_context); joined only through the Task 11 sink. Its direct dependent Task 4 is already its batch mate in cli-receipt
 - **Status**: done(fef328581d510398528e616daaef982103c20909)
 - **Gloss**: 被拒時一眼看出是誰動了什麼，照訊息做就能復原。
 
@@ -125,6 +127,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(cli-receipt)
+- **Not batched because**: proposer pairs it with Tasks 1 and 2 — no dependency edge and a different Module; joined only through the Task 11 sink. Batched with Task 3, its direct dependency, in cli-receipt
 - **Status**: done(dcf936bda342b7e2087a6b3cc7cb98f04eec5cfd)
 - **Gloss**: 收據記下「這批最後是通過還是退回」，reopen 次數就能算。
 
@@ -200,6 +203,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: true
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(proposer)
+- **Not batched because**: proposer pairs it with Tasks 5 and 6 — no dependency edge and a different Module (propose_review_batches vs task_batch_replay); connected only transitively via 8→9→11 and 6→11. Batched with its own dependents 8 and 9 in proposer
 - **Status**: done(441c9ecfc429fbb6a088ba965560738234a67e59)
 - **Gloss**: 腳本先提議怎麼分批，規劃者從提議出發而不是從全拆出發。
 
@@ -225,6 +229,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: "its `--check` mode exits non-zero when (a) a proposed pair is not in the same declared batch and the later task lacks a `- **Not batched because**: <reason>` line, or (b) a declared batch has more than 4 members and lacks an `- **Oversized because**: <reason>` line" (BI-3 clause)
 - **Review disposition**: batch(proposer)
+- **Not batched because**: proposer pairs it with Tasks 5 and 6 — no dependency edge and a different Module (propose_review_batches vs task_batch_replay); connected only through the Task 11 sink. Batched with Tasks 7 and 9, its direct neighbours, in proposer
 - **Status**: done(7964ade9b8091b45cb5e8f9cf29e1a759c990c0b)
 - **Gloss**: 保守不再免費：不合批要說為什麼，合太大也要說為什麼。
 
@@ -274,6 +279,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-5
 - **Review disposition**: batch(replay-observed)
+- **Not batched because**: proposer pairs it with Task 9 — no dependency edge and a different Module (finishing vs writing-plans prose contracts); joined only through the Task 11 sink. Batched with Task 5, the direct dependency whose `--summary` line it relays, in replay-observed
 - **Status**: done(8e7e899bc37429f41a4404702c9f5b1926f024c8)
 - **Gloss**: 每個弧收尾時都印出真實的派工次數，並留在 plan 裡。
 
@@ -301,6 +307,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: none — release administration (version bump + fingerprint refresh) delivers no brief outcome
 - **Review disposition**: individual
+- **Not batched because**: release administration — version bump plus dogfood fingerprint, reviewed individually; it is the dependency sink of every chain (1, 6, 9, 10, 12), so its proposed pairs with Tasks 9 and 10 exist only because it closes the branch, not because they share a verdict question
 - **Status**: pending
 - **Gloss**: 版本與指紋收尾，plugin update 拿得到新機制。
 
@@ -365,3 +372,8 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - Task 7 `Files touched` amended during SDD (2026-08-31): `test_gate_scripts_fail_loud_on_unreadable_input.py` added — its script registry fails the floor for any unclassified `loom-code/scripts/*.py`, so the new proposer needs one EXEMPT line there (precedent: check_review_batches.py). Scope change → delta re-review by the plan-document-reviewer, not a silent skip.
 - Task 9 `Files touched` amended during SDD (2026-08-31): three existing tests pin the reviewer prompt's check count (`test_plan_obligation_sweep.py`, `test_sdd_review_weight_marker.py`, `test_writing_plans_complexity.py`) and each new Check refreshes them by their own docstrings (Check 22 precedent) — one-line pin bumps 22→23 / `<20>`→`<21>`. Scope change → delta re-review by the plan-document-reviewer.
 - Tasks 8 and 9 `Brief item covered` amended during SDD (2026-08-31): all three `proposer` members cited `BI-3`, and `batch_review_cli.py packet` refuses a batch whose ownership proof carries the same requirement twice (`ownership proof contains duplicate requirement authority`). Tasks 8 and 9 now cite the BI-3 clauses they deliver verbatim (plan-format referent kind (a)); Task 7 keeps `BI-3`. Filling a schema field with brief wording — but recorded here and sent for delta re-review because the batch mechanism, not the plan, forced it; a backlog entry records the collision between the module rule and one-owner-per-requirement.
+- Task 12 pilot (2026-08-31), harness-observed: `observed reviewer fan-outs: 5 (rounds 5, batch reopens 0)` — the verbatim `task_batch_replay.py observe --summary` line for branch `batch-review-measurement-and-nudge`, read from `<git-dir>/loom/review-dispatches.jsonl` (5 records, all `review-dispatch-log/v1`, plugin 0.107.1) at the moment after the three review batches closed and before Task 11/12 review. Planned fan-outs were 7; the remaining two (Tasks 11 and 12) had not been dispatched yet when the count was taken.
+  - Result file (`task-batch-replay-result/v2`, written to the session scratchpad, not the repo): `provenance: observed`, `review_dispatches: 5`, `review_rounds: 5`, `batch_reopens: 0`, over the three applied receipts (`cli-receipt`, `proposer`, `replay-observed`) fed via `--receipts`; `package_gates` and `requirement_to_tests` are empty because the receipts carry no gate or test evidence.
+- Task 12 pilot, proposer vs declaration: `propose_review_batches.py` on this plan proposes `[1,2,3,4]`, `[5,6,7,8]`, `[9,10,11]` (all lane `full`, reason `dependency`) plus singleton Task 12. Declared: `cli-receipt` (3, 4), `replay-observed` (5, 6, 10), `proposer` (7, 8, 9), singletons 1, 2, 11, 12. The two disagree because the proposer treats the eleven full-lane tasks as one connected component and cuts it into 4-chunks in dependency order — and for several pairs (1↔2/3/4, 5/6↔7/8, 9↔10) the only path joining them is the Task 11 release sink, which depends on Tasks 1, 6, 9, 10 and 12. That is the finding: an edge rule that walks transitive dependencies lets a version-bump sink glue unrelated modules into one batch.
+  - `--check` before: 12 lines (7 tasks owing a reason), exit 1. Seven `Not batched because` lines added (Tasks 2, 3, 4, 7, 8, 10, 11), each naming the missing edge / different Module or the sink-only link; `--check` after: 0 lines, exit 0.
+- Task 12 pilot, packet-refusal collision: `batch_review_cli.py packet` refused batch `proposer` with `ownership proof contains duplicate requirement authority` because Tasks 7, 8 and 9 all cited `BI-3`; the resolution (BI-3 clauses cited verbatim per task) is recorded in the `Tasks 8 and 9 Brief item covered amended` bullet above — not repeated here.
