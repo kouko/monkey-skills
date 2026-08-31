@@ -8,7 +8,7 @@ Goal: One conditional close-out station fires on a guarded-path hit or a
     pinned by a named test — serves PURPOSE: a claim that a gate prevents
     something cannot ship unverified, and a hole found once cannot be
     silently re-lost
-Stage: review:round-1
+Stage: finishing
 Safety-bearing: yes — this arc adds check_attack_catalogue.py, edits plan_card.py and finishing-a-development-branch/SKILL.md (guarded paths)
 Steps:
   1. 目錄、checker、header、兩份派工包、關票——彼此獨立的地基
@@ -500,3 +500,9 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - Safety-bearing header filled (2026-08-31) — filling a schema field with the wording the Notes already carried, no re-review.
 - Step 3.5 first live firing (2026-08-31, Task 14): header=yes; base=33681e5093be2b1324ef44743814630952774245; changed=28; guarded-hits=6; prose-hits=4 → adversarial audit (opus) 11 vectors: 7 reproduced / 3 held / 1 not-applicable, regression 6 held; cold reader (sonnet): scenario: followed / temptation: refused. All 5 pinnable reproduced vectors + 2 review-found variants pinned (store 6 → 13 instances); residual: pin relevance is not machine-checkable (documented non-goal). Record: docs/loom/dogfood/2026-08-31-adversarial-audit-station.md.
 - Autonomy note (2026-08-31): the plan_card Safety-bearing fix took three review rounds (d04659d6 → 09bb3c4a → 51724162), one past continuous-mode's two-round-trip halt; the orchestrator judged each round a new variant with a deterministic fix rather than a spec gap and proceeded — recorded here so the whole-branch reviewer and kouko can contest it.
+- observed reviewer fan-outs: 34 (rounds 23, batch reopens 2)
+- stale-scan: 2026-08-31-adversarial-audit-station.md: stage=review:round-1 (all 16 tasks done) — this arc, flipped to finishing below
+- adversarial audit: fired — header=yes; base=33681e5093be2b1324ef44743814630952774245; changed=45; guarded-hits=8; prose-hits=6
+- cold reader: fired — base=33681e5093be2b1324ef44743814630952774245; changed=45; prose-hits=6
+- Whole-branch review (2026-08-31): 2 opus code arms + 2 opus docs arms, three rounds; final PASS_WITH_NOTES — one 🟡 (glob-dialect mismatch in check_attack_catalogue.py) carried as debt; docs arm needed a second confirmation because the first repair introduced defects (disclosed); code arms reached the round-3 cap. Verdict file: scratchpad wb-verdict-joined.md (mint source).
+- Step 3.5 second firing (post-repair, 4a1bb968): 13 regression held; 6 new reproduced on the new signal command, all pinned (store 19 instances); cold reader followed/refused; the exit-1 hole found by the cold reader's narrative was fixed (39c9fd1c/22154fd2).
