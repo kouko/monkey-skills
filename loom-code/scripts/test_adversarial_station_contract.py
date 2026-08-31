@@ -188,3 +188,50 @@ def test_step_3_5_stop_sentences_are_inside_the_step():
         'git diff --name-only "$(git merge-base HEAD origin/main '
         '2>/dev/null || git merge-base HEAD main)"..HEAD'
     ) in flat
+    # the resumption clause: only the user resumes a `no` + guarded-hit
+    # STOP, never the orchestrator alone — quoted exactly.
+    assert (
+        "only the user (flip the header, or narrow `## Guarded paths`) "
+        "resumes it, never the orchestrator alone."
+    ) in flat
+
+
+PROSE_CONTRACT_GLOBS = [
+    "**/SKILL.md",
+    "**/agents/*.md",
+    "**/hooks/*.md",
+    "**/references/*-packet.md",
+    "**/references/*-prompt.md",
+    "rules/*.md",
+]
+
+
+def test_prose_signal_enumerates_all_six_globs():
+    skill_text = FINISHING_SKILL.read_text(encoding="utf-8")
+    slice_text = _step_3_5_slice(skill_text)
+    flat = " ".join(slice_text.split())
+
+    for glob in PROSE_CONTRACT_GLOBS:
+        assert glob in flat, (
+            f"Step 3.5's prose signal must enumerate {glob!r}, not just "
+            "say 'a prose-shaped glob in the store'"
+        )
+
+
+def test_close_out_na_lines_carry_base_and_changed():
+    skill_text = FINISHING_SKILL.read_text(encoding="utf-8")
+    rows = _close_out_table_rows(skill_text)
+
+    audit_rows = [r for r in rows if "adversarial audit:" in r and "N/A —" in r]
+    assert audit_rows, "adversarial-audit N/A row must exist"
+    assert any("base=" in r and "changed=" in r for r in audit_rows), (
+        "adversarial-audit N/A line must carry base=<sha> so changed=<n> "
+        "is recomputable"
+    )
+
+    cold_rows = [r for r in rows if "cold reader:" in r and "N/A —" in r]
+    assert cold_rows, "cold-reader N/A row must exist"
+    assert any("base=" in r and "changed=" in r for r in cold_rows), (
+        "cold-reader N/A line must carry base=<sha> so changed=<n> is "
+        "recomputable"
+    )
