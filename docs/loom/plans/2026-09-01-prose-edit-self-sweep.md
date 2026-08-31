@@ -214,6 +214,11 @@ Zero eligible Batches. Tasks 1, 4, 6 were originally declared batch(prose-artifa
 - The A/B run itself (16 implementer + judge dispatches) is session work AFTER this plan's tasks complete and is not an SDD task; its results land in the dogfood directory in a follow-up commit on this branch.
 - Terminal for this arc: branch complete + whole-branch review PASS + local commits; NO push, NO PR, NO merge until the user releases the isolation hold (sibling worktree baseline).
 - The brief names the evidence doc and dogfood dir with date 2026-08-31; actual artifacts use 2026-09-01 (authoring date) — same artifacts, date drift only.
+- Close-out (2026-09-01): isolation hold RELEASED by the user (「先收尾吧」→ full flow to PR-open confirmed); the no-push terminal line above is superseded.
+- observed reviewer fan-outs: 8 (rounds 8, batch reopens unmeasured)
+- adversarial audit: fired — header=absent; base=3ef8922a72932991b39f67702eb33fec31ade2b0; changed=23; guarded-hits=1; prose-hits=1 — station already ran this branch (DL-4/DL-5): 8 vectors reproduced-and-pinned in ATTACK-CATALOGUE ## Instances, 4 pre-existing holes backlogged; signal exits 0 at close-out; delta since the audited surface is record-class only.
+- cold reader: fired — base=3ef8922a72932991b39f67702eb33fec31ade2b0; changed=23; prose-hits=1 — cold-reader dispatch already ran this branch (rule 14 executed blind; behaviour-not-effectiveness lesson recorded in docs/loom/memory).
+- Post-review record-only delta (c31f1553..HEAD): dogfood A/B results (confirmation +0.75; refinement null; action (b) semantic reword null — not shipped), loom memory entry, CHANGELOG note — all record-class per requesting-code-review §Classification, review-exempt.
 
 ## Decision Log
 
