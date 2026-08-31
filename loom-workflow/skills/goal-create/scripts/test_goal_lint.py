@@ -240,7 +240,9 @@ Stop-when: Stop when the work is done.
     assert result.exit_code == 0
     assert [f.code for f in result.warnings].count("no-numeric-bound") == 1
 
-    # A CJK numeric bound must not trigger the warning.
+    # An ASCII digit inside CJK text must not trigger the warning (the check
+    # is deliberately syntactic: a digit anywhere; Han numerals such as 六
+    # DO warn, by design).
     cjk_bound_goal = """\
 Outcome: The signup form submits with zero client-side validation errors.
 Constraints: Do not touch the payment module.

@@ -1,9 +1,8 @@
 # The Four-Field Goal Shape
 
 > **SSOT for `loom-workflow:goal-create`.**
-> This file is the authoritative definition of the four fields a goal
-> condition is written in. Other files in this skill route here; do not
-> duplicate the field definitions elsewhere.
+> The authoritative definition of the four goal fields; other files in
+> this skill route here rather than duplicating them.
 
 A goal condition — the text a long-running agent run is checked against — is
 written as four fields, in this order:
@@ -19,11 +18,11 @@ written as four fields, in this order:
 
 **Definition**: One measurable end state — not a vision.
 
-A vision describes a direction ("make the onboarding flow better"). An
-outcome names the one condition that, once true, means the run is finished
-("the signup form submits with zero client-side validation errors on the
-three test accounts"). If the field cannot be checked true/false against
-concrete evidence, it is still a vision and has not yet become an outcome.
+A vision describes a direction ("make onboarding better"); an outcome
+names the one condition that, once true, means the run is finished ("the
+signup form submits with zero validation errors on the three test
+accounts"). A field that cannot be checked true/false against evidence is
+still a vision.
 
 ## 2 — `Constraints`
 
@@ -31,16 +30,16 @@ concrete evidence, it is still a vision and has not yet become an outcome.
 
 Constraints name the invariants the run is not allowed to break while
 reaching the outcome — files it must not touch, behavior it must preserve,
-budgets it must stay under. Without this field an agent optimizing purely
-for the outcome may take a path that silently breaks something the outcome
-statement never mentioned.
+budgets it must stay under. Without it, an agent optimizing purely for the
+outcome may silently break something the outcome never mentioned.
 
 **Standing decision rule**: choices the goal does not pre-decide are the
 run's to make — it searches first, decides, and records the decision,
 its candidates, and its sources in a named file, and never stops to ask.
 
-SESSION mode emits this by default, tagged `derived` per
-`input-floor.md` §5, so a user need not write it each time.
+SESSION mode emits this by default, tagged `derived` with this section as
+its anchor — `input-floor.md` §5 lets a standing entry name the reference
+that defines it — so a user need not write it each time.
 
 Outside the run: an irreversible or outward-facing act — merge, deploy,
 send — where `Outcome` already ends.
@@ -53,10 +52,9 @@ in the conversation.
 Naming a check is not enough on its own. **Claude Code's goal evaluator reads
 only what has appeared in the conversation — it runs no commands and opens
 no files.** A check whose output never appears in the conversation can never
-be seen to hold, no matter how correctly it actually ran. Concretely, this
-means the run must paste the test output, the lint result, the diff, or
-whatever evidence the check produces, into the conversation itself — not
-merely claim the check passed.
+be seen to hold, no matter how correctly it actually ran. So the run pastes
+the check's output — test result, lint, diff — into the conversation,
+rather than claiming it passed.
 
 ## 4 — `Stop-when`
 
@@ -74,8 +72,8 @@ For example: "Stop when the outcome above is reached, or when 20 turns
 have passed and a status report has been posted — either way is the run
 completing."
 
-A human-dependent fork — a choice only a person can make — is never
-`Stop-when` material; see `input-floor.md` §4 item 3 for where it goes
+A human-dependent fork — a choice only a person can make — is never a
+`Stop-when` branch; see `input-floor.md` §4 item 3 for where it goes
 instead.
 
 ---
@@ -89,9 +87,8 @@ itself short enough for the evaluator to hold in view alongside the
 conversation it is checking.
 
 Only Anthropic's guidance documents this cap; OpenAI's guidance states no
-length limit at all. This skill applies the same 4,000-character budget to
-goals drafted for either host, for portability — not because OpenAI
-documents a cap of its own.
+length limit at all. This skill applies the same budget to goals for either
+host, for portability — not because OpenAI documents a cap of its own.
 
 ---
 
@@ -126,3 +123,7 @@ required field). Treating
 `Stop-when` as a required fourth field alongside the other three is **this
 skill's own choice** — the vendor sources above ground only the first three
 fields as shared guidance.
+
+That Anthropic example is quoted for attribution only: as §4 states, a bare
+turn clause reads as permission to stop, so this skill writes the bound as
+a completion condition.

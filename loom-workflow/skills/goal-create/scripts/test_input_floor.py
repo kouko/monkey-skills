@@ -170,12 +170,17 @@ def _negation_binds(text: str, negation: str, target: str, max_gap_words: int = 
     negation appears somewhere earlier, unrelated to the actual
     obligation). Capping the gap keeps the match local to the clause
     the negation actually governs, which a bare ``.*`` does not.
+
+    Markdown punctuation glued to the front of `target` (a backtick or
+    emphasis marker, as in ``never a `Stop-when` branch``) is tolerated,
+    so prose can keep its code-span convention without bending to the
+    regex.
     """
     pattern = (
         r"\b(?:" + negation + r")\b"
         r"\W*"  # trailing markdown/punctuation glued to the negation word
         r"(?:\s+\S+){0," + str(max_gap_words) + r"}"
-        r"\s+\b" + target + r"\b"
+        r"\s+[`*_]*\b" + target + r"\b"
     )
     return re.search(pattern, text) is not None
 

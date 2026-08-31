@@ -274,22 +274,24 @@ def _section_four(content: str) -> str:
 
 
 def _negation_binds(text: str, negation: str, target: str, max_gap_words: int = 6) -> bool:
-    """Bound negation-to-target polarity check (word-boundary safe).
+    """Bound negation-to-target polarity check (word-boundary safe on
+    BOTH ends — same regex body as test_input_floor.py's sanctioned copy;
+    only the default gap differs).
 
     True iff a `negation` alternation sits within `max_gap_words` words
     directly BEFORE `target`. See
     docs/loom/memory/a-list-of-forbidden-words-is-defeated-by-the-word-outside-it.md
     — a bare `negation.*target` is satisfied by unrelated co-occurrence
     anywhere in the text; this keeps the match local to the clause the
-    negation actually governs.
+    negation actually governs. Punctuation glued to the negation (`never,`)
+    and markdown glued to the target (`` `Stop-when` ``) are tolerated; a
+    trailing word boundary stops `ask` matching inside `asked`.
     """
     pattern = (
-        r"\b(?:"
-        + negation
-        + r")\b(?:\s+\S+){0,"
-        + str(max_gap_words)
-        + r"}\s+"
-        + target
+        r"\b(?:" + negation + r")\b"
+        r"\W*"
+        r"(?:\s+\S+){0," + str(max_gap_words) + r"}"
+        r"\s+[`*_]*\b" + target + r"\b"
     )
     return re.search(pattern, text) is not None
 
@@ -417,11 +419,11 @@ def test_stop_when_is_one_bound_written_as_completion() -> None:
         "'releases the run'."
     )
 
-    # --- forks: human-dependent forks are not Stop-when material — pointer
-    # to input-floor.md §4 item 3 ---
-    assert _negation_binds(section_lower, "never|not", r"`?stop-when`?\s+material"), (
-        "Must state a human-dependent fork is never Stop-when material, "
-        "negation bound to 'Stop-when material'."
+    # --- forks: a human-dependent fork is never a Stop-when branch — pointer
+    # to input-floor.md §4 item 3 (same term "branch" as that item uses) ---
+    assert _negation_binds(section_lower, "never|not", r"a\s+`?stop-when`?\s+branch"), (
+        "Must state a human-dependent fork is never a Stop-when branch, "
+        "negation bound to 'a Stop-when branch'."
     )
     assert "human" in section_lower, (
         "Must name the human-dependent fork explicitly."

@@ -211,7 +211,7 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
         "Use decision-map to start or resume an Outcome Map v3 for this repo."
         in codex_interface["defaultPrompt"]
     )
-    assert "## [3.1.1]" in changelog
+    assert f"## [{claude_manifest['version']}]" in changelog
     assert "v3.0.0" in governance
 
     for public_contract in (skill, map_format):
