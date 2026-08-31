@@ -19,6 +19,17 @@ _IDENTITY_FIELDS = (
     "runtime_revision_id",
     "configuration_fingerprint",
 )
+_COHORT_FIELDS = (
+    "corpus_digest",
+    "artifact_digest",
+    "contract_digest",
+    "runtime_digest",
+    "configuration_fingerprint",
+    "host",
+    "model",
+    "tier",
+    "requested_effort",
+)
 
 
 def _identity(record: Mapping[str, object]) -> str:
@@ -81,3 +92,55 @@ def resolve_scored_execution_profile(
         "scoreable": True,
     }
 
+
+def build_repeat_cohorts(runs: list[Mapping[str, object]]) -> dict[str, object]:
+    """Partition valid independent runs by every repeatability identity."""
+    groups: dict[str, dict[str, object]] = {}
+    excluded: list[dict[str, str]] = []
+    seen_run_ids: set[str] = set()
+    for run in runs:
+        run_value = run.get("run_id")
+        run_id = run_value.strip() if isinstance(run_value, str) else ""
+        if not run_id:
+            raise ValueError("repeat run is missing run_id")
+        if run_id in seen_run_ids:
+            raise ValueError(f"repeat run_id is not independent: {run_id}")
+        seen_run_ids.add(run_id)
+        if run.get("valid") is not True or run.get("scoreable") is not True:
+            excluded.append(
+                {"run_id": run_id, "reason": "run is not valid and scoreable"}
+            )
+            continue
+        identity: dict[str, str] = {}
+        for field in _COHORT_FIELDS:
+            value = run.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"run {run_id} is missing cohort field: {field}")
+            identity[field] = value.strip()
+        cohort_id = _identity(identity)
+        group = groups.setdefault(
+            cohort_id,
+            {"cohort_id": cohort_id, "identity": identity, "run_ids": []},
+        )
+        run_ids = group["run_ids"]
+        assert isinstance(run_ids, list)
+        run_ids.append(run_id)
+
+    cohorts: list[dict[str, object]] = []
+    insufficient: list[dict[str, object]] = []
+    for group in sorted(
+        groups.values(),
+        key=lambda item: tuple(item["identity"][field] for field in _COHORT_FIELDS),
+    ):
+        group["run_ids"] = sorted(group["run_ids"])
+        if len(group["run_ids"]) >= 2:
+            cohorts.append(group)
+        else:
+            insufficient.append(
+                {**group, "reason": "repeat cohort requires at least two runs"}
+            )
+    return {
+        "cohorts": cohorts,
+        "excluded": sorted(excluded, key=lambda item: item["run_id"]),
+        "insufficient": insufficient,
+    }

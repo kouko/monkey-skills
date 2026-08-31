@@ -27,6 +27,10 @@
 
 - test_req_104_observation_and_attribution_are_separate
 
+### REQ-105
+
+- test_req_105_repeat_cohorts_never_mix_execution_identities
+
 ### REQ-109
 
 - test_req_109_origin_requires_document_revision_evidence
@@ -475,7 +479,6 @@
 
 ### reqs with no tests
 
-- REQ-105
 - REQ-106
 - REQ-107
 - REQ-108
