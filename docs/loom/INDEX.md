@@ -10,6 +10,10 @@
 
 - test_req_101_corpus_manifest_is_exact_and_immutable
 
+### REQ-103
+
+- test_req_103_attempt_ledger_preserves_failures
+
 ### REQ-99
 
 - test_req_99_historical_case_admission
@@ -441,7 +445,6 @@
 ### reqs with no tests
 
 - REQ-102
-- REQ-103
 - REQ-104
 - REQ-105
 - REQ-106

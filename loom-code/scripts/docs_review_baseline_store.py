@@ -407,6 +407,91 @@ def freeze_corpus_manifest(
     return publish_record(store_root, f"corpus-{record_digest(record)}", record)
 
 
+_DISPATCH_OUTCOMES = {
+    "success",
+    "timeout",
+    "transport_failure",
+    "parse_failure",
+    "cancelled",
+    "interruption",
+    "quota_exhaustion",
+}
+
+
+def prepare_dispatch_attempt(
+    store_root: Path,
+    attempt_id: str,
+    *,
+    sequence: int,
+    profile_id: str,
+    corpus_id: str,
+    case_id: str,
+) -> PublishedRecord:
+    """Persist an attempt's immutable bindings before reviewer dispatch."""
+    if not isinstance(sequence, int) or isinstance(sequence, bool) or sequence < 1:
+        raise ValueError("sequence must be a positive integer")
+    record: dict[str, object] = {
+        "attempt_id": _required_text(attempt_id, "attempt_id"),
+        "case_id": _required_text(case_id, "case_id"),
+        "corpus_id": _required_text(corpus_id, "corpus_id"),
+        "kind": "dispatch_attempt",
+        "profile_id": _required_text(profile_id, "profile_id"),
+        "schema_version": 1,
+        "sequence": sequence,
+        "status": "prepared",
+    }
+    return publish_record(store_root, attempt_id, record)
+
+
+def record_dispatch_outcome(
+    store_root: Path,
+    attempt_id: str,
+    *,
+    outcome: str,
+    resource_telemetry: Mapping[str, object],
+    raw_response_bytes: bytes | None = None,
+    failure: str | None = None,
+) -> PublishedRecord:
+    """Attach one immutable terminal child to a prepared dispatch attempt."""
+    parent = read_record(store_root, attempt_id)
+    if parent.record.get("kind") != "dispatch_attempt" or parent.record.get(
+        "status"
+    ) != "prepared":
+        raise ValueError("dispatch outcome parent must be a prepared attempt")
+    if outcome not in _DISPATCH_OUTCOMES:
+        raise ValueError(f"unsupported dispatch outcome: {outcome!r}")
+    if not isinstance(resource_telemetry, Mapping):
+        raise ValueError("resource_telemetry must be an object")
+    if outcome in {"success", "parse_failure"} and not isinstance(
+        raw_response_bytes, bytes
+    ):
+        raise ValueError(f"raw_response_bytes are required for {outcome}")
+    if raw_response_bytes is not None and not isinstance(raw_response_bytes, bytes):
+        raise ValueError("raw_response_bytes must be bytes or None")
+    if outcome == "success":
+        if failure is not None:
+            raise ValueError("success must not carry a failure")
+    else:
+        failure = _required_text(failure, "failure")
+
+    record: dict[str, object] = {
+        "kind": "dispatch_outcome",
+        "outcome": outcome,
+        "parent_attempt_id": attempt_id,
+        "parent_digest": parent.digest,
+        "resource_telemetry": dict(resource_telemetry),
+        "schema_version": 1,
+    }
+    if failure is not None:
+        record["failure"] = failure
+    if raw_response_bytes is not None:
+        record["raw_response"] = {
+            "bytes_base64": base64.b64encode(raw_response_bytes).decode("ascii"),
+            "digest": hashlib.sha256(raw_response_bytes).hexdigest(),
+        }
+    return publish_record(store_root, f"{attempt_id}--outcome", record)
+
+
 def append_revision(
     store_root: Path, parent_record_id: str, revision: Mapping[str, object]
 ) -> PublishedRecord:

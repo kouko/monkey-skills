@@ -210,6 +210,136 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         )
 
 
+def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
+    # @req: REQ-103
+    """Every dispatch is counted even when it never yields usable findings."""
+    prepared = store.prepare_dispatch_attempt(
+        tmp_path,
+        "attempt-1",
+        sequence=1,
+        profile_id="codex:gpt-5.6-luna:economy",
+        corpus_id="corpus-abc",
+        case_id="case-1",
+    )
+    prepared_bytes = prepared.path.read_bytes()
+
+    failed = store.record_dispatch_outcome(
+        tmp_path,
+        prepared.record_id,
+        outcome="timeout",
+        resource_telemetry={"elapsed_ms": 30_000, "dispatches": 1},
+        failure="reviewer exceeded the deadline",
+    )
+
+    assert prepared.record == {
+        "attempt_id": "attempt-1",
+        "case_id": "case-1",
+        "corpus_id": "corpus-abc",
+        "kind": "dispatch_attempt",
+        "profile_id": "codex:gpt-5.6-luna:economy",
+        "schema_version": 1,
+        "sequence": 1,
+        "status": "prepared",
+    }
+    assert prepared.path.read_bytes() == prepared_bytes
+    assert failed.record["parent_digest"] == prepared.digest
+    assert failed.record["parent_attempt_id"] == prepared.record_id
+    assert failed.record["outcome"] == "timeout"
+    assert failed.record["failure"] == "reviewer exceeded the deadline"
+    assert failed.record["resource_telemetry"]["dispatches"] == 1
+    assert "findings" not in failed.record
+
+    usable = store.record_dispatch_outcome(
+        tmp_path,
+        store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-2",
+            sequence=2,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        ).record_id,
+        outcome="success",
+        raw_response_bytes=b'{"findings":[{"summary":"missing risk"}]}',
+        resource_telemetry={"elapsed_ms": 412, "dispatches": 1},
+    )
+    assert usable.record["raw_response"]["digest"] == (
+        "48d146824f72a74ad3edcbcb7f1672542634f0b9e0b4f135b297db499c3980b5"
+    )
+    assert "findings" not in usable.record
+
+    retry = store.prepare_dispatch_attempt(
+        tmp_path,
+        "attempt-3",
+        sequence=3,
+        profile_id="codex:gpt-5.6-luna:economy",
+        corpus_id="corpus-abc",
+        case_id="case-1",
+    )
+    assert retry.record_id != prepared.record_id
+    with pytest.raises(RecordConflictError):
+        store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-1",
+            sequence=4,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+
+    cancelled = store.record_dispatch_outcome(
+        tmp_path,
+        retry.record_id,
+        outcome="cancelled",
+        resource_telemetry={"elapsed_ms": 9, "dispatches": 1},
+        failure="operator interruption",
+    )
+    assert cancelled.record["outcome"] == "cancelled"
+    assert "findings" not in cancelled.record
+
+    with pytest.raises(RecordConflictError):
+        store.record_dispatch_outcome(
+            tmp_path,
+            retry.record_id,
+            outcome="interruption",
+            resource_telemetry={"elapsed_ms": 11, "dispatches": 1},
+            failure="second terminal result must not replace the first",
+        )
+
+    for sequence, outcome in enumerate(
+        ("transport_failure", "interruption", "quota_exhaustion", "parse_failure"),
+        start=4,
+    ):
+        attempt = store.prepare_dispatch_attempt(
+            tmp_path,
+            f"attempt-{sequence}",
+            sequence=sequence,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+        terminal = store.record_dispatch_outcome(
+            tmp_path,
+            attempt.record_id,
+            outcome=outcome,
+            raw_response_bytes=b"not-json" if outcome == "parse_failure" else None,
+            resource_telemetry={"elapsed_ms": sequence, "dispatches": 1},
+            failure=f"recorded {outcome}",
+        )
+        assert terminal.record["outcome"] == outcome
+        assert terminal.record["resource_telemetry"]["dispatches"] == 1
+        assert "findings" not in terminal.record
+
+    with pytest.raises(ValueError, match="raw_response_bytes"):
+        store.record_dispatch_outcome(
+            tmp_path,
+            retry.record_id,
+            outcome="parse_failure",
+            resource_telemetry={"elapsed_ms": 10, "dispatches": 1},
+            failure="malformed JSON",
+        )
+
+
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
     """A record ID chooses one canonical payload without rewriting history."""
     first = {"kind": "oracle", "labels": ["a"], "version": 1}
