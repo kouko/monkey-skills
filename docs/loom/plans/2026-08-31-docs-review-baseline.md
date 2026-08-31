@@ -66,7 +66,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-99
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(33bedfbdac68351f9e284f62196efe7d2f71dc1b)
+- **Status**: pending
 - **Gloss**: 只有真的找得回當時文件的案例，才能成為考題。
 
 ## Task 3 — 凍結人工 oracle revision
@@ -143,7 +143,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-103
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(6a654d644297b7708dc4395104b66adc737c577b)
+- **Status**: pending
 - **Gloss**: 失敗與中斷也會算進成本，不會被假裝成 reviewer 沒找到問題。
 
 ## Task 7 — 分離 observation 與人工 attribution
@@ -315,7 +315,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-112
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(8d1817d4d3f2f88947bc5f24ff2b78df9e71fdfe)
+- **Status**: pending
 - **Gloss**: 寫文件、寫答案與裁決的人是誰會被記錄，避免自己給自己過關。
 
 ## Task 16 — 限制 run 與 campaign 成本
