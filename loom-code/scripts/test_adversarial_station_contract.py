@@ -118,3 +118,38 @@ def test_temptations_heading_match_between_packet_and_checker():
 
     assert cold_reader_text.count("## Prose temptations") >= 1
     assert checker_text.count("## Prose temptations") >= 1
+
+
+def _close_out_table_rows(skill_text: str) -> list[str]:
+    return [
+        line
+        for line in skill_text.splitlines()
+        if line.strip().startswith("|") and "---" not in line
+    ]
+
+
+def test_close_out_card_has_audit_and_cold_reader_rows():
+    skill_text = FINISHING_SKILL.read_text(encoding="utf-8")
+    rows = _close_out_table_rows(skill_text)
+
+    audit_rows = [r for r in rows if "adversarial audit:" in r]
+    assert audit_rows, "close-out table must carry an adversarial-audit row"
+    assert any("fired —" in r for r in audit_rows), (
+        "adversarial-audit row must show the fired — form"
+    )
+    assert any("N/A —" in r for r in audit_rows), (
+        "adversarial-audit row must show the N/A — form"
+    )
+    assert any("check_attack_catalogue.py" in r for r in audit_rows), (
+        "adversarial-audit row must name check_attack_catalogue.py "
+        "among the close-out gate lines"
+    )
+
+    cold_rows = [r for r in rows if "cold reader:" in r]
+    assert cold_rows, "close-out table must carry a cold-reader row"
+    assert any("fired —" in r for r in cold_rows), (
+        "cold-reader row must show the fired — form"
+    )
+    assert any("N/A —" in r for r in cold_rows), (
+        "cold-reader row must show the N/A — form"
+    )
