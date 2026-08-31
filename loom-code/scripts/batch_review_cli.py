@@ -511,6 +511,8 @@ def _read_dispatch_receipt(receipt_path: str) -> dict:
     ):
         raise ValueError(f"{receipt_path} is not a batch-dispatch-receipt-v1")
     stored.setdefault("result_applied", False)
+    # `applied_action` (finalize / reopen) is optional: receipts flipped
+    # before the key existed carry none, and an unapplied receipt has none.
     return stored
 
 
@@ -784,8 +786,11 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
             "unchanged reviewer results to the new identity before retrying"
         )
     if stored["result_applied"]:
+        applied = (
+            f" ({stored['applied_action']})" if "applied_action" in stored else ""
+        )
         raise ValueError(
-            f"dispatch receipt {receipt_path} already applied; run "
+            f"dispatch receipt {receipt_path} already applied{applied}; run "
             "record-dispatch for a fresh cycle"
         )
     return stored
@@ -906,6 +911,12 @@ def _cmd_apply_result(args) -> int:
             # already-validated dict, instead of re-reading the receipt file
             # a second time (residue of F1/F6).
             stored["result_applied"] = True
+            # `applied_action` is the resolution's own action string
+            # (`finalize` / `reopen`): an observer counts batch reopens from
+            # the receipts alone. Non-mutating outcomes never reach here, so
+            # they write no key; receipts written before this key existed
+            # are read without it.
+            stored["applied_action"] = resolution.action
             Path(args.receipt).write_text(
                 json.dumps(stored, sort_keys=True), encoding="utf-8"
             )

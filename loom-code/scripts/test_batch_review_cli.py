@@ -787,6 +787,35 @@ def test_apply_result_reopens_with_owner_union(tmp_path, capsys) -> None:
     assert out["reopen_owners"] == ["Task 2"]
 
 
+@pytest.mark.parametrize("reopen, expected_action", [(False, "finalize"), (True, "reopen")])
+def test_apply_result_records_applied_action_in_receipt(
+    tmp_path, capsys, reopen, expected_action,
+) -> None:
+    """The flipped receipt must record WHICH terminal action was applied
+    (`applied_action`), so an observer can count batch reopens from the
+    receipts alone instead of from hand-declared numbers (BI-2)."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    result_path = _result_file(
+        tmp_path, _packet_identity(tmp_path), reopen=reopen,
+    )
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    capsys.readouterr()
+    assert code == 0
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored["result_applied"] is True
+    assert stored["applied_action"] == expected_action
+
+
 def test_apply_result_writes_ledger_on_finalize(tmp_path, capsys) -> None:
     """After the fix, a finalize resolution writes done(<same sha>) for
     every member under the plan lock — today it leaves implemented(<sha>)
@@ -1418,6 +1447,41 @@ def test_apply_result_refuses_receipt_unpinned_variants(tmp_path, capsys) -> Non
         assert stored.get("result_applied", False) == receipt.get(
             "result_applied", False
         ), name
+
+
+def test_apply_result_already_applied_refusal_quotes_applied_action(
+    tmp_path, capsys,
+) -> None:
+    """A second apply-result on an applied receipt must say WHICH action
+    already landed (the receipt's `applied_action`), so the operator can
+    tell a finished finalize from a reopen without opening the receipt;
+    a receipt written before the key existed still refuses, just without
+    the quote."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    base = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    result_path = _result_file(tmp_path, base["packet_identity"])
+    dispatch_receipt.write_text(
+        json.dumps({**base, "result_applied": True, "applied_action": "reopen"}),
+        encoding="utf-8",
+    )
+    code = cli.main(_apply_result_argv(
+        plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+    ))
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert any("already applied" in r and "reopen" in r for r in out["reasons"])
+    dispatch_receipt.write_text(
+        json.dumps({**base, "result_applied": True}), encoding="utf-8",
+    )
+    code = cli.main(_apply_result_argv(
+        plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+    ))
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert any("already applied" in r for r in out["reasons"])
 
 
 def test_apply_result_requires_receipt_flag(tmp_path, capsys) -> None:
