@@ -235,7 +235,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - plan-document-reviewer-prompt.md: Check 23, the reciprocal of Check 10 (run `--check`; a violation is a gap).
   - Word budget: writing-plans SKILL.md is at 4,114 words (cap 4,500) — net growth ≤ 120 words; put grammar in plan-format.md, not SKILL.md.
 - **Module**: loom-code/skills/writing-plans (prose contract)
-- **Files touched**: loom-code/skills/writing-plans/references/plan-format.md, loom-code/skills/writing-plans/SKILL.md, loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md, loom-code/scripts/test_writing_plans_batch_nudge_contract.py
+- **Files touched**: loom-code/skills/writing-plans/references/plan-format.md, loom-code/skills/writing-plans/SKILL.md, loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md, loom-code/scripts/test_writing_plans_batch_nudge_contract.py, loom-code/scripts/test_plan_obligation_sweep.py, loom-code/scripts/test_sdd_review_weight_marker.py, loom-code/scripts/test_writing_plans_complexity.py
 - **Context paths**:
   - loom-code/skills/writing-plans/SKILL.md (the `**Review-Batch gate (unconditional):**` paragraph and the "Review grouping is a second pass" paragraph)
   - loom-code/skills/writing-plans/references/plan-format.md (§Review Batches — "Grouping is eligible only when")
@@ -251,7 +251,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(proposer)
-- **Status**: pending
+- **Status**: implemented(c7d7553220e158b29f96766d9d8b2e62016e9b23)
 - **Gloss**: 規劃者和 reviewer 讀的契約裡有這兩個欄位和這一道閘。
 
 ## Task 10 — finishing 收尾卡片印 observed reviewer fan-outs 並蓋進 plan Notes
@@ -363,3 +363,4 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - BI-8 (Decision umbrella), BI-10 (hand-counted Notes line pattern obsolete), BI-11 (simulation record, already committed with the brief at 96af10c9) are delivered by the sum of Tasks 5–12 and by the brief commit; the coverage checker reports them as warnings by design.
 - Plan-review round count: round 1 NEEDS_REVISION (4 ⚠️ — double Module values, prose weight with a `.py` test, Task 7 Reuse-adequacy, Task 12 sealed-plan race — plus the CSV note that exposed the uncommitted variant-C run), round 2 PASS at 0cf007e2. Verdict stamped — stamping the verdict, no re-review.
 - Task 7 `Files touched` amended during SDD (2026-08-31): `test_gate_scripts_fail_loud_on_unreadable_input.py` added — its script registry fails the floor for any unclassified `loom-code/scripts/*.py`, so the new proposer needs one EXEMPT line there (precedent: check_review_batches.py). Scope change → delta re-review by the plan-document-reviewer, not a silent skip.
+- Task 9 `Files touched` amended during SDD (2026-08-31): three existing tests pin the reviewer prompt's check count (`test_plan_obligation_sweep.py`, `test_sdd_review_weight_marker.py`, `test_writing_plans_complexity.py`) and each new Check refreshes them by their own docstrings (Check 22 precedent) — one-line pin bumps 22→23 / `<20>`→`<21>`. Scope change → delta re-review by the plan-document-reviewer.
