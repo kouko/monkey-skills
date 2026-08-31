@@ -1,9 +1,13 @@
 """Execution-boundary primitives for docs-review historical replay."""
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
+from pathlib import Path
 from typing import Mapping
+
+from docs_review_baseline_store import PublishedRecord, publish_record, read_record
 
 
 _ECONOMY_MODELS = {
@@ -29,6 +33,9 @@ _COHORT_FIELDS = (
     "model",
     "tier",
     "requested_effort",
+)
+_REVIEWER_REVISION_KINDS = frozenset(
+    {"reviewer_contract_revision", "reviewer_runtime_revision"}
 )
 
 
@@ -144,3 +151,41 @@ def build_repeat_cohorts(runs: list[Mapping[str, object]]) -> dict[str, object]:
         "excluded": sorted(excluded, key=lambda item: item["run_id"]),
         "insufficient": insufficient,
     }
+
+
+def freeze_reviewer_revision(
+    store_root: Path,
+    *,
+    record_id: str,
+    kind: str,
+    content: bytes,
+    owner: str,
+    parent_revision_id: str | None,
+    change_reason: str,
+) -> PublishedRecord:
+    """Freeze contract or runtime bytes with independent revision lineage."""
+    if kind not in _REVIEWER_REVISION_KINDS:
+        raise ValueError(f"unsupported reviewer revision kind: {kind}")
+    if not isinstance(content, bytes) or not content:
+        raise ValueError("reviewer revision content must be non-empty bytes")
+    if not isinstance(owner, str) or not owner.strip():
+        raise ValueError("reviewer revision owner is required")
+    if not isinstance(change_reason, str) or not change_reason.strip():
+        raise ValueError("reviewer revision change reason is required")
+    parent_digest = None
+    if parent_revision_id is not None:
+        parent = read_record(store_root, parent_revision_id)
+        if parent.record.get("kind") != kind:
+            raise ValueError("reviewer revision parent kind does not match")
+        parent_digest = parent.digest
+    record = {
+        "change_reason": change_reason.strip(),
+        "content_base64": base64.b64encode(content).decode("ascii"),
+        "content_digest": hashlib.sha256(content).hexdigest(),
+        "kind": kind,
+        "owner": owner.strip(),
+        "parent_revision_digest": parent_digest,
+        "parent_revision_id": parent_revision_id,
+        "serialization_version": "docs-reviewer-revision-v1",
+    }
+    return publish_record(store_root, record_id, record)

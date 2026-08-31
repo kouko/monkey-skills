@@ -35,6 +35,10 @@
 
 - test_req_109_origin_requires_document_revision_evidence
 
+### REQ-110
+
+- test_req_110_contract_and_runtime_are_independent_inputs
+
 ### REQ-112
 
 - test_req_103_req_112_concurrent_dispatch_consumes_receipt_once
@@ -482,7 +486,6 @@
 - REQ-106
 - REQ-107
 - REQ-108
-- REQ-110
 - REQ-111
 - REQ-113
 - REQ-114
