@@ -113,6 +113,7 @@ def test_happy_path_mixed_statuses_renders_the_exact_card(tmp_path):
         "[!] T4 docs\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -130,6 +131,44 @@ def test_card_labels_the_goal_field_end_state(tmp_path):
     first_line = result.stdout.splitlines()[0]
     assert first_line.startswith("end-state: "), first_line
     assert not any(line.startswith("goal: ") for line in result.stdout.splitlines())
+
+
+def test_card_renders_safety_bearing_header_and_na_when_absent(tmp_path):
+    """(Task 6) An optional `Safety-bearing: yes|no — <reason>` header
+    line renders on the card as `safety-bearing: <value>` verbatim; its
+    absence renders `safety-bearing: N/A — header absent` (every other
+    existing fixture in this file omits the header and already pins
+    this N/A line). A value outside the `yes — `/`no — ` grammar raises
+    ValueError naming the accepted forms, and the pure `safety_bearing()`
+    helper (Task 10's consumer) returns the parsed (kind, reason) pair."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    text = text.replace(
+        "Stage: sdd:wave-1\n",
+        "Stage: sdd:wave-1\nSafety-bearing: yes — touches git-guard\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: yes — touches git-guard\n" in result.stdout
+    assert plan_card.safety_bearing(text) == ("yes", "touches git-guard")
+
+    absent_dir = tmp_path / "absent"
+    absent_dir.mkdir()
+    absent_text = _plan_text(tasks=[("parser", "pending")])
+    absent_plan_path = _write_plan(absent_dir, absent_text)
+
+    absent_result = _run_card(absent_plan_path)
+
+    assert absent_result.returncode == 0, absent_result.stdout + absent_result.stderr
+    assert "safety-bearing: N/A — header absent\n" in absent_result.stdout
+    assert plan_card.safety_bearing(absent_text) is None
+
+    with pytest.raises(ValueError, match="Safety-bearing"):
+        plan_card.safety_bearing(
+            absent_text.replace("Stage: sdd:wave-1\n", "Stage: sdd:wave-1\nSafety-bearing: maybe\n")
+        )
 
 
 def test_all_done_plan_renders_next_close_out(tmp_path):
@@ -153,6 +192,7 @@ def test_all_done_plan_renders_next_close_out(tmp_path):
         "[v] T2 renderer\n"
         "stage: finishing\n"
         "next: close-out\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -294,6 +334,7 @@ def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
         "[~] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -386,6 +427,7 @@ def test_titled_steps_with_glosses_render_the_exact_stepped_card(tmp_path):
         "      讓卡片直接在終端機看得懂\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -419,6 +461,7 @@ def test_deps_without_steps_render_untitled_separators(tmp_path):
         "[ ] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -474,6 +517,7 @@ def test_needs_list_sorts_ascending_and_parallel_form_parses(tmp_path):
         "[ ] T400 cli wiring\n"
         "stage: sdd:wave-1\n"
         "next: T400 cli wiring\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -505,6 +549,7 @@ def test_depless_glossless_plan_output_byte_identical_to_flat_card(tmp_path):
         "[!] T4 docs\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -533,6 +578,7 @@ def test_all_none_deps_without_steps_render_flat_no_separator(tmp_path):
         "[ ] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -563,6 +609,7 @@ def test_all_none_deps_with_declared_one_line_steps_renders_titled_step(tmp_path
         "[ ] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
+        "safety-bearing: N/A — header absent\n"
     )
 
 
@@ -1051,6 +1098,7 @@ def test_set_status_rewrites_in_place(tmp_path):
         "[v] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: close-out\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "- Status: pending", "- Status: done(abc1234)"
@@ -1088,6 +1136,7 @@ def test_set_status_preserves_bold_field_markup(tmp_path):
         "[v] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: close-out\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "- **Status**: pending", "- **Status**: done(abc1234)"
@@ -1113,6 +1162,7 @@ def test_set_status_pending_kind(tmp_path):
         "[ ] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert "- Status: pending" in plan_path.read_text(encoding="utf-8")
 
@@ -1135,6 +1185,7 @@ def test_set_status_claimed_kind(tmp_path):
         "[~] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert "- Status: claimed(@implementer)" in plan_path.read_text(
         encoding="utf-8"
@@ -1160,6 +1211,7 @@ def test_set_status_blocked_kind(tmp_path):
         "[!] T1 parser\n"
         "stage: sdd:wave-1\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert "- Status: blocked" in plan_path.read_text(encoding="utf-8")
 
@@ -1490,6 +1542,7 @@ def test_set_stage_happy_path_rewrites_and_prints_card(tmp_path):
         "[ ] T1 parser\n"
         "stage: sdd:wave-2\n"
         "next: T1 parser\n"
+        "safety-bearing: N/A — header absent\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "Stage: sdd:wave-1", "Stage: sdd:wave-2"

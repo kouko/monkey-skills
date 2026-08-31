@@ -172,6 +172,27 @@ def _header_value(header: str, key: str) -> str | None:
     return None
 
 
+def safety_bearing(plan_text: str) -> tuple[str, str] | None:
+    """The parsed `Safety-bearing:` header value as (kind, reason), where
+    kind is `"yes"` or `"no"` — None when the header is absent (Task 6 of
+    docs/loom/plans/2026-08-31-adversarial-audit-station.md; consumed by
+    `finishing-a-development-branch`'s trigger). Raises ValueError, naming
+    the accepted forms, when the header is present but its value does not
+    start with `yes — ` or `no — `."""
+    header, _, _ = plan_text.partition("\n## ")
+    value = _header_value(header, "Safety-bearing")
+    if value is None:
+        return None
+    for kind in ("yes", "no"):
+        prefix = f"{kind} — "
+        if value.startswith(prefix):
+            return kind, value[len(prefix):]
+    raise ValueError(
+        f"'Safety-bearing:' value '{value}' outside 'yes — <reason>' / "
+        "'no — <reason>'"
+    )
+
+
 def _parse_steps(header: str) -> list[str] | None:
     """The header `Steps:` block's titles, in order — a bare `Steps:`
     line followed by indented numbered lines (`  1. <title>`). None when
@@ -366,6 +387,7 @@ def build_card(text: str) -> str:
     stage = _header_value(header, "Stage")
     if not stage:
         raise ValueError("plan has no 'Stage:' header line")
+    safety = safety_bearing(text)
 
     tasks = _parse_tasks(text)
     if not tasks:
@@ -432,6 +454,10 @@ def build_card(text: str) -> str:
     else:
         next_task = "close-out"
     lines.append(f"next: {next_task}")
+    if safety is not None:
+        lines.append(f"safety-bearing: {safety[0]} — {safety[1]}")
+    else:
+        lines.append("safety-bearing: N/A — header absent")
 
     return "\n".join(lines) + "\n"
 
