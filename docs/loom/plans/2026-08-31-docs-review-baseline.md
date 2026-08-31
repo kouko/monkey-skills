@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: execution — Task 1 immutable record core
+Stage: execution — store-records batch / Task 2 historical case admission
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -47,7 +47,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: none — shared implementation foundation required by every active record-oriented requirement.
 - **Review disposition**: individual
-- **Status**: claimed(@codex)
+- **Status**: done(892c118c3cfd8975bf9e0a18013d3e8e6480cdb3)
 - **Gloss**: 每個結果都能重算且不會被後來修改偷偷改寫。
 
 ## Task 2 — 驗證 historical case 可重播性
