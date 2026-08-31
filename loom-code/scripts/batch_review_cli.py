@@ -66,6 +66,7 @@ def _load(name: str, filename: str):
 
 rb = _load("review_batch_for_batch_review_cli", "review_batch.py")
 plan_card = _load("plan_card_for_batch_review_cli", "plan_card.py")
+git_exec = _load("git_exec_for_batch_review_cli", "git_exec.py")
 
 _GIT_TIMEOUT_SECONDS = 30
 
@@ -86,43 +87,35 @@ def _run_subprocess(args: list[str], *, text: bool = True) -> subprocess.Complet
     must surface as (Task 18d — folds what were three separate
     TimeoutExpired->PacketRefused copies).
 
-    Explicit encoding="utf-8", errors="surrogateescape" (subprocess.run
-    docs: both are passed straight to the underlying io.TextIOWrapper)
-    rather than the locale-dependent default `text=True` picks up
-    (locale.getencoding(), fixed at THIS interpreter's startup from
-    LC_ALL/LANG — not the child's). git's own path output is raw bytes
-    that are valid UTF-8 whenever core.quotePath is left at its default
-    (quoted/escaped otherwise; git-config(1)) — decoding as UTF-8
-    unconditionally, with surrogateescape to still tolerate a stray
-    non-UTF-8 byte, keeps a non-ASCII path from raising
-    UnicodeDecodeError under a non-UTF-8 process locale. Applied only
-    when text=True: passing encoding=/errors= at all — even under
-    text=False — forces subprocess.run into text mode regardless, which
-    would hand `_committed_bytes`'s `text=False` git-show call a `str`
-    where its caller (the scope issuer) requires raw `bytes`.
-
-    argv is handed to the child as UTF-8 `bytes`, not `str`: on POSIX,
-    subprocess encodes `str` arguments with the filesystem encoding
-    (os.fsencode — PEP 383), which is ASCII under an uncoerced C/POSIX
-    locale, so a plan path such as `src/日本.py` inside a `git show
-    <sha>:<path>` argument raised UnicodeEncodeError before git ever ran
-    (observed on the Linux CI runner for #768; macOS's filesystem
-    encoding is always UTF-8, which is why it did not reproduce locally).
-    git itself treats paths as bytes, so UTF-8 bytes are exactly what it
-    expects regardless of the process locale (git-config(1)
-    core.quotePath describes the same byte-level model on output)."""
-    text_kwargs = {"encoding": "utf-8", "errors": "surrogateescape"} if text else {}
-    argv = [
-        arg.encode("utf-8", "surrogateescape") if isinstance(arg, str) else arg
-        for arg in args
-    ]
+    Every call site in this module builds `args` as the fixed
+    `["git", "-C", <repo_root>, *git_args]` shape, so the actual
+    subprocess invocation — argv-as-UTF-8-bytes encoding, `text=`/
+    `encoding=`/`errors=` handling — delegates to `git_exec.run_git`
+    (Task 9), which owns that logic for every scripts/ caller now (see
+    its docstring for the "why"). This wrapper's own job is just: peel
+    the `git -C <repo>` prefix back off, delegate with `check=True` so
+    a non-zero exit reaches us as `CalledProcessError` instead of being
+    swallowed, and re-wrap either outcome as the `CompletedProcess` this
+    module's three call sites (`_run_git`, `_committed_bytes`,
+    `_commit_changed_paths`) already read `.returncode`/`.stdout`/
+    `.stderr` off of — so none of them need to change."""
+    repo_root = Path(args[2])
+    git_args = args[3:]
     try:
-        return subprocess.run(
-            argv, capture_output=True, text=text, timeout=_GIT_TIMEOUT_SECONDS,
-            **text_kwargs,
+        stdout = git_exec.run_git(
+            repo_root, *git_args,
+            timeout=_GIT_TIMEOUT_SECONDS, check=True, text=text, strip=False,
         )
     except subprocess.TimeoutExpired:
         raise rb.PacketRefused(f"{' '.join(args)} timed out")
+    except subprocess.CalledProcessError as exc:
+        return subprocess.CompletedProcess(
+            args=exc.cmd, returncode=exc.returncode,
+            stdout=exc.output, stderr=exc.stderr,
+        )
+    return subprocess.CompletedProcess(
+        args=args, returncode=0, stdout=stdout, stderr="" if text else b"",
+    )
 
 
 def _run_git(repo_root: Path, *args: str) -> str:

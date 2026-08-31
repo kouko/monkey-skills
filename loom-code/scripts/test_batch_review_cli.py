@@ -1687,6 +1687,29 @@ def test_packet_seals_non_ascii_path_under_c_locale(tmp_path) -> None:
     assert [f["path"] for f in member_1["files"]] == ["src/日本.py"]
 
 
+def test_run_git_delegates_to_git_exec(monkeypatch) -> None:
+    """`_run_git` (via `_run_subprocess`) must route the actual subprocess
+    call through `git_exec.run_git` (Task 9) rather than building its own
+    argv/encoding -- patching `git_exec.run_git` with a sentinel-returning
+    fake must be visible in `_run_git`'s return value, and the sentinel's
+    args must reach it as the trailing git args (repo/-C stripped)."""
+    sentinel = object()
+    captured: dict[str, object] = {}
+
+    def _fake_run_git(repo, *args, **kwargs):
+        captured["repo"] = repo
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return sentinel
+
+    monkeypatch.setattr(cli.git_exec, "run_git", _fake_run_git)
+    result = cli._run_git(Path("/tmp/some-repo"), "status")
+    assert result is sentinel
+    assert captured["repo"] == Path("/tmp/some-repo")
+    assert captured["args"] == ("status",)
+    assert captured["kwargs"].get("check") is True
+
+
 def test_run_subprocess_hands_git_utf8_bytes_argv(monkeypatch) -> None:
     """Platform-independent pin for the argv half of the locale fix (#768
     hotfix): `_run_subprocess` must hand every argv element to
