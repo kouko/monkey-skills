@@ -124,3 +124,97 @@ def test_duplicate_case_arm_rep_exits_nonzero(tmp_path):
     assert "Traceback" not in result.stderr
     combined = result.stdout + result.stderr
     assert "c1" in combined and "A" in combined
+
+
+def test_evidence_class_finding_does_not_inflate_gating_total(tmp_path):
+    record = _record(case_id="c1", arm="A", rep=1, causes=[])
+    record["gating_findings"] = [
+        {"cause": "A", "class": "instruction"},
+        {"cause": "B", "class": "evidence"},
+    ]
+    fixture = _write(tmp_path, [record])
+
+    result = _run(fixture)
+
+    assert result.returncode == 0, result.stderr
+    # Only the instruction-class finding counts toward the gating metric.
+    assert "| gating findings (total) | 1 | 0 |" in result.stdout
+    assert "| gating findings (cause A) | 1 | 0 |" in result.stdout
+    assert "| gating findings (cause B) | 0 | 0 |" in result.stdout
+
+
+def test_missing_finding_class_exits_nonzero_naming_the_record(tmp_path):
+    record = _record(case_id="c1", arm="A", rep=1, causes=[])
+    record["gating_findings"] = [{"cause": "A"}]
+    fixture = _write(tmp_path, [record])
+
+    result = _run(fixture)
+
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    combined = result.stdout + result.stderr
+    assert "c1" in combined
+
+
+def test_unknown_finding_class_exits_nonzero_naming_the_record(tmp_path):
+    record = _record(case_id="c1", arm="A", rep=1, causes=[])
+    record["gating_findings"] = [{"cause": "A", "class": "bogus"}]
+    fixture = _write(tmp_path, [record])
+
+    result = _run(fixture)
+
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    combined = result.stdout + result.stderr
+    assert "c1" in combined and "bogus" in combined
+
+
+def test_rep_int_vs_str_treated_as_duplicate(tmp_path):
+    records = [
+        _record(case_id="c1", arm="A", rep=1, causes=["A"]),
+        _record(case_id="c1", arm="A", rep="1", causes=["B"]),
+    ]
+    fixture = _write(tmp_path, records)
+
+    result = _run(fixture)
+
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    combined = result.stdout + result.stderr
+    assert "c1" in combined
+
+
+def test_non_list_top_level_json_exits_nonzero_without_traceback(tmp_path):
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(json.dumps({"not": "a list"}), encoding="utf-8")
+
+    result = _run(fixture)
+
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    assert result.stderr.strip() != ""
+
+
+def test_record_missing_draft_tokens_exits_nonzero_named_not_silent_zero(tmp_path):
+    record = _record(case_id="c1", arm="A", rep=1, causes=["A"])
+    del record["draft_tokens"]
+    fixture = _write(tmp_path, [record])
+
+    result = _run(fixture)
+
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    combined = result.stdout + result.stderr
+    assert "c1" in combined
+    assert "draft_tokens" in combined
+
+
+def test_non_dict_record_exits_nonzero_without_traceback(tmp_path):
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(json.dumps(["not-a-dict"]), encoding="utf-8")
+
+    result = _run(fixture)
+
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    assert result.stderr.strip() != ""

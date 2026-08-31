@@ -17,13 +17,23 @@ Input: a JSON file holding a list of records, one per run:
         "review_rounds": int,
     }
 
-Validation, fail loud: every `cause` must be in the closed A-K set; every
-(case_id, arm, rep) triple must be unique. Either violation exits non-zero
-naming the offending record.
+Validation, fail loud, each violation exits non-zero naming the offending
+record: top-level JSON must be a list of dicts; each record must have all
+required keys (case_id, arm, rep, gating_findings, hedge_marks,
+draft_tokens, review_rounds); `arm` must be one of ARMS; every
+(case_id, arm, rep) triple must be unique — `rep` is required to be an
+int (no int/str coercion) so a triple can't collide by accident; each
+gating finding's `cause` must be in the closed A-K set and its `class`
+must be "instruction" or "evidence".
+
+The gating-finding metric (registered metric 1 — first-round PREVENTABLE
+gating findings) counts only `class: "instruction"` findings;
+`class: "evidence"` findings are validated but excluded from every
+gating count in the output table.
 
 Output: per-arm totals — first-round gating findings (overall and per
-cause), hedge-mark counts, mean draft tokens, review rounds — as a
-markdown table on stdout.
+cause, instruction-class only), hedge-mark counts, mean draft tokens,
+review rounds — as a markdown table on stdout.
 
 CLI: `python3 prose_selfsweep_tally.py <input.json>`. Stdlib only.
 """
@@ -35,25 +45,58 @@ import sys
 from pathlib import Path
 
 CAUSE_CODES = frozenset("ABCDEFGHIJK")
+FINDING_CLASSES = frozenset({"instruction", "evidence"})
 ARMS = ("A", "B")
+REQUIRED_FIELDS: dict[str, type] = {
+    "case_id": str,
+    "arm": str,
+    "rep": int,
+    "gating_findings": list,
+    "hedge_marks": int,
+    "draft_tokens": int,
+    "review_rounds": int,
+}
 
 
-def load_records(path: Path) -> list[dict]:
+def load_records(path: Path) -> list:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, list):
         raise ValueError(f"{path}: top-level JSON must be a list of records")
     return data
 
 
-def validate(records: list[dict]) -> None:
-    """Fail loud on an unknown arm, an unknown cause code, or a duplicate
-    (case_id, arm, rep) triple, naming the offending record in the
-    message."""
+def validate(records: list) -> None:
+    """Fail loud, naming the offending record, on: a non-dict record; a
+    record missing a required field or with a required field of the wrong
+    type; an unknown arm; a non-int `rep` (so a (case_id, arm, rep) triple
+    can't collide by int/str type confusion); a duplicate
+    (case_id, arm, rep) triple; an unknown gating-finding `cause` code; or
+    a gating-finding `class` outside {"instruction", "evidence"}."""
     seen: set[tuple] = set()
-    for record in records:
-        case_id = record.get("case_id")
-        arm = record.get("arm")
-        rep = record.get("rep")
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            raise ValueError(f"record at index {index}: not a JSON object (dict)")
+
+        for field, expected_type in REQUIRED_FIELDS.items():
+            if field not in record:
+                raise ValueError(
+                    f"record at index {index} ({record!r}): missing required "
+                    f"field {field!r}"
+                )
+            # bool is a subclass of int; reject it explicitly for int fields.
+            value = record[field]
+            type_ok = isinstance(value, expected_type) and not (
+                expected_type is int and isinstance(value, bool)
+            )
+            if not type_ok:
+                raise ValueError(
+                    f"record at index {index} ({record!r}): field {field!r} "
+                    f"must be {expected_type.__name__}, got {type(value).__name__}"
+                )
+
+        case_id = record["case_id"]
+        arm = record["arm"]
+        rep = record["rep"]
 
         if arm not in ARMS:
             raise ValueError(
@@ -68,12 +111,19 @@ def validate(records: list[dict]) -> None:
             )
         seen.add(key)
 
-        for finding in record.get("gating_findings", []):
+        for finding in record["gating_findings"]:
             cause = finding.get("cause")
             if cause not in CAUSE_CODES:
                 raise ValueError(
                     f"record case_id={case_id!r} arm={arm!r} rep={rep!r}: "
                     f"unknown cause code {cause!r} (must be one of A-K)"
+                )
+            finding_class = finding.get("class")
+            if finding_class not in FINDING_CLASSES:
+                raise ValueError(
+                    f"record case_id={case_id!r} arm={arm!r} rep={rep!r}: "
+                    f"unknown finding class {finding_class!r} "
+                    f"(must be one of {sorted(FINDING_CLASSES)})"
                 )
 
 
@@ -96,18 +146,19 @@ def tally(records: list[dict]) -> dict[str, dict]:
         for arm in ARMS
     }
     for record in records:
-        arm = record.get("arm")
-        if arm not in totals:
-            continue
-        bucket = totals[arm]
+        # validate() runs before tally() in main() and guarantees arm in
+        # ARMS for every record, so no arm-membership guard is needed here.
+        bucket = totals[record["arm"]]
         bucket["n_runs"] += 1
-        findings = record.get("gating_findings", [])
-        bucket["gating_total"] += len(findings)
-        for finding in findings:
+        gating_findings = [
+            f for f in record["gating_findings"] if f.get("class") == "instruction"
+        ]
+        bucket["gating_total"] += len(gating_findings)
+        for finding in gating_findings:
             bucket["gating_by_cause"][finding["cause"]] += 1
-        bucket["hedge_marks_total"] += record.get("hedge_marks", 0)
-        bucket["draft_tokens"].append(record.get("draft_tokens", 0))
-        bucket["review_rounds"].append(record.get("review_rounds", 0))
+        bucket["hedge_marks_total"] += record["hedge_marks"]
+        bucket["draft_tokens"].append(record["draft_tokens"])
+        bucket["review_rounds"].append(record["review_rounds"])
     return totals
 
 
@@ -153,6 +204,9 @@ def main(argv: list[str]) -> int:
         return 1
     except json.JSONDecodeError as exc:
         print(f"{path}: invalid JSON: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
         return 1
 
     try:
