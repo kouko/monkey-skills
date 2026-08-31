@@ -48,6 +48,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: false
 - **Brief item covered**: BI-1
 - **Status**: done(d335bc68)
+- **Review disposition**: individual
 - **Gloss**: reviewer 所需規則都有明確、可驗證的來源，不必自行猜 plugin 路徑。
 
 ## Task 2 — 統一 reviewer input 合約
@@ -65,6 +66,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2
 - **Status**: done(0148fbd5)
+- **Review disposition**: individual
 - **Gloss**: 共用規則不再只對 code reviewer 有效，所有 reviewer 都有相同輸入前提。
 
 ## Task 3 — 將 SDD reviewer 派工接上封包
@@ -85,6 +87,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2
 - **Status**: blocked
+- **Review disposition**: individual
 - **Gloss**: 日常子任務審查不會因為共用規則改版而失去必要資訊。
 
 ## Task 4 — 將 docs review 入口接上封包
@@ -105,6 +108,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2
 - **Status**: blocked
+- **Review disposition**: individual
 - **Gloss**: 純文件變更也能在獨立安裝時走完同一套可靠的閘門。
 
 ## Task 5 — 完成 code review 入口與聚合訊號
@@ -122,6 +126,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2
 - **Status**: blocked
+- **Review disposition**: individual
 - **Gloss**: code review 會審到同一個 commit，也不會丟失尚未驗證或可簡化的訊號。
 
 ## Task 6 — 說明 Claude Code adapter
@@ -139,6 +144,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: false
 - **Brief item covered**: BI-3
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: Claude Code 的派工方式被明確約束，避免 host 細節讓封包走樣。
 
 ## Task 7 — 說明 Codex adapter
@@ -156,6 +162,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: false
 - **Brief item covered**: BI-3
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: Codex 與 Claude Code 對同一封包採用不同工具語法，但保有相同語意。
 
 ## Task 8 — 建立隔離安裝 dogfood
@@ -173,7 +180,14 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Independent**: false
 - **Brief item covered**: BI-4
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: 用不消耗模型額度的真實安裝情境，驗證整套機制不只單元測試會過。
+
+## Review Batches
+
+No review batches: every task routes individual review. This plan
+predates the Review Batch schema and is amended with individual
+dispositions only; no batch grouping is declared.
 
 ## Notes
 
