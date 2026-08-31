@@ -97,7 +97,17 @@ def test_finishing_branch_step_3_5_dispatches_packets_that_exist():
         "SKILL.md must name the target-repo catalogue store path"
     )
     assert "check_attack_catalogue.py" in skill_text
-    assert "safety_bearing" in skill_text
+    assert "check_attack_catalogue.py signal" in skill_text, (
+        "Step 3.5 must invoke the signal subcommand, not name a Python "
+        "function"
+    )
+    assert "scripts/check_attack_catalogue.py" in skill_text, (
+        "repo-root two-form path variant must be present"
+    )
+    assert '${CLAUDE_PLUGIN_ROOT}/scripts/check_attack_catalogue.py' in skill_text, (
+        "plugin-root two-form path variant must be present"
+    )
+    assert "not-applicable" in skill_text
 
     assert "STOP" in skill_text
     assert "attack catalogue: absent" in skill_text
@@ -184,10 +194,29 @@ def test_step_3_5_stop_sentences_are_inside_the_step():
     assert "does not override" in flat
     assert "STOP naming both" in flat
     assert "orchestrator-run" in flat
-    assert (
-        'git diff --name-only "$(git merge-base HEAD origin/main '
-        '2>/dev/null || git merge-base HEAD main)"..HEAD'
-    ) in flat
+
+    # the ONLY computation is the `signal` command — no inline merge-base
+    # shell, no Python function names.
+    assert "check_attack_catalogue.py signal" in flat
+    assert "scripts/check_attack_catalogue.py" in flat, (
+        "repo-root two-form path variant must live inside the step"
+    )
+    assert '${CLAUDE_PLUGIN_ROOT}/scripts/check_attack_catalogue.py' in flat, (
+        "plugin two-form path variant must live inside the step"
+    )
+    assert "git merge-base" not in flat, (
+        "Step 3.5 must not compute the base via inline shell"
+    )
+    assert "safety_bearing(" not in flat, (
+        "Step 3.5 must not name the Python function directly"
+    )
+    assert "guarded_path_globs" not in flat, (
+        "Step 3.5 must not name the Python function directly"
+    )
+
+    # exit-2 / exit-3 handling words
+    assert "STOP" in flat
+
     # the resumption clause: only the user resumes a `no` + guarded-hit
     # STOP, never the orchestrator alone — quoted exactly.
     assert (
