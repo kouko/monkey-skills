@@ -701,6 +701,52 @@ def _validated_batch_snapshot(
     ), fields
 
 
+_BATCH_DISPOSITION = re.compile(r"batch\(([a-z0-9][a-z0-9-]*)\)")
+
+
+def _batch_member_done_refusal(
+    text: str, task_number: int, status: str
+) -> str | None:
+    """None when `--set-status` may write `status` to task T<task_number>;
+    otherwise the refusal message. Fires only for a `done(<sha>)` write
+    to a task whose own `- Review disposition:` line is `batch(<id>)` —
+    `batch_review_cli.py apply-result` is the only legitimate writer of
+    a declared batch member's `done`, so crash recovery can trust a
+    `done` it finds (plan Task 5). Fails closed on a schema-invalid or
+    unknown batch (the oracle's `ValueError`) — refuse rather than let
+    a broken plan through."""
+    if _DONE_STATUS.fullmatch(status) is None:
+        return None
+    for number, _name, block in _task_blocks(text):
+        if number == task_number:
+            disposition = _bullet_value(block, "Review disposition")
+            break
+    else:
+        return None
+    if disposition is None:
+        return None
+    match = _BATCH_DISPOSITION.fullmatch(disposition)
+    if match is None:
+        return None
+    batch_id = match.group(1)
+    try:
+        fields = _review_batch_oracle().execution_projection_fields(text, batch_id)
+    except ValueError as exc:
+        return (
+            f"batch '{batch_id}' schema invalid ({exc}) — refusing the "
+            "direct write; only `batch_review_cli.py apply-result` may "
+            "write a batch member's done"
+        )
+    members = {int(member["task_id"].split()[1]) for member in fields["members"]}
+    if task_number not in members:
+        return None
+    return (
+        f"task T{task_number} is a declared member of batch '{batch_id}' — "
+        "done(<sha>) may only be written by `batch_review_cli.py "
+        "apply-result`, refusing the direct write"
+    )
+
+
 def _transition_authority_validator(authority: object):
     """Resolve only a validator implemented by the sibling authority class."""
     validator = getattr(authority, "_validate_for_plan_card", None)
@@ -1143,6 +1189,12 @@ def main() -> int:
                 task_number,
                 _expand_status_sha_ref(status, plan_path),
             )
+            refusal = _batch_member_done_refusal(
+                plan_path.read_text(encoding="utf-8"), *set_status_ref
+            )
+            if refusal is not None:
+                print(f"plan_card: FAIL — {refusal}", file=sys.stderr)
+                return 1
             new_text, old_line, new_line = _publish_cli_mutation(
                 plan_path,
                 lambda current: set_status(current, *set_status_ref),
