@@ -33,10 +33,18 @@ When this ships, all of the following hold:
 - The two language hooks and `lang_detect.py` have tests covering their documented contract.
 - Success criteria: all existing suites stay green (loom-code 2075 passed at baseline) and the new tests pass. Non-criteria: no line-count target; no behavior change at any call site beyond the UTF-8 handling.
 
-- BI-1 — Characterization tests pin the failure-path behavior of the six git wrappers (`batch_review_cli._run_git`, `live_gate_station_receipt._git`, `live_host_review_gate._git`, `loom_gate_markers._git`, `review_context._git`, `review_scope._git`) and pass against the current code before any extraction.
+- BI-9 — Characterization tests pin the failure-path behavior of the three None-returning git wrappers (`loom_gate_markers._git`, `review_context._git`, `review_scope._git`) and pass against the current code before any extraction.
+- BI-10 — Characterization tests pin the failure-path behavior of the three raising git wrappers (`live_gate_station_receipt._git`, `live_host_review_gate._git`, `batch_review_cli._run_git`) and pass against the current code before any extraction.
 - BI-2 — One shared module `loom-code/scripts/git_exec.py` supplies the git wrapper body; every one of the six call sites keeps its observable success and failure behavior (return value, exception type, timeout).
-- BI-3 — The UTF-8 argv-as-bytes and `encoding="utf-8", errors="surrogateescape"` decoding from `batch_review_cli._run_subprocess` applies to every git call routed through `git_exec.py`, with a RED test per adopting wrapper for a non-ASCII path under a C locale.
-- BI-4 — One shared sibling-loader helper in `loom-code/scripts/` replaces the five `spec_from_file_location` bodies in `scripts/` (`batch_review_cli._load`, `task_batch_replay._load`, `plan_card._review_batch_oracle`, `review_batch._review_batch_oracle`, `propose_review_batches._oracle`), preserving each site's unique module name and exception type.
+- BI-11 — `loom_gate_markers._git` routes through `git_exec.py`, so the UTF-8 argv-as-bytes and `encoding="utf-8", errors="surrogateescape"` decoding from `batch_review_cli._run_subprocess` applies to it, with a RED test for a non-ASCII path.
+- BI-12 — `review_context._git` routes through `git_exec.py` with the same UTF-8 handling, with a RED test for a non-ASCII path.
+- BI-13 — `review_scope._git` routes through `git_exec.py` with the same UTF-8 handling, with a RED test for a non-ASCII path.
+- BI-14 — `live_gate_station_receipt._git` routes through `git_exec.py` with the same UTF-8 handling, with a RED test for a non-ASCII path.
+- BI-15 — `live_host_review_gate._git` routes through `git_exec.py` with the same UTF-8 handling, with a RED test for a non-ASCII path.
+- BI-16 — One shared sibling-loader helper exists in `loom-code/scripts/` and registers a loaded sibling under the caller's chosen `sys.modules` name, raising `ImportError` on a missing file.
+- BI-17 — `plan_card._review_batch_oracle` delegates to the shared loader, preserving its unique module name and `ValueError`.
+- BI-18 — `review_batch._review_batch_oracle` delegates to the shared loader, preserving its unique module name and `PacketRefused`.
+- BI-19 — `propose_review_batches._oracle` delegates to the shared loader, preserving its unique module name and `ValueError`.
 - BI-5 — `hooks/language-anchor.py`, `hooks/language-stop-check.py`, and `hooks/lang_detect.py` have tests covering their documented contract: ja/zh majority → directive or block; en / None / malformed input → no output, exit 0; the stop-check `max(10, 0.05 × visible_len)` threshold at its boundary.
 
 ## Current State Evidence
@@ -80,11 +88,14 @@ Portability constraint from the live map: `git_exec.py` and the loader helper ar
 ## What Becomes Obsolete
 
 - BI-7 — The six inline git wrapper bodies (`_run_git` in `batch_review_cli.py`; `_git` in `live_gate_station_receipt.py`, `live_host_review_gate.py`, `loom_gate_markers.py`, `review_context.py`, `review_scope.py`) are deleted in the same PR, each replaced by a one-line delegation to `git_exec.py`.
-- BI-8 — The five inline loader bodies in `scripts/` (`_load` ×2, `_review_batch_oracle` ×2, `_oracle`) are deleted in the same PR, each replaced by a call to the shared loader helper.
+- BI-20 — `batch_review_cli._load`'s inline loader body is deleted in the same PR, replaced by a call to the shared loader helper.
+- BI-21 — `task_batch_replay._load`'s inline loader body is deleted in the same PR, replaced by a call to the shared loader helper.
 
 ## Open Questions
 
 (empty)
+
+Retired identifiers (split 2026-08-31, plan DL-4 — never reuse): BI-1 → BI-9, BI-10; BI-3 → BI-11…BI-15; BI-4 → BI-16…BI-19; BI-8 → BI-20, BI-21.
 
 ## Diagrams
 

@@ -7,7 +7,7 @@ Goal: Six git wrappers pinned by characterization tests, then collapsed onto one
     language hooks plus `lang_detect.py` under test — serves PURPOSE: a fix to
     one git call now reaches every git call in the plugin instead of being
     silently re-lost in five sibling copies
-Stage: planning
+Stage: review:round-1
 Steps:
     1. 釘住現況：六個 git 包裝的特性測試、新 helper 本體、hook 測試
     2. 搬遷：六個 git 包裝逐檔接上 git_exec、三個 oracle 載入器逐檔接上 helper
@@ -16,7 +16,7 @@ Steps:
 Total tasks: 19
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-31, round 3)
+Plan-document-reviewer verdict: PASS (2026-08-31, round 3; DL-1 amendment PASS; DL-2 amendment PASS; DL-3 amendment PASS; DL-4 amendment PASS round 2)
 
 ## Task-flow diagram
 
@@ -57,7 +57,7 @@ T15 --> T19
 
 ## Open Questions
 
-N/A — no unresolved question: the brief's Open Questions section is empty and the user ratified BI-3 (UTF-8 to all six) on 2026-08-31.
+N/A — no unresolved question: the brief's Open Questions section is empty and the user ratified the UTF-8-to-all-six item (then BI-3, since split into BI-11…BI-15 per DL-4) on 2026-08-31.
 
 ## Complexity assessment
 
@@ -86,9 +86,9 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Dependencies**: none
 - **Seam**: payload: none
 - **Independent**: true
-- **Brief item covered**: BI-1
+- **Brief item covered**: BI-9
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(95b306e76a9a98efee762412f6c8a09eb9414034)
 - **Gloss**: 把三個「失敗回 None」包裝的現況釘成可執行契約，之後搬家有網可接。
 
 ## Task 2 — 釘住 raise 家族與 PacketRefused 的失敗行為
@@ -111,9 +111,9 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Dependencies**: none
 - **Seam**: payload: none
 - **Independent**: true
-- **Brief item covered**: BI-1
+- **Brief item covered**: BI-10
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(4eb1e6de9f7ed9050d026976f33f85f3fb4bec0d)
 - **Gloss**: 把「失敗就拋例外」的三個包裝釘住例外型別，搬家後不得變成靜默。
 
 ## Task 3 — 新增共用 git 本體 git_exec.py
@@ -124,7 +124,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - Encoding: argv handed to `subprocess.run` as UTF-8 `bytes`; when `text=True` pass `encoding="utf-8", errors="surrogateescape"` — transcribe from `batch_review_cli._run_subprocess` (its docstring is the SSOT for why; do not restate it).
   - Sibling-module style: no `__init__.py`, plain `import git_exec` per `loom-code/scripts/heading_window.py`'s documented precedent.
 - **Module**: loom-code/scripts/git_exec.py
-- **Files touched**: loom-code/scripts/git_exec.py, loom-code/scripts/test_git_exec.py
+- **Files touched**: loom-code/scripts/git_exec.py, loom-code/scripts/test_git_exec.py, loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py
 - **Context paths**:
   - loom-code/scripts/batch_review_cli.py
   - loom-code/scripts/test_batch_review_cli.py
@@ -140,11 +140,11 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(7645a42d2a16d06d0181d0db2bb56153f195efa3)
 - **Gloss**: 一份 git 呼叫本體，三種回答形狀由 check／text 參數表達，UTF-8 處理只寫一次。
 
 ## Task 4 — loom_gate_markers 改接 git_exec
-- **Description**: Replace the body of `loom_gate_markers._git` with a one-line delegation to `git_exec.run_git(repo, *args, check=False)`; add `test_loom_gate_markers_git_hands_utf8_bytes_argv` to `test_loom_gate_markers.py` (BI-3).
+- **Description**: Replace the body of `loom_gate_markers._git` with a one-line delegation to `git_exec.run_git(repo, *args, check=False)`; add `test_loom_gate_markers_git_hands_utf8_bytes_argv` to `test_loom_gate_markers.py` (BI-11).
   - The `_git` name and its call sites stay untouched (brief Out of Scope: no caller rewrite).
 - **Module**: loom-code/scripts/loom_gate_markers.py
 - **Files touched**: loom-code/scripts/loom_gate_markers.py, loom-code/scripts/test_loom_gate_markers.py
@@ -161,13 +161,13 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - from Task 1: payload: none
   - from Task 3: payload: `run_git(repo, *args, timeout, check=False)` return contract (stripped stdout or `None`); owner: Task 3; probe: test_loom_gate_markers_git_nonrepo_returns_none
 - **Independent**: true
-- **Brief item covered**: BI-3
+- **Brief item covered**: BI-11
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(3d7b90ea97f7b6636ac15d75201f518304e87d1a)
 - **Gloss**: gate marker 的 git 包裝搬到共用本體，None 契約不變，補一個 UTF-8 紅燈。
 
 ## Task 5 — review_context 改接 git_exec
-- **Description**: Replace the body of `review_context._git` with a one-line delegation to `git_exec.run_git(repo, *args, check=False)`; add `test_review_context_git_hands_utf8_bytes_argv` to `test_review_context.py` (BI-3).
+- **Description**: Replace the body of `review_context._git` with a one-line delegation to `git_exec.run_git(repo, *args, check=False)`; add `test_review_context_git_hands_utf8_bytes_argv` to `test_review_context.py` (BI-12).
   - The `_git` name and its call sites stay untouched (brief Out of Scope: no caller rewrite).
 - **Module**: loom-code/scripts/review_context.py
 - **Files touched**: loom-code/scripts/review_context.py, loom-code/scripts/test_review_context.py
@@ -184,13 +184,13 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - from Task 1: payload: none
   - from Task 3: payload: `run_git(repo, *args, timeout, check=False)` return contract (stripped stdout or `None`); owner: Task 3; probe: test_review_context_git_nonrepo_returns_none
 - **Independent**: true
-- **Brief item covered**: BI-3
+- **Brief item covered**: BI-12
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(27740591c10db3f32b2f7a56c4cb9dc599422697)
 - **Gloss**: review_context 的 git 包裝搬到共用本體，None 契約不變，補一個 UTF-8 紅燈。
 
 ## Task 6 — review_scope 改接 git_exec
-- **Description**: Replace the body of `review_scope._git` with a one-line delegation to `git_exec.run_git(repo, *args, check=False, timeout=timeout)`; add `test_review_scope_git_hands_utf8_bytes_argv` to `test_review_scope.py` (BI-3).
+- **Description**: Replace the body of `review_scope._git` with a one-line delegation to `git_exec.run_git(repo, *args, check=False, timeout=timeout)`; add `test_review_scope_git_hands_utf8_bytes_argv` to `test_review_scope.py` (BI-13).
   - The `_git` name and its call sites stay untouched (brief Out of Scope: no caller rewrite).
 - **Module**: loom-code/scripts/review_scope.py
 - **Files touched**: loom-code/scripts/review_scope.py, loom-code/scripts/test_review_scope.py
@@ -207,13 +207,13 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - from Task 1: payload: none
   - from Task 3: payload: `run_git(repo, *args, timeout, check=False)` return contract (stripped stdout or `None`); owner: Task 3; probe: test_review_scope_git_timeout_returns_none
 - **Independent**: true
-- **Brief item covered**: BI-3
+- **Brief item covered**: BI-13
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(9d22a1c6b6cfd99d61a20f074f42aa6e8aa11f5c)
 - **Gloss**: review_scope 的 git 包裝搬到共用本體，timeout→None 契約不變，補一個 UTF-8 紅燈。
 
 ## Task 7 — live_gate_station_receipt 改接 git_exec
-- **Description**: Replace the body of `live_gate_station_receipt._git` with `git_exec.run_git(repo, *args, timeout=20, check=True)`; add `test_live_gate_station_receipt_git_hands_utf8_bytes_argv` to `test_live_gate_station_receipt.py` (BI-3).
+- **Description**: Replace the body of `live_gate_station_receipt._git` with `git_exec.run_git(repo, *args, timeout=20, check=True)`; add `test_live_gate_station_receipt_git_hands_utf8_bytes_argv` to `test_live_gate_station_receipt.py` (BI-14).
   - Exceptions keep propagating exactly as today: `CalledProcessError` on non-zero, `TimeoutExpired`, `OSError`.
 - **Module**: loom-code/scripts/live_gate_station_receipt.py
 - **Files touched**: loom-code/scripts/live_gate_station_receipt.py, loom-code/scripts/test_live_gate_station_receipt.py
@@ -230,13 +230,13 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - from Task 2: payload: none
   - from Task 3: payload: `run_git(..., check=True)` raise contract (`CalledProcessError` / `TimeoutExpired` / `OSError` propagate); owner: Task 3; probe: test_live_gate_station_receipt_git_raises_called_process_error
 - **Independent**: true
-- **Brief item covered**: BI-3
+- **Brief item covered**: BI-14
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(4d76d958866226fa1c8ee19296efab50aa268c43)
 - **Gloss**: station receipt 的 git 包裝改用共用本體，「失敗就炸」一字不變。
 
 ## Task 8 — live_host_review_gate 改接 git_exec
-- **Description**: Replace the body of `live_host_review_gate._git` with `git_exec.run_git(repo, *args, timeout=20, check=True)`; add `test_live_host_review_gate_git_hands_utf8_bytes_argv` to `test_live_host_review_gate.py` (BI-3).
+- **Description**: Replace the body of `live_host_review_gate._git` with `git_exec.run_git(repo, *args, timeout=20, check=True)`; add `test_live_host_review_gate_git_hands_utf8_bytes_argv` to `test_live_host_review_gate.py` (BI-15).
   - Exceptions keep propagating exactly as today: `CalledProcessError` on non-zero, `TimeoutExpired`, `OSError`.
 - **Module**: loom-code/scripts/live_host_review_gate.py
 - **Files touched**: loom-code/scripts/live_host_review_gate.py, loom-code/scripts/test_live_host_review_gate.py
@@ -253,9 +253,9 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - from Task 2: payload: none
   - from Task 3: payload: `run_git(..., check=True)` raise contract (`CalledProcessError` / `TimeoutExpired` / `OSError` propagate); owner: Task 3; probe: test_live_host_review_gate_git_raises_called_process_error
 - **Independent**: true
-- **Brief item covered**: BI-3
+- **Brief item covered**: BI-15
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(3eca76ff92962234c32362271ad5845f86e62baf)
 - **Gloss**: live gate 的 git 包裝改用共用本體，「失敗就炸」一字不變。
 
 ## Task 9 — batch_review_cli 改接 git_exec
@@ -280,7 +280,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-7
 - **Review disposition**: batch(git-exec-extraction)
-- **Status**: pending
+- **Status**: implemented(5ab940806083811e5681787988c9f1e305710693)
 - **Gloss**: 最嚴格的那一份（拒收 packet）也改用共用本體，#769 的測試原封不動當驗收。
 
 ## Task 10 — 新增共用兄弟載入 helper sibling_import.py
@@ -289,7 +289,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - Grounding, `_load` shape: `batch_review_cli._load`, `task_batch_replay._load` (`"Load a sibling script module without cwd or sys.path coupling."`).
   - Grounding, oracle shape: `plan_card._review_batch_oracle`, `review_batch._review_batch_oracle`, `propose_review_batches._oracle` (`"Load the sibling schema oracle without relying on cwd/sys.path."`).
 - **Module**: loom-code/scripts/sibling_import.py
-- **Files touched**: loom-code/scripts/sibling_import.py, loom-code/scripts/test_sibling_import.py
+- **Files touched**: loom-code/scripts/sibling_import.py, loom-code/scripts/test_sibling_import.py, loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py
 - **Context paths**:
   - loom-code/scripts/plan_card.py
   - loom-code/scripts/task_batch_replay.py
@@ -298,11 +298,11 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - **GREEN**: that test plus `test_load_sibling_missing_file_raises_import_error` pass; `python3 -m pytest loom-code/scripts/test_sibling_import.py -q` green.
 - **Dependencies**: none
 - **Seam**: payload: none
-- **Independent**: true
-- **Brief item covered**: BI-4
+- **Independent**: false
+- **Brief item covered**: BI-16
 - **Not batched because**: the proposer pairs Task 10 with Task 9 through the Task 9 → Task 14 edge only; the sibling loader answers a different verdict question (module-name / exception-type preservation) from the git body's return/raise contract, so it anchors the sibling-loader batch instead.
 - **Review disposition**: batch(sibling-loader)
-- **Status**: pending
+- **Status**: implemented(26d0aaf3804100d782b0bf3fa2ba3ed147368b6f)
 - **Gloss**: 一個載入兄弟模組的 helper，五份複製的唯一模組名與例外型別都保得住。
 
 ## Task 11 — plan_card 的 oracle 載入器改接 helper
@@ -322,10 +322,10 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Seam**:
   - from Task 10: payload: `load_sibling(filename, name=...)` module return and `ImportError` on missing file; owner: Task 10; probe: test_load_sibling_registers_under_given_name
 - **Independent**: true
-- **Brief item covered**: BI-4
+- **Brief item covered**: BI-17
 - **Not batched because**: the proposer chains Task 11 to Task 9 through topological chunking only; Task 11's verdict question is loader-side (module name / exception type), not the git body's return/raise contract, so it stays in the sibling-loader batch.
 - **Review disposition**: batch(sibling-loader)
-- **Status**: pending
+- **Status**: implemented(5f3b13034cdf4702a2601afce482dcee2cac676e)
 - **Gloss**: plan_card 的 oracle 載入器改用 helper，唯一模組名與 ValueError 不變。
 
 ## Task 12 — review_batch 的 oracle 載入器改接 helper
@@ -345,10 +345,10 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Seam**:
   - from Task 10: payload: `load_sibling(filename, name=...)` module return and `ImportError` on missing file; owner: Task 10; probe: test_load_sibling_registers_under_given_name
 - **Independent**: true
-- **Brief item covered**: BI-4
+- **Brief item covered**: BI-18
 - **Not batched because**: same as Task 11 — paired with Task 9 by chunk order, not by a shared verdict question; it belongs to the sibling-loader batch.
 - **Review disposition**: batch(sibling-loader)
-- **Status**: pending
+- **Status**: implemented(90598f69467b89a41e69f12ca00ea42de8978148)
 - **Gloss**: review_batch 的 oracle 載入器改用 helper，唯一模組名與 PacketRefused 不變；舊本體刪除。
 
 ## Task 13 — propose_review_batches 的 oracle 載入器改接 helper
@@ -368,9 +368,9 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Seam**:
   - from Task 10: payload: `load_sibling(filename, name=...)` module return and `ImportError` on missing file; owner: Task 10; probe: test_load_sibling_registers_under_given_name
 - **Independent**: true
-- **Brief item covered**: BI-4
+- **Brief item covered**: BI-19
 - **Review disposition**: batch(sibling-loader)
-- **Status**: pending
+- **Status**: implemented(159765df73cf7ff7937b47ae703330ddba81d49c)
 - **Gloss**: proposer 的 oracle 載入器改用 helper，唯一模組名與 ValueError 不變。
 
 ## Task 14 — batch_review_cli 的 `_load` 改接 helper
@@ -390,9 +390,9 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
   - from Task 9: payload: none
   - from Task 10: payload: `load_sibling(filename, name=...)` returns the executed module registered under `name`; owner: Task 10; probe: test_load_sibling_registers_under_given_name
 - **Independent**: false
-- **Brief item covered**: BI-8
+- **Brief item covered**: BI-20
 - **Review disposition**: batch(sibling-loader)
-- **Status**: pending
+- **Status**: implemented(01f5352a569d7dfae97b834eef2c48dcb97846a0)
 - **Gloss**: batch_review_cli 的 `_load` 改成呼叫 helper，排在 Task 9 之後避免同檔衝突；舊本體刪除。
 
 ## Task 15 — task_batch_replay 的 `_load` 改接 helper
@@ -411,9 +411,9 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Seam**:
   - from Task 10: payload: `load_sibling(filename, name=...)` returns the executed module registered under `name`; owner: Task 10; probe: test_load_sibling_registers_under_given_name
 - **Independent**: true
-- **Brief item covered**: BI-8
+- **Brief item covered**: BI-21
 - **Review disposition**: batch(sibling-loader)
-- **Status**: pending
+- **Status**: implemented(90d3b04288e4f81a43b698e28bc27c930c9b9f83)
 - **Gloss**: task_batch_replay 的 `_load` 改成呼叫 helper。
 
 ## Task 16 — lang_detect.py 補測試
@@ -437,7 +437,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Brief item covered**: BI-5
 - **Not batched because**: a hook test file with its own contract; it shares no verdict window with the loader hosts the proposer chunked it beside, so it is reviewed individually.
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(f76dc2f975f62b8ae742f602574d9627fe5ac8c4)
 - **Gloss**: 語言偵測核心從零測試變成有網，兩支 hook 的共同地基先釘住。
 
 ## Task 17 — language-anchor.py 補測試
@@ -459,7 +459,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Independent**: true
 - **Brief item covered**: BI-5
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(14a7b5101e75b2e84ee7bf98aaa175b59ca963c6)
 - **Gloss**: PostToolUse 語言錨 hook 從零測試變成四條分支都有網。
 
 ## Task 18 — language-stop-check.py 補測試
@@ -483,21 +483,23 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Brief item covered**: BI-5
 - **Not batched because**: each hook test file pins a different hook's contract (Stop vs PostToolUse); one verdict question does not cover both, so both are reviewed individually.
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(730959d5bcc5629c8a1aff7b45978e82b59c881b)
 - **Gloss**: Stop 語言檢查 hook 的門檻邊界被釘住，之後調門檻不會靜默改行為。
 
 ## Task 19 — loom-code 0.108.1 版本 bump 與 CHANGELOG
 - **Description**: Bump `loom-code/.claude-plugin/plugin.json` to `0.108.1`, run `python3 scripts/sync_codex_manifests.py loom-code` to mirror `.codex-plugin/plugin.json`, and add a `## [0.108.1]` CHANGELOG entry.
   - CHANGELOG entry names: the two new modules, the six-to-one / five-to-one collapse, the UTF-8 propagation, the three new hook test files.
+  - Also regenerate `docs/loom/INDEX.md` with `python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md .` so `test_check_living_spec_index.py::test_committed_index_is_current` passes (DL-3).
+  - Last step, after every other loom-code byte is final: re-pin the `loom-code candidate SHA-256:` line in `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md` to `_tracked_worktree_fingerprint("loom-code")` from `scripts/test_stage_specific_complexity_behavior_evidence.py` (DL-2).
   - Reference: `loom-code/CHANGELOG.md` `## [0.108.0] — 2026-08-31` entry shape.
 - **Module**: loom-code/.claude-plugin/plugin.json
-- **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md
+- **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md, docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md, docs/loom/INDEX.md
 - **Context paths**:
   - scripts/sync_codex_manifests.py
   - loom-code/CHANGELOG.md
 - **Acceptance**:
   - **RED**: `python3 scripts/sync_codex_manifests.py --check loom-code` passes on HEAD at 0.108.0; after editing only the Claude manifest to 0.108.1 it exits non-zero (Codex mirror stale) — that drift is the RED.
-  - **GREEN**: `python3 scripts/sync_codex_manifests.py --check loom-code` exits 0 at 0.108.1; `python3 -m pytest loom-code/scripts -q` fully green.
+  - **GREEN**: `python3 scripts/sync_codex_manifests.py --check loom-code` exits 0 at 0.108.1; `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q` fully green, including `test_report_binds_baseline_and_final_candidate`.
     - `grep -c '"version": "0.108.1"' loom-code/.claude-plugin/plugin.json loom-code/.codex-plugin/plugin.json` = 1 each; `grep -c "## \[0.108.1\]" loom-code/CHANGELOG.md` = 1.
 - **Dependencies**: Tasks 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18 complete first
 - **Seam**:
@@ -539,11 +541,38 @@ N/A — no unresolved question: the brief's Open Questions section is empty and 
 - **Boundary**: capability: shared sibling-module loader; exclusions: none; consumable: yes
 - **Oversized because**: the helper (10) is only proven by the five hosts that delegate to it (11–15); one verdict question covers all six, and each host task is a near-identical two-line change.
 
+## Decision Log
+
+### DL-1 — New scripts/ modules must be classified in the fail-loud gate test (2026-08-31, SDD wave 1)
+- Class: implementation-discovered stated-fact gap, below kickoff threshold (reversal cost: one dict line; no product consequence).
+- Fact (Task 16's implementer full-suite run, verified by the orchestrator): `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py::test_every_script_here_is_classified` fails for any non-test `.py` added to `loom-code/scripts/` until it is listed in that file's `FAMILY` or `EXEMPT` dict — "No script joins this directory silently."
+- Decision: Tasks 3 and 10 each add one `EXEMPT` entry for their new module in the same commit as the module (`heading_window.py`'s entry is the template); both tasks' `Files touched` gain that test file. Tasks 3 and 10 are not at the same dependency level as any other task touching it, and each other's edits are sequential commits to one dict, so `Independent: true` still holds for their wave. Task 10 flips to `Independent: false` (it shares the gate-test file with Task 3 at the same level; Task 10 landed first, Task 3's edit is sequential to it). Plan-document-reviewer amendment review requested for the `Files touched` / `Independent` change.
+
+### DL-2 — loom-code tree fingerprint must be re-pinned at close-out (2026-08-31, SDD wave 1)
+- Class: implementation-discovered stated-fact gap, below kickoff threshold (one recorded hash line; no product consequence).
+- Fact (every wave-1 implementer's full-suite run; verified by the orchestrator reading the test): `scripts/test_stage_specific_complexity_behavior_evidence.py::test_report_binds_baseline_and_final_candidate` asserts the `loom-code candidate SHA-256:` line in `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md` equals `_tracked_worktree_fingerprint("loom-code")` — any tracked loom-code change turns it red until the line is re-pinned.
+- Decision: Task 19 (the last loom-code-touching task) re-pins that line as its final step and its GREEN now names that test; Task 19's `Files touched` gains the dogfood report. Mid-arc implementers report the failure as known and do not touch the report. Plan-document-reviewer amendment review requested.
+
+### DL-3 — living-spec INDEX.md must be regenerated at close-out (2026-08-31, SDD wave 2)
+- Class: implementation-discovered stated-fact gap, below kickoff threshold (generated file; no product consequence).
+- Fact (wave-2 implementers' full-suite runs; verified by the orchestrator): `loom-code/scripts/test_check_living_spec_index.py::test_committed_index_is_current` compares the committed `docs/loom/INDEX.md` to a fresh `build_index` over the repo; the new test files changed the index's test population, so it reads stale until regenerated.
+- Decision: Task 19 regenerates the index as part of close-out (release administration, same class as the fingerprint re-pin); its `Files touched` gains `docs/loom/INDEX.md`. Plan-document-reviewer amendment review requested.
+
+### DL-4 — Brief items split per task so Review Batch packets can seal (2026-08-31, SDD wave 2)
+- Class: implementation-discovered contract collision, below kickoff threshold (identifier bookkeeping; scope unchanged).
+- Fact (orchestrator, `batch_review_cli.py packet --batch git-exec-extraction`): refused with `ownership proof contains duplicate requirement authority` — members citing one Brief item (BI-1 ×2, BI-3 ×5; sibling-loader would hit BI-4 ×4, BI-8 ×2). Known defect, backlog `2026-08-31-one-owner-per-requirement-refuses-same-item-batches`, whose remedy is per-task clauses.
+- Decision: split the brief items per the brief-format identifier rules (split retires both sides): BI-1 → BI-9/BI-10; BI-3 → BI-11…BI-15; BI-4 → BI-16…BI-19; BI-8 → BI-20/BI-21; Tasks 1, 2, 4–8, 10–15 re-cite accordingly. No task scope, RED, or file changes. Plan-document-reviewer amendment review requested; packets re-sealed after PASS.
+
 ## Notes
 
 - Tasks 16–18 are individual review: each is a hook test file with its own contract and no shared verdict window with the extraction batches.
 - Task 19 runs the full triad: the CHANGELOG entry is authored prose, so `Review-weight: mechanical` does not apply (plan-document-reviewer round 1, Check 16).
 - Out of scope, recorded for a follow-up entry: `loom_gate_markers.py` carries five direct `subprocess.run(["git", ...])` calls outside `_git` (`cat-file -t`, `show`, `diff`, `patch-id --stable` with stdin, and one more near `main`), and `live_host_review_gate.py` two (`git clone` at `subprocess.run(["git", "clone", "-q"`, and one near its `TimeoutExpired` handler). They need stdin / bytes shapes `run_git` does not offer in this brief; they keep their current encoding behavior in Phase 1.
+- DL-4 amendment reviewed PASS round 2 (2026-08-31) — verdict stamped, no re-review.
+- DL-3 amendment reviewed PASS (2026-08-31) — verdict stamped, no re-review.
+- DL-2 amendment reviewed PASS (2026-08-31) — verdict stamped, no re-review.
+- DL-1 amendment reviewed PASS (2026-08-31) — verdict stamped, no re-review.
+- Wave-1 review debt (T16 code-quality PASS_WITH_NOTES, 🟢): three tmp_path tests in `test_lang_detect.py` re-invoke `_load_lang_detect()` instead of the module-scoped fixture — surfaced at PR, not blocking.
 - Kickoff sweep (2026-08-31): zero one-way-door decisions (every choice — module names, `run_git` signature, `ImportError` contract — is plugin-private and reversible by a rename); zero unpinned implementation forks; no `docs/loom/PRINCIPLES.md`, so nothing to derive. No kickoff briefing issued.
 - Verdict stamped PASS (2026-08-31, round 3) — stamping the verdict, no re-review.
 - Round-2 revision (2026-08-31, user-approved after the 2-round cap): each migration task's new test lands in its host's existing test file so `Files touched` sets are disjoint (Check 14); BI tie-break: Tasks 11–13 → BI-4 (RED asserts name/exception preserved), Tasks 14–15 → BI-8 (RED asserts the old `_load` body is replaced).
