@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Mapping
 
 from docs_review_baseline_store import PublishedRecord, publish_record, read_record
@@ -37,6 +38,12 @@ _COHORT_FIELDS = (
 _REVIEWER_REVISION_KINDS = frozenset(
     {"reviewer_contract_revision", "reviewer_runtime_revision"}
 )
+_ARTIFACT_INSTRUCTION = re.compile(
+    rb"(?:ignore\s+(?:the\s+)?(?:reviewer\s+)?contract|"
+    rb"read\s+(?:another|an?\s+external|/)|"
+    rb"(?:call|invoke|use)\s+(?:an?\s+)?(?:external\s+)?tool)",
+    re.IGNORECASE,
+)
 
 
 def _identity(record: Mapping[str, object]) -> str:
@@ -48,6 +55,13 @@ def _identity(record: Mapping[str, object]) -> str:
         sort_keys=True,
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def bytes_digest(content: bytes) -> str:
+    """Return the SHA-256 identity of exact artifact bytes."""
+    if not isinstance(content, bytes):
+        raise TypeError("content must be bytes")
+    return hashlib.sha256(content).hexdigest()
 
 
 def resolve_scored_execution_profile(
@@ -189,3 +203,61 @@ def freeze_reviewer_revision(
         "serialization_version": "docs-reviewer-revision-v1",
     }
     return publish_record(store_root, record_id, record)
+
+
+def build_isolated_replay_envelope(
+    snapshot: bytes,
+    *,
+    classification: Mapping[str, object] | None,
+    campaign_policy: Mapping[str, object],
+    reviewer_contract: Mapping[str, object],
+) -> dict[str, object]:
+    """Bind approved bytes as data and expose only jointly allowed capabilities."""
+    digest = bytes_digest(snapshot)
+    if classification is None:
+        raise ValueError("classification decision is required")
+    required_decision_fields = (
+        "snapshot_digest",
+        "classification",
+        "classifier",
+        "approver",
+        "handling_basis",
+        "campaign_policy_revision_id",
+    )
+    if classification.get("ratified") is not True or any(
+        not isinstance(classification.get(field), str)
+        or not str(classification[field]).strip()
+        for field in required_decision_fields
+    ):
+        raise ValueError("ratified classification decision is incomplete")
+    if classification["snapshot_digest"] != digest:
+        raise ValueError("classification decision does not bind snapshot digest")
+    policy_revision = campaign_policy.get("revision_id")
+    if classification["campaign_policy_revision_id"] != policy_revision:
+        raise ValueError("classification decision does not bind campaign policy")
+    approved = campaign_policy.get("approved_classifications", [])
+    if (
+        not isinstance(approved, list)
+        or classification["classification"] not in approved
+    ):
+        raise ValueError("snapshot classification is not approved for replay")
+    allowed = campaign_policy.get("allowed_capabilities", [])
+    required = reviewer_contract.get("required_capabilities", [])
+    if not isinstance(allowed, list) or not all(isinstance(x, str) for x in allowed):
+        raise ValueError("campaign capability policy is malformed")
+    if not isinstance(required, list) or not all(isinstance(x, str) for x in required):
+        raise ValueError("reviewer capability contract is malformed")
+    denied = sorted(set(required) - set(allowed))
+    if denied:
+        raise ValueError("reviewer contract requests a capability denied by policy")
+    events = []
+    if _ARTIFACT_INSTRUCTION.search(snapshot):
+        events.append({"event": "artifact-instruction-denied", "count": 1})
+    return {
+        "allowed_capabilities": sorted(set(required)),
+        "artifact_role": "untrusted-review-content",
+        "classification": classification["classification"],
+        "content": snapshot,
+        "isolation_events": events,
+        "snapshot_digest": digest,
+    }

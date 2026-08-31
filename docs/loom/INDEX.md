@@ -39,6 +39,10 @@
 
 - test_req_110_contract_and_runtime_are_independent_inputs
 
+### REQ-111
+
+- test_req_111_replay_content_is_untrusted_and_data_bound
+
 ### REQ-112
 
 - test_req_103_req_112_concurrent_dispatch_consumes_receipt_once
@@ -486,7 +490,6 @@
 - REQ-106
 - REQ-107
 - REQ-108
-- REQ-111
 - REQ-113
 - REQ-114
 - REQ-115
