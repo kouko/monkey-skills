@@ -41,6 +41,10 @@ held unmerged pending those results.
   `docs/loom/dogfood/2026-09-01-prose-selfsweep-ab/` in a follow-up
   commit. The branch stays unmerged until then.
 
+
+### Follow-up (same version, post-A/B)
+
+- Rule 14 action (a) reworded to target semantic dependents (a sentence that reasons from the changed claim without repeating its words), not only literal string matches — two blind A/B rounds (silent-vs-none, silent-vs-written-checklist) came back null on the output form and identified the literal-`grep` wording of action (a) as the actual gap. Rule 14 is kept, not dropped; no effectiveness is claimed. See `docs/loom/dogfood/2026-09-01-prose-selfsweep-ab/results.md` and `results-round2.md`.
 ## [0.109.0] — 2026-08-31 — Adversarial audit station
 
 Ships an attack-catalogue store and a fail-loud checker for it, a
