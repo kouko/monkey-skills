@@ -31,6 +31,7 @@ check. Seeded from the 2026-08-31 adversarial audit's six findings.
 - cross a trust boundary (repo / worktree / process) | check_attack_catalogue.py `pinned by` resolved under a vendored dir no runner collects | reproduced 2026-08-31 — pinned by test_checker_refuses_pin_defined_only_under_a_vendored_dir
 - self-exempt via a prose condition | plan_card.py safety_bearing: header written below the first section or miscased renders N/A silently | reproduced 2026-08-31 — pinned by test_safety_bearing_line_outside_header_or_miscased_fails_loud
 - self-exempt via a prose condition | plan_card.py safety_bearing: an indented Safety-bearing: line is folded as a continuation and renders N/A | reproduced 2026-08-31 — pinned by test_indented_safety_bearing_line_in_header_fails_loud
+- self-exempt via a prose condition | plan_card.py safety_bearing: an unclosed code fence hides every later line from the misplaced-header scan | reproduced 2026-08-31 — pinned by test_unclosed_fence_before_misplaced_header_fails_loud
 
 ## Prose temptations
 
