@@ -117,3 +117,31 @@ this is a directional shift in the distribution, not a firm effect size and not
 a fix — NEW's worst draft still reconciled only 1/3. Single case, single task
 shape; generalization untested. The reworded action (a) makes a weak model MORE
 LIKELY to catch semantic dependents, not reliably catch all of them.
+
+## Refinement A/B: does an added "reconcile in place" clause help? — NULL, not shipped
+
+The confirmation above showed 出典 (citations) is the most-often-missed dependent,
+and the miss shape is systematic: agents append a new correction elsewhere while
+leaving the original stale citation standing. A candidate refinement added a clause
+to action (a): "Fix each where it sits ... a correction added elsewhere while the
+original still stands does not count." Tested BEFORE committing (control = current
+semantic action a; treatment = + the clause), single variable, 4 reps each, blind
+per-dependent scoring:
+
+| arm | scores /3 | mean | 出典 reconciled |
+|---|---|---|---|
+| control (semantic action a) | 1,2,2,3 | 2.00 | 2/4 |
+| + in-place clause | 1,2,2,3 | 2.00 | 1/4 |
+
+**Δ = 0.00; on its own target (出典) the clause did slightly worse (1/4 vs 2/4,
+n=4 noise).** The clause was NOT committed — tested first, no effect, dropped.
+
+Two conclusions, both load-bearing:
+1. **Diminishing returns confirmed.** The big content change (literal-grep →
+   semantic-dependent) moved the metric +0.75/3; this small refinement moves it
+   0.00. The lever was the action's core content, not further wording.
+2. **The n=4 noise floor is ≈ the refinement effect size.** This same semantic
+   contract scored 2.25 in the first confirmation and 2.00 here — a 0.25 swing
+   from variance alone across two n=4 runs. A refinement whose true effect is
+   ≤0.25 cannot be detected at n=4; detecting it needs far more reps than it is
+   worth. This is why the wording-tuning loop stops here.
