@@ -1485,6 +1485,13 @@ def test_packet_seals_non_ascii_path_under_c_locale(tmp_path) -> None:
     (PEP 538/540, true on this dev machine) — `PYTHONUTF8=0` and
     `PYTHONCOERCECLOCALE=0` pin the child to the true ASCII/C-locale
     decoding the bug needs.
+    
+
+    Two defects share this pin, with different reachability: the git
+    OUTPUT decode (red on macOS and Linux alike under LC_ALL=C) and the
+    argv ENCODE (red only where the filesystem encoding is not UTF-8 —
+    Linux CI, never macOS). `test_run_subprocess_hands_git_utf8_bytes_argv`
+    pins the encode half platform-independently.
     """
     repo_root = tmp_path / "repo"
     _init_git_repo(repo_root)
@@ -1530,3 +1537,24 @@ def test_packet_seals_non_ascii_path_under_c_locale(tmp_path) -> None:
     member_1 = emitted["members"][0]
     assert member_1["sha"] == sha1
     assert [f["path"] for f in member_1["files"]] == ["src/日本.py"]
+
+
+def test_run_subprocess_hands_git_utf8_bytes_argv(monkeypatch) -> None:
+    """Platform-independent pin for the argv half of the locale fix (#768
+    hotfix): `_run_subprocess` must hand every argv element to
+    subprocess.run as UTF-8 `bytes`, never `str`. The C-locale CLI test
+    above can only go red where `sys.getfilesystemencoding()` is not
+    UTF-8 (Linux CI, never macOS — os.fsencode / PEP 383), so this pin
+    fails anywhere the encode is reverted."""
+    captured: dict[str, object] = {}
+
+    def _capture(argv, **kwargs):
+        captured["argv"] = argv
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(cli.subprocess, "run", _capture)
+    path = "src/日本.py"
+    cli._run_subprocess(["git", "-C", ".", "show", f"{'a' * 40}:{path}"])
+    argv = captured["argv"]
+    assert all(isinstance(item, bytes) for item in argv), argv
+    assert argv[-1] == f"{'a' * 40}:{path}".encode("utf-8")
