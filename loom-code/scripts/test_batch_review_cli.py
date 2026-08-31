@@ -1430,7 +1430,9 @@ def test_apply_result_refuses_result_file_missing_packet_identity(
 ) -> None:
     """A result file that omits packet_identity on any binding, terminal
     result or finding is malformed (it cannot prove which packet it
-    answers) — refused with the malformed message, not silently bound."""
+    answers) — refused with a message naming the offending record, not the
+    generic 'reviewer result file is malformed' (which today it reuses,
+    indistinguishable from a top-level shape error)."""
     plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     dispatch_receipt = _recorded_dispatch_receipt(
         tmp_path, plan_path, repo_root, capsys,
@@ -1442,16 +1444,19 @@ def test_apply_result_refuses_result_file_missing_packet_identity(
         )
         payload = json.loads(result_path.read_text(encoding="utf-8"))
         if section == "findings":
-            del payload["terminal_results"][0]["findings"][0]["packet_identity"]
+            record = payload["terminal_results"][0]["findings"][0]
         else:
-            del payload[section][0]["packet_identity"]
+            record = payload[section][0]
+        del record["packet_identity"]
         result_path.write_text(json.dumps(payload), encoding="utf-8")
         code = cli.main(_apply_result_argv(
             plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
         ))
         out = json.loads(capsys.readouterr().out)
         assert code != 0, section
-        assert out["reasons"] == ["reviewer result file is malformed"], section
+        assert out["reasons"] == [
+            f"reviewer result file record has no packet_identity: {record}"
+        ], section
         assert plan_path.read_text(encoding="utf-8") == before
         stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
         assert stored.get("result_applied", False) is False
