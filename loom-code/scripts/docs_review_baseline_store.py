@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import base64
 import binascii
+from contextlib import contextmanager
 from dataclasses import dataclass
 import difflib
+import fcntl
 import hashlib
 import json
 import os
@@ -18,7 +20,7 @@ from typing import Any, Mapping
 _RECORD_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _CAPABILITY_SEAL = object()
 _RECEIPT_SEAL = object()
-_CONSUMED_RECEIPTS: set[str] = set()
+_RECEIPT_NAMESPACE = "receipt-consumptions"
 
 
 class RecordConflictError(ValueError):
@@ -134,6 +136,22 @@ def _open_records_directory(store_root: Path, *, create: bool) -> int:
         os.close(store_fd)
 
 
+def _open_store_namespace(store_root: Path, name: str, *, create: bool) -> int:
+    """Open a dedicated no-follow namespace immediately below the store root."""
+    store_fd = _open_directory_path(store_root, create=create)
+    try:
+        if create:
+            try:
+                os.mkdir(name, 0o700, dir_fd=store_fd)
+            except FileExistsError:
+                pass
+            else:
+                os.fsync(store_fd)
+        return os.open(name, _directory_open_flags(), dir_fd=store_fd)
+    finally:
+        os.close(store_fd)
+
+
 def _read_regular_file(directory_fd: int, name: str, path: Path) -> bytes:
     try:
         flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
@@ -158,6 +176,84 @@ def _write_all(file_fd: int, payload: bytes) -> None:
         if written <= 0:
             raise OSError("short record write")
         view = view[written:]
+
+
+def _publish_namespace_payload(
+    directory_fd: int, *, final_name: str, payload: bytes, display_path: Path
+) -> None:
+    """Publish immutable bytes inside an already secured directory descriptor."""
+    temporary_name = f".{final_name}.{uuid.uuid4().hex}.tmp"
+    temporary_fd: int | None = None
+    temporary_created = False
+    try:
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+        temporary_fd = os.open(
+            temporary_name, flags, 0o600, dir_fd=directory_fd
+        )
+        temporary_created = True
+        _write_all(temporary_fd, payload)
+        os.fsync(temporary_fd)
+        os.close(temporary_fd)
+        temporary_fd = None
+        try:
+            os.link(
+                temporary_name,
+                final_name,
+                src_dir_fd=directory_fd,
+                dst_dir_fd=directory_fd,
+                follow_symlinks=False,
+            )
+        except FileExistsError:
+            existing = _read_regular_file(
+                directory_fd, final_name, display_path
+            )
+            if existing != payload:
+                raise RecordConflictError(
+                    f"immutable namespace entry has different bytes: {final_name}"
+                )
+        else:
+            os.fsync(directory_fd)
+    finally:
+        if temporary_fd is not None:
+            os.close(temporary_fd)
+        if temporary_created:
+            try:
+                os.unlink(temporary_name, dir_fd=directory_fd)
+            except FileNotFoundError:
+                pass
+            else:
+                os.fsync(directory_fd)
+
+
+@contextmanager
+def _receipt_consumption_lock(store_root: Path):
+    """Serialize receipt validation, target publication, and durable consumption."""
+    directory_fd = _open_store_namespace(
+        Path(store_root), _RECEIPT_NAMESPACE, create=True
+    )
+    lock_fd: int | None = None
+    try:
+        try:
+            lock_fd = os.open(
+                ".lock",
+                os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600,
+                dir_fd=directory_fd,
+            )
+        except FileExistsError:
+            lock_fd = os.open(
+                ".lock", os.O_RDWR | os.O_NOFOLLOW, dir_fd=directory_fd
+            )
+        else:
+            os.fsync(directory_fd)
+        if not stat.S_ISREG(os.fstat(lock_fd).st_mode):
+            raise ValueError("receipt consumption lock is not a regular file")
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        yield directory_fd
+    finally:
+        if lock_fd is not None:
+            os.close(lock_fd)
+        os.close(directory_fd)
 
 
 def _published(record_id: str, path: Path, payload: bytes) -> PublishedRecord:
@@ -283,14 +379,15 @@ def admit_historical_case(
         record["status"] = "candidate"
     else:
         raise ValueError("snapshot_bytes must be bytes or None")
-    consume_authorization_receipt(
+    return _publish_record_with_authorization_receipt(
         Path(store_root),
         authorization_receipt,
         action="nominate_historical_case",
         actor=actor,
         target=case_id,
+        record_id=case_id,
+        record=record,
     )
-    return publish_record(store_root, case_id, record)
 
 
 def _snapshot_value(snapshot_bytes: bytes) -> dict[str, str]:
@@ -1007,7 +1104,7 @@ def authorize_governed_action_with_capability(
     )
 
 
-def consume_authorization_receipt(
+def _validate_authorization_receipt(
     store_root: Path,
     receipt: AuthorizationReceipt,
     *,
@@ -1015,7 +1112,7 @@ def consume_authorization_receipt(
     actor: str,
     target: str,
 ) -> None:
-    """Validate and consume one receipt before its exact target mutation."""
+    """Validate a receipt's seal, exact binding, authority, and audit evidence."""
     if (
         not isinstance(receipt, AuthorizationReceipt)
         or getattr(receipt, "_seal", None) is not _RECEIPT_SEAL
@@ -1029,8 +1126,6 @@ def consume_authorization_receipt(
         raise ValueError("receipt actor does not match")
     if receipt.target != target:
         raise ValueError("receipt target does not match")
-    if receipt.nonce in _CONSUMED_RECEIPTS:
-        raise ValueError("receipt is already consumed or stale")
     capability = object.__new__(CampaignCapability)
     for field, value in {
         "store_identity": receipt.store_identity,
@@ -1054,7 +1149,98 @@ def consume_authorization_receipt(
         }.items()
     ):
         raise ValueError("receipt audit binding is invalid")
-    _CONSUMED_RECEIPTS.add(receipt.nonce)
+
+
+def _receipt_marker_name(receipt: AuthorizationReceipt) -> str:
+    if _RECORD_ID.fullmatch(receipt.nonce) is None:
+        raise ValueError("receipt nonce is invalid")
+    return f"{receipt.nonce}.json"
+
+
+def _receipt_is_consumed(directory_fd: int, receipt: AuthorizationReceipt) -> bool:
+    marker_name = _receipt_marker_name(receipt)
+    try:
+        _read_regular_file(
+            directory_fd,
+            marker_name,
+            Path(_RECEIPT_NAMESPACE) / marker_name,
+        )
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def _mark_receipt_consumed(
+    directory_fd: int,
+    receipt: AuthorizationReceipt,
+    *,
+    published: PublishedRecord | None,
+) -> None:
+    marker_name = _receipt_marker_name(receipt)
+    marker = {
+        "action": receipt.action,
+        "actor": receipt.actor,
+        "audit_record_id": receipt.audit_record_id,
+        "kind": "authorization_receipt_consumption",
+        "nonce": receipt.nonce,
+        "published_digest": None if published is None else published.digest,
+        "published_record_id": None if published is None else published.record_id,
+        "schema_version": 1,
+        "target": receipt.target,
+    }
+    _publish_namespace_payload(
+        directory_fd,
+        final_name=marker_name,
+        payload=canonical_json_bytes(marker),
+        display_path=Path(_RECEIPT_NAMESPACE) / marker_name,
+    )
+
+
+def _publish_record_with_authorization_receipt(
+    store_root: Path,
+    receipt: AuthorizationReceipt,
+    *,
+    action: str,
+    actor: str,
+    target: str,
+    record_id: str,
+    record: Mapping[str, object],
+) -> PublishedRecord:
+    """Publish one target and durably consume its receipt as one locked operation.
+
+    The consumption marker is finalized only after successful publication. If
+    publication reports an I/O failure after linking the target, a retry is safe:
+    immutable idempotent publication completes before the marker is retried.
+    """
+    store_root = Path(store_root)
+    with _receipt_consumption_lock(store_root) as directory_fd:
+        _validate_authorization_receipt(
+            store_root, receipt, action=action, actor=actor, target=target
+        )
+        if _receipt_is_consumed(directory_fd, receipt):
+            raise ValueError("receipt is already consumed or stale")
+        published = publish_record(store_root, record_id, record)
+        _mark_receipt_consumed(directory_fd, receipt, published=published)
+        return published
+
+
+def consume_authorization_receipt(
+    store_root: Path,
+    receipt: AuthorizationReceipt,
+    *,
+    action: str,
+    actor: str,
+    target: str,
+) -> None:
+    """Validate and durably consume one receipt without a coupled mutation."""
+    store_root = Path(store_root)
+    with _receipt_consumption_lock(store_root) as directory_fd:
+        _validate_authorization_receipt(
+            store_root, receipt, action=action, actor=actor, target=target
+        )
+        if _receipt_is_consumed(directory_fd, receipt):
+            raise ValueError("receipt is already consumed or stale")
+        _mark_receipt_consumed(directory_fd, receipt, published=None)
 
 
 def _ratification_governance(

@@ -273,6 +273,180 @@ def test_req_99_historical_case_admission(tmp_path) -> None:
     assert sorted((tmp_path / "records").glob("case-*.json")) == records_before_refusal
 
 
+def test_req_99_concurrent_admission_consumes_receipt_once(tmp_path) -> None:
+    # @req: REQ-99
+    """One receipt cannot authorize two successful concurrent publications."""
+    roles = _campaign_roles()
+    _authority, capability = store.bootstrap_campaign_authority(
+        tmp_path,
+        "authority-case-concurrent-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities=_campaign_action_authorities(roles),
+        allowed_self_ratification=[],
+    )
+    actor = roles["case_nominator"]
+    receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-concurrent",
+    )
+
+    def admit():
+        return admit_historical_case(
+            tmp_path,
+            "case-concurrent",
+            authorization_receipt=receipt,
+            actor=actor,
+            snapshot_bytes=b"# Concurrent historical draft\n",
+            source_locator="git:abc123:docs/concurrent.md",
+            evidence_locators=["review:concurrent#finding-1"],
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(admit) for _ in range(2)]
+    results = [future.exception() or future.result() for future in futures]
+
+    assert len([result for result in results if isinstance(result, store.PublishedRecord)]) == 1
+    failures = [result for result in results if isinstance(result, Exception)]
+    assert len(failures) == 1
+    assert "consumed" in str(failures[0]) or "stale" in str(failures[0])
+    assert len(list((tmp_path / "records").glob("case-concurrent.json"))) == 1
+    assert len(list((tmp_path / "receipt-consumptions").glob("*.json"))) == 1
+
+
+def test_req_99_publish_failure_does_not_burn_receipt(tmp_path, monkeypatch) -> None:
+    # @req: REQ-99
+    """A failed target publication leaves the receipt available for safe retry."""
+    roles = _campaign_roles()
+    _authority, capability = store.bootstrap_campaign_authority(
+        tmp_path,
+        "authority-case-retry-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities=_campaign_action_authorities(roles),
+        allowed_self_ratification=[],
+    )
+    actor = roles["case_nominator"]
+    receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-retry",
+    )
+    real_publish = store.publish_record
+    calls = 0
+
+    def fail_target_once(store_root, record_id, record):
+        nonlocal calls
+        if record_id == "case-retry" and calls == 0:
+            calls += 1
+            real_publish(store_root, record_id, record)
+            raise OSError("forced target publication failure")
+        return real_publish(store_root, record_id, record)
+
+    monkeypatch.setattr(store, "publish_record", fail_target_once)
+    arguments = {
+        "authorization_receipt": receipt,
+        "actor": actor,
+        "snapshot_bytes": b"# Retryable historical draft\n",
+        "source_locator": "git:abc123:docs/retry.md",
+        "evidence_locators": ["review:retry#finding-1"],
+    }
+
+    with pytest.raises(OSError, match="forced target publication failure"):
+        admit_historical_case(tmp_path, "case-retry", **arguments)
+    assert (tmp_path / "records" / "case-retry.json").is_file()
+    assert list((tmp_path / "receipt-consumptions").glob("*.json")) == []
+
+    published = admit_historical_case(tmp_path, "case-retry", **arguments)
+    assert published.record_id == "case-retry"
+    assert len(list((tmp_path / "receipt-consumptions").glob("*.json"))) == 1
+
+
+def test_req_99_publish_conflict_does_not_consume_receipt(tmp_path) -> None:
+    # @req: REQ-99
+    """A conflicting target refuses publication without consuming authority."""
+    roles = _campaign_roles()
+    _authority, capability = store.bootstrap_campaign_authority(
+        tmp_path,
+        "authority-case-conflict-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities=_campaign_action_authorities(roles),
+        allowed_self_ratification=[],
+    )
+    actor = roles["case_nominator"]
+    receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-conflict",
+    )
+    existing = publish_record(tmp_path, "case-conflict", {"kind": "other"})
+
+    for _ in range(2):
+        with pytest.raises(RecordConflictError):
+            admit_historical_case(
+                tmp_path,
+                "case-conflict",
+                authorization_receipt=receipt,
+                actor=actor,
+                snapshot_bytes=b"# Conflicting historical draft\n",
+                source_locator="git:abc123:docs/conflict.md",
+                evidence_locators=["review:conflict#finding-1"],
+            )
+
+    assert read_record(tmp_path, "case-conflict") == existing
+    assert list((tmp_path / "receipt-consumptions").glob("*.json")) == []
+
+
+def test_req_99_receipt_namespace_symlink_cannot_redirect_marker(tmp_path) -> None:
+    # @req: REQ-99
+    """Receipt consumption refuses a namespace redirected outside the store."""
+    roles = _campaign_roles()
+    _authority, capability = store.bootstrap_campaign_authority(
+        tmp_path,
+        "authority-case-symlink-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities=_campaign_action_authorities(roles),
+        allowed_self_ratification=[],
+    )
+    actor = roles["case_nominator"]
+    receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-symlink",
+    )
+    outside = tmp_path / "outside-receipts"
+    outside.mkdir()
+    (tmp_path / "receipt-consumptions").symlink_to(
+        outside, target_is_directory=True
+    )
+
+    with pytest.raises(OSError):
+        admit_historical_case(
+            tmp_path,
+            "case-symlink",
+            authorization_receipt=receipt,
+            actor=actor,
+            snapshot_bytes=b"# Symlink historical draft\n",
+            source_locator="git:abc123:docs/symlink.md",
+            evidence_locators=["review:symlink#finding-1"],
+        )
+
+    assert list(outside.iterdir()) == []
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "case-symlink")
+
+
 def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
     # @req: REQ-100
     """Ratification freezes a named oracle; corrections form reasoned children."""

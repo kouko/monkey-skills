@@ -31,7 +31,11 @@
 
 ### REQ-99
 
+- test_req_99_concurrent_admission_consumes_receipt_once
 - test_req_99_historical_case_admission
+- test_req_99_publish_conflict_does_not_consume_receipt
+- test_req_99_publish_failure_does_not_burn_receipt
+- test_req_99_receipt_namespace_symlink_cannot_redirect_marker
 
 ## independent-advisor
 
