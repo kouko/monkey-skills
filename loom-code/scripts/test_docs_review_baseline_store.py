@@ -147,6 +147,69 @@ def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
         )
 
 
+def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
+    # @req: REQ-101
+    """A run-facing corpus ID freezes exact, ratified snapshot bindings."""
+    case = admit_historical_case(
+        tmp_path,
+        "case-1",
+        snapshot_bytes=b"# Exact historical draft\n",
+        source_locator="git:abc123:docs/strategy.md",
+        evidence_locators=["review:abc123#finding-1"],
+    )
+    snapshot_digest = case.record["snapshot"]["digest"]
+    oracle = ratify_oracle(
+        tmp_path,
+        "oracle-case-1-r1",
+        case_id="case-1",
+        snapshot_digest=snapshot_digest,
+        findings=[
+            {
+                "finding_id": "missing-risk",
+                "expectation": "The review names the rollout risk.",
+                "rationale": "The rollout lacks a limiting condition.",
+                "evidence_locator": "git:abc123:docs/strategy.md#rollout",
+            }
+        ],
+        negative_control_intent="Do not reward generic requests for detail.",
+        ratifier="maintainer:kuku",
+    )
+    bindings = [("case-1", snapshot_digest, oracle.record_id)]
+
+    manifest = store.freeze_corpus_manifest(tmp_path, bindings)
+    frozen_bytes = manifest.path.read_bytes()
+
+    assert manifest.record == {
+        "bindings": [
+            {
+                "case_id": "case-1",
+                "oracle_revision_id": "oracle-case-1-r1",
+                "snapshot_digest": snapshot_digest,
+            }
+        ],
+        "kind": "corpus_manifest",
+        "schema_version": 1,
+    }
+    assert manifest.record_id == f"corpus-{manifest.digest}"
+    assert store.freeze_corpus_manifest(tmp_path, bindings) == manifest
+    assert manifest.path.read_bytes() == frozen_bytes
+
+    with pytest.raises(ValueError, match="non-empty"):
+        store.freeze_corpus_manifest(tmp_path, [])
+    with pytest.raises(ValueError, match="latest"):
+        store.freeze_corpus_manifest(
+            tmp_path, [("case-1", snapshot_digest, "latest")]
+        )
+    with pytest.raises(ValueError, match="ratified"):
+        store.freeze_corpus_manifest(
+            tmp_path, [("case-1", snapshot_digest, case.record_id)]
+        )
+    with pytest.raises(ValueError, match="snapshot digest"):
+        store.freeze_corpus_manifest(
+            tmp_path, [("case-1", "b" * 64, oracle.record_id)]
+        )
+
+
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
     """A record ID chooses one canonical payload without rewriting history."""
     first = {"kind": "oracle", "labels": ["a"], "version": 1}

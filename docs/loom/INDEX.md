@@ -6,6 +6,10 @@
 
 - test_req_100_oracle_ratification_is_immutable
 
+### REQ-101
+
+- test_req_101_corpus_manifest_is_exact_and_immutable
+
 ### REQ-99
 
 - test_req_99_historical_case_admission
@@ -436,7 +440,6 @@
 
 ### reqs with no tests
 
-- REQ-101
 - REQ-102
 - REQ-103
 - REQ-104

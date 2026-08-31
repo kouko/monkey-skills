@@ -345,6 +345,68 @@ def correct_oracle(
     return append_revision(store_root, parent_revision_id, child)
 
 
+def freeze_corpus_manifest(
+    store_root: Path, bindings: list[tuple[str, str, str]]
+) -> PublishedRecord:
+    """Freeze an exact ordered corpus and return its digest-bound revision."""
+    if not isinstance(bindings, list) or not bindings:
+        raise ValueError("corpus bindings must be a non-empty list")
+    manifest_bindings: list[dict[str, str]] = []
+    seen_cases: set[str] = set()
+    for index, binding in enumerate(bindings):
+        if not isinstance(binding, tuple) or len(binding) != 3:
+            raise ValueError(
+                f"bindings[{index}] must be (case_id, snapshot_digest, oracle_revision_id)"
+            )
+        case_id, snapshot_digest, oracle_revision_id = binding
+        case_id = _required_text(case_id, f"bindings[{index}].case_id")
+        snapshot_digest = _required_text(
+            snapshot_digest, f"bindings[{index}].snapshot_digest"
+        )
+        oracle_revision_id = _required_text(
+            oracle_revision_id, f"bindings[{index}].oracle_revision_id"
+        )
+        if oracle_revision_id == "latest":
+            raise ValueError("corpus bindings must not use latest")
+        if re.fullmatch(r"[0-9a-f]{64}", snapshot_digest) is None:
+            raise ValueError(
+                f"bindings[{index}].snapshot_digest must be a lowercase SHA-256 digest"
+            )
+        if case_id in seen_cases:
+            raise ValueError(f"duplicate corpus case_id: {case_id}")
+        oracle = read_record(store_root, oracle_revision_id)
+        if (
+            oracle.record.get("kind") != "ratified_oracle"
+            or oracle.record.get("status") != "ratified"
+        ):
+            raise ValueError(
+                f"binding {case_id} oracle revision is not ratified: {oracle_revision_id}"
+            )
+        if oracle.record.get("case_id") != case_id:
+            raise ValueError(
+                f"binding {case_id} oracle describes a different case: {oracle_revision_id}"
+            )
+        if oracle.record.get("snapshot_digest") != snapshot_digest:
+            raise ValueError(
+                f"binding {case_id} oracle snapshot digest does not match: "
+                f"{oracle_revision_id}"
+            )
+        seen_cases.add(case_id)
+        manifest_bindings.append(
+            {
+                "case_id": case_id,
+                "oracle_revision_id": oracle_revision_id,
+                "snapshot_digest": snapshot_digest,
+            }
+        )
+    record: dict[str, object] = {
+        "bindings": manifest_bindings,
+        "kind": "corpus_manifest",
+        "schema_version": 1,
+    }
+    return publish_record(store_root, f"corpus-{record_digest(record)}", record)
+
+
 def append_revision(
     store_root: Path, parent_record_id: str, revision: Mapping[str, object]
 ) -> PublishedRecord:
