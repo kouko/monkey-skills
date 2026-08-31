@@ -124,7 +124,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-102
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: claimed(@codex)
+- **Status**: implemented(2c41d28c03cb0a96bbf9b2f3e4808e2fd2728000)
 - **Gloss**: 實驗只比較真正可確認的弱模型，不讓強模型偷混進來。
 
 ## Task 6 — 保留每一次 dispatch attempt
@@ -181,7 +181,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-105
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 只有同模型、同設定的重跑才能回答 reviewer 穩不穩。
 
 ## Task 9 — 計算帶 population 的 metrics
