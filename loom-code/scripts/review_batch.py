@@ -280,8 +280,8 @@ def _review_batch_oracle():
         return load_sibling(
             "check_review_batches.py", name="review_batch_schema_oracle", anchor=__file__
         )
-    except ImportError:
-        raise PacketRefused("Review Batch schema oracle cannot be loaded") from None
+    except ImportError as exc:
+        raise PacketRefused("Review Batch schema oracle cannot be loaded") from exc
 
 
 def _issue_execution_projection_from_validated_plan(
