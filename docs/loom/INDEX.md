@@ -2,6 +2,10 @@
 
 ## docs-review-baseline
 
+### REQ-100
+
+- test_req_100_oracle_ratification_is_immutable
+
 ### REQ-99
 
 - test_req_99_historical_case_admission
@@ -432,7 +436,6 @@
 
 ### reqs with no tests
 
-- REQ-100
 - REQ-101
 - REQ-102
 - REQ-103

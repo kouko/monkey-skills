@@ -252,6 +252,99 @@ def admit_historical_case(
     return publish_record(store_root, case_id, record)
 
 
+def _required_text(value: object, field: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field} must be a non-empty string")
+    return value
+
+
+def _validated_findings(findings: object) -> list[dict[str, object]]:
+    if not isinstance(findings, list) or not findings:
+        raise ValueError("findings must be a non-empty list")
+    validated: list[dict[str, object]] = []
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, Mapping):
+            raise ValueError(f"findings[{index}] must be an object")
+        item = dict(finding)
+        for field in ("finding_id", "expectation", "rationale", "evidence_locator"):
+            _required_text(item.get(field), f"findings[{index}].{field}")
+        validated.append(item)
+    return validated
+
+
+def _oracle_fields(
+    *,
+    case_id: object,
+    snapshot_digest: object,
+    findings: object,
+    negative_control_intent: object,
+    ratifier: object,
+) -> dict[str, object]:
+    digest = _required_text(snapshot_digest, "snapshot_digest")
+    if re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+        raise ValueError("snapshot_digest must be a lowercase SHA-256 digest")
+    return {
+        "case_id": _required_text(case_id, "case_id"),
+        "findings": _validated_findings(findings),
+        "kind": "ratified_oracle",
+        "negative_control_intent": _required_text(
+            negative_control_intent, "negative_control_intent"
+        ),
+        "ratifier": _required_text(ratifier, "ratifier"),
+        "schema_version": 1,
+        "snapshot_digest": digest,
+        "status": "ratified",
+    }
+
+
+def ratify_oracle(
+    store_root: Path,
+    revision_id: str,
+    *,
+    case_id: str,
+    snapshot_digest: str,
+    findings: list[Mapping[str, object]],
+    negative_control_intent: str,
+    ratifier: str,
+) -> PublishedRecord:
+    """Freeze one complete, named human oracle revision."""
+    record = _oracle_fields(
+        case_id=case_id,
+        snapshot_digest=snapshot_digest,
+        findings=findings,
+        negative_control_intent=negative_control_intent,
+        ratifier=ratifier,
+    )
+    return publish_record(store_root, revision_id, record)
+
+
+def correct_oracle(
+    store_root: Path,
+    parent_revision_id: str,
+    *,
+    findings: list[Mapping[str, object]],
+    negative_control_intent: str,
+    reason: str,
+    ratifier: str,
+) -> PublishedRecord:
+    """Freeze a reason-bearing child while preserving the ratified parent."""
+    parent = read_record(store_root, parent_revision_id)
+    if parent.record.get("kind") != "ratified_oracle" or parent.record.get(
+        "status"
+    ) != "ratified":
+        raise ValueError("oracle correction parent must be a ratified oracle")
+    child = _oracle_fields(
+        case_id=parent.record.get("case_id"),
+        snapshot_digest=parent.record.get("snapshot_digest"),
+        findings=findings,
+        negative_control_intent=negative_control_intent,
+        ratifier=ratifier,
+    )
+    child["correction_reason"] = _required_text(reason, "reason")
+    child["parent_revision_id"] = parent_revision_id
+    return append_revision(store_root, parent_revision_id, child)
+
+
 def append_revision(
     store_root: Path, parent_record_id: str, revision: Mapping[str, object]
 ) -> PublishedRecord:

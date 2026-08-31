@@ -13,7 +13,9 @@ from docs_review_baseline_store import (
     admit_historical_case,
     append_revision,
     canonical_json_bytes,
+    correct_oracle,
     publish_record,
+    ratify_oracle,
     read_record,
     record_digest,
 )
@@ -64,6 +66,85 @@ def test_req_99_historical_case_admission(tmp_path) -> None:
         "status": "unscoreable",
     }
     assert "snapshot" not in unscoreable.record
+
+
+def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
+    # @req: REQ-100
+    """Ratification freezes a named oracle; corrections form reasoned children."""
+    oracle = ratify_oracle(
+        tmp_path,
+        "oracle-case-1-r1",
+        case_id="case-1",
+        snapshot_digest="a" * 64,
+        findings=[
+            {
+                "finding_id": "missing-risk",
+                "expectation": "The review names the unbounded migration risk.",
+                "rationale": "The rollout has no limiting condition.",
+                "evidence_locator": "git:abc123:docs/strategy.md#rollout",
+            }
+        ],
+        negative_control_intent="Do not reward generic requests for more detail.",
+        ratifier="maintainer:kuku",
+    )
+    frozen_bytes = oracle.path.read_bytes()
+
+    assert oracle.record["ratifier"] == "maintainer:kuku"
+    assert oracle.record["negative_control_intent"] == (
+        "Do not reward generic requests for more detail."
+    )
+    assert oracle.digest == record_digest(oracle.record)
+    with pytest.raises(RecordConflictError):
+        ratify_oracle(
+            tmp_path,
+            "oracle-case-1-r1",
+            case_id="case-1",
+            snapshot_digest="a" * 64,
+            findings=[
+                {
+                    "finding_id": "missing-risk",
+                    "expectation": "Changed in place.",
+                    "rationale": "This remains structurally complete.",
+                    "evidence_locator": "git:abc123:docs/strategy.md#rollout",
+                }
+            ],
+            negative_control_intent="Changed in place.",
+            ratifier="maintainer:kuku",
+        )
+
+    correction = correct_oracle(
+        tmp_path,
+        oracle.record_id,
+        findings=[
+            {
+                "finding_id": "missing-risk",
+                "expectation": "The review names the bounded migration risk.",
+                "rationale": "The rollout is limited to one cohort.",
+                "evidence_locator": "git:def456:docs/strategy.md#rollout",
+            }
+        ],
+        negative_control_intent="Do not reward generic requests for more detail.",
+        reason="The original snapshot interpretation ignored the cohort limit.",
+        ratifier="maintainer:kuku",
+    )
+
+    assert correction.record["parent_revision_id"] == oracle.record_id
+    assert correction.record["parent_digest"] == oracle.digest
+    assert correction.record["correction_reason"]
+    assert correction.digest != oracle.digest
+    assert correction.record_id != oracle.record_id
+    assert oracle.path.read_bytes() == frozen_bytes
+    assert read_record(tmp_path, oracle.record_id) == oracle
+
+    with pytest.raises(ValueError, match="reason"):
+        correct_oracle(
+            tmp_path,
+            oracle.record_id,
+            findings=correction.record["findings"],
+            negative_control_intent=correction.record["negative_control_intent"],
+            reason="",
+            ratifier="maintainer:kuku",
+        )
 
 
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
