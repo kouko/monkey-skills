@@ -263,6 +263,51 @@ def test_safety_bearing_mention_inside_fenced_block_is_ignored(tmp_path):
     assert plan_card.safety_bearing(text) is None
 
 
+def test_unclosed_fence_before_misplaced_header_fails_loud(tmp_path):
+    """(review round 3, live adversarial audit) A fenced code block
+    opened in the plan body and never closed used to leave the scan's
+    `in_fence` state True through EOF, so a genuine misplaced
+    `Safety-bearing:` line written after the opening fence marker was
+    silently treated as fenced content and skipped — exit 0, N/A. An
+    unclosed fence is itself malformed: it must fail loud naming the
+    opening line, never silently swallow the rest of the document."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n```\nSafety-bearing: yes — touches git-guard\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "unclosed" in result.stdout.lower()
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="unclosed"):
+        plan_card.safety_bearing(text)
+
+
+def test_tilde_fenced_safety_bearing_mention_is_ignored(tmp_path):
+    """(review round 3, live adversarial audit) `~~~` is markdown's
+    other fence delimiter, alongside triple-backtick — a
+    `Safety-bearing:` line quoted inside a properly closed `~~~` fence
+    is content, not a misplaced header declaration, same as the
+    backtick case."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n~~~\nSafety-bearing: yes — touches git-guard\n~~~\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: N/A — header absent\n" in result.stdout
+    assert plan_card.safety_bearing(text) is None
+
+
 def test_all_done_plan_renders_next_close_out(tmp_path):
     """(2) When every task's status is done(...), the next line points at
     close-out, not at any task."""

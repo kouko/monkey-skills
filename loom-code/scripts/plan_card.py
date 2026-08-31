@@ -197,18 +197,37 @@ def _reject_indented_header_key(header: str) -> None:
 def _find_misplaced_safety_bearing_line(outside: str) -> str | None:
     """The first `safety-bearing:` line (any case) in the plan body
     (everything after the header block), or None. Lines inside a fenced
-    code block (triple backtick) are skipped — a quoted grammar
-    example is content, not a misplaced header declaration (live
-    adversarial audit, review round 2)."""
-    in_fence = False
-    for line in outside.splitlines():
-        if line.strip().startswith("```"):
-            in_fence = not in_fence
+    code block (triple backtick or ~~~ — closing must reuse the SAME
+    delimiter, a mismatched close never ends the fence) are skipped — a
+    quoted grammar example is content, not a misplaced header
+    declaration (live adversarial audit, review round 2). A fence still
+    open at EOF is itself malformed: raises ValueError naming the
+    opening line, rather than silently treating every remaining line as
+    fenced content (review round 3) — an unclosed fence must never be
+    able to hide a genuine misplaced header line from this scan."""
+    fence_delim: str | None = None
+    fence_open_line: int | None = None
+    for lineno, line in enumerate(outside.splitlines(), start=1):
+        stripped = line.strip()
+        if fence_delim is None:
+            if stripped.startswith("```") or stripped.startswith("~~~"):
+                fence_delim = stripped[:3]
+                fence_open_line = lineno
+                continue
+        elif stripped.startswith(fence_delim):
+            fence_delim = None
+            fence_open_line = None
             continue
-        if in_fence:
+        if fence_delim is not None:
             continue
         if re.match(r"^safety-bearing:", line, re.IGNORECASE):
             return line
+    if fence_delim is not None:
+        raise ValueError(
+            f"unclosed code fence opened at line {fence_open_line} of the "
+            "plan body — a misplaced 'Safety-bearing:' line could be "
+            "hiding inside it"
+        )
     return None
 
 
