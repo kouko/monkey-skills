@@ -92,6 +92,10 @@ def _run_subprocess(args: list[str], *, text: bool = True) -> subprocess.Complet
     (`_run_git`, `_committed_bytes`, `_commit_changed_paths`) already
     read `.returncode`/`.stdout`/`.stderr` off of — so none of them need
     to change."""
+    # Invariant: args must be the fixed ["git", "-C", <repo_root>, *git_args]
+    # shape -- args[2] is read as repo_root below.
+    if args[:2] != ["git", "-C"] or len(args) < 3:
+        raise ValueError("_run_subprocess expects ['git', '-C', <repo>, ...] argv")
     repo_root = Path(args[2])
     git_args = args[3:]
     try:

@@ -8,7 +8,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
 ## [0.108.1] — 2026-08-31 — Shared git body and sibling loader (Phase 1 script helper extraction)
 
 Collapses two duplicated shapes across `scripts/` onto two new shared
-helpers, with no behavior change at any call site.
+helpers. Call-site return/raise/timeout contracts are unchanged; the one
+deliberate behavior change is the UTF-8 argv/decoding fix now applied to
+all six `_git`/`_run_git` wrappers, not just `batch_review_cli`'s.
 
 ### Added
 

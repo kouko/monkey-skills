@@ -72,7 +72,6 @@ def _oracle():
         return load_sibling(
             "check_review_batches.py",
             name="propose_review_batch_oracle",
-            anchor=__file__,
         )
     except ImportError as exc:
         raise ValueError("Review Batch schema oracle cannot be loaded") from exc

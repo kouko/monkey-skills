@@ -1,13 +1,16 @@
 """Shared git-invocation body for loom-code's scripts/ directory.
 
-`run_git` is the single subprocess.run wrapper around `git -C <repo> ...`;
-the return/raise shape it hands back is selected entirely by its `check`
-and `text` parameters, so the three failure-shape variants that six call
-sites (`loom_gate_markers._git`, `review_context._git`, `review_scope._git`,
-and others) hand-rolled independently collapse into one body here. This
-docstring is the SSOT for the encoding/argv rationale below -- other
-scripts/ modules that wrap `run_git` (e.g. `batch_review_cli._run_subprocess`)
-point back here rather than restating it.
+`run_git` is the shared body of the six `_git`/`_run_git` wrappers around
+`git -C <repo> ...`; the return/raise shape it hands back is selected
+entirely by its `check` and `text` parameters, so the three failure-shape
+variants that those six call sites (`loom_gate_markers._git`,
+`review_context._git`, `review_scope._git`, and others) hand-rolled
+independently collapse into one body here. This docstring is the SSOT for
+the encoding/argv rationale below -- other scripts/ modules that wrap
+`run_git` (e.g. `batch_review_cli._run_subprocess`) point back here rather
+than restating it. A handful of direct `subprocess.run(["git", ...])`
+calls with stdin/bytes needs remain outside this wrapper, in
+`loom_gate_markers.py` and `live_host_review_gate.py`.
 
 Encoding: `encoding="utf-8", errors="surrogateescape"` is passed explicitly
 rather than the locale-dependent default `text=True` picks up

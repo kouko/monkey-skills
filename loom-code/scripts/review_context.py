@@ -20,7 +20,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess  # kept: test_git_wrapper_characterization_none monkeypatches review_context.subprocess.run
 import sys
 from datetime import datetime, timezone
 from pathlib import Path

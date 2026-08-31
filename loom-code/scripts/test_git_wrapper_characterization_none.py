@@ -15,6 +15,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import git_exec
 import loom_gate_markers
 import review_context
 import review_scope
@@ -90,7 +91,7 @@ def test_review_context_git_missing_binary_returns_none(tmp_path, monkeypatch):
     def fake_run(*args, **kwargs):
         raise OSError("git binary not found")
 
-    monkeypatch.setattr(review_context.subprocess, "run", fake_run)
+    monkeypatch.setattr(git_exec.subprocess, "run", fake_run)
     assert review_context._git(tmp_path, "rev-parse", "HEAD") is None
 
 
@@ -117,7 +118,7 @@ def test_review_scope_git_missing_binary_returns_none(tmp_path, monkeypatch):
     def fake_run(*args, **kwargs):
         raise OSError("git binary not found")
 
-    monkeypatch.setattr(review_scope.subprocess, "run", fake_run)
+    monkeypatch.setattr(git_exec.subprocess, "run", fake_run)
     assert review_scope._git(tmp_path, "rev-parse", "HEAD") is None
 
 
@@ -130,5 +131,5 @@ def test_review_scope_git_timeout_returns_none(tmp_path, monkeypatch):
     def fake_run(*args, **kwargs):
         raise subprocess.TimeoutExpired(cmd=args, timeout=kwargs.get("timeout") or 0)
 
-    monkeypatch.setattr(review_scope.subprocess, "run", fake_run)
+    monkeypatch.setattr(git_exec.subprocess, "run", fake_run)
     assert review_scope._git(tmp_path, "rev-parse", "HEAD", timeout=0.01) is None

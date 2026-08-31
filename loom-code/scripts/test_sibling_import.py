@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+import sibling_import
 from sibling_import import load_sibling
 
 
@@ -20,6 +21,19 @@ def test_load_sibling_registers_under_given_name():
         assert callable(module.line_leading)
     finally:
         sys.modules.pop("probe_alias", None)
+
+
+def test_load_sibling_default_anchor_resolves_beside_this_helper():
+    """With no `anchor` given, load_sibling must resolve the sibling file
+    relative to sibling_import's own directory (its documented default),
+    not the caller's directory -- pins the docstring's corrected claim."""
+    try:
+        module = load_sibling("heading_window.py", name="probe_default_anchor")
+        assert Path(module.__file__) == Path(sibling_import.__file__).with_name(
+            "heading_window.py"
+        )
+    finally:
+        sys.modules.pop("probe_default_anchor", None)
 
 
 def test_load_sibling_missing_file_raises_import_error():

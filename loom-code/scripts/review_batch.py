@@ -277,9 +277,7 @@ def _trusted_execution_projection_issuer(
 def _review_batch_oracle():
     """Load the mandatory sibling checker without cwd or sys.path coupling."""
     try:
-        return load_sibling(
-            "check_review_batches.py", name="review_batch_schema_oracle", anchor=__file__
-        )
+        return load_sibling("check_review_batches.py", name="review_batch_schema_oracle")
     except ImportError as exc:
         raise PacketRefused("Review Batch schema oracle cannot be loaded") from exc
 

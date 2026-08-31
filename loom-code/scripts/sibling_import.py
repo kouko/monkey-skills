@@ -2,9 +2,11 @@
 
 Five call sites hand-rolled the same `importlib.util.spec_from_file_location`
 idiom to load a sibling script module without cwd or sys.path coupling.
-`load_sibling` is the single source: resolve the file relative to the
-caller's own file, register the loaded module in `sys.modules` under a
-caller-chosen unique name, execute it once, and return it. Sibling-module
+`load_sibling` is the single source: resolve the file relative to
+`anchor` (default: this helper's own directory -- pass `anchor=__file__`
+to resolve relative to another file instead), register the loaded module
+in `sys.modules` under a caller-chosen unique name, execute it once, and
+return it. Sibling-module
 import (no `__init__.py`, no conftest), following the existing `import
 distribute` precedent in this same scripts/ directory.
 """

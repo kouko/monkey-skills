@@ -159,9 +159,14 @@ def _show_committed_file(
     the local object store (type `commit`) is a second, also covered
     below — or `_UNDECODABLE_BLOB` when the blob is not valid UTF-8.
 
-    Reuses `_git`'s subprocess invocation shape but NOT its collapse-to-
-    `None` contract (Task 2 Reuse-adequacy) — GREEN needs these failure
-    modes distinguishable. The sha is checked to resolve to a commit
+    Keeps its own direct `subprocess.run` calls below rather than
+    routing through `_git` (which now delegates to `git_exec.run_git`'s
+    UTF-8 bytes argv) — this helper needs a bytes-returning `git show`
+    for the blob read, which `_git`'s str/text contract does not offer,
+    and that direct call is deliberately left unchanged in this branch.
+    NOT its collapse-to-`None` contract either (Task 2 Reuse-adequacy) —
+    GREEN needs these failure modes distinguishable. The sha is checked
+    to resolve to a commit
     FIRST, independently of the file read: `git show <sha>:<path>` on an
     unresolvable sha can print a misleading "exists on disk, but not in"
     message (a verified git quirk — a 40-hex-char string that resolves

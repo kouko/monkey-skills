@@ -91,7 +91,6 @@ fresh verdict.
 from __future__ import annotations
 
 import argparse
-import subprocess  # kept: test_git_wrapper_characterization_none monkeypatches review_scope.subprocess.run
 import sys
 from dataclasses import dataclass
 from pathlib import Path

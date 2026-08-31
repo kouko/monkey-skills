@@ -1690,8 +1690,9 @@ def test_plan_card_oracle_keeps_name_and_exception_type(monkeypatch):
 
     monkeypatch.setattr(sibling_import, "load_sibling", _boom)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exc_info:
         plan_card._review_batch_oracle()
+    assert isinstance(exc_info.value.__cause__, ImportError)
 
     monkeypatch.undo()
 

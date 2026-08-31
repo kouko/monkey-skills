@@ -690,8 +690,8 @@ def _review_batch_oracle():
         return sibling_import.load_sibling(
             "check_review_batches.py", name="plan_card_review_batch_oracle"
         )
-    except ImportError:
-        raise ValueError("Review Batch schema oracle cannot be loaded")
+    except ImportError as exc:
+        raise ValueError("Review Batch schema oracle cannot be loaded") from exc
 
 
 def _validated_batch_snapshot(

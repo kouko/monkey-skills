@@ -1742,6 +1742,14 @@ def test_run_git_packet_refused_message_carries_git_stderr(tmp_path) -> None:
     assert "no-such-ref-xyz" in message
 
 
+def test_run_subprocess_rejects_argv_not_shaped_git_dash_c() -> None:
+    """`_run_subprocess` silently reads args[2] as a repo path; a caller
+    that doesn't build the `["git", "-C", <repo>, ...]` prefix must get a
+    loud ValueError, not a confusing downstream failure."""
+    with pytest.raises(ValueError):
+        cli._run_subprocess(["git", "--no-pager", "log"])
+
+
 def test_run_subprocess_hands_git_utf8_bytes_argv(monkeypatch) -> None:
     """Platform-independent pin for the argv half of the locale fix (#768
     hotfix): `_run_subprocess` must hand every argv element to
