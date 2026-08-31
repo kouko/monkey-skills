@@ -10,6 +10,12 @@ again (it was deleted wholesale by the Outcome Map v3 rewrite).
 
 from pathlib import Path
 
+
+def _flat(text: str) -> str:
+    """Collapse all whitespace so line-wrapped prose still matches."""
+    return " ".join(text.split())
+
+
 SKILL_DIR = Path(__file__).resolve().parent.parent
 MAP_FORMAT_MD = SKILL_DIR / "references" / "map-format.md"
 SKILL_MD = SKILL_DIR / "SKILL.md"
@@ -46,7 +52,7 @@ CHARTER_REOPEN = (
 
 def test_map_format_defines_all_three_boundary_rules():
     """map-format.md is the single definition point of the boundary rules."""
-    text = MAP_FORMAT_MD.read_text(encoding="utf-8")
+    text = _flat(MAP_FORMAT_MD.read_text(encoding="utf-8"))
     assert BOUNDARY_SECTION in text
     assert CLOSE_AND_CITE in text
     assert RELEASE_ONLY in text
@@ -55,8 +61,8 @@ def test_map_format_defines_all_three_boundary_rules():
 
 def test_skill_cites_the_boundary_section_without_copying_it():
     """SKILL.md points at the section; it never restates the rules."""
-    skill = SKILL_MD.read_text(encoding="utf-8")
-    map_format = MAP_FORMAT_MD.read_text(encoding="utf-8")
+    skill = _flat(SKILL_MD.read_text(encoding="utf-8"))
+    map_format = _flat(MAP_FORMAT_MD.read_text(encoding="utf-8"))
 
     # The citation exists and names the section.
     assert BOUNDARY_SECTION in skill
@@ -77,8 +83,8 @@ def test_backlog_charter_keeps_its_store_side_copy():
     mechanically checkable commitments: the `origin: promoted to <ticket>`
     close-and-cite step and the reopen-on-archive duty.
     """
-    charter = BACKLOG_CHARTER_MD.read_text(encoding="utf-8")
-    map_format = MAP_FORMAT_MD.read_text(encoding="utf-8")
+    charter = _flat(BACKLOG_CHARTER_MD.read_text(encoding="utf-8"))
+    map_format = _flat(MAP_FORMAT_MD.read_text(encoding="utf-8"))
 
     assert CHARTER_CLOSE_AND_CITE in charter
     assert CHARTER_REOPEN in charter

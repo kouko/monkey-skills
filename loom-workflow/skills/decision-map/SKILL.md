@@ -22,7 +22,10 @@ Briefs, Plans, Git, PRs, and CI retain ownership of delivery progress;
 decision-map reads that state but never copies it into the Map or Ticket.
 
 Schema and operation authority lives in `references/map-format.md`. The
-prototype boundary lives in `references/prototype-contract.md`. Read both
+prototype boundary lives in `references/prototype-contract.md`. The
+map↔backlog boundary rules live in the `## Backlog boundary contract`
+section of `references/map-format.md` — cite that section, never restate
+its rules here or elsewhere. Read all three
 before charting or mutating a Map.
 
 ## Store and lifecycle

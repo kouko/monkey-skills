@@ -116,6 +116,26 @@ shrink in place, graduate exactly once to a Ticket carrying
 `graduated-from: F-<n>`, or move intact to Out-of-scope. It never silently
 vanishes.
 
+## Backlog boundary contract
+
+The loom-code backlog store (`docs/loom/backlog/`, chartered by its own
+`README.md`) and a Map are separate stores with a one-way promotion
+boundary. Three rules govern every crossing; this section is their
+single definition point — the backlog charter keeps its own store-side
+copy, and every other surface cites here rather than restating them.
+
+- **Close-and-cite.** Promotion is close-and-cite: close the backlog
+  entry and write `origin: promoted to <ticket>` before creating the
+  Ticket. There is no blocked state, standing bidirectional link, or
+  close-on-delivery step.
+- **Release-only.** Map-to-backlog travel is release-only. A
+  destination artifact is optional discovery context, never a live or
+  standing link.
+- **Reopen-on-archive.** On archive, reopen every backlog entry whose
+  Ticket is still non-closed and whose frontmatter says
+  `origin: promoted to <ticket>`; the map then remains a historical
+  record, not a stranded-promotion target.
+
 ## Ticket template
 
 ```markdown
