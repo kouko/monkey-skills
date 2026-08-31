@@ -296,6 +296,117 @@ def test_v2_classification_routes_task_and_feasibility_by_closure() -> None:
     assert ambiguous.refusal == migrate_map_v3.CLASSIFICATION_EVIDENCE_GUIDANCE
 
 
+def _write_v2_nonterminal_task(map_dir: Path, *, status: str = "open") -> tuple[Path, Path]:
+    tickets = map_dir / "tickets"
+    tickets.mkdir(parents=True)
+    map_path = map_dir / "MAP.md"
+    ticket_path = tickets / "consumers.md"
+    map_path.write_text(
+        "---\nmap-id: family-relocation\nschema_version: 2\nstate: active\n---\n"
+        "\n## Destination\n\nA durable outcome.\n\n## Notes\n\n\n"
+        "## Decisions-so-far\n\n\n## Not-yet-specified (fog)\n\n\n"
+        "## Out-of-scope\n",
+        encoding="utf-8",
+    )
+    ticket_path.write_text(
+        f"---\ntype: task\nstatus: {status}\n---\n\nInventory consumers.\n"
+        "\n## Resolution\n\n",
+        encoding="utf-8",
+    )
+    return map_path, ticket_path
+
+
+def test_nonterminal_ticket_refuses_without_manifest_migrates_with_one(
+    tmp_path: Path,
+) -> None:
+    # omitted @req: no registered REQ-id covers the manifest path (R4);
+    # REQ-85 only covers closure-evidence classification.
+    """An open v2 task ticket has no closure evidence to classify from."""
+    map_path, ticket_path = _write_v2_nonterminal_task(tmp_path / "family-relocation")
+
+    try:
+        migrate_map_v3.preview_migration(map_path.parent)
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "evidence" in str(exc).lower()
+    else:
+        raise AssertionError(
+            "an open ticket with no closure evidence must refuse without a manifest"
+        )
+
+    preview = migrate_map_v3.preview_migration(
+        map_path.parent, manifest={"consumers": "research"}
+    )
+    result = migrate_map_v3.apply_migration(map_path.parent, preview)
+    assert result.applied is True
+    migrated = ticket_path.read_text(encoding="utf-8")
+    assert "type: research" in migrated
+    assert "manifest-classified" in migrated
+
+
+def test_manifest_migrates_claimed_ticket_but_not_ambiguous_closed_one(
+    tmp_path: Path,
+) -> None:
+    # omitted @req: no registered REQ-id covers the manifest path (R4).
+    """The manifest applies only to nonterminal tickets, never closed ones."""
+    map_dir = tmp_path / "family-relocation"
+    map_path, ticket_path = _write_v2_nonterminal_task(map_dir, status="claimed")
+    preview = migrate_map_v3.preview_migration(
+        map_dir, manifest={"consumers": "grilling"}
+    )
+    result = migrate_map_v3.apply_migration(map_dir, preview)
+    assert result.applied is True
+    assert "type: grilling" in ticket_path.read_text(encoding="utf-8")
+
+    closed_dir = tmp_path / "closed-map"
+    closed_tickets = closed_dir / "tickets"
+    closed_tickets.mkdir(parents=True)
+    closed_map_path = closed_dir / "MAP.md"
+    closed_map_path.write_text(
+        "---\nmap-id: closed-map\nschema_version: 2\nstate: active\n---\n"
+        "\n## Destination\n\nA durable outcome.\n\n## Notes\n\n\n"
+        "## Decisions-so-far\n\n\n## Not-yet-specified (fog)\n\n\n"
+        "## Out-of-scope\n",
+        encoding="utf-8",
+    )
+    closed_ticket_path = closed_tickets / "ambiguous.md"
+    closed_ticket_path.write_text(
+        "---\ntype: task\nstatus: closed\n---\n\nSomething.\n"
+        "\n## Resolution\n\nResolution completed without a closure contract.\n",
+        encoding="utf-8",
+    )
+    try:
+        migrate_map_v3.preview_migration(
+            closed_dir, manifest={"ambiguous": "research"}
+        )
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "evidence" in str(exc).lower()
+    else:
+        raise AssertionError(
+            "a closed ticket with ambiguous evidence must refuse even with a "
+            "conflicting manifest"
+        )
+
+
+def test_manifest_refuses_unknown_slug_and_non_v3_target_type(tmp_path: Path) -> None:
+    # omitted @req: no registered REQ-id covers the manifest path (R4).
+    """A manifest is fail-loud authority, not a silently-ignored hint."""
+    map_dir = tmp_path / "family-relocation"
+    map_path, ticket_path = _write_v2_nonterminal_task(map_dir)
+    try:
+        migrate_map_v3.preview_migration(map_dir, manifest={"nope": "research"})
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "slug" in str(exc).lower()
+    else:
+        raise AssertionError("an unknown manifest slug must refuse")
+
+    try:
+        migrate_map_v3.preview_migration(map_dir, manifest={"consumers": "task"})
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "task" in str(exc).lower()
+    else:
+        raise AssertionError("'task' is not a v3 type; a manifest naming it must refuse")
+
+
 def test_v2_classification_refuses_malformed_or_competing_closure_evidence() -> None:
     # @req: REQ-85
     """A v2 migration does not treat malformed human approval as closure."""

@@ -28,6 +28,7 @@ class V2TicketClassification:
     source_evidence: str
     target_type: str | None
     refusal: str | None
+    manifest_classified: bool = False
 
 
 class MigrationConflict(Exception):
@@ -140,8 +141,17 @@ def _delivery_binding_snapshot(map_dir: Path, ticket_path: Path) -> delivery_bin
         ) from exc
 
 
-def preview_migration(map_dir: Path) -> MigrationPreview:
-    """Build a zero-write v2 candidate and pin every source byte digest."""
+def preview_migration(
+    map_dir: Path, manifest: dict[str, str] | None = None
+) -> MigrationPreview:
+    """Build a zero-write v2 candidate and pin every source byte digest.
+
+    ``manifest`` maps ticket slug (the ticket file's stem) to an explicit v3
+    target type, authorizing migration of nonterminal (open/claimed) v2
+    tickets that cannot yet carry closure evidence (R4). A slug in the
+    manifest that names no ticket in this map refuses loudly rather than
+    being silently ignored.
+    """
     map_dir = Path(map_dir).absolute()
     map_path = map_dir / "MAP.md"
     _safe_preview_path(map_dir, "MAP.md")
@@ -163,12 +173,22 @@ def preview_migration(map_dir: Path) -> MigrationPreview:
     binding_texts: dict[str, str] = {}
     binding_membership: set[str] = set()
     membership = _ticket_membership(map_dir)
+    manifest = manifest or {}
+    known_slugs = {Path(key).stem for key in membership}
+    unknown_slugs = sorted(set(manifest) - known_slugs)
+    if unknown_slugs:
+        raise MigrationConflict(
+            f"manifest names unknown ticket slug(s): {unknown_slugs}"
+        )
     for key in membership:
         ticket_path = _safe_preview_path(map_dir, key)
         ticket_text = ticket_path.read_text(encoding="utf-8")
         ticket = map_store.parse_ticket_document(ticket_text, ticket_path)
         classification = classify_v2_ticket(
-            ticket.frontmatter.type, ticket.resolution or ""
+            ticket.frontmatter.type,
+            ticket.resolution or "",
+            status=ticket.frontmatter.status,
+            manifest_type=manifest.get(ticket_path.stem),
         )
         classifications[key] = classification
         if classification.refusal is not None:
@@ -179,9 +199,15 @@ def preview_migration(map_dir: Path) -> MigrationPreview:
             binding_membership.update(snapshot.ticket_membership)
         digests[key] = _source_digest(ticket_text)
         source_texts[key] = ticket_text
-        candidates[key] = _replace_frontmatter_value(
+        candidate = _replace_frontmatter_value(
             ticket_text, "type", classification.target_type or ""
         )
+        if classification.manifest_classified:
+            candidate = (
+                candidate.rstrip("\n")
+                + f"\n\nmigration: manifest-classified {classification.target_type}\n"
+            )
+        candidates[key] = candidate
     return MigrationPreview(
         map_dir, digests, source_texts, classifications, candidates, membership,
         binding_texts, tuple(sorted(binding_membership))
@@ -337,14 +363,43 @@ def _has_ratification(source_evidence: str) -> bool:
 
 
 def classify_v2_ticket(
-    source_type: str, source_evidence: str
+    source_type: str,
+    source_evidence: str,
+    *,
+    status: str | None = None,
+    manifest_type: str | None = None,
 ) -> V2TicketClassification:
     """Classify a v2 ticket from its closure evidence without guessing.
 
     ``source_evidence`` is returned verbatim so a future preview/apply layer
     can preserve provenance.  Multiple closure contracts refuse because v3
     ticket types are closure-exclusive.
+
+    A nonterminal ticket (``status`` "open" or "claimed") cannot yet carry
+    closure evidence, so ``manifest_type`` — an explicit classification
+    authored at migration time — authorizes its migration instead (R4).
+    A closed ticket's classification always comes from closure evidence;
+    ``manifest_type`` is not consulted for it, so a conflicting manifest
+    entry cannot override an ambiguous closed record.
     """
+    if manifest_type is not None and status in {"open", "claimed"}:
+        if manifest_type not in map_store.V3_TICKET_TYPES:
+            return V2TicketClassification(
+                source_type=source_type,
+                source_evidence=source_evidence,
+                target_type=None,
+                refusal=(
+                    f"manifest names {manifest_type!r} which is not a v3 "
+                    f"ticket type (one of {sorted(map_store.V3_TICKET_TYPES)})"
+                ),
+            )
+        return V2TicketClassification(
+            source_type=source_type,
+            source_evidence=source_evidence,
+            target_type=manifest_type,
+            refusal=None,
+            manifest_classified=True,
+        )
     fields = _evidence_fields(source_evidence)
     has_inspectable_evidence = "inspectable-evidence" in fields
     machine_feasibility = bool(
