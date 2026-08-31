@@ -148,7 +148,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: true
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
-- **Status**: claimed(@implementer-t5)
+- **Status**: done(f3a62193fa0c74edd9d6b0678e28109238402c92)
 - **Gloss**: 批次成員的 done 只能由 apply-result 寫，手標會被擋，崩潰恢復因此可信。
 
 ## Task 6 — F7／F9／F10 立 backlog 三條
