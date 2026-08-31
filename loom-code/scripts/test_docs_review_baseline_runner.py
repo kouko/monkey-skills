@@ -171,12 +171,57 @@ def _run(
     }
 
 
-def test_req_105_repeat_cohorts_never_mix_execution_identities(tmp_path) -> None:
+def _scoreable_codex_run(
+    tmp_path,
+    monkeypatch,
+    run_id: str,
+    *,
+    contract_digest: str = "sha256:contract-r1",
+    runtime_digest: str = "sha256:runtime-r1",
+) -> dict[str, object]:
+    published = _run(
+        tmp_path,
+        run_id,
+        "codex",
+        "gpt-5.6-luna",
+        contract_digest=contract_digest,
+        runtime_digest=runtime_digest,
+    )
+    prepared = _binding("codex", "gpt-5.6-luna")
+    attestation = {"attempt_id": run_id, **prepared}
+    lease = runner.claim_dispatch(
+        tmp_path,
+        run_id,
+        f"owner-{run_id}",
+        prepared_profile=prepared,
+        dispatch_attestation=attestation,
+    )
+    raw_bytes = f"{run_id} response".encode()
+    capture = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id=run_id,
+        owner_id=lease["owner_id"],
+        fence_generation=lease["fence_generation"],
+        raw_bytes=raw_bytes,
+        completeness="complete",
+        outcome="completed",
+        capture_attestation=attestation,
+        invocation_receipt=_codex_receipt(monkeypatch, run_id, raw_bytes),
+    )
+    assert capture["scoreable"] is True
+    return published
+
+
+def test_req_105_repeat_cohorts_never_mix_execution_identities(
+    tmp_path, monkeypatch
+) -> None:
     # @req: REQ-105
     codex = runner.build_repeat_cohorts(
         tmp_path,
-        [_run(tmp_path, "codex-1", "codex", "gpt-5.6-luna"),
-         _run(tmp_path, "codex-2", "codex", "gpt-5.6-luna")]
+        [
+            _scoreable_codex_run(tmp_path, monkeypatch, "codex-1"),
+            _scoreable_codex_run(tmp_path, monkeypatch, "codex-2"),
+        ],
     )
     assert len(codex["cohorts"]) == 1
     assert codex["cohorts"][0]["run_ids"] == ["codex-1", "codex-2"]
@@ -185,22 +230,28 @@ def test_req_105_repeat_cohorts_never_mix_execution_identities(tmp_path) -> None
     split_root = tmp_path / "split"
     split = runner.build_repeat_cohorts(
         split_root,
-        [_run(split_root, "claude-1", "claude-code", "haiku"),
-         _run(split_root, "codex-1", "codex", "gpt-5.6-luna")]
+        [
+            _run(split_root, "claude-1", "claude-code", "haiku"),
+            _scoreable_codex_run(split_root, monkeypatch, "codex-1"),
+        ],
     )
     assert split["cohorts"] == []
-    assert [item["run_ids"] for item in split["insufficient"]] == [
-        ["claude-1"],
-        ["codex-1"],
+    assert split["excluded"] == [
+        {
+            "run_id": "claude-1",
+            "reason": "authoritative capture is not scoreable",
+        }
     ]
-    assert all(item["reason"] == "repeat cohort requires at least two runs"
-               for item in split["insufficient"])
+    assert split["insufficient"][0]["run_ids"] == ["codex-1"]
+    assert split["insufficient"][0]["reason"] == (
+        "repeat cohort requires at least two runs"
+    )
 
     excluded_root = tmp_path / "excluded"
     excluded = runner.build_repeat_cohorts(excluded_root, [
         _run(excluded_root, "bad-1", "codex", "gpt-5.6-luna",
              outcome="parse_failure"),
-        _run(excluded_root, "codex-2", "codex", "gpt-5.6-luna"),
+        _scoreable_codex_run(excluded_root, monkeypatch, "codex-2"),
     ])
     assert excluded["excluded"] == [
         {"run_id": "bad-1", "reason": "run is not valid and scoreable"}
@@ -215,7 +266,51 @@ def test_req_105_repeat_cohorts_never_mix_execution_identities(tmp_path) -> None
         )
 
 
-def test_req_110_contract_and_runtime_are_independent_inputs(tmp_path) -> None:
+def test_req_105_repeat_cohorts_require_scoreable_runner_captures(
+    tmp_path,
+) -> None:
+    # @req: REQ-105
+    prepared = _binding("codex", "gpt-5.6-luna")
+    runs = []
+    for run_id in ("detached-1", "detached-2"):
+        lease = runner.claim_dispatch(
+            tmp_path,
+            run_id,
+            f"owner-{run_id}",
+            prepared_profile=prepared,
+            dispatch_attestation={"attempt_id": run_id, **prepared},
+        )
+        runner.capture_dispatch_bytes(
+            tmp_path,
+            attempt_id=run_id,
+            owner_id=lease["owner_id"],
+            fence_generation=lease["fence_generation"],
+            raw_bytes=b"caller-controlled bytes",
+            completeness="complete",
+            outcome="completed",
+            capture_attestation={"attempt_id": run_id, **prepared},
+        )
+        runs.append(_run(tmp_path, run_id, "codex", "gpt-5.6-luna"))
+
+    assert runner.build_repeat_cohorts(tmp_path, runs) == {
+        "cohorts": [],
+        "excluded": [
+            {
+                "run_id": "detached-1",
+                "reason": "authoritative capture is not scoreable",
+            },
+            {
+                "run_id": "detached-2",
+                "reason": "authoritative capture is not scoreable",
+            },
+        ],
+        "insufficient": [],
+    }
+
+
+def test_req_110_contract_and_runtime_are_independent_inputs(
+    tmp_path, monkeypatch
+) -> None:
     # @req: REQ-110
     contract = runner.freeze_reviewer_revision(
         tmp_path,
@@ -249,12 +344,16 @@ def test_req_110_contract_and_runtime_are_independent_inputs(tmp_path) -> None:
     assert runtime_2.record["parent_revision_id"] == runtime_1.record_id
     assert read_record(tmp_path, "runtime-r1") == runtime_1
 
-    base = _run(
-        tmp_path, "run-1", "codex", "gpt-5.6-luna",
+    base = _scoreable_codex_run(
+        tmp_path,
+        monkeypatch,
+        "run-1",
         contract_digest=contract.digest, runtime_digest=runtime_1.digest,
     )
-    run_2 = _run(
-        tmp_path, "run-2", "codex", "gpt-5.6-luna",
+    run_2 = _scoreable_codex_run(
+        tmp_path,
+        monkeypatch,
+        "run-2",
         contract_digest=contract.digest, runtime_digest=runtime_2.digest,
     )
     separated = runner.build_repeat_cohorts(tmp_path, [

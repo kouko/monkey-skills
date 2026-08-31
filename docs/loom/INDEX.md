@@ -30,6 +30,7 @@
 ### REQ-105
 
 - test_req_105_repeat_cohorts_never_mix_execution_identities
+- test_req_105_repeat_cohorts_require_scoreable_runner_captures
 
 ### REQ-109
 

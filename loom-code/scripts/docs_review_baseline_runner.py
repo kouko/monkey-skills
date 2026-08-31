@@ -257,6 +257,17 @@ def build_repeat_cohorts(
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"run {run_id} is missing cohort field: {field}")
             identity[field] = value.strip()
+        if not any(
+            capture["scoreable"] is True
+            for capture in read_dispatch_captures(store_root, run_id)
+        ):
+            excluded.append(
+                {
+                    "run_id": run_id,
+                    "reason": "authoritative capture is not scoreable",
+                }
+            )
+            continue
         cohort_id = _identity(identity)
         group = groups.setdefault(
             cohort_id,
