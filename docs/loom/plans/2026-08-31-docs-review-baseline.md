@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: execution — store-records batch / Task 12 defect origin
+Stage: execution — store-records batch / Task 15 authority independence
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -257,7 +257,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-109
 - **Review disposition**: batch(store-records)
-- **Status**: claimed(@codex)
+- **Status**: implemented(01c1020981243c4b6a963e1cb9d7b00c1b278f54)
 - **Gloss**: 初稿問題與修復後新增問題會由 diff 證據分開，不靠印象。
 
 ## Task 13 — 凍結 reviewer contract 與 runtime
@@ -315,7 +315,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-112
 - **Review disposition**: batch(store-records)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 寫文件、寫答案與裁決的人是誰會被記錄，避免自己給自己過關。
 
 ## Task 16 — 限制 run 與 campaign 成本
