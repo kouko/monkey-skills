@@ -6,7 +6,7 @@ Goal: Repair the defects #765/#766 introduced without reverting either —
     invariants, restored cross-store boundary, unblocked live plans, and the
     batch-review adapter entrypoint — serves map family-relocation: its live
     tickets and map are the repaired artifacts (R5)
-Stage: review:round-1
+Stage: finishing
 Total tasks: 19
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
