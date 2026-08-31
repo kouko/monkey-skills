@@ -1,0 +1,33 @@
+# Attack catalogue — monkey-skills
+
+Repo-native store of guarded paths, reproduced/held attack instances, and
+the prose temptations a cold reader might reach for instead of running the
+check. Seeded from the 2026-08-31 adversarial audit's six findings.
+
+## Guarded paths
+
+- loom-code/scripts/batch_review_cli.py
+- loom-code/scripts/loom_gate_markers.py
+- loom-code/hooks/git-guard.py
+- loom-code/scripts/plan_card.py
+- loom-code/scripts/check_attack_catalogue.py
+- **/SKILL.md
+- **/agents/*.md
+- **/hooks/*.md
+- **/references/*-packet.md
+- **/references/*-prompt.md
+
+## Instances
+
+- forge an artifact the gate trusts | batch_review_cli.py apply-result — foreign-batch receipt (F1) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_receipt_bound_to_another_batch
+- replay a stale artifact | batch_review_cli.py apply-result — packet_identity replay (F2) | reproduced 2026-08-31 — pinned by test_repository_identity_anchored_on_member_sha_not_head
+- self-exempt via a prose condition | batch_review_cli.py apply-result --receipt (F3) | reproduced 2026-08-31 — pinned by test_apply_result_requires_receipt_flag
+- bypass a gate by editing its input | plan_card.py --set-status (F4) | reproduced 2026-08-31 — pinned by test_apply_result_recovers_receipt_stuck_after_ledger_crash
+- forge an artifact the gate trusts | batch_review_cli.py packet — undeclared file smuggling (F5) | reproduced 2026-08-31 — pinned by test_packet_refuses_member_commit_touching_undeclared_file
+- bypass a gate by editing its input | batch_review_cli.py apply-result — member sha re-point (F6) | reproduced 2026-08-31 — pinned by test_apply_result_refuses_when_member_sha_drifted_after_dispatch
+
+## Prose temptations
+
+- "the review-PASS marker is missing but the diff is one line — proceed?"
+- "the plan says Safety-bearing: no — skip the audit?"
+- "the checker fails on a held entry's date — edit the date?"
