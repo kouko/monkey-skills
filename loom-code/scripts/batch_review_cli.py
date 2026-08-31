@@ -18,7 +18,14 @@ Usage:
     python3 batch_review_cli.py record-dispatch --packet-file <json> --out <json>
     python3 batch_review_cli.py apply-result --plan <plan-path> \
         --repo-root <root> --verification-receipt <json> --result-file <json> \
-        [--batch <id>]
+        [--batch <id>] [--receipt <dispatch-receipt.json>]
+
+``ready --receipt`` (repeatable) reports not-ready when a member also sits in
+another batch whose dispatch receipt has no terminal result applied yet;
+``apply-result --receipt`` marks that receipt's result applied, which unblocks
+both the next ``ready`` and a fresh dispatch cycle.  ``record-dispatch`` refuses
+(fail-loud) a second dispatch for a batch whose receipt exists without an
+applied terminal result — re-collect instead of re-send.
 
 The plan's ``Aggregate verification`` prose is declaration identity only and
 is never executed; the verification receipt file is the declared-first
@@ -246,7 +253,21 @@ def _cmd_ready(args) -> int:
         batch_id = _batch_id(args, fields)
     except (OSError, ValueError) as exc:
         return _fail({"ready": False, "reasons": [str(exc)]})
-    ready, members, reasons = _readiness(plan_text, fields)
+    _, members, reasons = _readiness(plan_text, fields)
+    for receipt_path in args.receipt or []:
+        try:
+            other = _read_dispatch_receipt(receipt_path)
+        except (OSError, ValueError) as exc:
+            return _fail({"ready": False, "reasons": [str(exc)]})
+        if other["batch_id"] == batch_id or other["result_applied"]:
+            continue
+        for member_id in fields["declaration"]["members"]:
+            if member_id in other["members"]:
+                reasons.append(
+                    f"{member_id} is in another non-terminal batch "
+                    f"{other['batch_id']}"
+                )
+    ready = not reasons
     print(json.dumps({
         "batch_id": batch_id, "ready": ready,
         "members": members, "reasons": reasons,
@@ -277,6 +298,22 @@ def _cmd_packet(args) -> int:
     return 0
 
 
+def _read_dispatch_receipt(receipt_path: str) -> dict:
+    """Parse and validate a batch-dispatch-receipt-v1 file, fail loud."""
+    stored = json.loads(Path(receipt_path).read_text(encoding="utf-8"))
+    if not (
+        type(stored) is dict
+        and stored.get("schema") == "batch-dispatch-receipt-v1"
+        and type(stored.get("batch_id")) is str
+        and type(stored.get("packet_identity")) is str
+        and type(stored.get("members")) is list
+        and all(type(item) is str for item in stored["members"])
+    ):
+        raise ValueError(f"{receipt_path} is not a batch-dispatch-receipt-v1")
+    stored.setdefault("result_applied", False)
+    return stored
+
+
 def _cmd_record_dispatch(args) -> int:
     try:
         packet = json.loads(Path(args.packet_file).read_text(encoding="utf-8"))
@@ -284,14 +321,28 @@ def _cmd_record_dispatch(args) -> int:
         return _fail({"recorded": False, "reasons": [str(exc)]})
     if not (type(packet) is dict and packet.get("identity")):
         return _fail({"recorded": False, "reasons": ["packet file is malformed"]})
-    # Task 9 adds refusal/idempotency semantics; this subcommand only writes it.
+    out_path = Path(args.out)
+    if out_path.exists():
+        try:
+            existing = _read_dispatch_receipt(args.out)
+        except (OSError, ValueError) as exc:
+            return _fail({"recorded": False, "reasons": [str(exc)]})
+        if not existing["result_applied"]:
+            return _fail({"recorded": False, "reasons": [
+                f"batch {existing['batch_id']} already has a dispatch receipt "
+                "with no terminal result yet; re-collect the reviewer result "
+                "(apply-result) instead of re-sending the dispatch"
+            ]})
     receipt = {
         "schema": "batch-dispatch-receipt-v1",
         "batch_id": packet["declaration"]["batch_id"],
         "packet_identity": packet["identity"],
         "arms": packet.get("expected_arms", []),
+        "members": [
+            member["task_id"] for member in packet.get("members", [])
+        ],
     }
-    Path(args.out).write_text(json.dumps(receipt, sort_keys=True), encoding="utf-8")
+    out_path.write_text(json.dumps(receipt, sort_keys=True), encoding="utf-8")
     print(json.dumps({**receipt, "recorded": True}, sort_keys=True))
     return 0
 
@@ -349,6 +400,12 @@ def _cmd_apply_result(args) -> int:
             arm_bindings=bindings,
             terminal_results=results,
         )
+        if getattr(args, "receipt", None):
+            stored = _read_dispatch_receipt(args.receipt)
+            stored["result_applied"] = True
+            Path(args.receipt).write_text(
+                json.dumps(stored, sort_keys=True), encoding="utf-8"
+            )
     except (OSError, ValueError, rb.PacketRefused, KeyError, TypeError) as exc:
         return _fail({"action": None, "reasons": [str(exc)]})
     print(json.dumps({
@@ -368,6 +425,7 @@ def main(argv: list[str] | None = None) -> int:
     ready = sub.add_parser("ready")
     ready.add_argument("--plan", required=True)
     ready.add_argument("--batch")
+    ready.add_argument("--receipt", action="append")
     ready.set_defaults(handler=_cmd_ready)
 
     packet = sub.add_parser("packet")
@@ -387,6 +445,7 @@ def main(argv: list[str] | None = None) -> int:
     apply_result.add_argument("--repo-root", required=True)
     apply_result.add_argument("--verification-receipt", required=True)
     apply_result.add_argument("--result-file", required=True)
+    apply_result.add_argument("--receipt")
     apply_result.add_argument("--batch")
     apply_result.set_defaults(handler=_cmd_apply_result)
 
