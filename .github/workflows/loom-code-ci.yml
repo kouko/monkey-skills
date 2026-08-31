@@ -115,6 +115,9 @@ jobs:
           python3 scripts/check_plugin_boundaries.py loom-code
           python3 scripts/check_plugin_boundaries.py loom-design
 
+      - name: Attack-catalogue store is honest
+        run: python3 loom-code/scripts/check_attack_catalogue.py docs/loom/ATTACK-CATALOGUE.md --repo .
+
       - name: Verify code-team <-> loom-code knowledge SSOT
         # canonical/ is the single source of truth; each skill carries routed
         # functional copies. Any byte-level divergence fails the build.
