@@ -6,8 +6,10 @@ discovers sessions, plans, repositories, or other paths.  The corpus contains
 identifiers and measurement oracles, not source content; both result files
 must bind to its exact canonical digest before any comparison is made.
 
-Exit 0 means cost fell without a safety regression, exit 1 is a valid FAIL
-comparison, and exit 2 means an input could not be read or validate.
+Exit 0 proves the cost claim (dispatches, rounds and reopens fell); the safety
+checks run only over evidence ``observe`` does not yet collect, so they cannot
+fire on the sanctioned path.  Exit 1 is a valid FAIL comparison, and exit 2
+means an input could not be read or validate.
 
 ``observe`` derives a ``task-batch-replay-result/v2`` file from the dispatch
 log ``review_context.py`` appends per reviewer fan-out and from the dispatch
@@ -67,7 +69,6 @@ _CORPUS_CASE_KEYS = {
     "expected_candidate_path",
     "expected_fallback_causes",
 }
-_RESULT_KEYS = {"schema", "mode", "corpus_identity", "cases"}
 _RESULT_KEYS_V2 = {"schema", "provenance", "corpus_identity", "branch", "cases"}
 _RESULT_CASE_KEYS = {
     "case_id",
@@ -291,8 +292,9 @@ def _refuse_unobserved(result: object, label: str) -> None:
     if schema != RESULT_SCHEMA_V2:
         _fail(
             f"{label}.schema",
-            f"refused {schema!r}; compare accepts only {RESULT_SCHEMA_V2!r} "
-            f"results written by observe (provenance {OBSERVED_PROVENANCE!r})",
+            f"refused {schema!r} (the declared shape is {RESULT_SCHEMA!r}); "
+            f"compare accepts only {RESULT_SCHEMA_V2!r} results written by "
+            f"observe (provenance {OBSERVED_PROVENANCE!r})",
         )
     provenance = result.get("provenance", "<missing>")
     if provenance != OBSERVED_PROVENANCE:
@@ -609,10 +611,13 @@ def _observed_counts(
     }
 
 
-def _summary_line(counts: dict[str, int]) -> str:
+def _summary_line(counts: dict[str, int], reopens_measured: bool) -> str:
+    # Without `--receipts` nobody counted reopens; the relayed line must not
+    # read as a measured zero (the v2 file still carries 0 by schema).
+    reopens = counts["batch_reopens"] if reopens_measured else "unmeasured"
     return (
         f"observed reviewer fan-outs: {counts['review_dispatches']} "
-        f"(rounds {counts['review_rounds']}, batch reopens {counts['batch_reopens']})"
+        f"(rounds {counts['review_rounds']}, batch reopens {reopens})"
     )
 
 
@@ -649,7 +654,8 @@ def _run_observe(args: argparse.Namespace) -> int:
         if not args.log.exists():
             print(SUMMARY_NO_LOG)
             return 0
-        print(_summary_line(_observed_counts(args.log, args.branch, args.receipts)))
+        counts = _observed_counts(args.log, args.branch, args.receipts)
+        print(_summary_line(counts, args.receipts is not None))
         return 0
     if args.corpus is None or args.out is None:
         _fail("observe", "--corpus and --out are required without --summary")

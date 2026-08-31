@@ -605,7 +605,9 @@ def test_observe_refuses_malformed_log_and_summarizes_without_writing(
 
     # Zero matching lines on an existing log -> the zero line; absent log -> N/A, exit 0.
     assert replay.main(["observe", "--log", str(log), "--branch", "nobody", "--summary"]) == 0
-    assert capsys.readouterr().out == "observed reviewer fan-outs: 0 (rounds 0, batch reopens 0)\n"
+    assert capsys.readouterr().out == (
+        "observed reviewer fan-outs: 0 (rounds 0, batch reopens unmeasured)\n"
+    )
     assert replay.main(
         ["observe", "--log", str(tmp_path / "missing.jsonl"), "--branch", "b", "--summary"]
     ) == 0
@@ -632,7 +634,33 @@ def test_observe_refuses_malformed_log_and_summarizes_without_writing(
         replay, "read_dispatch_log", lambda path: [json.loads(_log_line("b", _SHA_B))]
     )
     assert replay.main(["observe", "--log", str(log), "--branch", "b", "--summary"]) == 0
-    assert capsys.readouterr().out == "observed reviewer fan-outs: 1 (rounds 1, batch reopens 0)\n"
+    assert capsys.readouterr().out == (
+        "observed reviewer fan-outs: 1 (rounds 1, batch reopens unmeasured)\n"
+    )
+
+
+def test_summary_marks_reopens_unmeasured_without_receipts(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Without `--receipts` nothing counted reopens; the relayed line must not
+    # read as a measured zero. With `--receipts` the numeric form stays.
+    log, receipts, _corpus_path = _observe_fixture(tmp_path)
+    assert replay.main(["observe", "--log", str(log), "--branch", "b", "--summary"]) == 0
+    assert capsys.readouterr().out == (
+        "observed reviewer fan-outs: 3 (rounds 2, batch reopens unmeasured)\n"
+    )
+    assert replay.main(
+        ["observe", "--log", str(log), "--branch", "b", "--receipts", str(receipts), "--summary"]
+    ) == 0
+    assert capsys.readouterr().out == "observed reviewer fan-outs: 3 (rounds 2, batch reopens 1)\n"
+
+
+def test_module_docstring_scopes_exit_zero_to_the_cost_claim() -> None:
+    # `observe` writes every safety field empty, so exit 0 cannot vouch for
+    # safety; the docstring must not promise what the sanctioned path never checks.
+    doc = replay.__doc__
+    assert "without a safety regression" not in doc
+    assert "does not yet collect" in doc
 
 
 def _v1_results(corpus: dict) -> tuple[dict, dict]:
@@ -667,6 +695,13 @@ def test_compare_refuses_declared_v1_results(tmp_path: Path) -> None:
         replay.compare(corpus, v1_baseline, candidate)
     assert "baseline.schema" in str(refused.value)
     assert "task-batch-replay-result/v1" in str(refused.value)
+    # The v1 schema constant exists for this message only: it names the
+    # declared v1 shape even when the refused file's schema is something else.
+    unknown = dict(v1_baseline, schema="not-a-known-schema")
+    with pytest.raises(replay.ReplayInputError) as refused_unknown:
+        replay.compare(corpus, unknown, candidate)
+    assert replay.RESULT_SCHEMA in str(refused_unknown.value)
+    assert not hasattr(replay, "_RESULT_KEYS"), "v1 key set is dead once compare refuses v1"
     with pytest.raises(replay.ReplayInputError, match="candidate.schema"):
         replay.compare(corpus, baseline, v1_candidate)
 

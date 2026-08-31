@@ -47,8 +47,9 @@ def test_finishing_documents_observed_fanouts_row(tmp_path):
     # GREEN pin: the prose's argv is what Task 5's parser accepts. Run it
     # with an empty temp dir as <git-dir> (no log there) — the N/A line
     # proves the invocation parsed and took the absent-log path.
+    # `[...]` marks an optional argument in the prose; run the required form.
     argv = shlex.split(
-        cmd.group(1)
+        re.sub(r"\s*\[[^\]]*\]", "", cmd.group(1))
         .replace("<git-dir>", str(tmp_path))
         .replace("<branch>", "any-branch")
     )
@@ -57,3 +58,12 @@ def test_finishing_documents_observed_fanouts_row(tmp_path):
     proc = subprocess.run(argv, capture_output=True, text=True, check=False)
     assert proc.returncode == 0, proc.stderr
     assert proc.stdout.strip() == NO_LOG_LINE
+
+
+def test_finishing_row_offers_receipts_as_optional():
+    # Without `--receipts` the relayed line says reopens are unmeasured; the
+    # row must offer the optional flag and name that wording.
+    row = _fanouts_row()
+    cmd = SUMMARY_CMD.search(row)
+    assert cmd and "[--receipts <dir>]" in cmd.group(1)
+    assert "batch reopens unmeasured" in row
