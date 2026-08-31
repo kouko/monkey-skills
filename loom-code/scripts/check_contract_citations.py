@@ -2,7 +2,8 @@
 """A runtime prose contract cites only what ships with it.
 
 Scans `loom-code/skills/**/*.md`, `loom-code/agents/*.md` (non-recursive —
-that directory is flat) and `loom-design/skills/**/*.md` for a
+that directory is flat), `loom-design/skills/**/*.md`,
+`loom-code/scripts/templates/*.md`, and `loom-workflow/skills/**/*.md` for a
 backtick-quoted citation of a file under THIS repository's `docs/`
 development records (a dated entry under `specs/`, `plans/`, `audits/`,
 `design/`, `research/`, `dogfood/`, `backlog/`, or a named entry under
@@ -75,6 +76,7 @@ _SCOPE_DIRS: tuple[tuple[str, bool], ...] = (
     ("loom-code/agents", False),
     ("loom-design/skills", True),
     ("loom-code/scripts/templates", False),
+    ("loom-workflow/skills", True),
 )
 
 # One backtick-delimited span, single line (every real citation in this
@@ -273,6 +275,12 @@ DEBT_LIST: frozenset[str] = frozenset(
         "loom-design/skills/product-principles/references/canon-product.md",
         "loom-design/skills/product-principles/references/question-sets.md",
         "loom-design/skills/using-loom-pipeline/SKILL.md",
+        # Pre-existing loom-workflow violations, on the list since the
+        # scan set widened to cover that tree (R6). Shrink-only applies.
+        "loom-workflow/skills/distill-sessions/SKILL.md",
+        "loom-workflow/skills/distill-sessions/agents/prompt-failure-analysis.md",
+        "loom-workflow/skills/distill-sessions/agents/prompt-success-analysis.md",
+        "loom-workflow/skills/git-memory/protocols/privacy-judge-spec.md",
     }
 )
 

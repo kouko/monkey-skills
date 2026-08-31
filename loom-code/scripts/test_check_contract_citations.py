@@ -92,6 +92,19 @@ def test_agent_contracts_are_not_on_the_debt_list() -> None:
     assert not (agent_files & DEBT_LIST), agent_files & DEBT_LIST
 
 
+def test_loom_workflow_prose_contracts_are_in_scope() -> None:
+    """The scan set covers the loom-workflow plugin tree, not just loom-code.
+
+    Governance repair R6 (map↔backlog boundary) landed boundary prose in
+    `loom-workflow/skills/decision-map/`; a gate blind to that tree could
+    not have caught a citation of this repo's development records added
+    there.
+    """
+    from check_contract_citations import _SCOPE_DIRS
+
+    assert ("loom-workflow/skills", True) in _SCOPE_DIRS
+
+
 def test_store_directory_citation_is_exempt() -> None:
     assert classify_citation("docs/loom/plans/") == "exempt"
     assert classify_citation("docs/loom/memory") == "exempt"

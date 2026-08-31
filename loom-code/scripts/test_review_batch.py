@@ -721,3 +721,77 @@ def test_verification_and_scope_issuers_hide_raw_authority_inputs() -> None:
         files=reviewed,
     )
     assert drifted.source_digest != scope.source_digest
+
+
+def test_execution_projection_accepts_quote_and_bi_referents() -> None:
+    """R11a: a validated plan whose members cite brief quotes / BI-<n>
+    ids (no REQ- id) must still be able to seal an execution-authority
+    projection — plan-format.md's four referent kinds are all legal
+    here, non-empty is the only rule."""
+    quote = '"the CSV export button appears on Settings"'
+    record_quote = review_batch.OwnershipRecord(
+        task_id="Task 1", owned_requirements=(quote,),
+        future_requirements=(), acceptance=("accept-Task 1",),
+    )
+    record_bi = review_batch.OwnershipRecord(
+        task_id="Task 2", owned_requirements=("BI-7",),
+        future_requirements=(), acceptance=("accept-Task 2",),
+    )
+    declaration = review_batch.BatchDeclaration(
+        batch_id="batch-a",
+        members=("Task 1", "Task 2"),
+        verdict_question="Does the aggregate behavior satisfy its contract?",
+        review_lane="full",
+        aggregate_verification="python3 -m pytest tests -q",
+        boundary="capability: aggregate behavior; exclusions: none; consumable: yes",
+    )
+    projection = _execution_projection((record_quote, record_bi), declaration)
+    assert projection.members[0].owned_requirements == (quote,)
+    assert projection.members[1].owned_requirements == ("BI-7",)
+
+
+def test_execution_projection_still_refuses_empty_owned_requirements() -> None:
+    """Widening the accepted referent grammar must not widen past
+    non-empty: a task whose only referent is the `none — <reason>`
+    release-administration value projects zero owned requirements and
+    stays refused for batching."""
+    record_none = review_batch.OwnershipRecord(
+        task_id="Task 1", owned_requirements=(),
+        future_requirements=(), acceptance=("accept-Task 1",),
+    )
+    declaration = review_batch.BatchDeclaration(
+        batch_id="batch-a",
+        members=("Task 1",),
+        verdict_question="Does the aggregate behavior satisfy its contract?",
+        review_lane="full",
+        aggregate_verification="python3 -m pytest tests -q",
+        boundary="capability: aggregate behavior; exclusions: none; consumable: yes",
+    )
+    with pytest.raises(review_batch.PacketRefused, match="execution authority member is malformed"):
+        review_batch._validate_execution_projection(
+            review_batch._sealed(
+                review_batch.ExecutionAuthorityProjection,
+                seal=review_batch._SEAL,
+                issuer="plan-card:validated-schema",
+                source_identity="plan:current",
+                source_digest="8" * 64,
+                plan_identity="plan:task-batch-review",
+                spec_identity="spec:REQ-105",
+                ownership_digest=review_batch._ownership_records_digest((record_none,)),
+                declaration=declaration,
+                members=(
+                    review_batch.ExecutionMemberProjection(
+                        task_id="Task 1",
+                        dependencies=(),
+                        review_disposition="batch(batch-a)",
+                        review_lane="full",
+                        acceptance=("accept-Task 1",),
+                        declared_files=("src/one.py",),
+                        brief_references=("none — release administration only",),
+                        owned_requirements=(),
+                        future_requirements=(),
+                    ),
+                ),
+                _receipt_seal=review_batch._SEAL,
+            )
+        )

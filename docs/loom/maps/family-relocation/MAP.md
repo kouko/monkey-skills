@@ -14,6 +14,10 @@ north-star 備忘（queue 層概念上屬家族、實體上被 loom-code 持有�
 
 user-ratified: kouko, 2026-08-29
 
+- DA-1: queue 層／loom-memory／family hooks 的最終歸屬各有一個 user-ratified 裁定記在本圖 Decisions-so-far | state: open | kind: evaluative | user-ratified: kouko, 2026-08-31
+- DA-2: 選定路徑下一個 adopting repo 無 patch 採用——以 kumiko-zaiku 或等價 repo 的 CI 綠 commit 為證 | state: open | kind: objective | user-ratified: kouko, 2026-08-31
+- DA-3: Codex 側 F-7 對等解法落地或明文放棄 | state: open | kind: evaluative | user-ratified: kouko, 2026-08-31
+
 ## Notes
 
 - 本圖是 decision-map 層的第一張 dogfood 圖（arc E 交付的實地驗證）。

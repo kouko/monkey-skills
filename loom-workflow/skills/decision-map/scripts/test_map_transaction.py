@@ -595,7 +595,7 @@ def test_retirement_rollback_failure_records_broken_recovery_state(
         .replace(
             "- DA-1: Slice works | state: open | kind: objective",
             "- DA-1: Slice works | state: satisfied | kind: objective | "
-            "evidence: docs/loom/evidence.md",
+            "evidence: PR #123",
         ),
         encoding="utf-8",
     )

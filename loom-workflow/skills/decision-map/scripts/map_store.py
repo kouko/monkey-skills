@@ -307,6 +307,12 @@ def _parse_destination_acceptance(
                     f"Destination acceptance {match.group('id')} has duplicate "
                     f"field {key!r}"
                 )
+            if key == "user-ratified" and not value:
+                raise SchemaViolation(
+                    f"Destination acceptance {match.group('id')} user-ratified "
+                    "field requires a non-empty value like "
+                    "'user-ratified: <name>, YYYY-MM-DD'"
+                )
             values[key] = value
         criteria.append(
             DestinationAcceptance(
@@ -1082,8 +1088,14 @@ def _check_schema_version(schema_version: int) -> None:
 
 
 def _has_user_ratified_line(text: str) -> bool:
+    """Whether a `user-ratified:` line carries a non-empty value.
+
+    A bare `user-ratified:` token is not a ratification (R3b): a
+    ratified decision must carry a name/date value.
+    """
     return any(
-        line.strip().startswith("user-ratified:")
+        line.strip().partition(":")[0] == "user-ratified"
+        and bool(line.strip().partition(":")[2].strip())
         for line in text.splitlines()
     )
 
@@ -1213,7 +1225,8 @@ def _check_map_structure(doc: MapDocument) -> None:
     ):
         raise SchemaViolation(
             f"{doc.path}: state {doc.frontmatter.state!r} requires a "
-            "'user-ratified:' line in the Destination section "
+            "non-empty 'user-ratified:' line like "
+            "'user-ratified: <name>, YYYY-MM-DD' in the Destination section "
             "(map-format.md §Sections)"
         )
     if doc.frontmatter.state == "clear" and doc.fog_entries:
@@ -1223,7 +1236,49 @@ def _check_map_structure(doc: MapDocument) -> None:
         )
 
 
-def _check_destination_acceptance(doc: MapDocument) -> None:
+def _da_evidence_is_resolvable(evidence: str, repo_root: Path | None) -> bool:
+    """A satisfied objective criterion's evidence must be a pointer a
+    reviewer can actually open, per R3c: an existing commit SHA, a
+    well-formed PR reference, or an artifact path that exists inside
+    the repo. A bare non-pointer string ("looks done") is not
+    evidence.
+
+    Grounding (external-surface category 4, CLI flag): the
+    `git cat-file -e <sha>^{commit}` form mirrors the in-repo idiom
+    at `loom-code/scripts/review_context.py` — the `^{commit}` peel
+    asserts commit-ness (gitrevisions(7)) and neutralises
+    flag-shaped refs."""
+    pr_match = _PR_EVIDENCE.fullmatch(evidence)
+    if pr_match is not None:
+        return True
+    commit_match = _COMMIT_EVIDENCE.fullmatch(evidence)
+    if commit_match is not None:
+        sha = evidence.split()[-1]
+        if repo_root is None:
+            return False
+        try:
+            subprocess.run(
+                ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+                cwd=repo_root,
+                capture_output=True,
+                check=True,
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+            return False
+        return True
+    if _ARTIFACT_PATH_EVIDENCE.fullmatch(evidence) is not None:
+        if repo_root is None:
+            return False
+        candidate = repo_root / evidence
+        try:
+            _assert_contained(repo_root, candidate)
+        except SchemaViolation:
+            return False
+        return candidate.resolve().is_file()
+    return False
+
+
+def _check_destination_acceptance(doc: MapDocument, repo_root: Path | None = None) -> None:
     if doc.frontmatter.schema_version != 3:
         return
     if any(
@@ -1232,6 +1287,12 @@ def _check_destination_acceptance(doc: MapDocument) -> None:
     ):
         raise SchemaViolation(
             "schema-v3 Destination acceptance requires stable DA-<n> entries"
+        )
+    if doc.frontmatter.state == "active" and not doc.destination_acceptance:
+        raise SchemaViolation(
+            f"{doc.path}: activation requires a Destination acceptance "
+            "criterion (map-format.md §Frontmatter and lifecycle); "
+            "add at least one DA-<n> entry before state: active"
         )
     seen: set[str] = set()
     previous = 0
@@ -1257,6 +1318,18 @@ def _check_destination_acceptance(doc: MapDocument) -> None:
         if criterion.state == "satisfied" and criterion.evidence is None:
             raise SchemaViolation(
                 f"satisfied Destination acceptance {criterion.id} requires evidence"
+            )
+        if (
+            criterion.kind == "objective"
+            and criterion.state == "satisfied"
+            and criterion.evidence is not None
+            and not _da_evidence_is_resolvable(criterion.evidence, repo_root)
+        ):
+            raise SchemaViolation(
+                f"satisfied objective Destination acceptance {criterion.id} "
+                "requires a resolvable evidence pointer (existing commit SHA, "
+                "PR reference, or artifact path within the repo), not "
+                f"{criterion.evidence!r}"
             )
         if criterion.kind == "evaluative" and criterion.state == "satisfied":
             if criterion.ratification is None or not _DATED_HUMAN.fullmatch(
@@ -1343,7 +1416,8 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
         ):
             raise SchemaViolation(
                 f"{ticket_path}: closed {ticket.frontmatter.type} ticket "
-                "is missing a 'user-ratified:' line in its Resolution "
+                "is missing a non-empty 'user-ratified: <name>, YYYY-MM-DD' "
+                "line in its Resolution "
                 "(map-format.md §Ticket schema HITL rule)"
             )
         if (
@@ -1514,11 +1588,16 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     violation — the exit-code split map-format.md §Command surface
     pins for every checker in the family.
 
-    `repo_root` is accepted for arg-shape parity with the other
-    §Command surface scripts; this function does not use it."""
+    `repo_root` resolves objective Destination acceptance evidence
+    pointers (R3c); when omitted it falls back to `resolve_repo_root`
+    from `target`'s directory, the same precedent every other
+    §Command surface script uses."""
     map_dir = Path(target)
     if not map_dir.is_dir():
         return 1, f"map directory not found: {map_dir}"
+    resolved_repo_root = (
+        Path(repo_root) if repo_root is not None else resolve_repo_root(None, map_dir)
+    )
     try:
         doc = read_map(map_dir)
     except MapStoreError as exc:
@@ -1529,7 +1608,7 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     try:
         _check_schema_version(doc.frontmatter.schema_version)
         _check_map_structure(doc)
-        _check_destination_acceptance(doc)
+        _check_destination_acceptance(doc, resolved_repo_root)
         _check_v3_clear_acceptance(doc)
         _check_tickets(
             map_dir, doc.frontmatter.state, doc.frontmatter.schema_version

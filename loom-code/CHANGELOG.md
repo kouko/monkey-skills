@@ -5,6 +5,39 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.106.0] — 2026-08-31 — Task Batch Review adapter + review debt cleared
+
+### Added
+
+- `batch_review_cli.py`: the single assembly-free execution path for the
+  Task Batch Review pipeline — `ready` (readiness check), `packet` (sealed
+  ReviewPacket), `record-dispatch` (idempotency receipt), `apply-result`
+  (feed the terminal verdict through `resolve_aggregate_review` and the
+  atomic ledger write) — wiring `review_batch.py`'s existing sealed-packet
+  and resolve functions behind a CLI.
+- Dispatch-receipt idempotency: re-entry refuses a second reviewer dispatch
+  for a batch whose receipt exists with no terminal result yet, keyed on
+  `batch_id` across the receipt directory regardless of `--out`; a crash on
+  the reopen path recovers idempotently, symmetric with finalize.
+- New small checker (`check_proposal_status.py`) refuses a plan/change arc
+  whose source proposal carries a non-ratified status, wired into the
+  writing-plans intake contract.
+- `plan_card.py --set-status` expands `implemented(<short>)`/`done(<short>)`
+  to the 40-hex SHA via `git rev-parse` at write time; the repo-root
+  `scripts/plan_card.py` shim onto it is pinned by a test.
+
+### Changed
+
+- `owned_requirements` accepts every `Brief item covered` referent
+  plan-format admits (REQ-<n>, BI-<n>, quote) — non-empty is the only
+  requirement — in both `check_review_batches.py` and `review_batch.py`'s
+  projection validator.
+- `subagent-driven-development` SKILL.md states whole-branch review entry
+  as an unconditional sequence step after every batch is finalized or
+  individually resolved, removing the interactive-mode ambiguity.
+- `check_contract_citations.py`'s scan set extended to include
+  loom-workflow (previously loom-code only).
+
 ## [0.105.1] — 2026-08-31 — fail-closed Task Batch Review
 
 ### Added

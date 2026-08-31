@@ -45,6 +45,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Independent**: false
 - **Brief item covered**: BI-1
 - **Status**: done(08261a9e)
+- **Review disposition**: individual
 - **Gloss**: 每份 reviewer 結果都能明確回答「它審的是哪一個 commit」。
 
 ## Task 2 — 交接 code 到 docs 的同一封包
@@ -62,6 +63,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2
 - **Status**: blocked
+- **Review disposition**: individual
 - **Gloss**: code 入口不再遺失封包，交給 docs 的仍是同一個審查事實。
 
 ## Task 3 — 明確化 Claude Code adapter
@@ -79,6 +81,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Independent**: true
 - **Brief item covered**: BI-3
 - **Status**: blocked
+- **Review disposition**: individual
 - **Gloss**: Claude 的便利確認流程仍保留，但不會沿用舊 commit 的審查結果。
 
 ## Task 4 — 明確化 Codex adapter
@@ -96,6 +99,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Independent**: true
 - **Brief item covered**: BI-3
 - **Status**: blocked
+- **Review disposition**: individual
 - **Gloss**: Codex 不假裝擁有 Claude 的續談能力，而是在新 commit 上重新做可追溯審查。
 
 ## Task 5 — 完成 docs 終態 consumer
@@ -114,6 +118,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Independent**: false
 - **Brief item covered**: BI-2, BI-3
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: 文件路徑成為真正的 consumer：接到哪份封包，就只對那份 SHA 做終態判定。
 
 ## Task 6 — 執行隔離安裝 dogfood
@@ -131,7 +136,14 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Independent**: false
 - **Brief item covered**: BI-4
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: 最終以真實隔離安裝情境驗證整條流程，而不是只驗各段文字。
+
+## Review Batches
+
+No review batches: every task routes individual review. This plan
+predates the Review Batch schema and is amended with individual
+dispositions only; no batch grouping is declared.
 
 ## Notes
 

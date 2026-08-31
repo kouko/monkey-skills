@@ -88,6 +88,12 @@ def test_batch_dispatch_and_fallback_contract() -> None:
     assert "SDD orchestrator is the only ledger writer" in batch
     assert "reviewers and implementers never mutate the ledger" in batch
 
+    # R9: whole-branch review entry after Batch finalize / individual
+    # resolution is an unconditional sequence step — no interactive-mode
+    # exception.
+    assert "necessarily proceeds to the existing whole-branch review" in batch
+    assert "no mode exception" in batch
+
     # The durable ledger contract describes implemented as a Task state, not a
     # second Batch lifecycle, and keeps owner-only repair atomic.
     for phrase in (
@@ -246,8 +252,12 @@ def test_actual_t6_t7_projection_is_packet_ready_and_acceptance_drifts_cas(tmp_p
         "loom-code/skills/subagent-driven-development/SKILL.md",
         "loom-code/scripts/test_sdd_new_plan_intake.py",
     )
+    # R11a widened owned_requirements to every non-empty Brief item covered
+    # referent kind, so Task 6's BI-<n> traceability referents now project
+    # alongside its REQ-<n> ids (plan-format.md §Brief item covered).
     assert task6["owned_requirements"] == (
         "REQ-103", "REQ-104", "REQ-105", "REQ-106", "REQ-107", "REQ-108",
+        "BI-2", "BI-4", "BI-8", "BI-9", "BI-10",
     )
     assert task6["future_requirements"] == ()
     assert "**RED**:" in task6["acceptance"][0]

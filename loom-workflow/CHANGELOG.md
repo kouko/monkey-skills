@@ -4,6 +4,37 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [3.1.0] — 2026-08-31 — v3 invariant enforcement + boundary restoration
+
+### Added
+
+- `map_store.py` enforces the v3 invariants the schema documented but did
+  not implement: `state: active` requires at least one Destination
+  Acceptance entry; the `user-ratified:` line validator rejects empty
+  values; objective DA evidence must be a resolvable pointer (existing
+  commit SHA, PR number, or artifact path — a non-empty string no longer
+  suffices).
+- `migrate_map_v3.py` accepts an explicit classification manifest (ticket
+  slug → target type, authored at migration time) so nonterminal
+  (open/claimed) v2 tickets can migrate without closure evidence they
+  cannot have; ambiguous CLOSED tickets still refuse.
+
+### Changed
+
+- `decision-map/references/map-format.md` restores the cross-store
+  boundary contract deleted by v3: promotion close-and-cite
+  (`origin: promoted to <ticket>`), map→backlog travel release-only, and
+  reopen-promoted-entries-on-archive — defined once and cited by
+  decision-map SKILL.md, with regression tests on both the map-side and
+  the backlog-side (loom-code template) contracts.
+- `docs/loom/outcome-map-v3/proposal.md` moves `Status: exploration` to
+  `Status: ratified — kouko, 2026-08-31`; the v3 plan's Decision Log is
+  filled with the itemized v3 semantic decisions, each tagged
+  `user-ratified: kouko, 2026-08-31`.
+- loom-code's `check_contract_citations.py` scan set extended to include
+  loom-workflow (previously loom-code only), so this plugin's boundary
+  contract is covered by the same citation check.
+
 ## [3.0.0] — 2026-08-30 — Outcome Map v3
 
 ### Breaking

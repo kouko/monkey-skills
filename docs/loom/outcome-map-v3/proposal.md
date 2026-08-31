@@ -1,6 +1,12 @@
 # Outcome Map v3 proposal
 
-Status: exploration
+Status: ratified — kouko, 2026-08-31
+
+Ratified by kouko on 2026-08-31, recorded retroactively in the
+contract-repair arc (docs/loom/specs/2026-08-31-contract-repair-post-v3.md,
+item R1): the v3 arc merged without a signed decision trail; the itemized
+semantic decisions were ratified then and are logged in the plan's Decision
+Log (docs/loom/plans/2026-08-30-outcome-map-v3.md).
 
 Principles basis: no `docs/loom/PRINCIPLES.md` exists; this proposal is unconstrained by repository principles.
 

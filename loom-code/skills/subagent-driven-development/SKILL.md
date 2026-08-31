@@ -26,7 +26,7 @@ Pause points the user **does** see:
 - Plan approval, before any task dispatch.
 - A `NEEDS_CONTEXT` from any implementer that survives the step-2 triage (orchestrator surfaces the question, waits for an answer; task-scoped checkable facts are resolved and re-dispatched without pausing).
 - A `BLOCKED` from any implementer that the orchestrator cannot unblock by re-dispatch (e.g. missing dependency the user must install).
-- After all tasks `DONE` (or `DONE_WITH_CONCERNS` triaged), an autonomous run with a human-approved frozen entry automatically invokes [`finishing-a-development-branch`](../finishing-a-development-branch/SKILL.md). It runs review + verification + push + PR-open in one pass; `一站一站來` keeps the final summary as the user-controlled pause point. Surface peer alternatives only when the user explicitly defers close-out.
+- After all tasks `DONE` (or `DONE_WITH_CONCERNS` triaged), an autonomous run with a human-approved frozen entry automatically invokes [`finishing-a-development-branch`](../finishing-a-development-branch/SKILL.md). It runs review + verification + push + PR-open in one pass; `一站一站來` keeps the final summary as the user-controlled pause point — that pause is `finishing-a-development-branch`'s own entry confirmation, not a block on entering whole-branch review (see the Batch review checkpoint's closing sentence). Surface peer alternatives only when the user explicitly defers close-out.
 
 Everything else — RED-GREEN-REFACTOR cycles, reviewer rounds, re-dispatch on `NEEDS_REVISION` — runs without user intervention.
 
@@ -214,6 +214,20 @@ mutation; use the existing verification recovery path. Read
 [`references/conditional-operations.md`](references/conditional-operations.md)
 §Batch review and individual fallback for the ordered fail-closed sequence.
 
+The executable form of that sequence is the adapter CLI
+`python3 loom-code/scripts/batch_review_cli.py` with its four subcommands:
+`ready` (checker-gated batch readiness), `packet` (materialize the sealed
+`ReviewPacket`; refuses unless `check_review_batches.py` exits 0 on the plan),
+`record-dispatch` (write the reviewer dispatch receipt), and `apply-result`
+(feed the terminal verdicts through `resolve_aggregate_review`). Use it instead
+of hand-assembling `review_batch.py` library calls; its call contract is
+`ready --plan <p> [--batch <id>] [--receipt <other-batch receipt>]...`,
+`packet --plan <p> --repo-root <r> --verification-receipt <resolver json>`,
+`record-dispatch --packet-file <json> --out <json>`, and `apply-result --plan
+<p> --repo-root <r> --verification-receipt <json> --result-file <json>
+--receipt <this-batch receipt>` — always pass `--receipt`: it is the
+idempotency record that refuses a re-send and recovers a crash.
+
 Dispatch one reviewer fan-out for the whole Batch, never one fan-out per
 member. The full lane uses spec-reviewer plus code-quality-reviewer. The prose
 lane uses the existing record-class narrowing: spec-reviewer alone for an
@@ -242,6 +256,12 @@ verification, return to `implemented(<new-sha>)`, and enter review only through
 a fresh Packet. `wait_refuse` changes nothing and waits or follows the failure's
 existing recovery rule. The SDD orchestrator is the only ledger writer;
 reviewers and implementers never mutate the ledger.
+
+Once every Batch reaches `finalize` (or a Task resolves through the existing
+individual reviewer loop), the run necessarily proceeds to the existing
+whole-branch review via `finishing-a-development-branch` — this holds for
+`一站一站來` interactive mode exactly as for an autonomous run, with no mode
+exception.
 
 **Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger. Perform every ledger flip via `python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py` exists at the repo root — it validates the task, the status grammar, and refuses duplicate or missing `Status` lines; hand-edit only when the script is absent. When only the repo-root copy is missing, run the plugin-shipped copy instead — `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path> --set-status "T<N>=<status>"` — "absent" means neither copy is present.
 

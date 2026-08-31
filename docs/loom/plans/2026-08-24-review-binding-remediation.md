@@ -19,6 +19,8 @@ Stage: verification:integration
 
 - Brief item covered: BI-1
 - Status: claimed(@root)
+- Review disposition: individual
+- Dependencies: none
 
 Description:
 
@@ -55,6 +57,8 @@ Acceptance criteria:
 
 - Brief item covered: BI-5
 - Status: claimed(@root)
+- Review disposition: individual
+- Dependencies: Task 1 completes first
 
 Description:
 
@@ -85,6 +89,8 @@ Acceptance criteria:
 
 - Brief item covered: BI-2
 - Status: claimed(@root)
+- Review disposition: individual
+- Dependencies: none
 
 Description:
 
@@ -116,6 +122,8 @@ Acceptance criteria:
 
 - Brief item covered: BI-3
 - Status: claimed(@root)
+- Review disposition: individual
+- Dependencies: Task 1 completes first
 
 Description:
 
@@ -149,6 +157,8 @@ Acceptance criteria:
 
 - Brief item covered: BI-3
 - Status: claimed(@root)
+- Review disposition: individual
+- Dependencies: Task 4 completes first
 
 Description:
 
@@ -180,6 +190,8 @@ Acceptance criteria:
 
 - Brief item covered: BI-4
 - Status: claimed(@root)
+- Review disposition: individual
+- Dependencies: Tasks 2, 3, 5 complete first
 
 Description:
 
@@ -220,6 +232,8 @@ Acceptance criteria:
 
 - Brief item covered: BI-6
 - Status: claimed(@root)
+- Review disposition: individual
+- Dependencies: Task 6 completes first
 
 Description:
 
@@ -251,6 +265,12 @@ Acceptance criteria:
 ## Open Questions
 
 N/A — no unresolved question: the user explicitly authorized remediation of the whole-branch review findings on 2026-08-24.
+
+## Review Batches
+
+No review batches: every task routes individual review. This plan
+predates the Review Batch schema and is amended with individual
+dispositions only; no batch grouping is declared.
 
 ## Notes
 

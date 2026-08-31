@@ -46,6 +46,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-6
 - **Status**: done(c9b82198)
+- **Review disposition**: individual
 - **Gloss**: 讓審查者拿到明確地圖，不再把使用者專案誤認成 plugin 安裝目錄。
 
 ## Task 2 — 綁定 marker 到 reviewed SHA
@@ -63,6 +64,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Independent**: true
 - **Brief item covered**: BI-2
 - **Status**: done(8d39d24a)
+- **Review disposition**: individual
 - **Gloss**: 避免舊 verdict 在新 commit 上被誤蓋成已通過。
 
 ## Task 3 — 將 code review station 改接 context
@@ -81,6 +83,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2, BI-6
 - **Status**: blocked
+- **Review disposition**: individual
 - **Gloss**: code review 的輸入改為跨工具相同的明確契約。
 
 ## Task 4 — 完成 docs review 的可 mint 終態
@@ -99,6 +102,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Independent**: false
 - **Brief item covered**: BI-2, BI-3, BI-6
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: 文件修正被確認後，也能在正確 commit 上真正完成閘門。
 
 ## Task 5 — 修正 Plan Check 17 的適用與 cross-read
@@ -117,6 +121,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Independent**: true
 - **Brief item covered**: BI-4
 - **Status**: claimed(@codex-check17)
+- **Review disposition**: individual
 - **Gloss**: 「重用既有 helper」不再能在沒有證據時被漏過。
 
 ## Task 6 — 保留 R3 與 simplification 的閘門訊號
@@ -135,6 +140,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Independent**: false
 - **Brief item covered**: BI-5
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: 證據尚未確認或可簡化的提醒，不會在蓋章前悄悄消失。
 
 ## Task 7 — 跨 host 回歸與版本鏈
@@ -153,7 +159,14 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Independent**: false
 - **Brief item covered**: BI-6
 - **Status**: pending
+- **Review disposition**: individual
 - **Gloss**: 最後用真實的獨立安裝情境證明兩個工具沒有各走各的。
+
+## Review Batches
+
+No review batches: every task routes individual review. This plan
+predates the Review Batch schema and is amended with individual
+dispositions only; no batch grouping is declared.
 
 ## Notes
 
