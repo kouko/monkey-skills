@@ -774,9 +774,85 @@ def test_apply_result_recovers_receipt_stuck_after_ledger_crash(
     out2 = json.loads(capsys.readouterr().out)
     assert code2 == 0
     assert out2["ledger_written"] is True
+    assert out2["recovered"] is True
+    assert out2.get("transition_authority_present") is None
     stored_after_recovery = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
     assert stored_after_recovery["result_applied"] is True
     assert plan_path.read_text(encoding="utf-8") == plan_after_crash
+
+
+def _stuck_finalized_plan(plan_path: Path, sha1: str, sha2: str) -> None:
+    """Rewrite plan.md as if the ledger CAS write already finalized both
+    members (post-crash state) without going through a real crash."""
+    plan_text = plan_path.read_text(encoding="utf-8")
+    plan_text = plan_text.replace(f"implemented({sha1})", f"done({sha1})")
+    plan_text = plan_text.replace(f"implemented({sha2})", f"done({sha2})")
+    plan_path.write_text(plan_text, encoding="utf-8")
+
+
+def test_apply_result_recovery_refuses_wrong_batch_receipt(tmp_path, capsys) -> None:
+    """A stuck receipt for a DIFFERENT batch_id than the one apply-result
+    resolves must not be flipped by borrowing this batch's done() statuses
+    (round-2 quality fix: recovery must check batch identity)."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    _stuck_finalized_plan(plan_path, sha1, sha2)
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    dispatch_receipt.write_text(json.dumps({
+        "schema": "batch-dispatch-receipt-v1",
+        "batch_id": "other-capability",
+        "packet_identity": "packet:other",
+        "arms": ["spec-reviewer"],
+        "members": ["Task 1", "Task 2"],
+        "member_shas": {"Task 1": sha1, "Task 2": sha2},
+        "result_applied": False,
+    }), encoding="utf-8")
+    result_path = _result_file(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["action"] is None
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored["result_applied"] is False
+
+
+def test_apply_result_recovery_refuses_sha_mismatch(tmp_path, capsys) -> None:
+    """A stuck receipt whose recorded member sha doesn't match the plan's
+    done(<sha>) must not be flipped — the receipt could be for a rebuilt
+    packet on the same batch with a different member commit (round-2
+    quality fix: recovery must check per-member sha)."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    _stuck_finalized_plan(plan_path, sha1, sha2)
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    dispatch_receipt.write_text(json.dumps({
+        "schema": "batch-dispatch-receipt-v1",
+        "batch_id": "capability",
+        "packet_identity": "packet:fixture",
+        "arms": ["spec-reviewer"],
+        "members": ["Task 1", "Task 2"],
+        "member_shas": {"Task 1": sha1, "Task 2": "f" * 40},
+        "result_applied": False,
+    }), encoding="utf-8")
+    result_path = _result_file(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["action"] is None
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored["result_applied"] is False
 
 
 def test_record_dispatch_refuses_malformed_packet_missing_batch_id(

@@ -446,6 +446,9 @@ def _cmd_record_dispatch(args) -> int:
             "members": [
                 member["task_id"] for member in packet.get("members", [])
             ],
+            "member_shas": {
+                task_id: sha for task_id, sha in packet.get("member_shas", [])
+            },
         }
     except (KeyError, TypeError) as exc:
         return _fail({"recorded": False, "reasons": [
@@ -491,12 +494,22 @@ def _recover_settled_receipt(args) -> dict | None:
 
     Returns the recovered result payload (receipt flipped, exit 0) when
     every declared member's CURRENT plan status is already `done(<sha>)`
-    — the only replacement a finalize resolution ever produces — and the
-    receipt is present and unapplied. Returns None (caller re-raises the
-    original readiness error) for every other case, including a genuine
-    not-ready plan (members still `pending`/`claimed`/`blocked`) and a
-    reopen resolution's `pending` replacement, which this recovery does
-    not attempt to distinguish from an unrelated not-ready state."""
+    — the only replacement a finalize resolution ever produces — the
+    receipt is present and unapplied, AND the receipt's own identity
+    matches: `batch_id` equals the batch this call resolves to, `members`
+    is set-equal to the declaration's members, and the receipt's
+    `member_shas` (required for recovery — an older receipt written before
+    this field existed cannot be recovered) has each member's sha equal to
+    the sha the plan's `done(<sha>)` actually recorded. Without this check
+    a stale receipt for an unrelated batch could be flipped using this
+    batch's finalized statuses, with no ledger write ever happening for
+    the batch the receipt claims to cover.
+
+    Returns None (caller re-raises the original readiness error) for
+    every other case, including a genuine not-ready plan (members still
+    `pending`/`claimed`/`blocked`) and a reopen resolution's `pending`
+    replacement, which this recovery does not attempt to distinguish from
+    an unrelated not-ready state."""
     receipt_path = getattr(args, "receipt", None)
     if not receipt_path or not Path(receipt_path).exists():
         return None
@@ -504,15 +517,26 @@ def _recover_settled_receipt(args) -> dict | None:
         stored = _read_dispatch_receipt(receipt_path)
         plan_text = _load_plan(args.plan)
         fields = _projection_fields(plan_text, args.batch)
+        batch_id = _batch_id(args, fields)
     except (OSError, ValueError):
         return None
     if stored["result_applied"]:
         return None
-    statuses = _member_statuses(plan_text, tuple(fields["declaration"]["members"]))
-    if not statuses or not all(
-        _DONE.fullmatch(status) is not None for status in statuses.values()
-    ):
+    if stored["batch_id"] != batch_id:
         return None
+    declared_members = tuple(fields["declaration"]["members"])
+    if set(stored["members"]) != set(declared_members):
+        return None
+    member_shas = stored.get("member_shas")
+    if not (type(member_shas) is dict and set(member_shas) == set(declared_members)):
+        return None
+    statuses = _member_statuses(plan_text, declared_members)
+    if not statuses:
+        return None
+    for member_id, status in statuses.items():
+        match = _DONE.fullmatch(status)
+        if match is None or match.group(1) != member_shas[member_id]:
+            return None
     stored["result_applied"] = True
     Path(receipt_path).write_text(
         json.dumps(stored, sort_keys=True), encoding="utf-8"
@@ -526,7 +550,8 @@ def _recover_settled_receipt(args) -> dict | None:
             "recovered: ledger already finalized before an earlier crash; "
             "receipt now applied",
         ],
-        "transition_authority_present": True,
+        "recovered": True,
+        "transition_authority_present": None,
     }
 
 
