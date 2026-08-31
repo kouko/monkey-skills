@@ -1572,7 +1572,7 @@ def prepare_dispatch_attempt(
     corpus_id: str,
     case_id: str,
 ) -> PublishedRecord:
-    """Consume exact dispatch authority, then persist immutable bindings."""
+    """Publish immutable bindings and consume exact dispatch authority together."""
     if not isinstance(sequence, int) or isinstance(sequence, bool) or sequence < 1:
         raise ValueError("sequence must be a positive integer")
     attempt_id = _required_text(attempt_id, "attempt_id")
@@ -1586,14 +1586,15 @@ def prepare_dispatch_attempt(
         "sequence": sequence,
         "status": "prepared",
     }
-    consume_authorization_receipt(
+    return _publish_record_with_authorization_receipt(
         Path(store_root),
         authorization_receipt,
         action="dispatch_review",
         actor=actor,
         target=attempt_id,
+        record_id=attempt_id,
+        record=record,
     )
-    return publish_record(store_root, attempt_id, record)
 
 
 def record_dispatch_outcome(

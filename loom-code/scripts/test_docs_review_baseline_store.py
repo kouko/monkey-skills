@@ -960,6 +960,133 @@ def test_req_103_req_112_dispatch_requires_one_exact_authorization(tmp_path) -> 
     with pytest.raises(ValueError, match="does not exist"):
         read_record(tmp_path, "attempt-wrong-store")
 
+
+def test_req_103_req_112_concurrent_dispatch_consumes_receipt_once(tmp_path) -> None:
+    # @req: REQ-103
+    # @req: REQ-112
+    """One receipt cannot authorize two successful concurrent attempts."""
+    actor, receipt = _authorize_dispatch(tmp_path, "attempt-concurrent")
+
+    def prepare():
+        return store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-concurrent",
+            authorization_receipt=receipt,
+            actor=actor,
+            sequence=1,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(prepare) for _ in range(2)]
+    results = [future.exception() or future.result() for future in futures]
+
+    assert len(
+        [result for result in results if isinstance(result, store.PublishedRecord)]
+    ) == 1
+    failures = [result for result in results if isinstance(result, Exception)]
+    assert len(failures) == 1
+    assert "consumed" in str(failures[0]) or "stale" in str(failures[0])
+    assert (tmp_path / "records" / "attempt-concurrent.json").is_file()
+    assert len(list((tmp_path / "receipt-consumptions").glob("*.json"))) == 1
+
+
+def test_req_103_req_112_dispatch_publication_failure_is_retryable(
+    tmp_path, monkeypatch
+) -> None:
+    # @req: REQ-103
+    # @req: REQ-112
+    """A post-publication I/O error leaves dispatch authority retryable."""
+    actor, receipt = _authorize_dispatch(tmp_path, "attempt-retry")
+    real_publish = store.publish_record
+    calls = 0
+
+    def fail_target_once(store_root, record_id, record):
+        nonlocal calls
+        if record_id == "attempt-retry" and calls == 0:
+            calls += 1
+            real_publish(store_root, record_id, record)
+            raise OSError("forced attempt publication failure")
+        return real_publish(store_root, record_id, record)
+
+    monkeypatch.setattr(store, "publish_record", fail_target_once)
+    arguments = {
+        "authorization_receipt": receipt,
+        "actor": actor,
+        "sequence": 1,
+        "profile_id": "codex:gpt-5.6-luna:economy",
+        "corpus_id": "corpus-abc",
+        "case_id": "case-1",
+    }
+
+    with pytest.raises(OSError, match="forced attempt publication failure"):
+        store.prepare_dispatch_attempt(tmp_path, "attempt-retry", **arguments)
+    assert (tmp_path / "records" / "attempt-retry.json").is_file()
+    assert list((tmp_path / "receipt-consumptions").glob("*.json")) == []
+
+    published = store.prepare_dispatch_attempt(
+        tmp_path, "attempt-retry", **arguments
+    )
+    assert published.record_id == "attempt-retry"
+    assert len(list((tmp_path / "receipt-consumptions").glob("*.json"))) == 1
+
+
+def test_req_103_req_112_dispatch_conflict_does_not_consume_receipt(tmp_path) -> None:
+    # @req: REQ-103
+    # @req: REQ-112
+    """A conflicting attempt leaves its exact dispatch authority unused."""
+    actor, receipt = _authorize_dispatch(tmp_path, "attempt-conflict")
+    existing = publish_record(tmp_path, "attempt-conflict", {"kind": "other"})
+
+    for _ in range(2):
+        with pytest.raises(RecordConflictError):
+            store.prepare_dispatch_attempt(
+                tmp_path,
+                "attempt-conflict",
+                authorization_receipt=receipt,
+                actor=actor,
+                sequence=1,
+                profile_id="codex:gpt-5.6-luna:economy",
+                corpus_id="corpus-abc",
+                case_id="case-1",
+            )
+
+    assert read_record(tmp_path, "attempt-conflict") == existing
+    assert list((tmp_path / "receipt-consumptions").glob("*.json")) == []
+
+
+def test_req_103_req_112_dispatch_receipt_namespace_symlink_is_refused(
+    tmp_path,
+) -> None:
+    # @req: REQ-103
+    # @req: REQ-112
+    """Dispatch refuses a receipt namespace redirected outside the store."""
+    actor, receipt = _authorize_dispatch(tmp_path, "attempt-symlink")
+    outside = tmp_path / "outside-receipts"
+    outside.mkdir()
+    (tmp_path / "receipt-consumptions").symlink_to(
+        outside, target_is_directory=True
+    )
+
+    with pytest.raises(OSError):
+        store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-symlink",
+            authorization_receipt=receipt,
+            actor=actor,
+            sequence=1,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+
+    assert list(outside.iterdir()) == []
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "attempt-symlink")
+
+
 def test_req_104_observation_and_attribution_are_separate(tmp_path) -> None:
     # @req: REQ-104
     """Model claims stay lossless; only named humans ratify judgments."""
