@@ -18,21 +18,34 @@ pinned, 7 reproduced live on the branch that built the station).
 
 - `docs/loom/ATTACK-CATALOGUE.md` reference + the `loom_init` scaffold
   that seeds it in an adopting repo.
-- `check_attack_catalogue.py` + a CI step: refuses duplicate section
-  headings, non-ISO dates, vendored version pins, an entry whose `def`
-  cannot be AST-resolved, and strips `.sh` comments before scanning so a
+- `check_attack_catalogue.py` + a CI step, resolving a `pinned by` test
+  name against the AST (a class-body method included) rather than a
+  text scan, and stripping `.sh` comments before scanning so a
   commented-out example doesn't count as a live entry.
-- `plan_card.py` gains a `Safety-bearing:` header, fail-loud on a
-  misplaced, indented, miscased, or unclosed-fence header.
+- `plan_card.py` gains a `Safety-bearing:` header.
 - `finishing-a-development-branch` Step 3.5 plus two close-out card rows
   and two new packets — `adversarial-audit-packet.md` and
   `cold-reader-packet.md`.
 - `code-reviewer` gains a `class:` tag; `plan-format.md` documents the
   `Safety-bearing` grammar.
 
+### Changed
+
+- `plan_card.py` now raises, for any plan, on a `Safety-bearing:` line
+  written outside the header block, an indented header key, a miscased
+  key, and — header or not — an unclosed ``` / ~~~ fence anywhere in the
+  body, instead of silently rendering the header as absent.
+- `check_attack_catalogue.py` now refuses a `reproduced` store line
+  carrying an empty `pinned by`, a non-ISO date, or a section heading
+  that duplicates an earlier one in the same store, instead of accepting
+  it.
+
 ### Fixed
 
-- Batch-CAS full-reopen fix in `batch_review_cli.py`.
+- Batch-CAS full-reopen fix: `loom-code/scripts/plan_card.py`
+  (`_replacements_are_finalization`, `_validate_batch_transition`,
+  `_atomic_batch_status_update_locked`) — a batch where every member is
+  reopened was misjudged as a finalization.
 
 ## [0.108.1] — 2026-08-31 — Shared git body and sibling loader (Phase 1 script helper extraction)
 
