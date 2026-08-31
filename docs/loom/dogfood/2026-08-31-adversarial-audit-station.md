@@ -114,6 +114,14 @@ For each `reproduced` vector, the RED test and commit that pins it in
 Store commits: `052dd594` (the four checker-grammar pins) and `2cb11a0f`
 (the `safety_bearing` pin), both dated 2026-08-31 16:4x.
 
+A third `safety_bearing` self-exemption variant was found by the fix's own
+review, not by either packet: reviewing `d04659d6` reproduced an INDENTED
+`  Safety-bearing: yes — …` line inside the header, which `_header_value`
+folds as a continuation and renders `N/A — header absent` at exit 0. It is
+pinned by `test_indented_safety_bearing_line_in_header_fails_loud`
+(`loom-code/scripts/test_plan_card.py`) with its own store line; the pin
+commit was pending at record time.
+
 The one un-pinnable `reproduced` vector — `check_attack_catalogue.py`
 `pinned by` resolution (relevance): "a name that exists proves nothing
 about whether the named test actually exercises the vector" — is recorded
@@ -167,6 +175,11 @@ on this branch:
   `packet` and `apply-result` invalidates the packet and refuses the
   binding, correct but a trap for concurrent waves. Captured, not fixed
   here: `docs/loom/backlog/2026-08-31-packet-identity-binds-whole-plan-text.md`.
+- **A prose rule walked past** — a debt-batch implementer ran
+  `git stash push`/`pop` despite the packet's explicit prohibition on stash
+  (stash stack verified intact afterwards, no data lost). The packet said
+  the right thing in prose and a worker did it anyway; the mechanical
+  answer is a hook, not another sentence — filed as a residual below.
 
 ## 7. Store fingerprint
 
@@ -205,3 +218,5 @@ As reported by the orchestrator's dispatch records:
   it), `cold-reader-packet.md`'s `taken` verdict routing, and an
   end-to-end race on `_batch_replacements_finalize` via
   `batch_review_cli.py` beyond the six pinned F1–F6 regressions.
+- A prose stash-prohibition in a worker packet has no mechanical backing —
+  a `git stash` guard hook is the fix; not built here.
