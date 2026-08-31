@@ -23,15 +23,21 @@ def _before_lock_file_open() -> None:
     """Test seam after opening the lock directory by descriptor."""
 
 
-def _assert_no_symlink_components(path: Path) -> None:
+def assert_no_symlink_components(
+    path: Path, error: type[Exception] = MapLockError
+) -> None:
     absolute = path.absolute()
     current = Path(absolute.anchor)
     for part in absolute.parts[1:]:
         current /= part
         if current.is_symlink():
-            raise MapLockError(f"refusing path with symlink component: {current}")
+            raise error(f"refusing path with symlink component: {current}")
         if not current.exists():
             break
+
+
+def _assert_no_symlink_components(path: Path) -> None:
+    assert_no_symlink_components(path)
 
 
 def _assert_contained(map_dir: Path, candidate: Path) -> None:
