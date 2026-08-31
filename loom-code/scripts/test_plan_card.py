@@ -214,6 +214,55 @@ def test_safety_bearing_line_outside_header_or_miscased_fails_loud(tmp_path):
         plan_card.safety_bearing(miscased_text)
 
 
+def test_indented_safety_bearing_line_in_header_fails_loud(tmp_path):
+    """(review round 2, live adversarial audit) A `Safety-bearing:` line
+    written INDENTED inside the header block — e.g. directly under
+    `Stage:` — is `_header_value`'s continuation shape (N1's folded
+    convention), so it used to be silently swallowed into the preceding
+    field's value instead of being read as its own field, rendering
+    `safety-bearing: N/A — header absent` at exit 0. A header-region
+    continuation line whose stripped text starts with a known header key
+    (Safety-bearing:/Goal:/Stage:/Steps:, case-insensitive) is malformed
+    and must fail loud, naming the line, from both the CLI card render
+    and the pure `safety_bearing()` helper directly."""
+    indented_text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "Stage: sdd:wave-1\n",
+        "Stage: sdd:wave-1\n  Safety-bearing: yes — touches git-guard\n",
+    )
+    plan_path = _write_plan(tmp_path, indented_text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "Safety-bearing:" in result.stdout
+    assert "continuation" in result.stdout
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="continuation"):
+        plan_card.safety_bearing(indented_text)
+
+
+def test_safety_bearing_mention_inside_fenced_block_is_ignored(tmp_path):
+    """(review round 2, live adversarial audit) A `Safety-bearing:` line
+    quoted inside a fenced code block (triple backtick) in the plan body
+    — e.g. documentation showing the grammar — is content, not a
+    misplaced header declaration; the outside-header scan must skip
+    fenced lines and the plan still renders its normal card (N/A here,
+    since no real header is present)."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n```\nSafety-bearing: yes — touches git-guard\n```\n",
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: N/A — header absent\n" in result.stdout
+    assert plan_card.safety_bearing(text) is None
+
+
 def test_all_done_plan_renders_next_close_out(tmp_path):
     """(2) When every task's status is done(...), the next line points at
     close-out, not at any task."""

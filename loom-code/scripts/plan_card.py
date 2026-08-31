@@ -173,6 +173,43 @@ def _header_value(header: str, key: str) -> str | None:
 
 
 _SAFETY_BEARING_KEY_CI = re.compile(r"^(safety-bearing):", re.IGNORECASE)
+_KNOWN_HEADER_KEYS_CI = re.compile(r"^(safety-bearing|goal|stage|steps):", re.IGNORECASE)
+
+
+def _reject_indented_header_key(header: str) -> None:
+    """Fail loud when a header-block line is indented — `_header_value`'s
+    continuation shape (N1's folded convention) — but its stripped text
+    starts with a known header key (Safety-bearing:/Goal:/Stage:/Steps:,
+    case-insensitive). Such a line used to be silently folded into the
+    PRECEDING field's value instead of being read as its own field (live
+    adversarial audit, review round 2)."""
+    for line in header.splitlines():
+        if line[:1] not in (" ", "\t"):
+            continue
+        stripped = line.strip()
+        if stripped and _KNOWN_HEADER_KEYS_CI.match(stripped) is not None:
+            raise ValueError(
+                f"'{stripped}' — a header key may not start a continuation "
+                "line (it is indented under the preceding field)"
+            )
+
+
+def _find_misplaced_safety_bearing_line(outside: str) -> str | None:
+    """The first `safety-bearing:` line (any case) in the plan body
+    (everything after the header block), or None. Lines inside a fenced
+    code block (triple backtick) are skipped — a quoted grammar
+    example is content, not a misplaced header declaration (live
+    adversarial audit, review round 2)."""
+    in_fence = False
+    for line in outside.splitlines():
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if re.match(r"^safety-bearing:", line, re.IGNORECASE):
+            return line
+    return None
 
 
 def safety_bearing(plan_text: str) -> tuple[str, str] | None:
@@ -184,26 +221,27 @@ def safety_bearing(plan_text: str) -> tuple[str, str] | None:
     start with `yes — ` or `no — `.
 
     Fail-loud guard against a self-exemption vector (live adversarial
-    audit, review-driven fix round): a `safety-bearing:` line (any case)
-    written OUTSIDE the header block — e.g. under a later `## ` section —
-    used to be invisible to `_header_value`'s header-only scan and
-    silently rendered as an absent header (N/A, exit 0); same for a
-    miscased key (`safety-bearing:`) INSIDE the header block, which
-    `_header_value`'s exact-case `startswith` also silently missed. Both
-    now raise here, the one helper both `build_card` and direct callers
-    share, so neither surface can be exempted by a misplaced or miscased
-    line."""
+    audit, review-driven fix rounds): a `safety-bearing:` line (any case)
+    written OUTSIDE the header block — e.g. under a later `## ` section,
+    but not inside a fenced code block quoting the grammar — used to be
+    invisible to `_header_value`'s header-only scan and silently rendered
+    as an absent header (N/A, exit 0); same for a miscased key
+    (`safety-bearing:`) or an INDENTED key line (folded as a
+    continuation of the preceding field) INSIDE the header block, both of
+    which `_header_value`'s exact-case, unindented `startswith` also
+    silently missed. All now raise here, the one helper both `build_card`
+    and direct callers share, so no surface can be exempted by a
+    misplaced, miscased, or indented line."""
     header, sep, rest = plan_text.partition("\n## ")
     outside = sep + rest
-    outside_match = re.search(
-        r"^safety-bearing:.*$", outside, re.IGNORECASE | re.MULTILINE
-    )
-    if outside_match is not None:
+    outside_line = _find_misplaced_safety_bearing_line(outside)
+    if outside_line is not None:
         raise ValueError(
-            f"'{outside_match.group(0)}' is outside the plan's header "
-            "block — the 'Safety-bearing:' header belongs above the first "
-            "'## ' section"
+            f"'{outside_line}' is outside the plan's header block — the "
+            "'Safety-bearing:' header belongs above the first '## ' "
+            "section"
         )
+    _reject_indented_header_key(header)
     for line in header.splitlines():
         key_match = _SAFETY_BEARING_KEY_CI.match(line)
         if key_match is not None and key_match.group(1) != "Safety-bearing":
