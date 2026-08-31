@@ -125,6 +125,11 @@ _PROTOCOL_BASENAMES = frozenset(
         # written by `backlog_index.py --write`. Surfaced when the scope
         # widened to `scripts/templates/`, whose backlog charter cites it.
         "BACKLOG.md",
+        # Adversarial-audit instance store; every adopting repo owns one at
+        # `docs/loom/ATTACK-CATALOGUE.md`, same root-level scaffold shape as
+        # BACKLOG.md/PRINCIPLES.md/KICKOFF-DEFAULTS.md above. The plugin
+        # reference `references/attack-catalogue.md` points at it by name.
+        "ATTACK-CATALOGUE.md",
     }
 )
 
