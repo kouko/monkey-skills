@@ -828,6 +828,21 @@ def freeze_corpus_manifest(
             raise ValueError(
                 f"binding {case_id} oracle revision is not ratified: {oracle_revision_id}"
             )
+        independence = oracle.record.get("independence_evidence")
+        if (
+            oracle.record.get("governance_status") != "bound"
+            or not isinstance(independence, Mapping)
+            or independence.get("status") != "satisfied"
+        ):
+            raise ValueError(
+                f"binding {case_id} oracle governance is not bound and satisfied: "
+                f"{oracle_revision_id}"
+            )
+        if oracle.record.get("eligible_for_official_metrics") is not True:
+            raise ValueError(
+                f"binding {case_id} oracle is not eligible for official metrics: "
+                f"{oracle_revision_id}"
+            )
         if oracle.record.get("case_id") != case_id:
             raise ValueError(
                 f"binding {case_id} oracle describes a different case: {oracle_revision_id}"

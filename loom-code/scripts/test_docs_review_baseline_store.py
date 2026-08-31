@@ -166,7 +166,26 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         evidence_locators=["review:abc123#finding-1"],
     )
     snapshot_digest = case.record["snapshot"]["digest"]
-    oracle = ratify_oracle(
+    roles = {
+        "execution_actor": "executor:weak-runner",
+        "document_author": "author:writer",
+        "oracle_author": "author:oracle-drafter",
+        "oracle_ratifier": "maintainer:oracle-ratifier",
+        "attribution_ratifier": "maintainer:attribution-ratifier",
+        "reviewer_output_author": "model:weak-reviewer",
+        "policy_owner": "maintainer:campaign-owner",
+    }
+    authority = store.publish_authority_assignment(
+        tmp_path,
+        "authority-corpus-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities={
+            "ratify_oracle": ["maintainer:oracle-ratifier"],
+        },
+        allowed_self_ratification=[],
+    )
+    oracle = store.ratify_governed_oracle(
         tmp_path,
         "oracle-case-1-r1",
         case_id="case-1",
@@ -180,7 +199,8 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
             }
         ],
         negative_control_intent="Do not reward generic requests for detail.",
-        ratifier="maintainer:kuku",
+        ratifier="maintainer:oracle-ratifier",
+        authority_revision_id=authority.record_id,
     )
     bindings = [("case-1", snapshot_digest, oracle.record_id)]
 
@@ -215,6 +235,30 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
     with pytest.raises(ValueError, match="snapshot digest"):
         store.freeze_corpus_manifest(
             tmp_path, [("case-1", "b" * 64, oracle.record_id)]
+        )
+
+    unbound = ratify_oracle(
+        tmp_path,
+        "oracle-case-1-unbound-r1",
+        case_id="case-1",
+        snapshot_digest=snapshot_digest,
+        findings=oracle.record["findings"],
+        negative_control_intent="Do not reward generic requests for detail.",
+        ratifier="maintainer:oracle-ratifier",
+    )
+    with pytest.raises(ValueError, match="governance"):
+        store.freeze_corpus_manifest(
+            tmp_path, [("case-1", snapshot_digest, unbound.record_id)]
+        )
+
+    ineligible_record = dict(oracle.record)
+    ineligible_record["eligible_for_official_metrics"] = False
+    ineligible = store.publish_record(
+        tmp_path, "oracle-case-1-ineligible-r1", ineligible_record
+    )
+    with pytest.raises(ValueError, match="official metrics"):
+        store.freeze_corpus_manifest(
+            tmp_path, [("case-1", snapshot_digest, ineligible.record_id)]
         )
 
 
