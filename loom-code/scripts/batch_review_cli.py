@@ -99,11 +99,26 @@ def _run_subprocess(args: list[str], *, text: bool = True) -> subprocess.Complet
     when text=True: passing encoding=/errors= at all — even under
     text=False — forces subprocess.run into text mode regardless, which
     would hand `_committed_bytes`'s `text=False` git-show call a `str`
-    where its caller (the scope issuer) requires raw `bytes`."""
+    where its caller (the scope issuer) requires raw `bytes`.
+
+    argv is handed to the child as UTF-8 `bytes`, not `str`: on POSIX,
+    subprocess encodes `str` arguments with the filesystem encoding
+    (os.fsencode — PEP 383), which is ASCII under an uncoerced C/POSIX
+    locale, so a plan path such as `src/日本.py` inside a `git show
+    <sha>:<path>` argument raised UnicodeEncodeError before git ever ran
+    (observed on the Linux CI runner for #768; macOS's filesystem
+    encoding is always UTF-8, which is why it did not reproduce locally).
+    git itself treats paths as bytes, so UTF-8 bytes are exactly what it
+    expects regardless of the process locale (git-config(1)
+    core.quotePath describes the same byte-level model on output)."""
     text_kwargs = {"encoding": "utf-8", "errors": "surrogateescape"} if text else {}
+    argv = [
+        arg.encode("utf-8", "surrogateescape") if isinstance(arg, str) else arg
+        for arg in args
+    ]
     try:
         return subprocess.run(
-            args, capture_output=True, text=text, timeout=_GIT_TIMEOUT_SECONDS,
+            argv, capture_output=True, text=text, timeout=_GIT_TIMEOUT_SECONDS,
             **text_kwargs,
         )
     except subprocess.TimeoutExpired:

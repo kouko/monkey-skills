@@ -5,6 +5,17 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.107.1] — 2026-08-31 — Hotfix: git argv as UTF-8 bytes under a C locale
+
+### Fixed
+
+- `batch_review_cli.py` `_run_subprocess`: argv is handed to git as UTF-8
+  `bytes`, so a non-ASCII declared path (`src/日本.py`) no longer raises
+  `UnicodeEncodeError` under an uncoerced C/POSIX locale on Linux — the
+  0.107.0 locale fix decoded git's output but still encoded argv with the
+  ASCII filesystem encoding, which the Linux CI runner surfaced right
+  after #768 merged.
+
 ## [0.107.0] — 2026-08-31 — Batch review hardening
 
 Closes the 2026-08-31 adversarial audit's F1–F6 and F8 findings against
