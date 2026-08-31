@@ -9,8 +9,9 @@
 
 ## Why this exists
 
-A prose contract (a `SKILL.md`, an `agents/*.md`, a `hooks/*.md`, or a
-`references/*-prompt.md`) is executed by a reader's attention, not by
+A prose contract (a `**/SKILL.md`, a `**/agents/*.md`, a `**/hooks/*.md`, a
+`**/references/*-packet.md`, a `**/references/*-prompt.md`, or a
+`rules/*.md`) is executed by a reader's attention, not by
 a machine. Reviewing the diff only checks that the words are present;
 it never checks whether an agent actually following those words, cold,
 does what they say. This packet drives that check directly: a
