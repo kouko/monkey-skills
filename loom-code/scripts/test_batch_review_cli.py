@@ -717,6 +717,68 @@ def test_apply_result_does_not_flip_receipt_on_non_terminal_resolution(
     stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
     assert stored.get("result_applied", False) is False
 
+def test_apply_result_recovers_receipt_stuck_after_ledger_crash(
+    tmp_path, capsys, monkeypatch,
+) -> None:
+    """A crash between the ledger CAS write and the dispatch-receipt flip
+    must not strand the receipt forever: once the plan already shows every
+    member as done(<sha>) (the ledger side succeeded) but result_applied is
+    still False, re-running apply-result --receipt must recover by flipping
+    the receipt idempotently instead of failing readiness forever (code
+    review round-1 finding)."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    result_path = _result_file(tmp_path)
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    assert cli.main([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ]) == 0
+    capsys.readouterr()
+
+    real_write_text = Path.write_text
+
+    def _crash_on_receipt_write(self, *call_args, **call_kwargs):
+        if self == dispatch_receipt:
+            raise OSError("simulated crash before receipt flip")
+        return real_write_text(self, *call_args, **call_kwargs)
+
+    monkeypatch.setattr(Path, "write_text", _crash_on_receipt_write)
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    capsys.readouterr()
+    assert code != 0
+    plan_after_crash = plan_path.read_text(encoding="utf-8")
+    assert f"- **Status**: done({sha1})" in plan_after_crash
+    assert f"- **Status**: done({sha2})" in plan_after_crash
+    stored_after_crash = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored_after_crash.get("result_applied", False) is False
+
+    monkeypatch.setattr(Path, "write_text", real_write_text)
+    code2 = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    out2 = json.loads(capsys.readouterr().out)
+    assert code2 == 0
+    assert out2["ledger_written"] is True
+    stored_after_recovery = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored_after_recovery["result_applied"] is True
+    assert plan_path.read_text(encoding="utf-8") == plan_after_crash
+
+
 def test_record_dispatch_refuses_malformed_packet_missing_batch_id(
     tmp_path, capsys,
 ) -> None:

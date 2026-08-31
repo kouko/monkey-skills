@@ -25,7 +25,11 @@ another batch whose dispatch receipt has no terminal result applied yet;
 ``apply-result --receipt`` marks that receipt's result applied, which unblocks
 both the next ``ready`` and a fresh dispatch cycle.  ``record-dispatch`` refuses
 (fail-loud) a second dispatch for a batch whose receipt exists without an
-applied terminal result — re-collect instead of re-send.
+applied terminal result — re-collect instead of re-send.  A crash between the
+ledger write and the receipt flip inside one ``apply-result --receipt`` run
+does not strand the receipt: re-running the same command recognizes every
+member already sitting at ``done(<sha>)`` and flips the receipt idempotently
+instead of re-running the ledger write (see ``_recover_settled_receipt``).
 
 The plan's ``Aggregate verification`` prose is declaration identity only and
 is never executed; the verification receipt file is the declared-first
@@ -67,6 +71,7 @@ _H2_HEADING = re.compile(r"^##\s+", re.MULTILINE)
 _STATUS_FIELD = re.compile(r"^\s*-\s*\*{0,2}Status\*{0,2}:\s*(.+?)\s*$", re.MULTILINE)
 _IMPLEMENTED = re.compile(r"^implemented\(([0-9a-f]{40})\)$")
 _IMPLEMENTED_ANY_SHA = re.compile(r"^implemented\((.*)\)$")
+_DONE = re.compile(r"^done\(([0-9a-f]{40})\)$")
 
 
 def _run_git(repo_root: Path, *args: str) -> str:
@@ -87,7 +92,14 @@ def _run_git(repo_root: Path, *args: str) -> str:
 
 def _committed_bytes(repo_root: Path, sha: str, path: str) -> bytes:
     """Read one declared file's exact committed bytes at <sha> — never the
-    live worktree, so a post-commit edit cannot change what gets sealed."""
+    live worktree, so a post-commit edit cannot change what gets sealed.
+
+    Grounding (external-surface category 4, CLI flag): the `git cat-file
+    -t <sha>:<path>` type check mirrors the in-repo idiom documented at
+    `loom-code/scripts/loom_gate_markers.py` (`_show_committed_file`,
+    lines 159-240) — a directory, a submodule gitlink, or an unresolvable
+    sha can each make `git show <sha>:<path>` exit 0 without returning
+    real blob content, so the type must be checked as `blob` first."""
     if not rb._safe_repo_path(path):
         raise rb.PacketRefused(f"{path} is not a safe repo-relative path")
     try:
@@ -467,9 +479,67 @@ def _ledger_expected_and_replacements(
     return expected_statuses, replacements
 
 
+def _recover_settled_receipt(args) -> dict | None:
+    """Crash-window recovery for `apply-result --receipt`: the ledger CAS
+    write (`plan_card.atomic_batch_status_update`) and the dispatch-receipt
+    flip are two separate writes, in that order. A crash between them
+    leaves every batch member already `done(<sha>)` on the plan but the
+    receipt's `result_applied` still False — re-running `apply-result`
+    then fails at `_readiness` (no member is `implemented(<sha>)` any
+    more), so the receipt is stuck forever and `ready --receipt` refuses
+    any other batch sharing a member.
+
+    Returns the recovered result payload (receipt flipped, exit 0) when
+    every declared member's CURRENT plan status is already `done(<sha>)`
+    — the only replacement a finalize resolution ever produces — and the
+    receipt is present and unapplied. Returns None (caller re-raises the
+    original readiness error) for every other case, including a genuine
+    not-ready plan (members still `pending`/`claimed`/`blocked`) and a
+    reopen resolution's `pending` replacement, which this recovery does
+    not attempt to distinguish from an unrelated not-ready state."""
+    receipt_path = getattr(args, "receipt", None)
+    if not receipt_path or not Path(receipt_path).exists():
+        return None
+    try:
+        stored = _read_dispatch_receipt(receipt_path)
+        plan_text = _load_plan(args.plan)
+        fields = _projection_fields(plan_text, args.batch)
+    except (OSError, ValueError):
+        return None
+    if stored["result_applied"]:
+        return None
+    statuses = _member_statuses(plan_text, tuple(fields["declaration"]["members"]))
+    if not statuses or not all(
+        _DONE.fullmatch(status) is not None for status in statuses.values()
+    ):
+        return None
+    stored["result_applied"] = True
+    Path(receipt_path).write_text(
+        json.dumps(stored, sort_keys=True), encoding="utf-8"
+    )
+    return {
+        "action": "finalize",
+        "reopen_owners": [],
+        "ledger_mutation_allowed": True,
+        "ledger_written": True,
+        "reasons": [
+            "recovered: ledger already finalized before an earlier crash; "
+            "receipt now applied",
+        ],
+        "transition_authority_present": True,
+    }
+
+
 def _cmd_apply_result(args) -> int:
     try:
-        packet = _build_from_args(args)
+        try:
+            packet = _build_from_args(args)
+        except ValueError:
+            recovered = _recover_settled_receipt(args)
+            if recovered is not None:
+                print(json.dumps(recovered, sort_keys=True))
+                return 0
+            raise
         payload = json.loads(Path(args.result_file).read_text(encoding="utf-8"))
         if not (type(payload) is dict and set(payload) == {
             "arm_bindings", "terminal_results",
