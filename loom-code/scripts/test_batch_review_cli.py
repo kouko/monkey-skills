@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -1460,3 +1461,72 @@ def test_apply_result_refuses_result_file_missing_packet_identity(
         assert plan_path.read_text(encoding="utf-8") == before
         stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
         assert stored.get("result_applied", False) is False
+
+
+def test_packet_seals_non_ascii_path_under_c_locale(tmp_path) -> None:
+    """`_run_subprocess` calls `subprocess.run(..., text=True)` with no
+    explicit `encoding=`, so Python decodes the child git process's stdout
+    using `locale.getencoding()` — this process's own locale, fixed at
+    interpreter startup from LC_ALL/LANG (PEP 538/540). After the
+    quotePath fix (`test_packet_seals_member_commit_touching_declared_non_ascii_path`)
+    `git diff --name-only` emits the raw UTF-8 path bytes for a non-ASCII
+    file; under a non-UTF-8 locale those bytes are not valid ASCII/C-locale
+    text and `text=True` without `errors=` raises `UnicodeDecodeError`.
+    `UnicodeDecodeError` IS a `ValueError` subclass, so `_cmd_packet`'s
+    `except (..., ValueError, ...)` already keeps this from an uncaught
+    traceback — but it still surfaces as a spurious refusal
+    (`{"packet": null, "reasons": ["'ascii' codec can't decode byte ..."]}`)
+    for a plan git itself has no trouble with; fixed, this same input
+    seals cleanly. Reproducing this needs the CLI run as an actual OS
+    subprocess (its own interpreter, its own startup locale) — an
+    in-process `cli.main()` call runs under pytest's own already-fixed
+    locale and cannot show it. `LC_ALL=C`/`LANG=C` alone are not enough
+    on a host where CPython auto-coerces a C/POSIX locale to UTF-8 mode
+    (PEP 538/540, true on this dev machine) — `PYTHONUTF8=0` and
+    `PYTHONCOERCECLOCALE=0` pin the child to the true ASCII/C-locale
+    decoding the bug needs.
+    """
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    _git_commit_file(repo_root, "seed.txt", b"seed")  # sha1 is NOT a root commit
+    sha1 = _git_commit_file(repo_root, "src/日本.py", b"member 1")
+    sha2 = _git_commit_file(repo_root, "src/2.py", b"member 2")
+    plan_text = _plan_text(
+        f"implemented({sha1})", f"implemented({sha2})",
+    ).replace(
+        "- **Files touched**: src/1.py",
+        "- **Files touched**: src/日本.py",
+    )
+    plan_path = repo_root / "plan.md"
+    plan_path.write_text(plan_text, encoding="utf-8")
+    receipt_path = tmp_path / "verification-receipt.json"
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+
+    env = dict(os.environ)
+    env["LC_ALL"] = "C"
+    env["LANG"] = "C"
+    # CPython 3.7+ auto-coerces a C/POSIX locale to UTF-8 mode (PEP 538/540)
+    # unless told not to — on a host where that coercion is available (this
+    # dev machine included) LC_ALL=C alone silently stays UTF-8 and never
+    # reproduces the bug. Pin both knobs off so the child genuinely runs
+    # under the ASCII/C-locale decoding this test exists to catch — the
+    # same effective interpreter state the reported CI failure ran under.
+    env["PYTHONUTF8"] = "0"
+    env["PYTHONCOERCECLOCALE"] = "0"
+    result = subprocess.run(
+        [
+            sys.executable, str(SCRIPTS / "batch_review_cli.py"),
+            "packet", "--plan", str(plan_path),
+            "--repo-root", str(repo_root),
+            "--verification-receipt", str(receipt_path),
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    emitted = json.loads(result.stdout)
+    member_1 = emitted["members"][0]
+    assert member_1["sha"] == sha1
+    assert [f["path"] for f in member_1["files"]] == ["src/日本.py"]
