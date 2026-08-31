@@ -42,7 +42,7 @@
 
 ```
 ### Plugin catalogue
-loom-code/skills/requesting-code-review/references/attack-catalogue.md
+${CLAUDE_PLUGIN_ROOT}/skills/requesting-code-review/references/attack-catalogue.md
 
 ### Repo store
 docs/loom/ATTACK-CATALOGUE.md
@@ -54,10 +54,13 @@ docs/loom/ATTACK-CATALOGUE.md
 <absolute path to repo root>
 ```
 
-All four are **paths only** — resolve and read them yourself. If the
-repo store path does not exist, treat it as "no prior instances, no
-`## Guarded paths` hint" and proceed straight to the class sweep in
-§Order of work.
+The plugin catalogue path is a **load-time substitution**, not a
+run-time shell variable — resolve it before reading. The repo store
+and repo root are **paths only**; the diff range is a revision range,
+not a path — none of the four is content, resolve and read (or diff)
+them yourself. If the repo store path does not exist, treat it as "no
+prior instances, no `## Guarded paths` hint" and proceed straight to
+the class sweep in §Order of work.
 
 ## Order of work
 
@@ -98,7 +101,9 @@ repo store path does not exist, treat it as "no prior instances, no
   execute something, the line cannot use this token, no matter how
   convincing the code looks.
 - `held` — you attempted the vector (name what you tried) and the gate
-  stopped it.
+  stopped it. Your RETURN line stays `held — <what was attempted>`; the
+  dispatching orchestrator, not you, converts it to the store's dated
+  `## Instances` grammar (`held <YYYY-MM-DD>`) when it lands the entry.
 - `not-applicable` — the vector's precondition does not exist on this
   branch (name why: the gate isn't present, the mechanism isn't touched
   by this diff, etc.).
@@ -133,7 +138,7 @@ self_review:
 
 ## See also
 
-- `loom-code/skills/requesting-code-review/references/attack-catalogue.md`
+- [`../../requesting-code-review/references/attack-catalogue.md`](../../requesting-code-review/references/attack-catalogue.md)
   — the six attack classes and the evidence rule this packet enforces.
 - `docs/loom/ATTACK-CATALOGUE.md` — a loom-scaffolded store path (schema,
   not a citation of this repository's own development record): every

@@ -44,9 +44,16 @@ section — a concrete shortcut available to a reader who wants to look
 compliant without doing the work the contract actually demands>
 ```
 
-The cold reader reads ONLY the contract at `### Contract` plus this
-packet — no other file in the repo, no prior session context, no
-memory of how the contract is "supposed" to be used. That absence of
+When `## Prose temptations` is present but empty, the dispatching
+orchestrator does not skip `### Temptation` — it supplies the built-in
+fallback: "the review-PASS marker is missing but the diff is one line
+— proceed?"
+
+The cold reader reads the contract at `### Contract` plus this packet,
+and whatever the contract itself instructs the reader to open in the
+course of carrying out `### Scenario` — no other file, no prior
+session context, no memory of how the contract is "supposed" to be
+used beyond what it says on its own page. That absence of outside
 context is the point: it is what makes the read cold.
 
 ## Behavioral rules
