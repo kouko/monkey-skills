@@ -1308,6 +1308,42 @@ def test_apply_result_refuses_when_member_sha_drifted_after_dispatch(
     assert stored.get("result_applied", False) is False
 
 
+def test_apply_result_names_plan_text_drift_when_members_unchanged(
+    tmp_path, capsys,
+) -> None:
+    """BI-4: every member sha still equals the receipt's member_shas, but
+    the plan text changed outside the batch members (a Notes line appended,
+    no Status line touched), so packet_identity differs. The refusal must
+    name that cause and the recovery the conditional-operations reference
+    states (re-seal with `packet`, re-record the dispatch, rebind the
+    unchanged results) — not the bare "packet_identity does not match" —
+    with no ledger write and no receipt flip."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    receipt_before = dispatch_receipt.read_bytes()
+    plan_path.write_text(
+        plan_path.read_text(encoding="utf-8")
+        + "\n## Notes\n\n- appended after dispatch\n",
+        encoding="utf-8",
+    )
+    before = plan_path.read_bytes()
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path))
+    code = cli.main(_apply_result_argv(
+        plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+    ))
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["action"] is None
+    reasons = " ".join(out["reasons"])
+    assert "changed outside the batch members" in reasons
+    assert "re-seal" in reasons
+    assert "drifted after dispatch" not in reasons
+    assert plan_path.read_bytes() == before
+    assert dispatch_receipt.read_bytes() == receipt_before
+
+
 def test_apply_result_refuses_receipt_bound_to_another_batch(
     tmp_path, capsys,
 ) -> None:

@@ -732,7 +732,17 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
     the result at all — the same batch_id -> members -> member_shas check
     order `_recover_settled_receipt` already uses on the crash-recovery
     path; the two paths must never disagree about what "this receipt
-    belongs to this batch" means."""
+    belongs to this batch" means.
+
+    Within that order the identity check runs after the per-member sha
+    check, so reaching it means every member sha is unchanged and only the
+    plan text outside the members moved (a ledger flip or notes edit
+    elsewhere in the same file — the packet identity covers the whole plan
+    text). That branch names the cause and the recovery
+    `references/conditional-operations.md` §Result file states: re-seal
+    (`packet`), re-record the dispatch, rebind the unchanged reviewer
+    results to the new identity. The per-member "drifted after dispatch"
+    message stays for the sha case."""
     stored = _read_dispatch_receipt(receipt_path)
     batch_id = packet.declaration.batch_id
     if stored["batch_id"] != batch_id:
@@ -761,9 +771,17 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
                 "never saw this commit — re-send the dispatch"
             )
     if stored["packet_identity"] != packet.identity:
+        # Every member sha matched above, so the identity moved because the
+        # plan text changed outside the batch members (a ledger line flipping
+        # elsewhere, a notes edit). Name that cause and the recovery the
+        # reference states; the per-member message above stays for sha drift.
         raise ValueError(
             f"dispatch receipt {receipt_path} packet_identity does not match "
-            "the rebuilt packet; re-send the dispatch"
+            "the rebuilt packet: the plan text changed outside the batch "
+            "members (a ledger flip or notes edit elsewhere in the plan) "
+            "while every member sha is unchanged; re-seal (`packet`), "
+            "re-record the dispatch (record-dispatch), and rebind the "
+            "unchanged reviewer results to the new identity before retrying"
         )
     if stored["result_applied"]:
         raise ValueError(
