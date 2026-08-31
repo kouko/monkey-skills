@@ -145,3 +145,41 @@ Two conclusions, both load-bearing:
    from variance alone across two n=4 runs. A refinement whose true effect is
    ≤0.25 cannot be detected at n=4; detecting it needs far more reps than it is
    worth. This is why the wording-tuning loop stops here.
+
+## Action (b) semantic reword A/B — NULL (one overclaim in the treatment arm), not shipped
+
+After (a)'s semantic reword proved out, the same literal→semantic pattern was
+applied to action (b): the trigger-word list ("verified", "swept all N",
+"unchanged", "tests pass") became a semantic category ("every sentence that
+asserts anything about your OWN work ... in ANY wording — literal words are
+examples, not the test"). Tested BEFORE committing: control = current action (b),
+treatment = semantic action (b), single-variable contract diff, 4 reps each on
+the case-1 correction task with an added requirement to write a short 更正 note
+(to naturally elicit a self-assertion surface). Blind judging scored the three
+dependents (0-3) plus a (b)-specific metric: the strongest self-completeness
+claim in the draft, rated accurate / overclaim / no-claim.
+
+| arm | dep scores /3 | mean | claim ratings | overclaims |
+|---|---|---|---|---|
+| control (trigger-word b) | 1,2,0,2 | 1.25 | no-claim, accurate, no-claim, accurate | 0/4 |
+| semantic (b) | 0,3,1,3 | 1.75 | overclaim, no-claim, accurate, accurate | **1/4** |
+
+**Verdict: null, not shipped.** The dependency-score Δ (+0.50) is not the (b)
+metric and sits inside the within-arm spread (both arms span 0–3 at n=4). On the
+dedicated metric — claim honesty — the arms tie on accurate (2/4 each) and the
+only overclaim landed in the TREATMENT arm. The semantic reword of (b) shows no
+effect where it was supposed to act; the contract keeps the current wording.
+
+Contamination note, recorded for honesty: rule-14 trigger interpretation varied
+again (3/4 control generators self-reported "rule 14 not triggered" off the
+literal `Files touched` precondition; treatment generators mostly reported it
+fired). That variance is a known, separately-recorded finding (the trigger is a
+literal field-name match) and muddies arm comparability at n=4 — one more reason
+this null cannot be read as "semantic (b) is worse", only as "no detectable
+effect, do not ship on this evidence".
+
+Reading across (a) and (b): the semantic reword paid off exactly once — where
+the action's core content changed what the agent must SEARCH for (a: literal
+copies → semantic dependents). Rewording what the agent must RE-CHECK about its
+own claims (b) measured null. The lever is search scope, not claim phrasing;
+wording-tuning on rule 14 stops here.
