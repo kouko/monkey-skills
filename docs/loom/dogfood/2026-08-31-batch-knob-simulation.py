@@ -68,6 +68,7 @@ class TaskRec:
     files: tuple[str, ...]
     deps: tuple[str, ...]  # dependency task ids (predecessors), any relation
     disposition: str  # "individual" | "batch(<id>)" | "" (absent -> individual)
+    module: str  # normalized Module field value, "" if absent
 
 
 @dataclass
@@ -83,6 +84,14 @@ class PlanResult:
     fanouts_k2_loose: int
     largest_component: int
     fanouts_k2_cap: dict  # {K: fanouts_k2_cap_K for K in CAP_KS}
+    fanouts_a_loose_cap4: int
+    fanouts_b_wave_cap4: int
+    fanouts_c_module_cap4: int
+    fanouts_d_strict_cap6: int
+    noshare_a: int
+    noshare_b: int
+    noshare_c: int
+    noshare_d: int
     parse_warnings: str
     # extra (not in CSV header, used for example selection in the report)
     example_edges: list = field(default_factory=list)
@@ -222,8 +231,11 @@ def parse_plan(text: str):
 
         disposition = _disposition_of(block)
 
+        module_raw = _field_value(block, "Module")
+        module = _norm_path(module_raw) if module_raw else ""
+
         tasks.append(
-            TaskRec(tid=tid, lane=lane, files=files, deps=deps, disposition=disposition)
+            TaskRec(tid=tid, lane=lane, files=files, deps=deps, disposition=disposition, module=module)
         )
 
     # Parse declared batches (member task ids), if any.
@@ -360,15 +372,17 @@ def compute_plan(repo: str, plan_name: str, text: str) -> PlanResult:
         return n_components, largest, groups
 
     fanouts_k2, largest_component, groups_strict = build_components(True)
-    fanouts_k2_loose, _, _ = build_components(False)
+    fanouts_k2_loose, _, groups_loose = build_components(False)
 
-    def _split_component_capped(members: list, K: int) -> int:
-        """Split one connected component into batches of at most K tasks,
-        filling in topological order (in-cluster dependency edges only) so a
-        batch may only contain tasks whose in-cluster dependencies sit in
-        the same or an earlier batch. Sequential chunking of a valid
-        topo order satisfies that constraint by construction. Returns the
-        number of batches this component becomes."""
+    def _capped_batches(members: list, K: int) -> list[list[str]]:
+        """Split one connected component/group into batches of at most K
+        tasks, filling in topological order (in-cluster dependency edges
+        only) so a batch may only contain tasks whose in-cluster
+        dependencies sit in the same or an earlier batch. Sequential
+        chunking of a valid topo order satisfies that constraint by
+        construction. Returns the actual batch member-lists (not just a
+        count) so callers can inspect batch composition (e.g. the
+        no-shared-file proxy)."""
         member_set = set(members)
         indeg = {m: 0 for m in members}
         adj: dict[str, list[str]] = {m: [] for m in members}
@@ -395,17 +409,116 @@ def compute_plan(repo: str, plan_name: str, text: str) -> PlanResult:
             # Cycle (shouldn't happen for a real dependency DAG) -- fall back
             # to original member order rather than dropping tasks.
             topo = list(members)
-        n_batches = 0
-        for i in range(0, len(topo), K):
-            n_batches += 1
-        return n_batches
+        return [topo[i:i + K] for i in range(0, len(topo), K)]
+
+    def _batches_for_groups(groups: list, K: int) -> list[list[str]]:
+        all_batches: list[list[str]] = []
+        for members in groups:
+            all_batches.extend(_capped_batches(members, K))
+        return all_batches
+
+    def _no_shared_file_batches(batches: list) -> int:
+        """Count batches with >=2 members where NO pair shares any touched
+        file -- a proxy for "semantically unrelated tasks merged". Singleton
+        batches are excluded: there is no pair to be unrelated."""
+        count = 0
+        for batch in batches:
+            if len(batch) < 2:
+                continue
+            filesets = [set(by_id[m].files) for m in batch]
+            any_shared = any(
+                filesets[i] & filesets[j]
+                for i in range(len(filesets))
+                for j in range(i + 1, len(filesets))
+            )
+            if not any_shared:
+                count += 1
+        return count
 
     fanouts_k2_cap: dict[int, int] = {}
     for K in CAP_KS:
-        total_batches = 0
-        for members in groups_strict.values():
-            total_batches += _split_component_capped(members, K)
-        fanouts_k2_cap[K] = total_batches
+        fanouts_k2_cap[K] = len(_batches_for_groups(list(groups_strict.values()), K))
+
+    # --- Variant D: strict (file-gated) clustering, cap=6, for reference ---
+    batches_d = _batches_for_groups(list(groups_strict.values()), 6)
+    fanouts_d_strict_cap6 = len(batches_d)
+    noshare_d = _no_shared_file_batches(batches_d)
+
+    # --- Variant A: loose (dependency edge AND same lane, no file gate), cap=4 ---
+    batches_a = _batches_for_groups(list(groups_loose.values()), 4)
+    fanouts_a_loose_cap4 = len(batches_a)
+    noshare_a = _no_shared_file_batches(batches_a)
+
+    # --- Variant B: wave (same dependency-depth level AND same lane,
+    #     regardless of edges/files -- "review each wave as one batch"), cap=4 ---
+    # Depth is computed over the FULL dependency graph (any lane, any task --
+    # mirrors plan-format.md's own Critical-path-depth definition), then only
+    # non-mechanical tasks are bucketed by (depth, lane) for batching.
+    depth_cache: dict[str, int] = {}
+    visiting: set[str] = set()
+
+    def _depth(tid: str) -> int:
+        if tid in depth_cache:
+            return depth_cache[tid]
+        if tid in visiting:
+            depth_cache[tid] = 0  # dependency cycle guard
+            return 0
+        visiting.add(tid)
+        t = by_id.get(tid)
+        preds = [d for d in t.deps if d in by_id] if t else []
+        d = 1 + max((_depth(p) for p in preds), default=-1) if preds else 0
+        visiting.discard(tid)
+        depth_cache[tid] = d
+        return d
+
+    for t in tasks:
+        _depth(t.tid)
+
+    wave_groups: dict[tuple[int, str], list[str]] = {}
+    for t in nonmech:
+        wave_groups.setdefault((depth_cache[t.tid], t.lane), []).append(t.tid)
+    batches_b = _batches_for_groups(list(wave_groups.values()), 4)
+    fanouts_b_wave_cap4 = len(batches_b)
+    noshare_b = _no_shared_file_batches(batches_b)
+
+    # --- Variant C: same lane AND (dependency edge OR shared Module value),
+    #     cap=4 (file gate replaced by Module equality) ---
+    parent_c = {t.tid: t.tid for t in nonmech}
+
+    def find_c(x: str) -> str:
+        while parent_c[x] != x:
+            parent_c[x] = parent_c[parent_c[x]]
+            x = parent_c[x]
+        return x
+
+    def union_c(x: str, y: str) -> None:
+        rx, ry = find_c(x), find_c(y)
+        if rx != ry:
+            parent_c[rx] = ry
+
+    for t in nonmech:
+        for a_id in t.deps:
+            a = by_id.get(a_id)
+            if a is None or a.tid not in nonmech_ids:
+                continue
+            if a.lane != t.lane:
+                continue
+            union_c(a.tid, t.tid)  # dependency edge, no file gate
+
+    module_buckets: dict[tuple[str, str], list[str]] = {}
+    for t in nonmech:
+        if t.module:
+            module_buckets.setdefault((t.lane, t.module), []).append(t.tid)
+    for bucket in module_buckets.values():
+        for i in range(1, len(bucket)):
+            union_c(bucket[0], bucket[i])  # shared Module value, same lane
+
+    groups_module: dict[str, list[str]] = {}
+    for t in nonmech:
+        groups_module.setdefault(find_c(t.tid), []).append(t.tid)
+    batches_c = _batches_for_groups(list(groups_module.values()), 4)
+    fanouts_c_module_cap4 = len(batches_c)
+    noshare_c = _no_shared_file_batches(batches_c)
 
     example_components = sorted(
         [g for g in groups_strict.values() if len(g) > 1], key=len, reverse=True
@@ -423,6 +536,14 @@ def compute_plan(repo: str, plan_name: str, text: str) -> PlanResult:
         fanouts_k2_loose=fanouts_k2_loose,
         largest_component=largest_component,
         fanouts_k2_cap=fanouts_k2_cap,
+        fanouts_a_loose_cap4=fanouts_a_loose_cap4,
+        fanouts_b_wave_cap4=fanouts_b_wave_cap4,
+        fanouts_c_module_cap4=fanouts_c_module_cap4,
+        fanouts_d_strict_cap6=fanouts_d_strict_cap6,
+        noshare_a=noshare_a,
+        noshare_b=noshare_b,
+        noshare_c=noshare_c,
+        noshare_d=noshare_d,
         parse_warnings="; ".join(warnings) if warnings else "",
         example_components=example_components,
     )
@@ -461,6 +582,8 @@ def main() -> int:
                 "fanouts_now", "nudge_pairs", "fanouts_k2", "fanouts_k2_loose",
                 "largest_component",
                 "fanouts_k2_cap3", "fanouts_k2_cap4", "fanouts_k2_cap5", "fanouts_k2_cap6",
+                "fanouts_a_loose_cap4", "fanouts_b_wave_cap4", "fanouts_c_module_cap4", "fanouts_d_strict_cap6",
+                "noshare_a", "noshare_b", "noshare_c", "noshare_d",
                 "parse_warnings",
             ]
         )
@@ -471,6 +594,8 @@ def main() -> int:
                     r.fanouts_now, r.nudge_pairs, r.fanouts_k2, r.fanouts_k2_loose,
                     r.largest_component,
                     r.fanouts_k2_cap[3], r.fanouts_k2_cap[4], r.fanouts_k2_cap[5], r.fanouts_k2_cap[6],
+                    r.fanouts_a_loose_cap4, r.fanouts_b_wave_cap4, r.fanouts_c_module_cap4, r.fanouts_d_strict_cap6,
+                    r.noshare_a, r.noshare_b, r.noshare_c, r.noshare_d,
                     r.parse_warnings,
                 ]
             )
@@ -492,6 +617,12 @@ def main() -> int:
             "fanouts_k2": r.fanouts_k2, "fanouts_k2_loose": r.fanouts_k2_loose,
             "largest_component": r.largest_component,
             "fanouts_k2_cap": r.fanouts_k2_cap,
+            "fanouts_a_loose_cap4": r.fanouts_a_loose_cap4,
+            "fanouts_b_wave_cap4": r.fanouts_b_wave_cap4,
+            "fanouts_c_module_cap4": r.fanouts_c_module_cap4,
+            "fanouts_d_strict_cap6": r.fanouts_d_strict_cap6,
+            "noshare_a": r.noshare_a, "noshare_b": r.noshare_b,
+            "noshare_c": r.noshare_c, "noshare_d": r.noshare_d,
             "parse_warnings": r.parse_warnings,
             "example_components": r.example_components,
         }

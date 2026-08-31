@@ -1,6 +1,6 @@
 # Batching-knob simulation over historical loom plans (read-only)
 
-Script: `2026-08-31-batch-knob-simulation.py` (stdlib only; run from a machine holding the seven repos). Per-plan rows: `2026-08-31-batch-knob-simulation-per-plan.csv`. Recorded 2026-08-31 as the evidence behind docs/loom/specs/2026-08-31-batch-review-measurement-and-nudge.md.
+Script: `batch_knob_sim.py` (stdlib only). Per-plan rows: `per_plan.csv`.
 No repo file was modified — this is pure analysis over `docs/loom/plans/*.md`
 across 7 repos.
 
@@ -126,7 +126,7 @@ tasks as parallel-safe, explicitly because the rest share
   duplicates excluded — `find` was scoped to each repo's canonical
   `docs/loom/plans/` directory only, `maxdepth 1`).
 - **283 parsed** (had ≥1 `## Task N` heading and ≥1 task survived parsing)
-  and are in `2026-08-31-batch-knob-simulation-per-plan.csv` / the totals above.
+  and are in `per_plan.csv` / the totals above.
 - **12 skipped**, all for the same reason: **no `## Task N` heading** —
   these are genuinely pre-schema free-form plans (checklists, "## Tasks
   (atomic, TDD each)" prose sections, or a `superpowers:`-era format
@@ -196,3 +196,36 @@ already captured by K=4, and a cap this low costs almost nothing in
 review-load reduction while directly bounding the largest-cluster concern
 raised above (the outcome-map-v3 and xval examples' 13-14-task clusters
 would become 3-4 batches of ≤5 each at K=5).
+
+## What it takes to reach -50% (three more aggressive edge definitions, cap K=4)
+
+kouko asked what -50% would require. Four variants, all capped at K=4 except
+D (kept at K=6 as the strict-clustering reference point from the section
+above): **(A) loose** = dependency edge AND same lane, no file gate;
+**(B) wave** = same dependency-depth level AND same lane, regardless of
+edges/files ("review each wave as one batch"); **(C) module** = same lane
+AND (dependency edge OR shared `Module` field value), file gate replaced by
+Module equality; **(D) strict/cap6** = this doc's existing file-gated
+knob ② from the section above, unchanged, included only for scale
+reference. New CSV columns: `fanouts_a_loose_cap4`, `fanouts_b_wave_cap4`,
+`fanouts_c_module_cap4`, `fanouts_d_strict_cap6`, `noshare_a/b/c/d`.
+
+| group | fanouts_now | A loose (cap4) | B wave (cap4) | C module (cap4) | D strict (cap6) |
+|---|---:|---:|---:|---:|---:|
+| **Overall** (283) | 2060 | 835 (−59.5%) | 1104 (−46.4%) | 813 (−60.5%) | 1651 (−19.9%) |
+| **monkey-skills** (254) | 1821 | 710 (−61.0%) | 983 (−46.0%) | 689 (−62.2%) | 1465 (−19.5%) |
+| **6 app repos** (29) | 239 | 125 (−47.7%) | 121 (−49.4%) | 124 (−48.1%) | 186 (−22.2%) |
+
+**Answer: A and C both clear -50% overall** (and on monkey-skills alone);
+**B clears it only on the 6 app repos**, not overall. D (this doc's earlier
+recommendation) does not get close.
+
+**No-shared-file batch counts (proxy for "unrelated tasks merged"), overall
+n=283:** A=272 of 835 batches (32.6%) share no file with any other member;
+B=459 of 1104 (41.6%); C=279 of 813 (34.3%); **D=0 of 1651 (0%)**. Reading
+-50% off A or C means roughly **1 in 3 resulting batches would pair tasks
+that touch zero files in common** — B is worse (2 in 5); D stays clean only
+because it never breaks the file-overlap requirement that defined its
+clusters in the first place. -50% is reachable, but not for free: A/C buy
+it by admitting same-Module-or-same-wave grouping that ~a third of the time
+produces a batch with no shared-file evidence a reviewer could point to.

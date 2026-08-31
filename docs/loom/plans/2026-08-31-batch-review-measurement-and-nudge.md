@@ -187,9 +187,9 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Context paths**:
   - loom-code/scripts/check_review_batches.py (`def _parse_tasks`, `def _projection_files`, `_projection_field_block` — reuse, do not re-implement the grammar)
   - docs/loom/dogfood/2026-08-31-batch-knob-simulation.py (the clustering the simulation ran — the proposer must reproduce variant C at cap 4 on the same input)
-  - docs/loom/dogfood/2026-08-31-batch-knob-simulation-per-plan.csv (column `fanouts_k2_cap4` — the module rule at cap 4; the us-sec xval plan's value is 6)
+  - docs/loom/dogfood/2026-08-31-batch-knob-simulation-per-plan.csv (column `fanouts_c_module_cap4` — variant C, the module rule at cap 4; the us-sec xval plan's value is 5)
 - **Acceptance**:
-  - **RED**: `test_propose_reproduces_simulation_on_us_sec_xval_plan` — running the proposer on `docs/loom/plans/2026-07-13-us-sec-financial-table-xval.md` yields `len(batches) + len(singletons) == 6`, the `fanouts_k2_cap4` value the simulation CSV records for that plan; today the script does not exist.
+  - **RED**: `test_propose_reproduces_simulation_on_us_sec_xval_plan` — running the proposer on `docs/loom/plans/2026-07-13-us-sec-financial-table-xval.md` yields `len(batches) + len(singletons) == 5`, the `fanouts_c_module_cap4` value the simulation CSV records for that plan; today the script does not exist.
   - **GREEN**: a 5-task same-module component splits 4+1 in dependency order (a task never precedes one of its dependencies in a later batch); mechanical tasks are excluded; two tasks with different lanes never share a batch; a plan with no `Module` lines still clusters by dependency edges.
 - **External surfaces**: stdlib only.
 - **Reuse-adequacy**:
