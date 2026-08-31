@@ -31,6 +31,8 @@ plan_card = importlib.util.module_from_spec(_SPEC)
 sys.modules["plan_card"] = plan_card
 _SPEC.loader.exec_module(plan_card)
 
+import loom_gate_markers
+
 
 def _plan_text(
     *,
@@ -1889,3 +1891,78 @@ def test_plan_card_oracle_keeps_name_and_exception_type(monkeypatch):
     sys.modules.pop("plan_card_review_batch_oracle", None)
     plan_card._review_batch_oracle()
     assert "plan_card_review_batch_oracle" in sys.modules
+
+
+# ---------------------------------------------------------------------------
+# F1/C1 — the header/body split anchors on ANY `^## ` line, including the
+# document's very first line; an indented body-line mention is not invisible
+# either. F4/C6 — fence scanning shares loom_gate_markers' toggle rules.
+# ---------------------------------------------------------------------------
+
+
+def test_plan_starting_with_h2_heading_has_empty_header_misplaced_line_raises():
+    """(F1, whole-branch review) `plan_text.partition("\\n## ")` needs a
+    LEADING newline before `## `, so a plan whose very first line IS a
+    `## ` heading was never split there — the whole first section was
+    read as `header`, and a `Safety-bearing:` line inside it rendered
+    N/A instead of raising. After the fix the header is EMPTY (the
+    split happens at position 0) and the line is scanned as body content
+    — outside the header block — so it must raise as misplaced, never
+    silently render N/A."""
+    text = (
+        "## Context\n\n"
+        "Safety-bearing: no — routine docs touch-up\n\n"
+        "## Task 1 — t\n\n- Status: pending\n"
+    )
+    with pytest.raises(ValueError, match="outside the plan's header block"):
+        plan_card.safety_bearing(text)
+
+
+def test_normal_plan_header_split_is_unchanged(tmp_path):
+    """A plan with a real preamble before the first `## ` still renders
+    its normal card — the F1 fix must not disturb the common case."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "safety-bearing: N/A — header absent\n" in result.stdout
+
+
+def test_indented_safety_bearing_line_in_body_fails_loud():
+    """(C1, whole-branch review) An INDENTED `Safety-bearing:` line
+    written in the plan BODY (outside the header block, e.g. under a
+    later `## ` section) used to be invisible to the outside-header scan
+    — `re.match(r"^safety-bearing:", line, ...)` never matches a line
+    with leading whitespace — so it rendered N/A silently, the same
+    self-exemption class this module pins three other ways."""
+    text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "\n  Safety-bearing: no — trivial\n",
+    )
+    with pytest.raises(ValueError, match="outside the plan's header block"):
+        plan_card.safety_bearing(text)
+
+
+def test_tilde_horizontal_rule_is_not_a_fence():
+    """(F4/C6, whole-branch review) Pin the shared
+    `loom_gate_markers._FENCED_CODE_DELIMITER_RE`/`_fence_toggle`
+    behaviour for a lone `~~~~~~~~~~` line, rather than assuming it: the
+    shared regex matches ANY run of 3+ of the same fence character at
+    line start regardless of what (if anything) follows, so a bare run
+    of tildes IS read as a fence-open delimiter — same as a genuine
+    ```/~~~ opener. Left unclosed, it fails loud naming the opening
+    line, exactly like any other unclosed fence (never silently hides
+    the rest of the document)."""
+    text = "## Notes\n\nFixture notes.\n\n~~~~~~~~~~\n\nMore text.\n"
+    with pytest.raises(ValueError, match="unclosed"):
+        plan_card._find_misplaced_safety_bearing_line(text)
+
+
+def test_fence_scanning_shares_loom_gate_markers_toggle():
+    """plan_card's fence scan and loom_gate_markers' agree because they
+    are now the SAME function — a differential regression guard: if a
+    future edit re-forks the two, this fails."""
+    assert plan_card._fence_toggle is loom_gate_markers._fence_toggle

@@ -126,6 +126,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable
 
+# Sibling resolves off sys.path[0], its own directory (same idiom as
+# check_scenario_coverage.py's `from adjudication_split import ...`).
+from loom_gate_markers import _FENCED_CODE_DELIMITER_RE, _fence_toggle
+
 _TASK_HEADING = re.compile(r"^## Task (\d+) — (.+?)\s*$", re.MULTILINE)
 _STATUS_BULLET = re.compile(r"^- \*{0,2}Status\*{0,2}:\s*(\S.*?)\s*$", re.MULTILINE)
 _STEPS_TITLE_LINE = re.compile(r"^\s+\d+\.\s+(.+?)\s*$")
@@ -151,6 +155,25 @@ _DONE_STATUS = re.compile(r"done\([^()\s]+\)")
 _IMPLEMENTED_STATUS = re.compile(r"implemented\([^()\s]+\)")
 _CLAIMED_STATUS = re.compile(r"claimed\([^()\s]+\)")
 _BLOCKED_STATUS = re.compile(r"blocked(?:\([^()\s]+\))?")
+
+
+_FIRST_H2_RE = re.compile(r"(?m)^## ")
+
+
+def _split_header(text: str) -> tuple[str, str, str]:
+    """(header, sep, rest) split at the FIRST `## ` heading line,
+    wherever it falls — including when it is the document's very first
+    line. `plan_text.partition("\\n## ")` (the shape this replaces at
+    every call site) needs a LEADING newline before `## `, so a plan
+    whose first line IS a `## ` heading was never split at all: the
+    entire first section was read as `header`, silently exempting any
+    `Safety-bearing:` line written inside it (live adversarial audit).
+    header + sep + rest always reconstructs `text` exactly — this is a
+    plain three-way slice, not a rewrite of `text`."""
+    match = _FIRST_H2_RE.search(text)
+    if match is None:
+        return text, "", ""
+    return text[: match.start()], text[match.start() : match.end()], text[match.end() :]
 
 
 def _header_value(header: str, key: str) -> str | None:
@@ -195,34 +218,37 @@ def _reject_indented_header_key(header: str) -> None:
 
 
 def _find_misplaced_safety_bearing_line(outside: str) -> str | None:
-    """The first `safety-bearing:` line (any case) in the plan body
-    (everything after the header block), or None. Lines inside a fenced
-    code block (triple backtick or ~~~ — closing must reuse the SAME
-    delimiter, a mismatched close never ends the fence) are skipped — a
-    quoted grammar example is content, not a misplaced header
-    declaration (live adversarial audit, review round 2). A fence still
-    open at EOF is itself malformed: raises ValueError naming the
-    opening line, rather than silently treating every remaining line as
-    fenced content (review round 3) — an unclosed fence must never be
-    able to hide a genuine misplaced header line from this scan."""
-    fence_delim: str | None = None
+    """The first `safety-bearing:` line (any case, any indent — an
+    INDENTED line in the body is content elsewhere but must not be
+    invisible to this scan either, C1 whole-branch review) in the plan
+    body (everything after the header block), or None. Fence tracking
+    reuses `loom_gate_markers._fence_toggle`/`_FENCED_CODE_DELIMITER_RE`
+    (F4/C6, whole-branch review) rather than a third hand-rolled scanner
+    — lines inside a fenced code block (backtick or `~`, closing must
+    reuse the SAME character with run length >= the opener's, per
+    CommonMark) are skipped: a quoted grammar example is content, not a
+    misplaced header declaration (review round 2). A fence still open at
+    EOF is itself malformed: raises ValueError naming the opening line,
+    rather than silently treating every remaining line as fenced content
+    (review round 3) — an unclosed fence must never be able to hide a
+    genuine misplaced header line from this scan."""
+    fence: tuple[str, int] | None = None
     fence_open_line: int | None = None
     for lineno, line in enumerate(outside.splitlines(), start=1):
-        stripped = line.strip()
-        if fence_delim is None:
-            if stripped.startswith("```") or stripped.startswith("~~~"):
-                fence_delim = stripped[:3]
+        delimiter = _FENCED_CODE_DELIMITER_RE.match(line)
+        new_fence = _fence_toggle(line, fence)
+        if delimiter:
+            if fence is None and new_fence is not None:
                 fence_open_line = lineno
-                continue
-        elif stripped.startswith(fence_delim):
-            fence_delim = None
-            fence_open_line = None
+            elif new_fence is None:
+                fence_open_line = None
+            fence = new_fence
             continue
-        if fence_delim is not None:
+        if fence is not None:
             continue
-        if re.match(r"^safety-bearing:", line, re.IGNORECASE):
+        if re.match(r"^safety-bearing:", line.strip(), re.IGNORECASE):
             return line
-    if fence_delim is not None:
+    if fence is not None:
         raise ValueError(
             f"unclosed code fence opened at line {fence_open_line} of the "
             "plan body — a misplaced 'Safety-bearing:' line could be "
@@ -251,7 +277,7 @@ def safety_bearing(plan_text: str) -> tuple[str, str] | None:
     silently missed. All now raise here, the one helper both `build_card`
     and direct callers share, so no surface can be exempted by a
     misplaced, miscased, or indented line."""
-    header, sep, rest = plan_text.partition("\n## ")
+    header, sep, rest = _split_header(plan_text)
     outside = sep + rest
     outside_line = _find_misplaced_safety_bearing_line(outside)
     if outside_line is not None:
@@ -467,7 +493,7 @@ def build_card(text: str) -> str:
     Raises ValueError (never exits the process itself — the caller
     decides exit codes) when the plan cannot render a complete card.
     """
-    header, _, _ = text.partition("\n## ")
+    header, _, _ = _split_header(text)
 
     goal = _header_value(header, "Goal")
     if not goal:
@@ -1267,7 +1293,7 @@ def set_stage(text: str, new_value: str) -> tuple[str, str, str]:
     every continuation line — never just the first line, which would
     leave a stale orphan continuation that `_header_value` folds back in
     on the next read (Finding 2, fix round)."""
-    header, sep, rest = text.partition("\n## ")
+    header, sep, rest = _split_header(text)
     match = re.search(r"^Stage:.*$(?:\n[ \t]+\S.*$)*", header, re.MULTILINE)
     if match is None:
         raise ValueError("plan has no 'Stage:' header line")
@@ -1306,7 +1332,7 @@ def build_stale_scan(
     for filename, text in plans:
         if _STATUS_BULLET.search(text) is None:
             continue
-        header, _, _ = text.partition("\n## ")
+        header, _, _ = _split_header(text)
         stage = _header_value(header, "Stage")
         if not stage:
             continue  # pre-Stage-era plan — cannot be stage-stale

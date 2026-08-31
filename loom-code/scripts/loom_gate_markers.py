@@ -564,6 +564,34 @@ def _simplification_ledger_problems(text: str) -> list[str]:
     return problems
 
 
+def _fence_toggle(
+    line: str, fence: tuple[str, int] | None
+) -> tuple[str, int] | None:
+    """The fence state after `line`, given the state before it —
+    CommonMark's toggle rule: a line matching `_FENCED_CODE_DELIMITER_RE`
+    opens a fence when none is open; when one is open, it closes ONLY
+    when the delimiter reuses the SAME character with a run length >=
+    the opener's, and nothing but whitespace follows the delimiter on
+    that line (a closing fence carries no info string). A line matching
+    neither condition — including any non-delimiter line — leaves the
+    state unchanged. Shared with `plan_card`'s misplaced-header scan
+    (F4/C6, whole-branch review) so the two never re-derive divergent
+    fence rules."""
+    delimiter = _FENCED_CODE_DELIMITER_RE.match(line)
+    if not delimiter:
+        return fence
+    run = delimiter.group(1)
+    if fence is None:
+        return (run[0], len(run))
+    if (
+        run[0] == fence[0]
+        and len(run) >= fence[1]
+        and not line[delimiter.end() :].strip(" \t")
+    ):
+        return None
+    return fence
+
+
 def _terminal_reviewed_sha(text: str) -> tuple[str | None, str | None]:
     """Return a terminal verdict's SHA, or one precise refusal reason.
 
@@ -576,16 +604,8 @@ def _terminal_reviewed_sha(text: str) -> tuple[str | None, str | None]:
     fence: tuple[str, int] | None = None
     for line in text.splitlines():
         delimiter = _FENCED_CODE_DELIMITER_RE.match(line)
+        fence = _fence_toggle(line, fence)
         if delimiter:
-            run = delimiter.group(1)
-            if fence is None:
-                fence = (run[0], len(run))
-            elif (
-                run[0] == fence[0]
-                and len(run) >= fence[1]
-                and not line[delimiter.end() :].strip(" \t")
-            ):
-                fence = None
             continue
         if fence is None:
             match = _TERMINAL_REVIEWED_SHA_RE.match(line)
