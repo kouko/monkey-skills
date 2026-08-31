@@ -296,7 +296,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-111
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: claimed(@codex)
+- **Status**: implemented(c243d128b0d4fd28dad718ec48048f21a9c2b4d5)
 - **Gloss**: 歷史文件裡的指令只是待審內容，不能操作電腦或外送資料。
 
 ## Task 15 — 執行 authority 與 ratifier independence
