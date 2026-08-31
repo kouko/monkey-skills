@@ -18,12 +18,14 @@ Usage:
     python3 batch_review_cli.py record-dispatch --packet-file <json> --out <json>
     python3 batch_review_cli.py apply-result --plan <plan-path> \
         --repo-root <root> --verification-receipt <json> --result-file <json> \
-        [--batch <id>] [--receipt <dispatch-receipt.json>]
+        --receipt <dispatch-receipt.json> [--batch <id>]
 
 ``ready --receipt`` (repeatable) reports not-ready when a member also sits in
-another batch whose dispatch receipt has no terminal result applied yet;
-``apply-result --receipt`` marks that receipt's result applied, which unblocks
-both the next ``ready`` and a fresh dispatch cycle.  ``record-dispatch`` refuses
+another batch whose dispatch receipt has no terminal result applied yet.
+``apply-result`` requires ``--receipt`` to bind the reviewer result to the
+dispatch receipt it was collected against; on success it also marks that
+receipt's result applied, which unblocks both the next ``ready`` and a fresh
+dispatch cycle.  ``record-dispatch`` refuses
 (fail-loud) a second dispatch for a batch whose receipt exists without an
 applied terminal result — re-collect instead of re-send, keyed on the
 batch_id across every receipt file in ``--out``'s directory, not merely the
@@ -609,7 +611,7 @@ def _recover_settled_receipt(args) -> dict | None:
     found), which this recovery does not attempt to distinguish from a
     recovered reopen with zero owners — an impossible resolution shape, so
     it is refused rather than guessed at."""
-    receipt_path = getattr(args, "receipt", None)
+    receipt_path = args.receipt
     if not receipt_path or not Path(receipt_path).exists():
         return None
     try:
@@ -739,11 +741,11 @@ def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
     return stored
 
 
-
 def _result_packet_identity(record: dict, packet: rb.ReviewPacket) -> str:
     """Return the result file's OWN `packet_identity` for one arm binding,
     terminal result or blocking finding, refusing unless it equals the
-    rebuilt packet's identity. Absence is "reviewer result file is
+    rebuilt packet's identity. Absence raises naming the offending record —
+    distinct from the top-level shape refusal "reviewer result file is
     malformed": a record that cannot say which packet it answers is not a
     result. The value returned is what gets constructed, so the library's
     `_valid_binding` / `_result_matches_binding` / `_finding_attributable`
@@ -758,7 +760,9 @@ def _result_packet_identity(record: dict, packet: rb.ReviewPacket) -> str:
     invariant as GitHub's "dismiss stale approvals": an approval binds to
     the exact reviewed artifact, not to whichever plan is applied next."""
     if "packet_identity" not in record:
-        raise ValueError("reviewer result file is malformed")
+        raise ValueError(
+            f"reviewer result file record has no packet_identity: {record}"
+        )
     identity = record["packet_identity"]
     if identity != packet.identity:
         raise ValueError(
