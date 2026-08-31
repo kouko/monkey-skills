@@ -64,6 +64,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path, Path, str]:
                 encoding="utf-8",
             )
     shutil.copyfile(SOURCE_ROOT / "scripts/review_context.py", root / "scripts/review_context.py")
+    shutil.copyfile(SOURCE_ROOT / "scripts/git_exec.py", root / "scripts/git_exec.py")
     manifest = root / ".claude-plugin" / "plugin.json"
     manifest.parent.mkdir()
     manifest.write_text('{"name":"loom-code","version":"test"}\n', encoding="utf-8")
@@ -117,6 +118,29 @@ def _command(
         "--station", station,
         "--nonce", nonce,
     ]
+
+
+def test_live_gate_station_receipt_git_hands_utf8_bytes_argv(tmp_path, monkeypatch):
+    # RED (Task 7): live_gate_station_receipt._git must delegate to
+    # git_exec.run_git, which invokes subprocess.run with UTF-8-encoded
+    # bytes argv and encoding="utf-8" (surrogateescape) under text=True —
+    # not the str argv / no-encoding call live_gate_station_receipt._git
+    # makes on HEAD.
+    import live_gate_station_receipt as live_gate_module
+
+    captured: dict[str, object] = {}
+
+    def fake_run(argv, **kwargs):
+        captured["argv"] = argv
+        captured["kwargs"] = kwargs
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    live_gate_module._git(tmp_path, "rev-parse", "HEAD")
+
+    assert all(isinstance(part, bytes) for part in captured["argv"])
+    assert captured["kwargs"].get("encoding") == "utf-8"
 
 
 def test_receipt_is_atomic_complete_and_exclusive(tmp_path: Path) -> None:
