@@ -140,6 +140,12 @@ def test_close_out_card_has_audit_and_cold_reader_rows():
     assert any("N/A —" in r for r in audit_rows), (
         "adversarial-audit row must show the N/A — form"
     )
+    assert any("header=" in r for r in audit_rows), (
+        "adversarial-audit N/A form must carry the computed header= evidence"
+    )
+    assert any("guarded-hits=" in r for r in audit_rows), (
+        "adversarial-audit N/A form must carry the computed guarded-hits= evidence"
+    )
     assert any("check_attack_catalogue.py" in r for r in audit_rows), (
         "adversarial-audit row must name check_attack_catalogue.py "
         "among the close-out gate lines"
@@ -152,6 +158,9 @@ def test_close_out_card_has_audit_and_cold_reader_rows():
     )
     assert any("N/A —" in r for r in cold_rows), (
         "cold-reader row must show the N/A — form"
+    )
+    assert any("prose-hits=" in r for r in cold_rows), (
+        "cold-reader N/A form must carry the computed prose-hits= evidence"
     )
 
 
