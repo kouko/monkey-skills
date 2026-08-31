@@ -1036,3 +1036,117 @@ def test_repository_identity_anchored_on_member_sha_not_head(tmp_path) -> None:
 
     after_head_moved = cli._repository_identity(repo_root, sha)
     assert after_head_moved == baseline
+
+
+def _recorded_dispatch_receipt(
+    tmp_path: Path, plan_path: Path, repo_root: Path, capsys,
+) -> Path:
+    """packet + record-dispatch for the current plan state; returns the
+    dispatch receipt path bound to the members' current shas."""
+    receipt_path = tmp_path / "verification-receipt.json"
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    assert cli.main([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ]) == 0
+    capsys.readouterr()
+    return dispatch_receipt
+
+
+def _apply_result_argv(
+    plan_path: Path, repo_root: Path, tmp_path: Path,
+    result_path: Path, dispatch_receipt: Path,
+) -> list[str]:
+    return [
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(tmp_path / "verification-receipt.json"),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ]
+
+
+def test_apply_result_refuses_when_member_sha_drifted_after_dispatch(
+    tmp_path, capsys,
+) -> None:
+    """F1: the reviewer saw member 2 at commit A (recorded in the dispatch
+    receipt's member_shas). Re-pointing the ledger to a later commit B and
+    applying the same PASS with the same receipt must refuse — the PASS was
+    never given for B — naming the drifted member, with no ledger write and
+    no receipt flip."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    sha2_b = _git_commit_file(repo_root, "src/2.py", b"member 2 rewritten")
+    plan_path.write_text(
+        plan_path.read_text(encoding="utf-8").replace(
+            f"implemented({sha2})", f"implemented({sha2_b})"
+        ),
+        encoding="utf-8",
+    )
+    before = plan_path.read_text(encoding="utf-8")
+    result_path = _result_file(tmp_path)
+    code = cli.main(_apply_result_argv(
+        plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+    ))
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["action"] is None
+    assert "Task 2" in " ".join(out["reasons"])
+    assert plan_path.read_text(encoding="utf-8") == before
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored["result_applied"] is False
+
+
+def test_apply_result_refuses_receipt_bound_to_another_batch(
+    tmp_path, capsys,
+) -> None:
+    """F6: a receipt whose batch_id / packet_identity belong to another
+    batch must not be usable to apply this batch's result, even when its
+    member_shas happen to match."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    before = plan_path.read_text(encoding="utf-8")
+    result_path = _result_file(tmp_path)
+    for foreign in (
+        {"batch_id": "other-capability", "packet_identity": "packet:other"},
+        {"batch_id": "capability", "packet_identity": "packet:other"},
+    ):
+        dispatch_receipt = tmp_path / "foreign-dispatch-receipt.json"
+        dispatch_receipt.write_text(json.dumps({
+            "schema": "batch-dispatch-receipt-v1",
+            **foreign,
+            "arms": ["spec-reviewer", "code-quality-reviewer"],
+            "members": ["Task 1", "Task 2"],
+            "member_shas": {"Task 1": sha1, "Task 2": sha2},
+            "result_applied": False,
+        }), encoding="utf-8")
+        code = cli.main(_apply_result_argv(
+            plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+        ))
+        out = json.loads(capsys.readouterr().out)
+        assert code != 0, foreign
+        assert out["action"] is None
+        assert plan_path.read_text(encoding="utf-8") == before
+        stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+        assert stored["result_applied"] is False
+
+
+def test_apply_result_requires_receipt_flag(tmp_path, capsys) -> None:
+    """F3: apply-result without --receipt is an argparse usage error
+    (exit 2) — there is nothing to bind the result to."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    result_path = _result_file(tmp_path)
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main([
+            "apply-result", "--plan", str(plan_path),
+            "--repo-root", str(repo_root),
+            "--verification-receipt", str(tmp_path / "verification-receipt.json"),
+            "--result-file", str(result_path),
+        ])
+    capsys.readouterr()
+    assert exc_info.value.code == 2
