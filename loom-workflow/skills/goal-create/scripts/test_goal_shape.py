@@ -294,6 +294,87 @@ def _negation_binds(text: str, negation: str, target: str, max_gap_words: int = 
     return re.search(pattern, text) is not None
 
 
+def _section_two(content: str) -> str:
+    """Extract '## 2 — `Constraints`' section's own text, heading-scoped.
+
+    Bounded to the text between that heading and the next `## 3` heading (no
+    `---` rule separates §2 from §3), so an assertion below can only be
+    satisfied by §2's own words, never by unrelated text in §4, the budget
+    section, or the attribution paragraph.
+    """
+    match = re.search(
+        r"## 2 — `Constraints`\n\n(.*?)(?=\n## 3|\Z)",
+        content,
+        re.DOTALL,
+    )
+    assert match, "Expected to find the '## 2 — `Constraints`' section."
+    return match.group(1)
+
+
+def test_constraints_carries_the_standing_decision_rule() -> None:
+    content = _read_reference()
+    section_lower = _section_two(content).lower()
+
+    # --- obligation 1: choices the goal does not pre-decide are the run's
+    # to make ---
+    assert re.search(r"does\s+not\s+pre-decide", section_lower), (
+        "Must state choices the goal does not pre-decide are the run's to "
+        "make."
+    )
+    assert re.search(r"run'?s?\s+to\s+make", section_lower), (
+        "Must bind those undecided choices to being the run's to make."
+    )
+
+    # --- obligation 2: the run searches first, decides, and records
+    # decision + candidates + sources in a named file ---
+    for word in ("search", "decide", "record"):
+        assert word in section_lower, (
+            f"Must state the run must {word} as part of the sequence."
+        )
+    assert "candidate" in section_lower, (
+        "Must state the record includes candidates considered."
+    )
+    assert "source" in section_lower, (
+        "Must state the record includes sources."
+    )
+    assert re.search(r"named\s+file", section_lower), (
+        "Must state the decision is recorded in a named file (the goal "
+        "names the file)."
+    )
+
+    # --- obligation 3: the run never stops to ask — negation bound to the
+    # asking itself, not to a stray nearby word (see
+    # docs/loom/memory/a-list-of-forbidden-words-is-defeated-by-the-word-outside-it.md)
+    # ---
+    assert _negation_binds(section_lower, "never", r"(?:stops?\s+to\s+)?ask"), (
+        "Must state the run never stops to ask, with the negation bound "
+        "to the asking."
+    )
+
+    # --- obligation 4: SESSION mode emits this entry by default, tagged
+    # `derived` per input-floor.md §5 ---
+    assert "by default" in section_lower, (
+        "Must state SESSION mode emits this entry by default."
+    )
+    assert "derived" in section_lower, (
+        "Must state the entry carries the `derived` provenance tag."
+    )
+
+    # --- obligation 5: what stays outside the run — an irreversible or
+    # outward-facing act, where `Outcome` ends ---
+    assert "irreversible" in section_lower and "outward-facing" in section_lower, (
+        "Must name an irreversible or outward-facing act as staying "
+        "outside the run."
+    )
+    assert re.search(r"merge|deploy|send", section_lower), (
+        "Must give an example of an irreversible or outward-facing act "
+        "(merge, deploy, send)."
+    )
+    assert "outcome" in section_lower, (
+        "Must state that outward-facing boundary is where `Outcome` ends."
+    )
+
+
 def test_stop_when_is_one_bound_written_as_completion() -> None:
     content = _read_reference()
     section_lower = _section_four(content).lower()
