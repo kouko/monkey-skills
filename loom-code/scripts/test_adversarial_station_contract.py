@@ -247,25 +247,34 @@ def test_step_3_5_stop_sentences_are_inside_the_step():
     ) in flat
 
 
-PROSE_CONTRACT_GLOBS = [
-    "**/SKILL.md",
-    "**/agents/*.md",
-    "**/hooks/*.md",
-    "**/references/*-packet.md",
-    "**/references/*-prompt.md",
-    "rules/*.md",
-]
-
-
-def test_prose_signal_enumerates_all_six_globs():
+def test_step_3_5_command_never_carries_base_and_defers_globs_to_ssot():
     skill_text = FINISHING_SKILL.read_text(encoding="utf-8")
     slice_text = _step_3_5_slice(skill_text)
     flat = " ".join(slice_text.split())
 
-    for glob in PROSE_CONTRACT_GLOBS:
-        assert glob in flat, (
-            f"Step 3.5's prose signal must enumerate {glob!r}, not just "
-            "say 'a prose-shaped glob in the store'"
+    assert "--base <ref>" not in flat, (
+        "Step 3.5's signal command must not carry --base — it is a "
+        "test/CI knob and silences the station"
+    )
+    assert "Never pass `--base` at close-out." in flat, (
+        "Step 3.5 must carry the never-pass-base reminder prose"
+    )
+    assert (
+        "any changed contract-class `.md` per `requesting-code-review` "
+        "§Classification, plus `rules/**/*.md`"
+    ) in flat, (
+        "Step 3.5's prose signal must be defined by the classification "
+        "SSOT, not a re-enumerated glob list"
+    )
+    for glob in (
+        "**/agents/*.md",
+        "**/hooks/*.md",
+        "**/references/*-packet.md",
+        "**/references/*-prompt.md",
+    ):
+        assert glob not in flat, (
+            f"Step 3.5 must not re-enumerate {glob!r} — that drifts from "
+            "the classification SSOT"
         )
 
 

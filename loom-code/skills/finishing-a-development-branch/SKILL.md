@@ -105,9 +105,9 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
 3.5. Adversarial-audit station (CONDITIONAL), **orchestrator-run**, never
    nested — one command: `python3 scripts/check_attack_catalogue.py
    signal --repo <root> --store docs/loom/ATTACK-CATALOGUE.md --plan
-   <plan> --base <ref>` (repo-root); else
+   <plan>` (repo-root); else
    `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_attack_catalogue.py"
-   signal` (same args).
+   signal` (same args). Never pass `--base` at close-out.
    - 0 — two stdout lines — `adversarial audit`/`cold reader`: `fired —
      …` or `N/A —`; exact fields per Step 8's close-out rows; relay
      both verbatim. `fired` audit →
@@ -124,10 +124,9 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
    - 3 — `Safety-bearing: no` with a guarded-path hit (`no` does not override
      the hit) → STOP naming both; only the user (flip the header, or
      narrow `## Guarded paths`) resumes it, never the orchestrator alone.
-   Prose signal: any changed path matching `**/SKILL.md`,
-   `**/agents/*.md`, `**/hooks/*.md`, `**/references/*-packet.md`,
-   `**/references/*-prompt.md`, or `rules/*.md` (or the store's
-   `## Guarded paths`).
+   Prose signal: any changed contract-class `.md` per
+   `requesting-code-review` §Classification, plus `rules/**/*.md` (or
+   the store's `## Guarded paths`).
    Verdict routing: `reproduced`/cold-reader `taken` → STOP until a
    RED test is committed and `## Instances` reads `reproduced <date> —
    pinned by <test>`; `signal` must then exit 0 (Step 8 re-run rule).
