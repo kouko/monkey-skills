@@ -81,7 +81,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: true
 - **Brief item covered**: BI-1
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(b8e9c733b7e811e9cebddc945ffc6553a377f2d3)
 - **Gloss**: 派工發生的那一刻自動留一行紀錄，沒人需要手填。
 
 ## Task 3 — identity 拒絕訊息分辨「成員變了」與「plan 其他文字變了」
@@ -125,7 +125,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(cli-receipt)
-- **Status**: pending
+- **Status**: implemented(dcf936bda342b7e2087a6b3cc7cb98f04eec5cfd)
 - **Gloss**: 收據記下「這批最後是通過還是退回」，reopen 次數就能算。
 
 ## Task 5 — task_batch_replay.py observe：從 log 與收據產出 v2 結果檔
