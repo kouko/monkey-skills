@@ -4,6 +4,32 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [3.1.1] — 2026-08-31 — decision-map script cleanup
+
+### Changed
+
+- `map_lock.py` publishes a single symlink guard body,
+  `assert_no_symlink_components(path, error=...)`, parameterized by the
+  exception class the caller wants raised; `map_store.py` and
+  `map_transaction.py` now delegate to it instead of each carrying its
+  own byte-identical copy.
+- `decision-map/references/map-format.md` and living-spec `REQ-97` are
+  rewritten from ticket reclamation to "claims are not transferable —
+  abandonment happens via Withdrawal", backed by a new `REQ-97` test.
+
+### Removed
+
+- `claim_ticket.py` and its test — the tool had no entry point and no
+  realistic success path (evidence showed one checkout attempt, never a
+  completed reclaim); deleting it closes a documented behavior nothing
+  implemented.
+
+### Backlog
+
+- Four entries filed: split `loom_gate_markers` and `batch_queue`,
+  unify loom-design's pytest root, and track that Map claims can
+  collide at merge.
+
 ## [3.1.0] — 2026-08-31 — v3 invariant enforcement + boundary restoration
 
 ### Added
