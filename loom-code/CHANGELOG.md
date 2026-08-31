@@ -5,6 +5,42 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.110.0] — 2026-09-01 — Prose-edit self-sweep
+
+Ships a silent, same-turn self-sweep rule for the implementer contract,
+its pinned test, an A/B measurement instrument, and the evidence and
+dogfood artifacts that back it. The A/B has not run yet: this branch is
+held unmerged pending those results.
+
+### Added
+
+- `agents/implementer.md` rule 14, "Prose-edit self-sweep" — when
+  every file in a task's `Files touched` is `.md`, the implementer
+  runs a fixed five-action self-sweep before returning, silently
+  (no user-facing narration of the sweep itself).
+- `scripts/test_agent_contract.py::test_implementer_has_prose_edit_self_sweep_rule`
+  and a second test pinning the rule's position in the file — the
+  rule text and its ordering are both under test.
+- `scripts/prose_selfsweep_tally.py` (+ `scripts/test_prose_selfsweep_tally.py`)
+  — an A/B tally utility: aggregates per-arm record counts and fails
+  loud on a record carrying an unrecognized `arm` value rather than
+  dropping it silently.
+- `docs/loom/audits/2026-09-01-docs-review-finding-causes.md` — a
+  finding-cause mining pass over 4 prior projects' docs-review
+  findings, informing which prose failure modes the self-sweep rule
+  targets.
+- `docs/loom/dogfood/2026-09-01-prose-selfsweep-ab/` — the A/B dogfood
+  harness (`protocol.md` + `cases.md`) that will run the implementer
+  with and without rule 14 on matched prose-editing tasks.
+
+### Pending
+
+- The A/B run itself (implementer + judge dispatches against
+  `cases.md`) has not been executed. No effectiveness claim is made
+  in this entry or in the artifacts above; results, once run, land in
+  `docs/loom/dogfood/2026-09-01-prose-selfsweep-ab/` in a follow-up
+  commit. The branch stays unmerged until then.
+
 ## [0.109.0] — 2026-08-31 — Adversarial audit station
 
 Ships an attack-catalogue store and a fail-loud checker for it, a
