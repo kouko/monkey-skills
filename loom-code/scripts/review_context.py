@@ -54,6 +54,7 @@ RESOURCE_RELATIVE_PATHS = {
         "live_gate_station_receipt": "scripts/live_gate_station_receipt.py",
         "live_gate_adapter_probe": "scripts/live_gate_adapter_probe.py",
         "doc_citation_checker": "scripts/check_doc_citations.py",
+        "attack_catalogue": "skills/requesting-code-review/references/attack-catalogue.md",
         "reviewer_discipline": "scripts/_reviewer-discipline.md",
         "code_reviewer": "agents/code-reviewer.md",
         "docs_reviewer": "agents/docs-reviewer.md",

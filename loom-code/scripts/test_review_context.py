@@ -17,6 +17,7 @@ REVIEWER_CONTRACT_RESOURCES = {
     "review_scope",
     "gate_markers",
     "doc_citation_checker",
+    "attack_catalogue",
     "reviewer_discipline",
     "code_reviewer",
     "docs_reviewer",
@@ -174,6 +175,39 @@ def test_context_includes_doc_citation_checker_resource(tmp_path: Path) -> None:
     resource = Path(json.loads(result.stdout)["resources"]["doc_citation_checker"])
 
     assert resource == installed_root / "scripts" / "check_doc_citations.py"
+    assert resource.is_absolute()
+    assert resource.is_file()
+    assert resource.is_relative_to(installed_root)
+
+
+def test_context_includes_attack_catalogue_resource(tmp_path: Path) -> None:
+    """code-reviewer.md must reach the attack catalogue via `resources`,
+    never by deriving a plugin-relative path itself (docs-arm A3)."""
+    installed_root = tmp_path / "plugin-cache" / "loom-code" / "0.108.0"
+    installed_root.parent.mkdir(parents=True)
+    shutil.copytree(PLUGIN_ROOT, installed_root)
+    consumer = _consumer_repo(tmp_path)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(installed_root / "scripts" / "review_context.py"),
+            "--repo",
+            str(consumer),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    resource = Path(json.loads(result.stdout)["resources"]["attack_catalogue"])
+
+    assert resource == (
+        installed_root
+        / "skills"
+        / "requesting-code-review"
+        / "references"
+        / "attack-catalogue.md"
+    )
     assert resource.is_absolute()
     assert resource.is_file()
     assert resource.is_relative_to(installed_root)
