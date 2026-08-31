@@ -508,16 +508,7 @@ def _validate_routes(unknowns: list[UnknownRoute]) -> None:
 
 
 def _assert_no_symlink_components(path: Path) -> None:
-    absolute = path.absolute()
-    current = Path(absolute.anchor)
-    for part in absolute.parts[1:]:
-        current /= part
-        if current.is_symlink():
-            raise CloseTransactionError(
-                f"refusing path with symlink component: {current}"
-            )
-        if not current.exists():
-            break
+    map_lock.assert_no_symlink_components(path, error=CloseTransactionError)
 
 
 def _assert_contained(map_dir: Path, candidate: Path) -> None:

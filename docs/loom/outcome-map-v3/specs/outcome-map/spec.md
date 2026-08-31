@@ -391,18 +391,18 @@ Every delivery Brief MUST declare exactly one closure policy of `pr-ci`, `merged
 - WHEN replacement work is needed
 - THEN the owning delivery ticket is withdrawn with its history preserved and a new delivery ticket and Brief own the replacement Plan
 
-### Requirement: REQ-97 — Stale claims have conservative recovery
-The workflow MUST allow reclaim only when the existing claim is dated, the Ticket remains claimed, and observable repository evidence shows no work touched that Ticket since the claim date; unavailable or contradictory evidence MUST preserve the current owner.
+### Requirement: REQ-97 — Claims are not transferable
+The workflow MUST refuse any edit that reassigns a claimed Ticket to a different owner; an abandoned claimed Ticket MUST leave `claimed` only through Withdrawal.
 
-#### Scenario: Claim has no usable stale evidence
-- GIVEN a claimed ticket whose date is missing or whose repository evidence cannot be established
-- WHEN another session attempts reclaim
-- THEN reclaim is refused and the current claim remains unchanged
+#### Scenario: Second claim on an already-claimed Ticket is refused
+- GIVEN a Ticket whose `claim:` line already names an owner
+- WHEN another session attempts to claim that same Ticket
+- THEN the claim is refused and the Ticket's `claim:` line is unchanged
 
-#### Scenario: Claim is observably stale
-- GIVEN a dated claimed ticket with no repository change since its claim date
-- WHEN another session reclaims it against the current revision
-- THEN the claim changes once and the body records old owner, new owner, date, and takeover basis
+#### Scenario: An abandoned claimed Ticket is withdrawn
+- GIVEN a claimed Ticket that will not be worked further
+- WHEN the Ticket is withdrawn
+- THEN its history records `withdrawn-from: claimed`
 
 ### Requirement: REQ-98 — Retirement requires a fully valid store
 The system MUST refuse charting, active, clear, or archived state transitions while any Map invariant is broken or any recoverable multi-artifact operation is incomplete.

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -23,6 +24,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+import map_lock  # noqa: E402
 import map_store  # noqa: E402
 import map_transaction  # noqa: E402
 
@@ -2112,3 +2114,31 @@ def test_validate_rejects_active_map_without_destination_acceptance(
     assert code == 2
     assert "wayfinder" in message
     assert "Destination acceptance" in message
+
+
+def test_symlink_guard_delegates_to_map_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """map_store._assert_no_symlink_components must delegate to
+    map_lock.assert_no_symlink_components (Task 1's public seam) rather
+    than re-implementing the symlink walk, so both callers share one
+    behavior and one message."""
+    real = tmp_path / "real"
+    real.mkdir()
+    link = tmp_path / "link"
+    os.symlink(real, link)
+
+    with pytest.raises(map_store.SchemaViolation) as excinfo:
+        map_store._assert_no_symlink_components(link / "x")
+
+    assert "refusing path with symlink component" in str(excinfo.value)
+
+    # A re-inlined walk that copies map_lock's message would pass the
+    # assertions above; proving the seam means the call must actually
+    # reach map_lock.assert_no_symlink_components.
+    def _fake(path: Path, error: type[Exception] = map_lock.MapLockError) -> None:
+        raise RuntimeError("delegated")
+
+    monkeypatch.setattr(map_lock, "assert_no_symlink_components", _fake)
+    with pytest.raises(RuntimeError, match="delegated"):
+        map_store._assert_no_symlink_components(tmp_path / "plain")
