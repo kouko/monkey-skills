@@ -229,8 +229,7 @@ count stated above, not from a round number on every cited row.
 ## Consumers
 
 - `loom-code/agents/implementer.md` rule 14 ("Prose-edit self-sweep") —
-  the brief that motivates this document (`docs/loom/specs/2026-08-31-
-  prose-edit-self-sweep.md`) cites this cause distribution (edit-
+  the brief that motivates this document (`docs/loom/specs/2026-08-31-prose-edit-self-sweep.md`) cites this cause distribution (edit-
   consistency causes A/B/H/C dominating over omission-class E/F/G/I in
   three of the four projects) as the reason the rule's five actions
   target restatement-checking, self-claim verification, reading-path

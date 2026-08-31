@@ -19,8 +19,8 @@ held unmerged pending those results.
   runs a fixed five-action self-sweep before returning, silently
   (no user-facing narration of the sweep itself).
 - `scripts/test_agent_contract.py::test_implementer_has_prose_edit_self_sweep_rule`
-  and a second test pinning the rule's position in the file — the
-  rule text and its ordering are both under test.
+  — one pinned test whose assertions cover both the rule text and its
+  position in the file.
 - `scripts/prose_selfsweep_tally.py` (+ `scripts/test_prose_selfsweep_tally.py`)
   — an A/B tally utility: aggregates per-arm record counts and fails
   loud on a record carrying an unrecognized `arm` value rather than

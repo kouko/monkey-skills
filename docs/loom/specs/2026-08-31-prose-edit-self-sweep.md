@@ -14,7 +14,7 @@ unqueued — seeded by a user-supplied proposal in-session (external suggestion 
 
 ## Problem
 
-When an implementer or orchestrator edits authored prose (`.md`) during development, the docs review that follows loops for multiple rounds on defects the writer could have caught in the same turn, so review cost (subagent rounds, wall-clock) stays high. Measured across 4 projects (98 recovered findings), 75%+ of docs-review findings are edit-consistency defects — stale restatements (A), false claims about the writer's own work (B), unsupported claims (H), misplacement (C) — not omission-class gaps; kumiko branches ran up to 8 review rounds, dotfiles PR#40 ran 10 with rounds 4–10 prose-only.
+When an implementer or orchestrator edits authored prose (`.md`) during development, the docs review that follows loops for multiple rounds on defects the writer could have caught in the same turn, so review cost (subagent rounds, wall-clock) stays high. Measured across 4 projects (104 findings, per the audit's own post-recount total), 72% (75 of 104) of docs-review findings are edit-consistency defects — stale restatements (A), false claims about the writer's own work (B), unsupported claims (H), misplacement (C) — not omission-class gaps; kumiko branches ran up to 8 review rounds, dotfiles PR#40 ran 10 with rounds 4–10 prose-only.
 
 ## Users
 
