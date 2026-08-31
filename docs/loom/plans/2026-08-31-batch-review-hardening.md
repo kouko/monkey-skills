@@ -6,7 +6,7 @@ Goal: Close the seven adversarial-audit findings (F1–F6, F8) with fail-closed
     pinned by a RED test that is the audit's own reproduction, and write the
     result-file contract down — serves PURPOSE: a batch verdict must not ship
     a commit the reviewer never saw (a claim cannot ship unverified)
-Stage: sdd:wave-1
+Stage: finishing
 Total tasks: 7
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
