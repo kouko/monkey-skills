@@ -1,9 +1,12 @@
 """Tests for population-accounted docs-review baseline metrics."""
 from __future__ import annotations
 
+import pytest
+
 from docs_review_baseline_metrics import (
     calculate_population_report,
     calculate_quality_metrics,
+    freeze_baseline_report,
 )
 
 
@@ -184,3 +187,84 @@ def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
             "unit": "tokens",
         },
     }
+
+
+def test_req_108_baseline_reports_are_revision_bound() -> None:
+    # @req: REQ-108
+    """A frozen baseline names every input revision and corrections make a child."""
+    revisions = {
+        "attribution": "attribution-r1",
+        "corpus": "corpus-r1",
+        "execution_profile": "profile-r1",
+        "metric_definition": "metrics-r1",
+        "oracle": "oracle-r1",
+        "parser": "parser-r1",
+        "reviewer_contract": "contract-r1",
+        "reviewer_runtime": "runtime-r1",
+    }
+    partial_metrics = {
+        "finding_rate": {
+            "availability": "available",
+            "denominator": 1,
+            "exclusion_reasons": [],
+            "formula_version": "docs-review-baseline-metrics-v1",
+            "numerator": 1,
+            "value": 1.0,
+        },
+        "elapsed_time": {
+            "availability": "unavailable",
+            "denominator": None,
+            "exclusion_reasons": ["elapsed_telemetry_unavailable"],
+            "formula_version": "docs-review-baseline-metrics-v1",
+            "numerator": None,
+            "value": None,
+        },
+    }
+
+    baseline = freeze_baseline_report(
+        report_id="baseline-r1",
+        metrics=partial_metrics,
+        revisions=revisions,
+        limitations=["elapsed telemetry unavailable for one valid run"],
+    )
+
+    assert baseline == {
+        "kind": "baseline_metric_report",
+        "limitations": ["elapsed telemetry unavailable for one valid run"],
+        "lineage_root_report_id": "baseline-r1",
+        "metrics": partial_metrics,
+        "parent_report_digest": None,
+        "report_id": "baseline-r1",
+        "revisions": revisions,
+        "schema_version": 1,
+        "status": "partial",
+    }
+
+    with pytest.raises(ValueError, match="parser"):
+        freeze_baseline_report(
+            report_id="baseline-missing-parser",
+            metrics=partial_metrics,
+            revisions={key: value for key, value in revisions.items() if key != "parser"},
+            limitations=["elapsed telemetry unavailable for one valid run"],
+        )
+
+    corrected = freeze_baseline_report(
+        report_id="baseline-r2",
+        metrics=partial_metrics,
+        revisions={**revisions, "oracle": "oracle-r2"},
+        limitations=["elapsed telemetry unavailable for one valid run"],
+        parent=baseline,
+    )
+
+    assert corrected["parent_report_digest"]
+    assert corrected["lineage_root_report_id"] == "baseline-r1"
+    assert corrected["revisions"]["oracle"] == "oracle-r2"
+    assert baseline["revisions"]["oracle"] == "oracle-r1"
+    with pytest.raises(ValueError, match="new report_id"):
+        freeze_baseline_report(
+            report_id="baseline-r1",
+            metrics=partial_metrics,
+            revisions={**revisions, "oracle": "oracle-r2"},
+            limitations=["elapsed telemetry unavailable for one valid run"],
+            parent=baseline,
+        )

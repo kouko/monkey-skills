@@ -40,6 +40,10 @@
 
 - test_req_107_invalid_and_unknown_populations_stay_visible
 
+### REQ-108
+
+- test_req_108_baseline_reports_are_revision_bound
+
 ### REQ-109
 
 - test_req_109_origin_requires_document_revision_evidence
@@ -514,7 +518,6 @@
 
 ### reqs with no tests
 
-- REQ-108
 - REQ-116
 - REQ-117
 - REQ-118

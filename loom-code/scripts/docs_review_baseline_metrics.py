@@ -2,9 +2,39 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+import hashlib
+import json
 
 
 FORMULA_VERSION = "docs-review-baseline-metrics-v1"
+
+_REPORT_REVISION_KEYS = (
+    "corpus",
+    "oracle",
+    "attribution",
+    "reviewer_contract",
+    "reviewer_runtime",
+    "parser",
+    "execution_profile",
+    "metric_definition",
+)
+
+
+def _canonical_digest(value: object) -> str:
+    payload = json.dumps(
+        value,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _required_text(value: object, name: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{name} is required")
+    return value
 
 
 def _metric(
@@ -206,4 +236,65 @@ def calculate_population_report(
         ),
         "population_counts": dict(sorted(population_counts.items())),
         "usage_populations": _usage_populations(attempt_records),
+    }
+
+
+def freeze_baseline_report(
+    *,
+    report_id: str,
+    metrics: Mapping[str, Mapping[str, object]],
+    revisions: Mapping[str, str],
+    limitations: list[str],
+    parent: Mapping[str, object] | None = None,
+) -> dict[str, object]:
+    """Freeze one revision-bound report without mutating any earlier report."""
+    report_id = _required_text(report_id, "report_id")
+    frozen_revisions = {
+        key: _required_text(revisions.get(key), f"{key} revision")
+        for key in _REPORT_REVISION_KEYS
+    }
+    if not isinstance(limits := limitations, list) or any(
+        not isinstance(limit, str) or not limit.strip() for limit in limits
+    ):
+        raise ValueError("limitations must be a list of non-empty strings")
+    frozen_metrics = json.loads(json.dumps(metrics, ensure_ascii=False))
+    unavailable = [
+        name
+        for name, metric in frozen_metrics.items()
+        if isinstance(metric, Mapping)
+        and metric.get("availability") == "unavailable"
+    ]
+    for name in unavailable:
+        metric = frozen_metrics[name]
+        if (
+            metric.get("value") is not None
+            or metric.get("denominator") is not None
+            or not isinstance(metric.get("exclusion_reasons"), list)
+            or not metric["exclusion_reasons"]
+        ):
+            raise ValueError(f"unavailable metric {name} lacks explicit population")
+    if unavailable and not limits:
+        raise ValueError("partial report requires limitations")
+
+    parent_digest: str | None = None
+    lineage_root = report_id
+    if parent is not None:
+        parent_id = _required_text(parent.get("report_id"), "parent report_id")
+        if report_id == parent_id:
+            raise ValueError("revision changes require a new report_id")
+        parent_digest = _canonical_digest(parent)
+        lineage_root = _required_text(
+            parent.get("lineage_root_report_id"), "parent lineage_root_report_id"
+        )
+
+    return {
+        "kind": "baseline_metric_report",
+        "limitations": list(limits),
+        "lineage_root_report_id": lineage_root,
+        "metrics": frozen_metrics,
+        "parent_report_digest": parent_digest,
+        "report_id": report_id,
+        "revisions": frozen_revisions,
+        "schema_version": 1,
+        "status": "partial" if unavailable else "complete",
     }
