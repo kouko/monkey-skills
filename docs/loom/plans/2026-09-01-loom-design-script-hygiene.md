@@ -79,7 +79,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Dependencies**: Task 1 completes first
 - **Seam**:
   - from Task 1: payload: the `pytest.ini` and five `conftest.py` files that make one invocation collect cleanly; owner: Task 1; probe: `python3 -m pytest loom-design/scripts/ -q`
-- **Independent**: false
+- **Independent**: true
 - **Brief item covered**: "the five per-directory CI jobs collapse to one"
 - **Review disposition**: batch(unified-root)
 - **Status**: pending
@@ -134,7 +134,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Dependencies**: Task 3 completes first
 - **Seam**:
   - from Task 3: payload: the state, engine and breaker functions `queue_core` now owns, imported by name; owner: Task 3; probe: `python3 loom-design/scripts/pipeline/batch_queue.py status`
-- **Independent**: false
+- **Independent**: true
 - **Brief item covered**: "leaving `batch_queue.py` as argparse wiring plus `main`, with `argv_exec.py`'s `batch_queue.main` call site and every pinned CLI string unchanged"
 - **Not batched because**: same reason as Task 3 — the test-root chain and the module-split chain carry different verdict questions, and are only transitively connected through the downstream backlog and version-bump sink.
 - **Review disposition**: batch(queue-split)
@@ -161,8 +161,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Seam**:
   - from Task 2: payload: none
   - from Task 4: payload: none
-- **Independent**: false
-- **Review-weight**: prose
+- **Independent**: true
 - **Brief item covered**: "Backlog entries `2026-08-31-loom-design-unified-pytest-root` and `2026-08-31-batch-queue-split` — both close"
 - **Review disposition**: batch(backlog-store)
 - **Status**: pending
@@ -189,7 +188,6 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Seam**:
   - from Task 5: payload: none
 - **Independent**: false
-- **Review-weight**: prose
 - **Brief item covered**: "file a new backlog entry for a renderer defect found this session"
 - **Review disposition**: batch(backlog-store)
 - **Status**: pending
@@ -214,7 +212,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Seam**:
   - from Task 2: payload: none
   - from Task 4: payload: none
-- **Independent**: false
+- **Independent**: true
 - **Brief item covered**: "Two changes, both in `loom-design/`" — shipping changed plugin script content requires the marketplace version bump that publishes it
 - **Not batched because**: Tasks 5 and 6 answer whether the backlog store correctly records this arc; this task answers whether the marketplace manifest republishes the changed content. Two verdict questions, and this task is only transitively connected to them through the shared version-bump sink.
 - **Review disposition**: individual
@@ -240,7 +238,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 ### Review Batch: backlog-store
 - **Members**: Task 5, Task 6
 - **Verdict question**: Does the backlog store correctly record this arc — both delivered entries closed with the wrong ordering claim corrected rather than dropped, the new renderer-defect entry filed, and the generated index consistent with all three?
-- **Review lane**: prose
+- **Review lane**: full
 - **Aggregate verification**: Run the backlog index writer and confirm it leaves the committed index byte-identical, then list ready entries and confirm the expected open and closed membership.
 - **Boundary**: capability: backlog store update for this arc; exclusions: none; consumable: yes
 
@@ -248,5 +246,5 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 
 - Entry artifact: the human-approved brief at `docs/loom/specs/2026-09-01-loom-design-script-hygiene.md`, signed off by kouko on 2026-09-01. No loom-design change-folder is bound: the branch slug matches no change-id directory, and the four non-archived change-folders present all belong to prior shipped arcs unrelated to this scope. Stated loudly rather than silently skipped.
 - Out of scope, carried forward: splitting `loom-code/scripts/loom_gate_markers.py` stays open in the backlog with its event trigger intact, deferred because the live `family-relocation` decision map has a claimed ticket naming it and its ownership verdict is still open.
-- The root README version-row check reads only the loom-workflow row, and this arc does not change loom-workflow, so no README edit is required.
+- No root README edit is required, for two independent reasons. `README.md` carries no `loom-design` row at all (its plugin table lists `domain-teams`, `loom-workflow` and nine others, but neither loom-design nor loom-code). And the version-row test that has repeatedly caught this repo — `test_root_readme_row_agrees_with_filesystem` in `loom-workflow/scripts/test_independent_advisor_plugin_readmes.py` — reads only the loom-workflow row, via its `_root_workflow_row()` helper; this arc does not change loom-workflow.
 - Backlog entry `2026-08-31-proposer-chunks-components-linked-only-through-a-sink` names its own start trigger as "the first arc after this one runs `--check` and finds itself writing 'only transitively connected through the version-bump sink' more than twice". This is that first arc, and this plan writes that reason three times (Tasks 3, 4 and 7): the proposer merged the test-root chain with the module-split chain, and the backlog chain with the manifest bump, in both cases joining components that share only a downstream sink. Recorded here as an observation; re-sizing the proposer's cap or edge rule is out of this arc's scope.
