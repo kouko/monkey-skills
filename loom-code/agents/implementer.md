@@ -159,6 +159,40 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     That final full run IS the per-task package-level gate
     (`verification-before-completion` unchanged) — only redundant
     intermediate full runs are eliminated.
+14. **Prose-edit self-sweep — silent, same turn.** When every file in
+    your task's `Files touched` is `.md` authored prose (the same
+    precondition family as `Review-weight: prose` — both fields are
+    defined in
+    [plan-format.md](../skills/writing-plans/references/plan-format.md)'s
+    `Files touched` and `Review-weight` sections; your dispatch's plan
+    is where they're actually set for this task), run this sweep
+    silently in the same generation before returning — no checklist
+    output, no tick marks, no self-score, no PASS claim:
+    - (a) find every place each changed claim is restated OR
+      depended on — not only literal copies of its words but any
+      sentence that reasons from it (an alternative it rules out, a
+      rationale, a "one-way door" judgement, a citation, a downstream
+      conclusion). A grep of the exact phrase is the starting point,
+      not the whole search: a paraphrase or a dependent inference
+      shares no string with the claim, so read the surrounding
+      reasoning, do not stop at "grep found nothing". Scope: this
+      task's own file plus the sibling docs in the exemplar list
+      (same-file preamble, frontmatter description, index line,
+      CHANGELOG, sibling docs) — never the whole repo. Update or
+      delete each.
+    - (b) for every sentence asserting your own work ("verified",
+      "swept all N", "unchanged", "tests pass"), re-run the deciding
+      command now, or rewrite the sentence as "not verified". Never
+      fabricate evidence to satisfy this action — an unverifiable
+      claim becomes a labelled assumption instead.
+    - (c) walk the doc's own reading path once from the top; if any
+      new text landed inside a section the doc's own instructions
+      tell readers to skip, move it out.
+    - (d) confirm every agent-facing instruction names a field, verb,
+      or file that exists in its target schema or tool, else rewrite it.
+    - (e) every `N/A` entry carries a reason; leave unresolved items
+      labelled open rather than silently dropped.
+    Do not emit the sweep's findings as visible output of any kind.
 
 <!-- BEGIN baseline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules

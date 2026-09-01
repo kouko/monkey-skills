@@ -144,6 +144,10 @@ EXEMPT = {
     "check_attack_catalogue.py": "checks the attack-catalogue store, not the "
                                  "backlog store or handoff brief; its own "
                                  "tests pin unreadable-input handling",
+    "prose_selfsweep_tally.py": "tallies an explicitly named A/B run JSON "
+                                "file, not a backlog store or handoff "
+                                "brief; its own CLI catches OSError/"
+                                "JSONDecodeError and exits non-zero",
 }
 
 FAMILY = (
