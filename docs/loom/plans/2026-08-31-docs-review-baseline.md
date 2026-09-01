@@ -299,7 +299,7 @@ The user-approved 2026-09-01 pivot removes production-runner work from this plan
 - **Independent**: false
 - **Brief item covered**: Smallest End State — one fixed historical corpus yields a reproducible controlled Luna report that separates initial-authoring defects from reviewer sampling cost.
 - **Review disposition**: individual
-- **Status**: done(4f98240bb0dc4c2a572198c4bc33d57605e73176)
+- **Status**: done(0e7dae83dc6373ca10a0daedb45990422e2a2d78)
 - **Gloss**: 固定考卷、原始輸入輸出、人工答案與重跑成本都能獨立重算。
 
 ## Review Batches
