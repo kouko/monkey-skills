@@ -2,11 +2,11 @@
 
 Source brief: docs/loom/specs/2026-09-01-loom-design-script-hygiene.md
 Goal: 讓 `python3 -m pytest loom-design/scripts/` 成為單一道綠燈指令（五個 CI job 收斂成一個），並把 `batch_queue.py` 的 CLI handler 抽成獨立模組、留下 argparse ＋ `main` — serves PURPOSE: 一個跑不起來的測試套件是驗證表面上的洞，而 PURPOSE 要求「規劃／規格／契約裡的宣稱不會未經驗證就出貨」；今天這道指令執行零個測試，任何依賴它的宣稱都沒有被驗證過。
-Stage: sdd:wave-1
+Stage: finishing
 Total tasks: 7
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-09-01, confirmation round after a user-authorized minimal fix; rounds 1 and 2 were NEEDS_REVISION)
+Plan-document-reviewer verdict: PASS (2026-09-01, confirming round after execution drift — Files touched, review dispositions and the batch set re-reviewed against the shipped commits; rounds 1 and 2 and the drift re-review were NEEDS_REVISION)
 
 ## Task-flow diagram
 
@@ -27,7 +27,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 
 ## Complexity assessment
 
-- Added complexity: six new small files under `loom-design/scripts/` (one `pytest.ini`, five `conftest.py`) that must stay in step with the station-directory list, plus two new modules in the pipeline directory that split one import surface into three.
+- Added complexity: one new file under `loom-design/scripts/` (`pytest.ini`) whose enumerated `pythonpath` station list must stay in step with the directories on disk, plus two new modules in the pipeline directory that split one import surface into three.
 - Why it is worthwhile: the unified root removes a standing verification hole — today the obvious command runs zero tests, so nobody can confirm a loom-design change is safe without knowing five separate commands. The module split makes the region most future edits land in readable on its own.
 - Removed or avoided complexity: four hand-maintained CI jobs disappear, and with them the rule that every new station directory needs its own job. Declined: `__init__.py` packaging, basename renames, and any repo-root pytest configuration.
 - Downstream risk: the import-mode change is verified locally on pytest 9.0.3 while CI pins Python 3.11, so a version-dependent difference would surface as a red unified job in this branch's own CI run. The split's risk is silent side-effect reordering inside the `next` command's lock span, which the existing reconcile-ordering test pins.
@@ -36,11 +36,11 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 
 - **Description**: Add a scoped pytest configuration so one invocation collects every loom-design station directory without module-basename collisions.
   - Create `loom-design/scripts/pytest.ini` with a `[pytest]` section setting `addopts = --import-mode=importlib`.
-  - Create one `conftest.py` in each of the five station directories (`discovery`, `interface`, `pipeline`, `principles`, `spec`).
-  - Each `conftest.py` inserts that directory's own absolute path at the front of `sys.path`, preserving the repo's sibling-import convention that `importlib` mode alone breaks.
-  - Grounding: `loom-code/scripts/sibling_import.py` documents the convention as "no `__init__.py`, no conftest".
+  - Add `pythonpath = discovery interface pipeline principles spec` to that same file, enumerating the five station directories.
+  - That line restores each station directory on `sys.path`, which `importlib` mode otherwise stops doing and which the repo's bare sibling imports depend on.
+  - Grounding: `loom-code/scripts/sibling_import.py` documents the convention as "no `__init__.py`, no conftest" — the `pythonpath` line honours it, where a per-station `conftest.py` would not.
 - **Module**: loom-design/scripts
-- **Files touched**: loom-design/scripts/pytest.ini, loom-design/scripts/discovery/conftest.py, loom-design/scripts/interface/conftest.py, loom-design/scripts/pipeline/conftest.py, loom-design/scripts/principles/conftest.py, loom-design/scripts/spec/conftest.py, loom-design/scripts/test_unified_pytest_root.py
+- **Files touched**: loom-design/scripts/pytest.ini, loom-design/scripts/test_unified_pytest_root.py
 - **Context paths**:
   - loom-code/scripts/sibling_import.py
   - loom-design/scripts/pipeline/test_pipeline_batch_queue.py
@@ -49,12 +49,13 @@ N/A — no unresolved question: the brief's three open questions were all resolv
     - It runs `python3 -m pytest loom-design/scripts/ --collect-only -q` as a subprocess from the repo root and asserts exit status 0 with no collection error reported.
     - On HEAD that command exits non-zero with eight `import file mismatch` collection errors.
   - **GREEN**: the new test passes, and `python3 -m pytest loom-design/scripts/ -q` reports the whole loom-design suite green in one invocation.
-- **External surfaces**: pytest configuration (`addopts`, `--import-mode=importlib`) and `sys.path` manipulation in `conftest.py`. Both are stdlib or pytest surfaces; no third-party dependency is added.
+- **External surfaces**: pytest configuration only — the `addopts` and `pythonpath` ini options, with `--import-mode=importlib`. `pythonpath` is built into pytest 7.0 and later; no third-party dependency is added.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "`python3 -m pytest loom-design/scripts/` runs as ONE green invocation"
-- **Review disposition**: batch(unified-root)
-- **Status**: implemented(9fe139f34469a0006cce942a16d94e882103535a)
+- **Not batched because**: the sealed-packet path is unavailable for this pair — Task 2 deletes two declared files and the packet builder requires every declared path to exist at the reviewed commit. Per SDD's fail-closed rule, an unprovable batch eligibility fact assigns the affected Tasks to individual review; both were reviewed by a two-arm fan-out with explicitly scoped commits.
+- **Review disposition**: individual
+- **Status**: done(9fe139f34469a0006cce942a16d94e882103535a)
 - **Gloss**: 讓一道指令就能跑完 loom-design 全部測試 — 補上驗證破洞的第一步。
 
 ## Task 2 — CI 收斂成單一 job
@@ -64,7 +65,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
   - Rewrite `loom-siblings-ci.yml`'s comment "The suites MUST run as separate pytest invocations" so it describes the unified root.
   - Rewrite `loom-pipeline-ci.yml`'s comment "This suite runs as its OWN pytest invocation" the same way.
 - **Module**: .github/workflows
-- **Files touched**: .github/workflows/loom-pipeline-ci.yml, .github/workflows/loom-siblings-ci.yml, .github/workflows/loom-spec-ci.yml, scripts/test_loom_design_ci_unified_root.py
+- **Files touched**: .github/workflows/loom-pipeline-ci.yml, .github/workflows/loom-siblings-ci.yml, .github/workflows/loom-spec-ci.yml, scripts/test_loom_design_ci_unified_root.py, .github/workflows/loom-code-ci.yml, loom-design/scripts/pipeline/test_pipeline_ci_workflow.py, loom-design/scripts/interface/test_design_md_schema_keys.py, loom-design/README.md
 - **Context paths**:
   - .github/workflows/loom-pipeline-ci.yml
   - .github/workflows/loom-siblings-ci.yml
@@ -78,11 +79,12 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **External surfaces**: GitHub Actions workflow YAML. No new action or runner dependency; the existing Python 3.11 setup and `pytest pyyaml` install are reused.
 - **Dependencies**: Task 1 completes first
 - **Seam**:
-  - from Task 1: payload: the `pytest.ini` and five `conftest.py` files that make one invocation collect cleanly; owner: Task 1; probe: `python3 -m pytest loom-design/scripts/ -q`
+  - from Task 1: payload: the `pytest.ini` import-mode and `pythonpath` entries that make one invocation collect cleanly; owner: Task 1; probe: `python3 -m pytest loom-design/scripts/ -q`
 - **Independent**: true
 - **Brief item covered**: "the five per-directory CI jobs collapse to one"
-- **Review disposition**: batch(unified-root)
-- **Status**: implemented(addbca3309216ed215a2e44772e2a53d1391e0ef)
+- **Not batched because**: the sealed-packet path is unavailable for this pair — Task 2 deletes two declared files and the packet builder requires every declared path to exist at the reviewed commit. Per SDD's fail-closed rule, an unprovable batch eligibility fact assigns the affected Tasks to individual review; both were reviewed by a two-arm fan-out with explicitly scoped commits.
+- **Review disposition**: individual
+- **Status**: done(addbca3309216ed215a2e44772e2a53d1391e0ef)
 - **Gloss**: CI 從五個 job 變一個，新增 station 不再需要手寫新 job。
 
 ## Task 3 — 抽出 queue_core 模組
@@ -94,7 +96,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
   - Move the breaker surface: `_check_circuit_breaker`, `_halt_notice_if_tripped`, `_describe_non_terminal_entry`, and the errors `QueueError`, `_fail`, plus `_test_rmw_sleep`.
   - Move the module-level constants those functions read, and update `test_pipeline_batch_queue.py`'s import block so each name is imported from its new owner. Assertions are not modified.
 - **Module**: loom-design/scripts/pipeline
-- **Files touched**: loom-design/scripts/pipeline/queue_core.py, loom-design/scripts/pipeline/batch_queue.py, loom-design/scripts/pipeline/test_pipeline_batch_queue.py
+- **Files touched**: loom-design/scripts/pipeline/queue_core.py, loom-design/scripts/pipeline/batch_queue.py, loom-design/scripts/pipeline/test_pipeline_batch_queue.py, loom-design/scripts/pipeline/test_pipeline_skill_contract.py
 - **Context paths**:
   - loom-design/scripts/pipeline/batch_queue.py
   - loom-design/scripts/pipeline/test_pipeline_batch_queue.py
@@ -110,7 +112,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Brief item covered**: "`batch_queue.py`'s CLI-handler region moves to its own module; `batch_queue.py` keeps `main` and the argparse wiring"
 - **Not batched because**: Tasks 1 and 2 answer whether one pytest invocation runs the whole suite; this task answers whether a module split preserves behaviour. Two verdict questions, not one. The two chains are only transitively connected through the downstream backlog and version-bump sink.
 - **Review disposition**: batch(queue-split)
-- **Status**: implemented(3c5d5611b7cd7efecaeaccbc54beacb58986acc6)
+- **Status**: done(3c5d5611b7cd7efecaeaccbc54beacb58986acc6)
 - **Gloss**: 把佇列狀態與排程引擎搬進自己的模組，為下一步騰出空間。
 
 ## Task 4 — 抽出 queue_commands 並把 batch_queue 收薄
@@ -120,7 +122,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
   - Move the two shared helpers `_resolve_paths_and_validate_id` and `_require_running`; the new module imports what it needs from `queue_core`.
   - Leave `_assert_valid_change_id`, `_build_parser`, `_add_next_subparser` and `main` in `batch_queue.py`, so `argv_exec.py`'s call site and the `status` subprocess contract are untouched.
 - **Module**: loom-design/scripts/pipeline
-- **Files touched**: loom-design/scripts/pipeline/queue_commands.py, loom-design/scripts/pipeline/batch_queue.py, loom-design/scripts/pipeline/test_pipeline_batch_queue.py
+- **Files touched**: loom-design/scripts/pipeline/queue_commands.py, loom-design/scripts/pipeline/batch_queue.py, loom-design/scripts/pipeline/test_pipeline_batch_queue.py, loom-design/scripts/pipeline/test_pipeline_skill_contract.py
 - **Context paths**:
   - loom-design/scripts/pipeline/queue_core.py
   - loom-design/scripts/pipeline/argv_exec.py
@@ -138,7 +140,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Brief item covered**: "leaving `batch_queue.py` as argparse wiring plus `main`, with `argv_exec.py`'s `batch_queue.main` call site and every pinned CLI string unchanged"
 - **Not batched because**: same reason as Task 3 — the test-root chain and the module-split chain carry different verdict questions, and are only transitively connected through the downstream backlog and version-bump sink.
 - **Review disposition**: batch(queue-split)
-- **Status**: implemented(f143b141da7d846b0de594eb9efbecbce27303ab)
+- **Status**: done(f143b141da7d846b0de594eb9efbecbce27303ab)
 - **Gloss**: CLI handler 搬進自己的模組，`batch_queue.py` 只剩指令接線。
 
 ## Task 5 — 關閉兩條 backlog，並更正被推翻的宣稱
@@ -164,7 +166,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Independent**: true
 - **Brief item covered**: "Backlog entries `2026-08-31-loom-design-unified-pytest-root` and `2026-08-31-batch-queue-split` — both close"
 - **Review disposition**: batch(backlog-store)
-- **Status**: pending
+- **Status**: done(3e83afd891602c26cfaced13d528058a05289fe7)
 - **Gloss**: 兩條 backlog 關閉，其中一條寫錯的風險宣稱一併更正而不是靜默關掉。
 
 ## Task 6 — 新增 renderer 缺陷的 backlog 條目
@@ -190,7 +192,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Independent**: false
 - **Brief item covered**: "file a new backlog entry for a renderer defect found this session"
 - **Review disposition**: batch(backlog-store)
-- **Status**: pending
+- **Status**: done(f9887d86080e4148644ec6bb1c8502bfbaf21262)
 - **Gloss**: 把這次發現的視圖產生器缺陷記進 backlog，不讓它隨 session 消失。
 
 ## Task 7 — loom-design 版本 bump
@@ -216,17 +218,10 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Brief item covered**: "Two changes, both in `loom-design/`" — shipping changed plugin script content requires the marketplace version bump that publishes it
 - **Not batched because**: Tasks 5 and 6 answer whether the backlog store correctly records this arc; this task answers whether the marketplace manifest republishes the changed content. Two verdict questions, and this task is only transitively connected to them through the shared version-bump sink.
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(ebc45520e1e4d00d731aaa592dba147e58636be7)
 - **Gloss**: 把 loom-design 版本推上去，否則 marketplace 不會重新發佈這次的改動。
 
 ## Review Batches
-
-### Review Batch: unified-root
-- **Members**: Task 1, Task 2
-- **Verdict question**: Does one pytest invocation now collect and run the whole loom-design suite without module-basename collisions, and does CI invoke exactly that one command with no remaining comment claiming the suites must run separately?
-- **Review lane**: full
-- **Aggregate verification**: Run the whole loom-design scripts tree under a single pytest invocation and confirm it is green, then confirm the workflow scan test passes.
-- **Boundary**: capability: unified loom-design pytest root; exclusions: none; consumable: yes
 
 ### Review Batch: queue-split
 - **Members**: Task 3, Task 4
@@ -259,4 +254,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 1. chose to move the change-id validator into the new core module rather than leave it with the command-line layer as the plan said, because all three functions that call it moved and leaving it behind would have made the two modules import each other in a loop — cost-of-change: the day you want that validator back beside the command-line layer, this choice costs moving one small private helper and re-running the pipeline suite
 2. chose to let the batch-queue split also touch a fourth file the plan did not declare, the pipeline skill-contract test, because its fixtures copy scripts into a fake plugin folder by name and the newly extracted module had to be copied alongside the old one or two tests fail — cost-of-change: the day you extract another module from that script, this choice costs adding one more filename to the same two fixture lists
 3. chose to have the command-line layer reach the new core module by qualified module access rather than by importing its names, because importing them would put the moved names back into the command-line layer's own namespace and the new test forbids exactly that — cost-of-change: the day you prefer short unqualified calls there, this choice costs rewriting about fifty call sites and relaxing that test
-4. chose to let the workflow collapse also correct the four files that assert or describe the old test layout — two tests pinning the per-station command, a simplification note citing a deleted workflow, and the plugin README — because the plan listed the files that state the rule but not the files that assert it, and shipping tests and docs that contradict the shipped behaviour is worse than a wider diff — cost-of-change: the day you want those corrections as their own change, this choice costs separating four small edits out of two commits
+4. chose to let the workflow collapse also correct the three files that assert or describe the old test layout — a test pinning the per-station command, a second test whose simplification note cited a deleted workflow, and the plugin README — because the plan listed the files that state the rule but not the files that assert it, and shipping tests and docs that contradict the shipped behaviour is worse than a wider diff — cost-of-change: the day you want those corrections as their own change, this choice costs separating four small edits out of two commits
+5. chose to review the workflow-collapse batch with the fan-out scoped explicitly to its commits rather than through the sealed packet, because the packet requires every declared file to exist at the reviewed commit and this task deletes two of them, which no correct deletion can satisfy — cost-of-change: the day the review tooling learns that absent-at-sha is the expected state for a deletion, this choice costs deleting this note and sealing the packet normally
+6. chose to fall back to individual review for the pytest-root pair rather than keep them as a batch, because the batch tooling cannot seal a packet for a task that deletes a declared file and SDD's own rule sends an unprovable batch to individual review — cost-of-change: the day that tooling accepts absent-at-sha for deletions, this choice costs restoring one batch declaration and two disposition lines
+7. chose to replace the five per-station conftest files with one enumerated `pythonpath` line in `pytest.ini`, reversing the mechanism Task 1 originally shipped, because a reviewer showed five byte-identical files were doing what one built-in pytest option does and a forgotten sixth file would fail silently where a missing list entry is visible — cost-of-change: the day a station needs setup a shared ini line cannot express, this choice costs reintroducing a conftest for that station alone
