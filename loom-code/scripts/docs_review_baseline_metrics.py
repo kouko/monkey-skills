@@ -224,11 +224,7 @@ def _quality_eligible_attributions(
         for attempt in attempts
         if isinstance(attempt.get("attempt_id"), str)
     }
-    bound = any(
-        "attempt_id" in attribution or "observation_attempt_id" in attribution
-        for attribution in attributions
-    )
-    if not bound:
+    if not attempts:
         return attributions
     return [
         attribution
@@ -250,6 +246,9 @@ def calculate_population_report(
     attribution_records = list(attributions)
     attempt_records = list(attempts)
     ratified = _ratified_attributions(attribution_records)
+    quality_attributions = _quality_eligible_attributions(
+        attribution_records, attempt_records
+    )
     population_counts = {
         count_name: sum(
             attempt.get("outcome") == outcome for attempt in attempt_records
@@ -268,13 +267,26 @@ def calculate_population_report(
             ),
         }
     )
-    return {
-        "quality_metrics": calculate_quality_metrics(
+    quality_metrics = calculate_quality_metrics(
             oracle=oracle,
-            attributions=_quality_eligible_attributions(
-                attribution_records, attempt_records
-            ),
-        ),
+            attributions=quality_attributions,
+        )
+    if attempt_records and not quality_attributions:
+        for metric in quality_metrics.values():
+            metric.update(
+                {
+                    "availability": "unavailable",
+                    "denominator": None,
+                    "numerator": None,
+                    "value": None,
+                }
+            )
+            metric["exclusion_reasons"] = [
+                *metric["exclusion_reasons"],
+                "no_successfully_bound_attributions",
+            ]
+    return {
+        "quality_metrics": quality_metrics,
         "population_counts": dict(sorted(population_counts.items())),
         "usage_populations": _usage_populations(attempt_records),
     }

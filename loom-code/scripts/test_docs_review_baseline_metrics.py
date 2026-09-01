@@ -28,25 +28,33 @@ def test_req_106_every_metric_carries_its_population() -> None:
         },
         attributions=[
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "true_positive",
                 "oracle_matches": ["expected-risk"],
             },
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "false_positive",
                 "oracle_matches": [],
             },
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "unknown",
                 "oracle_matches": [],
             },
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "disputed",
                 "oracle_matches": [],
@@ -112,31 +120,40 @@ def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
         },
         attributions=[
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "true_positive",
                 "oracle_matches": ["expected-risk"],
             },
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "false_positive",
                 "oracle_matches": [],
             },
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "unknown",
                 "oracle_matches": [],
             },
             {
+                "attempt_id": "attempt-success",
                 "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
                 "status": "ratified",
                 "human_verdict": "disputed",
                 "oracle_matches": [],
             },
         ],
         attempts=[
+            {"attempt_id": "attempt-success", "outcome": "success"},
             {"outcome": "failed", "usage": {"provider": "codex", "unit": "tokens", "value": 13}},
             {"outcome": "interrupted"},
             {"outcome": "malformed"},
@@ -250,6 +267,31 @@ def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
         "unparseable_attempts": 1,
         "unscoreable_model_attempts": 1,
     }
+
+    unbound = calculate_population_report(
+        oracle={
+            "kind": "ratified_oracle",
+            "status": "ratified",
+            "findings": [{"finding_id": "expected-risk", "load_bearing": True}],
+        },
+        attributions=[
+            {
+                "kind": "attribution_revision",
+                "status": "ratified",
+                "human_verdict": "true_positive",
+                "oracle_matches": ["expected-risk"],
+            }
+        ],
+        attempts=[
+            {"attempt_id": "attempt-success", "outcome": "success"},
+            {"attempt_id": "attempt-failed", "outcome": "failed"},
+        ],
+    )
+    assert {
+        name: metric["availability"]
+        for name, metric in unbound["quality_metrics"].items()
+    } == {"finding_rate": "unavailable", "false_alarm_rate": "unavailable"}
+    assert unbound["population_counts"]["failed_attempts"] == 1
 
 
 def test_req_108_baseline_reports_are_revision_bound(tmp_path) -> None:
