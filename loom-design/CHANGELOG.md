@@ -11,6 +11,27 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.6.0] — 2026-09-01 — one pytest root, and a split batch queue
+
+### Added
+
+- **One pytest invocation now collects the whole plugin suite.**
+  `scripts/pytest.ini` scopes a root at `loom-design/scripts/` and sets
+  `--import-mode=importlib`, which lifts pytest's unique-basename rule so the
+  stations can keep same-named test modules side by side. Because importlib
+  mode stops putting a test file's own directory on `sys.path`, one enumerated
+  `pythonpath` line restores the bare sibling imports that five per-directory
+  `conftest.py` files used to prop up. CI drops from five per-station pytest
+  jobs to one.
+
+### Changed
+
+- **`scripts/pipeline/batch_queue.py` split into three modules** — `queue_core.py`
+  (state and lock handling), `queue_commands.py` (the subcommand bodies), and a
+  thin argparse entry that remains `batch_queue.py`. Pure reorganisation: no
+  observable behaviour changed, and both the importable main entry and the
+  status subprocess contract are unchanged.
+
 ## [0.5.7] — 2026-08-28
 
 ### Changed
