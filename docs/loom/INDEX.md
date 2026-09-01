@@ -84,6 +84,10 @@
 - test_req_115_actual_model_identity_is_verified_twice
 - test_req_115_execution_identity_is_verified_at_point_of_use
 
+### REQ-116
+
+- test_req_116_zero_and_partial_populations_have_explicit_meaning
+
 ### REQ-99
 
 - test_req_99_concurrent_admission_consumes_receipt_once
@@ -518,7 +522,6 @@
 
 ### reqs with no tests
 
-- REQ-116
 - REQ-117
 - REQ-118
 - REQ-17

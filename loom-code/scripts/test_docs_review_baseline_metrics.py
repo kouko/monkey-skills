@@ -6,6 +6,7 @@ import pytest
 from docs_review_baseline_metrics import (
     calculate_population_report,
     calculate_quality_metrics,
+    classify_population_boundaries,
     freeze_baseline_report,
 )
 
@@ -268,3 +269,87 @@ def test_req_108_baseline_reports_are_revision_bound() -> None:
             limitations=["elapsed telemetry unavailable for one valid run"],
             parent=baseline,
         )
+
+
+def test_req_116_zero_and_partial_populations_have_explicit_meaning() -> None:
+    # @req: REQ-116
+    """No empty, partial, or unmatched population becomes a zero-percent rate."""
+    negative_control = classify_population_boundaries(
+        expected_findings=[],
+        negative_control={
+            "rationale": "A deliberately clean document checks generic alarms.",
+            "scope": "case-negative-control",
+            "status": "ratified",
+        },
+        normalization_state="valid_empty",
+        expected_outcomes=[],
+    )
+    unlabeled_zero_expected = classify_population_boundaries(
+        expected_findings=[],
+        negative_control=None,
+        normalization_state="valid_empty",
+        expected_outcomes=[],
+    )
+    response_states = {
+        state: classify_population_boundaries(
+            expected_findings=["expected-risk"],
+            negative_control=None,
+            normalization_state=state,
+            expected_outcomes=[
+                {"finding_id": "expected-risk", "outcome": "missed"}
+            ],
+        )
+        for state in (
+            "explicit_no_findings",
+            "valid_empty",
+            "suspicious_empty",
+            "extraction_failure",
+            "mixed_parse",
+            "partial_output",
+        )
+    }
+    not_assessable = classify_population_boundaries(
+        expected_findings=["expected-risk"],
+        negative_control=None,
+        normalization_state="partial_output",
+        expected_outcomes=[
+            {"finding_id": "expected-risk", "outcome": "not_assessable"}
+        ],
+    )
+
+    assert negative_control == {
+        "expected_finding_outcomes": [],
+        "finding_rate": {
+            "availability": "not_applicable",
+            "denominator": 0,
+            "exclusion_reasons": ["ratified_negative_control_zero_expected"],
+            "formula_version": "docs-review-baseline-metrics-v1",
+            "numerator": None,
+            "value": None,
+        },
+        "normalization_state": "valid_empty",
+        "population_state": "negative_control",
+    }
+    assert unlabeled_zero_expected["population_state"] == "unlabeled_zero_expected"
+    assert unlabeled_zero_expected["finding_rate"]["denominator"] == 0
+    assert unlabeled_zero_expected["finding_rate"]["value"] is None
+    assert set(response_states) == {
+        "explicit_no_findings",
+        "valid_empty",
+        "suspicious_empty",
+        "extraction_failure",
+        "mixed_parse",
+        "partial_output",
+    }
+    assert all(
+        result["population_state"] == state
+        and result["finding_rate"]["value"] is None
+        and result["finding_rate"]["numerator"] is None
+        for state, result in response_states.items()
+    )
+    assert response_states["valid_empty"]["expected_finding_outcomes"] == [
+        {"finding_id": "expected-risk", "outcome": "missed"}
+    ]
+    assert not_assessable["expected_finding_outcomes"] == [
+        {"finding_id": "expected-risk", "outcome": "not_assessable"}
+    ]

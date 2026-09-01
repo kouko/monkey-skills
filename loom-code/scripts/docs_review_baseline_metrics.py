@@ -19,6 +19,15 @@ _REPORT_REVISION_KEYS = (
     "metric_definition",
 )
 
+_NORMALIZATION_BOUNDARY_STATES = {
+    "explicit_no_findings",
+    "valid_empty",
+    "suspicious_empty",
+    "extraction_failure",
+    "mixed_parse",
+    "partial_output",
+}
+
 
 def _canonical_digest(value: object) -> str:
     payload = json.dumps(
@@ -297,4 +306,73 @@ def freeze_baseline_report(
         "revisions": frozen_revisions,
         "schema_version": 1,
         "status": "partial" if unavailable else "complete",
+    }
+
+
+def classify_population_boundaries(
+    *,
+    expected_findings: list[str],
+    negative_control: Mapping[str, object] | None,
+    normalization_state: str,
+    expected_outcomes: list[Mapping[str, str]],
+) -> dict[str, object]:
+    """Keep zero, empty, partial, and unmatched finding populations distinct."""
+    if normalization_state not in _NORMALIZATION_BOUNDARY_STATES:
+        raise ValueError(f"unsupported normalization state: {normalization_state}")
+    if any(not isinstance(finding, str) or not finding.strip() for finding in expected_findings):
+        raise ValueError("expected findings must be non-empty strings")
+    expected = set(expected_findings)
+    frozen_outcomes: list[dict[str, str]] = []
+    for outcome in expected_outcomes:
+        finding_id = outcome.get("finding_id")
+        status = outcome.get("outcome")
+        if finding_id not in expected or status not in {"missed", "not_assessable"}:
+            raise ValueError("expected finding outcome must be missed or not_assessable")
+        frozen_outcomes.append({"finding_id": finding_id, "outcome": status})
+    if len(frozen_outcomes) != len(expected):
+        raise ValueError("every expected finding needs an auditable outcome")
+
+    if not expected:
+        if negative_control is None:
+            population_state = "unlabeled_zero_expected"
+            availability = "unavailable"
+            exclusion_reasons = ["zero_expected_findings_not_ratified_negative_control"]
+        else:
+            if (
+                negative_control.get("status") != "ratified"
+                or not isinstance(negative_control.get("rationale"), str)
+                or not negative_control["rationale"].strip()
+                or not isinstance(negative_control.get("scope"), str)
+                or not negative_control["scope"].strip()
+            ):
+                raise ValueError("negative control requires ratified rationale and scope")
+            population_state = "negative_control"
+            availability = "not_applicable"
+            exclusion_reasons = ["ratified_negative_control_zero_expected"]
+        return {
+            "expected_finding_outcomes": frozen_outcomes,
+            "finding_rate": {
+                "availability": availability,
+                "denominator": 0,
+                "exclusion_reasons": exclusion_reasons,
+                "formula_version": FORMULA_VERSION,
+                "numerator": None,
+                "value": None,
+            },
+            "normalization_state": normalization_state,
+            "population_state": population_state,
+        }
+
+    return {
+        "expected_finding_outcomes": frozen_outcomes,
+        "finding_rate": {
+            "availability": "unavailable",
+            "denominator": len(expected),
+            "exclusion_reasons": [f"normalization_state:{normalization_state}"],
+            "formula_version": FORMULA_VERSION,
+            "numerator": None,
+            "value": None,
+        },
+        "normalization_state": normalization_state,
+        "population_state": normalization_state,
     }
