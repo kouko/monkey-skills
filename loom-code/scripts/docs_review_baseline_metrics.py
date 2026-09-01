@@ -126,3 +126,84 @@ def calculate_quality_metrics(
         "finding_rate": finding_rate,
         "false_alarm_rate": false_alarm_rate,
     }
+
+
+_INVALID_OUTCOMES = {
+    "failed": "failed_attempts",
+    "interrupted": "interrupted_attempts",
+    "malformed": "malformed_attempts",
+    "unparseable": "unparseable_attempts",
+    "unscoreable_model": "unscoreable_model_attempts",
+}
+
+
+def _usage_populations(
+    attempts: Iterable[Mapping[str, object]],
+) -> dict[str, dict[str, object]]:
+    populations: dict[str, dict[str, object]] = {}
+    for attempt in attempts:
+        usage = attempt.get("usage")
+        if not isinstance(usage, Mapping):
+            continue
+        provider = usage.get("provider")
+        unit = usage.get("unit")
+        value = usage.get("value")
+        if (
+            not isinstance(provider, str)
+            or not isinstance(unit, str)
+            or not isinstance(value, (int, float))
+            or isinstance(value, bool)
+        ):
+            continue
+        key = f"{provider}:{unit}"
+        population = populations.setdefault(
+            key,
+            {
+                "availability": "available",
+                "count": 0,
+                "provider": provider,
+                "total": 0,
+                "unit": unit,
+            },
+        )
+        population["count"] += 1
+        population["total"] += value
+    return populations
+
+
+def calculate_population_report(
+    *,
+    oracle: Mapping[str, object],
+    attributions: Iterable[Mapping[str, object]],
+    attempts: Iterable[Mapping[str, object]],
+) -> dict[str, object]:
+    """Report quality metrics beside every excluded run and usage population."""
+    attribution_records = list(attributions)
+    attempt_records = list(attempts)
+    ratified = _ratified_attributions(attribution_records)
+    population_counts = {
+        count_name: sum(
+            attempt.get("outcome") == outcome for attempt in attempt_records
+        )
+        for outcome, count_name in _INVALID_OUTCOMES.items()
+    }
+    population_counts.update(
+        {
+            "unknown_attributions": sum(
+                attribution.get("human_verdict") == "unknown"
+                for attribution in ratified
+            ),
+            "disputed_attributions": sum(
+                attribution.get("human_verdict") == "disputed"
+                for attribution in ratified
+            ),
+        }
+    )
+    return {
+        "quality_metrics": calculate_quality_metrics(
+            oracle=oracle,
+            attributions=attribution_records,
+        ),
+        "population_counts": dict(sorted(population_counts.items())),
+        "usage_populations": _usage_populations(attempt_records),
+    }

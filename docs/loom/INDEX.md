@@ -36,6 +36,10 @@
 
 - test_req_106_every_metric_carries_its_population
 
+### REQ-107
+
+- test_req_107_invalid_and_unknown_populations_stay_visible
+
 ### REQ-109
 
 - test_req_109_origin_requires_document_revision_evidence
@@ -510,7 +514,6 @@
 
 ### reqs with no tests
 
-- REQ-107
 - REQ-108
 - REQ-116
 - REQ-117
