@@ -10,6 +10,12 @@ drives almost everything below; ``batch_queue.py`` — the entry point,
 holding the argparse wiring and ``main`` — imports this module only for
 ``QueueError``.
 
+The underscore-prefixed names here are this module's INTERNAL SURFACE for
+``queue_commands`` (and the tests), not module-local helpers: the ``_``
+marks "not part of the CLI's user-facing surface", which stays true across
+the split. Several of them run inside a ``_state_lock`` span their caller
+owns — see the precondition line on each.
+
 Pure stdlib (``tomllib``, Python 3.11+). Paths are resolved by the
 caller; this module does not depend on cwd.
 """
@@ -573,7 +579,8 @@ def _reconcile_running_entries(entries: list[dict], state: dict) -> list[str]:
 
     Caller owns ``load_state``/``save_state``/the ``_state_lock`` span —
     this function does neither, so it can be invoked from inside a lock
-    already held by ``_cmd_next`` without a same-process flock deadlock.
+    already held by ``queue_commands._cmd_next`` without a same-process
+    flock deadlock.
     """
     merged = effective_entries(entries, state)
     lines: list[str] = []
@@ -594,10 +601,16 @@ def _reconcile_running_entries(entries: list[dict], state: dict) -> list[str]:
 def _skip_entry(state: dict, state_path: Path, change_id: str, reason: str) -> None:
     """Record ``SKIPPED`` + ``reason`` for change_id, persist, notice to stderr.
 
-    Shared by ``_cmd_next``'s two skip sites (freeze-predicate failure and
-    the post-worktree uncommitted-plan check) — never silent: every skip
-    writes state AND prints one line to stderr. Record shape matches
-    ``_cmd_mark``'s ``failed``/``done`` records.
+    Shared by ``queue_commands._cmd_next``'s two skip sites
+    (freeze-predicate failure and the post-worktree uncommitted-plan check)
+    — never silent: every skip writes state AND prints one line to stderr.
+    Record shape matches ``queue_commands._cmd_mark``'s ``failed``/``done``
+    records.
+
+    Caller owns ``load_state``/the ``_state_lock`` span — this mutates the
+    live ``state`` dict in place and calls ``save_state`` itself, but takes
+    no lock, so it can run inside the span ``queue_commands._cmd_next``
+    already holds without a same-process flock deadlock.
     """
     record = dict(state.get(change_id, {}))
     record["status"] = "SKIPPED"
@@ -608,7 +621,8 @@ def _skip_entry(state: dict, state_path: Path, change_id: str, reason: str) -> N
 
 
 def _teardown_worktree(project_path: Path, worktree_path: Path, branch: str) -> None:
-    """Remove a worktree + branch that ``_cmd_next`` just created.
+    """Remove a worktree + branch that ``queue_commands._cmd_next`` just
+    created.
 
     Used only on the uncommitted-plan skip path: ``SKIPPED`` has no
     automatic path back to ``QUEUED`` and ``status`` does not surface the
@@ -675,6 +689,11 @@ def _dispatch_entry(
     determinism rules; the timestamp seeds ``reconcile``'s staleness
     grace-window checks (Task 12) and is not itself part of the
     dispatch payload.
+
+    Caller owns ``load_state``/the ``_state_lock`` span — this mutates the
+    live ``state`` dict in place and calls ``save_state`` itself, but takes
+    no lock, so it can run inside the span ``queue_commands._cmd_next``
+    already holds without a same-process flock deadlock.
     """
     record = dict(state.get(entry["id"], {}))
     record["status"] = "RUNNING"
@@ -724,7 +743,8 @@ def _halt_notice_if_tripped(entries: list[dict], override_halt: bool) -> bool:
     """Print the HALT notice and return True iff the breaker should fire.
 
     Wraps ``_check_circuit_breaker`` with the print-and-decide shell so
-    ``_cmd_next`` stays a plain ``if _halt_notice_if_tripped(...): return 3``
+    ``queue_commands._cmd_next`` stays a plain
+    ``if _halt_notice_if_tripped(...): return 3``
     — keeps the caller's body short (house 50-line function ceiling).
     ``override_halt`` short-circuits to False without evaluating the
     predicate.
@@ -752,8 +772,9 @@ def _describe_non_terminal_entry(entry: dict, state: dict) -> dict:
     RUNNING entries reuse ``_classify_running_entry`` so the same
     SUSPECT/SUSPECT-COMPLETE evidence ``reconcile`` already prints to stderr
     also lands here, in the machine-readable stdout payload. A QUEUED entry
-    should never reach this point in practice — the scan above dispatches or
-    SKIPs every QUEUED entry it sees in the same invocation — but gets a
+    should never reach this point in practice — ``queue_commands._cmd_next``'s
+    scan dispatches or SKIPs every QUEUED entry it sees in the same
+    invocation — but gets a
     generic description rather than being assumed impossible, since this
     function's whole job is to never let ``done`` go silent.
     """

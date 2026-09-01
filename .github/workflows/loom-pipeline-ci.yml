@@ -70,6 +70,15 @@ jobs:
         run: python3 -m pip install --quiet pytest pyyaml
 
       - name: Run the loom-design scripts pytest suite
+        # Trade accepted deliberately: the deleted per-station jobs gave
+        # per-station visibility in the Actions UI and ran -v, and this one
+        # step gives up both. -q is kept because a >1000-test -v listing is
+        # log noise nobody reads, and pytest still prints the full traceback
+        # plus the `station/test_file.py::test_name` path for every FAILURE,
+        # which is what a red build is actually read for. The unified root is
+        # worth it: one collection means a same-named module cannot be
+        # collected twice under different identities, which is what forced
+        # the fan-out in the first place.
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 -m pytest loom-design/scripts/ -q

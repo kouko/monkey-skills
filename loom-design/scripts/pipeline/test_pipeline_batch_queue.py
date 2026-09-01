@@ -1,4 +1,9 @@
-"""Tests for loom-design/scripts/pipeline/batch_queue.py."""
+"""Tests for loom-pipeline batch mode: batch_queue.py and the sibling
+modules it was split into, queue_core.py and queue_commands.py.
+
+The module-boundary tests near the end assert about all three at once —
+which name is defined where — so this file is not scoped to one module.
+"""
 from __future__ import annotations
 
 import json
@@ -2099,8 +2104,9 @@ def test_classify_running_entry_suspect_when_dispatched_at_malformed():
 
 # --- Task 3 (script hygiene plan): the queue state / freeze gate / worktree
 # lifecycle / reconcile engine surface moved out of batch_queue.py into the
-# sibling module queue_core.py. batch_queue.py keeps only the argparse
-# wiring, the _cmd_* handlers and main. ---
+# sibling module queue_core.py. At that point batch_queue.py still held the
+# argparse wiring, the _cmd_* handlers and main; Task 4 below moved the
+# handlers out too. ---
 
 
 def test_queue_core_owns_state_and_engine():
