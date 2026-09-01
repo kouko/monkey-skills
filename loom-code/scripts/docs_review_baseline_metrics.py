@@ -323,15 +323,21 @@ def classify_population_boundaries(
     if any(not isinstance(finding, str) or not finding.strip() for finding in expected_findings):
         raise ValueError("expected findings must be non-empty strings")
     expected = set(expected_findings)
+    if len(expected) != len(expected_findings):
+        raise ValueError("duplicate expected finding IDs are not allowed")
     frozen_outcomes: list[dict[str, str]] = []
+    outcome_ids: set[str] = set()
     for outcome in expected_outcomes:
         finding_id = outcome.get("finding_id")
         status = outcome.get("outcome")
         if finding_id not in expected or status not in {"missed", "not_assessable"}:
             raise ValueError("expected finding outcome must be missed or not_assessable")
+        if finding_id in outcome_ids:
+            raise ValueError("duplicate expected outcome IDs are not allowed")
+        outcome_ids.add(finding_id)
         frozen_outcomes.append({"finding_id": finding_id, "outcome": status})
-    if len(frozen_outcomes) != len(expected):
-        raise ValueError("every expected finding needs an auditable outcome")
+    if outcome_ids != expected:
+        raise ValueError("expected outcome IDs must exactly equal expected finding IDs")
 
     if not expected:
         if negative_control is None:

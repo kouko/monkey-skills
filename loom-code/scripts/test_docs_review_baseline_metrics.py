@@ -354,6 +354,25 @@ def test_req_116_zero_and_partial_populations_have_explicit_meaning() -> None:
     assert not_assessable["expected_finding_outcomes"] == [
         {"finding_id": "expected-risk", "outcome": "not_assessable"}
     ]
+    with pytest.raises(ValueError, match="outcome IDs"):
+        classify_population_boundaries(
+            expected_findings=["expected-a", "expected-b"],
+            negative_control=None,
+            normalization_state="valid_empty",
+            expected_outcomes=[
+                {"finding_id": "expected-a", "outcome": "missed"},
+                {"finding_id": "expected-a", "outcome": "missed"},
+            ],
+        )
+    with pytest.raises(ValueError, match="duplicate expected"):
+        classify_population_boundaries(
+            expected_findings=["expected-a", "expected-a"],
+            negative_control=None,
+            normalization_state="valid_empty",
+            expected_outcomes=[
+                {"finding_id": "expected-a", "outcome": "missed"},
+            ],
+        )
 
 
 def test_req_117_report_population_is_frozen_before_calculation() -> None:
