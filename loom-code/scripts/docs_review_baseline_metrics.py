@@ -219,11 +219,14 @@ def _quality_eligible_attributions(
     attempts: list[Mapping[str, object]],
 ) -> list[Mapping[str, object]]:
     """Keep quality rates bound to successful, observation-matched attempts."""
-    outcomes = {
-        attempt["attempt_id"]: attempt.get("outcome")
-        for attempt in attempts
-        if isinstance(attempt.get("attempt_id"), str)
-    }
+    outcomes: dict[str, object] = {}
+    for attempt in attempts:
+        attempt_id = attempt.get("attempt_id")
+        if not isinstance(attempt_id, str):
+            continue
+        if attempt_id in outcomes:
+            raise ValueError(f"duplicate attempt_id: {attempt_id}")
+        outcomes[attempt_id] = attempt.get("outcome")
     if not attempts:
         return attributions
     return [

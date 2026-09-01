@@ -293,6 +293,40 @@ def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
     } == {"finding_rate": "unavailable", "false_alarm_rate": "unavailable"}
     assert unbound["population_counts"]["failed_attempts"] == 1
 
+    duplicate_arguments = {
+        "oracle": {
+            "kind": "ratified_oracle",
+            "status": "ratified",
+            "findings": [{"finding_id": "expected-risk", "load_bearing": True}],
+        },
+        "attributions": [
+            {
+                "attempt_id": "attempt-duplicate",
+                "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-duplicate",
+                "status": "ratified",
+                "human_verdict": "true_positive",
+                "oracle_matches": ["expected-risk"],
+            }
+        ],
+    }
+    for attempts in (
+        [
+            {"attempt_id": "attempt-duplicate", "outcome": "success"},
+            {"attempt_id": "attempt-duplicate", "outcome": "success"},
+        ],
+        [
+            {"attempt_id": "attempt-duplicate", "outcome": "success"},
+            {"attempt_id": "attempt-duplicate", "outcome": "failed"},
+        ],
+        [
+            {"attempt_id": "attempt-duplicate", "outcome": "failed"},
+            {"attempt_id": "attempt-duplicate", "outcome": "success"},
+        ],
+    ):
+        with pytest.raises(ValueError, match="duplicate attempt_id"):
+            calculate_population_report(**duplicate_arguments, attempts=attempts)
+
 
 def test_req_108_baseline_reports_are_revision_bound(tmp_path) -> None:
     # @req: REQ-108
