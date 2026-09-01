@@ -449,10 +449,10 @@ def test_req_116_zero_and_partial_populations_have_explicit_meaning() -> None:
         )
 
 
-def test_req_117_report_population_is_frozen_before_calculation() -> None:
+def test_req_117_report_population_is_frozen_before_calculation(tmp_path) -> None:
     # @req: REQ-117
     """One report id accepts one exact population, with incomplete cohorts partial."""
-    registry = PopulationManifestRegistry()
+    registry = PopulationManifestRegistry(tmp_path)
     arguments = {
         "runs": [{"record_id": "run-1", "digest": "a" * 64}],
         "observations": [{"record_id": "observation-1", "digest": "b" * 64}],
@@ -470,7 +470,7 @@ def test_req_117_report_population_is_frozen_before_calculation() -> None:
 
     first = registry.freeze("report-r1", **arguments)
 
-    assert registry.freeze("report-r1", **arguments) == first
+    assert PopulationManifestRegistry(tmp_path).freeze("report-r1", **arguments) == first
     assert first["runs"] == arguments["runs"]
     assert first["observations"] == arguments["observations"]
     assert first["attribution_revisions"] == arguments["attribution_revisions"]
@@ -484,13 +484,13 @@ def test_req_117_report_population_is_frozen_before_calculation() -> None:
     }
     assert first["status"] == "partial"
 
-    with pytest.raises(ValueError, match="different population"):
-        registry.freeze(
+    with pytest.raises(RecordConflictError):
+        PopulationManifestRegistry(tmp_path).freeze(
             "report-r1",
             **{**arguments, "attribution_revisions": [{"record_id": "attribution-2", "digest": "d" * 64}]},
         )
 
-    corrected = registry.freeze(
+    corrected = PopulationManifestRegistry(tmp_path).freeze(
         "report-r2",
         **{**arguments, "attribution_revisions": [{"record_id": "attribution-2", "digest": "d" * 64}]},
         parent_report_id="report-r1",

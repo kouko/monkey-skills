@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from threading import Lock
 
-from docs_review_baseline_store import PublishedRecord, publish_record
+from docs_review_baseline_store import PublishedRecord, publish_record, read_record
 
 
 FORMULA_VERSION = "docs-review-baseline-metrics-v1"
@@ -454,11 +454,11 @@ def _identity_records(
 
 
 class PopulationManifestRegistry:
-    """Atomically freeze one exact input population for each report ID."""
+    """Atomically freeze one exact input population in the append-only store."""
 
-    def __init__(self) -> None:
+    def __init__(self, store_root: Path) -> None:
+        self._store_root = Path(store_root)
         self._lock = Lock()
-        self._manifests: dict[str, dict[str, object]] = {}
 
     def freeze(
         self,
@@ -525,19 +525,17 @@ class PopulationManifestRegistry:
                 parent_report_id = _required_text(parent_report_id, "parent_report_id")
                 if parent_report_id == report_id:
                     raise ValueError("corrected population requires a new report_id")
-                parent = self._manifests.get(parent_report_id)
-                if parent is None:
-                    raise ValueError("parent report manifest does not exist")
-                candidate["lineage_root_report_id"] = parent[
+                try:
+                    parent = read_record(self._store_root, parent_report_id)
+                except ValueError as error:
+                    raise ValueError("parent report manifest does not exist") from error
+                if parent.record.get("kind") != "report_population_manifest":
+                    raise ValueError("parent record is not a population manifest")
+                candidate["lineage_root_report_id"] = parent.record[
                     "lineage_root_report_id"
                 ]
-                candidate["parent_manifest_digest"] = parent["manifest_digest"]
+                candidate["parent_manifest_digest"] = parent.record["manifest_digest"]
             candidate_digest = _canonical_digest(candidate)
-            existing = self._manifests.get(report_id)
-            if existing is not None:
-                if existing["manifest_digest"] != candidate_digest:
-                    raise ValueError("report id already has a different population")
-                return json.loads(json.dumps(existing))
             candidate["manifest_digest"] = candidate_digest
-            self._manifests[report_id] = candidate
-            return json.loads(json.dumps(candidate))
+            published = publish_record(self._store_root, report_id, candidate)
+            return json.loads(json.dumps(published.record))
