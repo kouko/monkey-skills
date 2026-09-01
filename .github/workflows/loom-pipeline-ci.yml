@@ -1,17 +1,19 @@
 name: loom-design CI
 
-# Runs the loom-design plugin's pytest suite (loom-design/scripts/pipeline/),
-# including the driver-build tests and the build-drift regression test
-# that checks the generated driver stays in sync with its js segment
-# sources. This plugin previously had NO CI coverage.
+# Runs the whole loom-design plugin pytest suite (loom-design/scripts/),
+# covering every station directory — discovery, interface, pipeline,
+# principles and spec — in ONE invocation. That includes the pipeline
+# driver-build tests and the build-drift regression test that checks the
+# generated driver stays in sync with its js segment sources.
 #
-# This suite runs as its OWN pytest invocation (own job, own workflow
-# file) rather than being folded into loom-siblings-ci.yml or another
-# plugin's workflow: monkey-skills has repeated same-basename test files
-# across plugins with no __init__.py (see loom-siblings-ci.yml), so a
-# combined collection risks "import file mismatch" errors. Keeping each
-# plugin's suite in its own job/workflow avoids that collision class
-# entirely.
+# One job, one invocation: `loom-design/scripts/pytest.ini` sets
+# `--import-mode=importlib`, so the repeated same-basename test files
+# across stations (test_marketplace_entry.py, test_plugin_manifest.py,
+# ...) no longer collide at collection; the same file's `pythonpath` line
+# puts each station directory on `sys.path`, which importlib mode
+# otherwise stops doing and the repo's bare sibling imports need. Before
+# that root existed the stations needed a job each — this job replaces
+# the four that loom-siblings-ci.yml and loom-spec-ci.yml used to run.
 #
 # The suite's build-drift test shells out to `node --check` on the
 # generated driver segments, so this job needs Node available. It does
@@ -63,10 +65,20 @@ jobs:
 
       - name: Install test deps
         # pytest = test runner; pyyaml = this suite's own CI-workflow
-        # self-test parses YAML.
+        # self-test parses YAML. Superset of what the collapsed
+        # per-station jobs installed.
         run: python3 -m pip install --quiet pytest pyyaml
 
-      - name: Run loom-design scripts/pipeline pytest suite
+      - name: Run the loom-design scripts pytest suite
+        # Trade accepted deliberately: the deleted per-station jobs gave
+        # per-station visibility in the Actions UI and ran -v, and this one
+        # step gives up both. -q is kept because a >1000-test -v listing is
+        # log noise nobody reads, and pytest still prints the full traceback
+        # plus the `station/test_file.py::test_name` path for every FAILURE,
+        # which is what a red build is actually read for. The unified root is
+        # worth it: one collection means a same-named module cannot be
+        # collected twice under different identities, which is what forced
+        # the fan-out in the first place.
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-design/scripts/pipeline/ -q
+        run: python3 -m pytest loom-design/scripts/ -q

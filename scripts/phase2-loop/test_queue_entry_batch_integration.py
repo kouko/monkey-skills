@@ -1,10 +1,14 @@
-"""Integration proof: propose_queue_entry output round-trips through batch_queue.
+"""Integration proof: propose_queue_entry output round-trips through queue_core.
 
 Proves the planning-stage helper's TOML is genuinely consumable by
-loom-design's batch_queue.py: load_queue parses the drafted entry and
-check_frozen returns eligible via the Form B (brief+plan) path — no
+loom-design's batch-mode queue machinery: load_queue parses the drafted
+entry and check_frozen returns eligible via the Form B (brief+plan) path — no
 docs/loom/<id>/ change folder exists for the synthetic fixture, so the
 plan's own ``Plan-document-reviewer verdict: PASS`` line is the freeze gate.
+
+Both functions live in ``queue_core.py``. ``batch_queue.py`` is only the
+argparse entry point and no longer defines them, so this module targets the
+module that owns the behaviour rather than the CLI wrapper.
 """
 
 import importlib.util
@@ -13,15 +17,22 @@ from pathlib import Path
 from queue_entry import propose_queue_entry
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_BATCH_QUEUE_PATH = _REPO_ROOT / "loom-design" / "scripts" / "pipeline" / "batch_queue.py"
+_QUEUE_CORE_PATH = _REPO_ROOT / "loom-design" / "scripts" / "pipeline" / "queue_core.py"
 
 
-def _load_batch_queue():
-    """Import loom-design's batch_queue.py by file path — a cross-plugin
+def _load_queue_core():
+    """Import loom-design's queue_core.py by file path — a cross-plugin
     sibling module in the same repo — without touching sys.path or any
-    shared conftest (scoped to this test module only)."""
+    shared conftest (scoped to this test module only).
+
+    ``queue_core`` is pure stdlib and imports no sibling of its own, so the
+    by-path load resolves with no sys.path entry at all. ``batch_queue.py``
+    would not: it opens with ``import queue_commands``, which resolves only
+    once loom-design's pipeline directory is on sys.path — the global state
+    this module deliberately leaves alone.
+    """
     spec = importlib.util.spec_from_file_location(
-        "loom_pipeline_batch_queue", _BATCH_QUEUE_PATH
+        "loom_pipeline_queue_core", _QUEUE_CORE_PATH
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -46,7 +57,7 @@ _CAMPAIGN_DOC = """\
 
 
 def test_proposed_entry_passes_batch_queue_freeze_check(tmp_path, monkeypatch):
-    batch_queue = _load_batch_queue()
+    queue_core = _load_queue_core()
     project_path = tmp_path
 
     # Plan fixture lives inside the temp project root. propose_queue_entry
@@ -72,7 +83,7 @@ def test_proposed_entry_passes_batch_queue_freeze_check(tmp_path, monkeypatch):
     queue_path.write_text(block, encoding="utf-8")
 
     # (3): load_queue parses it without raising and yields the one drafted entry.
-    entries = batch_queue.load_queue(queue_path)
+    entries = queue_core.load_queue(queue_path)
     assert len(entries) == 1
     entry = entries[0]
     assert entry["id"] == "B1"
@@ -82,6 +93,6 @@ def test_proposed_entry_passes_batch_queue_freeze_check(tmp_path, monkeypatch):
     # (4): Form B fires — no docs/loom/B1/ change folder exists, so the plan's
     # own PASS line is the gate; check_frozen returns (True, ...brief+plan...).
     assert not (project_path / "docs" / "loom" / "B1").exists()
-    eligible, reason = batch_queue.check_frozen(entry, project_path, _REPO_ROOT)
+    eligible, reason = queue_core.check_frozen(entry, project_path, _REPO_ROOT)
     assert eligible is True
     assert "brief+plan form" in reason

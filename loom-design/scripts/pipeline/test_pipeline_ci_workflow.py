@@ -1,7 +1,7 @@
 """RED-first test: loom-design must have its own CI workflow file that
-runs its pytest suite as a separate invocation (same-basename collision
-rule per loom-siblings-ci.yml) with path triggers on both pull_request
-and push, covering loom-design/**, loom-code/hooks/**,
+runs the whole `loom-design/scripts/` suite in one invocation (the
+unified pytest root replaced the per-station jobs) with path triggers on
+both pull_request and push, covering loom-design/**, loom-code/hooks/**,
 loom-code/skills/loom-memory/**, the marketplace.json fail-open
 guard, and the workflow file itself."""
 from pathlib import Path
@@ -47,6 +47,6 @@ def test_workflow_paths():
                 f"{trigger_name}.paths missing {expected_path!r}"
             )
 
-    assert "python3 -m pytest loom-design/scripts/pipeline/" in text, (
-        "workflow must run the loom-design/scripts/pipeline/ pytest suite"
+    assert "python3 -m pytest loom-design/scripts/ -q" in text, (
+        "workflow must run the unified loom-design/scripts/ pytest suite"
     )

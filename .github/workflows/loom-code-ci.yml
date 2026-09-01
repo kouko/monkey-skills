@@ -55,6 +55,13 @@ on:
       # in this trigger — so any loom-design edit must fire this
       # workflow, else it would merge ungated (fail-open).
       - 'loom-design/**'
+      # scripts/test_loom_design_ci_unified_root.py guards the single unified
+      # loom-design pytest step in loom-pipeline-ci.yml, but it is collected
+      # only by THIS workflow's `scripts/` step -- so the whole workflow dir
+      # must be a trigger. Naming just this file leaves the guard fail-open:
+      # a PR editing only loom-pipeline-ci.yml (or adding a brand-new
+      # workflow with a per-station job) would never run it.
+      - '.github/workflows/**'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
@@ -68,6 +75,8 @@ on:
       - 'scripts/**'
       # Same repo-root drift-guard rationale as the pull_request trigger above.
       - 'loom-design/**'
+      # Same fail-open rationale as the pull_request trigger above.
+      - '.github/workflows/**'
 
 permissions:
   contents: read
