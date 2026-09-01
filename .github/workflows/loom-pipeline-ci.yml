@@ -7,10 +7,11 @@ name: loom-design CI
 # generated driver stays in sync with its js segment sources.
 #
 # One job, one invocation: `loom-design/scripts/pytest.ini` sets
-# `--import-mode=importlib` and each station directory carries a
-# `conftest.py` that puts its own path on `sys.path`, so the repeated
-# same-basename test files across stations (test_marketplace_entry.py,
-# test_plugin_manifest.py, ...) no longer collide at collection. Before
+# `--import-mode=importlib`, so the repeated same-basename test files
+# across stations (test_marketplace_entry.py, test_plugin_manifest.py,
+# ...) no longer collide at collection; the same file's `pythonpath` line
+# puts each station directory on `sys.path`, which importlib mode
+# otherwise stops doing and the repo's bare sibling imports need. Before
 # that root existed the stations needed a job each — this job replaces
 # the four that loom-siblings-ci.yml and loom-spec-ci.yml used to run.
 #

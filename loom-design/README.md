@@ -107,11 +107,13 @@ mismatch": the station dirs ship same-named test files
 `__init__.py`, so pytest could not tell the modules apart. Those files
 still share their basenames; they simply no longer collide.
 `loom-design/scripts/pytest.ini` sets `--import-mode=importlib`, which
-gives each test module an identity independent of its basename, and each
-station dir carries a `conftest.py` that puts its own path back on
-`sys.path` — importlib mode does not do that, and this repo's scripts
-import their siblings by bare module name. If you hit the same collision
-elsewhere in this repo, that pair is the mechanism to copy.
+gives each test module an identity independent of its basename. The cost
+is that importlib mode no longer inserts a test file's own directory on
+`sys.path`, which would break the repo's bare sibling imports; the same
+`pytest.ini` pays it back with a `pythonpath` line enumerating the five
+station directories. If you hit the same collision elsewhere in this
+repo, that pair of ini settings is the mechanism to copy — and a new
+station directory has to be added to the `pythonpath` line.
 
 ## Install + requirements
 

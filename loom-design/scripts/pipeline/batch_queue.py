@@ -23,8 +23,6 @@ import queue_commands
 import queue_core
 
 
-
-
 def _build_parser() -> argparse.ArgumentParser:
     """Top-level argparse setup: ``mark``, ``mark-running``, ``reset``,
     ``force-fail``, ``status``, ``reconcile``, ``next`` subcommands."""

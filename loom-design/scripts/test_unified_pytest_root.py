@@ -44,7 +44,7 @@ def test_unified_collection_reports_no_errors():
     missing = [st for st in STATIONS if st not in collected]
     assert not missing, (
         "unified collection exited 0 but silently dropped station(s) "
-        f"{missing} -- a testpaths/norecursedirs/collect_ignore narrowing "
+        f"{missing} -- a norecursedirs/collect_ignore narrowing "
         f"would leave the no-ERROR assertions above green. Collected "
         f"station dirs: {sorted(collected)}"
     )

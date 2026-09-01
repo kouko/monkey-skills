@@ -87,7 +87,7 @@ def _require_running(
 
 
 def _cmd_mark(args: argparse.Namespace) -> int:
-    """Implements the ``mark`` subcommand — see ``main``'s subparser setup.
+    """Implements the ``mark`` subcommand — see ``batch_queue._build_parser``.
 
     Writes/updates the state record for ``args.change_id`` and returns a
     process exit code (0 on success, 1 on a caller-facing error such as an
@@ -134,8 +134,8 @@ def _cmd_mark(args: argparse.Namespace) -> int:
 
 
 def _cmd_mark_running(args: argparse.Namespace) -> int:
-    """Implements the ``mark-running`` subcommand — see ``main``'s subparser
-    setup.
+    """Implements the ``mark-running`` subcommand — see
+    ``batch_queue._build_parser``.
 
     Records ``runId`` + ``sessionDir`` on the state record for
     ``args.change_id``, called by the dispatcher immediately after
@@ -173,8 +173,9 @@ def _cmd_mark_running(args: argparse.Namespace) -> int:
 
 
 def _cmd_reconcile(args: argparse.Namespace) -> int:
-    """Implements the ``reconcile`` subcommand — see ``main``'s subparser
-    setup. Also invoked at the top of ``next`` (never in ``status``).
+    """Implements the ``reconcile`` subcommand — see
+    ``batch_queue._build_parser``. Also invoked at the top of ``next``
+    (never in ``status``).
 
     Loads the queue + state, runs ``_reconcile_running_entries`` under the
     same ``_state_lock`` span as every other state-mutating subcommand, and
@@ -203,7 +204,7 @@ def _cmd_reconcile(args: argparse.Namespace) -> int:
 
 
 def _cmd_reset(args: argparse.Namespace) -> int:
-    """Implements the ``reset`` subcommand — see ``main``'s subparser setup.
+    """Implements the ``reset`` subcommand — see ``batch_queue._build_parser``.
 
     Requeues an entry currently ``RUNNING`` or ``FAILED`` back to
     ``QUEUED`` (design SSOT §4c Fix-1 point 4 — the Airflow
@@ -249,8 +250,8 @@ def _cmd_reset(args: argparse.Namespace) -> int:
 
 
 def _cmd_force_fail(args: argparse.Namespace) -> int:
-    """Implements the ``force-fail`` subcommand — see ``main``'s subparser
-    setup.
+    """Implements the ``force-fail`` subcommand — see
+    ``batch_queue._build_parser``.
 
     Transitions an entry currently ``RUNNING`` to ``FAILED`` (design SSOT
     §4c Fix-1 point 4 — the mark-failed/terminate analog): an audit line
@@ -286,7 +287,7 @@ def _cmd_force_fail(args: argparse.Namespace) -> int:
 
 
 def _cmd_status(args: argparse.Namespace) -> int:
-    """Implements the ``status`` subcommand — see ``main``'s subparser setup.
+    """Implements the ``status`` subcommand — see ``batch_queue._build_parser``.
 
     Prints a one-screen plain-text overview to stdout: one line per queue
     entry, in queue order (``effective_entries`` preserves ``load_queue``'s
@@ -338,7 +339,8 @@ _TERMINAL_STATUSES = frozenset({"DONE", "FAILED", "SKIPPED"})
 
 
 def _cmd_next(args: argparse.Namespace) -> int:
-    """Implements the ``next`` subcommand — see ``main``'s subparser setup.
+    """Implements the ``next`` subcommand — see its registration in
+    ``batch_queue._add_next_subparser``.
 
     Runs ``_reconcile_running_entries`` first (Task 12 — reconcile's logic,
     never ``_cmd_status``'s), so a stranded RUNNING entry with definitive

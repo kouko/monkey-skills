@@ -4,8 +4,11 @@ The non-CLI half of loom-pipeline batch mode: parsing the human-editable
 ``QUEUE.toml``, the machine-owned ``queue-state.json`` read-modify-write
 span (``load_state``/``save_state`` under ``_state_lock``), the freeze
 predicate, worktree create/teardown, the RUNNING-entry reconcile engine
-and the circuit breaker. ``batch_queue.py`` keeps the argparse wiring and
-the ``_cmd_*`` handlers, and imports everything below from here.
+and the circuit breaker. Its main consumer is the sibling module
+``queue_commands``, which holds the ``_cmd_*`` subcommand handlers and
+drives almost everything below; ``batch_queue.py`` — the entry point,
+holding the argparse wiring and ``main`` — imports this module only for
+``QueueError``.
 
 Pure stdlib (``tomllib``, Python 3.11+). Paths are resolved by the
 caller; this module does not depend on cwd.
