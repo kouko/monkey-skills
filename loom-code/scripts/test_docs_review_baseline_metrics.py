@@ -190,6 +190,65 @@ def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
         },
     }
 
+    invalid_bound = calculate_population_report(
+        oracle={
+            "kind": "ratified_oracle",
+            "status": "ratified",
+            "findings": [{"finding_id": "expected-risk", "load_bearing": True}],
+        },
+        attributions=[
+            {
+                "attempt_id": "attempt-success",
+                "kind": "attribution_revision",
+                "observation_attempt_id": "attempt-success",
+                "status": "ratified",
+                "human_verdict": "true_positive",
+                "oracle_matches": ["expected-risk"],
+            },
+            *[
+                {
+                    "attempt_id": attempt_id,
+                    "kind": "attribution_revision",
+                    "observation_attempt_id": attempt_id,
+                    "status": "ratified",
+                    "human_verdict": "false_positive",
+                    "oracle_matches": [],
+                }
+                for attempt_id in (
+                    "attempt-failed",
+                    "attempt-malformed",
+                    "attempt-unparseable",
+                    "attempt-unscoreable",
+                )
+            ],
+        ],
+        attempts=[
+            {"attempt_id": "attempt-success", "outcome": "success"},
+            {"attempt_id": "attempt-failed", "outcome": "failed"},
+            {"attempt_id": "attempt-malformed", "outcome": "malformed"},
+            {"attempt_id": "attempt-unparseable", "outcome": "unparseable"},
+            {"attempt_id": "attempt-unscoreable", "outcome": "unscoreable_model"},
+        ],
+    )
+
+    assert invalid_bound["quality_metrics"]["false_alarm_rate"] == {
+        "availability": "available",
+        "denominator": 1,
+        "exclusion_reasons": [],
+        "formula_version": "docs-review-baseline-metrics-v1",
+        "numerator": 0,
+        "value": 0.0,
+    }
+    assert invalid_bound["population_counts"] == {
+        "disputed_attributions": 0,
+        "failed_attempts": 1,
+        "interrupted_attempts": 0,
+        "malformed_attempts": 1,
+        "unknown_attributions": 0,
+        "unparseable_attempts": 1,
+        "unscoreable_model_attempts": 1,
+    }
+
 
 def test_req_108_baseline_reports_are_revision_bound() -> None:
     # @req: REQ-108

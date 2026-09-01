@@ -211,6 +211,32 @@ def _usage_populations(
     return populations
 
 
+def _quality_eligible_attributions(
+    attributions: list[Mapping[str, object]],
+    attempts: list[Mapping[str, object]],
+) -> list[Mapping[str, object]]:
+    """Keep quality rates bound to successful, observation-matched attempts."""
+    outcomes = {
+        attempt["attempt_id"]: attempt.get("outcome")
+        for attempt in attempts
+        if isinstance(attempt.get("attempt_id"), str)
+    }
+    bound = any(
+        "attempt_id" in attribution or "observation_attempt_id" in attribution
+        for attribution in attributions
+    )
+    if not bound:
+        return attributions
+    return [
+        attribution
+        for attribution in attributions
+        if isinstance(attribution.get("attempt_id"), str)
+        and attribution.get("attempt_id")
+        == attribution.get("observation_attempt_id")
+        and outcomes.get(attribution["attempt_id"]) == "success"
+    ]
+
+
 def calculate_population_report(
     *,
     oracle: Mapping[str, object],
@@ -242,7 +268,9 @@ def calculate_population_report(
     return {
         "quality_metrics": calculate_quality_metrics(
             oracle=oracle,
-            attributions=attribution_records,
+            attributions=_quality_eligible_attributions(
+                attribution_records, attempt_records
+            ),
         ),
         "population_counts": dict(sorted(population_counts.items())),
         "usage_populations": _usage_populations(attempt_records),
