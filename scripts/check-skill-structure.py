@@ -52,13 +52,21 @@ gate, not here):
                             CLAUDE.md §Provenance & Divergence
                             Principle); the marker does not exempt any
                             other CHK-SKL-* rule
-    CHK-SKL-012 (FATAL)  — directory layout: required subdirectories
-                            `standards/`, `protocols/`, `checklists/`,
-                            `rubrics/`; optional `research/`; any
-                            other subdirectory is FATAL; if `research/`
+    CHK-SKL-012 (FATAL)  — directory layout. Repo-wide, for every
+                            plugin: no subdirectory inside a
+                            subdirectory (CLAUDE.md §Skill Structure).
+                            Additionally, for the plugins in
+                            TEAM_TAXONOMY_PLUGINS only, the
+                            domain-teams taxonomy from
+                            `domain-teams/skills/skill-team/standards/
+                            file-conventions.md`: required
+                            subdirectories `standards/`, `protocols/`,
+                            `checklists/`, `rubrics/`; optional
+                            `research/`; any other subdirectory or
+                            top-level file is FATAL; if `research/`
                             exists, every file inside MUST match
-                            `grounding-v{X.Y.Z}.md` pattern.
-                            Router skills are exempt from the
+                            `grounding-v{X.Y.Z}.md` pattern. Router
+                            skills are exempt from the
                             required-subdirectory check. `.DS_Store`
                             and other dotfiles are ignored as
                             filesystem noise.
@@ -403,6 +411,18 @@ REQUIRED_SUBDIRS = {"standards", "protocols", "checklists", "rubrics"}
 OPTIONAL_SUBDIRS = {"research", "references", "agents", "scripts", "assets", "evals"}
 RESEARCH_FILENAME = re.compile(r"^grounding-v\d+\.\d+\.\d+\.md$")
 
+# Plugins the four-subdirectory taxonomy above actually governs.
+#
+# `domain-teams/skills/skill-team/standards/file-conventions.md` opens with
+# "the four subdirectories under a domain-team skill" and names repo CLAUDE.md
+# §Skill Structure as the repo convention SSOT. CLAUDE.md states one
+# structural rule for every plugin: SKILL.md plus any number of single-level
+# subdirectories, and no subdirectory inside a subdirectory. Names, top-level
+# files, the required four, and the research/ filename pattern are the
+# narrower domain-teams convention, so they are enforced only here. Widening
+# this set means deciding that another plugin adopts that taxonomy wholesale.
+TEAM_TAXONOMY_PLUGINS = {"domain-teams"}
+
 
 def _is_noise_file(name: str) -> bool:
     """Filesystem noise files that should be ignored.
@@ -449,42 +469,38 @@ def _is_allowed_top_level_file(name: str) -> bool:
     return False
 
 
-def check_chk_skl_012(skill_dir: Path) -> list[CheckError]:
+def check_chk_skl_012(skill_dir: Path, *, team_taxonomy: bool = True) -> list[CheckError]:
+    """Directory layout.
+
+    The nesting rule is repo-wide (CLAUDE.md §Skill Structure). The rest --
+    subdirectory names, top-level filenames, the four required
+    subdirectories, and the research/ filename pattern -- is the domain-teams
+    taxonomy, applied only when `team_taxonomy` is set. It defaults to True so
+    an omitted argument fails closed.
+    """
     name = skill_dir.name
     errors: list[CheckError] = []
     # Top-level files: SKILL.md (required), README.md, README.{lang}.md
     # (optional per file-conventions.md §Top-Level Files); noise files ignored.
-    for entry in sorted(skill_dir.iterdir()):
-        if entry.is_file() and not _is_allowed_top_level_file(entry.name) and not _is_noise_file(entry.name):
-            errors.append(
-                CheckError(
-                    "CHK-SKL-012",
-                    name,
-                    f"unexpected top-level file: {entry.name}",
-                    entry,
+    if team_taxonomy:
+        for entry in sorted(skill_dir.iterdir()):
+            if entry.is_file() and not _is_allowed_top_level_file(entry.name) and not _is_noise_file(entry.name):
+                errors.append(
+                    CheckError(
+                        "CHK-SKL-012",
+                        name,
+                        f"unexpected top-level file: {entry.name}",
+                        entry,
+                    )
                 )
-            )
     # Subdirectories: required + optional only, no extras, no nesting.
     seen_subdirs: set[str] = set()
     for entry in sorted(skill_dir.iterdir()):
         if not entry.is_dir():
             continue
         seen_subdirs.add(entry.name)
-        if entry.name in REQUIRED_SUBDIRS or entry.name in OPTIONAL_SUBDIRS:
-            # No nested subdirectories inside any required/optional subdir.
-            for child in entry.iterdir():
-                if child.is_dir():
-                    if _is_noise_file(child.name):
-                        continue
-                    errors.append(
-                        CheckError(
-                            "CHK-SKL-012",
-                            name,
-                            f"nested subdirectory not allowed: {entry.name}/{child.name}",
-                            child,
-                        )
-                    )
-        else:
+        off_taxonomy = entry.name not in REQUIRED_SUBDIRS and entry.name not in OPTIONAL_SUBDIRS
+        if off_taxonomy and team_taxonomy:
             errors.append(
                 CheckError(
                     "CHK-SKL-012",
@@ -493,11 +509,27 @@ def check_chk_skl_012(skill_dir: Path) -> list[CheckError]:
                     entry,
                 )
             )
+            continue
+        # No nested subdirectories inside any subdirectory. This runs for
+        # off-taxonomy names too: relaxing what a directory may be called must
+        # not stop the repo-wide nesting rule from descending into it.
+        for child in entry.iterdir():
+            if child.is_dir():
+                if _is_noise_file(child.name):
+                    continue
+                errors.append(
+                    CheckError(
+                        "CHK-SKL-012",
+                        name,
+                        f"nested subdirectory not allowed: {entry.name}/{child.name}",
+                        child,
+                    )
+                )
     # Router skill exemption: router skills (no protocols/) only need SKILL.md
     # at the top level. They are NOT required to have the four runtime
     # subdirectories.
-    if is_router_skill(skill_dir):
-        pass  # Skip the missing-required check for router skills.
+    if not team_taxonomy or is_router_skill(skill_dir):
+        pass  # Skip the missing-required check outside domain-teams / for routers.
     else:
         missing = REQUIRED_SUBDIRS - seen_subdirs
         for sub in sorted(missing):
@@ -511,7 +543,7 @@ def check_chk_skl_012(skill_dir: Path) -> list[CheckError]:
             )
     # research/ filename pattern check (if present). Skip noise files.
     research = skill_dir / "research"
-    if research.is_dir():
+    if team_taxonomy and research.is_dir():
         for f in sorted(research.iterdir()):
             if not f.is_file() or _is_noise_file(f.name):
                 continue
@@ -538,7 +570,7 @@ class Report:
     errors: list[CheckError] = field(default_factory=list)
 
 
-def run_all_checks(skill_dir: Path) -> Report:
+def run_all_checks(skill_dir: Path, *, team_taxonomy: bool = True) -> Report:
     name = skill_dir.name
     report = Report(skill=name)
     if not (skill_dir / "SKILL.md").exists():
@@ -550,7 +582,7 @@ def run_all_checks(skill_dir: Path) -> Report:
     report.errors.extend(check_chk_skl_005(skill_dir))
     report.errors.extend(check_chk_skl_010(skill_dir))
     report.errors.extend(check_chk_skl_011(skill_dir))
-    report.errors.extend(check_chk_skl_012(skill_dir))
+    report.errors.extend(check_chk_skl_012(skill_dir, team_taxonomy=team_taxonomy))
     return report
 
 
@@ -563,7 +595,12 @@ def main(argv: list[str]) -> int:
     if not skills_dir.is_dir():
         print(f"error: {skills_dir} is not a directory", file=sys.stderr)
         return 2
-    reports = [run_all_checks(d) for d in sorted(skills_dir.iterdir()) if d.is_dir()]
+    team_taxonomy = plugin_dir.name in TEAM_TAXONOMY_PLUGINS
+    reports = [
+        run_all_checks(d, team_taxonomy=team_taxonomy)
+        for d in sorted(skills_dir.iterdir())
+        if d.is_dir()
+    ]
     total_errors = sum(len(r.errors) for r in reports)
     print(f"check-skill-structure: scanned {len(reports)} skills under {skills_dir}")
     for report in reports:
