@@ -15,6 +15,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SUITE = "loom-design/scripts/"
+STATIONS = ("discovery", "interface", "pipeline", "principles", "spec")
 
 
 def test_unified_collection_reports_no_errors():
@@ -34,4 +35,16 @@ def test_unified_collection_reports_no_errors():
     )
     assert proc.returncode == 0, (
         f"unified collection exited {proc.returncode}:\n{output[-4000:]}"
+    )
+    collected = {
+        ln.split("::", 1)[0].strip().split("/")[-2]
+        for ln in output.splitlines()
+        if "::" in ln and "/" in ln.split("::", 1)[0]
+    }
+    missing = [st for st in STATIONS if st not in collected]
+    assert not missing, (
+        "unified collection exited 0 but silently dropped station(s) "
+        f"{missing} -- a testpaths/norecursedirs/collect_ignore narrowing "
+        f"would leave the no-ERROR assertions above green. Collected "
+        f"station dirs: {sorted(collected)}"
     )
