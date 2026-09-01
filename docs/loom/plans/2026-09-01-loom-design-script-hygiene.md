@@ -2,11 +2,11 @@
 
 Source brief: docs/loom/specs/2026-09-01-loom-design-script-hygiene.md
 Goal: 讓 `python3 -m pytest loom-design/scripts/` 成為單一道綠燈指令（五個 CI job 收斂成一個），並把 `batch_queue.py` 的 CLI handler 抽成獨立模組、留下 argparse ＋ `main` — serves PURPOSE: 一個跑不起來的測試套件是驗證表面上的洞，而 PURPOSE 要求「規劃／規格／契約裡的宣稱不會未經驗證就出貨」；今天這道指令執行零個測試，任何依賴它的宣稱都沒有被驗證過。
-Stage: planning
+Stage: sdd:wave-1
 Total tasks: 7
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PENDING
+Plan-document-reviewer verdict: PASS (2026-09-01, confirmation round after a user-authorized minimal fix; rounds 1 and 2 were NEEDS_REVISION)
 
 ## Task-flow diagram
 
@@ -248,3 +248,8 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - Out of scope, carried forward: splitting `loom-code/scripts/loom_gate_markers.py` stays open in the backlog with its event trigger intact, deferred because the live `family-relocation` decision map has a claimed ticket naming it and its ownership verdict is still open.
 - No root README edit is required, for two independent reasons. `README.md` carries no `loom-design` row at all (its plugin table lists `domain-teams`, `loom-workflow` and nine others, but neither loom-design nor loom-code). And the version-row test that has repeatedly caught this repo — `test_root_readme_row_agrees_with_filesystem` in `loom-workflow/scripts/test_independent_advisor_plugin_readmes.py` — reads only the loom-workflow row, via its `_root_workflow_row()` helper; this arc does not change loom-workflow.
 - Backlog entry `2026-08-31-proposer-chunks-components-linked-only-through-a-sink` names its own start trigger as "the first arc after this one runs `--check` and finds itself writing 'only transitively connected through the version-bump sink' more than twice". This is that first arc, and this plan writes that reason three times (Tasks 3, 4 and 7): the proposer merged the test-root chain with the module-split chain, and the backlog chain with the manifest bump, in both cases joining components that share only a downstream sink. Recorded here as an observation; re-sizing the proposer's cap or edge rule is out of this arc's scope.
+- Verdict stamped in the header after the confirmation round returned PASS — stamping the verdict, no re-review (writing-plans' closed amendment list, kind 1).
+- Kickoff sweep found zero one-way-door decisions, so no batched briefing was raised; `docs/loom/PRINCIPLES.md` is absent, whose default is to brief all one-way-door hits — there were none to brief. The three forks below were resolved by look-up (triage arm 1) and are recorded unbriefed, per the kickoff contract's arm-1 rule. Kickoff writes these lines into `## Notes` after PASS by that contract's own instruction.
+- Kickoff decision: which workflow file hosts the single unified loom-design job → `.github/workflows/loom-pipeline-ci.yml`, job id `pipeline`, display name `loom-design pytest` (unchanged, so no new check name is introduced). `loom-siblings-ci.yml` and `loom-spec-ci.yml` are DELETED outright: every job in them is a loom-design pytest job, so collapsing leaves them with zero jobs, which GitHub Actions rejects.
+- Kickoff decision: dependency install line for the unified job → keep the superset `python3 -m pip install --quiet pytest pyyaml`. Only `loom-pipeline-ci.yml` installs `pyyaml` today; the other four install `pytest` alone, so hosting the unified job anywhere else, or narrowing the install, would redden the pipeline suite.
+- Kickoff decision: whether deleting four CI jobs can break a required status check → no. The six required contexts on `main` are `investing-toolkit script MD5 sync`, `SKILL.md structure`, `Conventional Commits`, `investing-toolkit pytest (offline)`, `loom memory store integrity`, and `loom-workflow shared conventions drift`; no loom-design job is among them (read from the branch-protection API on 2026-09-01). All three workflows already trigger on `loom-design/**`, not per-station, so the unified job loses no path coverage.
