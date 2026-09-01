@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: 使用者核准 pivot：停止 production-grade runner 加固，完成 metrics 與受控 Luna replay
+Stage: finishing
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -299,7 +299,7 @@ The user-approved 2026-09-01 pivot removes production-runner work from this plan
 - **Independent**: false
 - **Brief item covered**: Smallest End State — one fixed historical corpus yields a reproducible controlled Luna report that separates initial-authoring defects from reviewer sampling cost.
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(4f98240bb0dc4c2a572198c4bc33d57605e73176)
 - **Gloss**: 固定考卷、原始輸入輸出、人工答案與重跑成本都能獨立重算。
 
 ## Review Batches
