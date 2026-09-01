@@ -13,16 +13,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SUITE_ROOT = Path(__file__).resolve().parent
 SUITE = "loom-design/scripts/"
 PYTEST_INI = SUITE_ROOT / "pytest.ini"
 
-# Every station directory is a NON-test module basename that could shadow a
-# sibling, so it is derived from disk rather than hardcoded: a sixth station
-# added tomorrow is guarded on the day it lands. A station is a direct
-# subdirectory that actually holds test modules (`fixtures/`, `__pycache__/`
-# and the like are not stations).
+# The station list governs the checks below -- which directories unified
+# collection must reach, which entries `pythonpath` must name, and whose
+# NON-test module basenames are compared for shadowing -- so it is derived
+# from disk rather than hardcoded: a sixth station added tomorrow is guarded
+# on the day it lands. A station is a direct subdirectory that actually holds
+# test modules (`fixtures/`, `__pycache__/` and the like are not stations).
 STATIONS = tuple(
     sorted(
         d.name
@@ -131,6 +134,13 @@ def test_shadowed_basename_resolves_from_the_expected_station():
     would swap which copy every test exercises with nothing else failing, so
     the resolution is pinned here explicitly.
     """
+    if not SHADOWED_BASENAMES:
+        pytest.skip(
+            "no shadowed basename is pinned any more -- the collision was "
+            "renamed away, so there is no winner to pin. "
+            "test_duplicated_non_test_basenames_are_only_the_known_shadowed_"
+            "pair is what keeps that state honest."
+        )
     modules = _non_test_modules()
     order = _pythonpath_entries()
     winners = {

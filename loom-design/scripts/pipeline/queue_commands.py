@@ -9,7 +9,11 @@ gate, worktree lifecycle, the reconcile engine and the circuit breaker —
 lives in the sibling module ``queue_core`` and is imported below.
 
 Pure stdlib (Python 3.11+). Paths are resolved by the caller; this
-module does not depend on cwd.
+module does not depend on cwd. It does depend on sys.path: the
+``queue_core`` import below is by bare name, so an importer must put
+this file's own directory on ``sys.path`` first -- loading it by path
+(``importlib.util.spec_from_file_location``) without that entry raises
+``ModuleNotFoundError: No module named 'queue_core'``.
 """
 from __future__ import annotations
 

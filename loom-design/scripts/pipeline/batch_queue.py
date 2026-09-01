@@ -11,7 +11,11 @@ engine and the circuit breaker — lives in ``queue_core``. Both are
 imported below.
 
 Pure stdlib (Python 3.11+). Paths are resolved by the caller; this
-module does not depend on cwd.
+module does not depend on cwd. It does depend on sys.path: the two
+sibling imports below are by bare name, so an importer must put this
+file's own directory on ``sys.path`` first -- loading it by path
+(``importlib.util.spec_from_file_location``) without that entry raises
+``ModuleNotFoundError: No module named 'queue_commands'``.
 """
 from __future__ import annotations
 

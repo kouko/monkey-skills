@@ -621,8 +621,7 @@ def _skip_entry(state: dict, state_path: Path, change_id: str, reason: str) -> N
 
 
 def _teardown_worktree(project_path: Path, worktree_path: Path, branch: str) -> None:
-    """Remove a worktree + branch that ``queue_commands._cmd_next`` just
-    created.
+    """Remove a worktree + branch ``queue_commands._cmd_next`` just created.
 
     Used only on the uncommitted-plan skip path: ``SKIPPED`` has no
     automatic path back to ``QUEUED`` and ``status`` does not surface the
@@ -774,9 +773,9 @@ def _describe_non_terminal_entry(entry: dict, state: dict) -> dict:
     also lands here, in the machine-readable stdout payload. A QUEUED entry
     should never reach this point in practice — ``queue_commands._cmd_next``'s
     scan dispatches or SKIPs every QUEUED entry it sees in the same
-    invocation — but gets a
-    generic description rather than being assumed impossible, since this
-    function's whole job is to never let ``done`` go silent.
+    invocation — but gets a generic description rather than being assumed
+    impossible, since this function's whole job is to never let ``done`` go
+    silent.
     """
     record = state.get(entry["id"], {})
     if entry["status"] == "RUNNING":

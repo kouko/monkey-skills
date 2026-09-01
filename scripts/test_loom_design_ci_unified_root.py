@@ -18,8 +18,11 @@ relocation outright (`test_workflows_do_not_relocate_into_the_suite_root`)
 rather than by resolving it, so the scan keeps working on explicit paths.
 
 What is still NOT caught, and would need a real per-step YAML parse to close:
-a path reaching pytest through a shell variable, a `matrix` expansion, or a
-composite/reusable action defined outside `.github/workflows/`.
+a path reaching pytest through a shell variable, a `matrix` expansion, a
+composite/reusable action defined outside `.github/workflows/`, or a
+positional argument sitting between `pytest` and the path
+(`pytest tests/ loom-design/scripts/spec/` -- INVOCATION allows only flags
+there, and that form was judged contrived enough not to widen it for).
 """
 
 import pathlib
