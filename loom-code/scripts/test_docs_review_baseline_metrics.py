@@ -417,7 +417,24 @@ def test_req_108_baseline_reports_are_revision_bound(tmp_path) -> None:
     }
     with pytest.raises(RecordConflictError):
         BaselineReportRegistry(tmp_path).freeze(conflicting)
-    corrected_persisted = BaselineReportRegistry(tmp_path).freeze(corrected)
+    with pytest.raises(ValueError, match="parent_report_id"):
+        BaselineReportRegistry(tmp_path).freeze(corrected)
+    with pytest.raises(ValueError, match="does not exist"):
+        BaselineReportRegistry(tmp_path).freeze(
+            corrected, parent_report_id="missing-report"
+        )
+    with pytest.raises(ValueError, match="parent digest"):
+        BaselineReportRegistry(tmp_path).freeze(
+            {**corrected, "parent_report_digest": "0" * 64},
+            parent_report_id="baseline-r1",
+        )
+    with pytest.raises(ValueError, match="self-parent"):
+        BaselineReportRegistry(tmp_path).freeze(
+            corrected, parent_report_id="baseline-r2"
+        )
+    corrected_persisted = BaselineReportRegistry(tmp_path).freeze(
+        corrected, parent_report_id="baseline-r1"
+    )
     assert corrected_persisted.record["report_id"] == "baseline-r2"
     assert corrected_persisted.record["parent_report_digest"]
 

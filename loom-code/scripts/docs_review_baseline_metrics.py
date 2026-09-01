@@ -362,7 +362,9 @@ class BaselineReportRegistry:
     def __init__(self, store_root: Path) -> None:
         self._store_root = Path(store_root)
 
-    def freeze(self, report: Mapping[str, object]) -> PublishedRecord:
+    def freeze(
+        self, report: Mapping[str, object], *, parent_report_id: str | None = None
+    ) -> PublishedRecord:
         """Publish one report ID once; equal retries succeed, drift is refused."""
         if report.get("kind") != "baseline_metric_report":
             raise ValueError("report must be a baseline_metric_report")
@@ -373,8 +375,24 @@ class BaselineReportRegistry:
         )
         if report_id == lineage_root and parent_digest is not None:
             raise ValueError("root report must not bind a parent digest")
-        if report_id != lineage_root and not isinstance(parent_digest, str):
-            raise ValueError("corrected report requires a parent digest")
+        if report_id != lineage_root:
+            if not isinstance(parent_digest, str):
+                raise ValueError("corrected report requires a parent digest")
+            if parent_report_id is None:
+                raise ValueError("corrected report requires parent_report_id")
+            parent_report_id = _required_text(parent_report_id, "parent_report_id")
+            if parent_report_id == report_id:
+                raise ValueError("corrected report must not self-parent")
+            try:
+                parent = read_record(self._store_root, parent_report_id)
+            except ValueError as error:
+                raise ValueError("parent report does not exist") from error
+            if parent.record.get("kind") != "baseline_metric_report":
+                raise ValueError("parent record is not a baseline metric report")
+            if parent.digest != parent_digest:
+                raise ValueError("parent digest does not match persisted parent")
+        elif parent_report_id is not None:
+            raise ValueError("root report must not provide parent_report_id")
         return publish_record(self._store_root, report_id, report)
 
 
