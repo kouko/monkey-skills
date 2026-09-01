@@ -54,7 +54,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Independent**: true
 - **Brief item covered**: "`python3 -m pytest loom-design/scripts/` runs as ONE green invocation"
 - **Review disposition**: batch(unified-root)
-- **Status**: pending
+- **Status**: implemented(9fe139f34469a0006cce942a16d94e882103535a)
 - **Gloss**: 讓一道指令就能跑完 loom-design 全部測試 — 補上驗證破洞的第一步。
 
 ## Task 2 — CI 收斂成單一 job
@@ -82,7 +82,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Independent**: true
 - **Brief item covered**: "the five per-directory CI jobs collapse to one"
 - **Review disposition**: batch(unified-root)
-- **Status**: pending
+- **Status**: implemented(addbca3309216ed215a2e44772e2a53d1391e0ef)
 - **Gloss**: CI 從五個 job 變一個，新增 station 不再需要手寫新 job。
 
 ## Task 3 — 抽出 queue_core 模組
@@ -110,7 +110,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Brief item covered**: "`batch_queue.py`'s CLI-handler region moves to its own module; `batch_queue.py` keeps `main` and the argparse wiring"
 - **Not batched because**: Tasks 1 and 2 answer whether one pytest invocation runs the whole suite; this task answers whether a module split preserves behaviour. Two verdict questions, not one. The two chains are only transitively connected through the downstream backlog and version-bump sink.
 - **Review disposition**: batch(queue-split)
-- **Status**: pending
+- **Status**: implemented(3c5d5611b7cd7efecaeaccbc54beacb58986acc6)
 - **Gloss**: 把佇列狀態與排程引擎搬進自己的模組，為下一步騰出空間。
 
 ## Task 4 — 抽出 queue_commands 並把 batch_queue 收薄
@@ -138,7 +138,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Brief item covered**: "leaving `batch_queue.py` as argparse wiring plus `main`, with `argv_exec.py`'s `batch_queue.main` call site and every pinned CLI string unchanged"
 - **Not batched because**: same reason as Task 3 — the test-root chain and the module-split chain carry different verdict questions, and are only transitively connected through the downstream backlog and version-bump sink.
 - **Review disposition**: batch(queue-split)
-- **Status**: pending
+- **Status**: implemented(f143b141da7d846b0de594eb9efbecbce27303ab)
 - **Gloss**: CLI handler 搬進自己的模組，`batch_queue.py` 只剩指令接線。
 
 ## Task 5 — 關閉兩條 backlog，並更正被推翻的宣稱
@@ -253,3 +253,10 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - Kickoff decision: which workflow file hosts the single unified loom-design job → `.github/workflows/loom-pipeline-ci.yml`, job id `pipeline`, display name `loom-design pytest` (unchanged, so no new check name is introduced). `loom-siblings-ci.yml` and `loom-spec-ci.yml` are DELETED outright: every job in them is a loom-design pytest job, so collapsing leaves them with zero jobs, which GitHub Actions rejects.
 - Kickoff decision: dependency install line for the unified job → keep the superset `python3 -m pip install --quiet pytest pyyaml`. Only `loom-pipeline-ci.yml` installs `pyyaml` today; the other four install `pytest` alone, so hosting the unified job anywhere else, or narrowing the install, would redden the pipeline suite.
 - Kickoff decision: whether deleting four CI jobs can break a required status check → no. The six required contexts on `main` are `investing-toolkit script MD5 sync`, `SKILL.md structure`, `Conventional Commits`, `investing-toolkit pytest (offline)`, `loom memory store integrity`, and `loom-workflow shared conventions drift`; no loom-design job is among them (read from the branch-protection API on 2026-09-01). All three workflows already trigger on `loom-design/**`, not per-station, so the unified job loses no path coverage.
+
+## Decision Log
+
+1. chose to move the change-id validator into the new core module rather than leave it with the command-line layer as the plan said, because all three functions that call it moved and leaving it behind would have made the two modules import each other in a loop — cost-of-change: the day you want that validator back beside the command-line layer, this choice costs moving one small private helper and re-running the pipeline suite
+2. chose to let the batch-queue split also touch a fourth file the plan did not declare, the pipeline skill-contract test, because its fixtures copy scripts into a fake plugin folder by name and the newly extracted module had to be copied alongside the old one or two tests fail — cost-of-change: the day you extract another module from that script, this choice costs adding one more filename to the same two fixture lists
+3. chose to have the command-line layer reach the new core module by qualified module access rather than by importing its names, because importing them would put the moved names back into the command-line layer's own namespace and the new test forbids exactly that — cost-of-change: the day you prefer short unqualified calls there, this choice costs rewriting about fifty call sites and relaxing that test
+4. chose to let the workflow collapse also correct the four files that assert or describe the old test layout — two tests pinning the per-station command, a simplification note citing a deleted workflow, and the plugin README — because the plan listed the files that state the rule but not the files that assert it, and shipping tests and docs that contradict the shipped behaviour is worse than a wider diff — cost-of-change: the day you want those corrections as their own change, this choice costs separating four small edits out of two commits
