@@ -19,8 +19,11 @@
 set -e
 
 # Read PostToolUse event from stdin (Claude Code hook contract).
-# We extract tool_input.file_path; if absent, we silently fall back to a
-# repo-wide scan (slower but safe).
+# We extract tool_input.file_path. If it is absent -- no event on stdin, no
+# jq, or a path outside a skill tree -- this script exits 0 WITHOUT checking
+# anything. It does not scan the repo. A caller that passes the path as a
+# positional argument therefore gets a silent pass, not a check: callers
+# outside the hook system must feed the event shape on stdin.
 INPUT=$(cat 2>/dev/null || echo '{}')
 
 FILE_PATH=""
