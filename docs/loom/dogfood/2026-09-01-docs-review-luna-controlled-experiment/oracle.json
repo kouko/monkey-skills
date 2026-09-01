@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "kind": "human-oracle-revision",
+  "revision": "oracle-v1",
+  "ratifier": "main-agent-human-evidence-adjudication",
+  "method": "Read each quoted passage in the frozen blobs and group observations by the reader harm they assert. Do not treat reviewer wording or severity as ground truth.",
+  "expected_findings": [
+    {"id":"O1","document":"business","origin":"initial-authoring","summary":"N1–N3 are used as decision premises but are not defined in the artifact."},
+    {"id":"O2","document":"business","origin":"initial-authoring","summary":"C10–C14 are cited as the evidence basis without an in-artifact registry or source details."},
+    {"id":"O3","document":"strategy","origin":"initial-authoring","summary":"C1–C12 carry the causal synthesis without an in-artifact evidence registry."},
+    {"id":"O4","document":"strategy","origin":"initial-authoring","summary":"The interaction model uses unquantified scale language such as sizeable or many, so it can be mistaken for measured dominance."}
+  ],
+  "adjudication": {
+    "luna-repeat-1": {"matched":["O1","O2","O3","O4"],"unmatched_observations":["The best-supported causal model lacks an explicit evidence threshold"]},
+    "luna-repeat-2": {"matched":["O1","O3","O4"],"missed":["O2"],"unmatched_observations":[]}
+  },
+  "revision_attribution": {
+    "birth_commit":"2aae5d8b4c1e3aaf5aac4f8c121af275f70abce2",
+    "business_history":"No later commit through experiment HEAD changes the business artifact.",
+    "strategy_history":"No later commit through experiment HEAD changes the strategy artifact.",
+    "conclusion":"All four oracle defects were present at first commit and have no remediation parent-child diff; origin is initial-authoring. Review contributes detection variance, not defect introduction, in this corpus."
+  }
+}

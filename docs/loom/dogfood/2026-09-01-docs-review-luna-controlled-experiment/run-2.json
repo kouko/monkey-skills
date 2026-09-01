@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "run_id": "luna-repeat-2",
+  "requested_model": "gpt-5.6-luna",
+  "model_evidence": "requested-model CLI evidence; backend did not directly attest the actual model",
+  "cli_version": "codex-cli 0.151.0",
+  "returncode": 0,
+  "elapsed_seconds": 19.591809625,
+  "usage": {"input_tokens": 13846, "cached_input_tokens": 4864, "output_tokens": 741, "reasoning_output_tokens": 516},
+  "raw_output": {"verdict":"NEEDS_REVISION","findings":[{"document":"business","quote":"The observed needs N1–N3 are valuable","problem":"N1–N3 are referenced but not defined in this document, so the stated value cannot be evaluated from the supplied text.","harm":"Readers cannot verify whether the recommendation addresses the identified needs.","severity":"yellow"},{"document":"strategy","quote":"matching external evidence that LLM evaluator behavior varies","problem":"The document invokes external evidence through C10–C12 but does not identify the sources or state the relevant evidence.","harm":"Readers cannot independently assess whether the causal conclusion is supported.","severity":"yellow"},{"document":"strategy","quote":"a sizeable prose defect pool","problem":"“Sizeable” is asserted without a count, denominator, or other supporting measure, despite the document stating that historical rates are not generalized.","harm":"Readers may interpret the causal model as quantitatively established when the supplied text does not establish its scale.","severity":"yellow"}],"coverage":{"technical":"reviewed","business":"reviewed","strategy":"reviewed"}}
+}

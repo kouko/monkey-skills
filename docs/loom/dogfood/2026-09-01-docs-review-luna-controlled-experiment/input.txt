@@ -1,6 +1,7 @@
+=== DOCUMENT technical ===
 ## ADDED Requirements
 
-### Requirement: REQ-119 — historical cases are replayable before they are scoreable
+### Requirement: REQ-99 — historical cases are replayable before they are scoreable
 The baseline MUST score only a historical document case whose exact artifact
 bytes, digest, source locator, and evidence locators are inspectable. A branch
 name, path, narrative, or current file without a recoverable historical
@@ -16,7 +17,7 @@ snapshot is not a scoreable case.
 - WHEN the case is nominated
 - THEN the system keeps it outside the scored corpus and names the missing replay evidence
 
-### Requirement: REQ-120 — ratified oracle revisions are immutable
+### Requirement: REQ-100 — ratified oracle revisions are immutable
 The baseline MUST bind every scoreable case to a named, human-ratified oracle
 revision. Ratification freezes the complete revision; a correction MUST create
 a child revision with a reason and MUST NOT mutate the ratified parent.
@@ -31,7 +32,7 @@ a child revision with a reason and MUST NOT mutate the ratified parent.
 - WHEN the maintainer records the correction
 - THEN a child draft is created and the original revision remains byte-identical
 
-### Requirement: REQ-121 — corpus revisions bind one exact exam
+### Requirement: REQ-101 — corpus revisions bind one exact exam
 A ratified corpus revision MUST be a non-empty, immutable, deterministically
 serialized manifest of `(case_id, snapshot_digest, oracle_revision_id)`
 bindings. Every oracle MUST be ratified and describe the same snapshot digest;
@@ -47,7 +48,7 @@ a run MUST bind an exact corpus revision and MUST NOT bind `latest`.
 - WHEN ratification is attempted
 - THEN ratification is refused and the mismatched binding is named
 
-### Requirement: REQ-122 — scored replay uses explicit weak-model bindings [deferred]
+### Requirement: REQ-102 — scored replay uses explicit weak-model bindings
 Every scored review run MUST use the repository's `economy` execution profile
 and record the resolved host, exact model identifier, requested effort,
 reviewer-contract version, and configuration fingerprint before dispatch. The
@@ -69,7 +70,7 @@ cohorts. It MUST NOT silently substitute a stronger model.
 - WHEN baseline dispatch is requested
 - THEN dispatch is refused rather than accepting the stronger model as weak-model evidence
 
-### Requirement: REQ-123 — every dispatch is an immutable attempt
+### Requirement: REQ-103 — every dispatch is an immutable attempt
 The baseline MUST persist a run identity and its immutable bindings before
 invoking the reviewer. It MUST store raw response bytes and a digest before
 normalization. Failure, interruption, timeout, quota exhaustion, and malformed
@@ -86,7 +87,7 @@ findings; retrying MUST create a new run id.
 - WHEN the attempt ends
 - THEN the failure and available resource telemetry remain attached to that run and no zero-finding result is synthesized
 
-### Requirement: REQ-124 — observations and human attribution remain separate
+### Requirement: REQ-104 — observations and human attribution remain separate
 Reviewer output MUST be preserved as immutable finding observations without
 being accepted as ground truth. Oracle matching, defect-origin classification,
 and false-alarm judgment MUST live in named, human-ratified attribution
@@ -103,7 +104,7 @@ attributions MUST remain explicit.
 - WHEN attribution is drafted
 - THEN it is recorded as unknown or disputed and is not forced into a false-alarm denominator
 
-### Requirement: REQ-125 — repeatability cohorts never mix execution identities [deferred]
+### Requirement: REQ-105 — repeatability cohorts never mix execution identities
 A repeatability cohort MUST contain at least two independent valid runs with
 byte-identical corpus, artifact, reviewer-contract, and configuration
 fingerprints and identical host, exact model identifier, execution tier, and
@@ -121,7 +122,7 @@ MUST NOT be pooled to calculate repeat agreement.
 - WHEN repeat agreement is requested
 - THEN the system refuses to pool them and reports that each cohort lacks the required repeat count
 
-### Requirement: REQ-126 — every metric carries its population
+### Requirement: REQ-106 — every metric carries its population
 Every calculated metric MUST record its value or null, numerator, denominator,
 availability, formula version, and exclusion reasons. Finding rate MUST use
 ratified expected load-bearing findings; false-alarm rate MUST exclude
@@ -138,7 +139,7 @@ missing denominator MUST be unavailable rather than zero.
 - WHEN report calculation runs
 - THEN that metric is null with an exclusion reason while other valid metrics remain calculable
 
-### Requirement: REQ-127 — invalid and unknown populations stay visible
+### Requirement: REQ-107 — invalid and unknown populations stay visible
 The baseline report MUST disclose counts of failed, interrupted, malformed,
 unparseable, unscoreable-model, unknown-attribution, and disputed-attribution
 items. Invalid runs MAY contribute attempted elapsed or usage evidence but MUST
@@ -155,7 +156,7 @@ providers MUST NOT be added together.
 - WHEN cost evidence is aggregated
 - THEN each availability population is reported separately and no cross-unit total is calculated
 
-### Requirement: REQ-128 — the baseline report freezes evidence before process changes
+### Requirement: REQ-108 — the baseline report freezes evidence before process changes
 A metric report MUST bind exact corpus, oracle, attribution, reviewer-contract,
 execution-profile, parser, and metric-definition versions. It MAY freeze with
 unavailable metrics only when their populations and reasons are explicit. A
@@ -172,7 +173,7 @@ the frozen baseline.
 - WHEN a corrected oracle becomes available
 - THEN a new report may be calculated but the frozen baseline keeps its original oracle binding and results
 
-### Requirement: REQ-129 — defect origin is supported by a document revision chain
+### Requirement: REQ-109 — defect origin is supported by a document revision chain
 An initial-writing or fix-introduced attribution MUST bind the exact document
 revision where the defect is observable, its parent revision, the applicable
 authoring or remediation event, and an inspectable diff. If that chain cannot
@@ -188,7 +189,7 @@ support the claimed origin, the origin MUST remain unknown.
 - WHEN origin attribution is requested
 - THEN origin is recorded as unknown and is excluded from initial-writing versus fix-introduced rates
 
-### Requirement: REQ-130 — reviewer contract and runtime revisions are immutable inputs [deferred]
+### Requirement: REQ-110 — reviewer contract and runtime revisions are immutable inputs
 Every scored run MUST bind immutable reviewer-contract and reviewer-runtime
 revisions, including their content digests, owners, parent revisions, and
 change reasons. Runs with different contract or runtime digests MUST NOT share
@@ -209,7 +210,7 @@ a repeatability cohort, even when host, model, and effort match.
 - WHEN a new run is prepared
 - THEN it binds a separate reviewer-runtime revision with its own owner, parent, digest, and change reason while preserving the original contract revision
 
-### Requirement: REQ-131 — replay content is untrusted and data-bound [deferred]
+### Requirement: REQ-111 — replay content is untrusted and data-bound
 Historical artifacts MUST be treated only as review content, never as runtime
 instructions. A scored dispatch MUST use an approved data classification and
 an execution boundary that denies corpus-external files, connectors, network,
@@ -233,7 +234,7 @@ sent to a reviewer runtime.
 - WHEN scored-corpus admission or reviewer transmission is requested
 - THEN the action is refused even when the campaign policy permits some documents of that general class
 
-### Requirement: REQ-132 — governed actions carry explicit authority and independence
+### Requirement: REQ-112 — governed actions carry explicit authority and independence
 The campaign policy MUST name who may nominate, ratify, dispatch, adjudicate,
 freeze, invalidate, inspect raw evidence, and publish reports. Unauthorized
 actions MUST be refused without state change. An oracle or attribution used in
@@ -251,7 +252,7 @@ outside affected denominators.
 - WHEN ratification is requested
 - THEN the conflict is disclosed and the item remains disputed unless an independent ratifier or approved exception satisfies the versioned campaign rule
 
-### Requirement: REQ-133 — campaign and run resource use is bounded before dispatch [deferred]
+### Requirement: REQ-113 — campaign and run resource use is bounded before dispatch
 The campaign policy MUST set finite limits for run count, retries, concurrency,
 wall time, input and output size, and available usage budget. Preparation MUST
 validate whole-artifact context fit and deterministic input scope. Reaching a
@@ -268,7 +269,7 @@ or automatically retrying.
 - WHEN preparation validates the input
 - THEN scored dispatch is refused unless a versioned deterministic scope policy is explicitly selected and included in the configuration fingerprint
 
-### Requirement: REQ-134 — dispatch and capture have crash-safe attempt semantics [deferred]
+### Requirement: REQ-114 — dispatch and capture have crash-safe attempt semantics
 Only one executor MAY own dispatch for a run id. Provider acknowledgement loss,
 cancellation uncertainty, partial output, late output, and capture interruption
 MUST have explicit states. Raw bytes, completeness, digest, and terminal status
@@ -301,18 +302,11 @@ attempt.
 - WHEN the cancellation deadline expires
 - THEN the run records cancellation-unknown with existing bytes and completeness, and it is neither retried automatically nor scored
 
-### Requirement: REQ-135 — execution identity is verified at the point of use [deferred]
-The resolved economy mapping MUST match the execution binding at dispatch and
-capture. Host-reported actual model identity is the strongest evidence. For
-this internal baseline, when Codex does not report it, a runner-controlled CLI
-invocation MAY be scoreable only when one atomic store-local operation binds
-the approved weak-model argument, exact CLI version and closed-tool argv,
-input and output digests, subprocess outcome, and a one-time execution record.
-The report MUST label this evidence as requested-model CLI evidence and MUST
-state that the backend did not directly attest the actual model. A profile
-change, router change, binding mismatch, forged record, or replayed record
-MUST make that attempt unscoreable and MUST NOT silently update the existing
-run or substitute a stronger model.
+### Requirement: REQ-115 — execution identity is verified at the point of use
+The resolved economy mapping and actual host-reported execution identity MUST
+match the run binding at dispatch and capture. A profile change, router change,
+or identity mismatch after preparation MUST make that attempt unscoreable and
+MUST NOT silently update the existing run or substitute a stronger model.
 
 #### Scenario: the economy mapping drifts after preparation
 - GIVEN a run was prepared for weak model A but dispatch resolves or reports model B
@@ -322,9 +316,9 @@ run or substitute a stronger model.
 #### Scenario: the host cannot attest the actual model
 - GIVEN the configured alias resolves locally but the host cannot report a trustworthy actual model identity
 - WHEN capture completes
-- THEN the attempt enters a scored cohort only through the atomic runner-controlled CLI evidence path, is labeled requested-model CLI evidence, and preserves the explicit no-backend-attestation limitation; otherwise it is retained with identity unavailable and excluded
+- THEN the attempt is retained with identity unavailable and does not enter a scored cohort
 
-### Requirement: REQ-136 — zero and partial populations have explicit meaning
+### Requirement: REQ-116 — zero and partial populations have explicit meaning
 A deliberately empty oracle MUST be ratified as a negative control with a
 rationale; absence of labeling MUST NOT imply a negative control. A zero
 expected-finding denominator, zero observations, mixed parse result, partial
@@ -346,7 +340,7 @@ zero or partial population MAY be converted into a normal zero-percent metric.
 - WHEN attribution completes
 - THEN a per-run missed or not-assessable outcome is retained for that expected finding so the finding-rate numerator is auditable
 
-### Requirement: REQ-137 — report calculation uses one frozen population manifest
+### Requirement: REQ-117 — report calculation uses one frozen population manifest
 Before calculation, a report MUST freeze an immutable population manifest of
 the exact runs, observations, attribution revisions, parser revision, and
 metric-definition revision it reads. Concurrent additions or corrections MUST
@@ -367,7 +361,7 @@ create a new report lineage and MUST NOT enter an in-progress calculation.
 - WHEN the report freezes
 - THEN valid single-cohort metrics may publish as partial while the incomplete cohort and every cross-host conclusion remain unavailable
 
-### Requirement: REQ-138 — the next pre-review check remains a measured follow-on [deferred]
+### Requirement: REQ-118 — the next pre-review check remains a measured follow-on [deferred]
 After the baseline is frozen, any proposed pre-review check SHOULD bind a
 versioned defect class and demonstrate on a frozen corpus that it reduces that
 class without hiding a load-bearing reviewer finding. This requirement is
@@ -378,3 +372,126 @@ implementing a check.
 - GIVEN a proposed check reduces reviewer finding count but makes a ratified load-bearing finding no longer observable
 - WHEN the follow-on experiment is evaluated
 - THEN the check is not accepted as an improvement and the masking evidence remains inspectable
+=== DOCUMENT business ===
+# Business value — docs-review-cost
+
+Date: 2026-08-31
+Verdict: NO-GO
+
+> Register: Shape-Up betting — is a broad `loom-docs` plugin worth the time
+> budget now? This is not a market-size or revenue judgment.
+
+## Why now
+
+Document review has been the largest perceived development cost, and the core
+reviewer contracts have continued to change after several dedicated convergence
+audits. The cost is real, but current records cannot quantify the latest flow's
+cost or isolate its dominant source (`evidence.md` C1–C9).
+
+## Why me
+
+The maintainer controls the full Loom authoring, review, and release pipeline and
+has unusually rich local incident evidence. That makes this repository able to
+test process changes against its own hard cases rather than adopting generic
+documentation doctrine.
+
+## Opportunity cost
+
+No competing project was named. The continuing cost is therefore the maintenance
+burden created by any new plugin boundary: another router, manifest, release
+surface, cross-plugin composition contract, and duplicated ownership decisions.
+The absence of a competing commitment weakens the time-budget claim rather than
+making the work free.
+
+## Business complexity
+
+**Continuing burden:** a broad plugin spanning technical documentation, business
+analysis, and strategy would require several distinct truth standards and would
+overlap current owners (`evidence.md` C15). Maintainers would have to coordinate
+routing and review authority across those boundaries.
+
+**Worth:** the observed needs N1–N3 are valuable, but they concern attribution,
+signal calibration, and earlier prevention—not a new document-production brand.
+
+**Avoidance:** improving evidence and prevention at existing lifecycle stages can
+avoid another top-level orchestrator while preserving current specialist skills.
+
+**Downstream risk:** without telemetry, reorganizing first would make before/after
+comparison impossible and could hide the same reviewer behavior behind a new
+name.
+
+## Evidence consulted
+
+- [`evidence.md`](evidence.md) and the three reports under [`research/`](research/).
+- Existing owners: `domain-teams:docs-team`,
+  `loom-code:requesting-docs-review`,
+  `systems-thinking-toolkit:strategy-lever-and-cascade`, and
+  `loom-workflow:proposal-critique`.
+- EN and JA primary/authoritative sources listed as C10–C14.
+
+## Recommendation
+
+**NO-GO**
+
+Do not build the proposed broad `loom-docs` plugin now. The evidence supports a
+documentation-quality problem, but not a missing omnibus documentation product.
+First serve N1–N3 through a bounded, measurable quality campaign at the existing
+authoring and review stages. Reconsider a separate plugin only if that work
+demonstrates a stable cross-plugin responsibility that cannot have one existing
+owner without duplication.
+=== DOCUMENT strategy ===
+# Research question 2 — Is the dominant cause writing quality or review quality?
+
+## Goal
+
+Determine whether available evidence supports assigning the dominant cost to
+the writer, the reviewer, or their interaction.
+
+## Method
+
+- Classify historical observations by defect origin: pre-existing prose,
+  remediation-introduced prose, reviewer sampling, and review-policy behavior.
+- Compare project-local observations with English and Japanese research on LLM
+  evaluator consistency and bias.
+- Preserve the limits of each corpus; no historical rate is generalized to the
+  current version.
+
+## Findings
+
+### The evidence rejects a single-cause explanation
+
+- Writer side: real defects existed before review and fixes repeatedly created
+  new defects (C1–C2).
+- Reviewer side: separate reviewers returned disjoint subsets on identical
+  artifacts (C3), matching external evidence that LLM evaluator behavior varies
+  by model, task, sample, prompt, and textual likelihood (C10–C12).
+- Policy side: an unbounded “no findings means done” stop rule cannot converge
+  when reviewers sample a large pool; delta scoping changes the termination
+  behavior without proving the pool empty (C5, C7).
+
+The best-supported causal model is an interaction: a sizeable prose defect pool
+multiplied by a variable sampler, followed by fixes that can replenish the pool.
+
+### “Reviewer found another issue” is not equivalent to reviewer failure
+
+The seven-finding experiment and the historical yellow sample both indicate that
+many later findings were consequential. The yellow sample is selection-biased,
+so it cannot estimate the proportion of all findings that matter, but it refutes
+the simple assumption that later findings are mostly cosmetic noise (C4, C6).
+
+### “The review passed” is not equivalent to document completeness
+
+Because reviewers disagree and sampling is incomplete, a pass only describes
+the sampled run under a particular contract and model. External EN and JA
+research independently supports measuring evaluator consistency rather than
+assuming it (C10–C12).
+
+## Insight skeleton
+
+- Need: separate source defects, fix defects, reviewer variance, and policy
+  effects before changing the process.
+- Evidence: C1–C7, C10–C12.
+- Current workaround: interpret every new finding as another repair request,
+  then tune contracts after costly incidents.
+- Unknown: false-positive and false-negative rates against a stable human-owned
+  oracle have not been measured for the current reviewer.

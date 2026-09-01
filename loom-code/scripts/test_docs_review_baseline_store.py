@@ -88,7 +88,7 @@ def _authorize_dispatch(store_root, attempt_id: str):
 
 
 def test_req_99_historical_case_admission(tmp_path) -> None:
-    # @req: REQ-99
+    # @req: REQ-119
     """Governed nomination admits only explicit bytes or named missing evidence."""
     roles = _campaign_roles()
     _authority, capability = store.bootstrap_campaign_authority(
@@ -274,7 +274,7 @@ def test_req_99_historical_case_admission(tmp_path) -> None:
 
 
 def test_req_99_concurrent_admission_consumes_receipt_once(tmp_path) -> None:
-    # @req: REQ-99
+    # @req: REQ-119
     """One receipt cannot authorize two successful concurrent publications."""
     roles = _campaign_roles()
     _authority, capability = store.bootstrap_campaign_authority(
@@ -318,7 +318,7 @@ def test_req_99_concurrent_admission_consumes_receipt_once(tmp_path) -> None:
 
 
 def test_req_99_publish_failure_does_not_burn_receipt(tmp_path, monkeypatch) -> None:
-    # @req: REQ-99
+    # @req: REQ-119
     """A failed target publication leaves the receipt available for safe retry."""
     roles = _campaign_roles()
     _authority, capability = store.bootstrap_campaign_authority(
@@ -368,7 +368,7 @@ def test_req_99_publish_failure_does_not_burn_receipt(tmp_path, monkeypatch) -> 
 
 
 def test_req_99_publish_conflict_does_not_consume_receipt(tmp_path) -> None:
-    # @req: REQ-99
+    # @req: REQ-119
     """A conflicting target refuses publication without consuming authority."""
     roles = _campaign_roles()
     _authority, capability = store.bootstrap_campaign_authority(
@@ -406,7 +406,7 @@ def test_req_99_publish_conflict_does_not_consume_receipt(tmp_path) -> None:
 
 
 def test_req_99_receipt_namespace_symlink_cannot_redirect_marker(tmp_path) -> None:
-    # @req: REQ-99
+    # @req: REQ-119
     """Receipt consumption refuses a namespace redirected outside the store."""
     roles = _campaign_roles()
     _authority, capability = store.bootstrap_campaign_authority(
@@ -448,7 +448,7 @@ def test_req_99_receipt_namespace_symlink_cannot_redirect_marker(tmp_path) -> No
 
 
 def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
-    # @req: REQ-100
+    # @req: REQ-120
     """Ratification freezes a named oracle; corrections form reasoned children."""
     oracle = ratify_oracle(
         tmp_path,
@@ -535,7 +535,7 @@ def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
 
 
 def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
-    # @req: REQ-101
+    # @req: REQ-121
     """A run-facing corpus ID freezes exact, ratified snapshot bindings."""
     roles = _campaign_roles()
     authority, capability = store.bootstrap_campaign_authority(
@@ -688,7 +688,7 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
 
 
 def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
-    # @req: REQ-103
+    # @req: REQ-123
     """Every dispatch is counted even when it never yields usable findings."""
     actor, receipt = _authorize_dispatch(tmp_path, "attempt-1")
     prepared = store.prepare_dispatch_attempt(
@@ -834,8 +834,8 @@ def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
 
 
 def test_req_103_req_112_dispatch_requires_one_exact_authorization(tmp_path) -> None:
-    # @req: REQ-103
-    # @req: REQ-112
+    # @req: REQ-123
+    # @req: REQ-132
     """Attempt publication consumes one trust-root-bound dispatch receipt."""
     actor, receipt = _authorize_dispatch(tmp_path, "attempt-authorized")
     authorized = store.prepare_dispatch_attempt(
@@ -962,8 +962,8 @@ def test_req_103_req_112_dispatch_requires_one_exact_authorization(tmp_path) -> 
 
 
 def test_req_103_req_112_concurrent_dispatch_consumes_receipt_once(tmp_path) -> None:
-    # @req: REQ-103
-    # @req: REQ-112
+    # @req: REQ-123
+    # @req: REQ-132
     """One receipt cannot authorize two successful concurrent attempts."""
     actor, receipt = _authorize_dispatch(tmp_path, "attempt-concurrent")
 
@@ -996,8 +996,8 @@ def test_req_103_req_112_concurrent_dispatch_consumes_receipt_once(tmp_path) -> 
 def test_req_103_req_112_dispatch_publication_failure_is_retryable(
     tmp_path, monkeypatch
 ) -> None:
-    # @req: REQ-103
-    # @req: REQ-112
+    # @req: REQ-123
+    # @req: REQ-132
     """A post-publication I/O error leaves dispatch authority retryable."""
     actor, receipt = _authorize_dispatch(tmp_path, "attempt-retry")
     real_publish = store.publish_record
@@ -1034,8 +1034,8 @@ def test_req_103_req_112_dispatch_publication_failure_is_retryable(
 
 
 def test_req_103_req_112_dispatch_conflict_does_not_consume_receipt(tmp_path) -> None:
-    # @req: REQ-103
-    # @req: REQ-112
+    # @req: REQ-123
+    # @req: REQ-132
     """A conflicting attempt leaves its exact dispatch authority unused."""
     actor, receipt = _authorize_dispatch(tmp_path, "attempt-conflict")
     existing = publish_record(tmp_path, "attempt-conflict", {"kind": "other"})
@@ -1060,8 +1060,8 @@ def test_req_103_req_112_dispatch_conflict_does_not_consume_receipt(tmp_path) ->
 def test_req_103_req_112_dispatch_receipt_namespace_symlink_is_refused(
     tmp_path,
 ) -> None:
-    # @req: REQ-103
-    # @req: REQ-112
+    # @req: REQ-123
+    # @req: REQ-132
     """Dispatch refuses a receipt namespace redirected outside the store."""
     actor, receipt = _authorize_dispatch(tmp_path, "attempt-symlink")
     outside = tmp_path / "outside-receipts"
@@ -1088,7 +1088,7 @@ def test_req_103_req_112_dispatch_receipt_namespace_symlink_is_refused(
 
 
 def test_req_104_observation_and_attribution_are_separate(tmp_path) -> None:
-    # @req: REQ-104
+    # @req: REQ-124
     """Model claims stay lossless; only named humans ratify judgments."""
     actor, receipt = _authorize_dispatch(tmp_path, "attempt-observation-1")
     attempt = store.prepare_dispatch_attempt(
@@ -1233,7 +1233,7 @@ def test_req_104_observation_and_attribution_are_separate(tmp_path) -> None:
 
 
 def test_req_109_origin_requires_document_revision_evidence(tmp_path) -> None:
-    # @req: REQ-109
+    # @req: REQ-129
     """Origin uses recoverable before/after bytes, never narrative alone."""
     parent = store.publish_document_revision(
         tmp_path,
@@ -1327,7 +1327,7 @@ def test_req_109_origin_requires_document_revision_evidence(tmp_path) -> None:
 
 
 def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
-    # @req: REQ-112
+    # @req: REQ-132
     """Official human judgments bind authority and fail closed on conflicts."""
     roles = _campaign_roles()
     authority, capability = store.bootstrap_campaign_authority(
@@ -1562,7 +1562,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
 
 
 def test_req_112_bootstrap_capability_and_single_purpose_receipt(tmp_path) -> None:
-    # @req: REQ-112
+    # @req: REQ-132
     """Only the campaign trust root can authorize a bound mutation."""
     roles = _campaign_roles()
     action_authorities = _campaign_action_authorities(roles)

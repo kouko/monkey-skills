@@ -15,7 +15,7 @@ from docs_review_baseline_store import RecordConflictError
 
 
 def test_req_106_every_metric_carries_its_population() -> None:
-    # @req: REQ-106
+    # @req: REQ-126
     """Quality rates retain their arithmetic and never turn absent populations into zero."""
     complete = calculate_quality_metrics(
         oracle={
@@ -110,7 +110,7 @@ def test_req_106_every_metric_carries_its_population() -> None:
 
 
 def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
-    # @req: REQ-107
+    # @req: REQ-127
     """Invalid runs and incompatible usage stay outside, but visible beside, rates."""
     report = calculate_population_report(
         oracle={
@@ -329,7 +329,7 @@ def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
 
 
 def test_req_108_baseline_reports_are_revision_bound(tmp_path) -> None:
-    # @req: REQ-108
+    # @req: REQ-128
     """A frozen baseline names every input revision and corrections make a child."""
     revisions = {
         "attribution": "attribution-r1",
@@ -445,7 +445,7 @@ def test_req_108_baseline_reports_are_revision_bound(tmp_path) -> None:
 
 
 def test_req_116_zero_and_partial_populations_have_explicit_meaning() -> None:
-    # @req: REQ-116
+    # @req: REQ-136
     """No empty, partial, or unmatched population becomes a zero-percent rate."""
     negative_control = classify_population_boundaries(
         expected_findings=[],
@@ -548,7 +548,7 @@ def test_req_116_zero_and_partial_populations_have_explicit_meaning() -> None:
 
 
 def test_req_117_report_population_is_frozen_before_calculation(tmp_path) -> None:
-    # @req: REQ-117
+    # @req: REQ-137
     """One report id accepts one exact population, with incomplete cohorts partial."""
     registry = PopulationManifestRegistry(tmp_path)
     arguments = {

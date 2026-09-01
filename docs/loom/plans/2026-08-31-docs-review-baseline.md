@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-31-docs-review-baseline.md
 Goal: 交付第一個可重算的 historical replay baseline，用弱模型分辨文件初稿、修復與 review 各自造成的成本 — serves map docs-review-efficiency: 建立後續改善的可比較起點
-Stage: 第四輪 runner-boundaries：atomic invoke-and-capture 與完整路徑 confinement
+Stage: 使用者核准 pivot：停止 production-grade runner 加固，完成 metrics 與受控 Luna replay
 Steps:
   1. 建立不可改寫的實驗記錄與弱模型邊界
   2. 完成單一責任的行為與指標驗證
@@ -30,6 +30,10 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - Why it is worthwhile: without durable inputs, attempts, attributions, and denominators, the experiment cannot distinguish upstream defects from reviewer variance.
 - Removed or avoided complexity: no `loom-docs` plugin, database, web service, UI, pricing conversion, automatic prompt tuning, or generalized RBAC platform.
 - Downstream risk: provider identity and usage telemetry may be unavailable; the runner must fail closed for scoring while preserving attempted-run evidence.
+
+## Controlled-experiment pivot
+
+The user-approved 2026-09-01 pivot removes production-runner work from this plan. Historical runner commits remain in Git history, but Tasks 5, 8, 13, 14, 16, 17, and 18 and the runner-boundaries Batch are no longer part of the delivery graph. The retained scope is the immutable record and metric core plus one fixed Luna experiment; no generalized CLI, resource database, lease, takeover, or crash-recovery service ships.
 
 ## Task 1 — 建立 immutable record 核心
 
@@ -64,7 +68,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: canonical record publisher; owner: Task 1; probe: `test_docs_review_baseline_store.py::test_req_99_historical_case_admission`
 - **Independent**: false
-- **Brief item covered**: REQ-99
+- **Brief item covered**: REQ-119
 - **Review disposition**: batch(store-records)
 - **Status**: done(38d5ef5710a0289265493bc45440f1de5d61cd94)
 - **Gloss**: 只有真的找得回當時文件的案例，才能成為考題。
@@ -83,7 +87,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: canonical record publisher; owner: Task 1; probe: `test_docs_review_baseline_store.py::test_req_100_oracle_ratification_is_immutable`
 - **Independent**: false
-- **Brief item covered**: REQ-100
+- **Brief item covered**: REQ-120
 - **Review disposition**: batch(store-records)
 - **Status**: done(9dc0cdcdbd8551e0e4ef378ddaca176f0e2bda2f)
 - **Gloss**: 人工答案先凍結，實驗後才不會因結果而改題。
@@ -102,30 +106,10 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: canonical record publisher; owner: Task 1; probe: `test_docs_review_baseline_store.py::test_req_101_corpus_manifest_binds_one_exact_exam`
 - **Independent**: false
-- **Brief item covered**: REQ-101
+- **Brief item covered**: REQ-121
 - **Review disposition**: batch(store-records)
 - **Status**: done(804922851b975077d904400891a0ddb1dae43fc4)
 - **Gloss**: 每次弱模型重跑都面對同一份不會漂移的考卷。
-
-## Task 5 — 綁定弱模型 execution profile
-
-- **Description**: Resolve and record economy host, exact model, effort, contract, runtime, and configuration identities; refuse stronger or unknown scored bindings.
-- **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/using-loom-code/references/dispatch-profile.md`
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/loom_firing_harness.py`
-- **Acceptance**:
-  - **RED**: `test_docs_review_baseline_runner.py::test_req_102_scored_replay_uses_explicit_weak_bindings` fails for economy, unknown, and stronger mappings.
-  - **GREEN**: Current haiku and gpt-5.6-luna economy bindings score only with exact identities; stronger and unknown mappings remain unscoreable.
-- **Dependencies**: Task 1 completes first
-- **Seam**:
-  - from Task 1: payload: immutable binding record; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_102_scored_replay_uses_explicit_weak_bindings`
-- **Independent**: false
-- **Brief item covered**: REQ-102
-- **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(2c41d28c03cb0a96bbf9b2f3e4808e2fd2728000)
-- **Gloss**: 實驗只比較真正可確認的弱模型，不讓強模型偷混進來。
 
 ## Task 6 — 保留每一次 dispatch attempt
 
@@ -141,7 +125,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: append-only attempt record; owner: Task 1; probe: `test_docs_review_baseline_store.py::test_req_103_dispatch_attempts_never_become_zero_findings`
 - **Independent**: false
-- **Brief item covered**: REQ-103
+- **Brief item covered**: REQ-123
 - **Review disposition**: batch(store-records)
 - **Status**: done(9e2b13dd4ae7867b5a6f32c5ac337c5f45e0e9c1)
 - **Gloss**: 失敗與中斷也會算進成本，不會被假裝成 reviewer 沒找到問題。
@@ -160,29 +144,10 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: immutable observation and revision records; owner: Task 1; probe: `test_docs_review_baseline_store.py::test_req_104_observation_and_attribution_are_separate`
 - **Independent**: false
-- **Brief item covered**: REQ-104
+- **Brief item covered**: REQ-124
 - **Review disposition**: batch(store-records)
 - **Status**: done(d87da21d13948d450bdd46f21764da1d48f7c708)
 - **Gloss**: 模型說了什麼與人最後判定什麼分開，才能看出 false alarm。
-
-## Task 8 — 建立可比較 repeat cohorts
-
-- **Description**: Admit at least two runs only when corpus, contract, runtime, configuration, host, model, tier, and effort identities are identical.
-- **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
-- **Acceptance**:
-  - **RED**: `test_docs_review_baseline_runner.py::test_req_105_repeat_cohorts_never_mix_execution_identities` fails for identical and cross-host runs.
-  - **GREEN**: Same-identity repeats form a cohort; Claude and Codex or drifted identities never pool.
-- **Dependencies**: Task 1 completes first
-- **Seam**:
-  - from Task 1: payload: identity-bound run records; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_105_repeat_cohorts_never_mix_execution_identities`
-- **Independent**: false
-- **Brief item covered**: REQ-105
-- **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(8c2912213c5de5b1f45ce597cfa19646f8ac151e)
-- **Gloss**: 只有同模型、同設定的重跑才能回答 reviewer 穩不穩。
 
 ## Task 9 — 計算帶 population 的 metrics
 
@@ -198,9 +163,9 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: immutable metric input records; owner: Task 1; probe: `test_docs_review_baseline_metrics.py::test_req_106_every_metric_carries_its_population`
 - **Independent**: false
-- **Brief item covered**: REQ-106
+- **Brief item covered**: REQ-126
 - **Review disposition**: batch(metric-reporting)
-- **Status**: pending
+- **Status**: done(cf0e48f3eb428540b3e9663df5c03f733e64eeaa)
 - **Gloss**: 每個百分比都會顯示它算了誰、排除了誰。
 
 ## Task 10 — 顯示 invalid 與 unknown populations
@@ -217,9 +182,9 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: immutable attempt and attribution populations; owner: Task 1; probe: `test_docs_review_baseline_metrics.py::test_req_107_invalid_and_unknown_populations_stay_visible`
 - **Independent**: false
-- **Brief item covered**: REQ-107
+- **Brief item covered**: REQ-127
 - **Review disposition**: batch(metric-reporting)
-- **Status**: pending
+- **Status**: done(afc6eb419292d7cfa522c07c074b4cf26bef2702)
 - **Gloss**: 實驗的失敗與不確定會出現在報告，不被分母洗掉。
 
 ## Task 11 — 凍結 baseline report lineage
@@ -230,15 +195,15 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
-  - **RED**: `test_docs_review_baseline_metrics.py::test_req_108_frozen_reports_do_not_rewrite_history` fails for partial telemetry and later oracle correction.
+  - **RED**: `test_docs_review_baseline_metrics.py::test_req_108_baseline_reports_are_revision_bound` fails for partial telemetry and later oracle correction.
   - **GREEN**: Partial reports freeze with limitations; later corrections produce new lineage without changing baseline bytes.
 - **Dependencies**: Task 1 completes first
 - **Seam**:
-  - from Task 1: payload: canonical frozen report publisher; owner: Task 1; probe: `test_docs_review_baseline_metrics.py::test_req_108_frozen_reports_do_not_rewrite_history`
+  - from Task 1: payload: canonical frozen report publisher; owner: Task 1; probe: `test_docs_review_baseline_metrics.py::test_req_108_baseline_reports_are_revision_bound`
 - **Independent**: false
-- **Brief item covered**: REQ-108
+- **Brief item covered**: REQ-128
 - **Review disposition**: batch(metric-reporting)
-- **Status**: pending
+- **Status**: done(15321124cd32b9b66ac37c9e3561a2a86774b32c)
 - **Gloss**: 日後更正人工答案時，原始 baseline 仍然可重現。
 
 ## Task 12 — 以 revision chain 支撐 defect origin
@@ -255,49 +220,10 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: document revision records; owner: Task 1; probe: `test_docs_review_baseline_store.py::test_req_109_origin_requires_document_revision_evidence`
 - **Independent**: false
-- **Brief item covered**: REQ-109
+- **Brief item covered**: REQ-129
 - **Review disposition**: batch(store-records)
 - **Status**: done(01c1020981243c4b6a963e1cb9d7b00c1b278f54)
 - **Gloss**: 初稿問題與修復後新增問題會由 diff 證據分開，不靠印象。
-
-## Task 13 — 凍結 reviewer contract 與 runtime
-
-- **Description**: Version reviewer instructions independently from skill, package, and runtime implementation; separate cohorts whenever either digest changes.
-- **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/requesting-docs-review/SKILL.md`
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/agents/docs-reviewer.md`
-- **Acceptance**:
-  - **RED**: `test_docs_review_baseline_runner.py::test_req_110_contract_and_runtime_are_independent_inputs` fails for same-contract runtime drift.
-  - **GREEN**: Contract and runtime retain separate immutable lineage; either digest change splits repeatability cohorts.
-- **Dependencies**: Task 1 completes first
-- **Seam**:
-  - from Task 1: payload: immutable contract and runtime revision records; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_110_contract_and_runtime_are_independent_inputs`
-- **Independent**: false
-- **Brief item covered**: REQ-110
-- **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(d4df8323a5be1cff8ffb6a3d78e598bac3b9b8bc)
-- **Gloss**: prompt 變了還是 skill package 變了會被分開，不會被算成隨機性。
-
-## Task 14 — 隔離 untrusted replay content
-
-- **Description**: Enforce per-snapshot classification and deny artifact instructions, secrets, external files, tools, connectors, and network outside the approved boundary.
-- **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/agents/docs-reviewer.md`
-- **Acceptance**:
-  - **RED**: `test_docs_review_baseline_runner.py::test_req_111_replay_content_is_untrusted_and_data_bound` fails for prompt injection, unclassified, and sensitive snapshots.
-  - **GREEN**: Artifact instructions never gain authority; unapproved data or capabilities block transmission without leaking sensitive values.
-- **Dependencies**: Task 1 completes first
-- **Seam**:
-  - from Task 1: payload: classification and audit records; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_111_replay_content_is_untrusted_and_data_bound`
-- **Independent**: false
-- **Brief item covered**: REQ-111
-- **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
-- **Gloss**: 歷史文件裡的指令只是待審內容，不能操作電腦或外送資料。
 
 ## Task 15 — 執行 authority 與 ratifier independence
 
@@ -313,67 +239,10 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: campaign policy and append-only audit events; owner: Task 1; probe: `test_docs_review_baseline_store.py::test_req_112_authority_and_independence_are_explicit`
 - **Independent**: false
-- **Brief item covered**: REQ-112
+- **Brief item covered**: REQ-132
 - **Review disposition**: batch(store-records)
 - **Status**: done(9d448314087f0b273bca6a113944daf7dfdc1b9b)
 - **Gloss**: 寫文件、寫答案與裁決的人是誰會被記錄，避免自己給自己過關。
-
-## Task 16 — 限制 run 與 campaign 成本
-
-- **Description**: Enforce finite run, retry, concurrency, wall-time, input, output, and usage limits with deterministic whole-artifact fit checks.
-- **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/loom_firing_harness.py`
-- **Acceptance**:
-  - **RED**: `test_docs_review_baseline_runner.py::test_req_113_campaign_resource_use_is_bounded` fails for exhausted budgets and context overflow.
-  - **GREEN**: Exhausted limits refuse work; unsupported whole artifacts never truncate silently or become scored partial results.
-- **Dependencies**: Task 1 completes first
-- **Seam**:
-  - from Task 1: payload: policy-bound attempt identity; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_113_campaign_resource_use_is_bounded`
-- **Independent**: false
-- **Brief item covered**: REQ-113
-- **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
-- **Gloss**: 重跑不會因超時、無限 retry 或過長文件變成無底洞。
-
-## Task 17 — 保證 crash-safe dispatch 與 capture
-
-- **Description**: Implement single-owner dispatch, fencing takeover, acknowledgement uncertainty, partial and late bytes, cancellation uncertainty, and atomic capture.
-- **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/proposal.md`
-- **Acceptance**:
-  - **RED**: `test_docs_review_baseline_runner.py::test_req_114_dispatch_and_capture_are_crash_safe` fails for concurrent, partial, late, cancelled, and revived-owner attempts.
-  - **GREEN**: One fenced owner dispatches; uncertain and late outcomes preserve bytes and never overwrite or enter scoring implicitly.
-- **Dependencies**: Task 1 completes first
-- **Seam**:
-  - from Task 1: payload: atomic attempt and raw-output publisher; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_114_dispatch_and_capture_are_crash_safe`
-- **Independent**: false
-- **Brief item covered**: REQ-114
-- **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
-- **Gloss**: 當 host 斷線或回應晚到，每筆成本與輸出仍有正確落點。
-
-## Task 18 — 在 dispatch 與 capture 驗證實際 model identity
-
-- **Description**: Compare the prepared economy binding with a store-local atomic Codex CLI execution record; preserve mismatches, forged or replayed records, and unknown attestations as unscoreable while labeling the approved no-backend-attestation limitation.
-- **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/using-loom-code/references/dispatch-profile.md`
-- **Acceptance**:
-  - **RED**: `test_docs_review_baseline_runner.py::test_req_115_execution_identity_is_verified_at_point_of_use` fails for drift and unattested execution.
-- **GREEN**: Only a one-time runner-controlled CLI record may support requested-model evidence; drifted, forged, replayed, or otherwise unattested attempts retain evidence but never enter scored cohorts or silently update their bindings.
-- **Dependencies**: Task 1 completes first
-- **Seam**:
-  - from Task 1: payload: immutable prepared and captured identities; owner: Task 1; probe: `test_docs_review_baseline_runner.py::test_req_115_execution_identity_is_verified_at_point_of_use`
-- **Independent**: false
-- **Brief item covered**: REQ-115
-- **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
-- **Gloss**: 記錄的弱模型必須和真正跑的一樣，否則只保留不計分。
 
 ## Task 19 — 分開 zero 與 partial populations
 
@@ -389,9 +258,9 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: immutable observation and oracle populations; owner: Task 1; probe: `test_docs_review_baseline_metrics.py::test_req_116_zero_and_partial_populations_have_explicit_meaning`
 - **Independent**: false
-- **Brief item covered**: REQ-116
+- **Brief item covered**: REQ-136
 - **Review disposition**: batch(metric-reporting)
-- **Status**: pending
+- **Status**: done(28cb0dec6262ed55c8c884c672c7d54e7dd7742d)
 - **Gloss**: 真的沒問題、沒輸出、解析失敗與漏抓不再共用同一個零。
 
 ## Task 20 — 原子凍結 report population manifest
@@ -408,55 +277,30 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Seam**:
   - from Task 1: payload: atomic population-manifest publisher; owner: Task 1; probe: `test_docs_review_baseline_metrics.py::test_req_117_report_population_is_frozen_before_calculation`
 - **Independent**: false
-- **Brief item covered**: REQ-117
+- **Brief item covered**: REQ-137
 - **Review disposition**: batch(metric-reporting)
-- **Status**: pending
+- **Status**: done(cd638100e35ce14636d14bff24bfcbe1eb49f80d)
 - **Gloss**: 報告開始計算後不會途中吸入新裁決，造成分子分母不同時點。
 
-## Task 21 — 接成可執行 historical replay
+## Task 21 — 發布受控 historical replay
 
-- **Description**: Add a thin stdlib CLI that validates a campaign directory, dispatches configured weak-host commands, captures attempts, and emits a frozen JSON and Markdown report.
-- **Module**: `loom-code/scripts/docs_review_baseline.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline.py`, `loom-code/scripts/test_docs_review_baseline.py`, `claude/.claude/CLAUDE.md`, `AGENTS.md`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
-- **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/docs_review_baseline_store.py`
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/docs_review_baseline_runner.py`
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/docs_review_baseline_metrics.py`
-  - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/scripts/sync-agent-instructions.sh`
+- **Description**: Publish the fixed three-document corpus, byte-exact Luna stdin and prompt, two raw outputs, human oracle, revision attribution, population-bearing metrics, and the bounded conclusion about initial-draft versus review cost. Do not add a generalized runner.
+- **Module**: `docs/loom/dogfood/2026-09-01-docs-review-luna-controlled-experiment/`
+- **Files touched**: `docs/loom/dogfood/2026-09-01-docs-review-luna-controlled-experiment/README.md`, `input.txt`, `prompt.txt`, `corpus-manifest.json`, `run-1.json`, `run-2.json`, `oracle.json`, `metrics.json`
 - **Acceptance**:
-  - **RED**: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared` fails before CLI wiring and command documentation exist.
-  - **GREEN**:
-    - A real historical fixture produces immutable run and report artifacts, and the documented command succeeds.
-    - The report separates document-creation defects, remediation-introduced defects, reviewer misses, false alarms, and unknown origin instead of collapsing them into one rate.
-    - Technical, business-analysis, and strategy case coverage and insufficiencies are explicit; a hard-case corpus is labelled non-representative of routine work.
-    - Claude Code and Codex economy cohorts expose scored, invalid, and unavailable populations separately; every evidence insufficiency becomes a named Map fog handback.
-- **External surfaces**: subprocess adapters invoke user-configured local Claude Code and Codex CLIs; tests use deterministic fake commands, while live execution records exact executable, model identity, exit status, elapsed time, and available usage without sending secrets to third parties beyond the user-approved hosts.
-- **Dependencies**: Tasks 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 parallel
+  - **RED**: The experiment is incomplete when any frozen input, raw output, repeat, oracle, revision evidence, metric population, or limitation cannot be inspected and recomputed.
+  - **GREEN**: The committed directory preserves every named artifact, all recorded digests recompute, both run outputs parse, metric arithmetic recomputes, and the conclusion remains explicitly limited to this corpus.
+  - Verify stdin identity with `shasum -a 256 docs/loom/dogfood/2026-09-01-docs-review-luna-controlled-experiment/input.txt`.
+  - Verify metric JSON syntax with `python3 -m json.tool docs/loom/dogfood/2026-09-01-docs-review-luna-controlled-experiment/metrics.json`.
+- **Dependencies**: Tasks 4, 9 complete first
 - **Seam**:
-  - from Task 2: payload: admitted case; owner: Task 2; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 3: payload: ratified oracle; owner: Task 3; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 4: payload: corpus manifest; owner: Task 4; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 5: payload: weak-model binding; owner: Task 5; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 6: payload: run attempt; owner: Task 6; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 7: payload: observations and attributions; owner: Task 7; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 8: payload: repeat cohorts; owner: Task 8; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 9: payload: quality metrics; owner: Task 9; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 10: payload: invalid populations; owner: Task 10; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 11: payload: report lineage; owner: Task 11; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 12: payload: origin evidence; owner: Task 12; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 13: payload: contract and runtime revisions; owner: Task 13; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 14: payload: data boundary decision; owner: Task 14; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 15: payload: authority decision; owner: Task 15; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 16: payload: resource policy; owner: Task 16; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 17: payload: crash-safe outcome; owner: Task 17; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 18: payload: execution identity; owner: Task 18; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 19: payload: zero and partial states; owner: Task 19; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
-  - from Task 20: payload: population manifest; owner: Task 20; probe: `test_docs_review_baseline.py::test_historical_fixture_runs_end_to_end_and_command_surface_is_declared`
+  - from Task 4: payload: frozen corpus manifest; owner: Task 4; probe: `shasum -a 256 docs/loom/dogfood/2026-09-01-docs-review-luna-controlled-experiment/input.txt`
+  - from Task 9: payload: population-bearing quality metrics; owner: Task 9; probe: `python3 -m json.tool docs/loom/dogfood/2026-09-01-docs-review-luna-controlled-experiment/metrics.json`
 - **Independent**: false
-- **Brief item covered**: Smallest End State — one real historical case must produce an end-to-end immutable report with three-document coverage, hard-case limitations, separate weak-host populations, stage attribution, and Map-fog handback.
+- **Brief item covered**: Smallest End State — one fixed historical corpus yields a reproducible controlled Luna report that separates initial-authoring defects from reviewer sampling cost.
 - **Review disposition**: individual
 - **Status**: pending
-- **Gloss**: 所有量測能力最後接成一個可複製指令，真正跑出基準報告。
+- **Gloss**: 固定考卷、原始輸入輸出、人工答案與重跑成本都能獨立重算。
 
 ## Review Batches
 
@@ -467,12 +311,6 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Aggregate verification**: Run the complete store test file plus the resolved package suite against the exact member commits.
 - **Boundary**: capability: immutable historical-evidence records; exclusions: none; consumable: yes
 
-### Review Batch: runner-boundaries
-- **Members**: Task 5, Task 8, Task 13, Task 14, Task 16, Task 17, Task 18
-- **Verdict question**: Does the runner execute only bounded, identity-verifiable weak-model cohorts while preserving every unsafe, failed, or uncertain attempt outside scoring?
-- **Review lane**: full
-- **Aggregate verification**: Run the complete runner test file plus the resolved package suite against the exact member commits.
-- **Boundary**: capability: bounded weak-model execution; exclusions: none; consumable: yes
 
 ### Review Batch: metric-reporting
 - **Members**: Task 9, Task 10, Task 11, Task 19, Task 20
@@ -483,9 +321,15 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 ## Notes
 
+Map part: docs-review-efficiency / Part: establish-docs-review-baseline
+
+- observed reviewer fan-outs: N/A — no dispatch log
+- adversarial audit: N/A — header=absent; base=09608cabfbaf51a6363d06673845648c78130024; changed=27; guarded-hits=0; prose-hits=0
+- cold reader: N/A — base=09608cabfbaf51a6363d06673845648c78130024; changed=27; prose-hits=0
+- User-approved pivot (2026-09-01): this arc is a controlled internal experiment, not a production-grade runner. Preserve the frozen corpus, Luna model argument, prompt, raw input/output evidence, repeat runs, human oracle, and revision attribution; do not continue runner-boundary hardening. Task 21 publishes the controlled experiment record and conclusion; the retired runner tasks and runner Batch are absent from the active delivery graph. `.transactions/` remains untouched.
 - User-approved intervention boundary: checklist-enabled authoring starts after `2026-08-31T14:20:27Z`; the untreated baseline corpus may include only exact document snapshots and authoring/review events at or before that UTC cutoff, bounded by repository commit `82b6adf798b4d3745242669b2885c0ee92a56869`. Any first-authored or modified document after the cutoff belongs to a treated/post-intervention population. Task 21 must persist this cutoff and boundary commit in the frozen corpus/report rather than relying on session memory.
-- User-approved identity evidence policy A (2026-09-01): the internal baseline may score a Codex/Luna run without backend-reported actual-model identity only through one atomic, store-local, one-time runner operation binding the approved model argument, exact CLI version and closed-tool argv, input/output digests, and subprocess result. Reports must label it requested-model CLI evidence and explicitly state that the backend did not attest the actual model. This supersedes the earlier fail-closed no-attestation wording in REQ-115; forged, replayed, drifted, or caller-supplied records remain unscoreable.
+- User-approved identity evidence policy A (2026-09-01): the internal baseline may score a Codex/Luna run without backend-reported actual-model identity only through one atomic, store-local, one-time runner operation binding the approved model argument, exact CLI version and closed-tool argv, input/output digests, and subprocess result. Reports must label it requested-model CLI evidence and explicitly state that the backend did not attest the actual model. This supersedes the earlier fail-closed no-attestation wording in REQ-135; forged, replayed, drifted, or caller-supplied records remain unscoreable.
 - Kickoff decision: tracked-byte fingerprint re-pin → after each Task's final `loom-code/` edit, recompute the `loom-code candidate SHA-256` with `scripts/test_stage_specific_complexity_behavior_evidence.py::_tracked_worktree_fingerprint` and update `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md` in the same commit; source: `docs/loom/memory/tracked-byte-pin-tests-repin-in-the-same-commit-as-the-bytes.md` phrase `re-pin belongs in the wave's final content commit`.
 - Tasks 2–20 remain sequential for implementation because they share one of three module/test-file pairs, but their atomic commits park at `implemented(<sha>)` until the corresponding module-level review Batch is complete.
 - Task 1 and Task 21 remain individual checkpoints: the first establishes the shared storage seam, while the last crosses all three modules plus external command boundaries.
-- User-approved drop: `2026-08-31-docs-review-baseline / REQ-118 / Scenario: a future check reduces visible findings by masking evidence` is deferred by the ratified spec and the user's 2026-08-31 `OK`; this baseline plan must measure a repeatable defect class before selecting or implementing that follow-on check.
+- User-approved drop: `2026-08-31-docs-review-baseline / REQ-138 / Scenario: a future check reduces visible findings by masking evidence` is deferred by the ratified spec and the user's 2026-08-31 `OK`; this baseline plan must measure a repeatable defect class before selecting or implementing that follow-on check.

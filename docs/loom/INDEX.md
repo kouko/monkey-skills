@@ -2,19 +2,23 @@
 
 ## docs-review-baseline
 
-### REQ-100
+### REQ-119
+
+- test_req_99_concurrent_admission_consumes_receipt_once
+- test_req_99_historical_case_admission
+- test_req_99_publish_conflict_does_not_consume_receipt
+- test_req_99_publish_failure_does_not_burn_receipt
+- test_req_99_receipt_namespace_symlink_cannot_redirect_marker
+
+### REQ-120
 
 - test_req_100_oracle_ratification_is_immutable
 
-### REQ-101
+### REQ-121
 
 - test_req_101_corpus_manifest_is_exact_and_immutable
 
-### REQ-102
-
-- test_req_102_scored_replay_uses_explicit_weak_bindings
-
-### REQ-103
+### REQ-123
 
 - test_req_103_attempt_ledger_preserves_failures
 - test_req_103_req_112_concurrent_dispatch_consumes_receipt_once
@@ -23,40 +27,27 @@
 - test_req_103_req_112_dispatch_receipt_namespace_symlink_is_refused
 - test_req_103_req_112_dispatch_requires_one_exact_authorization
 
-### REQ-104
+### REQ-124
 
 - test_req_104_observation_and_attribution_are_separate
 
-### REQ-105
-
-- test_req_105_repeat_cohorts_never_mix_execution_identities
-- test_req_105_repeat_cohorts_require_scoreable_runner_captures
-
-### REQ-106
+### REQ-126
 
 - test_req_106_every_metric_carries_its_population
 
-### REQ-107
+### REQ-127
 
 - test_req_107_invalid_and_unknown_populations_stay_visible
 
-### REQ-108
+### REQ-128
 
 - test_req_108_baseline_reports_are_revision_bound
 
-### REQ-109
+### REQ-129
 
 - test_req_109_origin_requires_document_revision_evidence
 
-### REQ-110
-
-- test_req_110_contract_and_runtime_are_independent_inputs
-
-### REQ-111
-
-- test_req_111_replay_content_is_untrusted_and_data_bound
-
-### REQ-112
+### REQ-132
 
 - test_req_103_req_112_concurrent_dispatch_consumes_receipt_once
 - test_req_103_req_112_dispatch_conflict_does_not_consume_receipt
@@ -66,39 +57,13 @@
 - test_req_112_authority_and_independence_are_explicit
 - test_req_112_bootstrap_capability_and_single_purpose_receipt
 
-### REQ-113
-
-- test_req_113_campaign_resource_store_rejects_symlink_root
-- test_req_113_campaign_resource_store_rejects_symlinked_ancestor
-- test_req_113_campaign_resource_use_is_bounded
-- test_req_113_captured_output_cannot_bypass_reserved_ceiling
-- test_req_113_concurrent_resource_store_first_create_is_safe
-
-### REQ-114
-
-- test_req_114_dispatch_and_capture_are_crash_safe
-- test_req_114_dispatch_store_swap_cannot_escape_approved_root
-
-### REQ-115
-
-- test_req_115_actual_model_identity_is_verified_twice
-- test_req_115_execution_identity_is_verified_at_point_of_use
-
-### REQ-116
+### REQ-136
 
 - test_req_116_zero_and_partial_populations_have_explicit_meaning
 
-### REQ-117
+### REQ-137
 
 - test_req_117_report_population_is_frozen_before_calculation
-
-### REQ-99
-
-- test_req_99_concurrent_admission_consumes_receipt_once
-- test_req_99_historical_case_admission
-- test_req_99_publish_conflict_does_not_consume_receipt
-- test_req_99_publish_failure_does_not_burn_receipt
-- test_req_99_receipt_namespace_symlink_cannot_redirect_marker
 
 ## independent-advisor
 
@@ -526,7 +491,14 @@
 
 ### reqs with no tests
 
-- REQ-118
+- REQ-122
+- REQ-125
+- REQ-130
+- REQ-131
+- REQ-133
+- REQ-134
+- REQ-135
+- REQ-138
 - REQ-17
 - REQ-25
 - REQ-26
