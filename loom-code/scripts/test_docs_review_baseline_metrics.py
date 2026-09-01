@@ -428,6 +428,11 @@ def test_req_108_baseline_reports_are_revision_bound(tmp_path) -> None:
             {**corrected, "parent_report_digest": "0" * 64},
             parent_report_id="baseline-r1",
         )
+    with pytest.raises(ValueError, match="lineage root"):
+        BaselineReportRegistry(tmp_path).freeze(
+            {**corrected, "lineage_root_report_id": "unrelated-root"},
+            parent_report_id="baseline-r1",
+        )
     with pytest.raises(ValueError, match="self-parent"):
         BaselineReportRegistry(tmp_path).freeze(
             corrected, parent_report_id="baseline-r2"

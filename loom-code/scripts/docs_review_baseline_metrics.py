@@ -391,6 +391,12 @@ class BaselineReportRegistry:
                 raise ValueError("parent record is not a baseline metric report")
             if parent.digest != parent_digest:
                 raise ValueError("parent digest does not match persisted parent")
+            parent_lineage_root = _required_text(
+                parent.record.get("lineage_root_report_id"),
+                "parent lineage_root_report_id",
+            )
+            if lineage_root != parent_lineage_root:
+                raise ValueError("child lineage root does not match persisted parent")
         elif parent_report_id is not None:
             raise ValueError("root report must not provide parent_report_id")
         return publish_record(self._store_root, report_id, report)
