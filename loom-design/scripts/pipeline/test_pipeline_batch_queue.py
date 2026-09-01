@@ -2118,3 +2118,23 @@ def test_queue_core_owns_state_and_engine():
         assert name not in vars(
             batch_queue_module
         ), f"{name} must no longer be defined in batch_queue"
+
+
+# --- Task 4 (script hygiene plan): the _cmd_* handlers moved out of
+# batch_queue.py into the sibling module queue_commands.py. batch_queue.py
+# keeps only the argparse wiring and main. ---
+
+
+def test_batch_queue_is_argparse_and_main_only():
+    import batch_queue as batch_queue_module
+    import queue_commands
+
+    for name in ("_cmd_next", "_cmd_status"):
+        assert name in vars(
+            queue_commands
+        ), f"{name} must be defined in queue_commands"
+        assert name not in vars(
+            batch_queue_module
+        ), f"{name} must no longer be defined in batch_queue"
+    assert "load_queue" not in vars(batch_queue_module)
+    assert callable(batch_queue_module.main)
