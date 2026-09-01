@@ -32,6 +32,10 @@
 - test_req_105_repeat_cohorts_never_mix_execution_identities
 - test_req_105_repeat_cohorts_require_scoreable_runner_captures
 
+### REQ-106
+
+- test_req_106_every_metric_carries_its_population
+
 ### REQ-109
 
 - test_req_109_origin_requires_document_revision_evidence
@@ -506,7 +510,6 @@
 
 ### reqs with no tests
 
-- REQ-106
 - REQ-107
 - REQ-108
 - REQ-116
