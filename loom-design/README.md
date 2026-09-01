@@ -83,7 +83,14 @@ not here.
 
 ## Running the tests
 
-Run each station's suite as its OWN pytest invocation:
+Run the whole plugin's suite in one invocation:
+
+```
+python3 -m pytest loom-design/scripts/
+```
+
+That is the form `.github/workflows/loom-pipeline-ci.yml` runs. A single
+station is still a valid narrower target when you want a faster loop:
 
 ```
 python3 -m pytest loom-design/scripts/pipeline/
@@ -93,12 +100,18 @@ python3 -m pytest loom-design/scripts/spec/
 python3 -m pytest loom-design/scripts/principles/
 ```
 
-`python3 -m pytest loom-design/scripts/` — the obvious whole-plugin form —
-fails at collection with "import file mismatch". The station dirs ship
-same-named test files (`test_marketplace_entry.py`, `test_plugin_manifest.py`,
+The whole-plugin form used to fail at collection with "import file
+mismatch": the station dirs ship same-named test files
+(`test_marketplace_entry.py`, `test_plugin_manifest.py`,
 `test_knowledge_triage.py`, `test_mint_critic_verdict.py`) and carry no
-`__init__.py`, so pytest cannot tell the modules apart. `.github/workflows/
-loom-siblings-ci.yml` runs them as separate jobs for the same reason.
+`__init__.py`, so pytest could not tell the modules apart. Those files
+still share their basenames; they simply no longer collide.
+`loom-design/scripts/pytest.ini` sets `--import-mode=importlib`, which
+gives each test module an identity independent of its basename, and each
+station dir carries a `conftest.py` that puts its own path back on
+`sys.path` — importlib mode does not do that, and this repo's scripts
+import their siblings by bare module name. If you hit the same collision
+elsewhere in this repo, that pair is the mechanism to copy.
 
 ## Install + requirements
 
