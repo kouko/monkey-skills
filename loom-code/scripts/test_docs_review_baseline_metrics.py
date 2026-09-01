@@ -4,12 +4,14 @@ from __future__ import annotations
 import pytest
 
 from docs_review_baseline_metrics import (
+    BaselineReportRegistry,
     PopulationManifestRegistry,
     calculate_population_report,
     calculate_quality_metrics,
     classify_population_boundaries,
     freeze_baseline_report,
 )
+from docs_review_baseline_store import RecordConflictError
 
 
 def test_req_106_every_metric_carries_its_population() -> None:
@@ -250,7 +252,7 @@ def test_req_107_invalid_and_unknown_populations_stay_visible() -> None:
     }
 
 
-def test_req_108_baseline_reports_are_revision_bound() -> None:
+def test_req_108_baseline_reports_are_revision_bound(tmp_path) -> None:
     # @req: REQ-108
     """A frozen baseline names every input revision and corrections make a child."""
     revisions = {
@@ -329,6 +331,19 @@ def test_req_108_baseline_reports_are_revision_bound() -> None:
             limitations=["elapsed telemetry unavailable for one valid run"],
             parent=baseline,
         )
+
+    persisted = BaselineReportRegistry(tmp_path).freeze(baseline)
+    assert BaselineReportRegistry(tmp_path).freeze(baseline).record == baseline
+    assert persisted.record == baseline
+    conflicting = {
+        **baseline,
+        "metrics": {**partial_metrics, "finding_rate": {**partial_metrics["finding_rate"], "value": 0.5}},
+    }
+    with pytest.raises(RecordConflictError):
+        BaselineReportRegistry(tmp_path).freeze(conflicting)
+    corrected_persisted = BaselineReportRegistry(tmp_path).freeze(corrected)
+    assert corrected_persisted.record["report_id"] == "baseline-r2"
+    assert corrected_persisted.record["parent_report_digest"]
 
 
 def test_req_116_zero_and_partial_populations_have_explicit_meaning() -> None:

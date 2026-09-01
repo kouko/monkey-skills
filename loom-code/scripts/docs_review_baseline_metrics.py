@@ -4,7 +4,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 import hashlib
 import json
+from pathlib import Path
 from threading import Lock
+
+from docs_review_baseline_store import PublishedRecord, publish_record
 
 
 FORMULA_VERSION = "docs-review-baseline-metrics-v1"
@@ -336,6 +339,28 @@ def freeze_baseline_report(
         "schema_version": 1,
         "status": "partial" if unavailable else "complete",
     }
+
+
+class BaselineReportRegistry:
+    """Persist frozen report bytes through the shared append-only store."""
+
+    def __init__(self, store_root: Path) -> None:
+        self._store_root = Path(store_root)
+
+    def freeze(self, report: Mapping[str, object]) -> PublishedRecord:
+        """Publish one report ID once; equal retries succeed, drift is refused."""
+        if report.get("kind") != "baseline_metric_report":
+            raise ValueError("report must be a baseline_metric_report")
+        report_id = _required_text(report.get("report_id"), "report_id")
+        parent_digest = report.get("parent_report_digest")
+        lineage_root = _required_text(
+            report.get("lineage_root_report_id"), "lineage_root_report_id"
+        )
+        if report_id == lineage_root and parent_digest is not None:
+            raise ValueError("root report must not bind a parent digest")
+        if report_id != lineage_root and not isinstance(parent_digest, str):
+            raise ValueError("corrected report requires a parent digest")
+        return publish_record(self._store_root, report_id, report)
 
 
 def classify_population_boundaries(
