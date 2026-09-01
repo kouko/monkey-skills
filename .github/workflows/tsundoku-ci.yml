@@ -1,9 +1,13 @@
 name: tsundoku CI
 
-# Runs the tsundoku pytest suite (currently only book-extract has scripts +
-# tests) and the per-skill folder-structure validator on every PR that
-# touches the plugin (or the workflow itself), and on every push to main
-# that changes the plugin.
+# Runs the tsundoku pytest suite and the per-skill folder-structure
+# validator on every PR that touches the plugin (or the workflow itself),
+# and on every push to main that changes the plugin.
+#
+# Both steps discover skills by glob, so a newly added skill is covered
+# without editing this file. Test-file basenames do not have to be unique
+# across skills: pytest runs with --import-mode=importlib, which drops the
+# rootdir-relative import collision that plain import mode would raise.
 
 on:
   pull_request:
@@ -42,12 +46,45 @@ jobs:
       - name: Run tsundoku pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest tsundoku/skills/book-extract/tests/ -v
+        run: python3 -m pytest tsundoku/skills/*/tests/ -v --import-mode=importlib
 
       - name: Validate skill folder structure
         # Anthropic skill convention: SKILL.md + flat single-level subfolders.
-        # Hook script enforces no nested-subfolder violations per skill.
+        #
+        # The validator is a PostToolUse hook: it takes its target from a JSON
+        # event on stdin and ignores positional arguments. Passing the path as
+        # an argument makes it exit 0 without opening anything, so the event
+        # shape is mandatory -- otherwise this step is a no-op that reports
+        # success. It also needs jq to parse that event, and falls back to the
+        # same silent exit 0 when jq is missing, so assert jq up front.
+        #
+        # Every skill is checked before the step fails, so one bad skill does
+        # not hide the others.
+        #
+        # `shell: bash` is load-bearing, not decoration: without it GitHub runs
+        # the block as `bash -e {0}` with no pipefail, and a jq that is present
+        # but FAILS leaves the pipeline status equal to the hook's -- the hook
+        # gets empty stdin and exits 0, so the skill goes unchecked and the step
+        # still passes. `command -v jq` tests presence, not success.
+        #
+        # The zero-check is the same idea one level up: if the glob matches
+        # nothing, bash leaves the pattern literal, every iteration skips, and
+        # the step would exit 0 having validated nothing at all.
+        shell: bash
         run: |
-          for skill in book-distill book-extract kobo-auth kobo-library; do
-            bash .claude/hooks/validate-skill-folder-structure.sh "tsundoku/skills/$skill/SKILL.md"
+          command -v jq >/dev/null || { echo "jq missing: the validator would silently pass"; exit 1; }
+          failed=0
+          checked=0
+          for skill in tsundoku/skills/*/; do
+            [ -f "${skill}SKILL.md" ] || continue
+            echo "checking ${skill}"
+            checked=$((checked + 1))
+            jq -nc --arg p "${skill}SKILL.md" '{tool_input:{file_path:$p}}' \
+              | bash .claude/hooks/validate-skill-folder-structure.sh || failed=1
           done
+          if [ "$checked" -eq 0 ]; then
+            echo "no skills validated: tsundoku/skills/*/ matched nothing"
+            exit 1
+          fi
+          echo "validated $checked skill(s)"
+          exit $failed
