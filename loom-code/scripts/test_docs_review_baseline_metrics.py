@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 
 from docs_review_baseline_metrics import (
+    PopulationManifestRegistry,
     calculate_population_report,
     calculate_quality_metrics,
     classify_population_boundaries,
@@ -353,3 +354,55 @@ def test_req_116_zero_and_partial_populations_have_explicit_meaning() -> None:
     assert not_assessable["expected_finding_outcomes"] == [
         {"finding_id": "expected-risk", "outcome": "not_assessable"}
     ]
+
+
+def test_req_117_report_population_is_frozen_before_calculation() -> None:
+    # @req: REQ-117
+    """One report id accepts one exact population, with incomplete cohorts partial."""
+    registry = PopulationManifestRegistry()
+    arguments = {
+        "runs": [{"record_id": "run-1", "digest": "a" * 64}],
+        "observations": [{"record_id": "observation-1", "digest": "b" * 64}],
+        "attribution_revisions": [
+            {"record_id": "attribution-1", "digest": "c" * 64}
+        ],
+        "parser_revision": "parser-r1",
+        "metric_definition_revision": "metrics-r1",
+        "cohorts": {
+            "claude": {"valid_repeats": 1},
+            "codex": {"valid_repeats": 2},
+        },
+        "repeat_target": 2,
+    }
+
+    first = registry.freeze("report-r1", **arguments)
+
+    assert registry.freeze("report-r1", **arguments) == first
+    assert first["runs"] == arguments["runs"]
+    assert first["observations"] == arguments["observations"]
+    assert first["attribution_revisions"] == arguments["attribution_revisions"]
+    assert first["cohort_availability"] == {
+        "claude": {"availability": "unavailable", "valid_repeats": 1},
+        "codex": {"availability": "available", "valid_repeats": 2},
+    }
+    assert first["cross_host_conclusion"] == {
+        "availability": "unavailable",
+        "exclusion_reasons": ["incomplete_repeat_cohorts:claude"],
+    }
+    assert first["status"] == "partial"
+
+    with pytest.raises(ValueError, match="different population"):
+        registry.freeze(
+            "report-r1",
+            **{**arguments, "attribution_revisions": [{"record_id": "attribution-2", "digest": "d" * 64}]},
+        )
+
+    corrected = registry.freeze(
+        "report-r2",
+        **{**arguments, "attribution_revisions": [{"record_id": "attribution-2", "digest": "d" * 64}]},
+        parent_report_id="report-r1",
+    )
+
+    assert corrected["parent_manifest_digest"] == first["manifest_digest"]
+    assert corrected["lineage_root_report_id"] == "report-r1"
+    assert first["attribution_revisions"] == arguments["attribution_revisions"]

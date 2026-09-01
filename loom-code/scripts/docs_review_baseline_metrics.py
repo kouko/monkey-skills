@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 import hashlib
 import json
+from threading import Lock
 
 
 FORMULA_VERSION = "docs-review-baseline-metrics-v1"
@@ -376,3 +377,108 @@ def classify_population_boundaries(
         "normalization_state": normalization_state,
         "population_state": normalization_state,
     }
+
+
+def _identity_records(
+    records: list[Mapping[str, str]], name: str
+) -> list[dict[str, str]]:
+    frozen: list[dict[str, str]] = []
+    identities: set[str] = set()
+    for record in records:
+        record_id = _required_text(record.get("record_id"), f"{name} record_id")
+        digest = _required_text(record.get("digest"), f"{name} digest")
+        if record_id in identities:
+            raise ValueError(f"duplicate {name} record_id: {record_id}")
+        identities.add(record_id)
+        frozen.append({"record_id": record_id, "digest": digest})
+    return frozen
+
+
+class PopulationManifestRegistry:
+    """Atomically freeze one exact input population for each report ID."""
+
+    def __init__(self) -> None:
+        self._lock = Lock()
+        self._manifests: dict[str, dict[str, object]] = {}
+
+    def freeze(
+        self,
+        report_id: str,
+        *,
+        runs: list[Mapping[str, str]],
+        observations: list[Mapping[str, str]],
+        attribution_revisions: list[Mapping[str, str]],
+        parser_revision: str,
+        metric_definition_revision: str,
+        cohorts: Mapping[str, Mapping[str, int]],
+        repeat_target: int,
+        parent_report_id: str | None = None,
+    ) -> dict[str, object]:
+        """Return the single accepted manifest, or refuse different bytes."""
+        report_id = _required_text(report_id, "report_id")
+        if not isinstance(repeat_target, int) or repeat_target < 1:
+            raise ValueError("repeat_target must be a positive integer")
+        if not cohorts:
+            raise ValueError("cohorts are required")
+        cohort_availability: dict[str, dict[str, object]] = {}
+        incomplete: list[str] = []
+        for cohort, evidence in sorted(cohorts.items()):
+            cohort = _required_text(cohort, "cohort")
+            repeats = evidence.get("valid_repeats")
+            if not isinstance(repeats, int) or repeats < 0:
+                raise ValueError("valid_repeats must be a non-negative integer")
+            available = repeats >= repeat_target
+            cohort_availability[cohort] = {
+                "availability": "available" if available else "unavailable",
+                "valid_repeats": repeats,
+            }
+            if not available:
+                incomplete.append(cohort)
+
+        candidate: dict[str, object] = {
+            "attribution_revisions": _identity_records(
+                attribution_revisions, "attribution revision"
+            ),
+            "cohort_availability": cohort_availability,
+            "cross_host_conclusion": {
+                "availability": "unavailable" if incomplete else "available",
+                "exclusion_reasons": [
+                    f"incomplete_repeat_cohorts:{','.join(incomplete)}"
+                ]
+                if incomplete
+                else [],
+            },
+            "kind": "report_population_manifest",
+            "lineage_root_report_id": report_id,
+            "metric_definition_revision": _required_text(
+                metric_definition_revision, "metric_definition_revision"
+            ),
+            "observations": _identity_records(observations, "observation"),
+            "parent_manifest_digest": None,
+            "parser_revision": _required_text(parser_revision, "parser_revision"),
+            "report_id": report_id,
+            "runs": _identity_records(runs, "run"),
+            "schema_version": 1,
+            "status": "partial" if incomplete else "complete",
+        }
+        with self._lock:
+            if parent_report_id is not None:
+                parent_report_id = _required_text(parent_report_id, "parent_report_id")
+                if parent_report_id == report_id:
+                    raise ValueError("corrected population requires a new report_id")
+                parent = self._manifests.get(parent_report_id)
+                if parent is None:
+                    raise ValueError("parent report manifest does not exist")
+                candidate["lineage_root_report_id"] = parent[
+                    "lineage_root_report_id"
+                ]
+                candidate["parent_manifest_digest"] = parent["manifest_digest"]
+            candidate_digest = _canonical_digest(candidate)
+            existing = self._manifests.get(report_id)
+            if existing is not None:
+                if existing["manifest_digest"] != candidate_digest:
+                    raise ValueError("report id already has a different population")
+                return json.loads(json.dumps(existing))
+            candidate["manifest_digest"] = candidate_digest
+            self._manifests[report_id] = candidate
+            return json.loads(json.dumps(candidate))
