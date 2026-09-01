@@ -134,7 +134,7 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - **Dependencies**: Task 3 completes first
 - **Seam**:
   - from Task 3: payload: the state, engine and breaker functions `queue_core` now owns, imported by name; owner: Task 3; probe: `python3 loom-design/scripts/pipeline/batch_queue.py status`
-- **Independent**: true
+- **Independent**: false
 - **Brief item covered**: "leaving `batch_queue.py` as argparse wiring plus `main`, with `argv_exec.py`'s `batch_queue.main` call site and every pinned CLI string unchanged"
 - **Not batched because**: same reason as Task 3 — the test-root chain and the module-split chain carry different verdict questions, and are only transitively connected through the downstream backlog and version-bump sink.
 - **Review disposition**: batch(queue-split)
