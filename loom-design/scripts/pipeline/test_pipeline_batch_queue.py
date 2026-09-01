@@ -11,7 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from batch_queue import (
+from batch_queue import main
+from queue_core import (
     QueueError,
     _check_circuit_breaker,
     _classify_running_entry,
@@ -21,7 +22,6 @@ from batch_queue import (
     ensure_worktree,
     load_queue,
     load_state,
-    main,
     save_state,
 )
 
@@ -2095,3 +2095,26 @@ def test_classify_running_entry_suspect_when_dispatched_at_malformed():
 
     assert category == "SUSPECT"
     assert "dispatched_at missing/unparseable" in evidence
+
+
+# --- Task 3 (script hygiene plan): the queue state / freeze gate / worktree
+# lifecycle / reconcile engine surface moved out of batch_queue.py into the
+# sibling module queue_core.py. batch_queue.py keeps only the argparse
+# wiring, the _cmd_* handlers and main. ---
+
+
+def test_queue_core_owns_state_and_engine():
+    import batch_queue as batch_queue_module
+    import queue_core
+
+    moved = (
+        "load_queue",
+        "_state_lock",
+        "_reconcile_running_entries",
+        "_check_circuit_breaker",
+    )
+    for name in moved:
+        assert name in vars(queue_core), f"{name} must be defined in queue_core"
+        assert name not in vars(
+            batch_queue_module
+        ), f"{name} must no longer be defined in batch_queue"

@@ -229,7 +229,8 @@ def test_pipeline_public_commands_use_installed_plugin_root_and_preserve_code_ha
     installed_root = tmp_path / "installed loom-design's root"
     script_dir = installed_root / "scripts" / "pipeline"
     script_dir.mkdir(parents=True)
-    shutil.copy2(PLUGIN_ROOT / "scripts" / "pipeline" / "batch_queue.py", script_dir)
+    for script_name in ("batch_queue.py", "queue_core.py"):
+        shutil.copy2(PLUGIN_ROOT / "scripts" / "pipeline" / script_name, script_dir)
     project_path = tmp_path / "consumer project's files"
     loom_dir = project_path / "docs" / "loom"
     loom_dir.mkdir(parents=True)
@@ -302,7 +303,7 @@ def test_pipeline_dynamic_values_are_passed_as_literal_argv(tmp_path):
     installed_root = tmp_path / "installed loom-design's root"
     script_dir = installed_root / "scripts" / "pipeline"
     script_dir.mkdir(parents=True)
-    for script_name in ("argv_exec.py", "batch_queue.py"):
+    for script_name in ("argv_exec.py", "batch_queue.py", "queue_core.py"):
         shutil.copy2(PLUGIN_ROOT / "scripts" / "pipeline" / script_name, script_dir)
     project_path = tmp_path / "consumer project's files"
     loom_dir = project_path / "docs" / "loom"
