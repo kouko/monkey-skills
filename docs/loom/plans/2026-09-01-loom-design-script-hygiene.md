@@ -249,6 +249,10 @@ N/A — no unresolved question: the brief's three open questions were all resolv
 - Kickoff decision: dependency install line for the unified job → keep the superset `python3 -m pip install --quiet pytest pyyaml`. Only `loom-pipeline-ci.yml` installs `pyyaml` today; the other four install `pytest` alone, so hosting the unified job anywhere else, or narrowing the install, would redden the pipeline suite.
 - Kickoff decision: whether deleting four CI jobs can break a required status check → no. The six required contexts on `main` are `investing-toolkit script MD5 sync`, `SKILL.md structure`, `Conventional Commits`, `investing-toolkit pytest (offline)`, `loom memory store integrity`, and `loom-workflow shared conventions drift`; no loom-design job is among them (read from the branch-protection API on 2026-09-01). All three workflows already trigger on `loom-design/**`, not per-station, so the unified job loses no path coverage.
 
+- observed reviewer fan-outs: 4 (rounds 4, batch reopens 0). The dispatch log undercounts this arc: the `unified-root` pair was reviewed by arms dispatched directly rather than through `batch_review_cli`, because its packet could not be sealed for a task that deletes a declared file, so those fan-outs left no log record.
+- adversarial audit: N/A — header=absent; base=e1046dfb6e96a5a3aa44cd74c91cb349127f583e; changed=24; guarded-hits=0; prose-hits=0
+- cold reader: N/A — base=e1046dfb6e96a5a3aa44cd74c91cb349127f583e; changed=24; prose-hits=0
+
 ## Decision Log
 
 1. chose to move the change-id validator into the new core module rather than leave it with the command-line layer as the plan said, because all three functions that call it moved and leaving it behind would have made the two modules import each other in a loop — cost-of-change: the day you want that validator back beside the command-line layer, this choice costs moving one small private helper and re-running the pipeline suite

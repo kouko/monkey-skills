@@ -91,3 +91,39 @@ only by the whole-branch docs arms. When a reviewer finding supersedes
 pinned wording mid-arc, sweep every not-yet-executed pinned block that
 DESCRIBES the superseded text, not just the text itself: a frozen pin
 is a delayed-action neighbor.
+
+**Eighth carrier (2026-09-01, loom-design script hygiene): NINE instances
+in one arc, including the fix for the class producing another.** A branch
+that split a module and unified a test root falsified its own surroundings
+nine times, and every one was found by reading, never by running:
+
+- a plugin README that did not merely DESCRIBE the deleted mechanism but
+  PRESCRIBED it — "If you hit the same collision elsewhere in this repo,
+  that pair is the mechanism to copy" — pointing the next reader at five
+  `conftest.py` files the same branch had removed;
+- a module docstring stating an IMPORT CONTRACT the split invalidated:
+  `batch_queue.py` said "does not depend on cwd" and stayed silent about
+  newly requiring its own directory on `sys.path`, so a cross-plugin
+  consumer loading it by path broke, CI went red, and the requirement was
+  written down only inside the consumer that no longer imported it;
+- a REVIEW VERDICT STAMP: the plan header read `PASS` while the document
+  it certified had since changed its `Files touched`, its review
+  dispositions, and its batch set. A stamp is a claim about a document
+  version, and it goes stale exactly like prose;
+- a FIX COMMIT FOR THIS CLASS producing another instance: the commit that
+  added a paragraph explaining why a fingerprint pin had moved left the
+  hash itself unchanged, so the new paragraph asserted a refresh that had
+  not happened;
+- a GUARD'S FAILURE MESSAGE describing a state the guard itself invites:
+  an assertion whose sibling test tells the reader "rename it", which on
+  that path would fail saying "the station that wins changed: {}" when
+  nothing changed its winner and the collision was simply removed.
+
+**What the density says.** Nine instances is not nine lapses of care; it
+is one missing question. Every actor asked "did my change break
+anything", which tests answer, and nobody asked "which sentence did my
+change make false", which tests cannot answer because prose does not go
+red. Add the second question to any change that moves, deletes, or
+renames a thing: grep the tree for the thing's OLD name and OLD location
+as literal text, not just as an import — a name sweep finds importers, a
+text sweep finds the sentences that describe where it used to live.
