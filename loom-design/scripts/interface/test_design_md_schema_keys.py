@@ -52,10 +52,11 @@ def _nested_mapping(yaml_block: str, top_key: str) -> dict:
     """Parse `top_key:`'s two-level nested mapping into {name: {key: value}}.
 
     LOOM-SIMPLIFY: hand-rolled indentation walker, not a full YAML parser
-    (no PyYAML — loom-siblings-ci.yml installs pytest only, matching the
-    stdlib-only constraint `design_md_spec_keys.py` already documents for
-    this plugin's scripts/). Handles exactly the two-level shape this
-    reference emits (`top_key:` -> name -> `key: value`); a third nesting
+    (no PyYAML — matching the stdlib-only constraint
+    `design_md_spec_keys.py` already documents for this plugin's
+    scripts/; the unified loom-pipeline-ci.yml job does install pyyaml,
+    so CI is no longer the binding constraint). Handles exactly the
+    two-level shape this reference emits (`top_key:` -> name -> `key: value`); a third nesting
     level, YAML lists, or multiline scalars under `top_key:` are unsupported.
     A property line indented off the level's established property indent
     (deeper OR shallower) raises `AssertionError` instead of being
@@ -64,9 +65,10 @@ def _nested_mapping(yaml_block: str, top_key: str) -> dict:
     | ceiling: the fenced yaml block under `typography:` or `components:`
     grows a list, anchor, multiline scalar, or a third nesting level
     (indentation drift within the two supported levels is no longer a
-    ceiling — it now raises) | upgrade: add
-    `python3 -m pip install pyyaml` to loom-siblings-ci.yml's install step
-    and replace this walker with `yaml.safe_load(block)[top_key]`
+    ceiling — it now raises) | upgrade: replace this walker
+    with `yaml.safe_load(block)[top_key]` — loom-pipeline-ci.yml's
+    install step already provides pyyaml, so only the stdlib-only
+    convention for this plugin's scripts/ still has to be waived
     | ref: docs/loom/plans/2026-08-10-design-md-spec-conformance.md Task 3
     """
     lines = [line for line in yaml_block.splitlines() if line.strip()]
