@@ -1,7 +1,7 @@
 ---
 name: 2026-08-31-loom-design-unified-pytest-root
 description: loom-design's scripts run as five separate per-directory pytest jobs instead of one shared pytest root
-status: open
+status: closed
 origin: 2026-08-31 — three-plugin script audit (Phase 3 item 3c), deferred from docs/loom/specs/2026-08-31-decision-map-script-cleanup.md §Out of Scope
 start: event — the next time a loom-design script directory is added and needs its own CI job, or a cross-directory test needs to import two station modules
 ---
@@ -34,3 +34,12 @@ station modules at once; per-directory jobs sidestep it by construction,
 at the cost of a growing job list. A unified root needs the same fix
 that entry proposed but never applied: per-directory conftest sys.path
 isolation, unique module names, or packageizing the scripts directories.
+
+Closed — shipped on branch `loom-script-refactor-phase3`. A `pytest.ini`
+at `loom-design/scripts/` now sets `--import-mode=importlib` plus a
+`pythonpath` line enumerating the five station directories, so
+`python3 -m pytest loom-design/scripts/` runs the whole plugin suite in
+one invocation (1017 passed) without the module-basename collision this
+entry described. The five per-directory CI jobs collapsed to one in
+`.github/workflows/loom-pipeline-ci.yml`; `loom-siblings-ci.yml` and
+`loom-spec-ci.yml` were deleted.
