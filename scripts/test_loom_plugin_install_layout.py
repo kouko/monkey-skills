@@ -37,11 +37,13 @@ MANDATORY_DEPENDENCY_KEYS = {
     "requiredPlugins",
     "requires",
 }
+# loom 1.0 merged proposal-critique + complexity-critique into `critique` and
+# deleted brief-before-asking (its judgement-fork definition moved into
+# loom-code's one-way-door action).
 REQUIRED_LOOM_WORKFLOW_SKILLS = {
-    "brief-before-asking",
-    "complexity-critique",
+    "critique",
+    "decision-map",
     "git-memory",
-    "proposal-critique",
 }
 
 # loom-design 1.0's whole skill surface: two stations and two tools.

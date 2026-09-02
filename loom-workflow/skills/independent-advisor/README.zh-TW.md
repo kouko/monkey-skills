@@ -33,8 +33,8 @@
 | 情況 | 用哪個 |
 |---|---|
 | 想讓**另一個執行者**來回答（更強的模型、更高 effort、換一家廠商） | `loom-workflow:independent-advisor` |
-| 同一個執行者，但想換一個**批評視角**看提案 | `loom-workflow:proposal-critique` |
-| 特別懷疑過度設計 | `loom-workflow:complexity-critique` |
+| 同一個執行者，但想換一個**批評視角**看提案 | `loom-workflow:critique`（`mode: proposal`） |
+| 特別懷疑過度設計 | `loom-workflow:critique`（`mode: complexity`） |
 
 姊妹 skill 換的是視角，這支換的是執行者。它要花錢、而且會把材料送出這台機器，
 所以「只是想換視角」時用它是選錯工具。

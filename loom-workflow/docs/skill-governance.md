@@ -37,7 +37,7 @@ via the same-PR drift rule.
 
 | Convention | Canonical Location | Notes |
 |---|---|---|
-| Mindset standards (4) | `domain-teams:code-team/standards/mindset-*.md` | Functional copies in loom-workflow:complexity-critique/references/. PR #159 precedent. |
+| Mindset standards (4) | `domain-teams:code-team/standards/mindset-*.md` | Functional copies in loom-workflow:critique/references/ (`mode: complexity`). PR #159 precedent. |
 | Mindset extension policy | `domain-teams:code-team/standards/mindset-extension-standard.md` | Single SoT |
 
 ---
@@ -51,8 +51,7 @@ Each skill has an **owner** responsible for its lifecycle:
 | `skill-creator-advance` | kouko (with AllanYiin upstream attribution) | MIT chain in NOTICE |
 | `skill-judge` | kouko (with Leonardo Flores upstream attribution) | MIT chain in NOTICE |
 | `git-memory` | kouko | original |
-| `proposal-critique` | kouko | original |
-| `complexity-critique` | kouko (with joshuadavidthomas/softaworks lineage) | MIT chain in NOTICE |
+| `critique` | kouko (with joshuadavidthomas/softaworks lineage for `mode: complexity`) | MIT chain in NOTICE; merged from `proposal-critique` + `complexity-critique` at loom 1.0 |
 | `skill-refactor` | kouko | original design (darwin-skill inspiration only) |
 | `skill-tuning` | kouko | original design (darwin-skill inspiration only) |
 | `dogfood-skill-testing` | kouko | original design (vercel-labs/agent-browser dogfood-pattern inspiration only, Apache-2.0) |
@@ -81,8 +80,10 @@ Annotation in plugin README:
 | skill-creator-advance | Active | 2026-04-13 |
 | skill-judge | Active | 2026-04-29 (v1.4.0) |
 | git-memory | Active | 2026-04 |
-| proposal-critique | Active | 2026-04-25 (v1.3.0) |
-| complexity-critique | Active | 2026-04-29 (v1.5.0) |
+| critique | Active | 2026-09-03 (v4.0.0, merged) |
+| proposal-critique | Merged into `critique` | 2026-09-03 |
+| complexity-critique | Merged into `critique` | 2026-09-03 |
+| brief-before-asking | Deleted (loom-code one-way-door action) | 2026-09-03 |
 | skill-refactor | Active | 2026-04-29 (v1.6.0) |
 | skill-tuning | Active | 2026-04-29 (v1.7.0) |
 | dogfood-skill-testing | Active | 2026-06-03 (v0.1.0) |
@@ -213,9 +214,9 @@ The full convention lives in
 `domain-teams:skill-team/standards/file-conventions.md` §Skill-Internal
 README Authoring Discipline. loom-workflow inherits that convention.
 
-The 7 loom-workflow skills (skill-creator-advance / skill-judge /
-git-memory / proposal-critique / complexity-critique / skill-refactor
-/ skill-tuning) follow this lighter discipline. Dev-workflow's
+The 6 loom-workflow skills (skill-creator-advance / skill-judge /
+git-memory / critique / skill-refactor / skill-tuning) follow this
+lighter discipline. Dev-workflow's
 plugin-level READMEs (`loom-workflow/README.{md,ja.md,zh-TW.md}`)
 should be authored / updated via `docs-team` per the same convention,
 since they are plugin-level not skill-internal.

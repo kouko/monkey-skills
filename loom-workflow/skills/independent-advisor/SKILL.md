@@ -2,7 +2,7 @@
 name: independent-advisor
 version: 0.1.0
 description: |
-  Get a second opinion on the current plan or decision from a different executor — a stronger model, a higher effort level, or another vendor — instead of a different critique lens. Use for 'second opinion', 'ask a stronger model', '換一個模型看看', 'コードを別のモデルに見せて'. For a same-executor critique of a proposal use proposal-critique; for over-engineering use complexity-critique.
+  Get a second opinion on the current plan or decision from a different executor — a stronger model, a higher effort level, or another vendor — instead of a different critique lens. Use for 'second opinion', 'ask a stronger model', '換一個模型看看', 'コードを別のモデルに見せて'. For a same-executor critique use critique (mode: proposal for a list, mode: complexity for one over-engineered change).
 ---
 
 # Independent Advisor
@@ -10,8 +10,8 @@ description: |
 Consult a **different executor** about the user's current plan or decision.
 What changes here is WHO answers — a different model tier, a different effort
 level, or a different vendor — not which critique lens is applied. When the
-lens is what should change, use `loom-workflow:proposal-critique` or
-`loom-workflow:complexity-critique` instead; this skill spends money and sends
+lens is what should change, use `loom-workflow:critique` instead — `mode:
+proposal` for a list, `mode: complexity` for one change; this skill spends money and sends
 material off this machine, so it is the wrong tool for a lens change.
 
 Executor capability is written as a tier pair: model tier `economy` /

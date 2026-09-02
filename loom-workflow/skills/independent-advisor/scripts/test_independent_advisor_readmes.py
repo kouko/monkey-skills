@@ -40,7 +40,7 @@ CONCEPT_MATCHERS = {
         "執行者", "誰來回答", "不是換視角", "不是換觀點",
     ],
     "sibling-distinction": [
-        "proposal-critique", "complexity-critique",
+        "critique",
     ],
     "mode-explore": ["explore"],
     "mode-audit": ["audit"],

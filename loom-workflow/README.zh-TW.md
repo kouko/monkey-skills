@@ -13,7 +13,7 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 `loom-workflow` 源自兩個架構決定，其中一個已經搬走：
 
 1. **Two Hats split for skills**（把 Fowler 的 refactor-vs-feature 套用到 skill authoring）— `skill-refactor`（Phase A：behavior-preserving、auto-evaluable）與 `skill-tuning`（Phase B：taste-sensitive、human-judged）分開。這兩個 skill，連同 `skill-creator-advance` 與 `skill-judge`，已經搬到 `skill-dev-toolkit`；詳見下方「Skill-evolution architecture（已搬遷）」。
-2. **critique-gate 線** — 在 proposal 變成 commit 之前介入：`proposal-critique`（多項目 triage）→ `complexity-critique`（單一變更 deletion-first gate）→ simplify（實作後 review，存在於 Anthropic 自己的 toolkit）。這個決定仍留在 `loom-workflow`。
+2. **critique 閘** — 在 proposal 變成 commit 之前介入：一個 `critique` 兩個鏡頭（`mode: proposal` 做多項目 triage、`mode: complexity` 做單一變更的 deletion-first gate）→ simplify（實作後 review，存在於 Anthropic 自己的 toolkit）。這個決定仍留在 `loom-workflow`。
 
 plugin 還帶著 `git-memory`（寫進 commit trailer 與 PR 內文的可攜 project memory，任何能讀 git 的工具都能還原）。
 
@@ -27,8 +27,7 @@ plugin 還帶著 `git-memory`（寫進 commit trailer 與 PR 內文的可攜 pro
 
 | Skill | 角色 |
 |---|---|
-| [`brief-before-asking`](skills/brief-before-asking/) | 在 user 需要決定一個非顯而易見的 engineering fork 之前，送出 Mental-Model-first 的簡報——這是預設行為，不是可選項。當 user 對問題、解釋或利害關係表現出迷失時也會反應性觸發。 |
-| [`complexity-critique`](skills/complexity-critique/) | 用 deletion-first 的視角評估一個提案變更（refactor / feature / tech-debt）：before/after LOC、什麼會 obsolete。多項目的 proposal → `proposal-critique`。 |
+| [`critique`](skills/critique/) | 在動手做之前裁決提案：`mode: proposal` 用 evidence grounding 與 YAGNI 把清單、計畫或散文建議分成 KEEP / DEFER / DROP；`mode: complexity` 用 deletion-first 量一個具體改動——before/after LOC、什麼會 obsolete。 |
 | [`cot-explain`](skills/cot-explain/) | 把已經存在的推理——user 指名的一份文件、或剛完成的工作——渲染成以 CoT 圖為核心的自包含頁面，每條箭頭都標註「為什麼下一步會這樣接」。 |
 | [`dbt-model-style`](skills/dbt-model-style/) | 強制執行 dbt + Redshift model 的 style & structure contract — CTE 角色、zero-logic 的 final CTE、命名、YAML header、註解、syntax。 |
 | [`decision-map`](skills/decision-map/) | 在 `docs/loom/maps/<map-id>/` 開一張持久化的 decision map 並持續推進——一個目的地、一份不斷成長的 Decisions-so-far 紀錄，以及一份會在多個 session 中逐步畢業成 ticket 的 Not-yet-specified（fog）清單，而非一次性 plan。 |
@@ -37,18 +36,17 @@ plugin 還帶著 `git-memory`（寫進 commit trailer 與 PR 內文的可攜 pro
 | [`goal-create`](skills/goal-create/) | 起草一個 goal condition — SESSION mode 產出長時間執行 agent run 的四欄位停止條件（Outcome / Constraints / Verification / Stop-when）；ARC mode 產出 repository 的 purpose artifact（`Why` / `Done when`）。 |
 | [`handoff`](skills/handoff/) | 把 session 狀態存成結構化的 HANDOFF 檔，讓未來的 agent 能乾淨接手；或讀取／驗證既有的 HANDOFF。 |
 | [`independent-advisor`](skills/independent-advisor/) | 對當前的 plan 或決策，向**另一個 executor**——更強的 model、更高的 effort，或另一家廠商——取得 second opinion。換的是 executor，不是 critique 的觀點。 |
-| [`proposal-critique`](skills/proposal-critique/) | 把 proposal（list / plan / 散文建議）以 evidence grounding 與 YAGNI triage 為 KEEP / DEFER / DROP。 |
 | [`recap-state`](skills/recap-state/) | session 內的重新定向——當 user 跟丟話題時，輸出以 Synthesis-check 收尾的結構化 recap。 |
 
-十二個 skill 全為 **Active**。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
+十個 skill 全為 **Active**（八個 loom tool，加上在 loom 流程之外的 `goal-create`、`dbt-model-style` 兩個 standalone skill）。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique 線
 
-三個 skill 組成一條 deletion-first 的 review pipeline，分別對應不同的 proposal 形狀：
+一個 skill 的兩個鏡頭，加上 Anthropic 自己的實作後 reviewer，組成一條 deletion-first 的 pipeline，分別對應不同的 proposal 形狀：
 
 ```
-proposal-critique           complexity-critique           Anthropic simplify
-─────────────────           ─────────────────────         ──────────────────
+critique · mode: proposal   critique · mode: complexity   Anthropic simplify
+─────────────────────────   ───────────────────────────   ──────────────────
 多項目的 proposal           單一具體的提案變更            實作後的 diff review
 （list / plan / 散文）       （refactor、新增 feature、
                             debt cleanup，或
@@ -65,7 +63,7 @@ triage：每項判為            gate：三個 deletion-first     上線後的 r
                                    / RESHAPE / REJECT
 ```
 
-拿到 backlog 或編號 plan 時用 `proposal-critique`。檯面上是一個具體變更時用 `complexity-critique`。變更上線之後用 Anthropic 的 `simplify`。
+拿到 backlog 或編號 plan 時用 `mode: proposal`。檯面上是一個具體變更時用 `mode: complexity`。變更上線之後用 Anthropic 的 `simplify`。
 
 ## Skill-evolution architecture（已搬遷）
 
@@ -83,13 +81,13 @@ triage：每項判為            gate：三個 deletion-first     上線後的 r
 
 ## Upstream chain
 
-十二個 skill 中有一個源自 MIT-licensed 的 upstream。完整 attribution 在該 skill 的 `NOTICE` 檔案。（`skill-creator-advance` 與 `skill-judge` 的 upstream attribution 已隨它們一起搬到 `skill-dev-toolkit`。）
+十個 skill 中有一個源自 MIT-licensed 的 upstream。完整 attribution 在該 skill 的 `NOTICE` 檔案。（`skill-creator-advance` 與 `skill-judge` 的 upstream attribution 已隨它們一起搬到 `skill-dev-toolkit`。）
 
 | Skill | Upstream chain |
 |---|---|
-| `complexity-critique` | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` 改名為 `complexity-critique`） |
+| `critique`（`mode: complexity`） | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` 改名為 `complexity-critique`，再併入 `critique`） |
 
-其餘十一個 skill 為原創設計，沒有外部 upstream 需要 attribution。詳情見各 skill 的 `NOTICE`（若存在）。
+其餘九個 skill 為原創設計，沒有外部 upstream 需要 attribution。詳情見各 skill 的 `NOTICE`（若存在）。
 
 ## Repository 結構
 
@@ -103,9 +101,8 @@ loom-workflow/
 │   ├── quarterly-audit-runbook.md
 │   └── telemetry-setup.md
 ├── skills/
-│   ├── brief-before-asking/
-│   ├── complexity-critique/
 │   ├── cot-explain/
+│   ├── critique/
 │   ├── dbt-model-style/
 │   ├── decision-map/
 │   ├── distill-sessions/
@@ -113,7 +110,6 @@ loom-workflow/
 │   ├── goal-create/
 │   ├── handoff/
 │   ├── independent-advisor/
-│   ├── proposal-critique/
 │   └── recap-state/
 ├── CHANGELOG.md
 ├── README.md
@@ -132,13 +128,12 @@ loom-workflow/
 
 ## 使用
 
-`loom-workflow` 沒有內附 slash command — 十二個 skill 全部由自然語言 auto-trigger。例如：
+`loom-workflow` 沒有內附 slash command — 十個 skill 全部由自然語言 auto-trigger。例如：
 
 ```
-「critique 這份 12 項的 plan」                     → proposal-critique
-「值不值得改」/「該不該做這個」                     → complexity-critique
+「critique 這份 12 項的 plan」                     → critique（proposal）
+「值不值得改」/「該不該做這個」                     → critique（complexity）
 「我準備 commit — 幫我寫 trailer」                 → git-memory
-「看不懂」/「跟不上」/ agent-about-to-ask-complex-fork → brief-before-asking
 「開一張決策地圖」/「chart a decision map」         → decision-map
 「wrap up」/「save state」                          → handoff
 「where were we」/「我跟丟了」                      → recap-state
@@ -158,6 +153,6 @@ loom-workflow/
 
 ## License
 
-MIT。plugin 內唯一具有 MIT-licensed upstream 的 `complexity-critique`，在其 `LICENSE` 與 `NOTICE` 中完整保留 copyright chain。（`skill-creator-advance` 與 `skill-judge` 已搬到 `skill-dev-toolkit`，並在那裡保留各自的 copyright chain。）
+MIT。plugin 內唯一具有 MIT-licensed upstream 的 `critique`（其 `mode: complexity` 的一半），在其 `LICENSE` 與 `NOTICE` 中完整保留 copyright chain。（`skill-creator-advance` 與 `skill-judge` 已搬到 `skill-dev-toolkit`，並在那裡保留各自的 copyright chain。）
 
 repo 根目錄的 umbrella license 見 [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE)。
