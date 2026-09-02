@@ -114,7 +114,10 @@ criterion the slice serves as `- delivery-intent: <DA-id> | <intent path>` in
 Notes. Re-running with the same change-id reuses the existing intent and never
 rewrites it. Hand the intent to `loom-design:capture-intent` when loom-design
 is installed, otherwise to `loom-code:write-plan`; that station owns the
-intent, spec, plan, implementation, review, and PR thereafter.
+intent, spec, plan, implementation, review, and PR thereafter. The stub is a
+skeleton, not checker-clean — fill `kind:` and `needs-design:` and put the
+needs-design line in that commit's message before running
+`loom_checker.py intent`.
 
 ### Delivery state
 
