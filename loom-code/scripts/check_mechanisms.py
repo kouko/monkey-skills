@@ -54,6 +54,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -580,10 +581,16 @@ def measure_artifact_type_count(repo: Path) -> int:
 
 
 def wc_words(data: bytes) -> int:
-    """Word count the way KICKOFF-DEFAULTS records it: `| wc -w`. Python's
-    str.split() disagrees with wc on a handful of unicode separators, and the
-    recorded baseline is the command's number, not Python's."""
-    proc = subprocess.run(["wc", "-w"], input=data, capture_output=True)
+    """Word count the way KICKOFF-DEFAULTS records it: `LC_ALL=C wc -w`.
+    Python's str.split() disagrees with wc on a handful of unicode
+    separators, and the recorded baseline is the command's number, not
+    Python's. `wc -w` itself disagrees with itself across locales on some
+    unicode punctuation (e.g. a circled digit followed by a semicolon, as
+    the session-start hook emits), so LC_ALL is pinned to C here rather
+    than inherited from the caller's environment -- ASCII-whitespace
+    words, identical on macOS and GNU regardless of the ambient LANG."""
+    env = {**os.environ, "LC_ALL": "C"}
+    proc = subprocess.run(["wc", "-w"], input=data, capture_output=True, env=env)
     return int(proc.stdout.split()[0])
 
 

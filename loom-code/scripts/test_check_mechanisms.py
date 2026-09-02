@@ -647,6 +647,23 @@ class TestCountingProse:
         assert any(f.rule == "R5" for f in result.findings), result.findings
 
 
+class TestWcWordsLocaleIndependent:
+    """CI-1 — `wc -w` disagrees with itself across locales on some
+    unicode punctuation (e.g. a circled digit immediately followed by a
+    semicolon, as the real session-start hook emits); the recorded
+    baseline must reproduce on any runner regardless of its ambient
+    LANG/LC_ALL, so wc_words must pin its own locale rather than
+    inherit the caller's environment."""
+
+    def test_count_is_stable_across_locales(self, monkeypatch):
+        data = "not in ①;".encode("utf-8")
+        counts = set()
+        for locale in ("C", "C.UTF-8", "en_US.UTF-8"):
+            monkeypatch.setenv("LC_ALL", locale)
+            counts.add(cm.wc_words(data))
+        assert len(counts) == 1, counts
+
+
 def _measure_repo(tmp_path, *, words: int, baseline_line: str | None,
                   keep_hook: bool = True) -> Path:
     repo = _build_repo(tmp_path, mechanisms=FULL_MECHANISMS)
