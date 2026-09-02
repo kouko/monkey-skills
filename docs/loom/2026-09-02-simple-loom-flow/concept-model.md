@@ -21,9 +21,9 @@
 | **loom-code** | 怎麼做 | 站：write-plan、build、review、ship、maintain；checker；host hooks；reference 一份；intent／spec／plan／review 的檔案契約 | 可獨立 |
 | **loom-workflow** | 使用者點名的工具 | decision-map、handoff、recap、cot-explain、distill、git-memory、independent-advisor、critique | 可選 |
 
-- 依賴單向：loom-design 與 loom-workflow 依賴 loom-code 的 **versioned contract package**（schema、checker、relay 散文）。design 寫檔、code 讀檔；decision-map 寫 intent.md；沒有反向呼叫。
+- 依賴單向：loom-design 與 loom-workflow 依賴 loom-code 的 **versioned contract package**（schema、checker）；兩者各宣告 `requires-contract: >=<major>.<minor>`，站點啟動時對 manifest 版本重算，不符→BLOCK 印「請更新 loom-code」。design 寫檔、code 讀檔；decision-map 寫 intent.md；沒有反向呼叫。
 - 契約由消費者定義：schema 與 checker 住在 loom-code；loom-design 的站是「產生這個格式的比較好的方法」。
-- 仍需同步的功能副本，明列：checker（design 側呼叫 code 側同一支）、family-relay／plain-relay。除此之外沒有。
+- 仍需同步的功能副本，明列：checker（Codex scaffold 的 repo 內副本）。除此之外沒有。
 
 ## 2. Artifact
 
@@ -87,9 +87,10 @@ Task DAG（每 task 穩定 ID）／檔案／測試／風險。`needs-design: no`
 
 ```
 reviewed_sha         # 初值 branch base；只有 PASS／PASS_WITH_NOTES 推進
-verdicts[]           # 每個 reviewer 一份：{reviewer, vendor, model, dimension_scores, findings}
+scope                # 這一輪審的是什麼（spec | code | …）
+verdicts[]           # 每個 reviewer 一份：{reviewer, vendor, model, lens, verdict, dimension_scores, findings}
 vendors[]            # 本次 checkpoint 用到的 vendor 清單（記錄，不是條件）
-probes[]             # 實際跑過的 probe／測試／盲跑：{kind, command, result, artifact}
+probes[]             # 實際跑過的 probe／測試／盲跑：{kind, command, sha, result, artifact}；sha == reviewed_sha
 open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> | dismissed: <reason> by <who>}
 ```
 
@@ -122,19 +123,19 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 - 沒有獨立 router，沒有先於 intent 的 reception。
 - **人類決策點**：engineering 兩個（① intent 確認、③ 驗收）；product 三個（加 ② spec 的可見行為確認）。plan 永遠由 agent 決定並記理由。
 - **非決策型互動**只有一類、有入場判準：**不做就無法繼續的授權或缺件**（Codex 的一次性 `/hooks` 授信；缺 PRINCIPLES 的訪談——後者併進決策點①）。偏好類問題（例如要不要用第二家模型當 reviewer）不是非決策型：它在第一次碰到時併進決策點①一起問，答案記進 KICKOFF-DEFAULTS。這個類別不得新增成員，新增＝新機制，走 §11。
-- **問使用者的規則**：決策點的**數量**是結構（engineering 2、product 3），每個決策點**內**問幾個問題不限——訪談問到清楚為止、可見行為逐個操作對、驗收報告列所有不確定。限制是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是少問。**岔路不新增停點**：所有岔路問題都併進既有決策點——engineering 併進決策點①（intent 確認時一起問；若岔路在 plan 階段才浮現，agent 選預設並標 `agent-decided`，寫進盲跑報告的「我替你決定了」段讓決策點③看到）；product 併進決策點②。決策點之外 agent 不停。其他決定 agent 做，標 `agent-decided` 記理由；使用者隨時可翻。岔路有兩類：
+- **問使用者的規則**：決策點的**數量**是結構（engineering 2、product 3），每個決策點**內**問幾個問題不限——訪談問到清楚為止、可見行為逐個操作對、驗收報告列所有不確定。限制是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是少問。可驗判準：決策點內的每個問題必須可歸入三型之一（要什麼／可見行為／做到了嗎）或單向門的後果形；歸不進去的問題由 review 的 `user-judgment-leak` 維度判 NEEDS_REVISION。**岔路不新增停點**：所有岔路問題都併進既有決策點——engineering 併進決策點①（intent 確認時一起問；若岔路在 plan 階段才浮現，agent 選預設並標 `agent-decided`，寫進盲跑報告的「我替你決定了」段讓決策點③看到）；product 併進決策點②。決策點之外 agent 不停。其他決定 agent 做，標 `agent-decided` 記理由；使用者隨時可翻。岔路有兩類：
   - **判斷型**：≥3 個 trade-off 且不同選擇會改變交付物（brief-before-asking 既有定義）。
-  - **單向門（必問，不靠判斷）**：任一成立——(a) 之後難以更換：框架、語言、資料庫、認證方式、託管平台、套件管理器；(b) 產生金錢或持續義務：付費服務、需帳號的第三方 API、要維護的基礎設施；(c) 限制使用者未來能做的事：資料格式、匯出能力、平台綁定；(d) **決定輸出品質上限的選型**：辨識／生成模型、演算法、資料來源等，且候選在使用者感受得到的軸（準確率、速度、每次費用、語言／格式覆蓋、隱私）上差異顯著——任一軸差 ≥ 20%，或金錢／隱私／覆蓋的有無；純內部差異（記憶體、行數、可維護性）不算。四道閘依序：**先查**（intent 的 Acceptance／Constraints 或 PRINCIPLES.md 已釘住該軸→不問，選符合的）→ **先量**（能用使用者真實樣本快速比較的，量了再問，問結果不問假設）→ **門檻**（上述顯著性）→ **合併**（一個 change 的所有單向門合成一次問，附在既有決策點內；決策點過後才浮現的，agent 選預設、標 `agent-decided`、在盲跑報告揭露）。問法固定為**後果形**：「選 A：以後只能在 ___ 跑、每月 ___、換掉要重寫 ___。選 B：___。我建議 A，因為 ___。」不出現機制名詞。答案寫進 spec 的 Design decision 並標 `user-decided`。
+  - **單向門（必問，不靠判斷）**：任一成立——(a) 之後難以更換：框架、語言、資料庫、認證方式、託管平台、套件管理器；(b) 產生金錢或持續義務：付費服務、需帳號的第三方 API、要維護的基礎設施；(c) 限制使用者未來能做的事：資料格式、匯出能力、平台綁定；(d) **決定輸出品質上限的選型**：辨識／生成模型、演算法、資料來源等，且候選在使用者感受得到的軸（準確率、速度、每次費用、語言／格式覆蓋、隱私）上差異顯著——任一軸差 ≥ 20%，或金錢／隱私／覆蓋的有無；純內部差異（記憶體、行數、可維護性）不算；(e) **對使用者既有狀態的不可逆動作**：就地改寫或刪除使用者資料、改變既有檔案格式而無備份、把使用者資料送出本機——即使只有一種做法、沒有岔路也必問（盲跑在乾淨環境做，結構上碰不到既有資料，所以這類傷害只有問才擋得住）。四道閘依序：**先查**（intent 的 Acceptance／Constraints 或 PRINCIPLES.md 已釘住該軸→不問，選符合的）→ **先量**（能用使用者真實樣本快速比較的，量了再問，問結果不問假設）→ **門檻**（上述顯著性）→ **合併**（一個 change 的所有單向門合成一次問，附在既有決策點內；決策點過後才浮現的，agent 選預設、標 `agent-decided`、在盲跑報告揭露；**但 (b)(c)(e) 三類在決策點過後浮現時，agent 只能選零義務、可逆、不動既有資料的那個**，記 `agent-decided — 未經授權，取保守選項`，不得自選承諾型預設）。問法固定為**後果形**：「選 A：以後只能在 ___ 跑、每月 ___、換掉要重寫 ___。選 B：___。我建議 A，因為 ___。」不出現機制名詞。答案寫進 spec 的 Design decision 並標 `user-decided`。
 - 所有「問使用者」的舊時機（on-ramp、kickoff briefing、batch checkpoint、waiver）全部取消；on-ramp 1–3 列由 `needs-design` 重算，4–6 列變 standing default。
 
 ## 5. review 站＝checkpoint review（機器是唯一的審查者）
 
 - **一份契約**：verdict schema、`reviewed_sha`、輪次規則一套。鏡頭多個（code 11 維、docs 5 維；spec-conformance、design-conformance 各一維；correctness 必跑 probe）。
-- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer（同 host 的兩個 fresh session 即可）。**跨 vendor 是選配，由使用者選**：KICKOFF-DEFAULTS 記 `second-vendor: <cli> | none — <reason> (<date>)`（vendor＝不同模型供應商的可非互動 CLI，例如 Codex CLI、Gemini CLI）。未記錄且站偵測到第二家 CLI 時，在決策點①裡順帶建議（一段白話：能打到同模型盲點、每次約幾分鐘與額度），**同一個 change 至多一次**，並把選擇記進 KICKOFF-DEFAULTS；記了就不再提。選了就用，沒選就不用，兩者都不 WARN、不擋。review.json 只記 `vendors: [...]`。reviewer 分歧記進 verdicts，不平均。
-- **何時跑**：wave 結束算未審 delta，任一超過門檻（8 檔或 400 行，實驗預設，replay 後固定）才跑；branch 結束必跑；含 after-task 的 wave 結束一律跑。`needs-design: yes` 時 spec 進 plan 前必跑 spec 型別的「讀＋對抗」且 PASS。build 階段 checkpoint ≤ 5（plan 深度上限）。
-- **after-task**：plan 標記的 task commit 後立刻跑同一套；每 plan ≤ 2。它是獨立的一次 checkpoint；該 wave 結束時的 checkpoint 是**另一次**（只審 after-task 之後的 delta ＋ 跨任務一致性；delta 為零時只跑一致性，很便宜）。
+- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer（同 host 的兩個 fresh session 即可）。**跨 vendor 是選配，由使用者選**：KICKOFF-DEFAULTS 記 `second-vendor: <cli> | none — <reason> (<date>)`（vendor＝不同模型供應商的可非互動 CLI，例如 Codex CLI、Gemini CLI）。未記錄且站偵測到第二家 CLI 時，在決策點①裡順帶建議（一段白話，用數字當理由：本設計自己的 spec 審查七個致命問題有五個只有一家找到；每次約幾分鐘與額度），**同一個 change 至多一次**，並把選擇記進 KICKOFF-DEFAULTS；記了就不再提。選了就用，沒選就不用，兩者都不 WARN、不擋。review.json 只記 `vendors: [...]`。reviewer 分歧記進 verdicts，不平均。
+- **何時跑**：wave 結束算未審 delta，任一超過門檻（8 檔或 400 行，實驗預設，replay 後固定）才跑；branch 結束必跑；含 after-task 的 wave 結束一律跑。`needs-design: yes` 時 spec 進 plan 前必跑 spec 型別的「讀＋對抗」且 PASS。build 階段 checkpoint ≤ 5（plan 深度上限；NEEDS_REVISION 後的修正輪不計入）。
+- **after-task**：plan 標記的 task commit 後立刻跑同一套；每 plan 預算 2，超過的每個要在 plan 的該 task 記一行理由（預算不是硬帽）。它是獨立的一次 checkpoint；該 wave 結束時的 checkpoint 是**另一次**（只審 after-task 之後的 delta ＋ 跨任務一致性；delta 為零時只跑一致性，很便宜）。
 - **第 N 次審什麼**：`reviewed_sha` 後的 delta ＋ 跨任務一致性 ＋ 回歸 probe。
-- **狀態機**：NEEDS_REVISION 不推進；下一輪逐條關閉 `open_findings`（resolved 或 dismissed，記誰）才推進。findings 只在 checkpoint 內改變。
+- **狀態機**：NEEDS_REVISION 不推進；下一輪逐條關閉 `open_findings`（resolved 或 dismissed，記誰）才推進。`dismissed` 只能由非 implementer 的 reviewer 下（checker 對 dispatch 記錄重算）；severity 為 important 以上的 dismissal 必須出現在盲跑報告的「我替你決定了」段。findings 只在 checkpoint 內改變。
 - **邊界**：wave 內走歪要到 wave 結束才抓到；wave 大小是旋鈕。
 
 ## 6. 三種驗證動作＝品質的全部來源
@@ -143,9 +144,9 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 |---|---|---|---|
 | **讀** | ≥2 reviewer，code 11 維 | ≥2 reviewer，docs 5 維 | 同左 |
 | **盲跑** | 乾淨環境 build／跑／照 intent 的 Acceptance 逐條驗／截圖 | 冷讀者拿 spec 走 Acceptance 的情境 | 冷讀 agent 照 SKILL.md 做真實任務 |
-| **對抗** | mutation／fuzz／abuse case（repo 宣告工具時） | red-team spec | gate 攻擊目錄 |
+| **對抗** | mutation／fuzz（repo 宣告工具時）；**repo 未宣告工具時對抗 agent 自寫 ≥3 個可執行的 abuse／邊界案例並記進 `probes[]`** | red-team spec | gate 攻擊目錄 |
 
-- **盲跑報告是驗收介面**：用使用者的語言，對 intent 的每條 Acceptance（product 時再加 spec 的 UI flows 每條）寫「我怎麼試、結果、證據（截圖／輸出）」，不確定的地方列成問題。決策點 ③ 讀的就是這份，不是 diff。
+- **盲跑報告是驗收介面**：用使用者的語言，對 intent 的每條 Acceptance（product 時再加 spec 的 UI flows 每條）寫「我怎麼試、結果、證據（截圖／輸出）」，不確定的地方列成問題；固定一行「對你既有的資料做了什麼」（沒有就寫沒有）；「我替你決定了」段列 agent-decided 的岔路與 important 以上的 dismissal。決策點 ③ 讀的就是這份，不是 diff。
 - 三者共用 verdict schema，結果進 review.json。寫的人不能自己驗：盲跑與對抗的 agent 不得是 implementer，checker 對 `reviewer ≠ implementer` 機械檢查（dispatch 記錄）。
 - **型別對映**（KICKOFF-DEFAULTS 可覆寫）：`docs/loom/intent/**`＝intent、`docs/loom/<id>/spec.md`＝spec、`docs/loom/<id>/plan.md`＝plan、`PRINCIPLES.md`／`DESIGN.md`／`KICKOFF-DEFAULTS.md`＝standing、`docs/loom/memory/**`＝memory、`**/evidence/**`＝evidence（被引用時必讀）、`**/SKILL.md` 與 `agents/*.md`＝skill、`hooks/**` 與 `scripts/check_*`＝gate、`docs/loom/maps/**`＝map、其餘 `*.md`＝docs、其餘＝code。
 - 目錄累積＝continuous evals：每個事故變永久案例，是 §11 的供給。
@@ -156,7 +157,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 - **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」：
   - intent：schema；product 的 Problem 禁識別字；`needs-design` 行帶理由且進 commit message；`no` 但 diff 碰介面表面 glob → 擋。
   - 收件：write-spec／write-plan 只收 `status: confirmed` 的 intent；write-plan 在 `needs-design: yes` 時只收有 spec PASS 的，且 `kind: product` 時另要求 spec 有 `confirmed-behavior:` 行。
-  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有本 branch 的 package 測試結果且為 pass、`verdicts[]` ≥ 2（fresh-context；vendor 數不是條件）、reviewer ≠ implementer。
+  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有 package 測試記錄且 **checker 在乾淨工作樹（== reviewed_sha）自行執行該 `command`，以自己觀察到的 exit code 為準**，agent 填的 `result` 只作記錄、`verdicts[]` ≥ 2（vendor 數不是條件；`fresh-context` 是 dispatch 記錄欄位，不是可重算條件）、reviewer ≠ implementer、`dismissed` 者屬 dispatch 的審查角色。
   - 明說：這層擋的是漏步驟，不擋有目標的 agent；多人 repo 要作弊防護時加 branch protection。
 - **稽核**：git（trailer、review.json）。
 
@@ -171,7 +172,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 - product-principles／design-system 是工具，產 `PRINCIPLES.md`／`DESIGN.md`；文件要有 `ratified-by: <name> <date>`（使用者確認後 agent 寫）。沒裝 loom-design 時，write-plan 用 contract package 的模板**代做訪談並代寫** PRINCIPLES.md，使用者只確認；使用者永遠不手寫。
 - **勸導（每份 intent）**：repo 缺任一份 → checker 印固定三行 WARN；站原樣呈現。
-- **拒收（只有一種）**：`kind: product` 且無 ratified PRINCIPLES.md → write-spec／write-plan 拒收。DESIGN.md 永不拒。engineering 永不因此被拒。**不另開停點**：capture-intent（或 code-only 的 write-plan）在決策點①的同一段對話裡發現缺件時，直接接著做產品原則訪談，訪談結束一起確認；使用者不會被單獨問「要不要」。
+- **拒收（只有一種）**：`kind: product` 且無 ratified PRINCIPLES.md（ratified ＝ 有 `ratified-by:` 行且 Non-negotiables 段 ≥ 3 條）→ write-spec／write-plan 拒收。conformance 維度對照不到條文時回 N/A＋理由進 review.json，不硬給分。DESIGN.md 永不拒。engineering 永不因此被拒。**不另開停點**：capture-intent（或 code-only 的 write-plan）在決策點①的同一段對話裡發現缺件時，直接接著做產品原則訪談，訪談結束一起確認；使用者不會被單獨問「要不要」。
 - **靜音**：KICKOFF-DEFAULTS 記 `standing-docs: waived — <reason> (<date>)`，只靜音 WARN（DESIGN.md、與 engineering 的 PRINCIPLES 提醒）；**永不豁免 product 的 PRINCIPLES 拒收**。
 - 消費：write-spec 載入；review 站 `principles-conformance`、`design-conformance`。
 
@@ -192,7 +193,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 - completeness-critic／design-critic 作為獨立 skill；adversarial-audit-station 作為固定步
 - decision-map delivery ticket 與綁定機制
 - tdd-iron-law／systematic-debugging → reference；verification／ui-verification／parallel-agents／worktrees → action
-- 舊 plan／spec／brief 一律原地封存不轉換（硬切換）
+- 舊 plan／spec／brief 一律原地封存不轉換（硬切換）；切換日事實：既有 Codex repo 因 hooks.json 定義改變需重授信一次；進行中的舊 branch 第一次 push 會被新 checker 擋，出口＝補 intent＋跑一次 checkpoint；活著的 decision-map 中綁舊 brief 的 DA 改指 `retired — 硬切換`
 
 ## 11. 准入規則
 
@@ -204,7 +205,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 ## 12. 驗收與審查紀錄
 
-驗收對象是落地後各站的 SKILL.md（intent Acceptance #6）：冷讀者只拿該站文件，15 分鐘內零猜測說出指定任務的檔、決策點、checker、checkpoint；零猜測優先於時間。本頁的冷讀結果只作記錄。
+驗收對象是落地後各站的 SKILL.md（intent Acceptance #6）：冷讀者只拿該站文件，15 分鐘內零猜測說出指定任務的檔、決策點、checker、checkpoint；零猜測優先於時間。「猜測」＝冷讀者為回答四項而讀了入口站文件以外的任何檔案，或回答中出現無文件依據的斷言；由派測者判。本頁的冷讀結果只作記錄。
 
 | 版本 | 檢查 | 結果 |
 |---|---|---|

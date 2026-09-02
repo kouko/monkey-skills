@@ -81,6 +81,15 @@
    "model": "opus",
    "verdict": "PASS_WITH_NOTES",
    "findings_file": "evidence/spec-review-r4-claude.md"
+  },
+  {
+   "round": 5,
+   "reviewer": "opus-spec-redteam-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "spec-adversarial",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-redteam-r5.md"
   }
  ],
  "probes": [
@@ -89,6 +98,14 @@
    "command": "fresh sonnet narrates Task A/B from concept-model.md",
    "result": "v10: both paths correct, 25 min, 2 genuine guesses fixed",
    "artifact": "concept-model.md §12"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "spec",
+   "command": "fresh opus red-teams spec.md + concept-model.md across scenarios A–H",
+   "sha": "6eb0a6a9",
+   "result": "NEEDS_REVISION — 6 fatal, all adopted",
+   "artifact": "evidence/spec-redteam-r5.md"
   }
  ],
  "open_findings": [
@@ -368,6 +385,146 @@
    ],
    "text": "摘要表要含完整站序",
    "resolved": "6eb0a6a9"
+  },
+  {
+   "id": "SR5-01",
+   "severity": "fatal",
+   "anchor": "§7 push probes",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-1 probes[] 自填→checker 自跑",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-02",
+   "severity": "fatal",
+   "anchor": "§4 合併閘",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "C/D 決策點後單向門取保守預設",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-03",
+   "severity": "fatal",
+   "anchor": "§4 類別",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "C-2 類別 (e) 不可逆動作",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-04",
+   "severity": "fatal",
+   "anchor": "§6 對抗",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "A-1 無工具時自寫 abuse 案例",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-05",
+   "severity": "fatal",
+   "anchor": "§5 狀態機",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "A-2 dismissed 身分",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-06",
+   "severity": "fatal",
+   "anchor": "REQ-1／§4",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-2 問題型判準",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-07",
+   "severity": "important",
+   "anchor": "§5 second-vendor",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "B-2 建議句用 5/7",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-08",
+   "severity": "important",
+   "anchor": "§5 上限",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "E-1 修正輪不計、after-task 預算",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-09",
+   "severity": "nit",
+   "anchor": "§5 門檻",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "E-2 接受風險，replay 量首輪比例",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-10",
+   "severity": "important",
+   "anchor": "§8 拒收",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "F ratified 實質條件",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-11",
+   "severity": "important",
+   "anchor": "§1／§10／REQ-2",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "G 切換日三事實",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-12",
+   "severity": "important",
+   "anchor": "§7 fresh-context",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-3 降為記錄欄位",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-13",
+   "severity": "nit",
+   "anchor": "REQ-10",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-4 接受風險，分開呈現",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "SR5-14",
+   "severity": "nit",
+   "anchor": "§12",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-5 猜測定義",
+   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
   }
  ],
  "vendors": [

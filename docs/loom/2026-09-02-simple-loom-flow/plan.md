@@ -48,7 +48,7 @@ checkpoint：W0 結束必跑（新增檔 > 8）。
 - 風：介面表面 glob 的預設值（KICKOFF-DEFAULTS 缺時）要保守——預設 `**/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/**`，並印出用了哪組。
 
 **W0-04 checker 規則：push 與 standing docs**　after: W0-02
-- 規則：`push.review-only-head`（HEAD 只動 review.json）、`push.reviewed-sha`（== HEAD^）、`push.open-findings-closed`、`push.probes-package-tests`（probes[] 有本 branch package 測試且 pass）、`push.verdicts-ge-2`、`push.reviewer-ne-implementer`（比對 dispatch 記錄檔 `docs/loom/<id>/review.json.dispatch`——由 build／review 站寫，格式進 manifest）、`standing.warn`（固定三行）、`standing.product-principles-reject`、`standing.silence`（KICKOFF-DEFAULTS `standing-docs: waived`）。
+- 規則（含 spec 對抗後追加：`push.probes-package-tests` 由 checker 在乾淨工作樹自行執行 command；`push.dismissed-by-reviewer`；`standing.product-principles-reject` 另重算 Non-negotiables ≥3 條；新增 `contract.requires` 供 design／workflow 站啟動時比對 manifest 版本）：`push.review-only-head`（HEAD 只動 review.json）、`push.reviewed-sha`（== HEAD^）、`push.open-findings-closed`、`push.probes-package-tests`（probes[] 有本 branch package 測試且 pass）、`push.verdicts-ge-2`、`push.reviewer-ne-implementer`（比對 dispatch 記錄檔 `docs/loom/<id>/review.json.dispatch`——由 build／review 站寫，格式進 manifest）、`standing.warn`（固定三行）、`standing.product-principles-reject`、`standing.silence`（KICKOFF-DEFAULTS `standing-docs: waived`）。
 - 測：`test_loom_checker_push.py`（含 amend 後 reviewed_sha 失效、review-only commit 動到第二個檔）、`test_loom_checker_standing.py`（product 缺 ratified 行→拒；waived 只靜音 WARN 不解除拒收）。
 - 風：`reviewer ≠ implementer` 只能查記錄，記錄本身可造（§0 明說不防）；測試只驗「有記錄且不同」。
 
@@ -99,7 +99,7 @@ checkpoint：W1 結束必跑。
 checkpoint：W2 結束必跑。
 
 **W2-01 capture-intent 站**　after: W1-01
-- 檔：`loom-design/skills/capture-intent/SKILL.md`（訪談→intent.md（contract template）→「覆述並確認」action（同 W1-01，含單向門合併、second-vendor 一次建議、缺 PRINCIPLES 接訪談）→needs-design 判定→交 write-spec 或 loom-code；**站序摘要表**（Task B 路徑））；訪談問法自 user-insights／business-value 精選成 `references/interview.md`（≤1200 words）；刪 `using-loom-design/`、`using-loom-pipeline/`、`user-insights/`、`business-value/`。
+- 檔：`loom-design/.claude-plugin/plugin.json` 加 `requires-contract: ">=1.0"`，SKILL.md 開頭一步 `loom_checker.py contract --require 1.0`（不符→BLOCK）；`loom-design/skills/capture-intent/SKILL.md`（訪談→intent.md（contract template）→「覆述並確認」action（同 W1-01，含單向門合併、second-vendor 一次建議、缺 PRINCIPLES 接訪談）→needs-design 判定→交 write-spec 或 loom-code；**站序摘要表**（Task B 路徑））；訪談問法自 user-insights／business-value 精選成 `references/interview.md`（≤1200 words）；刪 `using-loom-design/`、`using-loom-pipeline/`、`user-insights/`、`business-value/`。
 - 測：`loom-design/scripts/test_capture_intent_contract.py`（SKILL.md 引用的 template／checker 路徑存在於 loom-code contract package；摘要表欄位齊）。
 - 風：cross-plugin 路徑只能用 plugin name 引用（官方：plugin 不可跨引用檔案）；SKILL.md 寫「loom-code 的 contract package」並列出相對於該 plugin 的路徑，checker 由 loom-code hook 觸發、design 側不直接執行。
 
@@ -122,7 +122,7 @@ checkpoint：W2 結束必跑。
 checkpoint：W3 結束必跑。
 
 **W3-01 decision-map：delivery ticket → intent**　after: W1-01
-- 檔：`loom-workflow/skills/decision-map/SKILL.md`（`start_delivery` 改為「寫 intent.md 帶 `map:`，MAP.md 列 change-id」；狀態由 intent §2b 派生；open intent 阻擋 DA、withdrawn 記 retired）；對應 script／test 修。
+- 檔：`loom-workflow/.claude-plugin/plugin.json` 加 `requires-contract`；綁舊 brief 的 DA 改指 `retired — 硬切換`；`loom-workflow/skills/decision-map/SKILL.md`（`start_delivery` 改為「寫 intent.md 帶 `map:`，MAP.md 列 change-id」；狀態由 intent §2b 派生；open intent 阻擋 DA、withdrawn 記 retired）；對應 script／test 修。
 - 測：既有 decision-map 測試調整＋`test_decision_map_intent_binding.py`。
 - 風：`docs/loom/maps/` 現有 7 檔含舊 ticket 格式——原地封存，MAP.md 加一行「舊 ticket 不轉換」。
 
@@ -165,7 +165,7 @@ checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
 - 風：Codex 額度；`codex exec` 需 `< /dev/null`。
 
 **W4-03 REQ-10 replay ×3**　after: W1-06, W3-05
-- 做（agent-decided，理由：#772 今天 67 commit 是站級新功能，真重建等於重做一個 change，而且舊機制在本 PR 已刪，「今天的做法」無法在同一棵樹上對照）：
+- 做（三個 change 分開呈現，不合計；同時量「首輪 vs 後續輪找到的 finding 比例」作門檻判準）（agent-decided，理由：#772 今天 67 commit 是站級新功能，真重建等於重做一個 change，而且舊機制在本 PR 已刪，「今天的做法」無法在同一棵樹上對照）：
   - #771（最小、純工程）**真 replay**：取其 PR 標題與描述寫成 intent（engineering、needs-design: no）、走 write-plan→build→review→ship 到 PR-ready（不開 PR），數 commit／派工／決策點。
   - #772、#775 **推導 replay**：以同樣方式寫 intent 與 plan（agent 產 Task DAG 但不 build），用 #771 實測校準的計數規則（commit＝task 數＋review-only commit 數；派工＝implementer 數＋每 checkpoint 2 reviewer＋盲跑 1＋對抗 1；決策點＝2）推算，並附 #771 的實測／推導誤差。
   - 三者逐項對比今天基線（31/22/2、67/58/2、28/14/2）；任一超出→這是 §0 意義的失敗，記進盲跑報告，不調整計數規則來過。
@@ -177,7 +177,7 @@ checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
 - 風：淨數基線在 923fb84a 沒有 mechanisms.yaml——`--baseline` 對舊 ref 用「skill 目錄＋hooks.json 條目」兩類近似，寫明。
 
 **W4-05 盲跑報告（決策點③）**　after: W4-01..04
-- 做：blind-runner agent（≠ 任何 implementer）在乾淨 clone 裝三個 plugin（本 branch 路徑），對 intent Acceptance 1–7 逐條「怎麼試、結果、證據」；「我替你決定了」段列：language-anchor 保留、replay 方式、Check 22/23 不保留、BACKLOG 逐條處置；不確定項列成問題。
+- 做：blind-runner agent（≠ 任何 implementer）在乾淨 clone 裝三個 plugin（本 branch 路徑），對 intent Acceptance 1–7 逐條「怎麼試、結果、證據」；固定行「對你既有的資料做了什麼」；「我替你決定了」段列：language-anchor 保留、replay 方式、Check 22/23 不保留、BACKLOG 逐條處置；不確定項列成問題。
 - 檔：`docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md`；review.json 收尾（reviewed_sha 推進、probes[] 含 package 測試與 Codex walk）。
 - 風：Acceptance #1 的「基本知識使用者」無法由 agent 扮演證明——盲跑報告如實寫「由 W4-01 冷讀＋決策點措辭審查間接證明」。
 
