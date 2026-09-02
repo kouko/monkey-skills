@@ -166,7 +166,10 @@ def _write_valid_principles(path: Path) -> None:
     path.write_text(
         "# PRINCIPLES\n\n"
         "## Who\nSolo maintainers.\n\n"
-        "## Non-negotiables\n- One\n- Two\n- Three\n\n"
+        "## Non-negotiables\n"
+        "- Every claim ships with the command that proves it\n"
+        "- One maintainer can run the whole thing alone\n"
+        "- A deleted mechanism never comes back silently\n\n"
         "## Won't do\n- Multi-tenant billing\n\n"
         "## Failure we must avoid\n- Silent data loss\n\n"
         "## Fixed choices\n- Python\n\n"
