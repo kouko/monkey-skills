@@ -12,15 +12,15 @@ kind: engineering　needs-design: yes（spec 已 PASS，本段不含 Current Sta
 - 版本：loom-code 0.110.0 → **1.0.0**、loom-design 0.6.0 → **1.0.0**、loom-workflow 3.2.0 → **4.0.0**（皆 breaking）。三表面各 bump：`plugin.json`、CHANGELOG、root README 的該列（版本＋skill 數欄＋描述句都要改；歷史上第 13 次漏掉的表面）＋ `.claude-plugin/marketplace.json` 三段描述（loom-design 現寫「deterministic pipeline conductor」）。
 - 基線（落地時寫進 `docs/loom/KICKOFF-DEFAULTS.md`）：`session-start-baseline: 923fb84a 5281`（merge-base `923fb84a`，命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo，本 plan 撰寫時實測 5281）。目標 ≤ 2640。
 
-### skill 收斂表（36 → 18）
+### skill 收斂表（36 → 17，另 2 個不計數）
 
 | plugin | 今天（數） | 落地後 | 去向 |
 |---|---|---|---|
 | loom-code | 14 | **5 站**：write-plan、build、review、ship、maintain | brainstorming→capture-intent（design）／write-plan 收件；writing-plans→write-plan；subagent-driven-development＋dispatching-parallel-agents＋using-git-worktrees→build（後兩者為 action）；requesting-code-review＋requesting-docs-review＋verification-before-completion＋ui-verification→review（後兩者為 action）；finishing-a-development-branch→ship；loom-memory→ship／maintain 的 memory 步驟＋`docs/loom/memory/` 慣例留在 contract package；tdd-iron-law＋systematic-debugging→`references/engineering-baseline.md`；using-loom-code 刪（無 router） |
 | loom-design | 10 | **2 站＋2 工具**：capture-intent、write-spec；product-principles、design-system | user-insights＋business-value→capture-intent 的訪談段；spec-expansion＋interaction-flows→write-spec；completeness-critic＋design-critic→review 站的 spec 鏡頭（docs 5 維＋design-conformance）；using-loom-design、using-loom-pipeline 刪 |
-| loom-workflow | 12 | **9 工具**：decision-map、handoff、cot-explain、distill-sessions、git-memory、independent-advisor、critique、goal-create、dbt-model-style | proposal-critique＋complexity-critique→critique（`mode:` 選鏡頭）；recap-state→handoff（`--for self`）；brief-before-asking 刪（判斷型岔路定義移進 contract package 的單向門 action） |
+| loom-workflow | 12 | **8 工具**：decision-map、handoff、recap-state、cot-explain、distill-sessions、git-memory、independent-advisor、critique（＋2 個不計數的獨立 skill：goal-create、dbt-model-style） | proposal-critique＋complexity-critique→critique（`mode:` 選鏡頭）；brief-before-asking 刪（判斷型岔路定義移進 contract package 的單向門 action）；goal-create、dbt-model-style 原樣保留 |
 
-與 concept-model §3 的差異（agent-decided）：§3 的 loom-workflow「八個」漏數了 goal-create 與 dbt-model-style；兩者都不是 loom 流程機制但按 §3 計數規則算 skill。為守 ≤18，把 recap-state 併進 handoff（兩者同為「給讀者的狀態摘要」，差別只在讀者是誰）。落地時同步修 §3 的數字（W3-06）。
+計數規則（kouko 2026-09-02 裁定，user-decided）：goal-create 與 dbt-model-style 獨立於 loom 自動流程之外，**不計入** skill 數；manifest 以 `standalone: true` 標記，`check_mechanisms.py` 的 skill 計數排除 standalone。計數＝7＋8＋2＝**17**（≤18）。W3-06 把這條計數規則寫進 concept-model §3。
 
 ### 名詞
 本 plan 不承諾 ≤40（spec REQ-8 註）；W3-06 用 §3 計數規則手數一次並記進 concept-model §3，作 Open question 的基線。
@@ -127,8 +127,8 @@ checkpoint：W3 結束必跑。
 - 風：`docs/loom/maps/` 現有 7 檔含舊 ticket 格式——原地封存，MAP.md 加一行「舊 ticket 不轉換」。
 
 **W3-02 critique 合併、recap→handoff、brief-before-asking 刪**　after: W1-01
-- 檔：`loom-workflow/skills/critique/SKILL.md`（`mode: proposal | complexity`，兩份 body 合成、共用段去重）；`handoff/SKILL.md` 加 `--for self`（recap 的輸出格式）；刪 `proposal-critique/`、`complexity-critique/`、`recap-state/`、`brief-before-asking/`；`hooks/hooks.json` 若引用 bba 則清；`loom-workflow/docs/`、`loom-workflow/tests/*.sh` grep 舊 skill 名逐檔改；`loom-code/tests/integration/test-complexity-critique-delegation.sh` 在此刪（若 W1-06 未刪）。
-- 測：對應 `test_*_compaction.py` 改名合併；`test_skill_count.py`（loom-workflow 恰 9）。
+- 檔：`loom-workflow/skills/critique/SKILL.md`（`mode: proposal | complexity`，兩份 body 合成、共用段去重）；刪 `proposal-critique/`、`complexity-critique/`、`brief-before-asking/`；recap-state、handoff、goal-create、dbt-model-style 不動；`hooks/hooks.json` 若引用 bba 則清；`loom-workflow/docs/`、`loom-workflow/tests/*.sh` grep 舊 skill 名逐檔改；`loom-code/tests/integration/test-complexity-critique-delegation.sh` 在此刪（若 W1-06 未刪）。
+- 測：對應 `test_*_compaction.py` 改名合併；`test_skill_count.py`（loom-workflow 恰 10 個目錄，其中 2 個 standalone）。
 - 風：brief-before-asking 被 kouko 的全域 CLAUDE.md 點名為預設路徑——這是使用者側設定，不在本 repo；PR body 提醒一句。
 
 **W3-03 docs/loom 收斂**　after: W1-06, W2-04
@@ -147,7 +147,7 @@ checkpoint：W3 結束必跑。
 - 風：無。
 
 **W3-06 concept-model／spec 對齊**　after: W3-02
-- 檔：`concept-model.md` §1（loom-workflow 欄改九項、移除 recap、加 goal-create／dbt-model-style；「仍需同步的功能副本」改為只剩 checker）、§2e（刪 `.git/loom/ready.json` 本機鏡像子句——plan 不建鏡像，review.json 入版控已足，agent-decided：少一個機制）、§3（tool 數改 11、loom-workflow 9 個、名詞手數結果）、§7a／§11 若落地時措辭有變逐字對齊；`spec.md` 不動（已 PASS；若 W 期間發現 spec 必須改，走 review 站 spec 鏡頭再 PASS，不靜默改）。
+- 檔：`concept-model.md` §1（loom-workflow 欄註明 goal-create／dbt-model-style 為不計數的獨立 skill；「仍需同步的功能副本」改為只剩 checker）、§2e（刪 `.git/loom/ready.json` 本機鏡像子句——plan 不建鏡像，review.json 入版控已足，agent-decided：少一個機制）、§3（加 standalone 計數規則、總數 17、名詞手數結果）、§7a／§11 若落地時措辭有變逐字對齊；`spec.md` 不動（已 PASS；若 W 期間發現 spec 必須改，走 review 站 spec 鏡頭再 PASS，不靜默改）。
 - 測：無（docs 鏡頭在 W3 checkpoint 審）。
 - 風：改 spec 會使 review.json 的 scope PASS 失效——規則寫死在上面。
 
@@ -173,11 +173,11 @@ checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
 - 風：這個 agent-decided 偏離會在盲跑報告「我替你決定了」段揭露；使用者不接受時的替代＝三個都真 replay（估三個 session）。
 
 **W4-04 量測與 mechanisms 收尾**　after: W3-04, W4-03
-- 做：`check_mechanisms.py --baseline 923fb84a` 淨數；skill 數（18）；artifact 種類（≤5）；session-start 字數（≤2640）；名詞手數；`needs-design` intent 數等記錄項——結果寫 `evidence/measurements.md` 並貼進盲跑報告。
+- 做：`check_mechanisms.py --baseline 923fb84a` 淨數；skill 數（17，排除 standalone）；artifact 種類（≤5）；session-start 字數（≤2640）；名詞手數；`needs-design` intent 數等記錄項——結果寫 `evidence/measurements.md` 並貼進盲跑報告。
 - 風：淨數基線在 923fb84a 沒有 mechanisms.yaml——`--baseline` 對舊 ref 用「skill 目錄＋hooks.json 條目」兩類近似，寫明。
 
 **W4-05 盲跑報告（決策點③）**　after: W4-01..04
-- 做：blind-runner agent（≠ 任何 implementer）在乾淨 clone 裝三個 plugin（本 branch 路徑），對 intent Acceptance 1–7 逐條「怎麼試、結果、證據」；「我替你決定了」段列：recap→handoff、language-anchor 保留、replay 方式、Check 22/23 不保留、BACKLOG 逐條處置；不確定項列成問題。
+- 做：blind-runner agent（≠ 任何 implementer）在乾淨 clone 裝三個 plugin（本 branch 路徑），對 intent Acceptance 1–7 逐條「怎麼試、結果、證據」；「我替你決定了」段列：language-anchor 保留、replay 方式、Check 22/23 不保留、BACKLOG 逐條處置；不確定項列成問題。
 - 檔：`docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md`；review.json 收尾（reviewed_sha 推進、probes[] 含 package 測試與 Codex walk）。
 - 風：Acceptance #1 的「基本知識使用者」無法由 agent 扮演證明——盲跑報告如實寫「由 W4-01 冷讀＋決策點措辭審查間接證明」。
 
