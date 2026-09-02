@@ -166,7 +166,8 @@
    "model": "opus",
    "lens": "spec",
    "verdict": "PASS_WITH_NOTES",
-   "findings_file": "evidence/spec-review-r5-read.md"
+   "findings_file": "evidence/spec-review-r5-read.md",
+   "spec_sha": "1ef2e82"
   },
   {
    "round": 9,
@@ -176,7 +177,8 @@
    "model": "sonnet",
    "lens": "spec",
    "verdict": "PASS_WITH_NOTES",
-   "findings_file": "evidence/spec-review-r5-read.md"
+   "findings_file": "evidence/spec-review-r5-read.md",
+   "spec_sha": "1ef2e82"
   },
   {
    "round": 10,

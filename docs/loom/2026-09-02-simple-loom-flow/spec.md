@@ -1,6 +1,6 @@
 # loom 重設計 — spec
 intent: 2026-09-02-simple-loom-flow@be19b961
-confirmed-behavior: 2026-09-02   # 重確認 2026-09-02：對抗 r5 後三處可見行為（不可逆動作必問、盲跑報告兩固定段、問題三型判準）kouko 逐項確認
+confirmed-behavior: 2026-09-02 @1ef2e82   # 重確認 2026-09-02：對抗 r5 後三處可見行為（不可逆動作必問、盲跑報告兩固定段、問題三型判準）kouko 逐項確認
 
 ## Requirements                                    【使用者可讀】
 REQ-1 — 決策點數固定
