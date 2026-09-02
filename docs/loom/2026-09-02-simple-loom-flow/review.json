@@ -886,6 +886,22 @@
    "model": "sonnet",
    "started": "2026-09-02T07:25:06Z",
    "fresh_context": true
+  },
+  {
+   "task": "W1-01 after-task",
+   "role": "blind-runner",
+   "agent_id": "sonnet-coldread-writeplan-1",
+   "model": "sonnet",
+   "started": "2026-09-02T07:34:39Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-01 after-task",
+   "role": "reviewer",
+   "agent_id": "opus-review-writeplan-1",
+   "model": "opus",
+   "started": "2026-09-02T07:34:39Z",
+   "fresh_context": true
   }
  ]
 }
