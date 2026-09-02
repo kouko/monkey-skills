@@ -4,3 +4,5 @@
 {"task": "W0-05", "role": "implementer", "agent_id": "opus-hooks-1", "model": "opus", "started": "2026-09-02T05:35:11Z"}
 {"task": "W0-03 after-task", "role": "reviewer", "agent_id": "opus-review-code-1", "model": "opus", "started": "2026-09-02T05:52:58Z"}
 {"task": "W0-03 after-task", "role": "reviewer", "agent_id": "sonnet-review-spec-1", "model": "sonnet", "started": "2026-09-02T05:52:58Z"}
+{"task": "W0-06", "role": "implementer", "agent_id": "sonnet-mechanisms-1", "model": "sonnet", "started": "2026-09-02T06:17:55Z"}
+{"task": "spec adversarial", "role": "adversary", "agent_id": "opus-spec-redteam-1", "model": "opus", "started": "2026-09-02T06:17:55Z"}
