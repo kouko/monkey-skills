@@ -50,3 +50,4 @@ GO。理由：現況的重量已經讓維護者自己都覺得 heavy；儀式成
 - 跨 vendor reviewer 每次約 5 分鐘、11 萬 token，成本是否可接受要用幾個真實 change 量。
 - 問題三型判準（要什麼／可見行為／做到了嗎＋單向門後果形）的邊界以實際使用回饋調整；量測面＝每 change 記錄的決策點數與岔路提問數（concept-model §11），判定住在 review 的 user-judgment-leak 鏡頭與 write-plan 的 one-way-door reference，改文字不改程式（kouko 2026-09-02）。
 - 對抗 artifact 的內容無機械約束（空殼檔也算合格）；可能的便宜硬化＝要求 artifact 在刻意弄壞的樹上必須失敗（mutation 式自證）。W1 對抗第四輪記錄，待實際使用後決定。
+- checkpoint 的固定成本＝每次三個 commit（派工記錄、checkpoint 工件、review-only）；#771 真 replay 因此 34 commit 對今天 31（Acceptance #4 該格不合格，派工與決策點合格）。可能的便宜硬化＝派工記錄與 checkpoint 工件併進同一 commit、或以 wave 為單位記錄一次。W4-03 記錄，落地後用真實 change 量再決定（agent-decided 不在本 change 內改）。
