@@ -152,3 +152,43 @@ def test_refuses_a_charting_map(tmp_path: Path) -> None:
 
     assert code == 2, message
     assert "charting" in message
+
+
+def _add_open_criterion(map_dir: Path, da_id: str = "DA-3") -> None:
+    path = map_dir / "MAP.md"
+    text = path.read_text(encoding="utf-8")
+    marker = "- DA-2: it stays shipped"
+    line = f"- {da_id}: another promise | state: open | kind: objective\n"
+    index = text.index(marker)
+    end = text.index("\n", index) + 1
+    path.write_text(text[:end] + line + text[end:], encoding="utf-8")
+
+
+def test_refuses_a_second_criterion_reusing_one_intent(tmp_path: Path) -> None:
+    """One intent = one delivery arc. Two DAs pointing at the same intent
+    share a single `status:`, so closing one silently closes the other
+    (W3 adversary P09)."""
+    map_dir = _map(tmp_path)
+    _add_open_criterion(map_dir)
+
+    first = start_delivery.start_delivery(map_dir, "DA-1", "shared-id", repo_root=tmp_path)
+    second = start_delivery.start_delivery(map_dir, "DA-3", "shared-id", repo_root=tmp_path)
+
+    assert first[0] == 0, first
+    assert second[0] == 2, second
+    assert "DA-1" in second[1]
+    assert "one intent" in second[1].lower()
+    notes = map_store.read_map(map_dir).sections["Notes"]
+    assert "delivery-intent: DA-3" not in notes
+
+
+def test_reuse_by_its_own_criterion_still_works(tmp_path: Path) -> None:
+    map_dir = _map(tmp_path)
+    _add_open_criterion(map_dir)
+    start_delivery.start_delivery(map_dir, "DA-1", "mine", repo_root=tmp_path)
+    start_delivery.start_delivery(map_dir, "DA-3", "theirs", repo_root=tmp_path)
+
+    again = start_delivery.start_delivery(map_dir, "DA-1", "mine", repo_root=tmp_path)
+
+    assert again[0] == 0, again
+    assert "reused" in again[1]

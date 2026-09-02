@@ -72,6 +72,18 @@ def _note_line(da_id: str, intent_rel: str) -> str:
     return f"- delivery-intent: {da_id} | {intent_rel}"
 
 
+_NOTE_LINE = re.compile(r"^\s*-\s*delivery-intent:\s*(DA-[0-9]+)\s*\|\s*(\S+)\s*$")
+
+
+def _owning_criterion(map_text: str, intent_rel: str) -> str | None:
+    """The Destination criterion this intent was already opened for, if any."""
+    for line in map_text.splitlines():
+        match = _NOTE_LINE.match(line)
+        if match and match.group(2) == intent_rel:
+            return match.group(1)
+    return None
+
+
 def _validate_inputs(da_id: str, change_id: str) -> None:
     if not _DA_ID.fullmatch(da_id):
         raise StartDeliveryError(f"Destination acceptance id must be DA-<n>: {da_id!r}")
@@ -144,6 +156,17 @@ def start_delivery(
             reused = _existing_intent(intent_path, map_id)
             map_path = map_dir / "MAP.md"
             current = map_path.read_text(encoding="utf-8")
+            # One intent = one delivery arc. An intent carries a single
+            # `status:`, so two criteria pointing at it would be opened and
+            # closed together, and the Map would report a promise as
+            # delivered on another promise's evidence (W3 adversary P09).
+            owner = _owning_criterion(current, intent_rel)
+            if owner is not None and owner != da_id:
+                raise StartDeliveryError(
+                    f"{intent_rel} is already the delivery intent of {owner}; "
+                    f"one intent is one delivery arc, so {da_id} needs its own "
+                    "change-id (its status would otherwise close both)"
+                )
             line = _note_line(da_id, intent_rel)
             if line not in current.splitlines():
                 map_store._atomic_write(
