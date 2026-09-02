@@ -94,6 +94,10 @@ Exit 0: continue. Anything else, the rule is `contract.requires`: print
 what the checker printed, tell the user to update `loom-code`, and
 **stop**. Do not work around it.
 
+On Codex the checker copy this command runs does not exist until step 0b
+has written it, so on Codex do step 0b first and then this step; on Claude
+Code the order is as written.
+
 ## Step 0b — Codex only: first contact with this repo
 
 Skip this entirely on Claude Code, where the plugin supplies the checker
@@ -313,7 +317,9 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py intake write-plan <change-
 
 Fix and re-run until it exits 0. It checks `intake.confirmed`,
 `intake.spec-pass` and `intake.confirmed-behavior` — the three ways a plan
-can be started too early.
+can be started too early. When `needs-design: no` there is no spec, and
+the last two rules have nothing to check and pass; only `intake.confirmed`
+can block.
 
 ## Step 5 — Write the plan
 
