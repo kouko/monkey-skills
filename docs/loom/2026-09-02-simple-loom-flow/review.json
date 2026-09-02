@@ -1,6 +1,6 @@
 {
  "reviewed_sha": "1c9ed208",
- "scope": "spec — PASS (rounds 1–4); spec adversarial round 5 NEEDS_REVISION adopted, read-review of the r5 delta pending decision point ② re-confirmation; W0 code — PASS_WITH_NOTES (rounds 6 after-task, 7 wave-end, 8 re-review)",
+ "scope": "spec — PASS (rounds 1–4 read; round 5 adversarial NEEDS_REVISION adopted; round 9 read PASS_WITH_NOTES, user re-confirmed ②); W0 code — PASS_WITH_NOTES (rounds 6–8)",
  "verdicts": [
   {
    "reviewer": "claude-fresh-context",
@@ -40,7 +40,8 @@
    "vendor": "openai",
    "model": "gpt-5.6-sol/high",
    "verdict": "NEEDS_REVISION",
-   "findings_file": "evidence/spec-review-r2-codex.md"
+   "findings_file": "evidence/spec-review-r2-codex.md",
+   "scope": "spec"
   },
   {
    "round": 2,
@@ -48,7 +49,8 @@
    "vendor": "anthropic",
    "model": "opus",
    "verdict": "NEEDS_REVISION",
-   "findings_file": "evidence/spec-review-r2-claude.md"
+   "findings_file": "evidence/spec-review-r2-claude.md",
+   "scope": "spec"
   },
   {
    "round": 3,
@@ -56,7 +58,8 @@
    "vendor": "openai",
    "model": "gpt-5.6-sol/high",
    "verdict": "NEEDS_REVISION",
-   "findings_file": "evidence/spec-review-r3-codex.md"
+   "findings_file": "evidence/spec-review-r3-codex.md",
+   "scope": "spec"
   },
   {
    "round": 3,
@@ -64,7 +67,8 @@
    "vendor": "anthropic",
    "model": "opus",
    "verdict": "PASS_WITH_NOTES",
-   "findings_file": "evidence/spec-review-r3-claude.md"
+   "findings_file": "evidence/spec-review-r3-claude.md",
+   "scope": "spec"
   },
   {
    "round": 4,
@@ -72,7 +76,8 @@
    "vendor": "openai",
    "model": "gpt-5.6-sol/high",
    "verdict": "PASS",
-   "findings_file": "evidence/spec-review-r4-codex.md"
+   "findings_file": "evidence/spec-review-r4-codex.md",
+   "scope": "spec"
   },
   {
    "round": 4,
@@ -80,7 +85,8 @@
    "vendor": "anthropic",
    "model": "opus",
    "verdict": "PASS_WITH_NOTES",
-   "findings_file": "evidence/spec-review-r4-claude.md"
+   "findings_file": "evidence/spec-review-r4-claude.md",
+   "scope": "spec"
   },
   {
    "round": 5,
@@ -89,7 +95,8 @@
    "model": "opus",
    "lens": "spec-adversarial",
    "verdict": "NEEDS_REVISION",
-   "findings_file": "evidence/spec-redteam-r5.md"
+   "findings_file": "evidence/spec-redteam-r5.md",
+   "scope": "spec"
   },
   {
    "round": 6,
@@ -150,6 +157,26 @@
    "lens": "docs",
    "verdict": "PASS_WITH_NOTES",
    "findings_file": "evidence/w0-checkpoint-reviews.md#re-review"
+  },
+  {
+   "round": 9,
+   "scope": "spec-r5-read",
+   "reviewer": "opus-spec-r5-read-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "spec",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r5-read.md"
+  },
+  {
+   "round": 9,
+   "scope": "spec-r5-read",
+   "reviewer": "sonnet-spec-r5-read-1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "spec",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r5-read.md"
   }
  ],
  "probes": [
@@ -470,7 +497,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-1 probes[] 自填→checker 自跑",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §7 + 6f8f7970 checker executes probes — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-02",
@@ -480,7 +507,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "C/D 決策點後單向門取保守預設",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §4; 3cab1a4a NF-1 no-reversible-option exit — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-03",
@@ -490,7 +517,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "C-2 類別 (e) 不可逆動作",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §4 (e) + UI flow 4 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-04",
@@ -500,7 +527,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "A-1 無工具時自寫 abuse 案例",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §6; push.probes-adversarial scheduled W1-06 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-05",
@@ -510,7 +537,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "A-2 dismissed 身分",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §5/§7 + 6f8f7970 push.dismissed-by-reviewer — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-06",
@@ -520,7 +547,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-2 問題型判準",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §4/REQ-1; questions[] field for the record — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-07",
@@ -530,7 +557,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "B-2 建議句用 5/7",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §5 (5/7 verified by r5 reviewer) — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-08",
@@ -540,7 +567,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "E-1 修正輪不計、after-task 預算",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §5; build SKILL + manifest wording synced — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-09",
@@ -550,7 +577,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "E-2 接受風險，replay 量首輪比例",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "plan W4-03 measurement line — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-10",
@@ -560,7 +587,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "F ratified 實質條件",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §8 + 6f8f7970 non-negotiables ≥3 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-11",
@@ -570,7 +597,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "G 切換日三事實",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §1/§10/REQ-2 + contract.requires rule — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-12",
@@ -580,7 +607,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-3 降為記錄欄位",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §7 + dispatch[] fresh_context field — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-13",
@@ -590,7 +617,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-4 接受風險，分開呈現",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "plan W4-03 separate presentation — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-14",
@@ -600,7 +627,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-5 猜測定義",
-   "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+   "resolved": "b61f7906 §12 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "W0-01",

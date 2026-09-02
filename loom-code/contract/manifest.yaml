@@ -64,7 +64,7 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "mutation / fuzz / abuse cases for code, red-team for spec, gate-attack catalogue for skills; results land in review.json."
   - name: checkpoint
     owner: review
-    summary: "wave end when unreviewed delta > 8 files or 400 lines, branch end always, after-task task ≤2 per plan; reviewed_sha advances only on PASS / PASS_WITH_NOTES."
+    summary: "wave end when unreviewed delta > 8 files or 400 lines, branch end always, after-task tasks (budget 2 per plan, more with a reason line); ≤5 checkpoints during build, fix rounds not counted; reviewed_sha advances only on PASS / PASS_WITH_NOTES."
   - name: memory
     owner: ship
     summary: "git-memory trailers on the commit plus docs/loom/memory/ entries (templates/memory-README.md) before push."
@@ -120,6 +120,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, verdict, dimension_scores, findings}]"}
       - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact}]"}
       - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
+      - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}
       - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
 
 standing_docs:       # not per-change (§2a, §8)

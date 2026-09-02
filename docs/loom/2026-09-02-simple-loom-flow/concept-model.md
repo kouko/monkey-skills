@@ -92,6 +92,7 @@ verdicts[]           # 每個 reviewer 一份：{reviewer, vendor, model, lens, 
 vendors[]            # 本次 checkpoint 用到的 vendor 清單（記錄，不是條件）
 probes[]             # 實際跑過的 probe／測試／盲跑：{kind, command, sha, result, artifact}；sha == reviewed_sha
 open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> | dismissed: <reason> by <who>}
+questions[]          # 每個決策點問過的問題：{decision_point, text, type: what|behaviour|done|consequence}；§4 三型判準與 §11 提問數量測讀這裡
 dispatch[]           # build／review 站每次派工一筆：{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}；push 規則 reviewer≠implementer 與 dismissed 身分讀這裡
 ```
 
@@ -110,7 +111,7 @@ dispatch[]           # build／review 站每次派工一筆：{task, role: imple
 | **reference** | 建議性規則，不是 skill | 1 | engineering-baseline＝tdd-iron-law ＋ systematic-debugging |
 | **action** | 站內可執行步驟，不是 skill，不計 | — | package 測試、UI 盲跑、平行派工、worktree |
 
-skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2 個 standalone 工具不計）。名詞 ≤ 40（計數規則：artifact 名、站／工具／action 名、frontmatter 與 JSON 頂層欄位名、狀態物件名；standalone 工具不計；不數段落標題、欄位子值、型別列舉值、git 詞、alias）。
+skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2 個 standalone 工具——goal-create、dbt-model-style——不計）。名詞 ≤ 40（計數規則：artifact 名、站／工具／action 名、frontmatter 與 JSON 頂層欄位名、狀態物件名；standalone 工具不計；不數段落標題、欄位子值、型別列舉值、git 詞、alias）。
 
 ## 4. 入口、路由、人類決策點
 
@@ -126,12 +127,12 @@ skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2
 - **非決策型互動**只有一類、有入場判準：**不做就無法繼續的授權或缺件**（Codex 的一次性 `/hooks` 授信；缺 PRINCIPLES 的訪談——後者併進決策點①）。偏好類問題（例如要不要用第二家模型當 reviewer）不是非決策型：它在第一次碰到時併進決策點①一起問，答案記進 KICKOFF-DEFAULTS。這個類別不得新增成員，新增＝新機制，走 §11。
 - **問使用者的規則**：決策點的**數量**是結構（engineering 2、product 3），每個決策點**內**問幾個問題不限——訪談問到清楚為止、可見行為逐個操作對、驗收報告列所有不確定。限制是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是少問。可驗判準：決策點內的每個問題必須可歸入三型之一（要什麼／可見行為／做到了嗎）或單向門的後果形；歸不進去的問題由 review 的 `user-judgment-leak` 維度判 NEEDS_REVISION。**岔路不新增停點**：所有岔路問題都併進既有決策點——engineering 併進決策點①（intent 確認時一起問；若岔路在 plan 階段才浮現，agent 選預設並標 `agent-decided`，寫進盲跑報告的「我替你決定了」段讓決策點③看到）；product 併進決策點②。決策點之外 agent 不停。其他決定 agent 做，標 `agent-decided` 記理由；使用者隨時可翻。岔路有兩類：
   - **判斷型**：≥3 個 trade-off 且不同選擇會改變交付物（brief-before-asking 既有定義）。
-  - **單向門（必問，不靠判斷）**：任一成立——(a) 之後難以更換：框架、語言、資料庫、認證方式、託管平台、套件管理器；(b) 產生金錢或持續義務：付費服務、需帳號的第三方 API、要維護的基礎設施；(c) 限制使用者未來能做的事：資料格式、匯出能力、平台綁定；(d) **決定輸出品質上限的選型**：辨識／生成模型、演算法、資料來源等，且候選在使用者感受得到的軸（準確率、速度、每次費用、語言／格式覆蓋、隱私）上差異顯著——任一軸差 ≥ 20%，或金錢／隱私／覆蓋的有無；純內部差異（記憶體、行數、可維護性）不算；(e) **對使用者既有狀態的不可逆動作**：就地改寫或刪除使用者資料、改變既有檔案格式而無備份、把使用者資料送出本機——即使只有一種做法、沒有岔路也必問（盲跑在乾淨環境做，結構上碰不到既有資料，所以這類傷害只有問才擋得住）。四道閘依序：**先查**（intent 的 Acceptance／Constraints 或 PRINCIPLES.md 已釘住該軸→不問，選符合的）→ **先量**（能用使用者真實樣本快速比較的，量了再問，問結果不問假設）→ **門檻**（上述顯著性）→ **合併**（一個 change 的所有單向門合成一次問，附在既有決策點內；決策點過後才浮現的，agent 選預設、標 `agent-decided`、在盲跑報告揭露；**但 (b)(c)(e) 三類在決策點過後浮現時，agent 只能選零義務、可逆、不動既有資料的那個**，記 `agent-decided — 未經授權，取保守選項`，不得自選承諾型預設）。問法固定為**後果形**：「選 A：以後只能在 ___ 跑、每月 ___、換掉要重寫 ___。選 B：___。我建議 A，因為 ___。」不出現機制名詞。答案寫進 spec 的 Design decision 並標 `user-decided`。
+  - **單向門（必問，不靠判斷）**：任一成立——(a) 之後難以更換：框架、語言、資料庫、認證方式、託管平台、套件管理器；(b) 產生金錢或持續義務：付費服務、需帳號的第三方 API、要維護的基礎設施；(c) 限制使用者未來能做的事：資料格式、匯出能力、平台綁定；(d) **決定輸出品質上限的選型**：辨識／生成模型、演算法、資料來源等，且候選在使用者感受得到的軸（準確率、速度、每次費用、語言／格式覆蓋、隱私）上差異顯著——任一軸差 ≥ 20%，或金錢／隱私／覆蓋的有無；純內部差異（記憶體、行數、可維護性）不算；(e) **對使用者既有狀態的不可逆動作**：就地改寫或刪除使用者資料、改變既有檔案格式而無備份、把使用者資料送出本機——即使只有一種做法、沒有岔路也必問（盲跑在乾淨環境做，結構上碰不到既有資料，所以這類傷害只有問才擋得住）。四道閘依序：**先查**（intent 的 Acceptance／Constraints 或 PRINCIPLES.md 已釘住該軸→不問，選符合的）→ **先量**（能用使用者真實樣本快速比較的，量了再問，問結果不問假設）→ **門檻**（上述顯著性）→ **合併**（一個 change 的所有單向門合成一次問，附在既有決策點內；決策點過後才浮現的，agent 選預設、標 `agent-decided`、在盲跑報告揭露；**但 (b)(c)(e) 三類在決策點過後浮現時，agent 只能選零義務、可逆、不動既有資料的那個**，記 `agent-decided — 未經授權，取保守選項`，不得自選承諾型預設；「可逆」＝不觸發 (e) 的三個標記（就地改寫／刪除／送出本機）；若不存在零義務可逆選項，該項工作就此停住不做，在盲跑報告「我替你決定了」段列為未完成並說明原因，交決策點③）。問法固定為**後果形**：「選 A：以後只能在 ___ 跑、每月 ___、換掉要重寫 ___。選 B：___。我建議 A，因為 ___。」不出現機制名詞。答案寫進 spec 的 Design decision 並標 `user-decided`。
 - 所有「問使用者」的舊時機（on-ramp、kickoff briefing、batch checkpoint、waiver）全部取消；on-ramp 1–3 列由 `needs-design` 重算，4–6 列變 standing default。
 
 ## 5. review 站＝checkpoint review（機器是唯一的審查者）
 
-- **一份契約**：verdict schema、`reviewed_sha`、輪次規則一套。鏡頭多個（code 11 維、docs 5 維；spec-conformance、design-conformance 各一維；correctness 必跑 probe）。
+- **一份契約**：verdict schema、`reviewed_sha`、輪次規則一套。鏡頭多個（code 11 維、docs 5 維；spec-conformance、design-conformance、principles-conformance、user-judgment-leak 各一維；correctness 必跑 probe）。
 - **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer（同 host 的兩個 fresh session 即可）。**跨 vendor 是選配，由使用者選**：KICKOFF-DEFAULTS 記 `second-vendor: <cli> | none — <reason> (<date>)`（vendor＝不同模型供應商的可非互動 CLI，例如 Codex CLI、Gemini CLI）。未記錄且站偵測到第二家 CLI 時，在決策點①裡順帶建議（一段白話，用數字當理由：本設計自己的 spec 審查七個致命問題有五個只有一家找到；每次約幾分鐘與額度），**同一個 change 至多一次**，並把選擇記進 KICKOFF-DEFAULTS；記了就不再提。選了就用，沒選就不用，兩者都不 WARN、不擋。review.json 只記 `vendors: [...]`。reviewer 分歧記進 verdicts，不平均。
 - **何時跑**：wave 結束算未審 delta，任一超過門檻（8 檔或 400 行，實驗預設，replay 後固定）才跑；branch 結束必跑；含 after-task 的 wave 結束一律跑。`needs-design: yes` 時 spec 進 plan 前必跑 spec 型別的「讀＋對抗」且 PASS。build 階段 checkpoint ≤ 5（plan 深度上限；NEEDS_REVISION 後的修正輪不計入）。
 - **after-task**：plan 標記的 task commit 後立刻跑同一套；每 plan 預算 2，超過的每個要在 plan 的該 task 記一行理由（預算不是硬帽）。它是獨立的一次 checkpoint；該 wave 結束時的 checkpoint 是**另一次**（只審 after-task 之後的 delta ＋ 跨任務一致性；delta 為零時只跑一致性，很便宜）。
@@ -157,8 +158,9 @@ skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2
 - **建議性**：skill 散文、standing docs、reference。不用散文當閘。
 - **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」：
   - intent：schema；product 的 Problem 禁識別字；`needs-design` 行帶理由且進 commit message；`no` 但 diff 碰介面表面 glob → 擋。
+  - 站點啟動：`contract.requires`——loom-design／loom-workflow 的站對 manifest 版本重算，不符→擋。
   - 收件：write-spec／write-plan 只收 `status: confirmed` 的 intent；write-plan 在 `needs-design: yes` 時只收有 spec PASS 的，且 `kind: product` 時另要求 spec 有 `confirmed-behavior:` 行。
-  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有 package 測試記錄且 **checker 在乾淨工作樹（== reviewed_sha）自行執行該 `command`，以自己觀察到的 exit code 為準**，agent 填的 `result` 只作記錄——信任邊界：被 checkout 的分支其 review.json 的 `command` 會在 push 前被 checker 執行，這在 §0 的單人／自家 agent 威脅模型下可接受，多人 repo 要另加 branch protection、`verdicts[]` ≥ 2（vendor 數不是條件；`fresh-context` 是 dispatch 記錄欄位，不是可重算條件）、reviewer ≠ implementer、`dismissed` 者屬 dispatch 的審查角色。
+  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有 package 測試記錄，且 artifact 型別要求對抗時有 ≥3 筆 `kind: adversarial` 記錄；**這兩類的每一筆 checker 都在乾淨工作樹（== reviewed_sha）自行執行其 `command`，以自己觀察到的 exit code 為準**（adversarial 的 command 預期 exit 0＝案例被擋住／通過），agent 填的 `result` 只作記錄——信任邊界：被 checkout 的分支其 review.json 的 `command` 會在 push 前被 checker 執行，這在 §0 的單人／自家 agent 威脅模型下可接受，多人 repo 要另加 branch protection、`verdicts[]` ≥ 2（vendor 數不是條件；`fresh-context` 是 dispatch 記錄欄位，不是可重算條件）、reviewer ≠ implementer、`dismissed` 者屬 dispatch 的審查角色。
   - 明說：這層擋的是漏步驟，不擋有目標的 agent；多人 repo 要作弊防護時加 branch protection。
 - **稽核**：git（trailer、review.json）。
 

@@ -4,7 +4,7 @@ confirmed-behavior: 2026-09-02   # 重確認 2026-09-02：對抗 r5 後三處可
 
 ## Requirements                                    【使用者可讀】
 REQ-1 — 決策點數固定
-  engineering 兩處（intent 確認、驗收）、product 三處（加可見行為確認）；單向門與判斷型岔路一律併進既有決策點，不新增停點；決策點後才浮現的岔路由 agent 選預設、標 agent-decided、在盲跑報告揭露。每個決策點內問題數不限，但每個問題必須可歸入三型之一（要什麼／可見行為／做到了嗎）或單向門的後果形；歸不進去的由 review 的 user-judgment-leak 維度判 NEEDS_REVISION。決策點過後才浮現的單向門若屬金錢／綁定／動既有資料三類，agent 只能選零義務、可逆、不動既有資料的預設。→ Acceptance #1, #3
+  engineering 兩處（intent 確認、驗收）、product 三處（加可見行為確認）；單向門與判斷型岔路一律併進既有決策點，不新增停點；決策點後才浮現的岔路由 agent 選預設、標 agent-decided、在盲跑報告揭露。每個決策點內問題數不限，但每個問題必須可歸入三型之一（要什麼／可見行為／做到了嗎）或單向門的後果形；歸不進去的由 review 的 user-judgment-leak 維度判 NEEDS_REVISION（判準對象＝站在決策點記進 review.json `questions[]` 的問題）。決策點過後才浮現的單向門若屬金錢／綁定／動既有資料三類，agent 只能選零義務、可逆、不動既有資料的預設。→ Acceptance #1, #3
 REQ-2 — 兩個 host 一致
   Claude Code 與 Codex CLI 走出相同的檔案、決策點、閘門；Codex 只多一次每 repo 的 `/hooks` 授信，成立條件是 `.codex/hooks.json` 的 command 字串固定（相對路徑、不含版本），升級只換 checker 副本內容；切換日既有 Codex repo 因定義改變需重授信一次（一次性，spec 明示）。→ Acceptance #2
 REQ-3 — 機器審查為唯一品質來源
