@@ -11,7 +11,7 @@
 
 1. 使用者**不能**判斷 spec／plan／diff 的品質，所以人類簽核沒有品質意義；人只回答「這是不是我要的」——在 intent（要什麼）、product 的 spec 可見行為（操作與反應）、驗收（做到了嗎）三處。
 2. 品質的唯一來源是**機器**：寫的 agent ≠ 審的 agent（≥2 個 fresh context；第二家 vendor 由使用者選，機制每 change 至多建議一次）、沒寫過它的 agent 盲跑、一個 agent 試著弄壞它、每個事故變永久 eval。
-3. 主要威脅是**agent 品質不夠而使用者看不出來**，不是 agent 繞閘（沒有人在審，就沒有冒充人的問題）。決定性層擋的是手滑，不宣稱擋作弊；需要作弊防護的多人 repo 另加 branch protection，不在本文。
+3. 主要威脅是**agent 品質不夠而使用者看不出來**，不是 agent 繞閘（沒有人在審，就沒有冒充人的問題）。決定性層擋的是手滑，不宣稱擋作弊；需要作弊防護的多人 repo 另加 branch protection，不在本文。具體而言：review.json 與 dispatch 記錄的可信度由 host 的 agent log 保證，不由 checker 保證（全數捏造即可通過）；hook 對 push 指令的辨識只涵蓋誠實寫法，`git-push`、變數展開、包裝腳本可繞（W1 對抗 P10／P12-B，接受）。
 
 ## 1. Plugin 與依賴
 
