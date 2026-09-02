@@ -57,7 +57,7 @@ notes:
 
 - R24-C1 (report's records-only claim false because f600c281 touched checker code): claim withdrawn in 501a4ead; a second blind-run addendum runs against the final tree and states which paths change afterwards (records only).
 - R24-C2 (CHANGELOG 20 → 27): fixed in 501a4ead.
-- R24-O1: the four prose adversarial entries are removed from `probes[]` in the review-only commit; their findings files under `evidence/` stay as the written record. No code changes.
+- R24-O1: the four prose adversarial entries are removed from `probes[]` (done in a record-only commit after round 25 pointed out that this sentence read as already done at the frozen tree); their findings files under `evidence/` stay as the written record. No code changes.
 - R24-O2: accepted, not fixed — a code edit after the final blind run would reopen R24-C1; carried to the first post-merge change.
 - R24-O3: round 25 runs on a frozen tree.
 - Round 25 (two docs-lens reviewers, one on Codex) re-reads the report and this disposition; no code lens is owed because no code changes after 501a4ead.

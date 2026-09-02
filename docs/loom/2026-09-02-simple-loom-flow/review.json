@@ -449,28 +449,12 @@
    "artifact": "concept-model.md §12"
   },
   {
-   "kind": "adversarial",
-   "scope": "spec",
-   "command": "fresh opus red-teams spec.md + concept-model.md across scenarios A–H",
-   "sha": "0974e7cd",
-   "result": "NEEDS_REVISION — 6 fatal, all adopted",
-   "artifact": "evidence/spec-redteam-r5.md"
-  },
-  {
    "kind": "package-tests",
    "scope": "w0-code",
    "command": "python3 -m pytest loom-code/scripts/ -q",
    "sha": "257bdd81",
    "result": "2285 passed, 1 xfailed in 122.29s (0:02:02)",
    "artifact": "loom-code/scripts/"
-  },
-  {
-   "kind": "adversarial",
-   "scope": "w0-code",
-   "command": "reviewer probes: 6 checker fail-open probes (after-task) + hook payload shapes / scaffold real-copy / R1–R4 fixtures (wave-end)",
-   "sha": "257bdd81",
-   "result": "3 + 4 fatal fail-opens found and fixed",
-   "artifact": "evidence/w0-checkpoint-reviews.md"
   },
   {
    "kind": "package-tests",
@@ -623,22 +607,6 @@
    "sha": "c3c4d478",
    "result": "985 passed (round 21 reviewer run)",
    "artifact": "loom-code/scripts/"
-  },
-  {
-   "kind": "adversarial",
-   "scope": "w2-skill",
-   "command": "scratchpad/adversary-w2 (13 probes; 11 held, p07/p12 by design)",
-   "sha": "c3c4d478",
-   "result": "held",
-   "artifact": "evidence/w2-checkpoint-reviews.md"
-  },
-  {
-   "kind": "adversarial",
-   "scope": "w3-gate",
-   "command": "scratchpad/adversary-w3 (15 probes; 14 caught, p14 by design)",
-   "sha": "c3c4d478",
-   "result": "caught",
-   "artifact": "evidence/w3-checkpoint-reviews.md"
   }
  ],
  "open_findings": [
