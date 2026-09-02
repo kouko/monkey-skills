@@ -2015,6 +2015,50 @@
    ],
    "text": "locale test passes vacuously without a UTF-8 locale",
    "resolved": "open"
+  },
+  {
+   "id": "R28-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/spec.md:3",
+   "origin_sha": "a20db4e9",
+   "raised_by": [
+    "codex-review-docs-branch-end-r28"
+   ],
+   "text": "confirmed-behavior comment claimed a user re-confirmation not yet given",
+   "resolved": "resolved: 28ac50f7"
+  },
+  {
+   "id": "R28-C2",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:56",
+   "origin_sha": "a20db4e9",
+   "raised_by": [
+    "codex-review-docs-branch-end-r28"
+   ],
+   "text": "plan lines 56/57/179 still ≤2640",
+   "resolved": "resolved: 28ac50f7"
+  },
+  {
+   "id": "R28-O1",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:56",
+   "origin_sha": "a20db4e9",
+   "raised_by": [
+    "opus-review-code-branch-end-r28"
+   ],
+   "text": "same as R28-C2",
+   "resolved": "resolved: 28ac50f7"
+  },
+  {
+   "id": "R28-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:664",
+   "origin_sha": "a20db4e9",
+   "raised_by": [
+    "opus-review-code-branch-end-r28"
+   ],
+   "text": "skip-guard probe lacks check=True",
+   "resolved": "accepted, not fixed: carried to the first post-merge change with R24-O2"
   }
  ],
  "vendors": [
@@ -2900,6 +2944,24 @@
    "model": "codex exec (gpt-5.6-sol/high)",
    "vendor": "openai",
    "started": "2026-09-02T19:10:31Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 29 re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-branch-end-r29",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-02T19:18:42Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 29 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r29",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T19:18:42Z",
    "fresh_context": true
   }
  ],
