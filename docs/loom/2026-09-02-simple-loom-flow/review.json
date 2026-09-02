@@ -2883,6 +2883,24 @@
    "started": "2026-09-02T19:06:08Z",
    "fresh_context": true,
    "note": "R27-C1 R27-O1 R27-O2 R27-O3"
+  },
+  {
+   "task": "branch-end round 28 re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r28",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T19:10:31Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 28 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r28",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T19:10:31Z",
+   "fresh_context": true
   }
  ],
  "questions": [
