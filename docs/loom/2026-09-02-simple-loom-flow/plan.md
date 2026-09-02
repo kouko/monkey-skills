@@ -38,7 +38,7 @@ checkpoint：W0 結束必跑（新增檔 > 8）。
 - 風：manifest 是 §11 五類之一的可重算面，欄位一旦命名就是名詞；命名前先對 §3 計數規則過一遍。
 
 **W0-02 loom checker：骨架與 `--list-rules`**　after: W0-01
-- 檔：`loom-code/scripts/loom_checker.py`（單一入口；子命令 `intent <path>`、`intake <station> <change-id>`、`push`、`standing`、`hooks-probe`、`--list-rules` 輸出 rule id 表）；`loom-code/scripts/git_exec.py` 沿用。
+- 檔：`loom-code/scripts/loom_checker.py`（單一入口；子命令 `intent <path>`、`intake <station> <change-id>`、`push [--hook]`、`standing`、`contract --require`、`--list-rules` 輸出 rule id 表）；`loom-code/scripts/git_exec.py` 沿用。
 - 測：`test_loom_checker_cli.py`——`--list-rules` 輸出穩定排序、每條 rule 有 id＋一句描述；未知子命令 exit 2（fail-closed）。
 - 風：rule id 是 mechanisms.yaml 的鍵，改名＝機制淨數波動；id 用 `intent.schema` 這種 `<area>.<name>` 形式一次定好。
 

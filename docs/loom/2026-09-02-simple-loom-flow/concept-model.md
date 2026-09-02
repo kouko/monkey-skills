@@ -158,7 +158,7 @@ skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2
 - **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」：
   - intent：schema；product 的 Problem 禁識別字；`needs-design` 行帶理由且進 commit message；`no` 但 diff 碰介面表面 glob → 擋。
   - 收件：write-spec／write-plan 只收 `status: confirmed` 的 intent；write-plan 在 `needs-design: yes` 時只收有 spec PASS 的，且 `kind: product` 時另要求 spec 有 `confirmed-behavior:` 行。
-  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有 package 測試記錄且 **checker 在乾淨工作樹（== reviewed_sha）自行執行該 `command`，以自己觀察到的 exit code 為準**，agent 填的 `result` 只作記錄、`verdicts[]` ≥ 2（vendor 數不是條件；`fresh-context` 是 dispatch 記錄欄位，不是可重算條件）、reviewer ≠ implementer、`dismissed` 者屬 dispatch 的審查角色。
+  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有 package 測試記錄且 **checker 在乾淨工作樹（== reviewed_sha）自行執行該 `command`，以自己觀察到的 exit code 為準**，agent 填的 `result` 只作記錄——信任邊界：被 checkout 的分支其 review.json 的 `command` 會在 push 前被 checker 執行，這在 §0 的單人／自家 agent 威脅模型下可接受，多人 repo 要另加 branch protection、`verdicts[]` ≥ 2（vendor 數不是條件；`fresh-context` 是 dispatch 記錄欄位，不是可重算條件）、reviewer ≠ implementer、`dismissed` 者屬 dispatch 的審查角色。
   - 明說：這層擋的是漏步驟，不擋有目標的 agent；多人 repo 要作弊防護時加 branch protection。
 - **稽核**：git（trailer、review.json）。
 
