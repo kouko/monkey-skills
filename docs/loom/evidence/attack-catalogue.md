@@ -1,17 +1,18 @@
 # Attack catalogue — monkey-skills
 
+> ARCHIVED at loom-code 1.0 — moved here from `docs/loom/ATTACK-CATALOGUE.md`
+> as repo-level evidence (concept-model §9); the classes it works through now
+> ship at `loom-code/skills/review/references/attack-catalogue.md`.
+
 Repo-native store of guarded paths, reproduced/held attack instances, and
 the prose temptations a cold reader might reach for instead of running the
 check. Seeded from the 2026-08-31 adversarial audit's six findings.
 
 ## Guarded paths
 
-- docs/loom/ATTACK-CATALOGUE.md
-- loom-code/scripts/batch_review_cli.py
-- loom-code/scripts/loom_gate_markers.py
-- loom-code/hooks/git-guard.py
-- loom-code/scripts/plan_card.py
-- loom-code/scripts/check_attack_catalogue.py
+- docs/loom/evidence/attack-catalogue.md
+- loom-code/scripts/loom_checker.py
+- loom-code/scripts/check_mechanisms.py
 - **/SKILL.md
 - **/agents/*.md
 - **/hooks/*.md

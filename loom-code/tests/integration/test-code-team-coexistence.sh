@@ -99,24 +99,24 @@ Offline checks PASSED. Live verification (manual, in fresh Claude session):
 
   1. claude   # fresh session with both plugins enabled
   2. Verify both skill families surface in router list:
-     - Skill(loom-code:tdd-iron-law) — should load successfully
+     - Skill(loom-code:write-plan) — should load successfully
      - Skill(domain-teams:code-team) — should load successfully
   3. Run a hybrid prompt that exercises BOTH:
 
      ---
      I have an existing src/services/payment_processor.py (200 LOC,
      no tests). Use domain-teams:code-team to audit it for compliance,
-     then if PASS, use loom-code's tdd-iron-law to add test coverage
-     under Feathers (2004) characterization-test approach.
+     then if PASS, take the audit's findings through loom-code's
+     write-plan and build stations to add test coverage.
      ---
 
   4. Expected behavior:
      - Agent loads domain-teams:code-team for the audit (passive gate)
-     - On code-team PASS, agent routes to loom-code's tdd-iron-law
-       (active construction)
+     - On code-team PASS, agent routes to loom-code:write-plan, which
+       asks for the intent and then plans the work (active construction)
      - Both skills used in same session without conflict
-     - Per PRODUCT-SPEC §Q2: "code-team 並存 — loom-code 主動建構
-       入口，code-team 被動 gate 入口"
+     - loom-code's TDD rule lives in references/engineering-baseline.md
+       and is carried by the implementer agent, not by a skill of its own
 
   5. PASS if both skills load + execute their respective roles without
      deadlock / collision / contradiction.

@@ -70,4 +70,4 @@ def test_attack_catalogue_names_six_classes_with_evidence_rule() -> None:
         assert f"`{token}`" in vocab_block, token
 
     assert "## Repo store" in text
-    assert "docs/loom/ATTACK-CATALOGUE.md" in text
+    assert "docs/loom/evidence/attack-catalogue.md" in text

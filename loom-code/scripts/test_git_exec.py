@@ -1,8 +1,9 @@
 """Executable contract for `git_exec.run_git` -- the single git-invocation
-body Tasks 4-9 delegate to (six pre-existing copies collapse into this
-one). Encoding rationale (argv-as-UTF-8-bytes, `encoding="utf-8",
+body this directory delegates to (six hand-rolled copies collapsed into
+it; five of those callers were deleted at loom-code 1.0). Encoding
+rationale (argv-as-UTF-8-bytes, `encoding="utf-8",
 errors="surrogateescape"` under `text=True`) is transcribed from
-`batch_review_cli._run_subprocess`'s docstring, not restated here.
+`git_exec.run_git`'s own module docstring, not restated here.
 """
 from __future__ import annotations
 
@@ -125,8 +126,8 @@ def test_run_git_strip_false_keeps_trailing_whitespace(tmp_path) -> None:
 
 
 def test_run_git_under_c_locale_decodes_non_ascii_path(tmp_path) -> None:
-    """Same technique as
-    `test_batch_review_cli.py::test_packet_seals_non_ascii_path_under_c_locale`:
+    """The non-ASCII-path case that the deleted batch-review suite used to
+    cover, kept here because the encoding behaviour it pins is `run_git`'s:
     a real OS subprocess (its own interpreter startup locale) is required
     to reproduce the decode -- an in-process call runs under pytest's
     already-fixed locale. The non-ASCII path is written into the runner

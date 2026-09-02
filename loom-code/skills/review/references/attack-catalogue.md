@@ -92,7 +92,7 @@ watching it refuse (or not) is.
 ## Repo store
 
 Each adopting repo keeps its own dated instance file at
-`docs/loom/ATTACK-CATALOGUE.md` — a loom-scaffolded store path (schema,
+`docs/loom/evidence/attack-catalogue.md` — a loom-scaffolded store path (schema,
 not a citation of this repository's development records) recording that
 repo's guarded paths, its `reproduced` / `held` / `not-applicable`
 instances against the six classes above, and the prose temptations its

@@ -28,7 +28,7 @@ fail() { echo "FAIL — $1"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
 skip() { echo "SKIP — $1"; SKIP_COUNT=$((SKIP_COUNT + 1)); }
 
 # -------------------------------------------------------------------------
-# Check 1 — offline: finishing-a-development-branch references git-memory
+# Check 1 — offline: the ship station references git-memory
 
 if [ ! -f "${SHIP_SKILL}" ]; then
   fail "ship/SKILL.md not found"
@@ -52,10 +52,13 @@ else
   fail "ship does NOT name the --verify commit-carrier gate — memory-worthy branch can ship with an empty commit carrier (#445 leak)"
 fi
 
-if grep -- 'memory-grep.sh' "${SHIP_SKILL}" >/dev/null; then
-  pass "ship references the memory-grep.sh script by path"
+# The station may NOT reach into loom-workflow's file tree (the plugins
+# install independently), so it carries its own post-merge carrier check
+# and names the sibling skill for installs that have it.
+if grep -qE "git log -1 --format=%B[^|]*\\| *grep -E '\\^\\(Decision" "${SHIP_SKILL}"; then
+  pass "ship carries its own inline post-merge carrier grep"
 else
-  fail "ship does NOT reference loom-workflow's memory-grep.sh script"
+  fail "ship has NO inline carrier check — a loom-code-only install would verify nothing"
 fi
 
 # -------------------------------------------------------------------------
@@ -131,23 +134,22 @@ cat <<'EOF'
 
 Offline checks PASSED. Live verification (manual, in fresh Claude session):
 
-  1. cd to a repo with a non-trivial branch ready to close (e.g. this
-     very repo's feat/loom-code-design branch — it has 20+ commits
-     that would warrant memory trailers)
+  1. cd to a repo with a non-trivial branch whose branch-end checkpoint
+     has returned PASS and whose blind-run report exists — it should
+     have enough commits to warrant memory trailers
   2. claude
   3. Prompt: "finish this branch"
   4. Expected agent behavior:
-     - Skill(loom-code:finishing-a-development-branch) auto-loads
-     - Phases 1 + 2 run (requesting-code-review + verification-before-
-       completion)
-     - Phase 3 EXPLICITLY invokes loom-workflow:git-memory (transcript
+     - Skill(loom-code:ship) auto-loads
+     - Step 1 recomputes the preconditions and step 2 presents the
+       blind-run report for acceptance
+     - Step 3 EXPLICITLY invokes loom-workflow:git-memory (transcript
        should show "Skill(loom-workflow:git-memory) → Successfully
-       loaded skill" before commit message draft)
-     - Step 4 commit message includes git-memory's trailer decisions
+       loaded skill" before the trailers are drafted)
+     - The amended review-only commit carries git-memory's trailers
        (Decision: / Learning: / Gotcha: as warranted)
 
-  5. PASS if transcript shows Phase 3 git-memory invocation BEFORE the
-     commit subject is finalized. FAIL if commit message is drafted
-     without git-memory dispatch.
+  5. PASS if the transcript shows the step-3 git-memory invocation BEFORE
+     the trailers are finalized. FAIL if they are drafted without it.
 EOF
 exit 0

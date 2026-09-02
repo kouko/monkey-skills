@@ -131,10 +131,10 @@ _PROTOCOL_BASENAMES = frozenset(
         # widened to `scripts/templates/`, whose backlog charter cites it.
         "BACKLOG.md",
         # Adversarial-audit instance store; every adopting repo owns one at
-        # `docs/loom/ATTACK-CATALOGUE.md`, same root-level scaffold shape as
-        # BACKLOG.md/PRINCIPLES.md/KICKOFF-DEFAULTS.md above. The plugin
-        # reference `references/attack-catalogue.md` points at it by name.
-        "ATTACK-CATALOGUE.md",
+        # `docs/loom/evidence/attack-catalogue.md` alongside mechanisms.yaml
+        # (concept-model §9). The plugin reference
+        # `references/attack-catalogue.md` points at it by name.
+        "attack-catalogue.md",
     }
 )
 

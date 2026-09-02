@@ -1,20 +1,17 @@
 """Shared git-invocation body for loom-code's scripts/ directory.
 
-`run_git` is the shared body of the six `_git`/`_run_git` wrappers around
-`git -C <repo> ...`; the return/raise shape it hands back is selected
-entirely by its `check` and `text` parameters, so the three failure-shape
-variants that those six call sites (`loom_gate_markers._git`,
-`review_context._git`, `review_scope._git`, and others) hand-rolled
-independently collapse into one body here. This docstring is the SSOT for
-the encoding/argv rationale below -- other scripts/ modules that wrap
-`run_git` (e.g. `batch_review_cli._run_subprocess`) point back here rather
-than restating it. Direct `subprocess.run(["git", ...])` calls that were
-never one of those six wrappers still exist in other scripts/ modules
-(`loom_gate_markers.py`, `live_host_review_gate.py`, `plan_card.py`,
-`check_doc_citations.py`, `loom_init.py`, `living_spec_gitref.py`,
-`check_onramp_choice.py`, `check_queue_relation.py`); they stay outside
-this wrapper and keep their own encoding behavior -- routing them here is
-a separate change, not something this module claims to have done.
+`run_git` is the one git-invocation body in this directory: the
+return/raise shape it hands back is selected entirely by its `check` and
+`text` parameters, so the three failure shapes its callers used to
+hand-roll independently live here instead. It was extracted from six
+wrappers around `git -C <repo> ...`, five of which were deleted with the
+pre-1.0 script families at loom-code 1.0; `loom_checker.py` is the caller
+that remains. This docstring is the SSOT for the encoding/argv rationale
+below -- a module that wraps `run_git` points back here rather than
+restating it. Direct `subprocess.run(["git", ...])` calls that were never
+one of those wrappers still exist (`check_doc_citations.py`); they keep
+their own encoding behavior, and routing them here is a separate change,
+not something this module claims to have done.
 
 Encoding: `encoding="utf-8", errors="surrogateescape"` is passed explicitly
 rather than the locale-dependent default `text=True` picks up
