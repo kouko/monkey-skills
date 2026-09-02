@@ -42,8 +42,10 @@ count falls sharply (14 skills → 5, ~50 scripts → 11, 4 verdict agents →
   recomputed classes, each entry carrying an `eval:`;
   `scripts/check_mechanisms.py` diffs it against repo state.
 - **`scripts/codex_scaffold.py`** — the repo-local checker copy and
-  `.codex/hooks.json` for Codex CLI, with `--probe` to prove the hook is
-  trusted (an untrusted Codex hook is skipped silently).
+  `.codex/hooks.json` for Codex CLI, with `--self-test` to prove the copy
+  runs. Trust is a separate question, because an untrusted Codex hook is
+  skipped silently: the `write-plan` station answers it by issuing a doomed
+  `git push` as an ordinary tool call and reading who replied.
 
 ### Removed
 
