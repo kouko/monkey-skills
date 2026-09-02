@@ -106,7 +106,18 @@ def write_spec(repo: Path, *, confirmed_behavior: str = "", change: str = CHANGE
     )
 
 
-def write_review(repo: Path, verdicts: list[dict], *, change: str = CHANGE, scope: str = "spec") -> None:
+ADVERSARIAL = {"kind": "adversarial", "command": "red-team the spec", "sha": "abc1234",
+               "result": "pass", "artifact": "evidence/red-team.md"}
+
+
+def write_review(
+    repo: Path,
+    verdicts: list[dict],
+    *,
+    change: str = CHANGE,
+    scope: str = "spec",
+    probes: list[dict] | None = None,
+) -> None:
     path = repo / "docs/loom" / change / "review.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -116,7 +127,7 @@ def write_review(repo: Path, verdicts: list[dict], *, change: str = CHANGE, scop
                 "scope": scope,
                 "vendors": ["anthropic"],
                 "verdicts": verdicts,
-                "probes": [],
+                "probes": [ADVERSARIAL] if probes is None else probes,
                 "open_findings": [],
             }
         ),
@@ -328,6 +339,71 @@ def test_write_spec_never_asks_for_confirmed_behavior(tmp_path: Path) -> None:
 # --- the repo's own first v10 change --------------------------------------
 
 
-def test_the_repos_own_change_is_accepted_by_write_plan() -> None:
+def test_the_repos_own_change_matches_its_own_review_json() -> None:
+    """The checker agrees with what the file actually records. The spec
+    round passed with two reviewers; whether write-plan may start also
+    depends on an `adversarial` probe being recorded for it."""
+    review = json.loads(
+        (REPO_ROOT / "docs/loom/2026-09-02-simple-loom-flow/review.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    has_adversarial = any(p.get("kind") == "adversarial" for p in review["probes"])
     result = run_checker("intake", "write-plan", "2026-09-02-simple-loom-flow", cwd=REPO_ROOT)
+    if has_adversarial:
+        assert result.returncode == 0, result.stderr
+    else:
+        assert blocked_rules(result) == {"intake.spec-pass"}
+        assert "adversarial" in result.stderr
+
+
+# --- intake.confirmed grammar (W0-03 review fix 4) -------------------------
+
+
+def test_confirmed_without_a_date_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: confirmed")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+
+
+def test_confirmed_with_a_trailing_comment_is_accepted(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: confirmed 2026-09-02   # re-confirmed after the fork")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+def test_a_confirmed_looking_prefix_is_not_enough(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: confirmed-soon 2026-09-02")
+    assert "intake.confirmed" in blocked_rules(run_checker("intake", "write-plan", CHANGE, cwd=repo))
+
+
+# --- the spec lens is read + adversarial (review fix 9) --------------------
+
+
+def test_a_spec_round_without_an_adversarial_probe_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [verdict("a", "PASS", 1), verdict("b", "PASS", 1)],
+        probes=[{"kind": "cold-read", "command": "read it", "result": "pass"}],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.spec-pass" in blocked_rules(result)
+    assert "adversarial" in result.stderr
+
+
+# --- change-id operand (review fix 10) ------------------------------------
+
+
+def test_a_traversing_change_id_exits_2(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    for bad in ("../evil", "a/b", "a b", ""):
+        result = run_checker("intake", "write-plan", bad, cwd=repo)
+        assert result.returncode == 2, bad

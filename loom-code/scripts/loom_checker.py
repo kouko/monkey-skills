@@ -11,7 +11,7 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py --list-rules
     loom_checker.py intent <path> [--commit-msg <file>]
     loom_checker.py intake <station> <change-id>
-    loom_checker.py push [--head <ref>] [--base <ref>]
+    loom_checker.py push [--head <ref>]
     loom_checker.py standing <path-to-intent>
     loom_checker.py hooks-probe
 
@@ -78,6 +78,10 @@ RULES: list[tuple[str, str]] = [
         "review.json probes[] records a package-test run for this branch whose result is pass.",
     ),
     (
+        "push.review-schema",
+        "review.json carries every key the contract manifest declares, with the container type its template shows.",
+    ),
+    (
         "push.review-only-head",
         "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json.",
     ),
@@ -139,10 +143,32 @@ def load_manifest(path: Path = MANIFEST_PATH):
     return yaml.safe_load(read_text(path))
 
 
+GIT_TIMEOUT = 30  # a hung git is a failure, not a pass
+
+
+def git_maybe(repo: Path, *args: str) -> str | None:
+    """Stripped stdout, or None when git fails, is missing, or times out."""
+    return run_git(repo, *args, timeout=GIT_TIMEOUT)
+
+
+def git_text(repo: Path, *args: str) -> str:
+    """Same, but a failure is undecidable and fails closed -- the caller
+    must never read a git error as "nothing changed"."""
+    output = git_maybe(repo, *args)
+    if output is None:
+        raise UsageError(f"`git {' '.join(args)}` failed or timed out in {repo}.")
+    return output
+
+
+def git_ok(repo: Path, *args: str) -> bool:
+    """True when git exits 0 (used for existence probes like cat-file -e)."""
+    return git_maybe(repo, *args) is not None
+
+
 def repo_root(start: Path) -> Path:
     """The git work tree holding `start` -- every path rule is relative to it."""
     anchor = start if start.is_dir() else start.parent
-    top = run_git(anchor, "rev-parse", "--show-toplevel")
+    top = git_maybe(anchor, "rev-parse", "--show-toplevel")
     if not top:
         raise UsageError(f"{anchor} is not inside a git work tree.")
     return Path(top)
@@ -253,33 +279,37 @@ def glob_to_regex(pattern: str) -> re.Pattern[str]:
     return re.compile("".join(out) + r"\Z")
 
 
-def branch_base(repo: Path, base: str | None = None) -> str | None:
-    """merge-base with origin/main, else main; None when neither exists."""
-    if base:
-        return run_git(repo, "rev-parse", base)
-    for candidate in ("origin/main", "main"):
-        merge_base = run_git(repo, "merge-base", "HEAD", candidate)
+TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master", "@{upstream}")
+
+
+def branch_base(repo: Path) -> str:
+    """The commit this branch grew from. An unresolvable base is fatal:
+    the alternative -- diffing against nothing and seeing no changes --
+    turns every diff-recomputing rule into a silent pass."""
+    for candidate in TRUNK_CANDIDATES:
+        merge_base = git_maybe(repo, "merge-base", "HEAD", candidate)
         if merge_base:
             return merge_base
-    return None
+    raise UsageError(
+        "no branch base resolves in "
+        f"{repo} (tried {', '.join(TRUNK_CANDIDATES)}); the diff cannot be recomputed."
+    )
 
 
-def changed_paths(repo: Path, base: str | None = None) -> set[str]:
+def changed_paths(repo: Path) -> set[str]:
     """Everything this branch changed, committed or not -- a claim about a
     diff must be checked against the whole diff, staging area included."""
+    merge_base = branch_base(repo)
     paths: set[str] = set()
-    merge_base = branch_base(repo, base)
-    commands = [
+    for command in (
+        ("diff", "--name-only", merge_base, "HEAD"),
         ("diff", "--name-only", "HEAD"),
         ("diff", "--name-only", "--cached", "HEAD"),
         ("ls-files", "--others", "--exclude-standard"),
-    ]
-    if merge_base:
-        commands.append(("diff", "--name-only", merge_base, "HEAD"))
-    for command in commands:
-        output = run_git(repo, *command)
-        if output:
-            paths.update(line for line in output.splitlines() if line.strip())
+    ):
+        for line in git_text(repo, *command).splitlines():
+            if line.strip():
+                paths.add(line)
     return paths
 
 
@@ -302,18 +332,18 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         raise UsageError(f"no intent file at {path}")
 
     manifest = load_manifest()
-    text = read_text(path)
-    front, sections = parse_document(text)
+    repo = repo_root(path)
+    front, sections = parse_document(read_text(path))
     failures: list[tuple[str, str]] = []
 
     failures += check_intent_schema(manifest, front, sections)
     failures += check_product_no_identifiers(front, sections)
 
-    reason_failures, needs_design = check_needs_design_reason(front, commit_msg)
+    reason_failures, needs_design = check_needs_design_reason(front, commit_msg, repo)
     failures += reason_failures
 
     if needs_design == "no":
-        failures += check_needs_design_recompute(repo_root(path), manifest, out)
+        failures += check_needs_design_recompute(repo, manifest, out)
 
     return report(failures, err)
 
@@ -378,9 +408,11 @@ def check_product_no_identifiers(front, sections) -> list[tuple[str, str]]:
 NEEDS_DESIGN_GRAMMAR = re.compile(r"^(yes|no)\s*(?:—|–|--)\s*(\S.*)$")
 
 
-def check_needs_design_reason(front, commit_msg: Path | None):
+def check_needs_design_reason(front, commit_msg: Path | None, repo: Path):
     """`needs-design` carries a reason, and the intent's commit message
-    repeats the line verbatim (concept-model §2b)."""
+    repeats the line verbatim (concept-model §2b). With no `--commit-msg`
+    (the post-commit and station calls) the message is HEAD's own, read
+    from git -- the check is never skipped for want of a flag."""
     raw = front.get("needs-design", "").strip()
     if not raw:
         return [], None
@@ -399,17 +431,20 @@ def check_needs_design_reason(front, commit_msg: Path | None):
     if commit_msg is not None:
         if not commit_msg.is_file():
             raise UsageError(f"no commit message file at {commit_msg}")
-        line = f"needs-design: {raw}"
-        if _squeeze(line) not in _squeeze(read_text(commit_msg)):
-            return (
-                [
-                    (
-                        "intent.needs-design-reason",
-                        f"the commit message does not carry the line `{line}`.",
-                    )
-                ],
-                verdict,
-            )
+        message, source = read_text(commit_msg), str(commit_msg)
+    else:
+        message, source = git_text(repo, "log", "-1", "--format=%B"), "HEAD"
+    line = f"needs-design: {raw}"
+    if _squeeze(line) not in _squeeze(message):
+        return (
+            [
+                (
+                    "intent.needs-design-reason",
+                    f"the commit message ({source}) does not carry the line `{line}`.",
+                )
+            ],
+            verdict,
+        )
     return [], verdict
 
 
@@ -434,6 +469,9 @@ def check_needs_design_recompute(repo: Path, manifest, out) -> list[tuple[str, s
     ]
 
 
+CHANGE_ID = re.compile(r"[A-Za-z0-9._-]+")
+CONFIRMED = re.compile(r"confirmed \d{4}-\d{2}-\d{2}(\s+#.*)?")
+
 INTAKE_STATIONS = ("write-spec", "write-plan")  # the two stations that accept an intent
 
 
@@ -441,6 +479,11 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if len(args) < 2:
         raise UsageError("intake needs a station and a change-id.")
     station, change_id = args[0], args[1]
+    if not CHANGE_ID.fullmatch(change_id):
+        raise UsageError(
+            f"{change_id!r} is not a change-id; expected [A-Za-z0-9._-]+ "
+            "(the id is spliced into a path, so nothing else is accepted)."
+        )
     if len(args) > 2:
         raise UsageError(f"unexpected argument {args[2]!r}.")
     if station not in INTAKE_STATIONS:
@@ -460,13 +503,13 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     front, _sections = parse_document(read_text(intent_path))
 
     status = front.get("status", "").strip()
-    if not status.startswith("confirmed"):
+    if not CONFIRMED.fullmatch(status):
         shown = status or "absent (= open)"
         return report(
             [
                 (
                     "intake.confirmed",
-                    f"{station} accepts only a confirmed intent; status is {shown}.",
+                    f"{station} accepts only `status: confirmed <date>`; status is {shown}.",
                 )
             ],
             err,
@@ -519,6 +562,16 @@ def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str
                 "intake.spec-pass",
                 f"the latest spec review round ({round_number}) is not passing: "
                 f"{', '.join(failed)}.",
+            )
+        ]
+    # The spec lens is read AND adversarial (concept-model §5, §6): two
+    # passing readers without a red-team is half a review.
+    if not any(str(probe.get("kind")) == "adversarial" for probe in review.get("probes", [])):
+        return [
+            (
+                "intake.spec-pass",
+                "no `adversarial` probe recorded for the spec; the spec lens is "
+                "read + adversarial, and only the read half ran.",
             )
         ]
     return []
@@ -581,23 +634,20 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
 
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
-    head, base = "HEAD", None
+    head = "HEAD"
     rest = list(args)
     while rest:
         token = rest.pop(0)
-        if token in ("--head", "--base"):
+        if token == "--head":
             if not rest:
-                raise UsageError(f"{token} needs a ref.")
-            if token == "--head":
-                head = rest.pop(0)
-            else:
-                base = rest.pop(0)
+                raise UsageError("--head needs a ref.")
+            head = rest.pop(0)
         else:
             raise UsageError(f"unexpected argument {token!r}.")
 
     manifest = load_manifest()
     repo = repo_root(Path.cwd())
-    head_sha = run_git(repo, "rev-parse", head)
+    head_sha = git_maybe(repo, "rev-parse", head)
     if not head_sha:
         raise UsageError(f"cannot resolve {head!r} in {repo}.")
 
@@ -605,21 +655,37 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if review_rel is None:
         return report(failures, err)
 
-    review = json.loads(run_git(repo, "show", f"{head_sha}:{review_rel}"))
-    failures += check_reviewed_sha(repo, head_sha, review)
+    raw = git_text(repo, "show", f"{head_sha}:{review_rel}")
+    try:
+        review = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return report([("push.review-schema", f"{review_rel} is not valid JSON: {exc}")], err)
+    if not isinstance(review, dict):
+        return report([("push.review-schema", f"{review_rel} is not a JSON object.")], err)
+
+    failures += check_review_schema(manifest, review, review_rel)
+    recorded = str(review.get("reviewed_sha", "")).strip()
+    reviewed_id = (
+        git_maybe(repo, "rev-parse", "--verify", f"{recorded}^{{commit}}")
+        if SHA_HEX.fullmatch(recorded)
+        else None
+    )
+
+    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id)
     failures += check_open_findings_closed(review)
-    failures += check_probes_package_tests(review)
+    failures += check_probes_package_tests(repo, review, reviewed_id)
     failures += check_verdicts(review)
-    failures += check_reviewer_ne_implementer(repo, head_sha, review_rel)
-    if base:  # recorded for symmetry with the other sub-commands
-        out.write(f"base: {base}\n")
+    failures += check_reviewer_ne_implementer(repo, head_sha, review_rel, review, reviewed_id)
     return report(failures, err)
+
+
+SHA_HEX = re.compile(r"[0-9a-f]{7,40}")
 
 
 def check_review_only_head(manifest, repo: Path, head_sha: str):
     """A checkpoint push rides on a review-only commit: exactly one file,
     and that file is this change's review.json (concept-model §2e)."""
-    listing = run_git(repo, "show", "--name-only", "--pretty=format:", head_sha) or ""
+    listing = git_text(repo, "show", "--name-only", "--pretty=format:", head_sha)
     touched = sorted({line for line in listing.splitlines() if line.strip()})
     template = manifest["artifacts"]["review"]["path"]
     is_review = glob_to_regex(template.replace("<change-id>", "*"))
@@ -635,18 +701,63 @@ def check_review_only_head(manifest, repo: Path, head_sha: str):
     ]
 
 
-def check_reviewed_sha(repo: Path, head_sha: str, review) -> list[tuple[str, str]]:
-    """The reviewed tree must be the tree being pushed: an amend or a new
-    code commit under a written review.json invalidates it."""
-    parent = run_git(repo, "rev-parse", f"{head_sha}^")
+def review_container_types(manifest) -> dict[str, type]:
+    """The declared container per key, taken from the artifact's own
+    template -- the schema is declared once, in the contract package."""
+    template = MANIFEST_PATH.parent / "templates" / manifest["artifacts"]["review"]["template"]
+    return {key: type(value) for key, value in json.loads(read_text(template)).items()}
+
+
+def check_review_schema(manifest, review, review_rel: str) -> list[tuple[str, str]]:
+    """Nothing downstream may read a key that was never checked to exist."""
+    types = review_container_types(manifest)
+    failures = []
+    for field in manifest["artifacts"]["review"]["fields"]:
+        if not field.get("required"):
+            continue
+        name = field["name"]
+        if name not in review:
+            failures.append(("push.review-schema", f"{review_rel} has no `{name}` key."))
+            continue
+        expected = types.get(name)
+        if expected is not None and not isinstance(review[name], expected):
+            failures.append(
+                (
+                    "push.review-schema",
+                    f"`{name}` is {type(review[name]).__name__}, not "
+                    f"{expected.__name__} as the template declares.",
+                )
+            )
     recorded = str(review.get("reviewed_sha", "")).strip()
+    if recorded and not SHA_HEX.fullmatch(recorded):
+        failures.append(
+            (
+                "push.review-schema",
+                f"`reviewed_sha: {recorded}` is not 7-40 lowercase hex digits.",
+            )
+        )
+    return failures
+
+
+def check_reviewed_sha(repo: Path, head_sha: str, recorded: str, reviewed_id: str | None):
+    """The reviewed tree must be the tree being pushed. Compared as object
+    ids resolved by git, never as strings: a prefix compare accepts a
+    reviewed_sha that names no commit at all."""
+    parent = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^{{commit}}^")
     if not parent:
         return [("push.reviewed-sha", "HEAD has no parent commit to have reviewed.")]
-    if not recorded or not (parent.startswith(recorded) or recorded.startswith(parent)):
+    if reviewed_id is None:
         return [
             (
                 "push.reviewed-sha",
-                f"reviewed_sha is {recorded or 'empty'} but HEAD^ is {parent[:8]}; "
+                f"reviewed_sha {recorded or '(empty)'} names no commit in this repo.",
+            )
+        ]
+    if reviewed_id != parent:
+        return [
+            (
+                "push.reviewed-sha",
+                f"reviewed_sha resolves to {reviewed_id[:8]} but HEAD^ is {parent[:8]}; "
                 "the reviewed commit is not the one being pushed.",
             )
         ]
@@ -657,7 +768,7 @@ def check_open_findings_closed(review) -> list[tuple[str, str]]:
     open_ones = [
         str(entry.get("id", "<no id>"))
         for entry in review.get("open_findings", [])
-        if not entry.get("resolved") and not entry.get("dismissed")
+        if isinstance(entry, dict) and not entry.get("resolved") and not entry.get("dismissed")
     ]
     if open_ones:
         return [
@@ -670,43 +781,68 @@ def check_open_findings_closed(review) -> list[tuple[str, str]]:
     return []
 
 
-def check_probes_package_tests(review) -> list[tuple[str, str]]:
-    """A test run is a fact only when it was recorded as one."""
-    probes = review.get("probes", [])
-    passing = [
-        probe
-        for probe in probes
-        if str(probe.get("kind")) == "package-tests"
-        and str(probe.get("result", "")).lower() == "pass"
-    ]
-    if passing:
-        return []
-    attempted = [str(probe.get("kind")) for probe in probes]
-    return [
-        (
-            "push.probes-package-tests",
-            "review.json records no passing `package-tests` probe "
-            f"(probes present: {', '.join(attempted) or 'none'}).",
+def check_probes_package_tests(repo: Path, review, reviewed_id: str | None):
+    """A recorded test run is evidence only when the record says WHICH
+    commit was tested and the artifact it points at is really in that
+    commit's tree. Without that, `result: pass` is a self-claim."""
+    reasons: list[str] = []
+    for probe in review.get("probes", []):
+        if not isinstance(probe, dict) or str(probe.get("kind")) != "package-tests":
+            continue
+        label = str(probe.get("command", "")).strip() or "<no command>"
+        if not str(probe.get("command", "")).strip():
+            reasons.append("a package-tests probe records no command")
+            continue
+        if str(probe.get("result", "")).lower() != "pass":
+            reasons.append(f"`{label}` result is {probe.get('result')!r}, not pass")
+            continue
+        sha = str(probe.get("sha", "")).strip()
+        probe_id = (
+            git_maybe(repo, "rev-parse", "--verify", f"{sha}^{{commit}}")
+            if SHA_HEX.fullmatch(sha)
+            else None
         )
+        if probe_id is None or reviewed_id is None or probe_id != reviewed_id:
+            reasons.append(f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed commit")
+            continue
+        artifact = str(probe.get("artifact", "")).strip()
+        if artifact and not git_ok(repo, "cat-file", "-e", f"{reviewed_id}:{artifact}"):
+            reasons.append(f"`{label}` names artifact {artifact}, absent from the reviewed tree")
+            continue
+        return []
+    detail = "; ".join(reasons) if reasons else "no package-tests probe recorded at all"
+    return [("push.probes-package-tests", f"no usable package-tests probe: {detail}.")]
+
+
+def scored_verdicts(review) -> tuple[int, list[dict]]:
+    """The latest round's verdicts, minus entries that name no reviewer or
+    carry no verdict -- an unreadable entry is not a second opinion."""
+    usable = [
+        entry
+        for entry in review.get("verdicts", [])
+        if isinstance(entry, dict)
+        and str(entry.get("reviewer", "")).strip()
+        and str(entry.get("verdict", "")).strip()
     ]
+    return latest_round(usable)
 
 
 def check_verdicts(review) -> list[tuple[str, str]]:
-    round_number, verdicts = latest_round(review.get("verdicts", []))
-    reviewers = {str(entry.get("reviewer", "")) for entry in verdicts}
+    round_number, verdicts = scored_verdicts(review)
+    reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
     failures = []
     if len(reviewers) < 2:
         failures.append(
             (
                 "push.verdicts-ge-2",
                 f"review round {round_number} carries {len(reviewers)} distinct "
-                "reviewer(s); two fresh contexts are required.",
+                "reviewer(s) with a readable verdict; two fresh contexts are required.",
             )
         )
     not_passing = [
-        f"{entry.get('reviewer')}={entry.get('verdict')}"
+        f"{entry['reviewer']}={entry['verdict']}"
         for entry in verdicts
-        if str(entry.get("verdict")) not in PASSING_VERDICTS
+        if str(entry["verdict"]) not in PASSING_VERDICTS
     ]
     if not_passing:
         failures.append(
@@ -721,20 +857,32 @@ def check_verdicts(review) -> list[tuple[str, str]]:
 REVIEWING_ROLES = {"reviewer", "blind-runner", "adversary"}
 
 
-def check_reviewer_ne_implementer(repo: Path, head_sha: str, review_rel: str):
-    """Recomputed from the dispatch record. §0 is explicit that a forged
-    record is out of scope; an ABSENT one is not -- it fails closed."""
+def check_reviewer_ne_implementer(repo: Path, head_sha: str, review_rel: str, review,
+                                  reviewed_id: str | None):
+    """Recomputed from the committed dispatch record. §0 is explicit that a
+    FORGED record is out of scope; an absent, unreadable or working-tree-only
+    one is not -- only a tree the review commit or its parent carries counts."""
     dispatch_rel = f"{review_rel}.dispatch"
-    raw = run_git(repo, "show", f"{head_sha}:{dispatch_rel}")
-    if raw is None:
-        raw = read_text(repo / dispatch_rel) if (repo / dispatch_rel).is_file() else None
+    raw = None
+    for tree in (reviewed_id, head_sha):
+        if tree:
+            raw = git_maybe(repo, "show", f"{tree}:{dispatch_rel}")
+            if raw:
+                break
     if not raw:
         return [
             (
                 "push.reviewer-ne-implementer",
-                f"no dispatch record at {dispatch_rel}; who reviewed cannot be recomputed.",
+                f"no committed dispatch record at {dispatch_rel}; who reviewed cannot "
+                "be recomputed (a working-tree copy does not count).",
             )
         ]
+
+    manifest_fields = [
+        field["name"]
+        for field in load_manifest()["artifacts"]["review-dispatch"]["fields"]
+        if field.get("required")
+    ]
     implementers: set[str] = set()
     reviewers: set[str] = set()
     for number, line in enumerate(raw.splitlines(), start=1):
@@ -750,12 +898,23 @@ def check_reviewer_ne_implementer(repo: Path, head_sha: str, review_rel: str):
                     "the record cannot be recomputed.",
                 )
             ]
-        agent = str(entry.get("agent_id", ""))
-        role = str(entry.get("role", ""))
+        if not isinstance(entry, dict):
+            return [("push.reviewer-ne-implementer", f"{dispatch_rel} line {number} is not an object.")]
+        missing = [key for key in manifest_fields if not str(entry.get(key, "")).strip()]
+        if missing:
+            return [
+                (
+                    "push.reviewer-ne-implementer",
+                    f"{dispatch_rel} line {number} is missing {', '.join(missing)}; "
+                    "the record cannot be recomputed.",
+                )
+            ]
+        agent, role = str(entry["agent_id"]), str(entry["role"])
         if role == "implementer":
             implementers.add(agent)
         elif role in REVIEWING_ROLES:
             reviewers.add(agent)
+
     if not reviewers:
         return [
             (
@@ -769,6 +928,16 @@ def check_reviewer_ne_implementer(repo: Path, head_sha: str, review_rel: str):
             (
                 "push.reviewer-ne-implementer",
                 f"agent(s) {', '.join(both)} both implemented and reviewed this change.",
+            )
+        ]
+    _round, verdicts = scored_verdicts(review)
+    unknown = sorted({str(entry["reviewer"]).strip() for entry in verdicts} - reviewers)
+    if unknown:
+        return [
+            (
+                "push.reviewer-ne-implementer",
+                f"verdict reviewer(s) {', '.join(unknown)} were never dispatched as "
+                f"reviewer, blind-runner or adversary in {dispatch_rel}.",
             )
         ]
     return []

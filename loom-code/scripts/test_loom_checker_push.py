@@ -45,18 +45,18 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
         "scope": "wave 1 code delta",
         "vendors": ["anthropic"],
         "verdicts": [
-            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+            {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m", "lens": "code",
              "verdict": "PASS", "dimension_scores": {}, "findings": []},
-            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+            {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m", "lens": "code",
              "verdict": "PASS_WITH_NOTES", "dimension_scores": {}, "findings": []},
         ],
         "probes": [
-            {"kind": "package-tests", "command": "pytest -q", "result": "pass",
-             "artifact": "evidence/tests.txt"},
+            {"kind": "package-tests", "command": "pytest -q", "sha": reviewed_sha,
+             "result": "pass", "artifact": "evidence/tests.txt"},
         ],
         "open_findings": [
             {"id": "F-1", "anchor": "a.py:1", "origin_sha": "deadbee",
-             "raised_by": "rev-a", "resolved": "fixed in HEAD^"},
+             "raised_by": "agent-rev", "resolved": "fixed in HEAD^"},
         ],
     }
     body.update(overrides)
@@ -86,7 +86,9 @@ def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = DISPATCH_LINES) 
     git(repo, "checkout", "-q", "-b", "work")
 
     (repo / "a.py").write_text("value = 1\n", encoding="utf-8")
-    paths = ["a.py"]
+    (repo / "evidence").mkdir()
+    (repo / "evidence/tests.txt").write_text("2199 passed\n", encoding="utf-8")
+    paths = ["a.py", "evidence/tests.txt"]
     if dispatch is not None:
         write_dispatch(repo, dispatch)
         paths.append(DISPATCH)
@@ -109,6 +111,11 @@ def write_dispatch(repo: Path, entries: list[dict]) -> None:
     path = repo / DISPATCH
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("".join(json.dumps(e) + "\n" for e in entries), encoding="utf-8")
+
+
+def rebuild(repo: Path, **overrides) -> dict:
+    """A review body for the current HEAD^ with `overrides` applied."""
+    return review_body(git(repo, "rev-parse", "HEAD~1"), **overrides)
 
 
 def recommit_review(repo: Path, body: dict) -> None:
@@ -418,3 +425,167 @@ def test_hook_mode_malformed_payload_fails_closed(tmp_path: Path) -> None:
     result = subprocess.run([sys.executable, str(CHECKER), "push"], capture_output=True, text=True,
                             cwd=str(repo), input="{not json")
     assert result.returncode == 2
+
+
+# --- push.review-schema ----------------------------------------------------
+
+
+def test_a_missing_review_key_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    del body["vendors"]
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-schema" in blocked_rules(result)
+    assert "vendors" in result.stderr
+
+
+def test_a_wrong_container_type_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, rebuild(repo, vendors="anthropic"))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-schema" in blocked_rules(result)
+
+
+def test_a_too_short_reviewed_sha_blocks_the_schema(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, review_body("abc12"))
+    result = run_checker("push", cwd=repo)
+    assert "push.review-schema" in blocked_rules(result)
+
+
+def test_a_non_hex_reviewed_sha_blocks_the_schema(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, review_body("HEAD~1"))
+    assert "push.review-schema" in blocked_rules(run_checker("push", cwd=repo))
+
+
+def test_a_reviewed_sha_that_names_no_commit_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, review_body("abcdef1234567"))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_verdict_entries_missing_reviewer_or_verdict_do_not_count(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "verdict": "PASS"},
+                {"reviewer": "agent-blind"},
+                {"verdict": "PASS"},
+                {"note": "a stray object"},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+# --- push.probes-package-tests, recomputed against the reviewed commit -----
+
+
+def test_a_probe_for_another_commit_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    body["probes"][0]["sha"] = git(repo, "rev-parse", "HEAD")
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-package-tests" in blocked_rules(result)
+
+
+def test_a_probe_without_a_sha_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    del body["probes"][0]["sha"]
+    recommit_review(repo, body)
+    assert "push.probes-package-tests" in blocked_rules(run_checker("push", cwd=repo))
+
+
+def test_a_probe_without_a_command_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = "   "
+    recommit_review(repo, body)
+    assert "push.probes-package-tests" in blocked_rules(run_checker("push", cwd=repo))
+
+
+def test_a_probe_artifact_absent_from_the_reviewed_tree_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    body["probes"][0]["artifact"] = "evidence/never-committed.txt"
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-package-tests" in blocked_rules(result)
+    assert "never-committed" in result.stderr
+
+
+def test_a_probe_without_an_artifact_is_still_accepted(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    del body["probes"][0]["artifact"]
+    recommit_review(repo, body)
+    assert run_checker("push", cwd=repo).returncode == 0
+
+
+# --- push.reviewer-ne-implementer, recomputed from the reviewed tree -------
+
+
+def test_a_dispatch_record_only_in_the_working_tree_is_ignored(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, dispatch=None)
+    write_dispatch(repo, DISPATCH_LINES)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewer-ne-implementer" in blocked_rules(result)
+
+
+def test_a_dispatch_line_missing_a_required_key_blocks(tmp_path: Path) -> None:
+    entries = [
+        {"task": "T1", "role": "implementer", "agent_id": "agent-imp", "model": "m",
+         "started": "2026-09-02T09:00:00Z"},
+        {"task": "T1", "role": "reviewer", "agent_id": "agent-rev"},
+        {"task": "T1", "role": "blind-runner", "agent_id": "agent-blind", "model": "m",
+         "started": "2026-09-02T11:00:00Z"},
+    ]
+    repo = build_repo(tmp_path, dispatch=entries)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewer-ne-implementer" in blocked_rules(result)
+    assert "model" in result.stderr
+
+
+def test_a_reviewer_absent_from_the_dispatch_record_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "verdict": "PASS"},
+                {"reviewer": "ghost-reviewer", "verdict": "PASS"},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewer-ne-implementer" in blocked_rules(result)
+    assert "ghost-reviewer" in result.stderr
+
+
+# --- operands --------------------------------------------------------------
+
+
+def test_the_dead_base_flag_is_gone(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    result = run_checker("push", "--base", "main", cwd=repo)
+    assert result.returncode == 2
+    assert "--base" in result.stderr

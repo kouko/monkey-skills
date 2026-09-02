@@ -73,17 +73,31 @@ def git(repo: Path, *args: str) -> str:
     ).stdout.strip()
 
 
-def make_repo(tmp_path: Path) -> Path:
+def make_repo(tmp_path: Path, *, trunk: str = "main", branch: str | None = "work") -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
-    git(repo, "init", "-q", "-b", "main")
+    git(repo, "init", "-q", "-b", trunk)
     git(repo, "config", "user.email", "t@example.com")
     git(repo, "config", "user.name", "T")
     (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
     git(repo, "add", "seed.txt")
     git(repo, "commit", "-q", "-m", "seed")
-    git(repo, "checkout", "-q", "-b", "work")
+    if branch:
+        git(repo, "checkout", "-q", "-b", branch)
     return repo
+
+
+def seal(repo: Path, intent: Path, *, message: str | None = None) -> None:
+    """Commit the intent the way the station does -- with the needs-design
+    line in the commit message, which is what the rule recomputes."""
+    if message is None:
+        line = next(
+            line for line in intent.read_text(encoding="utf-8").splitlines()
+            if line.startswith("needs-design:")
+        )
+        message = f"docs(loom): add an intent\n\n{line}\n"
+    git(repo, "add", str(intent.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", message)
 
 
 def commit_file(repo: Path, rel: str, content: str = "x\n") -> None:
@@ -114,6 +128,7 @@ def blocked_rules(result: subprocess.CompletedProcess) -> set[str]:
 def test_complete_intent_passes(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     intent = write_intent(repo / "docs/loom/intent/2026-09-02-a.md")
+    seal(repo, intent)
     result = run_checker("intent", str(intent), cwd=repo)
     assert result.returncode == 0, result.stderr
 
@@ -280,6 +295,7 @@ def test_needs_design_no_with_internal_diff_passes(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     commit_file(repo, "src/core/engine.py")
     intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    seal(repo, intent)
     result = run_checker("intent", str(intent), cwd=repo)
     assert result.returncode == 0, result.stderr
 
@@ -333,6 +349,70 @@ def test_the_glob_set_in_use_is_printed(tmp_path: Path) -> None:
 
 
 def test_the_repos_own_intent_is_accepted(tmp_path: Path) -> None:
+    """Everything recomputed from the file itself passes. The only rule it
+    cannot satisfy is the commit-message half of needs-design-reason: the
+    commit that landed this intent predates the rule, and HEAD moves on."""
     intent = REPO_ROOT / "docs/loom/intent/2026-09-02-simple-loom-flow.md"
     result = run_checker("intent", str(intent), cwd=REPO_ROOT)
+    assert blocked_rules(result) <= {"intent.needs-design-reason"}, result.stderr
+
+
+# --- the base of the diff (W0-03 review fix 1) -----------------------------
+
+
+def test_master_is_a_recognised_trunk(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path, trunk="master")
+    commit_file(repo, "src/cli/main.py")
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-recompute" in blocked_rules(result)
+
+
+def test_an_upstream_branch_is_a_recognised_base(tmp_path: Path) -> None:
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    git(origin, "init", "-q", "--bare", "-b", "trunk")
+    repo = make_repo(tmp_path, trunk="trunk", branch=None)
+    git(repo, "remote", "add", "origin", str(origin))
+    git(repo, "checkout", "-q", "-b", "work")
+    git(repo, "push", "-q", "-u", "origin", "work")
+    git(repo, "branch", "-D", "-q", "trunk")
+    commit_file(repo, "src/cli/main.py")
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.needs-design-recompute" in blocked_rules(result)
+
+
+def test_no_resolvable_base_fails_closed(tmp_path: Path) -> None:
+    """Never "no base, therefore no changes" -- that is a fail-open."""
+    repo = make_repo(tmp_path, trunk="scratch", branch=None)
+    commit_file(repo, "src/cli/main.py")
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 2
+    assert result.stderr.strip()
+
+
+# --- the commit message half of needs-design-reason (review fix 5) ---------
+
+
+def test_heads_commit_message_is_used_when_no_flag_is_given(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="yes — new surface")
+    seal(repo, intent, message="docs(loom): add an intent\n\nno mention of the line\n")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+
+
+def test_the_flag_still_wins_over_head(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="yes — new surface")
+    seal(repo, intent, message="docs(loom): add an intent\n\nno mention of the line\n")
+    message = tmp_path / "msg.txt"
+    message.write_text(
+        "docs(loom): add an intent\n\nneeds-design: yes — new surface\n", encoding="utf-8"
+    )
+    result = run_checker("intent", str(intent), "--commit-msg", str(message), cwd=repo)
     assert result.returncode == 0, result.stderr

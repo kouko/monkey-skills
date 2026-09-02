@@ -24,6 +24,7 @@ EXPECTED_RULE_IDS = [
     "push.open-findings-closed",
     "push.probes-package-tests",
     "push.review-only-head",
+    "push.review-schema",
     "push.reviewed-sha",
     "push.reviewer-ne-implementer",
     "push.verdicts-ge-2",

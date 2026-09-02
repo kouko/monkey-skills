@@ -118,7 +118,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: scope,         kind: json, required: true}
       - {name: vendors,       kind: json, required: true}
       - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, verdict, dimension_scores, findings}]"}
-      - {name: probes,        kind: json, required: true, grammar: "[{kind, command, result, artifact}]"}
+      - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact}]"}
       - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed}]"}
   review-dispatch:
     path: docs/loom/<change-id>/review.json.dispatch
