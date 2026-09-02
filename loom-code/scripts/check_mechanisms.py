@@ -8,13 +8,26 @@ prose paragraph — this module is its executable twin and must not drift
 from it). A sixth class, host-hygiene, is declared but never recomputed and
 never counted toward the net total.
 
-Four red conditions:
-  R1 unregistered  — a recomputed id is not in the yaml.
-  R2 stale         — a yaml id (class != host-hygiene) was not recomputed.
+Red conditions (class-scoped: R1/R2 compare a mechanism's id within its
+declared class, not across classes):
+  R0 unknown-class — a mechanism's `class:` is not one of ALL_CLASSES.
+  R1 unregistered  — a recomputed id (for class X) is not registered in the
+                      yaml under class X.
+  R2 stale         — a yaml id registered under class X was not found by
+                      X's recompute; a host-hygiene id must be found in the
+                      hook or skill recompute, else it is stale too.
   R3 budget        — the net count rose over --baseline and the CHANGELOG
-                      entry for --version carries no
-                      `budget-exception: <mechanism-id> — <reason>` line.
-  R4 missing-eval   — a mechanism has no non-empty `eval:`.
+                      section headed `## [<version>]` / `## <version>`
+                      carries no `budget-exception: <mechanism-id> —
+                      <reason>` line (no matching section at all is also
+                      red, distinctly, and never falls back to a whole-file
+                      scan).
+  R4 missing-eval   — a mechanism's `eval:` is empty, or points at a path
+                      (before `::`) or `cold-read: <path>` that does not
+                      exist on disk.
+  R4-pending        — a mechanism's `eval:` is the literal
+                      `pending — <plan task id>` form: accepted syntax, but
+                      always printed red so it is never silently green.
 
 Exit codes: 0 clean, 1 any red finding, 2 internal error (fail-closed).
 
@@ -42,6 +55,7 @@ ALL_CLASSES = RECOMPUTED_CLASSES + ("host-hygiene",)
 GATE_MARKER_RE = re.compile(r"<!--\s*gate:\s*([A-Za-z0-9._-]+)\s*-->")
 BUDGET_EXCEPTION_RE = re.compile(r"budget-exception:\s*(\S+)\s*—\s*(.+)")
 QUOTED_TOKEN_RE = re.compile(r'"([^"]+)"|(\S+)')
+PENDING_RE = re.compile(r"^pending\s*—\s*(\S.*)$")
 
 
 # --------------------------------------------------------------------------
@@ -143,8 +157,9 @@ def recompute_contract(repo: Path) -> set[str]:
         ids.add(f"tool:{t['name']}")
     for a in manifest.get("actions", []):
         ids.add(f"action:{a['name']}")
-    for name in (manifest.get("artifacts") or {}):
-        ids.add(f"artifact:{name}")
+    for name, schema in (manifest.get("artifacts") or {}).items():
+        for f in schema.get("fields", []):
+            ids.add(f"artifact:{name}.{f['name']}")
     return ids
 
 
@@ -191,14 +206,11 @@ class CheckResult:
     net_total: int = 0
     baseline_total: int | None = None
     baseline_approx: bool = False
+    host_hygiene_ids: list[str] = field(default_factory=list)
 
 
 def net_count(mechanisms: list[dict]) -> int:
     return sum(1 for m in mechanisms if m.get("class") != "host-hygiene")
-
-
-def _all_yaml_ids(mechanisms: list[dict]) -> set[str]:
-    return {m["id"] for m in mechanisms}
 
 
 def run_checks(
@@ -211,26 +223,67 @@ def run_checks(
 ) -> CheckResult:
     mechanisms = load_mechanisms(repo)
     recomputed = recompute_all(repo)
-    yaml_ids = _all_yaml_ids(mechanisms)
-    recomputed_all_ids: set[str] = set().union(*recomputed.values()) if recomputed else set()
 
     findings: list[Finding] = []
     summary: dict[str, tuple[int, int]] = {}
 
+    # R0: class must be one of ALL_CLASSES.
+    for m in mechanisms:
+        cls = m.get("class")
+        mid = m.get("id", "<missing-id>")
+        if cls not in ALL_CLASSES:
+            findings.append(Finding("R0", mid, f"unknown class {cls!r} (must be one of {ALL_CLASSES})"))
+
+    # host-hygiene ids draw from the hook/skill recompute but are registered
+    # under a separate class; a *valid* host-hygiene id (one actually found
+    # in that recompute) is not a hook/skill-class registration gap, so it
+    # must not also trip R1 on the hook/skill class it was drawn from.
+    host_hygiene_universe = recomputed["hook"] | recomputed["skill"]
+    host_hygiene_ids: list[str] = [
+        m["id"] for m in mechanisms
+        if m.get("class") == "host-hygiene" and m.get("id") in host_hygiene_universe
+    ]
+
+    # R1: a recomputed id for class X not registered in yaml under class X.
     for cls in RECOMPUTED_CLASSES:
         recomputed_ids = recomputed[cls]
         registered_ids = {m["id"] for m in mechanisms if m.get("class") == cls}
         summary[cls] = (len(recomputed_ids), len(registered_ids))
-        for mid in sorted(recomputed_ids - yaml_ids):
+        covered_ids = registered_ids | set(host_hygiene_ids) if cls in ("hook", "skill") else registered_ids
+        for mid in sorted(recomputed_ids - covered_ids):
             findings.append(Finding("R1", mid, f"class {cls}: recomputed but not registered in mechanisms.yaml"))
 
+    # R2: a yaml id registered under class X but not found by X's recompute.
+    # host-hygiene is exempt from ordinary recompute matching but its id
+    # must still be found in the hook or skill recompute (real infra, just
+    # outside the loom flow) — otherwise it too is red.
     for m in mechanisms:
         cls = m.get("class")
         mid = m.get("id", "<missing-id>")
-        if cls != "host-hygiene" and mid not in recomputed_all_ids:
+        if cls not in ALL_CLASSES:
+            continue  # already reported as R0
+        if cls == "host-hygiene":
+            if mid not in host_hygiene_universe:
+                findings.append(Finding("R2", mid, "class host-hygiene: id not found in hook or skill recompute"))
+            continue
+        if mid not in recomputed[cls]:
             findings.append(Finding("R2", mid, f"class {cls}: registered but not found by recompute"))
-        if not (m.get("eval") or "").strip():
+
+        # R4 / R4-pending: eval must be non-empty and resolve, unless it is
+        # the literal accepted-but-flagged `pending — <plan task id>` form.
+        eval_raw = (m.get("eval") or "").strip()
+        if not eval_raw:
             findings.append(Finding("R4", mid, "mechanism has no eval:"))
+        elif PENDING_RE.match(eval_raw):
+            findings.append(Finding("R4-pending", mid, f"eval not yet landed: {eval_raw}"))
+        elif eval_raw.startswith("cold-read:"):
+            cold_read_path = eval_raw.split("cold-read:", 1)[1].strip()
+            if not (repo / cold_read_path).is_file():
+                findings.append(Finding("R4", mid, f"cold-read path does not exist: {cold_read_path}"))
+        else:
+            file_part = eval_raw.split("::", 1)[0].strip()
+            if not (repo / file_part).is_file():
+                findings.append(Finding("R4", mid, f"eval path does not exist: {file_part}"))
 
     net_total = net_count(mechanisms)
     baseline_total: int | None = None
@@ -243,7 +296,18 @@ def run_checks(
     if baseline_total is not None and net_total > baseline_total:
         changelog_path = changelog or _default_changelog(repo)
         version_str = version or _default_version(repo)
-        if not _changelog_has_budget_exception(changelog_path, version_str):
+        if not version_str:
+            raise ValueError(
+                f"cannot resolve plugin version for the R3 CHANGELOG check "
+                f"(empty or unparseable {repo / 'loom-code' / '.claude-plugin' / 'plugin.json'})"
+            )
+        section = _changelog_section(changelog_path, version_str)
+        if section is None:
+            findings.append(Finding(
+                "R3", "<net-count>",
+                f"no CHANGELOG section for {version_str} in {changelog_path}",
+            ))
+        elif not BUDGET_EXCEPTION_RE.search(section):
             findings.append(Finding(
                 "R3", "<net-count>",
                 f"net mechanism count rose {baseline_total} -> {net_total} and "
@@ -258,6 +322,7 @@ def run_checks(
         net_total=net_total,
         baseline_total=baseline_total,
         baseline_approx=baseline_approx,
+        host_hygiene_ids=host_hygiene_ids,
     )
 
 
@@ -334,20 +399,21 @@ def _default_version(repo: Path) -> str:
     return ""
 
 
-def _changelog_has_budget_exception(changelog: Path, version: str) -> bool:
+def _changelog_section(changelog: Path, version: str) -> str | None:
+    """Return the text of the `## [<version>]` or `## <version>` section,
+    or None when no such heading exists — R3 reads only that section, never
+    a whole-file scan (F7)."""
     if not changelog.is_file():
-        return False
+        return None
     text = changelog.read_text(encoding="utf-8", errors="replace")
-    if version:
-        # scope the search to the section for `version` when the heading is
-        # findable; fall back to scanning the whole file otherwise.
-        heading_re = re.compile(rf"^##\s*\[{re.escape(version)}\]", re.MULTILINE)
-        m = heading_re.search(text)
-        if m:
-            next_heading = re.compile(r"^##\s*\[", re.MULTILINE)
-            nxt = next_heading.search(text, m.end())
-            text = text[m.end():nxt.start() if nxt else len(text)]
-    return bool(BUDGET_EXCEPTION_RE.search(text))
+    v = re.escape(version)
+    heading_re = re.compile(rf"^##\s*(?:\[{v}\]|{v}(?=\s|$))", re.MULTILINE)
+    m = heading_re.search(text)
+    if not m:
+        return None
+    next_heading = re.compile(r"^##\s", re.MULTILINE)
+    nxt = next_heading.search(text, m.end())
+    return text[m.end():nxt.start() if nxt else len(text)]
 
 
 # --------------------------------------------------------------------------
@@ -427,6 +493,8 @@ def _print_summary(result: CheckResult) -> None:
     if result.baseline_total is not None:
         approx = " (approximated)" if result.baseline_approx else ""
         print(f"baseline net count: {result.baseline_total}{approx}")
+    for mid in result.host_hygiene_ids:
+        print(f"exempt from net count: {mid}")
     if result.findings:
         print()
         for f in result.findings:

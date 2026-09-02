@@ -21,11 +21,15 @@ counting: >
   PreToolUse / PostToolUse / SessionStart hook declared in
   loom-code/hooks/hooks.json, id'd as `<event>:<matcher>:<command
   basename>`. contract = every station, non-standalone tool, action and
-  artifact schema declared in loom-code/contract/manifest.yaml, id'd as
-  `station:<name>` / `tool:<name>` / `action:<name>` / `artifact:<name>`
-  respectively — this is a separate recomputable surface from the skill
-  class above because it reads the manifest's own declaration, not the
-  skills/ directory listing. prose-gate = every `<!-- gate: <id> -->`
+  artifact field declared in loom-code/contract/manifest.yaml, id'd as
+  `station:<name>` / `tool:<name>` / `action:<name>` /
+  `artifact:<name>.<field>` respectively — an artifact schema recomputes
+  one id per declared field (frontmatter key, H2 section, or JSON key), not
+  one id for the whole artifact, so a field can go missing from a template
+  without the artifact-level id silently covering for it. This is a
+  separate recomputable surface from the skill class above because it
+  reads the manifest's own declaration, not the skills/ directory listing.
+  prose-gate = every `<!-- gate: <id> -->`
   marker found in `*/skills/**/*.md`, `*/agents/*.md` or
   `*/references/*.md` under the three plugins (an unmarked paragraph is
   not a gate and may not be used as one). A sixth class, host-hygiene, is
@@ -40,55 +44,55 @@ mechanisms:
   #     landed shape, plan §0's convergence table) ---
   - id: capture-intent
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-B.md"
+    eval: "pending — W4-01"
   - id: write-spec
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-B.md"
+    eval: "pending — W4-01"
   - id: write-plan
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: build
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: review
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: ship
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: maintain
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: product-principles
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-B.md"
+    eval: "pending — W4-01"
   - id: design-system
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-B.md"
+    eval: "pending — W4-01"
   - id: decision-map
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: handoff
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: recap-state
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: cot-explain
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: distill-sessions
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: git-memory
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: independent-advisor
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
   - id: critique
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
+    eval: "pending — W4-01"
 
   # --- checker-rule (19; loom_checker.py --list-rules) ---
   - id: contract.requires
@@ -162,8 +166,8 @@ mechanisms:
                           # real hook entry, so it must still be listed.
     eval: loom-code/scripts/test_language_anchor_hook.py
 
-  # --- contract (35; loom-code/contract/manifest.yaml — stations, the 10
-  #     non-standalone tools, actions and artifact schemas) ---
+  # --- contract (63; loom-code/contract/manifest.yaml — stations, the 10
+  #     non-standalone tools, actions and per-field artifact schemas) ---
   - {id: "station:capture-intent", class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_seven_stations_with_owner"}
   - {id: "station:write-spec",     class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_seven_stations_with_owner"}
   - {id: "station:write-plan",     class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_seven_stations_with_owner"}
@@ -195,10 +199,41 @@ mechanisms:
   - {id: "action:checkpoint",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:memory",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:alert-to-intent",     class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
-  - {id: "artifact:intent",           class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
-  - {id: "artifact:spec",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
-  - {id: "artifact:plan",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
-  - {id: "artifact:review",           class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
+  # artifact:<name>.<field> — one id per declared field (F10); eval is the
+  # single test that walks every field of every artifact against its
+  # template, so a dropped field cannot hide behind the artifact-level id.
+  - {id: "artifact:intent.originator",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.kind",                class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.needs-design",        class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.map",                 class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.evidence",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.status",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.Problem",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.Proposed outcome",    class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.Acceptance",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.Constraints",         class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.Value case",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.Out of scope",        class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.Open questions",      class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.intent",                class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.confirmed-behavior",    class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.Requirements",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.Design decision",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.Alternatives considered", class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.Current state evidence", class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.UI flows",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:plan.intent",                class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:plan.spec",                  class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:plan.Task DAG",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:plan.Risks",                 class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:plan.Current State Evidence", class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.reviewed_sha",        class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.scope",               class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.vendors",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.verdicts",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.probes",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.open_findings",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.dispatch",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
 
   # --- prose-gate: none yet (W0-06 target population; the landed stations
   #     mark their real `<!-- gate: … -->` paragraphs in W1/W2, W3-06 §11
