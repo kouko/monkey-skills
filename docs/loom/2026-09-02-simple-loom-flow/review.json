@@ -1584,6 +1584,30 @@
    "model": "opus",
    "started": "2026-09-02T12:09:13Z",
    "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w3",
+   "model": "opus",
+   "started": "2026-09-02T12:23:43Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-w3",
+   "model": "sonnet",
+   "started": "2026-09-02T12:23:43Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end",
+   "role": "adversary",
+   "agent_id": "opus-adversary-w3",
+   "model": "opus",
+   "started": "2026-09-02T12:23:43Z",
+   "fresh_context": true
   }
  ]
 }
