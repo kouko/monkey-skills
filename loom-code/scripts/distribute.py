@@ -185,8 +185,10 @@ AGENT_BASELINE_END = "<!-- END baseline-v1 -->"
 #                           in this batch.
 # v0.42.0: docs-reviewer.md (prose-native whole-artifact reviewer from
 #          requesting-docs-review).
+# W1-02: implementer.md no longer carries an injected baseline block — the
+# engineering baseline is a reference (loom-code/references/
+# engineering-baseline.md) that the contract cites by relative path.
 AGENT_BASELINE_TARGETS: list[str] = [
-    "agents/implementer.md",
     "agents/spec-reviewer.md",
     "agents/code-quality-reviewer.md",
     "agents/code-reviewer.md",

@@ -240,6 +240,12 @@ mechanisms:
   - id: "maintain.dedupe"
     class: prose-gate
     eval: "pending — W4-01"
+  - id: "build.no-dispatch-without-a-record"
+    class: prose-gate
+    eval: "pending — W4-01"
+  - id: "build.after-task-review-before-next-task"
+    class: prose-gate
+    eval: "pending — W4-01"
   - id: "write-plan.no-plan-without-confirmed-intent"
     class: prose-gate
     eval: "pending — W4-01"
