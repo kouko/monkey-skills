@@ -1,5 +1,5 @@
 {
- "reviewed_sha": "ffd9b90a",
+ "reviewed_sha": "96d90f1b",
  "scope": "spec — PASS (rounds 1–4 read, 5 adversarial adopted, 9 read); W0 code — PASS_WITH_NOTES (rounds 6–8); W1 loom-code stations — PASS_WITH_NOTES (rounds 10–14); W2 in review",
  "verdicts": [
   {
@@ -302,7 +302,7 @@
    "kind": "adversarial",
    "scope": "spec",
    "command": "fresh opus red-teams spec.md + concept-model.md across scenarios A–H",
-   "sha": "6eb0a6a9",
+   "sha": "0974e7cd",
    "result": "NEEDS_REVISION — 6 fatal, all adopted",
    "artifact": "evidence/spec-redteam-r5.md"
   },
@@ -310,7 +310,7 @@
    "kind": "package-tests",
    "scope": "w0-code",
    "command": "python3 -m pytest loom-code/scripts/ -q",
-   "sha": "1c9ed208",
+   "sha": "423efe92",
    "result": "2285 passed, 1 xfailed in 122.29s (0:02:02)",
    "artifact": "loom-code/scripts/"
   },
@@ -318,7 +318,7 @@
    "kind": "adversarial",
    "scope": "w0-code",
    "command": "reviewer probes: 6 checker fail-open probes (after-task) + hook payload shapes / scaffold real-copy / R1–R4 fixtures (wave-end)",
-   "sha": "1c9ed208",
+   "sha": "423efe92",
    "result": "3 + 4 fatal fail-opens found and fixed",
    "artifact": "evidence/w0-checkpoint-reviews.md"
   },
@@ -326,7 +326,7 @@
    "kind": "package-tests",
    "scope": "w1-code",
    "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "896 passed (round 3); 889 passed after W2-04 cleanup",
    "artifact": "loom-code/scripts/"
   },
@@ -334,7 +334,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py"
   },
@@ -342,7 +342,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py"
   },
@@ -350,7 +350,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py"
   },
@@ -358,7 +358,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py"
   },
@@ -366,7 +366,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py"
   },
@@ -374,7 +374,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "escaped-by-design (§0)",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py"
   },
@@ -382,7 +382,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py"
   },
@@ -390,7 +390,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py"
   },
@@ -398,7 +398,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py"
   },
@@ -406,7 +406,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "escaped-by-design (§0)",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py"
   },
@@ -414,7 +414,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py"
   },
@@ -422,7 +422,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py"
   },
@@ -430,7 +430,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py"
   },
@@ -438,7 +438,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py"
   },
@@ -446,7 +446,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py"
   },
@@ -454,7 +454,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py"
   },
@@ -462,7 +462,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py",
-   "sha": "78c5661f",
+   "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
   }
@@ -477,7 +477,7 @@
     "codex"
    ],
    "text": "Acceptance #4 (replay 三個真實 change 不比今天重) 無任何 REQ",
-   "resolved": "a3d78066: REQ-10 逐 change 基線 31/22/2、67/58/2、28/14/2，engineering 路徑"
+   "resolved": "f0b59ce8: REQ-10 逐 change 基線 31/22/2、67/58/2、28/14/2，engineering 路徑"
   },
   {
    "id": "SR1-02",
@@ -488,7 +488,7 @@
     "codex"
    ],
    "text": "單向門與判斷型岔路成為額外停點；engineering 在 write-plan 前問違反 ≤2",
-   "resolved": "a3d78066: 岔路併入既有決策點；非決策型限授權／缺件；PRINCIPLES 訪談併入決策點①"
+   "resolved": "f0b59ce8: 岔路併入既有決策點；非決策型限授權／缺件；PRINCIPLES 訪談併入決策點①"
   },
   {
    "id": "SR1-03",
@@ -498,7 +498,7 @@
     "codex"
    ],
    "text": "只裝 loom-code 且 needs-design: yes 時要求使用者手寫 spec ＝ user-judgment leak",
-   "resolved": "e11a198f: write-plan 自動產最小 spec；a3d78066 補 product 限定"
+   "resolved": "24528776: write-plan 自動產最小 spec；f0b59ce8 補 product 限定"
   },
   {
    "id": "SR1-04",
@@ -508,7 +508,7 @@
     "codex"
    ],
    "text": "准入規則的『機制』無機器可讀母體，CI 無法驗淨數不增",
-   "resolved": "a3d78066: 散文閘以 <!-- gate: id --> 為母體；checker --list-rules；budget-exception 文法"
+   "resolved": "f0b59ce8: 散文閘以 <!-- gate: id --> 為母體；checker --list-rules；budget-exception 文法"
   },
   {
    "id": "SR1-05",
@@ -519,7 +519,7 @@
     "codex"
    ],
    "text": "缺 Codex /hooks 授信、PRINCIPLES 拒收、standing docs WARN 的可見流程",
-   "resolved": "a3d78066: flow 5 授信、flow 6 併入決策點①"
+   "resolved": "f0b59ce8: flow 5 授信、flow 6 併入決策點①"
   },
   {
    "id": "SR1-06",
@@ -530,7 +530,7 @@
     "codex"
    ],
    "text": "複合 REQ 的箭頭只覆蓋部分義務；名詞≤40 與跨 vendor 必用是 intent Open question 卻寫成硬要求",
-   "resolved": "e11a198f + ecb335ce：箭頭縮窄；跨 vendor 改使用者選擇"
+   "resolved": "24528776 + fc5693e2：箭頭縮窄；跨 vendor 改使用者選擇"
   },
   {
    "id": "SR1-07",
@@ -540,7 +540,7 @@
     "claude"
    ],
    "text": "『只多一次授信』為假：hook 定義變即重授信，而 §7a 升版覆寫；command 字串須固定",
-   "resolved": "e11a198f: hooks.json command 固定；核對 run E"
+   "resolved": "24528776: hooks.json command 固定；核對 run E"
   },
   {
    "id": "SR1-08",
@@ -550,7 +550,7 @@
     "codex"
    ],
    "text": "skill 36→18 應為 ≤18；session-start 減半無 baseline sha；113 名詞未受清單支持",
-   "resolved": "a3d78066: session-start 基線釘 SHA＋命令"
+   "resolved": "f0b59ce8: session-start 基線釘 SHA＋命令"
   },
   {
    "id": "SR1-09",
@@ -561,7 +561,7 @@
     "codex"
    ],
    "text": "REQ-9 措辭『走完』≠ Acceptance #6 的四項輸出；且未帶現況 25 分鐘與拆站對策",
-   "resolved": "a3d78066: REQ-9 回 Acceptance #6 原句＋固定測例；對象改站文件與否待 intent 裁定"
+   "resolved": "f0b59ce8: REQ-9 回 Acceptance #6 原句＋固定測例；對象改站文件與否待 intent 裁定"
   },
   {
    "id": "SR1-10",
@@ -571,7 +571,7 @@
     "claude"
    ],
    "text": "機制規則混進使用者可讀段；『掃讀』理由無證據；REQ-6/7 列舉不完整",
-   "resolved": "e11a198f"
+   "resolved": "24528776"
   },
   {
    "id": "SR2-01",
@@ -581,7 +581,7 @@
     "claude"
    ],
    "text": "spec 改跨 vendor 為選配後與 intent『至少一個不同 vendor』牴觸",
-   "resolved": "a3d78066: intent 該句改為使用者選擇；status 退回 open 待重確認"
+   "resolved": "f0b59ce8: intent 該句改為使用者選擇；status 退回 open 待重確認"
   },
   {
    "id": "SR2-02",
@@ -591,7 +591,7 @@
     "codex"
    ],
    "text": "『不需要產品原則』選項是額外停點且繞過 product 拒收",
-   "resolved": "a3d78066: 訪談併入決策點①；waiver 只靜音 WARN 永不豁免拒收"
+   "resolved": "f0b59ce8: 訪談併入決策點①；waiver 只靜音 WARN 永不豁免拒收"
   },
   {
    "id": "SR2-03",
@@ -601,7 +601,7 @@
     "claude"
    ],
    "text": "非決策型類別無上限，6a 是偏好詢問",
-   "resolved": "a3d78066: 入場判準＝不做無法繼續的授權／缺件，不得新增；6a 併入首次決策點①"
+   "resolved": "f0b59ce8: 入場判準＝不做無法繼續的授權／缺件，不得新增；6a 併入首次決策點①"
   },
   {
    "id": "SR2-04",
@@ -611,7 +611,7 @@
     "claude"
    ],
    "text": "code-only 格漏 product 限定",
-   "resolved": "a3d78066"
+   "resolved": "f0b59ce8"
   },
   {
    "id": "SR2-05",
@@ -621,7 +621,7 @@
     "claude"
    ],
    "text": "未寫明 checker 副本可被改寫的已知限制",
-   "resolved": "a3d78066"
+   "resolved": "f0b59ce8"
   },
   {
    "id": "SR2-06",
@@ -642,7 +642,7 @@
     "codex"
    ],
    "text": "§0 仍寫『至少一個不同 vendor』，與重確認 intent 衝突",
-   "resolved": "9d3615ab"
+   "resolved": "bb5601cb"
   },
   {
    "id": "SR3-02",
@@ -653,7 +653,7 @@
     "claude"
    ],
    "text": "REQ-8 基線仍寫『main 當前』",
-   "resolved": "9d3615ab"
+   "resolved": "bb5601cb"
   },
   {
    "id": "SR3-03",
@@ -663,7 +663,7 @@
     "codex"
    ],
    "text": "contract package 宣告檔無固定路徑",
-   "resolved": "9d3615ab: loom-code/contract/manifest.yaml"
+   "resolved": "bb5601cb: loom-code/contract/manifest.yaml"
   },
   {
    "id": "SR3-04",
@@ -673,7 +673,7 @@
     "codex"
    ],
    "text": "缺 standing docs 三行 WARN 流程",
-   "resolved": "9d3615ab: flow 7"
+   "resolved": "bb5601cb: flow 7"
   },
   {
    "id": "SR3-05",
@@ -683,7 +683,7 @@
     "claude"
    ],
    "text": "測例未指明受測站",
-   "resolved": "0f907d37: 入口站＋摘要表"
+   "resolved": "34de58f4: 入口站＋摘要表"
   },
   {
    "id": "SR3-06",
@@ -693,7 +693,7 @@
     "claude"
    ],
    "text": "evidence New-model 欄依 v7 算，自證不可通過",
-   "resolved": "0f907d37: 註明過時、以 replay 為準"
+   "resolved": "34de58f4: 註明過時、以 replay 為準"
   },
   {
    "id": "SR3-07",
@@ -703,7 +703,7 @@
     "claude"
    ],
    "text": "code-only product 缺件仍寫『手寫』",
-   "resolved": "0f907d37: write-plan 代做訪談代寫"
+   "resolved": "34de58f4: write-plan 代做訪談代寫"
   },
   {
    "id": "SR3-08",
@@ -713,7 +713,7 @@
     "claude"
    ],
    "text": "§12 歷史列措辭、yaml-extra 檢查、重複性範圍措辭",
-   "resolved": "0f907d37"
+   "resolved": "34de58f4"
   },
   {
    "id": "SR4-01",
@@ -723,7 +723,7 @@
     "claude"
    ],
    "text": "§11 第四條紅線未同步進 REQ-7",
-   "resolved": "6eb0a6a9"
+   "resolved": "0974e7cd"
   },
   {
    "id": "SR4-02",
@@ -733,7 +733,7 @@
     "claude"
    ],
    "text": "flow 7 不符非決策型判準；計數錯",
-   "resolved": "6eb0a6a9: 獨立為非互動提示類"
+   "resolved": "0974e7cd: 獨立為非互動提示類"
   },
   {
    "id": "SR4-03",
@@ -743,7 +743,7 @@
     "claude"
    ],
    "text": "摘要表要含完整站序",
-   "resolved": "6eb0a6a9"
+   "resolved": "0974e7cd"
   },
   {
    "id": "SR5-01",
@@ -753,7 +753,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-1 probes[] 自填→checker 自跑",
-   "resolved": "b61f7906 §7 + 6f8f7970 checker executes probes — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §7 + bb85a744 checker executes probes — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-02",
@@ -763,7 +763,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "C/D 決策點後單向門取保守預設",
-   "resolved": "b61f7906 §4; 3cab1a4a NF-1 no-reversible-option exit — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §4; 343e95f2 NF-1 no-reversible-option exit — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-03",
@@ -773,7 +773,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "C-2 類別 (e) 不可逆動作",
-   "resolved": "b61f7906 §4 (e) + UI flow 4 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §4 (e) + UI flow 4 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-04",
@@ -783,7 +783,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "A-1 無工具時自寫 abuse 案例",
-   "resolved": "b61f7906 §6; push.probes-adversarial scheduled W1-06 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §6; push.probes-adversarial scheduled W1-06 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-05",
@@ -793,7 +793,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "A-2 dismissed 身分",
-   "resolved": "b61f7906 §5/§7 + 6f8f7970 push.dismissed-by-reviewer — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §5/§7 + bb85a744 push.dismissed-by-reviewer — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-06",
@@ -803,7 +803,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-2 問題型判準",
-   "resolved": "b61f7906 §4/REQ-1; questions[] field for the record — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §4/REQ-1; questions[] field for the record — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-07",
@@ -813,7 +813,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "B-2 建議句用 5/7",
-   "resolved": "b61f7906 §5 (5/7 verified by r5 reviewer) — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §5 (5/7 verified by r5 reviewer) — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-08",
@@ -823,7 +823,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "E-1 修正輪不計、after-task 預算",
-   "resolved": "b61f7906 §5; build SKILL + manifest wording synced — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §5; build SKILL + manifest wording synced — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-09",
@@ -843,7 +843,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "F ratified 實質條件",
-   "resolved": "b61f7906 §8 + 6f8f7970 non-negotiables ≥3 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §8 + bb85a744 non-negotiables ≥3 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-11",
@@ -853,7 +853,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "G 切換日三事實",
-   "resolved": "b61f7906 §1/§10/REQ-2 + contract.requires rule — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §1/§10/REQ-2 + contract.requires rule — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-12",
@@ -863,7 +863,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-3 降為記錄欄位",
-   "resolved": "b61f7906 §7 + dispatch[] fresh_context field — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §7 + dispatch[] fresh_context field — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-13",
@@ -883,288 +883,288 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-5 猜測定義",
-   "resolved": "b61f7906 §12 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "7b972f12 §12 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "W0-01",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "branch_base only main",
-   "resolved": "resolved: 7a41e13f"
+   "resolved": "resolved: b2e9e1c0"
   },
   {
    "id": "W0-02",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "no review.json schema at push",
-   "resolved": "resolved: 7a41e13f push.review-schema"
+   "resolved": "resolved: b2e9e1c0 push.review-schema"
   },
   {
    "id": "W0-03",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "package-tests probe unbound",
-   "resolved": "resolved: 7a41e13f (sha) + 6f8f7970 (checker executes)"
+   "resolved": "resolved: b2e9e1c0 (sha) + bb85a744 (checker executes)"
   },
   {
    "id": "W0-04",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "push hangs on open stdin",
-   "resolved": "resolved: 6f8f7970 --hook"
+   "resolved": "resolved: bb85a744 --hook"
   },
   {
    "id": "W0-05",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "push regex misses git -C / eval / shell -c / xargs",
-   "resolved": "resolved: 6f8f7970 + 1c9ed208"
+   "resolved": "resolved: bb85a744 + 423efe92"
   },
   {
    "id": "W0-06",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "Codex scaffold copy lacks deps; probe misreports",
-   "resolved": "resolved: d9ed517e"
+   "resolved": "resolved: 0459e0ac"
   },
   {
    "id": "W0-07",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "dispatch contract prose vs code",
-   "resolved": "resolved: 6f8f7970 dispatch[] in review.json"
+   "resolved": "resolved: bb85a744 dispatch[] in review.json"
   },
   {
    "id": "W0-08",
    "severity": "fatal",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "mechanisms registered per artifact not per field",
-   "resolved": "resolved: d3b6aefd"
+   "resolved": "resolved: 2f91feb7"
   },
   {
    "id": "W0-09",
    "severity": "important",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "dismissed not identity-checked",
-   "resolved": "resolved: 6f8f7970 push.dismissed-by-reviewer"
+   "resolved": "resolved: bb85a744 push.dismissed-by-reviewer"
   },
   {
    "id": "W0-10",
    "severity": "important",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "R3 whole-file fallback; R4 unresolved eval; class unvalidated",
-   "resolved": "resolved: d3b6aefd + 1c9ed208"
+   "resolved": "resolved: 2f91feb7 + 423efe92"
   },
   {
    "id": "W0-11",
    "severity": "important",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "docs: backlog wording, session-start ②, KICKOFF globs, §3 JSON keys",
-   "resolved": "resolved: 979b1668, 3c8568d4"
+   "resolved": "resolved: 8b325a7f, c51d4518"
   },
   {
    "id": "W0-12",
    "severity": "nit",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "contract --require message direction; plan lists hooks-probe",
-   "resolved": "resolved: 1c9ed208, 0f1dd2fe"
+   "resolved": "resolved: 423efe92, 6e8e2c92"
   },
   {
    "id": "W0-13",
    "severity": "important",
    "anchor": "W0",
-   "origin_sha": "8a5a3b2f",
+   "origin_sha": "a9eeeea3",
    "raised_by": [
     "w0-reviewers"
    ],
    "text": "intake.spec-pass picks the latest round across all lenses; a later code round would shadow the spec round",
-   "resolved": "88ec6637 intake.spec-pass filters by spec-scoped rounds; 5 tests incl. later-code-round shadowing"
+   "resolved": "1ffc8bca intake.spec-pass filters by spec-scoped rounds; 5 tests incl. later-code-round shadowing"
   },
   {
    "id": "W1-01",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "write-plan lacked the needs-design criterion and Codex first-contact step",
-   "resolved": "resolved: c4747e6f, eecb4c9f"
+   "resolved": "resolved: dc6e8bf7, dead30e5"
   },
   {
    "id": "W1-02",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "CI pytest step died on a collection error; 46 root guards pinned deleted mechanisms",
-   "resolved": "resolved: da16a0e0, 1a799c0d"
+   "resolved": "resolved: 114ea813, b25b88e6"
   },
   {
    "id": "W1-03",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "ship referenced a sibling plugin path (boundary)",
-   "resolved": "resolved: da16a0e0"
+   "resolved": "resolved: 114ea813"
   },
   {
    "id": "W1-04",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "adversary.md pointed at a non-existent catalogue",
-   "resolved": "resolved: 7a499c02"
+   "resolved": "resolved: 2cc406a8"
   },
   {
    "id": "W1-05",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "no adversary dispatched at the checkpoint; push.probes-adversarial absent from tables",
-   "resolved": "resolved: adversary dispatched (683ebc45); tables 7a499c02"
+   "resolved": "resolved: adversary dispatched (2eeb18d2); tables 2cc406a8"
   },
   {
    "id": "W1-06",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "probe command `true` / comment-substring / `; true` passed the push gate",
-   "resolved": "resolved: 6573958c → 5cc21c57 → ffd9b90a (checker executes artifacts and declared commands, never recorded strings)"
+   "resolved": "resolved: 4558a4ce → 2260fe69 → 96d90f1b (checker executes artifacts and declared commands, never recorded strings)"
   },
   {
    "id": "W1-07",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "branch-level Task trailer let untagged code commits through",
-   "resolved": "resolved: ffd9b90a per-commit trailer"
+   "resolved": "resolved: 96d90f1b per-commit trailer"
   },
   {
    "id": "W1-08",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "dispatch record race; second-vendor silently dropped; after-task budget prose-only; rename hides deletion",
-   "resolved": "resolved: 6573958c push.dispatch-covers-tasks, push.second-vendor-honoured, intake.after-task-budget, --no-renames"
+   "resolved": "resolved: 4558a4ce push.dispatch-covers-tasks, push.second-vendor-honoured, intake.after-task-budget, --no-renames"
   },
   {
    "id": "W1-09",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "build BLOCKED branch re-opened a stop; questions[] carrier; branch creation; wave-end/branch-end doubling; five tables diverged",
-   "resolved": "resolved: 7a499c02 (tables identical, test)"
+   "resolved": "resolved: 2cc406a8 (tables identical, test)"
   },
   {
    "id": "W1-10",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "spec red-team probe accepted without scope; R3/R4/class checks; host-hygiene skipped R4",
-   "resolved": "resolved: 6573958c, d3b6aefd, 1c9ed208"
+   "resolved": "resolved: 4558a4ce, 2f91feb7, 423efe92"
   },
   {
    "id": "W1-11",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "KICKOFF lacked package-tests for this repo; fallback masked",
-   "resolved": "resolved: 5cc21c57"
+   "resolved": "resolved: 2260fe69"
   },
   {
    "id": "W1-12",
    "severity": "nit",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "dead constant, weak `or` assertion, timeout regressions, ROUTINE.md dead pointer, docstrings, codex longDescription",
-   "resolved": "resolved: 78c5661f, 5cc21c57, 43018f9f"
+   "resolved": "resolved: 0e719e27, 2260fe69, babe8bb1"
   },
   {
    "id": "W1-13",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "e43bd203",
+   "origin_sha": "4cbb40d0",
    "raised_by": [
     "w1-reviewers"
    ],

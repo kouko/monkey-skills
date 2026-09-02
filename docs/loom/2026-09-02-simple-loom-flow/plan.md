@@ -1,6 +1,6 @@
 # loom 重設計 — plan
 intent: 2026-09-02-simple-loom-flow@be19b961
-spec: docs/loom/2026-09-02-simple-loom-flow/spec.md@6eb0a6a9（review.json PASS）
+spec: docs/loom/2026-09-02-simple-loom-flow/spec.md@0974e7cd（review.json PASS）
 kind: engineering　needs-design: yes（spec 已 PASS，本段不含 Current State Evidence）
 決策：agent-decided；理由附在各 task。使用者不審 plan（concept-model §4）。
 

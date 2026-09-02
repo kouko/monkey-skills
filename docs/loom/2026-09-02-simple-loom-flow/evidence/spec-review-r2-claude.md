@@ -1,7 +1,7 @@
 # spec review round 2 — Claude leg (opus) — verbatim
 
 ## 前提更正
-指定的 delta 終點 `e11a198f` **不是 HEAD**：其後還有 `ecb335ce`（docs(loom): cross-vendor review is a user standing choice）。我審的是 `e75630c5..HEAD`（＝現行文字），下列 N1／N2 由這個追加 commit 引入。
+指定的 delta 終點 `24528776` **不是 HEAD**：其後還有 `fc5693e2`（docs(loom): cross-vendor review is a user standing choice）。我審的是 `12027c40..HEAD`（＝現行文字），下列 N1／N2 由這個追加 commit 引入。
 
 ## findings_status
 - **SR1-01 resolved** — 新增 `REQ-10 — 不比今天重`，指名 PR #771／#772／#775、三項計數、基線 evidence §Totals，write-plan 可據此排 replay 任務。殘留見 N5。
@@ -16,7 +16,7 @@
 - **SR1-10 resolved** — 掃讀改為「whole-branch 首輪 under-reach（q2 §C.5：round 3 三條、round 4 再兩條）」；UI flows 第 4 項的觸發規則已移入 Design decision；REQ-6 補「完整規則集見 concept-model §7」、REQ-7 的「三項觀察指標」措辭已刪。
 
 ## new_findings
-- **N1 🔴 spec-conformance** — `spec.md:REQ-3`／`concept-model.md:§5`（commit ecb335ce）。跨 vendor 由「必用／預設」改成「使用者常設選擇，選了就用，沒選就不用，兩者都不 WARN、不擋」，且 §7 push 閘改為「vendor 數不是條件」、schema 刪 `degraded`。但 ground truth `intent §Proposed outcome` 仍寫「品質來自機器：寫的 agent 和審的 agent 分開、**至少一個不同 vendor**」；Open question 只把**成本**列為待量，不是把它降為偏好。spec 現在與未修改的 intent 直接牴觸。
+- **N1 🔴 spec-conformance** — `spec.md:REQ-3`／`concept-model.md:§5`（commit fc5693e2）。跨 vendor 由「必用／預設」改成「使用者常設選擇，選了就用，沒選就不用，兩者都不 WARN、不擋」，且 §7 push 閘改為「vendor 數不是條件」、schema 刪 `degraded`。但 ground truth `intent §Proposed outcome` 仍寫「品質來自機器：寫的 agent 和審的 agent 分開、**至少一個不同 vendor**」；Open question 只把**成本**列為待量，不是把它降為偏好。spec 現在與未修改的 intent 直接牴觸。
   fix：二擇一——(a) 回復「預設開啟，成本量完前缺第二 vendor 只 WARN」；或 (b) 先修 intent 該句並記錄使用者裁定，spec 再跟改。
 - **N2 🟡 ambiguity／spec-conformance** — `spec.md:§UI flows` 非決策型清單。新增的「非決策型（不計入決策點）」是一個**無上限、無判準**的類別：5 與 6 是解除阻擋的動作，但新增的 6a（要不要用第二家 CLI 當 reviewer）是純偏好詢問，性質上就是停下來要使用者做工程取捨，卻被排除在 Acceptance #3 的計數之外。這條路徑可以無限增生而不違反 REQ-1。
   fix：定義「非決策型」的入場判準（只限：不做就無法繼續的授權／缺件），並明訂總數上限；6a 若保留，改為併進決策點①。

@@ -24,4 +24,4 @@
 
 **verdict**：PASS_WITH_NOTES — 對方的 🔴 fatal 已死、雙方 r3 所有 still-open 全關；三條新發現皆為契約層同步／分類瑕疵，不阻擋落地，建議與落地首個 commit 合併修。
 
-**what_i_did_not_read**：只開指派的六個路徑與指定的 `74229611..0f907d37` diff（另跑 `git log --oneline -3` 核對兩個 fix commit）。未再開 `evidence/ceremony-cost-old-vs-new.md`（本輪只驗 caveat 措辭，未重算 New model 欄）、未開 r1／r2 findings 檔與其餘 evidence、未開任何 loom plugin 原始碼；未重審 delta 未觸及的 §1–§3、§6、§7、§9、§10。未派 subagent，未修改任何檔案。
+**what_i_did_not_read**：只開指派的六個路徑與指定的 `7e3b7046..34de58f4` diff（另跑 `git log --oneline -3` 核對兩個 fix commit）。未再開 `evidence/ceremony-cost-old-vs-new.md`（本輪只驗 caveat 措辭，未重算 New model 欄）、未開 r1／r2 findings 檔與其餘 evidence、未開任何 loom plugin 原始碼；未重審 delta 未觸及的 §1–§3、§6、§7、§9、§10。未派 subagent，未修改任何檔案。

@@ -1,6 +1,6 @@
 # spec 讀審 — round 9（r5 對抗後的 delta）— 2026-09-02
 
-兩個 fresh reviewer（opus、sonnet）只審 `6eb0a6a9..3cab1a4a` 的 delta 與 SR5-01..14 是否關閉。前提：kouko 已逐項確認三處可見行為（決策點②重確認）。
+兩個 fresh reviewer（opus、sonnet）只審 `0974e7cd..343e95f2` 的 delta 與 SR5-01..14 是否關閉。前提：kouko 已逐項確認三處可見行為（決策點②重確認）。
 
 | reviewer | verdict | 關閉 | notes（處置） |
 |---|---|---|---|

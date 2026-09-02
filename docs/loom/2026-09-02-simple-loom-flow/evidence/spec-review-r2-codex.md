@@ -16,4 +16,4 @@ new_findings[]:
     fix: 將 standing-doc WARN 與 product 拒收拆成明確流程；刪除可繞過 PRINCIPLES 拒收的「不需要」選項，並把產品原則訪談併入既有 intent 決策點，或明確調整 ground-truth 決策點契約。
 verdict: NEEDS_REVISION
 what_i_did_not_read:
-  完整讀取 packet 列出的六個檔案，並只執行指定的 `git diff e75630c5..e11a198f -- docs/loom/2026-09-02-simple-loom-flow/spec.md docs/loom/2026-09-02-simple-loom-flow/concept-model.md`；未開啟任何其他路徑，包括文件內引用的 evidence。
+  完整讀取 packet 列出的六個檔案，並只執行指定的 `git diff 12027c40..24528776 -- docs/loom/2026-09-02-simple-loom-flow/spec.md docs/loom/2026-09-02-simple-loom-flow/concept-model.md`；未開啟任何其他路徑，包括文件內引用的 evidence。
