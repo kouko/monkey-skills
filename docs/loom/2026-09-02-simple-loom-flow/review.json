@@ -2061,6 +2061,24 @@
    "started": "2026-09-02",
    "fresh_context": false,
    "note": "orchestrator inline, no fresh dispatch: c0f49194 (W3 docs notes, check_mechanisms measure gates) 52553a27 (CC regex ci type + !) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+  },
+  {
+   "task": "branch-end round 22",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r22",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T16:55:35Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 22",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r22",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T16:55:35Z",
+   "fresh_context": true
   }
  ],
  "questions": [
