@@ -5,5 +5,5 @@
 |---|---|---|---|
 | sonnet-review-docs-w3 | docs 5 維＋conformance | PASS_WITH_NOTES | 26 規則／每欄位／17 skill／INDEX 數字逐項吻合；🔴 AGENTS.md 一句仍指新工作進 backlog（已修）；🔴 loom-workflow README 三語 Version 1.0.0（已修 4.0.0）；🟡 write-plan 兩表對自身 checkpoint 欄不一致（已修）；🟡 REQ-8 的 skill ≤18／形狀 ≤5 只量不 gate（已改為紅燈）；🟢 backlog 1 檔未索引（凍結，不動）。REQ 對映表：REQ-1/4 部分靠散文與記錄、REQ-9/10 一次性驗收、其餘機械可驗 |
 | opus-review-code-w3 | code＋CI 逐步實跑 | （待） | |
-| opus-adversary-w3 | 對抗（§11 准入、CI 接線、KICKOFF、frozen stores、start_delivery） | （待） | |
+| opus-adversary-w3 | 對抗（15 探針） | PASS_WITH_NOTES | 攔下：未註冊 gate R1、錯版本段 budget-exception R3、CI path filter、interface-surfaces 不可縮、stub 佔位符雙 BLOCK。逃脫（important）：R4 只驗路徑（README.md／假 node id 皆過）；`--measure` baseline 行缺或 hook 缺＝靜默綠、baseline 數字可改大；凍結庫只有散文；同 Map 兩 DA 共用一份 intent。逃脫（note）：host-hygiene 自宣告豁免消音 R1；`map:` 自由文字；`counting:` 散文無綁定；push.* 只靠 host hook（接受） |
 處置：9dae7dcf。
