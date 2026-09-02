@@ -1938,6 +1938,17 @@
    ],
    "text": "README said 20 rules; --list-rules prints 27",
    "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "CI-1",
+   "severity": "fatal",
+   "anchor": "loom-code/scripts/check_mechanisms.py:586",
+   "origin_sha": "2b876055",
+   "raised_by": [
+    "github-ci loom-code pytest (PR #780 run 33667184980)"
+   ],
+   "text": "test_real_repo_measure_is_green red on CI: session-start word count is locale-dependent (`wc -w` counts 5281 under macOS UTF-8 locale, 5278 under LC_ALL=C / GNU on the runner; python str.split agrees with 5278), so the recorded baseline 923fb84a 5281 does not reproduce on CI",
+   "resolved": "open"
   }
  ],
  "vendors": [
@@ -2761,6 +2772,15 @@
    "vendor": "openai",
    "started": "2026-09-02T18:14:31Z",
    "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-ci-locale-fix-1",
+   "model": "sonnet",
+   "started": "2026-09-02T18:29:48Z",
+   "fresh_context": true,
+   "note": "CI-1"
   }
  ],
  "questions": [
