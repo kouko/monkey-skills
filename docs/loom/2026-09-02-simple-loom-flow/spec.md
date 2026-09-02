@@ -1,5 +1,5 @@
 # loom 重設計 — spec
-intent: 2026-09-02-simple-loom-flow@(pending — 填 intent 確認後的 commit sha)
+intent: 2026-09-02-simple-loom-flow@be19b961
 
 ## Requirements                                    【使用者可讀】
 REQ-1 — 三處決策點
