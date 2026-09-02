@@ -150,6 +150,7 @@ checkpoint：W3 結束必跑。
 **W3-06 concept-model／spec 對齊**　after: W3-02
 - 檔：`concept-model.md` §1（loom-workflow 欄註明 goal-create／dbt-model-style 為不計數的獨立 skill；「仍需同步的功能副本」改為只剩 checker）、§2e（刪 `.git/loom/ready.json` 本機鏡像子句——plan 不建鏡像，review.json 入版控已足，agent-decided：少一個機制）、§3（加 standalone 計數規則、總數 17、名詞手數結果）、§7a／§11 若落地時措辭有變逐字對齊；`spec.md` 不動（已 PASS；若 W 期間發現 spec 必須改，走 review 站 spec 鏡頭再 PASS，不靜默改）。
 - 測：無（docs 鏡頭在 W3 checkpoint 審）。
+- 殘：§1 copies line updated for one-way-door (W2)。
 - 風：改 spec 會使 review.json 的 scope PASS 失效——規則寫死在上面。
 
 ### W4 — 驗收（REQ-9／REQ-10／REQ-2）與盲跑報告

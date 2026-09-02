@@ -44,16 +44,30 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 1.0
 
 Exit 0 continue; non-zero stop and report the mismatch (`contract.requires`).
 
+On Codex, if `.codex/hooks/loom_checker.py` does not exist, **stop**: run
+`loom-code:write-plan` step 0b (the scaffold) first. Do not produce any
+artifact without the checker.
+
 The record is `docs/loom/<change-id>/review.json`, in version control. At
 the first checkpoint of a change it does not exist yet: copy
 `contract/templates/review.json` and set `reviewed_sha` to the merge-base
 with the trunk —
 
 ```
-git merge-base HEAD origin/main
+git merge-base HEAD <trunk>
 ```
 
 — because nothing before the branch started is this change's to answer for.
+`<trunk>` is the **first** of `origin/main`, `main`, `origin/master`,
+`master` that `git rev-parse --verify <name>` resolves; a repo with no
+remote is fine, the local branch answers. If none of the four resolves, say
+so and ask the user which ref is the trunk — do not guess.
+
+If `HEAD` **is** the trunk, **stop**: create the change branch first and
+come back. A merge-base of a branch with itself is the branch tip, which
+would make the delta empty and the checkpoint vacuous — this is the same
+condition the checker refuses.
+
 If `build` already created the file for its dispatch records, use that one;
 never start a second.
 
@@ -68,7 +82,7 @@ this round:
 
 | `scope` | Called by | Delta |
 |---|---|---|
-| `spec` | write-plan, before a plan exists | the spec file only |
+| `spec` | write-spec (or write-plan, for the code-only minimal spec) | the spec file only |
 | `after-task:<id>` | build, right after that task's commit | that task's commits |
 | `wave-end:<n>` | build, when the wave closes | `<reviewed_sha>..HEAD` |
 | `branch-end` | ship | `<reviewed_sha>..HEAD` |
@@ -257,15 +271,30 @@ Findings already open from an earlier round must each be closed before
 ## 7. Write the record
 
 Write `review.json` — verdicts, probes, findings and vendors of this round
-— and commit it **alone**. Add to what is there; never drop a key another
+— and commit it **alone**. On a round whose `scope` is `spec`, every verdict
+also carries `spec_sha`: the first seven characters of
+`git hash-object docs/loom/<change-id>/spec.md` as reviewed. It is what
+lets a later reader tell whether the spec the user confirmed
+(`confirmed-behavior: <date> @<spec sha7>`) is the spec that was reviewed. Add to what is there; never drop a key another
 station wrote (`dispatch[]` from `build`, `questions[]` from a decision
 point), and never rewrite an earlier round:
 
-At the **first** checkpoint of a change, also copy the plan's
-`## Questions asked` section into `questions[]`, one entry each as
-`{decision_point, text, type}`. Those questions were asked at decision
-point ① before `review.json` existed, so the plan is where they were
-parked; leaving them there makes the flow look quieter than it was.
+At the **first** checkpoint of a change, also fill `questions[]`, one entry
+each as `{decision_point, text, type}`. Those questions were asked at
+decision point ① before `review.json` existed, so they arrive from
+elsewhere; leaving them there makes the flow look quieter than it was.
+Where to take them from depends on whether a plan exists yet:
+
+- **A plan exists** — copy the plan's `## Questions asked` section, and add
+  anything the hand-off message carries that the section does not.
+- **Scope `spec`, no plan yet** — the plan has not been written, so the
+  only carrier is `write-spec`'s hand-off message, which is required to
+  list the questions verbatim. Take them from there. If that message
+  carries none and decision points did happen, say so in the round's notes
+  rather than writing an empty `questions[]` as if none were asked.
+
+A later checkpoint does not re-copy: `questions[]` accumulates, it is never
+rewritten.
 
 ```
 git add docs/loom/<change-id>/review.json
@@ -356,10 +385,11 @@ they want, what they will see, or whether it is done.
 
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
-| capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
-| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
-| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
+| capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
+| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
+

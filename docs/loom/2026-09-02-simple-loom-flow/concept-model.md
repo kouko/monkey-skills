@@ -23,7 +23,7 @@
 
 - 依賴單向：loom-design 與 loom-workflow 依賴 loom-code 的 **versioned contract package**（schema、checker）；兩者各宣告 `requires-contract: >=<major>.<minor>`，站點啟動時對 manifest 版本重算，不符→BLOCK 印「請更新 loom-code」。design 寫檔、code 讀檔；decision-map 寫 intent.md；沒有反向呼叫。
 - 契約由消費者定義：schema 與 checker 住在 loom-code；loom-design 的站是「產生這個格式的比較好的方法」。
-- 仍需同步的功能副本，明列：checker（Codex scaffold 的 repo 內副本）。除此之外沒有。
+- 仍需同步的功能副本，明列：checker（Codex scaffold 的 repo 內副本）、單向門類別清單（loom-code write-plan reference 為正本，loom-design 兩站為副本，測試釘住）。除此之外沒有。
 
 ## 2. Artifact
 

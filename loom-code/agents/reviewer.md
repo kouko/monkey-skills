@@ -37,6 +37,14 @@ dimension named below and the severity thresholds.
 | `principles` | principles-conformance |
 | `skill` | the five `docs` dimensions, plus user-judgment-leak |
 
+On the `spec` lens, `user-judgment-leak` also fires the other way round —
+on a decision that was **not** put to the user: a `Design decision` that
+introduces a paid service, an account the user must hold, or the user's
+data leaving their machine, with no `user-decided` mark, is
+`NEEDS_REVISION`. Those are one-way-door classes (b) and (e), where the
+user carries the cost, so an `agent-decided` mark does not settle it unless
+the option taken has zero obligation and is reversible.
+
 The `tests` dimension reads `review.json`'s `probes[]` as well as the test
 files: each entry's `command` and `artifact`, never its `result`. A probe
 whose command is a shell builtin (`true`, `:`), or that never names the

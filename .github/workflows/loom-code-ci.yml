@@ -56,10 +56,10 @@ on:
       # workflow, else it would merge ungated (fail-open).
       - 'loom-design/**'
       # scripts/test_loom_design_ci_unified_root.py guards the single unified
-      # loom-design pytest step in loom-pipeline-ci.yml, but it is collected
+      # loom-design pytest step in loom-design-ci.yml, but it is collected
       # only by THIS workflow's `scripts/` step -- so the whole workflow dir
       # must be a trigger. Naming just this file leaves the guard fail-open:
-      # a PR editing only loom-pipeline-ci.yml (or adding a brand-new
+      # a PR editing only loom-design-ci.yml (or adding a brand-new
       # workflow with a per-station job) would never run it.
       - '.github/workflows/**'
       - '.github/workflows/loom-code-ci.yml'

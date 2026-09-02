@@ -43,13 +43,13 @@ title in kebab-case — for "six scripts share a git helper" started on
 
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
-| capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
-| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
-| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
+| capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
+| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
 ## What you will be asked, in plain words
 
@@ -110,7 +110,9 @@ what the checker printed, tell the user to update `loom-code`, and
 
 On Codex the checker copy this command runs does not exist until step 0b
 has written it, so on Codex do step 0b first and then this step; on Claude
-Code the order is as written.
+Code the order is as written. If `.codex/hooks/loom_checker.py` still does
+not exist after step 0b, **stop** — do not produce any artifact without the
+checker.
 
 ## Step 0b — Codex only: first contact with this repo
 
@@ -165,7 +167,10 @@ the user named a change, match the slug.
   the problem is, who it hurts, and what they will be able to do when it
   is done; write the file yourself from their answers. Keep it short — an
   engineering intent is normally three to five lines, and writing it by
-  hand beats interviewing. The user never hand-writes the file.
+  hand beats interviewing. The user never hand-writes the file. When you
+  write it, `## Open questions` must be non-empty — the checker requires
+  the section to have content, so with nothing open write exactly `- none`
+  under the heading rather than leaving it blank.
 
 <!-- gate: write-plan.no-plan-without-confirmed-intent -->
 **No plan is written without a confirmed intent.** If `status:` is not
@@ -207,22 +212,31 @@ twice.
 1. **The restatement.** Problem and Acceptance in the user's own plain
    words — no file paths, no identifiers, no mechanism names:
 
-   > You want ___, and when it is done you will be able to ___, ___ and
-   > ___. Is that right?
+   > 你要的是 ___，做完後你可以 ___、___、___。對嗎？
+   >
+   > (You want ___, and when it is done you will be able to ___, ___ and
+   > ___. Is that right?)
 
 2. **The one-way doors found so far**, in consequence form, per
    `references/one-way-door.md` — load that file before deciding whether a
    fork is one; the five classes and the four gates (check, measure,
    threshold, merge) are there, and a class (e) action — anything
    irreversible to the user's existing data — is asked even when there is
-   no fork.
+   no fork. Class (e) still yields to the **check** gate: when the intent's
+   Constraints or `PRINCIPLES.md` already pin how that existing data is
+   handled, do **not** ask — restate the handling in consequence form
+   inside this same message ("this will rewrite your ___, I am doing it the
+   way you said: ___"), so the user sees it without being stopped for it.
 
 3. **The second-reviewer suggestion, at most once per change.** A second
    reviewer only counts if it is a non-interactive command-line tool from a
    **different model vendor than the host you are running on**: on Claude
    Code look for `codex` or `gemini`, on Codex look for `claude` or
    `gemini`. Detect it with `command -v <cli>` **and** a probe that it
-   runs — `<cli> --version` must exit 0. Never `which`: it reports shell
+   runs — `<cli> --version` must exit 0. In zsh `command -v` may print an
+   alias or a function body rather than a path; do not try to parse it.
+   **Any non-empty output plus a `<cli> --version` that exits 0 counts as
+   present**, and nothing else does. Never `which`: it reports shell
    aliases and stale hashes, and suggesting a tool that turns out not to
    run costs the user a question for nothing. Never suggest the host
    itself. Include the suggestion only if
@@ -239,14 +253,15 @@ twice.
 
 4. **The principles interview**, if step 2 demanded it.
 
-**Every question in this message must be one of four kinds**, and you check
-the list before sending:
+**Every question in this message must be one of three types, or the
+consequence form for one-way doors**, and you check the list before
+sending:
 
 - what do you want (the restatement),
 - what will you see (visible behaviour — product only, and it belongs to
   decision point ②),
 - did it work (acceptance — decision point ③),
-- a one-way door in consequence form.
+- or the consequence form for a one-way door.
 
 A question that fits none of them is a question the user cannot answer.
 The test is concrete: **if the user would have to read code to answer it,
@@ -343,8 +358,12 @@ When `kind: product`, decision point ② belongs to whoever wrote the spec:
 if you wrote it, you run it. Present the Requirements and the UI flows in
 plain words — "you type ___ and you see ___; when ___ happens it will
 ___" — and nothing from `## Design decision` down, ever. On "yes", write
-`confirmed-behavior: <date>` into the spec frontmatter. On a correction,
-rewrite and present again. Engineering changes skip this entirely.
+`confirmed-behavior: <date> @<spec sha7>` into the spec frontmatter, where
+`<spec sha7>` is the first seven characters of
+`git hash-object docs/loom/<change-id>/spec.md` run after the spec's last
+edit — it pins which text the user said yes to. On a correction, rewrite,
+present again, and recompute the hash. Engineering changes skip this
+entirely.
 
 ### The intake check — both branches, every time
 
