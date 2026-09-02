@@ -210,7 +210,7 @@ the station that owns it:
 | `push.open-findings-closed` | a finding is neither resolved nor dismissed | `loom-code:build` for the fix, then `loom-code:review` |
 | `push.probes-package-tests` | the recorded test run does not reproduce, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |
 | `push.probes-adversarial` | fewer than 3 usable adversarial probes for this change's artifact types, or one exited non-zero when the checker ran it | back to `loom-code:review`, dispatch an adversary |
-| `push.dispatch-covers-tasks` | a `Task:` trailer on this branch names a task no implementer entry claims | `loom-code:review` — the dispatch record lost a writer |
+| `push.dispatch-covers-tasks` | (i) a commit touching code/skill/gate carries no `Task:` trailer (spec/intent/plan/docs commits owe none); or (ii) a `Task:` trailer on this branch names a task no implementer entry claims | (i) `loom-code:build` — the task that owns the work amends or re-commits with the trailer; (ii) `loom-code:review` — the dispatch record lost a writer |
 | `push.second-vendor-honoured` | KICKOFF-DEFAULTS names a second vendor the round neither used nor recorded a `fallback` for | `loom-code:review` |
 | `push.verdicts-ge-2` | one reviewer is not a review | `loom-code:review` |
 | `push.reviewer-ne-implementer` | someone reviewed their own work | `loom-code:review` — dispatch an independent agent |
