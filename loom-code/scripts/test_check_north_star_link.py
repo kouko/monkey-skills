@@ -123,7 +123,7 @@ def test_exit_2_asks_for_purpose_md_when_absent_but_entries_exist(tmp_path):
     assert "entry-a" not in result.stderr
 
 
-_TEMPLATE = (Path(__file__).parent / "templates" / "PURPOSE.md").read_text(encoding="utf-8")
+_TEMPLATE = (Path(__file__).parents[1] / "contract" / "templates" / "PURPOSE.md").read_text(encoding="utf-8")
 
 
 def test_retired_status_fails_loudly_instead_of_clean_pass(tmp_path):

@@ -3,7 +3,7 @@
 
 Scans `loom-code/skills/**/*.md`, `loom-code/agents/*.md` (non-recursive —
 that directory is flat), `loom-design/skills/**/*.md`,
-`loom-code/scripts/templates/*.md`, and `loom-workflow/skills/**/*.md` for a
+`loom-code/contract/templates/*.md`, and `loom-workflow/skills/**/*.md` for a
 backtick-quoted citation of a file under THIS repository's `docs/`
 development records (a dated entry under `specs/`, `plans/`, `audits/`,
 `design/`, `research/`, `dogfood/`, `backlog/`, or a named entry under
@@ -75,7 +75,8 @@ _SCOPE_DIRS: tuple[tuple[str, bool], ...] = (
     ("loom-code/skills", True),
     ("loom-code/agents", False),
     ("loom-design/skills", True),
-    ("loom-code/scripts/templates", False),
+    ("loom-code/contract/templates", False),
+    ("loom-code/contract", False),
     ("loom-workflow/skills", True),
 )
 
@@ -115,6 +116,10 @@ _PROTOCOL_BASENAMES = frozenset(
         "PRINCIPLES.md",
         "PURPOSE.md",
         "KICKOFF-DEFAULTS.md",
+        # Mechanism population every adopting repo keeps at
+        # `docs/loom/evidence/mechanisms.yaml` (concept-model §11) — a
+        # scaffolded store path, not a development record.
+        "mechanisms.yaml",
         "INDEX.md",
         "DESIGN.md",
         "QUEUE.toml",

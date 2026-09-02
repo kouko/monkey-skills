@@ -22,7 +22,7 @@ CHARTER_PATH = REPO_ROOT / "docs" / "loom" / "backlog" / "README.md"
 # charter above is its instantiated copy. Both must agree with
 # CLOSED_STATUS_VOCABULARY, or loom_init.py scaffolds a wrong charter
 # into every newly adopting repo.
-TEMPLATE_PATH = Path(__file__).resolve().parent / "templates" / "backlog-README.md"
+TEMPLATE_PATH = Path(__file__).resolve().parents[1] / "contract" / "templates" / "backlog-README.md"
 BACKLOG_SCRIPT = Path(__file__).resolve().parent / "backlog_index.py"
 
 # Direct import (not subprocess) so the revision-round-1 tests below can reuse

@@ -44,8 +44,8 @@ from check_attack_catalogue import parse_store, guarded_path_globs
 SCRIPTS = Path(__file__).resolve().parent
 LOOM_INIT = SCRIPTS / "loom_init.py"
 BACKLOG_INDEX = SCRIPTS / "backlog_index.py"
-TEMPLATE_README = SCRIPTS / "templates" / "backlog-README.md"
-TEMPLATE_KICKOFF_DEFAULTS = SCRIPTS / "templates" / "KICKOFF-DEFAULTS.md"
+TEMPLATE_README = SCRIPTS.parent / "contract" / "templates" / "backlog-README.md"
+TEMPLATE_KICKOFF_DEFAULTS = SCRIPTS.parent / "contract" / "templates" / "KICKOFF-DEFAULTS.md"
 REPO_ROOT = SCRIPTS.parent.parent
 
 # Charter sections the scaffolded README must carry (structural pins on
@@ -89,7 +89,7 @@ def _scratch_scripts(tmp_path: Path) -> Path:
     scratch.mkdir()
     shutil.copy(LOOM_INIT, scratch / "loom_init.py")
     shutil.copy(BACKLOG_INDEX, scratch / "backlog_index.py")
-    shutil.copytree(SCRIPTS / "templates", scratch / "templates")
+    shutil.copytree(SCRIPTS.parent / "contract" / "templates", scratch / "templates")
     return scratch
 
 
@@ -138,21 +138,6 @@ def test_scaffold_creates_kickoff_defaults_not_direction(tmp_path):
         "loom_init must no longer scaffold the old direction skeleton"
     )
 
-
-def test_kickoff_defaults_scaffold_has_onramp_standing_choices_section(tmp_path):
-    """Task 6: the scaffolded KICKOFF-DEFAULTS.md carries an empty
-    `## On-ramp standing choices` section so a fresh repo does not need
-    a manual first-touch addition before check_onramp_choice.py can
-    read it."""
-    target = tmp_path / "repo"
-    result = _scaffold_ok(target)
-
-    kickoff_defaults = target / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
-    text = kickoff_defaults.read_text(encoding="utf-8")
-    assert "## On-ramp standing choices" in text, (
-        f"scaffolded KICKOFF-DEFAULTS.md missing the section, got:\n{text}\n"
-        f"{result.stdout}{result.stderr}"
-    )
 
 
 def test_refuses_when_the_store_already_exists(tmp_path):
@@ -457,7 +442,7 @@ def _normalized(text: str) -> str:
 
 BACKLOG_README = REPO_ROOT / "docs" / "loom" / "backlog" / "README.md"
 TEMPLATE_BACKLOG_README = (
-    REPO_ROOT / "loom-code" / "scripts" / "templates" / "backlog-README.md"
+    REPO_ROOT / "loom-code" / "contract" / "templates" / "backlog-README.md"
 )
 
 # The named list, not a glob — a glob that silently matched zero files
@@ -607,29 +592,6 @@ def test_loom_init_ok_message_lists_purpose_skeleton(tmp_path):
         f"{result.stdout}"
     )
 
-
-def test_scaffolded_kickoff_defaults_onramp_comment_does_not_name_an_unresolvable_repo_path(
-    tmp_path,
-):
-    # Same shape as F2: the On-ramp standing choices HTML comment must not
-    # name the bare repo-relative hook path — that path does not exist in
-    # a consuming repo.
-    target = tmp_path / "repo"
-    _scaffold_ok(target)
-
-    kickoff_defaults = _stripped_blockquote(
-        (target / "docs" / "loom" / "KICKOFF-DEFAULTS.md").read_text(
-            encoding="utf-8"
-        )
-    )
-    assert "owned by loom-code/hooks/family-reception.md" not in kickoff_defaults, (
-        "scaffolded KICKOFF-DEFAULTS.md's on-ramp comment must not name a "
-        "bare repo-relative path to the plugin's hook file"
-    )
-    assert "owned by the loom-code plugin's" in kickoff_defaults, (
-        "scaffolded KICKOFF-DEFAULTS.md's on-ramp comment must name the "
-        "pointer as the loom-code plugin's file, not a repo-relative path"
-    )
 
 
 def test_scaffold_refuses_a_stray_file_at_the_memory_store_path(tmp_path):

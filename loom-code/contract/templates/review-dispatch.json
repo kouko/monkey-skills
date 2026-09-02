@@ -1,0 +1,1 @@
+{"task": "<task id>", "role": "implementer|reviewer|blind-runner|adversary", "agent_id": "<id>", "model": "<model>", "started": "<iso timestamp>"}

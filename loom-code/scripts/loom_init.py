@@ -53,7 +53,7 @@ import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-TEMPLATES_DIR = SCRIPT_DIR / "templates"
+TEMPLATES_DIR = SCRIPT_DIR.parent / "contract" / "templates"
 PLUGIN_JSON = SCRIPT_DIR.parent / ".claude-plugin" / "plugin.json"
 BACKLOG_INDEX = SCRIPT_DIR / "backlog_index.py"
 

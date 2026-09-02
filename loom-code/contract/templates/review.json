@@ -1,0 +1,15 @@
+{
+  "reviewed_sha": "<branch base sha; advances only on PASS / PASS_WITH_NOTES>",
+  "scope": "<what this checkpoint reviewed>",
+  "vendors": ["anthropic"],
+  "verdicts": [
+    {"reviewer": "<agent id>", "vendor": "anthropic", "model": "<model>", "lens": "code|docs|spec|design|principles",
+     "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION", "dimension_scores": {}, "findings": []}
+  ],
+  "probes": [
+    {"kind": "package-tests|blind-run|adversarial|codex-walk", "command": "<command>", "result": "pass|fail", "artifact": "<path>"}
+  ],
+  "open_findings": [
+    {"id": "<id>", "anchor": "<file:line>", "origin_sha": "<sha>", "raised_by": "<reviewer>", "resolved": "<evidence>"}
+  ]
+}
