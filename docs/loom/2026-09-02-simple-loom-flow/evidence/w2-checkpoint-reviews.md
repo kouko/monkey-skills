@@ -14,3 +14,5 @@
 | sonnet-review-docs-w2b | docs 閉環＋冷讀 Task B r2 | PASS_WITH_NOTES | 22 條全關；冷讀 Task B **零猜測**（開檔 2）；notes：review description 未提 write-spec 為 spec 鏡頭呼叫者、gate 標記 vs checker id 未說明（7bf27b96 已修） |
 | opus-review-code-w2b | code＋gate 閉環＋探針 | NEEDS_REVISION | A1–A9 全關（kind-recompute 只以 glob 命中觸發＝正確讀法）；W2 探針 11 held／2 設計接受；新 🔴 F1 checker 把 `ratified-by: pending` 當已批准（validator 擋、checker 不擋，而真閘是 checker）；🔴 F2 UI flows 反向重算只認字面 N/A，「沒有介面」穿過；🔴 F3/F4 spec 新鮮度 legacy 第三階無界（省略 spec_sha 即免查）；🟡 F5 needs-design-reason 只讀 HEAD 訊息（分支中段必誤報）；🟡 F6 日期只驗形狀 |
 處置：checker 側 agent 修 F1–F6（拿掉 legacy 退化；本 change 的 review.json 由 orchestrator 補 spec_sha）。
+
+處置落地：79efc3a9（ratified-by 文法＋真日期＋parity；UI flows 反轉為至少一條 `→`；spec 新鮮度無 legacy 退化；intent commit 訊息改讀最後動到 intent 的 commit；日期真實性）。本 repo 的 standing 閘正確擋下未簽 PRINCIPLES；intake 在補 spec_sha／@sha 後通過。
