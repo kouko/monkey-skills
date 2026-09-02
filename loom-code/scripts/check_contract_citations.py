@@ -261,8 +261,10 @@ def evaluate(
 #     import scan_repo; print('\n'.join(sorted(scan_repo(Path('.')))))"
 DEBT_LIST: frozenset[str] = frozenset(
     {
-        "loom-design/skills/completeness-critic/references/consistency-lens.md",
-        "loom-design/skills/using-loom-pipeline/SKILL.md",
+        # The two loom-design entries left the list at 1.0 with the skills
+        # that carried them (completeness-critic and using-loom-pipeline
+        # were deleted, not repaired). Shrink-only, so nothing takes their
+        # place.
         # Pre-existing loom-workflow violations, on the list since the
         # scan set widened to cover that tree (R6). Shrink-only applies.
         "loom-workflow/skills/distill-sessions/SKILL.md",

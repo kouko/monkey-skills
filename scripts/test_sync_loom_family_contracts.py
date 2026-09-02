@@ -4,7 +4,18 @@ import re
 
 import sync_loom_family_contracts as sync
 
-POLICY_NAMES = ("family-reception.md", "family-relay.md", "plain-relay.md")
+# One policy still has a routed functional copy. `family-relay.md` and
+# `plain-relay.md` lost theirs when loom-design's router was deleted at 1.0;
+# their SSOTs remain under scripts/canonical/ for the guards that read them,
+# but no destination is generated from them, so there is nothing here to
+# compare. The `REQ-<n>` grammar copy went the same way — its source of truth
+# is loom-code's contract manifest now, read rather than copied.
+POLICY_NAMES = ("family-reception.md",)
+DESTINATIONS = {
+    "family-reception.md": (
+        "loom-workflow/skills/decision-map/references/family-reception.md",
+    ),
+}
 PLUGIN_INTERNAL_PATH = re.compile(
     rb"(?:loom-code|loom-design)/(?:hooks|skills|scripts)/"
 )
@@ -23,12 +34,11 @@ def _managed_header(source_rel: str) -> bytes:
 def test_real_functional_copies_match_sibling_neutral_family_policy_ssot():
     for name in POLICY_NAMES:
         source_rel = f"scripts/canonical/loom-family/{name}"
-        destination_rels = (
-            f"loom-design/skills/using-loom-design/references/{name}",
-        )
+        destination_rels = DESTINATIONS[name]
         source = sync.REPO_ROOT / source_rel
 
         assert source.is_file(), f"missing neutral SSOT: {source_rel}"
+        assert sync.ROUTE[source_rel] == destination_rels
         expected = _managed_header(source_rel) + source.read_bytes()
         for destination_rel in destination_rels:
             destination = sync.REPO_ROOT / destination_rel
@@ -36,20 +46,22 @@ def test_real_functional_copies_match_sibling_neutral_family_policy_ssot():
             assert destination.read_bytes() == expected
 
 
-def test_identifier_grammar_has_one_neutral_source_and_one_packaged_copy():
-    source_rel = "scripts/canonical/loom-artifacts/requirement-identifiers.md"
-    destination_rels = (
-        "loom-design/skills/spec-expansion/references/requirement-identifiers.md",
-    )
-    source = sync.REPO_ROOT / source_rel
+def test_unrouted_canonical_policies_have_no_stale_generated_copies():
+    """A policy nothing routes must not leave a managed copy behind.
 
-    assert sync.ROUTE[source_rel] == destination_rels
-    assert source.is_file(), f"missing neutral SSOT: {source_rel}"
-    expected = _managed_header(source_rel) + source.read_bytes()
-    for destination_rel in destination_rels:
-        destination = sync.REPO_ROOT / destination_rel
-        assert destination.is_file(), f"missing copy: {destination_rel}"
-        assert destination.read_bytes() == expected
+    `family-relay.md` and `plain-relay.md` are still SSOTs on disk but have
+    no destination since loom 1.0. If a copy of one reappears under a plugin,
+    it is an unmanaged hand-edit pretending to be generated — exactly what
+    the header forbids.
+    """
+    for name in ("family-relay.md", "plain-relay.md"):
+        source_rel = f"scripts/canonical/loom-family/{name}"
+        assert (sync.REPO_ROOT / source_rel).is_file(), (
+            f"missing neutral SSOT: {source_rel}"
+        )
+        assert source_rel not in sync.ROUTE, (
+            f"{name} is routed again — give it a destination assertion above"
+        )
 
 
 def test_canonical_and_generated_policy_has_no_plugin_internal_paths():

@@ -15,21 +15,24 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 _CANONICAL = "scripts/canonical/loom-family"
-_ARTIFACT_CANONICAL = "scripts/canonical/loom-artifacts"
-_DESIGN_REFERENCES = "loom-design/skills/using-loom-design/references"
 _WORKFLOW_DECISION_MAP_REFERENCES = (
     "loom-workflow/skills/decision-map/references"
 )
+
+# One route survives loom 1.0. Every loom-design destination this engine used
+# to write sat under `skills/using-loom-design/references/` or
+# `skills/spec-expansion/references/`, and both skills are deleted:
+# `family-reception.md`, `family-relay.md` and `plain-relay.md` went with the
+# router that mounted them, and the `REQ-<n>` grammar's source of truth is
+# loom-code's contract manifest now, read directly rather than copied. The
+# `family-relay.md` / `plain-relay.md` SSOTs stay on disk under
+# `scripts/canonical/` — other guards still read them — but nothing routes
+# them any more.
 ROUTE: dict[str, tuple[str, ...]] = {
-    f"{_CANONICAL}/{name}": (f"{_DESIGN_REFERENCES}/{name}",)
-    for name in ("family-reception.md", "family-relay.md", "plain-relay.md")
+    f"{_CANONICAL}/family-reception.md": (
+        f"{_WORKFLOW_DECISION_MAP_REFERENCES}/family-reception.md",
+    ),
 }
-ROUTE[f"{_CANONICAL}/family-reception.md"] += (
-    f"{_WORKFLOW_DECISION_MAP_REFERENCES}/family-reception.md",
-)
-ROUTE[f"{_ARTIFACT_CANONICAL}/requirement-identifiers.md"] = (
-    "loom-design/skills/spec-expansion/references/requirement-identifiers.md",
-)
 
 PLUGIN_INTERNAL_PATH = re.compile(
     rb"(?:loom-code|loom-design)/(?:hooks|skills|scripts)/"

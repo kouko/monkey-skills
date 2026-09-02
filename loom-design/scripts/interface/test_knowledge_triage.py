@@ -20,6 +20,13 @@ What is deliberately NOT weakened by that collapse:
   3. The supplement sentences are still required to appear exactly once,
      after the pin, in that order. Only the "byte-identical across both
      files" pair is gone, because there is no second file to differ from.
+
+Section 11 below is inherited, not new. `scripts/test_bucket_vocabulary_
+consistency.py` was the repo-root guard on the bucket vocabulary "across the
+plugins that carry it"; loom 1.0 left exactly one carrier — this file — so a
+cross-file drift guard had nothing left to compare and was deleted. Its one
+assertion that was not already made here (no variant spelling of a bucket
+name inside a tag/value context) moved in with it, scoping helper included.
 """
 from __future__ import annotations
 
@@ -296,3 +303,44 @@ def test_tier_label_supplement_after_first_supplement():
         "tier-label supplement must come AFTER the existing SHAPING-consequence "
         "supplement sentence"
     )
+
+
+# --- 11. bucket-name spellings, inherited from the repo-root drift guard ----
+
+BUCKET_NAMES = ("craft", "domain-convention", "project-local")
+
+# Variant spellings that must never appear in a TAG/VALUE context. Prose like
+# "the business domain's rule" is fine — these are only checked inside the
+# scoped tag/value neighbourhood computed by `_scoped_tag_text` (see
+# docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md: whole-file
+# substring checks go false-green when the phrase pre-exists in unrelated
+# prose).
+VARIANT_SPELLINGS = ("domain_convention", "project_local", "domain convention")
+
+
+def _scoped_tag_text(text: str) -> str:
+    """Text narrowed to tag/value contexts: the fenced pin block, and any
+    line naming the `evidence_needed` tag."""
+    parts = []
+    fence = _fenced_block(text)
+    if fence:
+        parts.append(fence)
+    for line in text.splitlines():
+        if "evidence_needed" in line:
+            parts.append(line)
+    return "\n".join(parts)
+
+
+def test_carrier_contains_all_three_bucket_names():
+    text = _text(DS_TRIAGE)
+    for name in BUCKET_NAMES:
+        assert name in text, f"knowledge-triage.md missing bucket name {name!r}"
+
+
+def test_carrier_has_no_variant_spelling_in_tag_context():
+    scoped = _scoped_tag_text(_text(DS_TRIAGE))
+    for variant in VARIANT_SPELLINGS:
+        assert variant not in scoped, (
+            f"knowledge-triage.md uses variant spelling {variant!r} in a "
+            "tag/value context"
+        )

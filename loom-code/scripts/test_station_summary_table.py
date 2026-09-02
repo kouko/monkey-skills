@@ -11,6 +11,15 @@ The population is the contract manifest, not this directory listing: the
 five loom-code stations land across W1-01..W1-05, so a station whose
 directory does not exist yet skips by name rather than failing. When the
 directory lands, the row it must satisfy is already written here.
+
+The manifest owns the other half of the population too. `capture-intent` and
+`write-spec` are stations owned by loom-design, and `product-principles` and
+`design-system` are its tools; a cold reader can be handed any one of those
+four instead of a loom-code station, and REQ-9 does not care which plugin
+the file came out of. So the table check and the byte-identity check both
+run over all nine documents. The identity check crossing a plugin boundary
+is the point: two plugins are where a hand-maintained copy drifts hardest,
+and neither plugin's own test suite would ever see the other's copy.
 """
 from __future__ import annotations
 
@@ -38,6 +47,21 @@ STATION_ORDER = [s["name"] for s in MANIFEST_DATA["stations"]]
 LOOM_CODE_STATIONS = [
     s["name"] for s in MANIFEST_DATA["stations"] if s["owner"] == "loom-code"
 ]
+# The design-side documents that carry the same summary: loom-design's two
+# stations plus its two tools, both taken from the manifest rather than from
+# a hand-written list, so a fifth one is covered the day it is declared.
+LOOM_DESIGN_DOCUMENTS = [
+    entry["name"]
+    for key in ("stations", "tools")
+    for entry in MANIFEST_DATA.get(key, [])
+    if entry.get("owner") == "loom-design"
+]
+
+
+def skill_path(name: str) -> Path:
+    """The SKILL.md for one manifest entry, in whichever plugin owns it."""
+    plugin = "loom-design" if name in LOOM_DESIGN_DOCUMENTS else "loom-code"
+    return REPO / plugin / "skills" / name / "SKILL.md"
 
 
 def frontmatter_name(text: str) -> str | None:
@@ -79,9 +103,11 @@ def summary_table(text: str) -> list[list[str]] | None:
     return None
 
 
-@pytest.mark.parametrize("station", LOOM_CODE_STATIONS)
+@pytest.mark.parametrize(
+    "station", LOOM_CODE_STATIONS + LOOM_DESIGN_DOCUMENTS
+)
 def test_station_skill_carries_the_summary_table(station):
-    skill = REPO / "loom-code" / "skills" / station / "SKILL.md"
+    skill = skill_path(station)
     if not skill.is_file():
         pytest.skip(f"station {station} has not landed yet ({skill.relative_to(REPO)})")
     text = skill.read_text(encoding="utf-8")
@@ -153,10 +179,17 @@ def test_every_station_carries_the_same_summary_section():
     checker list and the maintain row's rule names all saying different
     things. The section is compared byte for byte, so a later edit to one
     copy fails here rather than silently teaching four different flows.
+
+    There are nine copies now, four of them in loom-design. Those four are
+    the ones nothing else would catch: loom-design's own suite cannot see
+    loom-code's copy to compare against, and vice versa, so this test is the
+    only place the two plugins' accounts of the station order are held to
+    each other.
     """
     sections = {}
-    for station in LOOM_CODE_STATIONS:
-        skill = REPO / "loom-code" / "skills" / station / "SKILL.md"
+    population = LOOM_CODE_STATIONS + LOOM_DESIGN_DOCUMENTS
+    for station in population:
+        skill = skill_path(station)
         if not skill.is_file():
             continue
         section = summary_section(skill.read_text(encoding="utf-8"))
@@ -165,9 +198,9 @@ def test_every_station_carries_the_same_summary_section():
         )
         sections[station] = section
 
-    assert len(sections) == len(LOOM_CODE_STATIONS), (
+    assert len(sections) == len(population), (
         f"only {sorted(sections)} landed; the identity check needs all of "
-        f"{LOOM_CODE_STATIONS}."
+        f"{population}."
     )
     reference_station = "review"
     reference = sections[reference_station]
