@@ -1991,6 +1991,22 @@
    "model": "opus",
    "started": "2026-09-02T15:20:39Z",
    "fresh_context": true
+  },
+  {
+   "task": "W4-06+W4-08",
+   "role": "implementer",
+   "agent_id": "sonnet-fix-scaffold-frozen-1",
+   "model": "sonnet",
+   "started": "2026-09-02T16:34:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-07",
+   "role": "implementer",
+   "agent_id": "sonnet-fix-rule-spec-exempt-1",
+   "model": "sonnet",
+   "started": "2026-09-02T16:34:15Z",
+   "fresh_context": true
   }
  ],
  "questions": [
