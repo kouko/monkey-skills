@@ -286,3 +286,9 @@ mechanisms:
   - id: "ship.pr-body-carries-trailer-footer"
     class: prose-gate
     eval: "pending — W4-01"
+  - id: "capture-intent.no-confirmed-without-restatement"
+    class: prose-gate
+    eval: "pending — W4-01"
+  - id: "capture-intent.product-problem-plain-words"
+    class: prose-gate
+    eval: "pending — W4-01"
