@@ -73,26 +73,35 @@ def grammar_fields(field: dict) -> set[str] | None:
     return names
 
 
-def test_template_carries_exactly_the_declared_fields(declared_fields, template):
+def required_and_declared(declared_fields) -> tuple[set[str], set[str]]:
+    """Required field names, and every declared name. A required field
+    missing from a document is a push rule with nothing to read; an
+    undeclared field is a mechanism nobody recomputes. An optional field
+    (`questions`, written at a decision point by another station) may be
+    shown or left out."""
     declared = {field["name"] for field in declared_fields}
-    assert set(template) == declared, (
-        "contract/templates/review.json and the manifest disagree: "
-        f"template-only {sorted(set(template) - declared)}, "
-        f"manifest-only {sorted(declared - set(template))}."
+    required = {field["name"] for field in declared_fields if field.get("required")}
+    return required, declared
+
+
+@pytest.mark.parametrize("source", ["template", "example"])
+def test_documents_carry_the_declared_fields(declared_fields, template, skill_example, source):
+    document = template if source == "template" else skill_example
+    required, declared = required_and_declared(declared_fields)
+    assert not required - set(document), (
+        f"the {source} is missing required review field(s) "
+        f"{sorted(required - set(document))} declared by the manifest."
     )
-
-
-def test_skill_example_carries_exactly_the_declared_fields(declared_fields, skill_example):
-    declared = {field["name"] for field in declared_fields}
-    assert set(skill_example) == declared, (
-        "the review station's example and the manifest disagree: "
-        f"example-only {sorted(set(skill_example) - declared)}, "
-        f"manifest-only {sorted(declared - set(skill_example))}."
+    assert not set(document) - declared, (
+        f"the {source} carries field(s) {sorted(set(document) - declared)} the "
+        "manifest never declares."
     )
 
 
 def test_skill_example_containers_match_the_template(template, skill_example):
     for key, value in template.items():
+        if key not in skill_example:
+            continue
         assert type(skill_example[key]) is type(value), (
             f"`{key}` is {type(skill_example[key]).__name__} in the station's "
             f"example but {type(value).__name__} in the template; the checker "
@@ -107,6 +116,8 @@ def test_array_entries_carry_the_declared_grammar(declared_fields, template, ski
         expected = grammar_fields(field)
         if expected is None:
             continue
+        if field["name"] not in document:
+            continue          # an optional field the document chose not to show
         entries = document[field["name"]]
         assert isinstance(entries, list) and entries, (
             f"`{field['name']}` in the {source} shows no entry, so its grammar "

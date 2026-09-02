@@ -228,7 +228,9 @@ Findings already open from an earlier round must each be closed before
 ## 7. Write the record
 
 Write `review.json` — verdicts, probes, findings and vendors of this round
-— and commit it **alone**:
+— and commit it **alone**. Add to what is there; never drop a key another
+station wrote (`dispatch[]` from `build`, `questions[]` from a decision
+point), and never rewrite an earlier round:
 
 ```
 git add docs/loom/<change-id>/review.json
