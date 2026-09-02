@@ -2132,12 +2132,22 @@
    "fresh_context": true
   },
   {
-   "task": "W4-06+W4-08",
+   "task": "W4-06",
    "role": "implementer",
    "agent_id": "sonnet-fix-scaffold-frozen-1",
    "model": "sonnet",
    "started": "2026-09-02T16:34:15Z",
-   "fresh_context": true
+   "fresh_context": true,
+   "note": "split from the combined entry W4-06+W4-08"
+  },
+  {
+   "task": "W4-08",
+   "role": "implementer",
+   "agent_id": "sonnet-fix-scaffold-frozen-1",
+   "model": "sonnet",
+   "started": "2026-09-02T16:34:15Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W4-06+W4-08"
   },
   {
    "task": "W4-07",
@@ -2280,6 +2290,33 @@
    "vendor": "openai",
    "started": "2026-09-02T17:27:33Z",
    "fresh_context": true
+  },
+  {
+   "task": "W4-01",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline: 19b14977 landed the cold-read evidence (the cold reads themselves ran as fresh sonnet readers, recorded in evidence/cold-read-A.md and cold-read-B.md) and the mechanism eval tests; recorded 2026-09-03 when the trailer was found unclaimed"
+  },
+  {
+   "task": "W4-04",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline: 88b69bce measurements.md; recorded 2026-09-03 when the trailer was found unclaimed"
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r23-docstring-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:38:18Z",
+   "fresh_context": true,
+   "note": "R23-O1 docstring + R23-O3 pin test"
   }
  ],
  "questions": [
