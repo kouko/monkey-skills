@@ -380,14 +380,6 @@
 
 - test_plan_contract_matrix
 
-### REQ-103
-
-- test_batch_ledger_transition_matrix
-
-### REQ-104
-
-- test_batch_ledger_transition_matrix
-
 ### REQ-105
 
 - test_packet_readiness_and_immutability_matrix
@@ -399,10 +391,6 @@
 ### REQ-107
 
 - test_aggregate_resolution_matrix
-
-### REQ-108
-
-- test_batch_ledger_transition_matrix
 
 ### REQ-109
 
@@ -426,6 +414,9 @@
 
 ### reqs with no tests
 
+- REQ-103
+- REQ-104
+- REQ-108
 - REQ-17
 - REQ-25
 - REQ-26
