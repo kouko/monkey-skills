@@ -1,5 +1,5 @@
 # Product principles — loom (monkey-skills)
-ratified-by: pending — kouko to confirm
+ratified-by: kouko 2026-09-03
 
 ## Who
 People who describe what they want in plain words and have only basic software-engineering knowledge, working alone or in a small team, on Claude Code or Codex CLI. They cannot judge the quality of a spec, a plan, or a diff.
