@@ -17,9 +17,9 @@ REQ-5 — 五種 per-change artifact
 REQ-6 — 決定性層靠重算
   checker 對 needs-design 重算介面表面、對測試與 probe 要求實跑記錄、對 reviewer ≠ implementer 機械檢查、對收件與 push 條件重算（完整規則集見 concept-model §7）；不讀 agent 的宣稱。→ Acceptance #1（品質由機器保證）
 REQ-7 — 准入規則可機械驗
-  機制母體＝`docs/loom/evidence/mechanisms.yaml`，五類各有可重算面（skill 目錄、checker `--list-rules` 輸出、hooks.json 條目、contract package 宣告、SKILL.md 內 `<!-- gate: id -->` 標記）；checker 必須提供 `--list-rules`；CI 重算五類與 yaml 比對：漏登→紅、淨數增且 CHANGELOG 無 `budget-exception: <id> — <reason>`→紅、無 eval→紅。→ Acceptance #7
+  機制母體＝`docs/loom/evidence/mechanisms.yaml`，五類各有可重算面（skill 目錄、checker `--list-rules` 輸出、hooks.json 條目、`loom-code/contract/manifest.yaml` 宣告、SKILL.md 內 `<!-- gate: id -->` 標記）；checker 必須提供 `--list-rules`；CI 重算五類與 yaml 比對：漏登→紅、淨數增且 CHANGELOG 無 `budget-exception: <id> — <reason>`→紅、無 eval→紅。→ Acceptance #7
 REQ-8 — 瘦身目標
-  skill ≤ 18；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝main 當前 `hooks/session-start` 渲染輸出字數，CI 命令固定）。→ Acceptance #5
+  skill ≤ 18；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝本 change 合併前 main 的固定 SHA，落地時記進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`；命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo）。→ Acceptance #5
   （名詞 ≤ 40 屬 intent Open question：計數規則與基線定案前只記錄，不入本 REQ。）
 REQ-9 — 冷讀可執行
   一個沒看過 loom 的 agent，只拿該站的 SKILL.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑；零猜測優先於 15 分鐘。concept-model.md 只記錄（v10：25 分鐘、零猜測），不作驗收。→ Acceptance #6
@@ -59,5 +59,6 @@ agent-decided 的岔路與理由：
 非決策型（不計入決策點）：
 5. Codex 第一次用此 repo：「我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 /hooks 按一次授權，我才會繼續。」→ 使用者授權 → 下次指令自動繼續。
 6. product 但 repo 還沒有產品原則（**併在決策點①的同一段對話**，不另停）：「做產品功能前這個 repo 要先有一份產品原則，我接著問你幾個問題來產生（約十分鐘），最後跟 intent 一起確認。」→ 直接進訪談。
+7. 缺 DESIGN.md（或 engineering 缺 PRINCIPLES.md）時，每份 intent 開頭固定三行提示，不需回答：「這個 repo 還沒有 ___。沒有它，___ 無法檢查一致性。想要的話說一聲我來做；不想再看到這行，我可以在設定裡記住。」
 （要不要用第二家模型當 reviewer，也在該 repo 第一次決策點①裡順帶問一次，答案記進 KICKOFF-DEFAULTS。）
 單向門的觸發規則（哪些算、先量再問、已釘住不問、合成一次）見 Design decision。
