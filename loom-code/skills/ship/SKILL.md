@@ -234,7 +234,8 @@ a `## Memory` heading, and **nothing after them**. A post-merge workflow
 greps the squash commit for exactly this shape; a trailer with any line
 after it stops being the message's footer and the check fires on `main`,
 where nobody is watching. Prose about the memory is not the memory: the
-heading and the raw lines both have to be there.
+heading and the raw lines both have to be there. Length is not the test —
+a single such line qualifies; a paragraph describing it does not.
 <!-- /gate -->
 
 Then:

@@ -1,1 +1,0 @@
-Refactor `src/services/order_service.py`. It's a 600-line god-class — `OrderService` mixes pricing, tax computation, inventory reservation, and email notification. Extract these into separate collaborators with single responsibilities. Existing test coverage on this file is high (~85% line coverage); the current behavior must be preserved exactly.

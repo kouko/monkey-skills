@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # test-code-team-coexistence.sh
 #
-# Verify loom-code + domain-teams:code-team coexist without conflict.
-# Per PRODUCT-SPEC §Q2 (passive code-team retained) + §4.3 (parallel use).
+# Verify loom-code + domain-teams:code-team coexist without conflict —
+# both installable side by side, no skill-name collision between the five
+# loom-code stations and code-team.
+#
+# The SSOT-and-functional-copy check (verify-drift.py) and the
+# coexistence-framing check (using-loom-code/SKILL.md) were dropped at
+# loom-code 1.0: the canonical/ routing table and the router skill they
+# read are both deleted.
 #
 # Usage:
 #   bash loom-code/tests/integration/test-code-team-coexistence.sh
@@ -56,31 +62,7 @@ if [ ${collision} -eq 0 ]; then
 fi
 
 # -------------------------------------------------------------------------
-# Check 3 — SSOT-and-functional-copy mechanism intact
-
-if [ -f "${REPO_ROOT}/loom-code/scripts/verify-drift.py" ]; then
-  # Python script; executable bit not required (invoked via python3)
-  if python3 "${REPO_ROOT}/loom-code/scripts/verify-drift.py" >/dev/null 2>&1; then
-    pass "verify-drift.py: all functional copies byte-identical to canonical"
-  else
-    fail "verify-drift.py reports drift between loom-code functional copies and code-team canonical"
-  fi
-else
-  skip "verify-drift.py not found"
-fi
-
-# -------------------------------------------------------------------------
-# Check 4 — coexistence framing in loom-code SKILL.md files
-
-USING_SKILL="${CODE_TOOLKIT_SKILLS}/using-loom-code/SKILL.md"
-if grep -q "code-team" "${USING_SKILL}" && grep -qi "coexist\|並存\|passive gate" "${USING_SKILL}"; then
-  pass "using-loom-code/SKILL.md surfaces code-team coexistence framing"
-else
-  fail "using-loom-code/SKILL.md missing code-team coexistence framing"
-fi
-
-# -------------------------------------------------------------------------
-# Check 5 — both plugins discoverable in Claude CLI
+# Check 3 — both plugins discoverable in Claude CLI
 
 if command -v claude >/dev/null 2>&1; then
   # `claude plugin list` is multi-line per plugin; use -A 3 to capture Status
