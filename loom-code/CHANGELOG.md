@@ -30,7 +30,7 @@ count falls sharply (14 skills → 5, ~50 scripts → 11, 4 verdict agents →
   `contract/README.md` and `contract/templates/` ship with it.
   `loom-design` and `loom-workflow` read it and declare
   `requires-contract`; only loom-code writes it.
-- **`scripts/loom_checker.py`** — the whole deterministic layer, 20 rules
+- **`scripts/loom_checker.py`** — the whole deterministic layer, 27 rules (`--list-rules` is the source of truth)
   under `--list-rules`: the `contract.*`, `intent.*`, `intake.*`, `push.*`
   and `standing.*` families. It recomputes rather than believes: it re-runs
   the recorded package-test and adversarial probes and reads the exit code.
