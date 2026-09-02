@@ -171,6 +171,7 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
   are no questions.
 
 <!-- gate: capture-intent.product-problem-plain-words -->
+<!-- The `gate:` markers in this file are prose gates: rules this station must follow, registered in the mechanism population and checked by cold-read evals — not checker rule ids. The checker rules are the `intent.*` / `standing.*` / `contract.*` ids named in the commands. -->
 **A product Problem section is written in plain words only.** No file
 paths, no function or class identifiers, no script filenames — the section
 is what the user reads to recognise their own problem, and the checker
