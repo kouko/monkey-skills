@@ -50,7 +50,7 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: write-plan
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"  # interim; W4-01 replaces
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
   - id: build
     class: skill
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
@@ -273,10 +273,10 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "write-plan.no-plan-without-confirmed-intent"
     class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"  # interim; W4-01 replaces
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
   - id: "write-plan.product-spec-needs-confirmed-behavior"
     class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"  # interim; W4-01 replaces
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
   - id: "write-plan.post-decision-conservative-default"
     class: prose-gate
     eval: loom-code/scripts/test_write_plan_intake.py

@@ -378,13 +378,27 @@ TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master", "@{upstrea
 # The branch names loom treats as the trunk; standing on one is the P13 hole.
 TRUNK_BRANCH_NAMES = frozenset({"main", "master"})
 
-# Host plumbing: what the Codex scaffold writes into the adopting repo. It is
-# part of loom's own safety belt, never a surface any rule reads as the
-# change's diff (W4-02 finding F3). The exemption is scoped to the scaffold's
-# own directory, not to all of `.codex/`: everything else there — a prompt
-# file, a config the user edits — is content, and exempting it would blind
-# every rule that recomputes a claim from the diff.
-HOST_PLUMBING_PREFIX = ".codex/hooks/"
+# Host plumbing: exactly what the Codex scaffold writes into the adopting
+# repo (loom-code/scripts/codex_scaffold.py -- SHIM_COMMAND, CHECKER_COPY,
+# HOOK_DIR + SIBLING_MODULES, CONTRACT_COPY), never a surface any rule reads
+# as the change's diff (W4-02 finding F3). This is scoped to those specific
+# files, not to the whole `.codex/hooks/` directory: an adopting repo may
+# keep its own gate scripts there too (R22-O3, this repo does), and a
+# directory-wide exemption made that real gate code invisible to
+# push.probes-adversarial and the intent recomputes.
+HOST_PLUMBING_FILES = frozenset(
+    {
+        ".codex/hooks/loom-checker",  # codex_scaffold.SHIM_COMMAND
+        ".codex/hooks/loom_checker.py",  # codex_scaffold.CHECKER_COPY
+        ".codex/hooks/git_exec.py",  # codex_scaffold.HOOK_DIR/SIBLING_MODULES
+        ".codex/hooks/.loom-hook-fired",  # codex_scaffold.MARKER
+    }
+)
+HOST_PLUMBING_DIR_PREFIX = ".codex/hooks/contract/"  # codex_scaffold.CONTRACT_COPY
+
+
+def _is_host_plumbing(path: str) -> bool:
+    return path in HOST_PLUMBING_FILES or path.startswith(HOST_PLUMBING_DIR_PREFIX)
 
 
 ON_A_BRANCH = (
@@ -453,7 +467,7 @@ def changed_paths(repo: Path) -> set[str]:
         ("ls-files", "--others", "--exclude-standard"),
     ):
         for line in git_text(repo, *command).splitlines():
-            if line.strip() and not line.startswith(HOST_PLUMBING_PREFIX):
+            if line.strip() and not _is_host_plumbing(line):
                 paths.add(line)
     return paths
 

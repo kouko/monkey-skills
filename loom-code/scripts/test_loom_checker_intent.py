@@ -766,14 +766,17 @@ def test_codex_scaffold_paths_are_never_an_interface_surface(tmp_path: Path) -> 
 
 def test_only_the_scaffold_plumbing_under_codex_hooks_is_ignored(tmp_path: Path) -> None:
     """The exemption belongs to what the scaffold writes, not to the whole
-    of `.codex/`. `.codex/hooks/` is the scaffold's plumbing; everything
-    else there — a prompt file the user wrote, say — is content the user
-    reads and edits, and a diff claim must still be checked against it."""
+    of `.codex/hooks/`. This repo keeps its own gate scripts there (R22-O3):
+    a directory-wide exemption made real gate code invisible to
+    push.probes-adversarial and the intent recomputes. Only the scaffold's
+    own files are exempt; a hook the user added is content."""
     import loom_checker as lc
 
     repo = make_repo(tmp_path)
     commit_file(repo, ".codex/hooks/contract/templates/x.md")
     commit_file(repo, ".codex/prompts/x.md")
+    commit_file(repo, ".codex/hooks/other-hook.sh")
     paths = lc.changed_paths(repo)
     assert ".codex/prompts/x.md" in paths
+    assert ".codex/hooks/other-hook.sh" in paths
     assert ".codex/hooks/contract/templates/x.md" not in paths
