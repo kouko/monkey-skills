@@ -3,7 +3,7 @@ originator: kouko
 kind: product
 needs-design: yes — 多站、多 artifact、多 plugin 的狀態與互動要重定義，現有 spec 不存在（條件 b）
 evidence: [docs/loom/2026-09-02-simple-loom-flow/evidence/]
-status: confirmed 2026-09-02   # 重確認：跨 vendor 改選配、Acceptance #6 對象改站文件
+status: confirmed 2026-09-02   # 重確認×3：跨 vendor 改選配、Acceptance #6 對象改站文件、Acceptance #2 切換日重授信除外（kouko 2026-09-02）
 
 ## Problem
 loom 現在太重：三個 plugin 共 36 個 skill、約 38 種文件形狀、113 個專有名詞，每個 session 開頭要塞進五千多字的說明。重量集中在「治理」——拆計畫、批次審查、閘門標記——而不是在幫使用者把東西做好。每次出事故就長一個新機制，沒有准入規則，砍了也會長回來。
@@ -19,7 +19,7 @@ loom 的目標重新定為：假定使用者只具備基本軟體工程知識，
 
 ## Acceptance
 1. 一個只有基本軟體知識的人，能用白話描述想要的功能，在不讀 spec、plan 或 diff 的情況下，只回答「這是我要的嗎」「這個操作會這樣反應對嗎」「做到了嗎」三種問題，就拿到一個測試通過、經兩個獨立 reviewer 審過、有盲跑報告的 PR。
-2. 同一個任務在 Claude Code 和 Codex CLI 上走出來的檔案、決策點、閘門一致；Codex 只多一次每 repo 一次的 `/hooks` 授信。
+2. 同一個任務在 Claude Code 和 Codex CLI 上走出來的檔案、決策點、閘門一致；Codex 只多一次每 repo 一次的 `/hooks` 授信（切換日既有 Codex repo 因 hook 定義改變的一次性重授信除外）。
 3. 一個 engineering 的 change（例如抽共用 helper）從頭到 PR，流程停下來等使用者的**決策點** ≤ 2；product 的 change ≤ 3。每個決策點內問幾個問題不限（訪談可以問到清楚為止）；限制的是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是問得少。
 4. 拿三個 2026-08-20 之後真實合併的 change 重走一遍，commit 數、審查派工數、人類決策點都不多於今天的實際數字。
 5. skill 數從 36 降到 18 以內，session-start 注入字數減半以上，每個 change 產生的文件形狀 ≤ 5 種。
