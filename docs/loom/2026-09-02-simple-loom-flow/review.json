@@ -1025,6 +1025,14 @@
    "model": "sonnet",
    "started": "2026-09-02T10:07:40Z",
    "fresh_context": true
+  },
+  {
+   "task": "W2-01",
+   "role": "implementer",
+   "agent_id": "opus-capture-intent-1",
+   "model": "opus",
+   "started": "2026-09-02T10:17:12Z",
+   "fresh_context": true
   }
  ]
 }

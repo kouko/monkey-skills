@@ -14,3 +14,10 @@
 | sonnet-blindrun-w1 | 盲跑（scratch repo，四站走完到 ship step 4） | 走得通 | 六種產物與表一致；指令全 exit 0；9 落差：`which` 抓到 alias 誤判第二家 CLI；references 路徑基準未講；**沒說要開 feature branch**；KICKOFF 模板 stamp 註解；package-test 偵測無 fallback；intake 指令段落位置；最小 plan 時 wave-end＋branch-end 重複；≤5 是否含 branch-end；push 輸出看不出 adversarial 有無重跑 |
 | opus-review-code-w1 | code＋跨站＋探針 | NEEDS_REVISION | 🔴 root `scripts/` 一支測試 collection error 讓 CI pytest 整包不跑（＝本 wave 537 測試在 CI 從沒跑過）＋46 個舊守衛測試紅；🔴 ship 引用 loom-workflow 內部路徑違反 plugin 邊界；🔴 adversary.md 目錄路徑不存在；🟠 spec 紅隊 probe 不帶 scope 可被 code 輪冒充（唯一 fail-open）；🟠 ship §2/§3 自相矛盾（questions[] 寫進 amend）；🟠 五張站序表 12 格分歧＋write-plan 第五種寫法；🟡 R3 基線近似假象、codex-plugin longDescription 陳舊、integration 兩支舊名、兩份攻擊目錄並存、docstring drift、三處死路徑。四組對抗探針（probes-adversarial ×3、questions 壞條目、spec-pass 影子、dismissed 身分）全部照設計擋住 |
 | opus-adversary-w1 | 對抗（skill／gate，13 支可執行探針） | NEEDS_REVISION | 擋住 6：無 dispatch 記錄、untracked 介面檔、contract 版本、review.json 重放、誠實 push 寫法、dismissed 身分。逃脫 7：**P04 probe command 寫 `true` 過閘（致命，reviewer 鏡頭不看 command）**；P13 平行 implementer 覆寫 review.json；P11 KICKOFF 縮小 interface-surfaces 無下限；P07 second-vendor 缺席無指示；P02 after-task 超預算純散文；P03 rename 藏刪除；P06 問題型別只驗 enum。接受：P10 全捏造、P12-B 規避寫法（§0 已記）。adversary.md 目錄路徑錯 |
+
+## wave-end 複審（da16a0e0 / 6573958c / 7a499c02 / 43018f9f）
+| reviewer | lens | verdict | 摘要 |
+|---|---|---|---|
+| sonnet-review-docs-w1b | docs 閉環＋冷讀 r3 | PASS | 18 條全關（逐條引文）；冷讀 Task A **零猜測**，開檔 2 |
+| opus-review-code-w1b | code 閉環＋自打 11 支探針 | NEEDS_REVISION | 15 條全關、13 支對抗探針全擋（但 5 支是被 package-tests 規則擋的，非目標規則）；新 🔴 N1 adversarial `command` 提到 artifact 用子字串比對，寫進 `#` 註解就過；🔴 N2 本 repo 無 `package-tests:` 行，fallback 指令在根目錄 rc=3 → 本分支用自己的閘推不出去；🟡 N3 task 行加項目符號不計；N4 fallback 任意字串消音；N5 零 Task trailer 時身分鏈真空；🟢 N6 ROUTINE.md 死指標被測試釘住 |
+處置：同一 implementer 修 N1–N6 → 第三輪 code 複審。
