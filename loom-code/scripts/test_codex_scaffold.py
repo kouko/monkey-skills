@@ -435,3 +435,57 @@ def test_a_shim_that_lost_its_executable_bit_is_repaired(repo):
     assert "unchanged" not in proc.stdout
     assert shim.stat().st_mode & 0o111
     assert "unchanged" in scaffold(repo).stdout
+
+
+# --- hooks.json merge (R22-O2) --------------------------------------------
+
+
+def test_an_existing_hooks_json_block_survives_a_scaffold_run(repo):
+    """PRINCIPLES.md non-negotiable 5: existing data is never rewritten
+    without asking. A repo's own PostToolUse hooks must survive, with
+    loom's PreToolUse Bash entry added alongside them."""
+    hooks_dir = repo / ".codex"
+    hooks_dir.mkdir(parents=True)
+    existing = {
+        "hooks": {
+            "PostToolUse": [
+                {"matcher": "Write", "hooks": [{"type": "command", "command": "echo hi"}]}
+            ]
+        }
+    }
+    (hooks_dir / "hooks.json").write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
+    proc = scaffold(repo)
+    assert proc.returncode == 0, proc.stderr
+    config = json.loads((hooks_dir / "hooks.json").read_text(encoding="utf-8"))
+    assert config["hooks"]["PostToolUse"] == existing["hooks"]["PostToolUse"]
+    pre = config["hooks"]["PreToolUse"]
+    commands = [hook["command"] for entry in pre for hook in entry["hooks"]]
+    assert commands.count(".codex/hooks/loom-checker") == 1
+
+
+def test_rerunning_scaffold_on_a_merged_hooks_json_is_idempotent(repo):
+    hooks_dir = repo / ".codex"
+    hooks_dir.mkdir(parents=True)
+    existing = {
+        "hooks": {
+            "PostToolUse": [
+                {"matcher": "Write", "hooks": [{"type": "command", "command": "echo hi"}]}
+            ]
+        }
+    }
+    (hooks_dir / "hooks.json").write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
+    scaffold(repo)
+    proc = scaffold(repo)
+    assert proc.returncode == 0, proc.stderr
+    assert "unchanged" in proc.stdout
+
+
+def test_unparseable_hooks_json_stops_the_scaffold_untouched(repo):
+    hooks_dir = repo / ".codex"
+    hooks_dir.mkdir(parents=True)
+    (hooks_dir / "hooks.json").write_text("{not json", encoding="utf-8")
+    proc = scaffold(repo)
+    assert proc.returncode == 2
+    assert "hooks.json" in proc.stderr
+    assert "Traceback" not in proc.stderr
+    assert (hooks_dir / "hooks.json").read_text(encoding="utf-8") == "{not json"

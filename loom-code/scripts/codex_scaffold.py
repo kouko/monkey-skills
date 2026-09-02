@@ -149,6 +149,44 @@ def stamp_line(version: str) -> str:
     return f"{STAMP_PREFIX}{version}"
 
 
+def _merged_hooks_json(path: Path) -> dict:
+    """Merge loom's PreToolUse Bash entry into ``path``'s existing content.
+
+    PRINCIPLES.md non-negotiable 5: existing data is never rewritten
+    without asking. An adopting repo may already have its own hooks (this
+    repo's PostToolUse block was destroyed wholesale by an earlier version
+    of this script, R22-O2) — every other event and matcher is left alone,
+    and loom's own entry is added at most once. Unparseable content is a
+    hard stop, not a silent overwrite."""
+    if not path.is_file():
+        return json.loads(json.dumps(HOOKS_JSON))
+
+    text = path.read_text(encoding="utf-8")
+    try:
+        existing = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{path} is not valid JSON — refusing to overwrite it: {exc}") from exc
+    if not isinstance(existing, dict):
+        raise ValueError(f"{path} has no top-level JSON object — refusing to overwrite it")
+
+    hooks = existing.setdefault("hooks", {})
+    pre_tool_use = hooks.setdefault("PreToolUse", [])
+    already_present = any(
+        isinstance(entry, dict)
+        and entry.get("matcher") == "Bash"
+        and any(
+            isinstance(hook, dict) and hook.get("command") == SHIM_COMMAND
+            for hook in entry.get("hooks", [])
+        )
+        for entry in pre_tool_use
+    )
+    if not already_present:
+        pre_tool_use.append(
+            {"matcher": "Bash", "hooks": [{"type": "command", "command": SHIM_COMMAND}]}
+        )
+    return existing
+
+
 def _write(path: Path, content: str, executable: bool = False) -> str:
     """Install ``content`` at ``path``; return what had to be done.
 
@@ -201,8 +239,10 @@ def scaffold(repo: Path) -> int:
         if action:
             changed.append((action, name))
 
+    hooks_json_path = repo / ".codex" / "hooks.json"
+    merged_hooks_json = _merged_hooks_json(hooks_json_path)
     record(
-        _write(repo / ".codex" / "hooks.json", json.dumps(HOOKS_JSON, indent=2) + "\n"),
+        _write(hooks_json_path, json.dumps(merged_hooks_json, indent=2) + "\n"),
         ".codex/hooks.json",
     )
 
