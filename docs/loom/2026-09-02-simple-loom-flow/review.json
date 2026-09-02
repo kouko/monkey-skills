@@ -611,6 +611,22 @@
    "model": "sonnet",
    "started": "2026-09-02T06:18:25Z",
    "fresh_context": true
+  },
+  {
+   "task": "W0 wave-end fixes",
+   "role": "implementer",
+   "agent_id": "opus-w0-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T06:51:11Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-06 fixes F7-F10",
+   "role": "implementer",
+   "agent_id": "sonnet-mechanisms-2",
+   "model": "sonnet",
+   "started": "2026-09-02T06:51:11Z",
+   "fresh_context": true
   }
  ]
 }
