@@ -16,3 +16,10 @@
 處置：checker 側 agent 修 F1–F6（拿掉 legacy 退化；本 change 的 review.json 由 orchestrator 補 spec_sha）。
 
 處置落地：79efc3a9（ratified-by 文法＋真日期＋parity；UI flows 反轉為至少一條 `→`；spec 新鮮度無 legacy 退化；intent commit 訊息改讀最後動到 intent 的 commit；日期真實性）。本 repo 的 standing 閘正確擋下未簽 PRINCIPLES；intake 在補 spec_sha／@sha 後通過。
+
+## 複審第三輪（79efc3a9）
+| reviewer | lens | verdict | 摘要 |
+|---|---|---|---|
+| opus-review-code-w2c | code＋gate | NEEDS_REVISION | F1–F6 全關（獨立探針 30+ 例）；🔴 NF-1 測試 oracle 不認 YAML 行尾註解、與 checker 對同一檔給相反答案；🔴 NF-2 UI flows 反轉只認一個箭頭字元：`N/A … ->`、code fence 內箭頭、HTML 註解內箭頭皆過；🟡 NF-3 spec_sha 用 any()，一位 reviewer 對得上即新鮮；🟡 NF-4 「最後動過 intent 的 commit」語意讓任何後續 evidence 編輯把閘打紅（本 repo 現在就紅）；🟡 NF-5 `--list-rules` 描述停在舊語意 |
+處置：同 agent 第四輪（內容判定：fence／註解外、箭頭兩側各 ≥2 token；spec_sha all()；needs-design 行綁「改動 status／needs-design 行的 commit」；描述同步）。
+教訓（進 memory）：對抗型 finding 的修法若只加一個 token（子字串→argv、N/A→箭頭），下一輪必再開一個 token；要一次換成語意判定或直接執行物本身。
