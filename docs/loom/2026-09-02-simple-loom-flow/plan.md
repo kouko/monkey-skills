@@ -10,7 +10,7 @@ kind: engineering　needs-design: yes（spec 已 PASS，本段不含 Current Sta
 - 五個 wave＝五次 checkpoint（build 上限 5，concept-model §5）；`review: after-task` 兩處（上限 2）。
 - 進度＝commit 的 `Task: <id>` trailer；沒有 Status 帳。
 - 版本：loom-code 0.110.0 → **1.0.0**、loom-design 0.6.0 → **1.0.0**、loom-workflow 3.2.0 → **4.0.0**（皆 breaking）。三表面各 bump：`plugin.json`、CHANGELOG、root README 的該列（版本＋skill 數欄＋描述句都要改；歷史上第 13 次漏掉的表面）＋ `.claude-plugin/marketplace.json` 三段描述（loom-design 現寫「deterministic pipeline conductor」）。
-- 基線（落地時寫進 `docs/loom/KICKOFF-DEFAULTS.md`）：`session-start-baseline: 923fb84a 5281`（merge-base `923fb84a`，命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo，本 plan 撰寫時實測 5281）。目標 ≤ 2640。
+- 基線（落地時寫進 `docs/loom/KICKOFF-DEFAULTS.md`）：`session-start-baseline: 923fb84a 5278`（merge-base `923fb84a`，命令 `bash loom-code/hooks/session-start </dev/null | LC_ALL=C wc -w`，cwd 為空 git repo；本 plan 撰寫時在 Mac 語系下實測 5281，CI-1 後改用 LC_ALL=C 計法為 5278）。目標 ≤ 2639。
 
 ### skill 收斂表（36 → 17，另 2 個不計數）
 
@@ -143,7 +143,7 @@ checkpoint：W3 結束必跑。
 - 風：branch protection 必經檢查名（先查）；`.claude/hooks/validate-skill-folder-structure.sh` 對新目錄（`loom-code/contract/templates/`）是單層，合規。
 
 **W3-05 standing docs 與 KICKOFF-DEFAULTS**　after: W0-04
-- 檔：`docs/loom/KICKOFF-DEFAULTS.md` 重寫成新 grammar（`session-start-baseline: 923fb84a 5281`、`second-vendor:`（本 repo：`codex — kouko 2026-09-02`，依本 change 已用 Codex 審 spec 的事實）、`standing-docs:`、介面表面 glob、型別對映覆寫）；`loom-code/contract/templates/KICKOFF-DEFAULTS.md` 同 grammar；本 repo 的 `PRINCIPLES.md`：原寫「不新建」，但本 change 的 intent 是 `kind: product`，新 standing 閘正確拒收 → 由 orchestrator 依 §0 與 kouko 歷次裁定代填、kouko 決策點①確認後簽 `ratified-by`（2026-09-03，agent-decided 推翻原句）。
+- 檔：`docs/loom/KICKOFF-DEFAULTS.md` 重寫成新 grammar（`session-start-baseline: 923fb84a 5278`、`second-vendor:`（本 repo：`codex — kouko 2026-09-02`，依本 change 已用 Codex 審 spec 的事實）、`standing-docs:`、介面表面 glob、型別對映覆寫）；`loom-code/contract/templates/KICKOFF-DEFAULTS.md` 同 grammar；本 repo 的 `PRINCIPLES.md`：原寫「不新建」，但本 change 的 intent 是 `kind: product`，新 standing 閘正確拒收 → 由 orchestrator 依 §0 與 kouko 歷次裁定代填、kouko 決策點①確認後簽 `ratified-by`（2026-09-03，agent-decided 推翻原句）。
 - 測：`test_kickoff_defaults_grammar.py`（每行 `key: value — reason (date)`）。
 - 風：無。
 
