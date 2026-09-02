@@ -133,7 +133,7 @@ checkpoint：W3 結束必跑。
 - 風：brief-before-asking 被 kouko 的全域 CLAUDE.md 點名為預設路徑——這是使用者側設定，不在本 repo；PR body 提醒一句。
 
 **W3-03 docs/loom 收斂**　after: W1-06, W2-04
-- 檔：`docs/loom/evidence/`（repo 級：mechanisms.yaml、attack-catalogue.md、自 `audits/`、`research/`、`dogfood/`、`firing-corpus/`、`task-batch-review/`、`outcome-map-v3/`、`references/` 七處**移入**——`git mv` 保留歷史；各子目錄名保留一層）；`plans/`、`specs/`、`backlog/`、`design/` **原地封存**（各加 `ARCHIVED.md` 一行：「loom 1.0 起不再讀寫，新 change 見 `docs/loom/intent/`」）；`BACKLOG.md` 未結條目逐條轉 open intent 或標 withdrawn；`INDEX.md`、`README.md`、`PURPOSE.md` 改寫；`codex-verification.md` 併進 `evidence/q4-codex-hooks-live-test.md`；`archive/`、`2026-07-12-us-sec-primary-source-layer/`、`2026-07-19-8k-prose-kpi-intake/` 原地不動（舊 change 資料夾，各加 `ARCHIVED.md`）。
+- 檔：`docs/loom/evidence/`（repo 級：mechanisms.yaml、attack-catalogue.md、自 `audits/`、`research/`、`dogfood/`、`firing-corpus/`、`task-batch-review/`、`outcome-map-v3/`、`references/` 七處**移入**——`git mv` 保留歷史；各子目錄名保留一層）；`plans/`、`specs/`、`backlog/`、`design/` **原地封存**（各加 `ARCHIVED.md` 一行：「loom 1.0 起不再讀寫，新 change 見 `docs/loom/intent/`」）；`BACKLOG.md` 凍結不轉換（agent-decided，偏離本行原文：184 條逐條轉 intent 是一個 session 的量，硬切換原則本就是原地封存；再犯的項目由 maintain 站重新開 intent）；`INDEX.md`、`README.md`、`PURPOSE.md` 改寫；`codex-verification.md` 併進 `evidence/q4-codex-hooks-live-test.md`；`archive/`、`2026-07-12-us-sec-primary-source-layer/`、`2026-07-19-8k-prose-kpi-intake/` 原地不動（舊 change 資料夾，各加 `ARCHIVED.md`）。
 - 測：`check_doc_citations.py` 綠；W0-06 的重算對 `**/evidence/**` 型別無誤判。
 - 風：`docs/loom/memory/` 258 檔不動（memory 不是 per-change artifact）；BACKLOG 轉換是判斷型工作，逐條列在 commit body。
 
