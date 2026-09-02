@@ -39,10 +39,7 @@ def test_routine_doc_covers_required_steps():
     assert "mark <id> failed" in content
 
     # (7) the earlier-halt precedent, pointed at by path (not restated).
-    assert (
-        "loom-code/skills/using-loom-code/references/continuous-mode.md"
-        in content
-    )
+    assert "loom-code/skills/review/SKILL.md" in content
 
     # fail-closed / never-retry discipline on any failure.
     assert "fail closed" in lower

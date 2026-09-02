@@ -142,10 +142,11 @@ command -v <cli> && <cli> --version
 Both must succeed. A named CLI that is missing, or that fails its version
 probe, does **not** stop the checkpoint and is **not** a question for the
 user: run both legs here as two same-vendor fresh reviewers, record
-`vendors: ["anthropic"]`, and put `fallback: "<cli> missing at <date>"` on
-this round's verdicts. The checker reads that field
-(`push.second-vendor-honoured`) — without it, a vendor the user chose looks
-as if it were used.
+`vendors: ["anthropic"]`, and put `fallback: "<cli> missing at <YYYY-MM-DD>"`
+on this round's verdicts — that exact shape, naming the CLI that was
+declared. The checker matches it (`push.second-vendor-honoured`): a free
+string like `n/a`, or one naming a different tool, explains nothing about
+the vendor the user chose and does not silence the rule.
 
 Record every vendor used in `vendors:`. If the line says `none`, or is
 absent, both legs run here and that is a complete review. **This station

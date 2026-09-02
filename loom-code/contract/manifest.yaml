@@ -117,7 +117,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: reviewed_sha,  kind: json, required: true}
       - {name: scope,         kind: json, required: true}
       - {name: vendors,       kind: json, required: true}
-      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback}]", note: "scope says what the round reviewed; fallback records a named second vendor that was unavailable"}
+      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback}]", note: "scope says what the round reviewed; fallback records a named second vendor that was unavailable, grammar `<cli> missing at <YYYY-MM-DD>`"}
       - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact, scope}]", note: "scope says what the probe attacked; the spec gate accepts an adversarial probe only with scope: spec"}
       - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
       - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}

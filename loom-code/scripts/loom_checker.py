@@ -584,7 +584,9 @@ AFTER_TASK_FREE = 2
 
 # A plan's task line, per templates/plan.md:
 # `**<id> <title>**  after: <ids>  review: after-task[ — <reason>]`
-TASK_LINE = re.compile(r"^\*\*(?P<id>[A-Za-z0-9][A-Za-z0-9._-]*)[^*]*\*\*(?P<rest>.*)$")
+TASK_LINE = re.compile(
+    r"^(?:[-*+]\s+)?\*\*(?P<id>[A-Za-z0-9][A-Za-z0-9._-]*)[^*]*\*\*(?P<rest>.*)$"
+)
 
 
 def check_after_task_budget(manifest, repo: Path, change_id: str):
@@ -1118,6 +1120,25 @@ def is_trivial_command(command: str) -> bool:
     return head in {"test", "["}
 
 
+def command_names_artifact(command: str, artifact: str) -> bool:
+    """True when one argument of `command` IS `artifact`.
+
+    A substring test cannot tell `python3 attack0.py` from
+    `python3 noop.py  # attack0.py`: both contain the path, only one runs
+    it. The command is read the way a shell reads it -- a trailing `#`
+    comment dropped, then split into arguments -- and the artifact has to
+    be one of those arguments. `./x/y.py` and `x/y.py` name the same file
+    and both count.
+    """
+    without_comment = re.sub(r"(?:(?<=\s)|^)#.*$", "", command).strip()
+    try:
+        tokens = shlex.split(without_comment)
+    except ValueError as exc:
+        raise ValueError(str(exc)) from exc
+    wanted = os.path.normpath(artifact)
+    return any(os.path.normpath(token) == wanted for token in tokens)
+
+
 def declared_test_command(repo: Path) -> tuple[str | None, str]:
     """The repo's own package-test command, and where it was read from.
 
@@ -1210,7 +1231,19 @@ def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
             f"(recorded result: {probe.get('result')!r})\n"
         )
         if observed != 0:
-            reasons.append(f"`{label}` exited {observed} when the checker ran it")
+            advice = (
+                ""
+                if source == "docs/loom/KICKOFF-DEFAULTS.md"
+                else (
+                    " — this command was not declared but recomputed from "
+                    f"{source}; if it is the wrong one, declare "
+                    "`package-tests:` in docs/loom/KICKOFF-DEFAULTS.md rather "
+                    "than leaving the gate guessing"
+                )
+            )
+            reasons.append(
+                f"`{label}` exited {observed} when the checker ran it{advice}"
+            )
             continue
         return []
     detail = "; ".join(reasons) if reasons else "no package-tests probe recorded at all"
@@ -1291,10 +1324,17 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 f"`{label}` names artifact {artifact}, absent from the reviewed tree"
             )
             continue
-        if artifact not in command:
+        try:
+            named = command_names_artifact(command, artifact)
+        except ValueError as exc:
+            reasons.append(f"`{label}` is not a parseable command line: {exc}")
+            continue
+        if not named:
             reasons.append(
-                f"`{label}` never mentions its artifact {artifact}, so what it "
-                "actually ran cannot be recomputed from the record"
+                f"`{label}` passes its artifact {artifact} to nothing — no "
+                "argument of the command is that path, so a mention in a "
+                "trailing comment or in an unrelated word is all there is, "
+                "and what actually ran cannot be recomputed from the record"
             )
             continue
         sha = str(probe.get("sha", "")).strip()
@@ -1363,6 +1403,29 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     log = git_text(repo, "log", "--format=%B%x00", f"{base}..{reviewed_id}")
     claimed = {match.group(1) for match in TASK_TRAILER.finditer(log)}
     if not claimed:
+        # No trailer at all is the same hole one commit wider: nothing ties
+        # this work to a planned task, so nothing can be checked against a
+        # dispatch record. A docs-only branch owes no plan and stays exempt.
+        try:
+            manifest = load_manifest()
+            changed = changed_paths(repo)
+        except (UsageError, OSError, KeyError) as exc:
+            return [("push.dispatch-covers-tasks", f"cannot recompute artifact types: {exc}")]
+        is_review = glob_to_regex(
+            manifest["artifacts"]["review"]["path"].replace("<change-id>", "*")
+        )
+        changed = {path for path in changed if not is_review.match(path)}
+        kinds = artifact_types(manifest, changed) & ADVERSARIAL_TYPES
+        if kinds:
+            return [
+                (
+                    "push.dispatch-covers-tasks",
+                    f"no `Task:` trailer on a change that touches "
+                    f"{', '.join(sorted(kinds))}; progress is derived from those "
+                    "trailers, so this work belongs to no planned task and no "
+                    "dispatch entry can be checked against it.",
+                )
+            ]
         return []
     dispatched = {
         str(entry.get("task", "")).strip()
@@ -1407,14 +1470,24 @@ def check_second_vendor_honoured(repo: Path, review):
     used = {str(entry.get("vendor", "")).strip().lower() for entry in verdicts}
     if wanted in used:
         return []
-    if any(str(entry.get("fallback", "")).strip() for entry in verdicts):
+    # The fallback is a dated statement about THIS cli, not a free-text
+    # field: `n/a` is not a reason the second opinion is missing, and a
+    # fallback naming some other tool explains nothing about this one.
+    grammar = re.compile(rf"^{re.escape(cli)} missing at \d{{4}}-\d{{2}}-\d{{2}}")
+    written = [
+        str(entry.get("fallback", "")).strip()
+        for entry in verdicts
+        if str(entry.get("fallback", "")).strip()
+    ]
+    if any(grammar.match(value) for value in written):
         return []
+    saw = f"; it records fallback {written[0]!r}" if written else ""
     return [
         (
             "push.second-vendor-honoured",
             f"KICKOFF-DEFAULTS names `second-vendor: {declared}` ({wanted}), but the "
-            f"latest round used {', '.join(sorted(used)) or 'nothing'} and records no "
-            "`fallback` saying the CLI was unavailable.",
+            f"latest round used {', '.join(sorted(used)) or 'nothing'} and no verdict "
+            f"records `fallback: \"{cli} missing at <YYYY-MM-DD>\"`{saw}.",
         )
     ]
 

@@ -143,7 +143,9 @@ def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None,
         encoding="utf-8",
     )
     git(repo, "add", "-A")
-    git(repo, "commit", "-q", "-m", "feat: a")
+    # The dispatch entries below claim task T1; a branch whose commits carry
+    # no `Task:` trailer at all now blocks (push.dispatch-covers-tasks).
+    git(repo, "commit", "-q", "-m", "feat: a\n\nTask: T1")
 
     body = review_body(git(repo, "rev-parse", "HEAD"))
     if dispatch is not None:

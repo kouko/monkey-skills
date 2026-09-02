@@ -6,7 +6,7 @@
     {"reviewer": "<agent id>", "vendor": "anthropic", "model": "<model>", "lens": "code|docs|spec|design|principles",
      "scope": "spec|code|branch-end|wave-end:<n>", "round": 1,
      "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION", "dimension_scores": {}, "findings": [],
-     "fallback": "<cli> missing at <date>"}
+     "fallback": "<cli> missing at <YYYY-MM-DD>"}
   ],
   "probes": [
     {"kind": "package-tests|blind-run|adversarial|codex-walk", "scope": "spec|code|skill|gate", "command": "<command that runs the artifact>", "sha": "<sha the probe ran against>", "result": "pass|fail", "artifact": "<committed path the command runs>"}

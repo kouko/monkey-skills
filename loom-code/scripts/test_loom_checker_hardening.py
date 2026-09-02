@@ -544,3 +544,158 @@ def test_an_unscoped_adversarial_probe_does_not_satisfy_the_spec_gate(tmp_path: 
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "docs(loom): scope the probe")
     assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
+
+
+# --- re-review N1: an argv match, not a substring ---------------------------
+
+
+def test_an_adversarial_command_naming_its_artifact_only_in_a_comment_blocks(tmp_path) -> None:
+    """R3: `python3 noop.py  # attack0.py` mentions the artifact and runs
+    something else entirely. A substring test cannot tell those apart."""
+    repo = build_repo(tmp_path)
+    write(repo, "evidence/noop.py", "raise SystemExit(0)\n")
+    body = rebuild(repo)
+    for n, probe in enumerate(p for p in body["probes"] if p["kind"] == "adversarial"):
+        probe["command"] = f"python3 evidence/noop.py  # evidence/abuse_{n}.py"
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-adversarial" in blocked_rules(result)
+    assert "argument" in result.stderr
+
+
+def test_a_dot_slash_prefixed_artifact_argument_is_accepted(tmp_path) -> None:
+    """`./evidence/abuse_0.py` names the same file; normalising is not
+    loosening."""
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    for n, probe in enumerate(p for p in body["probes"] if p["kind"] == "adversarial"):
+        probe["command"] = f"python3 ./evidence/abuse_{n}.py"
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert "push.probes-adversarial" not in blocked_rules(result), result.stderr
+
+
+def test_an_unparseable_adversarial_command_blocks(tmp_path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    for probe in body["probes"]:
+        if probe["kind"] == "adversarial":
+            probe["command"] = 'python3 "evidence/abuse_0.py'
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-adversarial" in blocked_rules(result)
+
+
+# --- re-review N2: a detected command that fails says what to declare ------
+
+
+def test_a_failing_detected_command_asks_for_a_kickoff_declaration(tmp_path) -> None:
+    repo = build_repo(tmp_path, kickoff="# Kickoff Defaults\n")
+    write(repo, "pyproject.toml", "[project]\nname = 'x'\n")
+    write(repo, "test_red.py", "def test_red():\n    assert False\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: suite\n\nTask: T1")
+    body = review_body(git(repo, "rev-parse", "HEAD"))
+    body["probes"][0]["command"] = "python3 -m pytest -q"
+    write_review(repo, body)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-package-tests" in blocked_rules(result)
+    assert "declare `package-tests:` in" in result.stderr
+
+
+# --- re-review N3: a task line may carry a list bullet ---------------------
+
+
+def test_a_bullet_prefixed_after_task_line_is_still_counted(tmp_path: Path) -> None:
+    repo = _intake_repo(
+        tmp_path,
+        "**W1-01 first** after: none review: after-task\n"
+        "**W1-02 second** after: W1-01 review: after-task\n"
+        "- **W1-03 third** after: W1-02 review: after-task\n"
+        "* **W1-04 fourth** after: W1-03 review: after-task\n",
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.after-task-budget" in blocked_rules(result)
+    assert "W1-03" in result.stderr and "W1-04" in result.stderr
+
+
+# --- re-review N4: `fallback` has a grammar --------------------------------
+
+
+SECOND_VENDOR_KICKOFF = (
+    "# Kickoff Defaults\n\n"
+    f"- package-tests: {DECLARED_TESTS} — fixture (2026-09-02)\n"
+    "- second-vendor: codex — cross-vendor review (2026-09-02)\n"
+)
+
+
+def test_a_fallback_that_is_not_the_declared_grammar_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, kickoff=SECOND_VENDOR_KICKOFF)
+    body = rebuild(repo)
+    body["verdicts"][0]["fallback"] = "n/a"
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.second-vendor-honoured" in blocked_rules(result)
+    assert "codex missing at" in result.stderr
+
+
+def test_a_fallback_naming_another_cli_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, kickoff=SECOND_VENDOR_KICKOFF)
+    body = rebuild(repo)
+    body["verdicts"][0]["fallback"] = "gemini missing at 2026-09-02"
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.second-vendor-honoured" in blocked_rules(result)
+
+
+# --- re-review N5: no Task: trailer at all on a code branch ----------------
+
+
+def _no_trailer_repo(tmp_path: Path, *, path: str, body: str) -> Path:
+    repo = tmp_path / "notrailer"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    write(repo, "seed.txt", "seed\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    write(repo, path, body)
+    write(repo, "evidence/tests.txt", "ok\n")
+    for n in range(3):
+        write(repo, f"evidence/abuse_{n}.py", "raise SystemExit(0)\n")
+    write(
+        repo,
+        KICKOFF,
+        f"# Kickoff Defaults\n\n- package-tests: {DECLARED_TESTS} — fixture (2026-09-02)\n",
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: no trailer here")
+    reviewed = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(reviewed))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return repo
+
+
+def test_a_code_branch_with_no_task_trailer_at_all_blocks(tmp_path: Path) -> None:
+    repo = _no_trailer_repo(tmp_path, path="a.py", body="value = 1\n")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    assert "code" in result.stderr
+
+
+def test_a_docs_only_branch_with_no_task_trailer_is_exempt(tmp_path: Path) -> None:
+    repo = _no_trailer_repo(tmp_path, path="notes.md", body="prose\n")
+    result = run_checker("push", cwd=repo)
+    assert "push.dispatch-covers-tasks" not in blocked_rules(result), result.stderr

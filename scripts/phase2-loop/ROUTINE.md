@@ -210,11 +210,13 @@ entry with no run evidence for `reconcile` to judge.
 This routine runs with **no human present to pump the loop**, so its
 escalation tolerance is one round tighter than an interactive run. Follow the
 existing halt discipline documented at
-`loom-code/skills/using-loom-code/references/continuous-mode.md` — its
-"no human pumping → hand back slack one round earlier" precedent (the STOP
-contract there). Do not invent a new threshold and do not restate its
-mechanics here; that file is the single source of truth for **when** an
-unattended run stops and escalates. It is not the source of truth for what
+`loom-code/skills/review/SKILL.md` §8 (Hand back) — its NEEDS_REVISION
+contract: findings go back to build as fix work and the checkpoint runs
+again, and a rule that blocks twice means the plan is wrong, not the rule.
+With no human pumping the loop, hand back one round earlier than that. Do
+not invent a new threshold and do not restate its mechanics here; that
+file is the single source of truth for **when** an unattended run stops
+and escalates. It is not the source of truth for what
 happens next: its stop contract ends at a PR-open this routine forbids
 outright (see Hard boundaries), so the terminal bookkeeping below applies
 instead.
