@@ -770,7 +770,7 @@
     "w0-reviewers"
    ],
    "text": "intake.spec-pass picks the latest round across all lenses; a later code round would shadow the spec round",
-   "note": "open until W1-03 lands the lens filter; push stays blocked by design"
+   "resolved": "88ec6637 intake.spec-pass filters by spec-scoped rounds; 5 tests incl. later-code-round shadowing"
   }
  ],
  "vendors": [
