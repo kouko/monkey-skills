@@ -282,13 +282,6 @@ Role boundaries enforced by behavior, not reading restrictions:
   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" …` — where
   `${CLAUDE_PLUGIN_ROOT}` is a load-time substitution performed when
   skill text is rendered, not a run-time shell variable.
-- **Validate/regenerate the backlog index**:
-  `python3 scripts/backlog_index.py {--ready | --validate | --write | --check}`
-  — the backlog store's generator/validator (charter:
-  `docs/loom/backlog/README.md`). Same two-tier resolution: repo-root
-  `scripts/backlog_index.py` first, else the loom-code plugin-shipped
-  copy via `"${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py"`
-  (load-time substitution, as above).
 - **Scaffold the queue layer into a repo (one-time)**:
   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py" [repo-root]`
   — creates the backlog charter + KICKOFF-DEFAULTS skeleton + PURPOSE
