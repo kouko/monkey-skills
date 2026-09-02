@@ -121,6 +121,9 @@ mechanisms:
   - id: push.review-only-head
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_head_carrying_a_second_file_is_blocked
+  - id: push.review-schema
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_push.py::test_a_missing_review_key_blocks
   - id: push.reviewed-sha
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_reviewed_sha_pointing_elsewhere_is_blocked
