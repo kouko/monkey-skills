@@ -50,7 +50,7 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: write-plan
     class: skill
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A-interim.md"  # interim; W4-01 replaces
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"  # interim; W4-01 replaces
   - id: build
     class: skill
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
@@ -62,7 +62,7 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: maintain
     class: skill
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_maintain_intent_dedupe.py
   - id: product-principles
     class: skill
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
@@ -264,7 +264,7 @@ mechanisms:
   #     paragraphs in W1/W2, W3-06 §11 recomputes ---
   - id: "maintain.dedupe"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_maintain_intent_dedupe.py
   - id: "build.no-dispatch-without-a-record"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
@@ -273,37 +273,37 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "write-plan.no-plan-without-confirmed-intent"
     class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A-interim.md"  # interim; W4-01 replaces
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"  # interim; W4-01 replaces
   - id: "write-plan.product-spec-needs-confirmed-behavior"
     class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A-interim.md"  # interim; W4-01 replaces
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"  # interim; W4-01 replaces
   - id: "write-plan.post-decision-conservative-default"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_write_plan_intake.py
   - id: "review.two-fresh-reviewers"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_loom_checker_push.py::test_one_reviewer_blocks
   - id: "review.reviewer-not-implementer"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "review.no-averaging"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_reviewer_agent_single_contract.py
   - id: "review.review-only-commit"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "ship.no-push-before-acceptance"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_ship_pr_body.py
   - id: "ship.pr-body-carries-trailer-footer"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_ship_pr_body.py
   - id: "capture-intent.no-confirmed-without-restatement"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: "capture-intent.product-problem-plain-words"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_loom_checker_intent.py::test_product_problem_with_code_identifier_is_blocked
   - id: "write-spec.product-visible-behaviour-confirmed-before-review"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
@@ -315,4 +315,4 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: "design-system.never-blocks"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: loom-code/scripts/test_loom_checker_standing.py::test_missing_design_never_rejects

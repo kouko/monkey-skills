@@ -334,6 +334,8 @@ the intent and restate again; there is no limit on rounds here.
 
 ## Step 5 — Hand off
 
+Branch: the intent may be committed on the trunk or on the change branch — this station does not create branches. `loom-code:write-plan` creates `<change-id>` from the trunk before the plan commit if HEAD is still on the trunk; everything after the intent lives on that branch.
+
 Read the `needs-design:` line you wrote:
 
 - **`yes`** → hand the change to `loom-design:write-spec`.
