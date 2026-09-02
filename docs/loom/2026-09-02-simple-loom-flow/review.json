@@ -1,5 +1,5 @@
 {
- "reviewed_sha": "fbe8cfba",
+ "reviewed_sha": "b45446bb",
  "scope": "spec PASS (r1–4, r5 adversarial, r9); W0 PWN (6–8); W1 PWN (10–14); W2 PWN (15–19); W3 PWN (20–21); W4 pending",
  "verdicts": [
   {
@@ -620,7 +620,7 @@
    "kind": "package-tests",
    "scope": "w3-code",
    "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
-   "sha": "fbe8cfba",
+   "sha": "b45446bb",
    "result": "985 passed (round 21 reviewer run)",
    "artifact": "loom-code/scripts/"
   },
@@ -628,7 +628,7 @@
    "kind": "adversarial",
    "scope": "w2-skill",
    "command": "scratchpad/adversary-w2 (13 probes; 11 held, p07/p12 by design)",
-   "sha": "fbe8cfba",
+   "sha": "b45446bb",
    "result": "held",
    "artifact": "evidence/w2-checkpoint-reviews.md"
   },
@@ -636,7 +636,7 @@
    "kind": "adversarial",
    "scope": "w3-gate",
    "command": "scratchpad/adversary-w3 (15 probes; 14 caught, p14 by design)",
-   "sha": "fbe8cfba",
+   "sha": "b45446bb",
    "result": "caught",
    "artifact": "evidence/w3-checkpoint-reviews.md"
   }
@@ -1431,7 +1431,7 @@
     "w2-w3-reviewers"
    ],
    "text": "PRINCIPLES.md untracked/unsigned",
-   "resolved": "resolved: 9a15f1b7 tracked, 07e6cdac ratified by kouko"
+   "resolved": "resolved: 9a15f1b7 tracked, 8d077e65 ratified by kouko"
   },
   {
    "id": "W3-03",
@@ -1442,7 +1442,7 @@
     "w2-w3-reviewers"
    ],
    "text": "R4 verified path existence only; --measure fail-open; frozen stores prose-only; two DAs one intent; host-hygiene self-exemption; map: unchecked; counting prose unbound",
-   "resolved": "resolved: f05a2ec2, 98a583eb, fbe8cfba"
+   "resolved": "resolved: f05a2ec2, 98a583eb, b45446bb"
   },
   {
    "id": "W3-04",
@@ -1464,7 +1464,7 @@
     "w2-w3-reviewers"
    ],
    "text": "dead FLOW_MARKER, nested ARCHIVED.md exemption, indented code as flow line, ui-flows scope statement",
-   "resolved": "resolved: fbe8cfba"
+   "resolved": "resolved: b45446bb"
   }
  ],
  "vendors": [

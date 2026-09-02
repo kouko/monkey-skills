@@ -9,4 +9,4 @@
 處置：4a521327。
 
 ## 複審第二輪（f05a2ec2／98a583eb／九個 docs commit／CC regex／PRINCIPLES 簽署）
-| opus-review-code-w23 | code＋CI | PASS_WITH_NOTES | 對抗 p02–p15 全翻 caught（p14 設計接受）；PRINCIPLES 簽署後 standing exit 0；doc citations 顯式懸空→exit 1；9 個 pending eval 是唯一紅；CC 檢查剩 review(×4（kouko 已改寫）＋docs+test×1（待改寫）；notes：nested ARCHIVED.md 豁免、縮排 code block、死常數（fbe8cfba 已修） |
+| opus-review-code-w23 | code＋CI | PASS_WITH_NOTES | 對抗 p02–p15 全翻 caught（p14 設計接受）；PRINCIPLES 簽署後 standing exit 0；doc citations 顯式懸空→exit 1；9 個 pending eval 是唯一紅；CC 檢查剩 review(×4（kouko 已改寫）＋docs+test×1（待改寫）；notes：nested ARCHIVED.md 豁免、縮排 code block、死常數（b45446bb 已修） |

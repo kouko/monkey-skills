@@ -31,4 +31,4 @@
 處置：同 ID 第三輪 → 換設計：`spec.ui-flows-recompute` 改純結構判定（剝所有 markdown 前綴、fence／註解外、箭頭兩側各 ≥4 字元、無否定詞表），內容品質交 reviewer 鏡頭；deciding-commit 只看 front-matter 區；五條描述重寫（併入 W3 修正 agent 的 loom_checker 修改）。
 
 ## 複審第五輪（f05a2ec2 純結構 UI flows）
-| opus-review-code-w23 | code | PASS_WITH_NOTES | F1/F2/F4/F5/F3 全關；notes：死常數 FLOW_MARKER、縮排 code block 未剝（fbe8cfba 已修）、規則只在 intake 跑（描述已明說） |
+| opus-review-code-w23 | code | PASS_WITH_NOTES | F1/F2/F4/F5/F3 全關；notes：死常數 FLOW_MARKER、縮排 code block 未剝（b45446bb 已修）、規則只在 intake 跑（描述已明說） |
