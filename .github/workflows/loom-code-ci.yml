@@ -3,11 +3,8 @@ name: loom-code CI
 # Runs loom-code's drift gates on every PR that touches the plugin (or
 # the workflow itself), and on every push to main that changes the plugin.
 #
-# Two SSOT drift gates are enforced:
+# One SSOT drift gate is enforced:
 #
-#   - verify-drift.py:        the code-team <-> loom-code knowledge SSOT —
-#                             every routed functional copy must stay
-#                             byte-identical to its canonical payload.
 #   - sync_codex_manifests.py: the Codex plugin manifest SSOT —
 #                             each CODEX_ELIGIBLE plugin's .codex-plugin/plugin.json
 #                             must stay in sync with its .claude-plugin/plugin.json.
@@ -17,6 +14,9 @@ name: loom-code CI
 #
 # The sync_codex_manifests.py pytest suite is also run so the generator logic
 # itself is covered, mirroring legal-toolkit-ci.yml (pytest + drift).
+#
+# The living-spec, attack-catalogue and knowledge-SSOT steps were removed at
+# loom-code 1.0 with the scripts they ran; the remaining shape is W3-04's.
 #
 # Status: intended for `main` branch protection.
 
@@ -108,11 +108,10 @@ jobs:
 
       - name: Install test deps
         # pytest = test runner. The drift + sync scripts are pure stdlib (P1-E).
-        # markdown-it-py = adjudication_render's markdown→HTML converter; it is
-        # the one non-stdlib runtime import under loom-code/scripts/, and three
-        # test modules fail at COLLECTION without it (not at assert time), which
-        # takes the whole suite down rather than one test.
-        run: python3 -m pip install --quiet pytest markdown-it-py pyyaml
+        # pyyaml = the contract manifest and mechanisms.yaml parser; test
+        # modules fail at COLLECTION without it, which takes the whole suite
+        # down rather than one test. markdown-it-py went with adjudication_render.
+        run: python3 -m pip install --quiet pytest pyyaml
 
       - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
@@ -123,14 +122,6 @@ jobs:
         run: |
           python3 scripts/check_plugin_boundaries.py loom-code
           python3 scripts/check_plugin_boundaries.py loom-design
-
-      - name: Attack-catalogue store is honest
-        run: python3 loom-code/scripts/check_attack_catalogue.py docs/loom/ATTACK-CATALOGUE.md --repo .
-
-      - name: Verify code-team <-> loom-code knowledge SSOT
-        # canonical/ is the single source of truth; each skill carries routed
-        # functional copies. Any byte-level divergence fails the build.
-        run: python3 loom-code/scripts/verify-drift.py
 
       - name: Codex manifest drift gate (all plugins)
         # Each CODEX_ELIGIBLE plugin's .codex-plugin/plugin.json is generated
@@ -154,31 +145,3 @@ jobs:
         # file. Guards the cross-skill reference convention (e.g. the shared
         # references/environment-gotchas.md pointers) against silent breakage.
         run: python3 loom-code/scripts/check-skill-crossrefs.py
-
-      - name: Verify living-spec structural integrity
-        # Hard FAIL on every push: every @req tag in the repo source tree must
-        # resolve to a real requirement id and be well-formed. A dangling or
-        # malformed @req exits 1 and fails the build.
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 loom-code/scripts/check-living-spec-index.py .
-
-      - name: Verify living-spec index is current
-        # Byte-identity gate: regenerate build_index over the repo root and
-        # byte-compare to the committed docs/loom/INDEX.md. Any drift exits 1
-        # so a stale committed index can't slip in. Repair locally with:
-        # python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md .
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md .
-
-      - name: Verify living-spec active reqs are covered
-        # Merge-boundary gate: every `active` requirement must have a passing
-        # test. This runs AFTER the green pytest gate above, so a green suite
-        # means every linked test passed — "0 passing" therefore reduces to
-        # "0 linked", and an uncovered active req exits 1. Unlike --verify-index,
-        # this gate regenerates nothing (no --write-index counterpart); it only
-        # reads the persisted intent + @req links and reports coverage.
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 loom-code/scripts/check-living-spec-index.py --check-coverage .
