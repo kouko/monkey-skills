@@ -1,0 +1,6 @@
+{"task": "plan-read-back", "role": "reviewer", "agent_id": "opus-readback-1", "model": "opus", "started": "2026-09-02T05:35:11Z"}
+{"task": "W0-01", "role": "implementer", "agent_id": "orchestrator", "model": "fable", "started": "2026-09-02T05:35:11Z"}
+{"task": "W0-02..04", "role": "implementer", "agent_id": "opus-checker-1", "model": "opus", "started": "2026-09-02T05:35:11Z"}
+{"task": "W0-05", "role": "implementer", "agent_id": "opus-hooks-1", "model": "opus", "started": "2026-09-02T05:35:11Z"}
+{"task": "W0-03 after-task", "role": "reviewer", "agent_id": "opus-review-code-1", "model": "opus", "started": "2026-09-02T05:52:58Z"}
+{"task": "W0-03 after-task", "role": "reviewer", "agent_id": "sonnet-review-spec-1", "model": "sonnet", "started": "2026-09-02T05:52:58Z"}
