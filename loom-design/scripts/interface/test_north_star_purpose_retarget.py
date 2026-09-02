@@ -1,10 +1,10 @@
 """Guards Task 9 of docs/loom/plans/2026-08-20-north-star-serves-link.md:
-the four loom-design skills that derive from or check against the retired
+the loom-design skills that derive from or check against the retired
 `## North Star` section must instead name `PURPOSE.md`.
 
 Task 2 retired `## North Star` from PRINCIPLES.md's authoring contract
 (loom-design/skills/product-principles/). This test guards the sibling
-skills that consumed that section: they must no longer instruct reading a
+consumers of that section: they must no longer instruct reading a
 North Star section out of PRINCIPLES.md, and must each name PURPOSE.md
 where they previously named the section.
 
@@ -19,11 +19,14 @@ from pathlib import Path
 
 SKILLS_DIR = Path(__file__).parents[2] / "skills"
 
+# Four files consumed the retired section; loom 1.0 deleted two of them
+# (`using-loom-design` and `completeness-critic`), so the guard now covers
+# the two that survive. It is deliberately NOT widened to the new stations:
+# `capture-intent` and `write-spec` never read a North Star, so requiring
+# them to name PURPOSE.md would assert something this test never asserted.
 FILES = [
-    SKILLS_DIR / "using-loom-design" / "SKILL.md",
     SKILLS_DIR / "design-system" / "SKILL.md",
     SKILLS_DIR / "design-system" / "references" / "design-md-schema.md",
-    SKILLS_DIR / "completeness-critic" / "SKILL.md",
 ]
 
 # Any surviving mention of "North Star" in these files would mean a

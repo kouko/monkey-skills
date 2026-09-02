@@ -1,11 +1,16 @@
 """One pytest invocation must collect every loom-design station directory.
 
-Before the scoped `pytest.ini` existed, the five station directories held
-test modules with colliding basenames (e.g. `test_marketplace_entry.py` in
-both `discovery/` and `interface/`), so a single rootdir-wide collection
-failed with `import file mismatch` errors and CI had to fan out into one
-pytest job per directory. This test pins the unified invocation so that
-fan-out cannot silently come back.
+Before the scoped `pytest.ini` existed, the station directories held test
+modules with colliding basenames (e.g. `test_marketplace_entry.py` in both
+`discovery/` and `interface/`), so a single rootdir-wide collection failed
+with `import file mismatch` errors and CI had to fan out into one pytest job
+per directory. This test pins the unified invocation so that fan-out cannot
+silently come back.
+
+Loom 1.0 cut the suite to three stations -- `interface/`, `principles/` and
+`spec/`; `discovery/` and `pipeline/` went with the skills they guarded. The
+checks below derive the station list from disk, so they followed that cut
+without being rewritten.
 """
 from __future__ import annotations
 
@@ -35,16 +40,15 @@ STATIONS = tuple(
 )
 
 # Duplicated NON-test basenames across stations, pinned rather than banned.
-# `pythonpath` gives the whole suite ONE sys.path, so such a basename resolves
-# for every test from the first station on that line -- both stations' tests
-# import the same copy, and the other file is dead to the import system.
-# `mint_critic_verdict.py` is a deliberate SSOT/functional-copy pair and is
-# tolerated ONLY because interface/test_mint_critic_verdict.py::
-# test_lockstep_code_matches_ssot reads BOTH files by path (docstrings
-# stripped, ast compared), so a logic divergence still fails despite the
-# shadowing. A NEW collision would have no such protection: it belongs here
-# only once it has an equivalent guard.
-SHADOWED_BASENAMES = {"mint_critic_verdict.py"}
+# `pythonpath` gives the whole suite ONE sys.path, so such a basename would
+# resolve for every test from the first station on that line -- both stations'
+# tests import the same copy, and the other file is dead to the import system.
+# As of loom 1.0 the set is EMPTY: the one tolerated collision
+# (`mint_critic_verdict.py`, a deliberate SSOT/functional-copy pair) was
+# deleted with the critic skills it minted verdicts for. A NEW collision has
+# no protection at all: it belongs here only once it carries a lockstep guard
+# comparing both files by path, the way that pair's test did.
+SHADOWED_BASENAMES: set[str] = set()
 
 
 def test_unified_collection_reports_no_errors():
@@ -136,8 +140,8 @@ def test_shadowed_basename_resolves_from_the_expected_station():
     """
     if not SHADOWED_BASENAMES:
         pytest.skip(
-            "no shadowed basename is pinned any more -- the collision was "
-            "renamed away, so there is no winner to pin. "
+            "no shadowed basename is pinned any more -- the one collision "
+            "went out with the critic skills, so there is no winner to pin. "
             "test_duplicated_non_test_basenames_are_only_the_known_shadowed_"
             "pair is what keeps that state honest."
         )
@@ -147,7 +151,7 @@ def test_shadowed_basename_resolves_from_the_expected_station():
         name: next(st for st in order if name in modules.get(st, ()))
         for name in sorted(SHADOWED_BASENAMES)
     }
-    assert winners == {"mint_critic_verdict.py": "interface"}, (
+    assert winners == {}, (
         "the station that wins a shadowed import changed: "
         f"{winners}. pythonpath order is {order}."
     )

@@ -3,13 +3,18 @@
 plugin.json is pure config (a tdd-iron-law exemption), so these are
 cheap presence/validity assertions, not iron-law-mandated logic tests.
 Path is resolved relative to this file so the test runs from any cwd.
+
+Lives at the suite root, not inside a station directory: it guards the
+plugin as a whole. It carries the union of the assertions the three
+per-station copies made, so the keyword list below spans both the
+design-system and the product-principles tools.
 """
 
 import json
 import re
 from pathlib import Path
 
-MANIFEST = Path(__file__).parents[2] / ".claude-plugin" / "plugin.json"
+MANIFEST = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
 
 
@@ -69,7 +74,17 @@ def test_manifest_valid():
     keywords = manifest["keywords"]
     assert isinstance(keywords, list)
     assert all(isinstance(k, str) for k in keywords)
-    for required in ("interface-design", "ui-ux", "design-system", "portable"):
+    for required in (
+        "capture-intent",
+        "write-spec",
+        "product-principles",
+        "design-system",
+        "constitution",
+        "principles",
+        "interface-design",
+        "ui-ux",
+        "portable",
+    ):
         assert required in keywords, f"keyword {required!r} missing"
 
     assert len(manifest["description"]) <= 1024
