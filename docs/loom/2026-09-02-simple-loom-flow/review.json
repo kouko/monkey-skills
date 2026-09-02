@@ -1465,6 +1465,116 @@
    ],
    "text": "dead FLOW_MARKER, nested ARCHIVED.md exemption, indented code as flow line, ui-flows scope statement",
    "resolved": "resolved: c3c4d478"
+  },
+  {
+   "id": "R22-O1",
+   "severity": "fatal",
+   "anchor": "scripts/test_codex_git_guard_shim.py:27",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "tests for the deleted git-guard shim left behind; package command red (5 failed)",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-O2",
+   "severity": "fatal",
+   "anchor": "loom-code/scripts/codex_scaffold.py:205",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "scaffold overwrites an adopting repo's hooks.json wholesale (PRINCIPLES non-negotiable 5)",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-O3",
+   "severity": "important",
+   "anchor": "loom-code/scripts/loom_checker.py:387",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "HOST_PLUMBING_PREFIX hides real gate scripts under .codex/hooks/ from changed_paths",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-O4",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/review.json:2018",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "orchestrator-inline notes say shas are pre-rewrite after they were remapped",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-O5",
+   "severity": "nit",
+   "anchor": "docs/loom/evidence/mechanisms.yaml:53",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "stale \"# interim; W4-01 replaces\" comments (53, 276, 279)",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "blind-run report predates the W4 fix round (sha a5ca1bcf, 63 dispatches)",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-C2",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:211",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "plan risk 1 still instructs a `!` push around the deleted git-guard",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-C3",
+   "severity": "fatal",
+   "anchor": "docs/loom/memory/README.md:255",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "memory entry names git-guard.py / git-guard-shim.sh as the only cross-host enforcement surface",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-C4",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/concept-model.md:165",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "push.dispatch-covers-tasks summary omits trailer duty and spec exemption",
+   "resolved": "open"
+  },
+  {
+   "id": "R22-C5",
+   "severity": "important",
+   "anchor": "loom-code/skills/ship/SKILL.md:213",
+   "origin_sha": "65c55387",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "ship table describes only one of the rule's two failure modes",
+   "resolved": "open"
   }
  ],
  "vendors": [
@@ -2079,6 +2189,32 @@
    "vendor": "openai",
    "started": "2026-09-02T16:55:35Z",
    "fresh_context": true
+  },
+  {
+   "task": "W4-06 fixes",
+   "role": "implementer",
+   "agent_id": "sonnet-r22-code-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:06:56Z",
+   "fresh_context": true,
+   "note": "R22-O1 R22-O2 (Task: W4-06); R22-O3 R22-O5 (Task: W4-10)"
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r22-code-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:06:56Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r22-docs-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:06:56Z",
+   "fresh_context": true,
+   "note": "R22-C2 R22-C3 R22-C4 R22-C5"
   }
  ],
  "questions": [
