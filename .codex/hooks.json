@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".codex/hooks/git-guard-shim.sh"
+            "command": ".codex/hooks/loom-checker"
           }
         ]
       }

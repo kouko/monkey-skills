@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# loom-checker 1.0.0
+# Written by loom-code/scripts/codex_scaffold.py — do not edit by hand.
+# The version stamp lives here, never in .codex/hooks.json: Codex binds hook
+# trust to the definition, so the command string must never change.
+set -euo pipefail
+# Record that Codex' hook engine really invoked this hook. Nothing else can
+# observe that: an untrusted hook is skipped in silence. Never fatal — a
+# read-only checkout must still get its verdict. LOOM_SELF_TEST marks the
+# one caller that is NOT Codex' hook engine — codex_scaffold.py --self-test
+# spawns this shim itself, and a marker written then would let --trusted
+# report a trust decision Codex never made.
+if [ -z "${LOOM_SELF_TEST:-}" ]; then
+  { : > "$(dirname "$0")/.loom-hook-fired"; } 2>/dev/null || true
+fi
+exec python3 .codex/hooks/loom_checker.py push --hook
