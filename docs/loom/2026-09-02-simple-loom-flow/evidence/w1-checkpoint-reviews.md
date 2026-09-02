@@ -21,3 +21,8 @@
 | sonnet-review-docs-w1b | docs 閉環＋冷讀 r3 | PASS | 18 條全關（逐條引文）；冷讀 Task A **零猜測**，開檔 2 |
 | opus-review-code-w1b | code 閉環＋自打 11 支探針 | NEEDS_REVISION | 15 條全關、13 支對抗探針全擋（但 5 支是被 package-tests 規則擋的，非目標規則）；新 🔴 N1 adversarial `command` 提到 artifact 用子字串比對，寫進 `#` 註解就過；🔴 N2 本 repo 無 `package-tests:` 行，fallback 指令在根目錄 rc=3 → 本分支用自己的閘推不出去；🟡 N3 task 行加項目符號不計；N4 fallback 任意字串消音；N5 零 Task trailer 時身分鏈真空；🟢 N6 ROUTINE.md 死指標被測試釘住 |
 處置：同一 implementer 修 N1–N6 → 第三輪 code 複審。
+
+## wave-end 複審第三輪（5cc21c57）
+| reviewer | lens | verdict | 摘要 |
+|---|---|---|---|
+| opus-review-code-w1c | code＋gate | NEEDS_REVISION | N1–N6 全關；🔴 F1 `python3 attack.py ; true` 洗白 exit（根因＝執行記錄字串）→ 改為執行 artifact／宣告指令、不經 shell；🔴 F2 零 trailer 閘只看分支彙總，docs commit 帶 trailer 即可掩護無 trailer 的 code commit → 改逐 commit 要求；🟡 fallback 用 match 非 fullmatch；🟡 `#` 剝除不認引號；🟢 review-only-head 失敗即 early return。並確認 13 支對抗探針中 5 支是被 package-tests 泛用規則擋而非目標規則（fixture 未宣告測試指令）→ 改 fixture |
