@@ -54,7 +54,7 @@ blank of each.
 
 ## The checker
 
-`scripts/loom_checker.py` is the whole deterministic layer — 20 rules,
+`scripts/loom_checker.py` is the whole deterministic layer — 27 rules (`--list-rules` is the source of truth),
 listed by `--list-rules`. It runs on the SessionStart hook and before
 `git push` / `gh pr create` / `gh pr merge`, and it recomputes rather than
 believes: it re-runs the package-test and adversarial probes itself and

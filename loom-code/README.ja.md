@@ -53,7 +53,7 @@ skill だけが `contract --require` を実行します。書き込むのは loo
 
 ## checker
 
-`scripts/loom_checker.py` が決定的な層のすべてです — ルール 20 個、
+`scripts/loom_checker.py` が決定的な層のすべてです — ルール 27 個（`--list-rules` が正）、
 `--list-rules` で一覧できます。SessionStart hook と
 `git push` / `gh pr create` / `gh pr merge` の前に走り、宣言を信じずに
 再計算します：package テストと敵対 probe を自分で走らせ直し、終了コードを

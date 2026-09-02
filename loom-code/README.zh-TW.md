@@ -48,7 +48,7 @@ plan、review）的每一個欄位。`loom-design` 讀它並宣告 `requires-con
 
 ## checker
 
-`scripts/loom_checker.py` 就是整個決定性層 —— 20 條規則，`--list-rules`
+`scripts/loom_checker.py` 就是整個決定性層 —— 27 條規則（以 `--list-rules` 為準），`--list-rules`
 可列出。它掛在 SessionStart hook 與 `git push` / `gh pr create` /
 `gh pr merge` 之前，而且是重算而非採信：package 測試與對抗 probe 都由它
 自己重跑一次，看退出碼。它擋的是手滑，不宣稱擋得住蓄意作弊。
