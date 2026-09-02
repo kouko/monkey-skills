@@ -18,10 +18,11 @@ you never ask the user to judge the quality of your work.
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees happen.
 `kind: engineering` is everything else: refactors, internal plumbing,
-tooling, tests, docs. `<change-id>` is `<YYYY-MM-DD>-<slug>`, where the
-date is the day the work starts and the slug is the intent's title in
+tooling, tests, docs. `<change-id>` is `<today YYYY-MM-DD>-<slug>`, where
+the date is the day the work starts and the slug is the intent's title in
 kebab-case — for "CLI todo gains a due date" started on 2026-09-02,
-`2026-09-02-cli-todo-due-date`.
+`2026-09-02-cli-todo-due-date` (the date is today's date, not the
+example's).
 
 The file formats and the checker belong to `loom-code`; this station is
 one good way to produce them. Everything it writes is read back by
@@ -99,8 +100,10 @@ find the checkout, say so and ask the user where `loom-code` is installed.
 the scaffold copy is the whole path, so do not append `/scripts/` to it.)
 
 If `.codex/hooks/loom_checker.py` does not exist on Codex, **stop**: run
-`loom-code`'s `write-plan` step 0b (the scaffold) first. Do not produce any
-artifact without the checker.
+`loom-code`'s `write-plan` step 0b (the scaffold and its trust probe) first. Do not produce any
+artifact without the checker. The file existing is not proof the hook runs:
+an untrusted Codex hook is skipped in silence, and step 0b's trust probe is
+what tells the two apart.
 
 ## Step 1 — Interview
 
