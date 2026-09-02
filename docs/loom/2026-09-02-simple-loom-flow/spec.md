@@ -1,6 +1,6 @@
 # loom 重設計 — spec
 intent: 2026-09-02-simple-loom-flow@be19b961
-confirmed-behavior: 2026-09-03 @8844407   # 重確認 2026-09-03：REQ-8 計數命令措辭（LC_ALL=C 加在 wc 上，CI-1）— 非可見行為變更，kouko 重確認
+confirmed-behavior: 2026-09-03 @8844407   # 2026-09-03 REQ-8 只改計數命令措辭（LC_ALL=C 加在 wc 上，CI-1），非可見行為變更；此行由 agent 重釘到新 blob，kouko 的重確認尚未取得（ship 前請 kouko 一句確認）
 
 ## Requirements                                    【使用者可讀】
 REQ-1 — 決策點數固定
