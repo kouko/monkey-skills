@@ -41,8 +41,9 @@ Every tagged open question written into DESIGN.md must carry a literal `SHAPING`
 means market "up"/"down", a sign convention for a negative value, a
 period-definition-driven label) — or a TUI/CLI output convention with the
 same shape — and its **correct form is NOT derivable** from `PRINCIPLES.md`
-or the seed. At that exact moment, **stop and run the classification
-question above FIRST** — before committing the token/convention.
+or the user's own words in the interview. At that exact moment, **stop and
+run the classification question above FIRST** — before committing the
+token/convention.
 
 ## Two-tier triage — HIGH bar for SHAPING
 
@@ -77,9 +78,9 @@ losing recall.
 - **domain-convention, DEFERRABLE-class** → write the item into `DESIGN.md`
   as a **tagged open question** instead of a resolved token, carrying
   `evidence_needed: domain-convention` in the pin's tag format. This flows
-  downstream: `loom-design`'s write-spec intake inherits tagged open
-  questions from the design seed, so a deferred item is never dropped — only
-  handed to the next station.
+  downstream: `loom-design`'s `write-spec` reads `DESIGN.md` and inherits
+  the tagged open questions `DESIGN.md` itself carries, so a deferred item is
+  never dropped — only handed to the next station.
 
 ## Cross-severing guard — review verdict vocabulary unchanged
 

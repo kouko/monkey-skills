@@ -30,13 +30,13 @@ good way to produce them. The shapes below are not negotiable.
 
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
-| capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
-| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
-| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
+| capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
+| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
 ## What you will be asked, in plain words
 
@@ -66,7 +66,7 @@ checkout on this host:
 | Host | Where `loom-code` lives |
 |---|---|
 | Claude Code | the plugin cache — `~/.claude/plugins/cache/<marketplace>/loom-code/<version>/`, one directory per installed version; take the newest |
-| Codex CLI | `.codex/hooks/loom_checker.py` inside this repo, written by `loom-code`'s `write-plan` when it first met this repo |
+| Codex CLI | the scaffold copy `.codex/hooks/loom_checker.py` inside this repo, written by `loom-code`'s `write-plan` when it first met this repo — use it directly, no `/scripts/` suffix |
 
 Then run, with that directory in place of `<loom-code>`:
 
@@ -78,6 +78,13 @@ Exit 0: continue. Anything else, the rule is `contract.requires`: print
 what the checker printed, tell the user to update `loom-code`, and
 **stop**. Do not work around it and do not guess a path — if you cannot
 find the checkout, say so and ask the user where `loom-code` is installed.
+
+(Codex form: `python3 .codex/hooks/loom_checker.py contract --require 1.0` —
+the scaffold copy is the whole path, so do not append `/scripts/` to it.)
+
+If `.codex/hooks/loom_checker.py` does not exist on Codex, **stop**: run
+`loom-code`'s `write-plan` step 0b (the scaffold) first. Do not produce any
+artifact without the checker.
 
 ## Step 1 — Intake
 
@@ -188,13 +195,18 @@ turns a behaviour confirmation into a quality review the user cannot do.
    authentication, hosting, package manager; **(b)** creates money or a
    standing obligation — paid services, third-party APIs needing an
    account, infrastructure to maintain; **(c)** limits what the user can do
-   later — data formats, export, platform lock-in; **(d)** sets the ceiling
-   on output quality — model, algorithm or data source, when candidates
+   in future — data formats, export, platform lock-in; **(d)** sets the
+   ceiling on output quality — model, algorithm or data source, when candidates
    differ on an axis the user feels (accuracy, speed, cost per run,
    coverage, privacy); **(e)** an irreversible action on the user's
    existing state — rewriting or deleting their data in place, changing a
    file format with no backup, sending their data off their machine, which
-   is asked **even when there is no fork at all**.
+   is asked **even when there is no fork at all**. Class (e) still yields to
+   the **check** gate below: when the intent's Constraints or
+   `PRINCIPLES.md` already pin how that existing data is handled, do **not**
+   ask — restate the handling in consequence form inside this same message
+   ("this will rewrite your ___, I am doing it the way you said: ___"), so
+   the user sees it without being stopped for it.
 
    Four gates, in order: **check** the intent's Acceptance and Constraints
    and `PRINCIPLES.md` first — an axis already pinned there is not asked,
@@ -216,8 +228,8 @@ turns a behaviour confirmation into a quality review the user cannot do.
    ___ into a new format and the old program will not read it; I will keep
    a backup at ___ first. Is that OK?"
 
-**Every question in this message must be one of three types, or a one-way
-door in consequence form**: what do you want, what will you see (this
+**Every question in this message must be one of three types, or the
+consequence form for one-way doors**: what do you want, what will you see (this
 station's own type), did it work. A question fitting none of them is a
 question the user cannot answer — "should the state live in the store or
 the component?" is not a behaviour question however it is phrased. The
@@ -235,9 +247,18 @@ exists, that piece of work stops and is reported as not done.
 <!-- gate: write-spec.product-visible-behaviour-confirmed-before-review -->
 **A product spec does not reach the review station before the user has
 confirmed its visible behaviour.** On "yes", write
-`confirmed-behavior: <date>` into the spec frontmatter. On a correction,
-rewrite the spec and present it again — there is no limit on rounds, and
-you never write that line on the user's behalf.
+
+```
+confirmed-behavior: <date> @<spec sha7>
+```
+
+into the spec frontmatter, where `<spec sha7>` is the first seven
+characters of `git hash-object docs/loom/<change-id>/spec.md` **run after
+the spec's last edit and before writing this line** — it pins which text
+the user actually said yes to, so a later edit is visibly a different
+spec. On a correction, rewrite the spec, present it again, and recompute
+the hash — there is no limit on rounds, and you never write that line on
+the user's behalf.
 <!-- /gate -->
 
 **Record every question you asked**, as `{decision_point, text, type}` with
@@ -247,15 +268,21 @@ to the contract's. The canonical carrier is the plan's `## Questions asked`
 section, from which the review station copies it into `questions[]` in
 `review.json`. So carry the list forward **verbatim in your hand-off
 message** in step 4, together with anything `capture-intent` handed you,
-and say it belongs in that section.
+and say it belongs in that section. The hand-off message is the only
+carrier at this point: the spec-scope checkpoint in step 4 happens before
+any plan exists, so the review station takes `questions[]` from this
+message. A hand-off that omits the list leaves that field empty with no way
+to reconstruct it.
 
 ## Step 4 — Commit, review, hand off
 
 1. Commit the spec with the message `docs(loom): spec <change-id>`.
-2. Hand it to **`loom-code:review`** with scope `spec`. That lens is read
-   plus adversarial: at least two fresh-context reviewers on the read,
-   and a red-team pass over the spec itself. You are not one of them, and
-   you do not review your own file.
+2. Hand it to **`loom-code:review`** with scope `spec`, **pasting the
+   question list verbatim** — no plan exists yet, so this message is where
+   `questions[]` comes from. That lens is read plus adversarial: at least
+   two fresh-context reviewers on the read, and a red-team pass over the
+   spec itself. You are not one of them, and you do not review your own
+   file.
 3. **NEEDS_REVISION** — close each finding, commit, and send it round
    again as a new round. Nothing about this is negotiable by argument: the
    verdict moves when the file does.

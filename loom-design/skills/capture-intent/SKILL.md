@@ -31,13 +31,13 @@ one good way to produce them. Everything it writes is read back by
 
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
-| capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
-| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
-| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
+| capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
+| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
 ## What you will be asked, in plain words
 
@@ -82,7 +82,7 @@ checkout on this host:
 | Host | Where `loom-code` lives |
 |---|---|
 | Claude Code | the plugin cache — `~/.claude/plugins/cache/<marketplace>/loom-code/<version>/`, one directory per installed version; take the newest |
-| Codex CLI | `.codex/hooks/loom_checker.py` inside this repo, written by `loom-code`'s `write-plan` when it first met this repo |
+| Codex CLI | the scaffold copy `.codex/hooks/loom_checker.py` inside this repo, written by `loom-code`'s `write-plan` when it first met this repo — use it directly, no `/scripts/` suffix |
 
 Then run, with that directory in place of `<loom-code>`:
 
@@ -94,6 +94,13 @@ Exit 0: continue. Anything else, the rule is `contract.requires`: print
 what the checker printed, tell the user to update `loom-code`, and
 **stop**. Do not work around it and do not guess a path — if you cannot
 find the checkout, say so and ask the user where `loom-code` is installed.
+
+(Codex form: `python3 .codex/hooks/loom_checker.py contract --require 1.0` —
+the scaffold copy is the whole path, so do not append `/scripts/` to it.)
+
+If `.codex/hooks/loom_checker.py` does not exist on Codex, **stop**: run
+`loom-code`'s `write-plan` step 0b (the scaffold) first. Do not produce any
+artifact without the checker.
 
 ## Step 1 — Interview
 
@@ -158,6 +165,10 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
   `needs-design: yes — CLI surface changes, no ui-flows cover due dates`.
 
 - `status: open` for now; step 4 turns it into `confirmed`.
+- `## Open questions` — the checker requires the section to be non-empty, so
+  when the interview left nothing open write exactly `- none` under the
+  heading. An empty section is a schema failure, not a statement that there
+  are no questions.
 
 <!-- gate: capture-intent.product-problem-plain-words -->
 **A product Problem section is written in plain words only.** No file
@@ -201,8 +212,10 @@ twice, and this is the only stop this station makes.
 1. **The restatement.** Problem and Acceptance in the user's own plain
    words — no file paths, no identifiers, no mechanism names:
 
-   > You want ___, and when it is done you will be able to ___, ___ and
-   > ___. Is that right?
+   > 你要的是 ___，做完後你可以 ___、___、___。對嗎？
+   >
+   > (You want ___, and when it is done you will be able to ___, ___ and
+   > ___. Is that right?)
 
 2. **The one-way doors found so far**, in consequence form. A one-way door
    is a choice that is expensive or impossible to undo. The reference that
@@ -213,7 +226,7 @@ twice, and this is the only stop this station makes.
      authentication method, hosting platform, package manager;
    - **(b)** creates money or a standing obligation — paid services,
      third-party APIs needing an account, infrastructure to maintain;
-   - **(c)** limits what the user can do later — data formats, export
+   - **(c)** limits what the user can do in future — data formats, export
      ability, platform lock-in;
    - **(d)** sets the ceiling on output quality — model, algorithm or data
      source, when candidates differ on an axis the user feels (accuracy,
@@ -221,7 +234,12 @@ twice, and this is the only stop this station makes.
    - **(e)** an irreversible action on the user's existing state —
      rewriting or deleting their data in place, changing an existing file
      format with no backup, sending their data off their machine. This one
-     is asked **even when there is no fork at all**.
+     is asked **even when there is no fork at all**. Class (e) still yields to
+   the **check** gate below: when the intent's Constraints or `PRINCIPLES.md`
+   already pin how that existing data is handled, do **not** ask — restate
+   the handling in consequence form inside this same message ("this will
+   rewrite your ___, I am doing it the way you said: ___"), so the user sees
+   it without being stopped for it.
 
    Four gates, in order: **check** the intent's Acceptance and Constraints
    and `PRINCIPLES.md` first — an axis already pinned there is not asked,
@@ -249,7 +267,10 @@ twice, and this is the only stop this station makes.
    **different model vendor than the host you are running on**: on Claude
    Code look for `codex` or `gemini`, on Codex look for `claude` or
    `gemini`. Detect it with `command -v <cli>` **and** a probe that it
-   runs — `<cli> --version` must exit 0. Never `which`: it reports shell
+   runs — `<cli> --version` must exit 0. In zsh `command -v` may print an
+   alias or a function body rather than a path; do not try to parse it.
+   **Any non-empty output plus a `<cli> --version` that exits 0 counts as
+   present**, and nothing else does. Never `which`: it reports shell
    aliases and stale hashes, and suggesting a tool that turns out not to
    run costs the user a question for nothing. Never suggest the host
    itself. Include the suggestion only when `docs/loom/KICKOFF-DEFAULTS.md`
@@ -267,8 +288,8 @@ twice, and this is the only stop this station makes.
 4. **The principles confirmation**, if step 3 ran the interview — restated
    in the same message, confirmed by the same yes.
 
-**Every question in this message must be one of three types, or a one-way
-door in consequence form**: what do you want (the restatement), what will
+**Every question in this message must be one of three types, or the
+consequence form for one-way doors**: what do you want (the restatement), what will
 you see (visible behaviour — that belongs to decision point ② at
 `write-spec`), did it work (acceptance — decision point ③ at `ship`). A
 question fitting none of them is a question the user cannot answer. Three
