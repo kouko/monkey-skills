@@ -452,13 +452,10 @@ def changed_paths(repo: Path) -> set[str]:
     """Everything this branch changed, committed or not -- a claim about a
     diff must be checked against the whole diff, staging area included.
 
-    `.codex/hooks/` is the one exception: it is the host plumbing the Codex
-    scaffold writes (the hook definition and the checker's own copy of the
-    contract package), never a surface a user reads. Left in, the scaffold's
-    copied `contract/templates/**` matched the manifest's default interface
-    glob and every Codex engineering change whose branch carried the
-    scaffold commit was blocked by the safety belt's own installation
-    (W4-02 finding F3)."""
+    The exception is exactly what the Codex scaffold writes (HOST_PLUMBING_FILES /
+    HOST_PLUMBING_DIR_PREFIX below), never a surface a user reads -- an adopting
+    repo's own hooks under `.codex/hooks/` stay visible. Left directory-wide, the
+    scaffold's `contract/templates/**` matched the interface glob (W4-02 F3)."""
     merge_base = branch_base(repo)
     paths: set[str] = set()
     for command in (

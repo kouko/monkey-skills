@@ -780,3 +780,19 @@ def test_only_the_scaffold_plumbing_under_codex_hooks_is_ignored(tmp_path: Path)
     assert ".codex/prompts/x.md" in paths
     assert ".codex/hooks/other-hook.sh" in paths
     assert ".codex/hooks/contract/templates/x.md" not in paths
+
+
+def test_host_plumbing_constants_are_pinned_to_the_scaffold(tmp_path: Path) -> None:
+    """R23-O3: HOST_PLUMBING_FILES/_DIR_PREFIX hand-copy codex_scaffold's
+    constants; nothing pinned them together before this test. If the
+    scaffold's file list changes without this constant following, the
+    exemption silently drifts from what the scaffold actually writes."""
+    import codex_scaffold as cs
+    import loom_checker as lc
+
+    assert lc.HOST_PLUMBING_FILES == {
+        cs.SHIM_COMMAND,
+        cs.CHECKER_COPY,
+        cs.MARKER,
+    } | {f"{cs.HOOK_DIR}/{m}" for m in cs.SIBLING_MODULES}
+    assert lc.HOST_PLUMBING_DIR_PREFIX == cs.CONTRACT_COPY + "/"
