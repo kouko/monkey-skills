@@ -190,7 +190,7 @@ checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
 
 **W4-06 對本 repo 跑 Codex scaffold**　after: W4-05
 - 做：`codex_scaffold.py --repo .` 的產出 commit（`.codex/hooks.json`、`.codex/hooks/loom-checker`、checker 與 sibling 副本、`contract/`、`.gitignore` 一行）；補回 monkey-skills 專用的兩支 PostToolUse hook（validate-skill-folder-structure、remind-memory-mirror）；刪 `git-guard-shim.sh`（指向 W1-06 已刪的 git-guard.py，`set -e` 下 exit 2＝每個 Bash 都被擋）。
-- 風：scaffold 重跑會整檔覆寫 hooks.json，repo 自帶的 PostToolUse 條目會掉——原記為 open question；round 22 reviewer 判為違反 PRINCIPLES 第 5 條（fatal，R22-O2），已在本 change 內修：scaffold 改為合併寫入（只加 loom 的 PreToolUse 條目、其餘 event／matcher 不動、無法解析即 exit 2 不碰檔），f79a337a。
+- 風：scaffold 重跑會整檔覆寫 hooks.json，repo 自帶的 PostToolUse 條目會掉——原記為 open question；round 22 reviewer 判為違反 PRINCIPLES 第 5 條（fatal，R22-O2），已在本 change 內修：scaffold 改為合併寫入（只加 loom 的 PreToolUse 條目、其餘 event／matcher 不動、無法解析即 exit 2 不碰檔），a8bcbbf9。
 
 **W4-07 `push.dispatch-covers-tasks` 免除 spec 型**　after: W4-05
 - 做：spec.md 由 write-spec 站擁有（同 intent／plan），其新鮮度已由 `spec_sha`／`confirmed-behavior` 守；規則的 trailer 義務型別改為 code／skill／gate。先寫失敗測試（只動 spec.md 的 commit 無 trailer → 不擋；動 code 無 trailer → 仍擋）。

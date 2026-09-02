@@ -1,4 +1,4 @@
-# REQ-2 re-verification — round 2, after 49fe6f6b / f598c6c0 (W4-02, 2026-09-02)
+# REQ-2 re-verification — round 2, after 1eeabf26 / 2ec7de50 (W4-02, 2026-09-02)
 
 Round 1 is `req2-codex-walk.md`; it found F1–F4 and REQ-2 **not verified**.
 This round re-walks the same Task A on a **fresh** scratch repo against the

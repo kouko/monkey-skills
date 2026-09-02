@@ -1,6 +1,6 @@
 # Branch-end round 23 — re-review after the round-22 fixes
 
-Re-review delta: `65c55387..e8b5a6fe`. Same two lenses and vendors as round 22.
+Re-review delta: `a696a314..72307c9d`. Same two lenses and vendors as round 22.
 
 ## codex-review-docs-branch-end-r23 (openai, lens: docs) — NEEDS_REVISION
 
@@ -9,11 +9,11 @@ verdict: NEEDS_REVISION
 lens: docs
 reviewed_sha: c3c4d478
 rereview_of:
-  - "R22-C1: still-open — 32cf87d3 adds a blind-run addendum, but it tests b61b87ff rather than the final pre-review tree e8b5a6fe; its dispatch totals are already stale."
-  - "R22-C2: closed — f01ea57b marks the old guard as historical and identifies the current repo-local loom-checker path."
-  - "R22-C3: closed — f01ea57b updates the memory index and entry to the current Claude Code and Codex hook surfaces."
-  - "R22-C4: closed — f01ea57b states both trailer duty and the spec/intent/plan/docs/evidence/review exemptions."
-  - "R22-C5: closed — ea5c902a documents both failure modes, their return paths, and the spec exemption."
+  - "R22-C1: still-open — f0066ed5 adds a blind-run addendum, but it tests 40442b1e rather than the final pre-review tree 72307c9d; its dispatch totals are already stale."
+  - "R22-C2: closed — c5fc1346 marks the old guard as historical and identifies the current repo-local loom-checker path."
+  - "R22-C3: closed — c5fc1346 updates the memory index and entry to the current Claude Code and Codex hook surfaces."
+  - "R22-C4: closed — c5fc1346 states both trailer duty and the spec/intent/plan/docs/evidence/review exemptions."
+  - "R22-C5: closed — 784606bb documents both failure modes, their return paths, and the spec exemption."
 dimension_scores:
   omission: PASS
   ambiguity: PASS
@@ -24,17 +24,17 @@ findings:
   - severity: fatal
     dimension: incorrect-fact
     anchor: "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3"
-    text: "R22-C1 remains open. The report calls b61b87ff the tested W4-fix-round tree, but two later commits changed the report and review.json before this re-review. At HEAD, review.json contains 85 dispatches (44 implementers, 30 reviewers, 7 blind-runners, 4 adversaries), contradicting the report's 79/40/28/7/4 at lines 47 and 251. It therefore is not the requested branch-end acceptance report."
+    text: "R22-C1 remains open. The report calls 40442b1e the tested W4-fix-round tree, but two later commits changed the report and review.json before this re-review. At HEAD, review.json contains 85 dispatches (44 implementers, 30 reviewers, 7 blind-runners, 4 adversaries), contradicting the report's 79/40/28/7/4 at lines 47 and 251. It therefore is not the requested branch-end acceptance report."
     fix: "Run the blind-run delta against the final pre-review SHA, update the header and all derived counts/results, and ensure no artifact-changing commit follows it before review dispatch."
   - severity: fatal
     dimension: inconsistency
     anchor: "docs/loom/2026-09-02-simple-loom-flow/plan.md:193"
-    text: "W4-06 still says scaffold overwrite is an open question that will not be fixed in this change, while f79a337a fixes it and blind-run-report.md:233-234 presents merging existing hooks as current verified behavior."
-    fix: "Mark this risk as superseded by f79a337a and record that the scaffold now merges Loom's entry while preserving existing hook blocks."
+    text: "W4-06 still says scaffold overwrite is an open question that will not be fixed in this change, while a8bcbbf9 fixes it and blind-run-report.md:233-234 presents merging existing hooks as current verified behavior."
+    fix: "Mark this risk as superseded by a8bcbbf9 and record that the scaffold now merges Loom's entry while preserving existing hook blocks."
   - severity: fatal
     dimension: incorrect-fact
     anchor: "docs/loom/2026-09-02-simple-loom-flow/concept-model.md:173"
-    text: "The concept model still says checker recomputation ignores all of .codex/. Commit 8331f6c6 changed the implementation to exempt only scaffold-owned paths under .codex/hooks/, specifically so adopting-repo files such as other-hook.sh remain visible."
+    text: "The concept model still says checker recomputation ignores all of .codex/. Commit 68d8855d changed the implementation to exempt only scaffold-owned paths under .codex/hooks/, specifically so adopting-repo files such as other-hook.sh remain visible."
     fix: "Replace the whole-.codex exemption claim with the exact scaffold-owned exemption and state that other .codex files and non-scaffold hook files remain in changed_paths."
   - severity: fatal
     dimension: incorrect-fact
@@ -44,8 +44,8 @@ findings:
   - severity: fatal
     dimension: incorrect-fact
     anchor: "docs/loom/2026-09-02-simple-loom-flow/review.json :: \"the commits' short shas above are pre-rewrite\""
-    text: "Six orchestrator-inline dispatch notes still label the 14 listed short SHAs as pre-rewrite. Round 22 already established that those SHAs were remapped by 2ac26023 and resolve in the current history; e8b5a6fe retained the false qualifier while restructuring the dispatch entries."
-    fix: "Replace the qualifier in all six notes with the recorded fact that 2ac26023 remapped the listed SHAs to their post-rewrite successors."
+    text: "Six orchestrator-inline dispatch notes still label the 14 listed short SHAs as pre-rewrite. Round 22 already established that those SHAs were remapped by 83e730dd and resolve in the current history; 72307c9d retained the false qualifier while restructuring the dispatch entries."
+    fix: "Replace the qualifier in all six notes with the recorded fact that 83e730dd remapped the listed SHAs to their post-rewrite successors."
 notes: []```
 
 Disposition: C2–C5 confirmed closed. New findings R23-C1 (report counts drift with every dispatch-record commit), R23-C2 (plan W4-06 risk note), R23-C3 (§7 whole-.codex claim), R23-C4 (README 20→27) fixed in the docs commit that follows this file; R23-C5 (= R22-O4) is scheduled for the review-only commit. A docs re-review (round 24) is owed.
@@ -56,10 +56,10 @@ Disposition: C2–C5 confirmed closed. New findings R23-C1 (report counts drift 
 verdict: NEEDS_REVISION
 lens: code
 reviewed_sha: c3c4d478
-rereview_of: {R22-O1: closed (807e4db5), R22-O2: closed (f79a337a), R22-O3: closed (8331f6c6), R22-O5: closed, R22-O4: not-due (review-only commit)}
+rereview_of: {R22-O1: closed (c45dcb15), R22-O2: closed (a8bcbbf9), R22-O3: closed (68d8855d), R22-O5: closed, R22-O4: not-due (review-only commit)}
 dimension_scores: {security: PASS, architecture: PASS, correctness: PASS_WITH_NOTES, naming: PASS, tests: PASS, refactoring: PASS, cross-task-coherence: NEEDS_REVISION, external-surface-grounding: PASS, principles-conformance: PASS, deliberate-simplification: PASS, deletion-first: PASS}
 findings:
-  - {id: R23-O1, severity: fatal, dimension: cross-task-coherence, anchor: "docs/loom/2026-09-02-simple-loom-flow/review.json:2135", text: "push.dispatch-covers-tasks red at HEAD in both modes: dc78b73b, af6d73a5, 4a70e8cd touch loom-code/skills/** with no Task trailer; W4-01 and W4-04 have no implementer entry; W4-06/W4-08 only inside the combined entry.", fix: "Trailer the three commits (history rewrite, user-run) with their owning task; split W4-06+W4-08; record W4-01/W4-04 (orchestrator-inline); re-run the rule against HEAD and require an empty list."}
+  - {id: R23-O1, severity: fatal, dimension: cross-task-coherence, anchor: "docs/loom/2026-09-02-simple-loom-flow/review.json:2135", text: "push.dispatch-covers-tasks red at HEAD in both modes: f7a18499, a0128ea2, 7094123c touch loom-code/skills/** with no Task trailer; W4-01 and W4-04 have no implementer entry; W4-06/W4-08 only inside the combined entry.", fix: "Trailer the three commits (history rewrite, user-run) with their owning task; split W4-06+W4-08; record W4-01/W4-04 (orchestrator-inline); re-run the rule against HEAD and require an empty list."}
   - {id: R23-O2, severity: important, dimension: correctness, anchor: "loom-code/scripts/loom_checker.py:454", text: "changed_paths docstring still states the directory-wide .codex/hooks/ exemption that R22-O3 removed; copied verbatim into .codex/hooks/loom_checker.py.", fix: "Rewrite the paragraph to the file-scoped exemption; refresh the copy."}
   - {id: R23-O3, severity: nit, dimension: refactoring, anchor: "loom-code/scripts/loom_checker.py:389", text: "HOST_PLUMBING_FILES hand-copies codex_scaffold's constants; nothing pins them together.", fix: "Test asserting HOST_PLUMBING_FILES == {SHIM_COMMAND, CHECKER_COPY, MARKER} | {HOOK_DIR/m for m in SIBLING_MODULES} and HOST_PLUMBING_DIR_PREFIX == CONTRACT_COPY + '/'."}
 notes:

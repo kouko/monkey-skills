@@ -1470,7 +1470,7 @@
    "id": "R22-O1",
    "severity": "fatal",
    "anchor": "scripts/test_codex_git_guard_shim.py:27",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "opus-review-code-branch-end-r22"
    ],
@@ -1481,7 +1481,7 @@
    "id": "R22-O2",
    "severity": "fatal",
    "anchor": "loom-code/scripts/codex_scaffold.py:205",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "opus-review-code-branch-end-r22"
    ],
@@ -1492,7 +1492,7 @@
    "id": "R22-O3",
    "severity": "important",
    "anchor": "loom-code/scripts/loom_checker.py:387",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "opus-review-code-branch-end-r22"
    ],
@@ -1503,7 +1503,7 @@
    "id": "R22-O4",
    "severity": "important",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/review.json:2018",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "opus-review-code-branch-end-r22"
    ],
@@ -1514,7 +1514,7 @@
    "id": "R22-O5",
    "severity": "nit",
    "anchor": "docs/loom/evidence/mechanisms.yaml:53",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "opus-review-code-branch-end-r22"
    ],
@@ -1525,18 +1525,18 @@
    "id": "R22-C1",
    "severity": "fatal",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "codex-review-docs-branch-end-r22"
    ],
-   "text": "blind-run report predates the W4 fix round (sha a5ca1bcf, 63 dispatches)",
+   "text": "blind-run report predates the W4 fix round (sha c43641e6, 63 dispatches)",
    "resolved": "open"
   },
   {
    "id": "R22-C2",
    "severity": "fatal",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:211",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "codex-review-docs-branch-end-r22"
    ],
@@ -1547,7 +1547,7 @@
    "id": "R22-C3",
    "severity": "fatal",
    "anchor": "docs/loom/memory/README.md:255",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "codex-review-docs-branch-end-r22"
    ],
@@ -1558,7 +1558,7 @@
    "id": "R22-C4",
    "severity": "important",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/concept-model.md:165",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "codex-review-docs-branch-end-r22"
    ],
@@ -1569,7 +1569,7 @@
    "id": "R22-C5",
    "severity": "important",
    "anchor": "loom-code/skills/ship/SKILL.md:213",
-   "origin_sha": "65c55387",
+   "origin_sha": "a696a314",
    "raised_by": [
     "codex-review-docs-branch-end-r22"
    ],
