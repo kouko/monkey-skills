@@ -29,7 +29,7 @@ file first — it holds the per-type recipes and the exact probe shape.
 - **Spec**: red-team each requirement — name a behaviour it permits that
   the author plainly did not want — then hunt the states it never mentions.
 - **Skill or gate**: work the classes of
-  `loom-code/contract/templates/ATTACK-CATALOGUE.md` against the file, one
+  `loom-code/skills/review/references/attack-catalogue.md` against the file, one
   attempt per class, including its prose temptations verbatim.
 
 ## What you return

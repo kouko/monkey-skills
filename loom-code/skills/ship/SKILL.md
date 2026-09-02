@@ -2,7 +2,7 @@
 name: ship
 description: |
   Closes a development branch out: confirms the branch-end checkpoint passed, presents the blind-run report to the user for acceptance, writes the memory, runs the deterministic push gate, opens the pull request from the review record, verifies the merge and closes the intent. Use when the last checkpoint returned PASS, or on "finish the branch", "open the PR", "ready to merge", "ship it".
-version: 0.1.0
+version: 1.0.0
 ---
 
 ## What this station does
@@ -40,10 +40,18 @@ Read `docs/loom/<change-id>/review.json` and the git state yourself. Four
 facts, in this order:
 
 1. **The latest round is a branch-end pass.** Its `scope` is `branch-end`
-   and its outcome is `PASS` or `PASS_WITH_NOTES`. A wave-end pass is not a
-   branch-end pass, however recent. If the last checkpoint was any other
-   scope — or the branch grew a commit after it — call `loom-code:review`
-   with scope `branch-end` now and come back with its verdict.
+   and its outcome is `PASS` or `PASS_WITH_NOTES`. If the last checkpoint
+   was any other scope — or the branch grew a commit after it — call
+   `loom-code:review` with scope `branch-end` now and come back with its
+   verdict.
+
+   One case does not need a second run: when the last wave-end checkpoint
+   ran at the commit that is still `HEAD^` and nothing has changed since,
+   there is no delta for a branch-end round to look at, and re-reviewing an
+   unchanged tree buys nothing. That round **is** the branch-end
+   checkpoint — the review station records `scope: branch-end` on it rather
+   than adding an empty round, and this precondition is met. Anything
+   committed after it, review.json aside, and the exemption is gone.
 2. **The blind-run report exists** at
    `docs/loom/<change-id>/blind-run-report.md`. Without it there is nothing
    to accept, and step 2 has no material.
@@ -130,10 +138,20 @@ with no prose after it:
 git commit --amend --no-edit --trailer "Learning: <one fact>"
 ```
 
-Amending is allowed **for this commit only**, and only for the message. The
-parent does not change, so `reviewed_sha` still equals `HEAD^` and step 1's
-fourth fact still holds. Amending anything else — a file, an earlier commit
-— invalidates the review and sends you back to `loom-code:review`.
+Amending is allowed **for this commit only**. Two things may change in it:
+the message (the trailers above) and `review.json` itself, to append the
+`questions[]` entries step 2 recorded. Nothing else — the parent does not
+move, the commit still touches only `review.json`, so `reviewed_sha` still
+equals `HEAD^` and step 1's fourth fact still holds, and the checker
+permits exactly this shape:
+
+```
+git add docs/loom/<change-id>/review.json
+git commit --amend --no-edit --trailer "Learning: <one fact>"
+```
+
+Amending any other file, or an earlier commit, invalidates the review and
+sends you back to `loom-code:review`.
 
 **Store entries**, when the lesson is durable rather than bound to this one
 commit: a file under `docs/loom/memory/`, one fact per file, in the format
@@ -182,7 +200,10 @@ the station that owns it:
 | `push.reviewed-sha` | the branch moved after the review | `loom-code:review` |
 | `push.review-schema` | `review.json` lost a declared key | `loom-code:review` |
 | `push.open-findings-closed` | a finding is neither resolved nor dismissed | `loom-code:build` for the fix, then `loom-code:review` |
-| `push.probes-package-tests` | the recorded test run does not reproduce | `loom-code:build` — the suite is red |
+| `push.probes-package-tests` | the recorded test run does not reproduce, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |
+| `push.probes-adversarial` | fewer than 3 usable adversarial probes for this change's artifact types, or one exited non-zero when the checker ran it | back to `loom-code:review`, dispatch an adversary |
+| `push.dispatch-covers-tasks` | a `Task:` trailer on this branch names a task no implementer entry claims | `loom-code:review` — the dispatch record lost a writer |
+| `push.second-vendor-honoured` | KICKOFF-DEFAULTS names a second vendor the round neither used nor recorded a `fallback` for | `loom-code:review` |
 | `push.verdicts-ge-2` | one reviewer is not a review | `loom-code:review` |
 | `push.reviewer-ne-implementer` | someone reviewed their own work | `loom-code:review` — dispatch an independent agent |
 | `push.dismissed-by-reviewer` | an implementer waved away a finding | `loom-code:review` |
@@ -209,10 +230,19 @@ tried, what happened, the evidence>
 
 ## Review
 Rounds: <n>. Reviewers: <agent ids and models from verdicts[]>.
-Vendors: <vendors[]>. Probes: <package tests, blind run, adversarial cases —
-kind and result, from probes[]>.
+Vendors: <vendors[]>, plus any `fallback` a round recorded.
 Findings: <n> raised, <n> resolved, <n> dismissed (each dismissal with its
 reason and the reviewer who made it).
+
+Probes — one line each, from `probes[]`, `<kind> — <command> — <result>`:
+<every probe, verbatim; the command is the point of the line, because a
+reader can re-type it, and a command that plainly runs nothing is visible
+here before it is visible in production>
+
+## Questions I asked you
+<every `questions[]` entry, verbatim: `<decision point> — <text>`. A reader
+who cannot recognise one of these as a question they could have answered
+has found a leak of agent judgement into the user's lap.>
 
 ## What this did to existing data
 <the report's fixed line>
@@ -327,8 +357,8 @@ verify the installed cache directory carries the new version number.
 |---|---|---|---|---|
 | capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass` | calls review with scope `spec` |
-| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end past 8 files or 400 lines; right after an `after-task` task; at most 5 per plan |
-| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed` | `branch-end` always runs |
-| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
-| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute` | before hand-off to write-plan |
+| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |

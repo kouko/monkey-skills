@@ -2,7 +2,7 @@
 name: review
 description: |
   Runs one checkpoint review of a change: at least two fresh-context reviewers, a blind run and an adversarial pass over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-plan for the spec lens, by build after a task or at the end of a wave, by ship at branch end, and whenever someone asks for a review of the change in progress.
-version: 0.1.0
+version: 1.0.0
 ---
 
 ## What this station does
@@ -133,6 +133,20 @@ non-interactively — for Codex:
 codex exec --sandbox read-only -o <out-file> "<the reviewer prompt above>" < /dev/null
 ```
 
+Before dispatching to that tool, check it is actually there:
+
+```
+command -v <cli> && <cli> --version
+```
+
+Both must succeed. A named CLI that is missing, or that fails its version
+probe, does **not** stop the checkpoint and is **not** a question for the
+user: run both legs here as two same-vendor fresh reviewers, record
+`vendors: ["anthropic"]`, and put `fallback: "<cli> missing at <date>"` on
+this round's verdicts. The checker reads that field
+(`push.second-vendor-honoured`) — without it, a vendor the user chose looks
+as if it were used.
+
 Record every vendor used in `vendors:`. If the line says `none`, or is
 absent, both legs run here and that is a complete review. **This station
 never suggests a second vendor**: that offer is made once per change by
@@ -188,6 +202,14 @@ Recipes and the probe shape are in `references/adversarial.md`. Whatever
 the adversary finds enters `findings` like any other finding; whatever it
 ran enters `probes[]` with `kind: adversarial` and this round's `scope`.
 
+Each such probe names, in `artifact`, the **committed file** the case now
+lives in, and its `command` runs that file. The checker re-runs each one
+itself at push and refuses a probe whose command never mentions its
+artifact, or is a shell builtin: `true` exits 0 without attacking
+anything, and three of those used to pass for a red team
+(`push.probes-adversarial`). A case that is not a file in the tree is not
+a regression eval — it is a claim.
+
 ## 5. Package tests
 
 Run the repo's own test command at `HEAD` and record it:
@@ -197,9 +219,15 @@ Run the repo's own test command at `HEAD` and record it:
 ```
 
 `build` supplies the command (a `package-tests:` line in
-`KICKOFF-DEFAULTS.md`, else detected from the repo). Your `result` is a
-record and nothing more: at push the checker runs the command itself in a
-clean tree and believes only the exit code it sees
+`KICKOFF-DEFAULTS.md`, else detected from the repo) and it is recorded
+byte for byte — the checker compares it against the repo's own command and
+refuses a substitute. When `build` reports that the repo has no suite at
+all, the `package-tests: none — <why>` line it wrote is the record; note
+the gap in this round's findings so it is visible rather than absent, and
+record no run.
+
+Your `result` is a record and nothing more: at push the checker runs the
+command itself in a clean tree and believes only the exit code it sees
 (`push.probes-package-tests`).
 
 ## 6. Merging the verdicts
@@ -232,6 +260,12 @@ Write `review.json` — verdicts, probes, findings and vendors of this round
 station wrote (`dispatch[]` from `build`, `questions[]` from a decision
 point), and never rewrite an earlier round:
 
+At the **first** checkpoint of a change, also copy the plan's
+`## Questions asked` section into `questions[]`, one entry each as
+`{decision_point, text, type}`. Those questions were asked at decision
+point ① before `review.json` existed, so the plan is where they were
+parked; leaving them there makes the flow look quieter than it was.
+
 ```
 git add docs/loom/<change-id>/review.json
 git commit -m "chore(loom): checkpoint review — <scope> <verdict>"
@@ -245,6 +279,15 @@ reviewed tree and the pushed tree are the same object
 (`push.review-only-head`, `push.reviewed-sha`, `push.review-schema`).
 On `NEEDS_REVISION`, `reviewed_sha` does not move at all.
 <!-- /gate -->
+
+**A wave-end round that is also the branch end.** When this checkpoint is
+the plan's last wave and nothing is committed after it, there is no delta
+left for a separate `branch-end` round to read, and reviewing an unchanged
+tree twice buys nothing. Record `scope: branch-end` on this round rather
+than adding an empty one — that is what `ship` step 1 looks for, and it
+still counts as one checkpoint, not two. If anything but `review.json` is
+committed afterwards, the exemption is gone and a real `branch-end` round
+is owed.
 
 A worked record:
 
@@ -314,8 +357,8 @@ they want, what they will see, or whether it is done.
 |---|---|---|---|---|
 | capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass` | calls this station with scope `spec` |
-| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end past 8 files or 400 lines; right after an `after-task` task; at most 5 per plan |
-| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed` | this station; `branch-end` always runs |
-| ship | diff | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests` | before push |
-| maintain | intent | agent (dedupe is mechanical) | `intent.schema` + `intent.needs-design-*` | before hand-off to write-plan |
+| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |

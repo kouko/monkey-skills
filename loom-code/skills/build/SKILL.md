@@ -2,7 +2,7 @@
 name: build
 description: |
   Turns a committed plan.md into commits — one fresh-context implementer per task under the engineering baseline, a dispatch record for every dispatch, and the wave-end computation that decides when the review station runs. Use when a plan exists and implementation is ready to start, and to resume a half-built plan.
-version: 0.1.0
+version: 1.0.0
 ---
 
 ## What this skill does
@@ -163,18 +163,34 @@ Reviewer, blind-runner and adversary entries are appended the same way by
 2. `DONE_WITH_CONCERNS` — same, and carry the concern into the wave's
    report so the checkpoint reviewers see it.
 3. `NEEDS_CONTEXT` — answer it if the answer is in the plan, the spec or
-   the code, and re-dispatch. If it is genuinely a user question, see the
-   blocked rule below.
+   the code, and re-dispatch. Anything else, see the blocked rule below.
 4. `BLOCKED` — mark the task `blocked(<reason>)` in `plan.md`, stop the
-   wave (do not start dependent tasks), and decide:
-   - **The answer is something only the user can give** — an unstated
-     preference, an outside credential, a decision about their own data:
-     stop and ask, in plain language, once.
-   - **Anything else** — decide it yourself, mark the decision
-     `agent-decided` with a one-line reason in the commit message, and
-     continue. A decision the user cannot check is not a decision to
-     interrupt them with (concept-model §4). It surfaces later, in the
-     blind-run report's "I decided for you" section.
+   wave (do not start dependent tasks), and **decide it yourself**. Build
+   has no stopping point of its own: the decision points were passed at
+   `write-plan`, and this station runs from there to the hand-off without
+   asking the user anything. The single exception is the Codex trust step
+   at `write-plan` step 0b, which is an authorisation, not a decision.
+
+   Mark the decision `agent-decided` with a one-line reason in the commit
+   message. Which decision to make is not free:
+   - A one-way door of class **(b) money or a standing obligation**,
+     **(c) a limit on what the user can do later**, or **(e) an
+     irreversible action on data they already have** — the classes named
+     in `write-plan`'s `references/one-way-door.md` — was never authorised
+     here, so take the option that costs nothing, is reversible, and
+     touches no existing data. Record it as
+     `agent-decided — 未經授權，取保守選項`.
+   - When no such option exists, the work stops there. Leave the item
+     undone, and list it in the blind-run report's "I decided for you"
+     section with the reason it could not be finished, so decision
+     point ③ sees it.
+   - Anything else: pick the option the plan's reasoning points at and
+     keep going.
+
+   Every one of these surfaces later, in that same report section. A
+   decision the user cannot check is not a decision to interrupt them with
+   (concept-model §4); one they could have checked and never saw is worse,
+   which is why the report lists them all.
 5. <!-- gate: build.after-task-review-before-next-task -->
    If the plan marks the task `review: after-task`, call
    `loom-code:review` **now**, with scope = that task, and wait for its
@@ -217,10 +233,22 @@ station, so the reviewers read a tree whose tests are known green:
 
 1. If `docs/loom/KICKOFF-DEFAULTS.md` carries a `package-tests:` line, that
    command is the command. No detection, no substitute.
-2. Otherwise detect it from the repo: `pytest` (a `pyproject.toml` or
-   `pytest.ini`), `npm test` (a `package.json` with a `test` script),
-   `cargo test` (a `Cargo.toml`), `go test ./...` (a `go.mod`). Say which
-   one you detected and why.
+2. Otherwise detect it from the repo, first marker wins:
+   `python3 -m pytest -q` (a `pyproject.toml` or `pytest.ini`), `npm test`
+   (a `package.json` with a `test` script), `cargo test` (a `Cargo.toml`),
+   `go test ./...` (a `go.mod`). Say which one you detected and why.
+3. No config file, but the tree carries `test_*.py` / `*_test.py` files →
+   `python3 -m pytest -q`. `*.test.js` files → `npx jest`.
+4. Nothing at all — do **not** ask the user, and do not invent a command
+   that exits 0. Write `- package-tests: none — <why>` into
+   `docs/loom/KICKOFF-DEFAULTS.md`, say so in the wave report, and the
+   review station records the gap on the checkpoint. The push gate reads
+   that same line and asks for no run; what it will not accept is silence.
+
+Whatever the source, the command that goes into the probe is the command
+above, byte for byte: `push.probes-package-tests` compares the recorded
+command against this repo's own and refuses anything else, because a
+command that exits 0 for another reason is not a test run.
 
 Run it from the integrated tree, and hand the command and its result to the
 review station — the probe entry in `review.json` is written there, and the
@@ -245,9 +273,9 @@ finding.
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
 | capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | N/A |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass` | N/A |
-| build | diff (commits, one `Task: <id>` trailer each) | agent-decided; a task that stops asks the user only when the answer is the user's own | none runs during build; `push.reviewer-ne-implementer` later reads the `dispatch[]` this station writes | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints per plan during build (fix rounds after NEEDS_REVISION not counted) |
-| review | review | ≥2 fresh-context reviewers | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed` | branch end always; after-task budget 2 tasks per plan, more with a reason line in the plan |
-| ship | diff | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests` | before push |
-| maintain | intent | agent (dedupe is mechanical); a new intent still needs decision point ① at write-plan | `intent.schema` + `intent.needs-design-*` on a new intent | before hand-off to write-plan |
+| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |

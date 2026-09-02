@@ -30,7 +30,7 @@ settles a disagreement, not what to read first.
 | architecture | Does the shape the change produces hold — responsibilities, dependency direction, boundaries | SOLID (Martin) |
 | correctness | Does it do what it claims, at the boundaries as well as the middle; is there RED→GREEN evidence in the history | the tests, run |
 | naming | Names say what the thing is; functions stay short — 20 lines soft, 50 hard, 100 is a finding on its own | Clean Code Ch.2–3 (Martin) |
-| tests | Every shipped behaviour has a test that failed first; F.I.R.S.T holds for the suite, not just the new file | Beck, *Test-Driven Development* (2002) |
+| tests | Every shipped behaviour has a test that failed first; F.I.R.S.T holds for the suite, not just the new file. Read `probes[]` too: each entry's `command` and `artifact`, not its `result` — a command that exits 0 without running the suite or the abuse case (a shell builtin, or one that never names its artifact) is a finding, not evidence | Beck, *Test-Driven Development* (2002) |
 | refactoring | Duplication and smells; Rule of Three — three sites doing the same thing is an extraction | Fowler, *Refactoring*; the Pragmatic Programmer's DRY |
 | cross-task-coherence | Only a whole-delta reviewer can see this: abstractions that disagree between tasks, logic duplicated because each task saw one slice, a task that quietly did more than its title | — |
 | external-surface-grounding | Every call into a surface the author does not own — HTTP API, SDK package, MCP tool, CLI flag, a sibling team's contract — carries a grounding citation. Missing on the first four is fatal; missing on a sibling contract is important; two tasks calling the same surface with conflicting shapes is important | — |

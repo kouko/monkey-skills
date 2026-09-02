@@ -15,5 +15,9 @@ spec: docs/loom/<change-id>/spec.md@<sha>     # 只在 needs-design: yes
 - 測：<先寫失敗的測試>
 - 風：<風險與預設選擇；agent-decided 標記>
 
+## Questions asked                        # 決策點 ①（與在此執行的 ②）問過的每一題
+<決策點編號> — <what|behaviour|done|consequence> — <原話>
+<!-- review 站在第一次 checkpoint 把這一段抄進 review.json 的 questions[] -->
+
 ## Risks
 1. <全 plan 風險>

@@ -126,3 +126,54 @@ def test_station_skill_carries_the_summary_table(station):
     assert len(header) >= len(REQUIRED_COLUMNS) + 1, (
         "the summary table needs a station column plus the four answer columns."
     )
+
+
+# --- the table is one text, not five drifting copies -----------------------
+
+SUMMARY_HEADING = "## Station summary"
+
+
+def summary_section(text: str) -> str | None:
+    """Everything under `## Station summary` up to the next `## ` heading."""
+    if SUMMARY_HEADING not in text:
+        return None
+    body = text.split(SUMMARY_HEADING, 1)[1]
+    for line in body.splitlines(keepends=True):
+        if line.startswith("## "):
+            body = body.split(line, 1)[0]
+            break
+    return body.strip("\n")
+
+
+def test_every_station_carries_the_same_summary_section():
+    """A cold reader handed any one station must read the same flow.
+
+    Five hand-maintained copies drifted the moment they were written — the
+    W1 checkpoint found the build row's checkpoint rule, the ship row's
+    checker list and the maintain row's rule names all saying different
+    things. The section is compared byte for byte, so a later edit to one
+    copy fails here rather than silently teaching four different flows.
+    """
+    sections = {}
+    for station in LOOM_CODE_STATIONS:
+        skill = REPO / "loom-code" / "skills" / station / "SKILL.md"
+        if not skill.is_file():
+            continue
+        section = summary_section(skill.read_text(encoding="utf-8"))
+        assert section, (
+            f"{skill.relative_to(REPO)} carries no `{SUMMARY_HEADING}` section."
+        )
+        sections[station] = section
+
+    assert len(sections) == len(LOOM_CODE_STATIONS), (
+        f"only {sorted(sections)} landed; the identity check needs all of "
+        f"{LOOM_CODE_STATIONS}."
+    )
+    reference_station = "review"
+    reference = sections[reference_station]
+    differing = [name for name, text in sections.items() if text != reference]
+    assert not differing, (
+        f"the `{SUMMARY_HEADING}` section differs from {reference_station}'s in: "
+        f"{', '.join(differing)}. It is one text; edit it in every station or "
+        "in none."
+    )

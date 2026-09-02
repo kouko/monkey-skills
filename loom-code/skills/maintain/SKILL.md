@@ -2,7 +2,7 @@
 name: maintain
 description: |
   Turns a failing CI run, production alert, bug report, regression, or dogfood incident into evidence on an existing open intent, or a new intent with originator maintenance-loop, and turns the incident into a permanent eval in mechanisms.yaml.
-version: 0.1.0
+version: 1.0.0
 ---
 
 ## What this skill does
@@ -86,9 +86,9 @@ Point the user (or the next automated pass) at `loom-code:write-plan` with the i
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
 | capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | N/A |
-| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass` | N/A |
-| build | diff | agent-decided | package-test run recorded as a probe | wave end when unreviewed delta > 8 files or 400 lines |
-| review | review | ≥2 fresh-context reviewers | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed` | branch end always; after-task ≤2 tasks per plan |
-| ship | diff | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests` | before push |
-| maintain | intent | agent (dedupe is mechanical); a new intent still needs decision point ① at write-plan | `intent.schema` + `intent.needs-design-*` on a new intent; `<!-- gate: maintain.dedupe -->` on a same-incident match | before hand-off to write-plan |
+| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |

@@ -37,6 +37,14 @@ dimension named below and the severity thresholds.
 | `principles` | principles-conformance |
 | `skill` | the five `docs` dimensions, plus user-judgment-leak |
 
+The `tests` dimension reads `review.json`'s `probes[]` as well as the test
+files: each entry's `command` and `artifact`, never its `result`. A probe
+whose command is a shell builtin (`true`, `:`), or that never names the
+artifact it claims to have run, exits 0 for reasons unrelated to the thing
+it stands for — score `tests` `NEEDS_REVISION` and raise a finding naming
+that probe. A recorded pass nobody can reproduce is the failure mode this
+dimension exists to catch.
+
 Score every dimension of your lens. A dimension with nothing to conform to
 — no `PRINCIPLES.md`, no `DESIGN.md` — scores `N/A` with the reason, which
 is not a pass. A dimension whose pass rests on evidence you did not run

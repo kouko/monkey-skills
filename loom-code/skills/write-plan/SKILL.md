@@ -7,6 +7,8 @@ version: 1.0.0
 
 ## What this station does
 
+Relative paths in this document are relative to this skill's own directory.
+
 You take one intent — a short document saying what the user wants and how
 they will know it is done — and produce `docs/loom/<change-id>/plan.md`: a
 graph of tasks, grouped into waves, each with its files, its one failing
@@ -36,6 +38,18 @@ plumbing, tooling, tests, docs. `<change-id>` is `<YYYY-MM-DD>-<slug>`,
 where the date is the day the work starts and the slug is the intent's
 title in kebab-case — for "six scripts share a git helper" started on
 2026-09-02, `2026-09-02-scripts-share-git-helper`.
+
+## Station summary
+
+| station | artifact | who decides | checker | checkpoint |
+|---|---|---|---|---|
+| capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
+| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
 ## What you will be asked, in plain words
 
@@ -207,8 +221,11 @@ twice.
    reviewer only counts if it is a non-interactive command-line tool from a
    **different model vendor than the host you are running on**: on Claude
    Code look for `codex` or `gemini`, on Codex look for `claude` or
-   `gemini` (`which codex gemini` / `which claude gemini`). Never suggest
-   the host itself. Include the suggestion only if
+   `gemini`. Detect it with `command -v <cli>` **and** a probe that it
+   runs — `<cli> --version` must exit 0. Never `which`: it reports shell
+   aliases and stale hashes, and suggesting a tool that turns out not to
+   run costs the user a question for nothing. Never suggest the host
+   itself. Include the suggestion only if
    `docs/loom/KICKOFF-DEFAULTS.md` has no `second-vendor:` line and such a
    tool is present. Say it in one plain sentence with the number in it:
    reviewing with a second vendor costs a few minutes and some quota, and
@@ -232,9 +249,29 @@ the list before sending:
 - a one-way door in consequence form.
 
 A question that fits none of them is a question the user cannot answer.
+The test is concrete: **if the user would have to read code to answer it,
+it is not a decision-point question** — decide it yourself and mark it
+`agent-decided`. Three that fail the test, and what to do instead:
+
+| Not a question for the user | Why | Instead |
+|---|---|---|
+| "Should the parser be recursive or table-driven?" | They would have to read the grammar and the call sites to have an opinion | Pick the one the existing code already uses; note the reason on the task |
+| "Should this live in `auth/` or a new `session/` module?" | A module boundary is only visible from inside the code | Follow the repo's existing boundaries; note it |
+| "Should the new tests use pytest fixtures or a helper class?" | The answer is whatever the suite already does | Read one existing test and match it |
+
 The review station has a dimension for exactly this, `user-judgment-leak`,
 and it returns NEEDS_REVISION when it finds one. Ask nothing about spec
 quality, task splitting, or review verdicts.
+
+**Write down every question you asked.** Keep a running list from this
+point — every question put to the user at ①, and at ② if you run it here —
+as `{decision_point, text, type}` with `type` one of `what` / `behaviour` /
+`done` / `consequence`. It goes into the plan's `## Questions asked`
+section at step 5, and the review station copies it from there into
+`questions[]` in `review.json` at the first checkpoint, because that file
+does not exist yet while you are asking. The §11 measurement of how often
+loom interrupts the user reads exactly this list; a question asked and not
+recorded makes the flow look quieter than it is.
 
 **On "yes":**
 
@@ -309,17 +346,21 @@ ___" — and nothing from `## Design decision` down, ever. On "yes", write
 `confirmed-behavior: <date>` into the spec frontmatter. On a correction,
 rewrite and present again. Engineering changes skip this entirely.
 
-Then let the checker confirm all of it:
+### The intake check — both branches, every time
+
+Whichever branch above you took, `no` included, run this before writing a
+plan:
 
 ```
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py intake write-plan <change-id>
 ```
 
 Fix and re-run until it exits 0. It checks `intake.confirmed`,
-`intake.spec-pass` and `intake.confirmed-behavior` — the three ways a plan
-can be started too early. When `needs-design: no` there is no spec, and
-the last two rules have nothing to check and pass; only `intake.confirmed`
-can block.
+`intake.spec-pass`, `intake.confirmed-behavior` and
+`intake.after-task-budget` — the ways a plan can be started too early or
+mark more checkpoints than it justifies. When `needs-design: no` there is
+no spec, and the spec rules have nothing to check and pass; only
+`intake.confirmed` and the budget rule can block.
 
 ## Step 5 — Write the plan
 
@@ -339,9 +380,13 @@ a task by how long it will take.
 - Group tasks into **waves**. The hard limit is on reviews, not waves:
   **at most 5 checkpoints during build**, counting wave-end checkpoints and
   after-task ones together, with the fix rounds after a NEEDS_REVISION not
-  counted. Derive the wave count from that budget; as a rough guide that
-  leaves about five waves, and needing more usually means the change is too
-  big — say so rather than nesting further.
+  counted. The branch-end checkpoint is **not** one of the five — it always
+  runs, on top. And when the last wave-end checkpoint ran at what is still
+  `HEAD` and nothing changed after it, that round doubles as the branch-end
+  one: it records `scope: branch-end` rather than a second, empty review.
+  Derive the wave count from that budget; as a rough guide that leaves
+  about five waves, and needing more usually means the change is too big —
+  say so rather than nesting further.
 - Task ids are `W<n>-<nn>` and are **stable**: once written, an id is never
   renumbered, because commits refer to it in their `Task: <id>` trailer.
 - Dependencies go on the task line as `after: <ids>`. Tasks in one wave
@@ -352,14 +397,20 @@ a task by how long it will take.
   first**, and **its risk**.
 - `review: after-task` marks a task that gets its own review immediately
   after its commit. Budget **2 per plan**; more is allowed, and each extra
-  one carries a one-line reason on that task. A wave holding one still ends
-  with its own wave-end checkpoint, and both count against the 5.
+  one carries `— <reason>` on that task line — `intake.after-task-budget`
+  reads that line and blocks a third marker without one. A wave holding
+  one still ends with its own wave-end checkpoint, and both count against
+  the 5.
 
 **Sections.**
 
 - When `needs-design: no`, the plan opens with **Current State Evidence** —
   Forward, Reverse, Error, Data, Boundary, each with a path and an anchor.
   With a spec, that section lives there instead and the plan cites the spec.
+- A **Questions asked** section carrying the list you kept from step 3 —
+  one line per question, `<decision point> — <type> — <text>`. The review
+  station reads this section at the first checkpoint and copies it into
+  `questions[]`.
 - A closing **Risks** section for risks that span the whole plan. When
   there is no spec, this section is also where the answers to one-way-door
   questions live: one `user-decided — <what they chose and why>` line each,
@@ -382,6 +433,19 @@ option`. Choosing a committing option unasked is never allowed, however
 obvious it looks.
 
 ## Step 6 — Commit and hand off
+
+**Branch first, if you are still on the trunk.** `git branch --show-current`
+naming the trunk means the plan would land there, and every later
+checkpoint measures its delta from the branch base — which would then be
+the plan commit itself:
+
+```
+git switch -c <change-id>
+```
+
+The intent may already be committed on the trunk; that is fine and nothing
+needs moving. It is the plan and everything after it that belongs on the
+branch.
 
 Commit the plan with the message `docs(loom): plan <change-id>`. Then hand
 the change to the build station — `loom-code:build` — which dispatches one
