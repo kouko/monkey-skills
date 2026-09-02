@@ -92,6 +92,7 @@ verdicts[]           # 每個 reviewer 一份：{reviewer, vendor, model, lens, 
 vendors[]            # 本次 checkpoint 用到的 vendor 清單（記錄，不是條件）
 probes[]             # 實際跑過的 probe／測試／盲跑：{kind, command, sha, result, artifact}；sha == reviewed_sha
 open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> | dismissed: <reason> by <who>}
+dispatch[]           # build／review 站每次派工一筆：{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}；push 規則 reviewer≠implementer 與 dismissed 身分讀這裡
 ```
 
 寫 review.json 的 commit（review-only）只動這一個檔。push 時 HEAD 是 review-only commit 且 `reviewed_sha == HEAD^`。amend 或新增 code commit 後重跑 checkpoint。
@@ -109,7 +110,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 | **reference** | 建議性規則，不是 skill | 1 | engineering-baseline＝tdd-iron-law ＋ systematic-debugging |
 | **action** | 站內可執行步驟，不是 skill，不計 | — | package 測試、UI 盲跑、平行派工、worktree |
 
-36 → 18。名詞 ≤ 40（計數規則：artifact 名、站／工具／action 名、frontmatter 欄位名、狀態物件名；不數段落標題、欄位子值、型別列舉值、git 詞、alias）。
+36 → 18。名詞 ≤ 40（計數規則：artifact 名、站／工具／action 名、frontmatter 與 JSON 頂層欄位名、狀態物件名；standalone 工具不計；不數段落標題、欄位子值、型別列舉值、git 詞、alias）。
 
 ## 4. 入口、路由、人類決策點
 
@@ -199,7 +200,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 新增任何機制必須**同時**：(1) 有 regression eval（程式＝測試；閘門＝攻擊案例；散文規則＝冷讀 dogfood，排程 eval suite）；(2) 淨數不增，做不到寫明示 budget 例外進 CHANGELOG。決定性只是形式要求。不再新增散文閘：事故 → memory → eval → 才考慮 hook。
 
-**機制母體**：`docs/loom/evidence/mechanisms.yaml`（repo 級常駐證據）列出每個機制，各帶 `eval:` 指向其回歸案例。每類都有可重算面：skill＝`skills/*/SKILL.md` 目錄；checker 規則＝checker 以 `--list-rules` 輸出的 rule id 表（checker 必須提供此輸出）；hook＝hooks.json 條目；action／schema 欄位＝contract package 的宣告檔 `loom-code/contract/manifest.yaml`（列 actions、artifact schema 欄位、station 名，機器可讀，版本戳在檔內）；**散文閘＝SKILL.md／reference 內以 `<!-- gate: <id> -->` 標記的段落**——沒有標記的散文不算閘，也就不得當閘用（審查維度 user-judgment-leak／omission 抓未標記的閘）。CI 重算五類清單與 mechanisms.yaml 比對：清單有而 yaml 無→紅（漏登）；**yaml 有而清單無→紅（殘留條目墊高基線）**；淨數增加且 CHANGELOG 該版條目無 `budget-exception: <mechanism-id> — <reason>` 行→紅；有機制無 `eval:`→紅。
+**機制母體**：`docs/loom/evidence/mechanisms.yaml`（repo 級常駐證據）列出每個機制，各帶 `eval:` 指向其回歸案例。每類都有可重算面：skill＝`skills/*/SKILL.md` 目錄；checker 規則＝checker 以 `--list-rules` 輸出的 rule id 表（checker 必須提供此輸出）；hook＝hooks.json 條目；action／schema 欄位＝contract package 的宣告檔 `loom-code/contract/manifest.yaml`（列 actions、artifact schema **逐欄位**（`artifact:<name>.<field>`）、station 名，機器可讀，版本戳在檔內）；**散文閘＝SKILL.md／reference 內以 `<!-- gate: <id> -->` 標記的段落**——沒有標記的散文不算閘，也就不得當閘用（審查維度 user-judgment-leak／omission 抓未標記的閘）。CI 重算五類清單與 mechanisms.yaml 比對：清單有而 yaml 無→紅（漏登）；**yaml 有而清單無→紅（殘留條目墊高基線）**；淨數增加且 CHANGELOG 該版條目無 `budget-exception: <mechanism-id> — <reason>` 行→紅；有機制無 `eval:`→紅。
 
 **量測**（CI 或排程算）：機制淨數（上述）、skill 數、artifact 種類數、session-start 注入字數（超 main 基線且無例外→紅；session-start 基線＝本 change 合併前 main 的固定 SHA（落地時寫進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`），計數命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo）；`needs-design: yes` intent 數、逾期未確認 intent 數、**每 change 的決策點數與岔路提問數**（只記錄，不是配額；連續上升＝違背 §0）。名詞數手數。
 

@@ -16,8 +16,8 @@ Record a **distilled practice, habit, process, or recurring gotcha** —
 something learned the hard way that should change how future work in
 this repo is done. Do NOT record here:
 
-- An open item, debt, or re-trigger condition — that belongs in
-  `docs/loom/backlog/` (its own charter defines the entry format).
+- An open item, debt, or re-trigger condition — that is an intent
+  (`docs/loom/intent/<change-id>.md`, `status: open`), not a memory.
 - A decision bound to a single commit — that belongs in the commit's
   own memory trailer (`Decision:` / `Learning:` / `Gotcha:`), not here.
 - A one-off event artifact (a spec, a plan, an audit) — those live
