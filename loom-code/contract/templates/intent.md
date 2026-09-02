@@ -25,4 +25,4 @@ status: open                 # open | confirmed <date> | withdrawn — <reason>�
 - <…>
 
 ## Open questions
-- <…>
+- <…>                     # 沒有就寫 `- none`：這一段必填，空的會被 intent.schema 擋

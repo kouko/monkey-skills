@@ -422,3 +422,138 @@ def test_the_flag_still_wins_over_head(tmp_path: Path) -> None:
     )
     result = run_checker("intent", str(intent), "--commit-msg", str(message), cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+# --- branch_base: the trunk itself is not a base (W2 adversary P13) --------
+
+
+def test_working_on_the_trunk_fails_closed(tmp_path: Path) -> None:
+    """On `main` with no remote, `merge-base HEAD main` IS HEAD, so every
+    diff-recomputing rule would see an empty diff and pass a claim it never
+    tested. That is the one thing branch_base() exists to prevent."""
+    repo = make_repo(tmp_path, branch=None)
+    commit_file(repo, "src/cli/main.py")
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 2
+    assert "git switch -c" in result.stderr
+
+
+def test_a_local_trunk_is_still_a_base_from_a_branch(tmp_path: Path) -> None:
+    """The remote-less repo is the common case; only being ON the trunk is
+    fatal. `main` alone still resolves the base from a feature branch."""
+    repo = make_repo(tmp_path, branch="work")
+    commit_file(repo, "src/cli/main.py")
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-recompute" in blocked_rules(result)
+
+
+# --- intent.kind-recompute (W2 adversary P05) ------------------------------
+
+
+def test_engineering_kind_over_an_interface_diff_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_file(repo, "src/cli/add.py")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="engineering",
+        needs_design="yes — the CLI grows a flag",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.kind-recompute" in blocked_rules(result)
+    assert "src/cli/add.py" in result.stderr
+
+
+def test_product_kind_over_an_interface_diff_is_fine(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_file(repo, "src/cli/add.py")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="product",
+        needs_design="yes — the CLI grows a flag",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.kind-recompute" not in blocked_rules(result)
+
+
+def test_engineering_kind_off_every_interface_surface_is_fine(tmp_path: Path) -> None:
+    """`needs-design: yes` for reason (b) -- many states, no spec -- is a
+    legitimate engineering combination (concept-model §2b, §4); only the
+    diff makes it a user surface."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, "src/store/index.py")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="engineering",
+        needs_design="yes — many states, no spec exists",
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+# --- intent.product-no-identifiers: the F3 false positives ------------------
+
+
+def test_a_consumer_product_name_is_not_an_identifier(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    for name in ("iPhone", "iPad", "iOS", "macOS", "eBay", "iCloud", "iMac", "tvOS",
+                 "watchOS", "iPadOS"):
+        intent = write_intent(
+            repo / "docs/loom/intent/a.md",
+            kind="product",
+            problem=f"People on {name} cannot see what is due and miss things.",
+        )
+        result = run_checker("intent", str(intent), cwd=repo)
+        assert "intent.product-no-identifiers" not in blocked_rules(result), name
+
+
+def test_a_date_like_fraction_is_not_a_path(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    for fraction in ("9/10", "12/31", "9/10/26", "12/31/2026"):
+        intent = write_intent(
+            repo / "docs/loom/intent/a.md",
+            kind="product",
+            problem=f"On {fraction} the list still showed yesterday, so people gave up.",
+        )
+        result = run_checker("intent", str(intent), cwd=repo)
+        assert "intent.product-no-identifiers" not in blocked_rules(result), fraction
+
+
+def test_a_real_camel_case_identifier_is_still_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="product",
+        problem="The saveDraft path loses what people typed.",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.product-no-identifiers" in blocked_rules(result)
+
+
+def test_a_real_path_is_still_blocked_next_to_an_allowlisted_name(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="product",
+        problem="On iPhone the list is empty because src/app/x.py drops the rows.",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.product-no-identifiers" in blocked_rules(result)
+    assert "src/app/x.py" in result.stderr
+
+
+def test_a_none_placeholder_satisfies_a_required_section(tmp_path: Path) -> None:
+    """`## Open questions` is required and checked for emptiness, so the
+    template tells the author to write `- none` when there are none. That
+    string has to actually pass."""
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/a.md")
+    text = intent.read_text(encoding="utf-8").replace("- None yet.", "- none")
+    intent.write_text(text, encoding="utf-8")
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr

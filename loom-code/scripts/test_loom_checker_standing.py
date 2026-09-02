@@ -213,7 +213,9 @@ def test_a_lowercase_non_negotiables_heading_still_counts(tmp_path: Path) -> Non
     repo, intent = make_repo(tmp_path, kind="product")
     add_principles(
         repo,
-        non_negotiables="\n## non-negotiables\n1. One.\n2. Two.\n3. Three.\n",
+        non_negotiables="\n## non-negotiables\n1. Saving works with the network off.\n"
+                        "2. Never require a sign-up.\n"
+                        "3. One plain-text file holds everything.\n",
     )
     assert run_checker("standing", str(intent), cwd=repo).returncode == 0
 
@@ -269,3 +271,48 @@ def test_a_missing_intent_path_exits_2(tmp_path: Path) -> None:
     repo, _ = make_repo(tmp_path)
     result = run_checker("standing", str(repo / "docs/loom/intent/none.md"), cwd=repo)
     assert result.returncode == 2
+
+
+# --- standing.product-principles-reject: substance (W2 adversary P04) ------
+
+
+def test_three_identical_non_negotiables_are_not_three(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(
+        repo,
+        non_negotiables="\n## Non-negotiables (ordered)\n"
+        "- it must be fast\n- it must be fast\n- it must be fast\n",
+    )
+    result = run_checker("standing", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "standing.product-principles-reject" in blocked_rules(result)
+
+
+def test_items_differing_only_in_case_and_punctuation_are_not_distinct(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(
+        repo,
+        non_negotiables="\n## Non-negotiables (ordered)\n"
+        "- It must be fast.\n- it must be fast\n- IT MUST BE FAST!\n",
+    )
+    result = run_checker("standing", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "standing.product-principles-reject" in blocked_rules(result)
+
+
+def test_one_word_slogans_do_not_count_as_non_negotiables(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(
+        repo,
+        non_negotiables="\n## Non-negotiables (ordered)\n- x\n- y\n- z\n",
+    )
+    result = run_checker("standing", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "standing.product-principles-reject" in blocked_rules(result)
+
+
+def test_three_distinct_substantive_non_negotiables_ratify(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(repo)
+    add_design(repo)
+    assert run_checker("standing", str(intent), cwd=repo).returncode == 0

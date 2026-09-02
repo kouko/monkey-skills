@@ -26,6 +26,7 @@ package this checker ships with.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -77,6 +78,10 @@ RULES: list[tuple[str, str]] = [
     (
         "intake.spec-pass",
         "write-plan accepts a needs-design: yes change only when the latest spec review round is all PASS or PASS_WITH_NOTES.",
+    ),
+    (
+        "intent.kind-recompute",
+        "kind: engineering is rejected when the diff touches a declared interface-surface glob.",
     ),
     (
         "intent.needs-design-reason",
@@ -140,6 +145,16 @@ RULES: list[tuple[str, str]] = [
     (
         "push.verdicts-ge-2",
         "The latest review round carries at least two distinct fresh-context reviewers.",
+    ),
+    (
+        "spec.req-grammar",
+        "Every Requirements entry reads `REQ-<n> — <name>` with n contiguous from 1, "
+        "unique, and points at an Acceptance number the intent actually carries.",
+    ),
+    (
+        "spec.ui-flows-recompute",
+        "A spec may not answer `N/A` under UI flows while the diff touches a declared "
+        "interface-surface glob.",
     ),
     (
         "standing.product-principles-reject",
@@ -336,18 +351,53 @@ def glob_to_regex(pattern: str) -> re.Pattern[str]:
 
 TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master", "@{upstream}")
 
+# The branch names loom treats as the trunk; standing on one is the P13 hole.
+TRUNK_BRANCH_NAMES = frozenset({"main", "master"})
+
+
+ON_A_BRANCH = (
+    "work on a branch: `git switch -c <change-id>`, then re-run -- "
+    "loom recomputes every claim from the branch's diff."
+)
+
 
 def branch_base(repo: Path) -> str:
-    """The commit this branch grew from. An unresolvable base is fatal:
-    the alternative -- diffing against nothing and seeing no changes --
-    turns every diff-recomputing rule into a silent pass."""
+    """The commit this branch grew from. Two ways this can go wrong, and
+    both are fatal, because the alternative -- diffing against nothing and
+    seeing no changes -- turns every diff-recomputing rule into a silent
+    pass:
+
+    * no trunk resolves at all; and
+    * the trunk resolves TO HEAD, which is what a repo with no remote looks
+      like while the work is happening on `main` itself (W2 adversary P13).
+      `merge-base HEAD main` is then HEAD, the diff is empty, and a
+      `needs-design: no` claim passes without ever being tested.
+    """
+    head = git_maybe(repo, "rev-parse", "HEAD")
+    current = git_maybe(repo, "rev-parse", "--abbrev-ref", "HEAD") or ""
+    # A branch that has not committed yet also has base == HEAD, and that is
+    # fine: the working tree and the untracked files are still in the diff,
+    # and the first commit moves HEAD off the base. What is fatal is being ON
+    # the trunk, where nothing will ever move.
+    on_trunk = current in TRUNK_BRANCH_NAMES
+    detached_at_the_base = current == "HEAD"
     for candidate in TRUNK_CANDIDATES:
         merge_base = git_maybe(repo, "merge-base", "HEAD", candidate)
-        if merge_base:
-            return merge_base
+        if not merge_base:
+            continue
+        if on_trunk or (detached_at_the_base and head and merge_base == head):
+            where = f"the trunk branch {current!r}" if on_trunk else "the trunk commit"
+            raise UsageError(
+                f"HEAD is {where} in {repo} (merge-base HEAD {candidate} "
+                f"resolves against it), so the branch diff is empty and every "
+                f"recomputed rule would pass a claim it never tested; "
+                f"{ON_A_BRANCH}"
+            )
+        return merge_base
     raise UsageError(
         "no branch base resolves in "
-        f"{repo} (tried {', '.join(TRUNK_CANDIDATES)}); the diff cannot be recomputed."
+        f"{repo} (tried {', '.join(TRUNK_CANDIDATES)}); the diff cannot be "
+        f"recomputed; {ON_A_BRANCH}"
     )
 
 
@@ -397,8 +447,13 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     reason_failures, needs_design = check_needs_design_reason(front, commit_msg, repo)
     failures += reason_failures
 
-    if needs_design == "no":
-        failures += check_needs_design_recompute(repo, manifest, out)
+    kind = front.get("kind", "").strip()
+    if needs_design == "no" or kind == "engineering":
+        touched = touched_interface_surfaces(repo, manifest, out)
+        if needs_design == "no":
+            failures += check_needs_design_recompute(touched)
+        if kind == "engineering":
+            failures += check_kind_recompute(touched)
 
     return report(failures, err)
 
@@ -440,12 +495,29 @@ IDENTIFIER_PATTERNS = [
 ]
 
 
+# Two things a person with the problem writes that the patterns above read
+# as code, and that no amount of plain-English discipline removes: the name
+# of the device they use, and a date written with slashes. They are masked
+# out (replaced by spaces, so every other match keeps its offsets) before
+# the patterns run; everything else still counts.
+CONSUMER_PRODUCT_NAMES = re.compile(
+    r"\b(?:iPhone|iPadOS|iPad|iOS|macOS|eBay|iCloud|iMac|tvOS|watchOS)\b"
+)
+DATE_LIKE_FRACTION = re.compile(r"\b\d{1,2}/\d{1,2}(?:/\d{2,4})?\b")
+
+
+def mask_allowed_tokens(problem: str) -> str:
+    for pattern in (CONSUMER_PRODUCT_NAMES, DATE_LIKE_FRACTION):
+        problem = pattern.sub(lambda match: " " * len(match.group(0)), problem)
+    return problem
+
+
 def check_product_no_identifiers(front, sections) -> list[tuple[str, str]]:
     """A product Problem is written for the person with the problem: it may
     not name the code that will change (concept-model §2b)."""
     if front.get("kind", "").strip() != "product":
         return []
-    problem = sections.get("Problem", "")
+    problem = mask_allowed_tokens(sections.get("Problem", ""))
     failures = []
     for pattern, what in IDENTIFIER_PATTERNS:
         match = pattern.search(problem)
@@ -503,16 +575,23 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path):
     return [], verdict
 
 
-def check_needs_design_recompute(repo: Path, manifest, out) -> list[tuple[str, str]]:
-    """`needs-design: no` is a claim; the diff is the fact."""
+def touched_interface_surfaces(repo: Path, manifest, out) -> list[str]:
+    """The changed paths that land on a declared interface surface, and a
+    printed line saying which globs were used -- the answer to "why did it
+    say that" is never a mystery. Both `intent.needs-design-recompute` and
+    `intent.kind-recompute` read this one recomputation."""
     globs, source = interface_surfaces(repo, manifest)
     out.write(f"interface-surfaces ({source}): {', '.join(globs)}\n")
     matchers = [glob_to_regex(pattern) for pattern in globs]
-    touched = sorted(
+    return sorted(
         path
         for path in changed_paths(repo)
         if any(matcher.match(path) for matcher in matchers)
     )
+
+
+def check_needs_design_recompute(touched: list[str]) -> list[tuple[str, str]]:
+    """`needs-design: no` is a claim; the diff is the fact."""
     if not touched:
         return []
     return [
@@ -520,6 +599,34 @@ def check_needs_design_recompute(repo: Path, manifest, out) -> list[tuple[str, s
             "intent.needs-design-recompute",
             "`needs-design: no` but the diff touches a declared interface "
             f"surface: {', '.join(touched[:5])}.",
+        )
+    ]
+
+
+def check_kind_recompute(touched: list[str]) -> list[tuple[str, str]]:
+    """`kind:` is a claim too, and it is the one that switches off all three
+    product rules at once -- the PRINCIPLES.md rejection, the plain-words
+    Problem, and decision point (2) (W2 adversary P05). `needs-design` is
+    already recomputed against the interface globs; the same recomputation
+    answers `kind:`, so an `engineering` label over a diff that edits what
+    the user reads or types is refused.
+
+    Note what is NOT here: a declared `needs-design: yes` on its own does not
+    make a change product. Reason (b) of concept-model §2b -- many states or
+    objects and no spec -- is a legitimate engineering reason to write a
+    spec, and §4 gives engineering a needs-design: yes path that simply
+    skips decision point (2). Only the diff says "user surface"."""
+    if not touched:
+        return []
+    return [
+        (
+            "intent.kind-recompute",
+            "`kind: engineering` but the diff touches a user surface: "
+            f"{', '.join(touched[:5])}. Either `kind: product` (which brings "
+            "the ratified PRINCIPLES.md, the plain-words Problem and decision "
+            "point 2 with it), or keep the change off the declared interface "
+            "surfaces -- docs/loom/KICKOFF-DEFAULTS.md `interface-surfaces` "
+            "can only ADD globs, never remove one.",
         )
     ]
 
@@ -555,7 +662,7 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             [("intake.confirmed", f"no intent file at {intent_path.relative_to(repo)}.")],
             err,
         )
-    front, _sections = parse_document(read_text(intent_path))
+    front, sections = parse_document(read_text(intent_path))
 
     status = front.get("status", "").strip()
     if not CONFIRMED.fullmatch(status):
@@ -572,12 +679,174 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
     failures: list[tuple[str, str]] = []
     failures += check_after_task_budget(manifest, repo, change_id)
+
+    kind = front.get("kind", "").strip()
     needs_design = front.get("needs-design", "").strip().split()[:1]
-    if station == "write-plan" and needs_design[:1] == ["yes"]:
-        failures += check_spec_pass(manifest, repo, change_id)
-        if front.get("kind", "").strip() == "product":
-            failures += check_confirmed_behavior(manifest, repo, change_id)
+    yes_at_write_plan = station == "write-plan" and needs_design == ["yes"]
+
+    touched: list[str] = []
+    if kind == "engineering" or yes_at_write_plan:
+        touched = touched_interface_surfaces(repo, manifest, out)
+    if kind == "engineering":
+        failures += check_kind_recompute(touched)
+
+    failures += check_req_grammar(manifest, repo, change_id, sections)
+
+    if yes_at_write_plan:
+        failures += check_spec_pass(manifest, repo, change_id, err)
+        failures += check_ui_flows_recompute(manifest, repo, change_id, touched)
+        if kind == "product":
+            failures += check_confirmed_behavior(manifest, repo, change_id, err)
     return report(failures, err)
+
+
+# --- spec body grammar (W2 adversaries P03, P06) ---------------------------
+
+REQ_LINE = re.compile(r"^\s*(?:[-*+]\s+)?REQ-(\d+)\s*(?:—|–|--)\s*(\S.*)$")
+ACCEPTANCE_POINTER = re.compile(r"(?:→|->)\s*Acceptance\s*#(\d+)")
+
+
+def acceptance_count(intent_sections: dict[str, str]) -> int:
+    """How many things the user said "done means this" about."""
+    body = intent_sections.get("Acceptance", "")
+    return sum(1 for line in body.splitlines() if LIST_ITEM.match(line))
+
+
+def check_req_grammar(manifest, repo: Path, change_id: str, intent_sections):
+    """The Requirements grammar the contract manifest declares, recomputed.
+
+    `REQ-<n> — <name>` ids are what a plan task, a finding and a blind-run
+    line all point at, so a skipped number, a reused one, or a requirement
+    that answers to no Acceptance line breaks addressability everywhere
+    downstream (W2 adversary P03). The manifest declared the grammar from
+    the start; until now nothing read it."""
+    spec_path = artifact_path(manifest, "spec", change_id, repo)
+    if not spec_path.is_file():
+        return []  # a missing spec is intake.spec-pass's business, not this rule
+    _front, sections = parse_document(read_text(spec_path))
+    if "Requirements" not in sections:
+        return []  # already reported as a schema gap by the spec's own review
+    body = sections["Requirements"]
+
+    entries: list[tuple[int, str, str]] = []   # (number, name, block text)
+    current: list[str] = []
+    for line in body.splitlines():
+        match = REQ_LINE.match(line)
+        if match:
+            entries.append((int(match.group(1)), match.group(2).strip(), ""))
+            current = []
+        elif entries:
+            current.append(line)
+        if entries:
+            number, name, _ = entries[-1]
+            entries[-1] = (number, name, "\n".join(current))
+
+    if not entries:
+        return [
+            (
+                "spec.req-grammar",
+                f"{spec_path.relative_to(repo)} has a `## Requirements` section "
+                "with no `REQ-<n> — <name>` line in it; the ids are what plan "
+                "tasks, findings and the blind-run report point at.",
+            )
+        ]
+
+    failures = []
+    seen: set[int] = set()
+    for position, (number, _name, _block) in enumerate(entries, start=1):
+        if number in seen:
+            failures.append(
+                (
+                    "spec.req-grammar",
+                    f"REQ-{number} appears twice; every requirement id is used "
+                    "once, so a finding against one of them is unambiguous.",
+                )
+            )
+        elif number != position:
+            failures.append(
+                (
+                    "spec.req-grammar",
+                    f"REQ-{number} is the {position}th requirement; the ids run "
+                    f"contiguously from 1, so this one has to be REQ-{position}.",
+                )
+            )
+        seen.add(number)
+
+    total = acceptance_count(intent_sections)
+    for number, name, block in entries:
+        pointers = [int(value) for value in ACCEPTANCE_POINTER.findall(name + "\n" + block)]
+        if not pointers:
+            failures.append(
+                (
+                    "spec.req-grammar",
+                    f"REQ-{number} carries no `→ Acceptance #<n>`; a requirement "
+                    "that answers to no acceptance line is not something the "
+                    "user asked for.",
+                )
+            )
+            continue
+        for pointer in pointers:
+            if not 1 <= pointer <= total:
+                failures.append(
+                    (
+                        "spec.req-grammar",
+                        f"REQ-{number} points at Acceptance #{pointer}, but the "
+                        f"intent carries {total} acceptance line(s).",
+                    )
+                )
+    return failures
+
+
+def check_ui_flows_recompute(manifest, repo: Path, change_id: str, touched: list[str]):
+    """`## UI flows: N/A` is a claim; the diff is the fact.
+
+    `intent.needs-design-recompute` only ever ran on the `no` branch, so a
+    `needs-design: yes` change could answer "no interface" in its spec while
+    editing the CLI and a `.tsx` file, leaving decision point (2) with
+    nothing to read back (W2 adversary P06)."""
+    if not touched:
+        return []
+    spec_path = artifact_path(manifest, "spec", change_id, repo)
+    if not spec_path.is_file():
+        return []  # intake.spec-pass reports the missing spec
+    _front, sections = parse_document(read_text(spec_path))
+    body = _squeeze(sections.get("UI flows", ""))
+    if not re.match(r"(?i)^n/?a\b", body):
+        return []
+    return [
+        (
+            "spec.ui-flows-recompute",
+            f"{spec_path.relative_to(repo)} answers `{body[:40]}` under "
+            "`## UI flows` while the diff touches a declared interface "
+            f"surface: {', '.join(touched[:5])}. Write the operations and what "
+            "the user sees back; that section IS decision point 2.",
+        )
+    ]
+
+
+# --- spec freshness (W2 adversaries P02, P09) ------------------------------
+
+CONFIRMED_BEHAVIOR_GRAMMAR = re.compile(
+    r"^(\d{4}-\d{2}-\d{2})(?:\s+@([0-9a-f]{7,40}))?$"
+)
+CONFIRMED_BEHAVIOR_LINE = re.compile(rb"^confirmed-behavior:.*\n?", re.MULTILINE)
+
+# The one tolerance in this file, and it has an end date: records written
+# before `spec_sha` / `@<sha>` existed cannot prove freshness, so they WARN
+# instead of blocking. W4 removes the fallback; until then the WARN names
+# exactly what was not checked.
+LEGACY_UNTIL = "W4"
+
+
+def blob_sha(data: bytes) -> str:
+    """`git hash-object` without shelling out -- the same value git stores."""
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+
+
+def sha_agrees(recorded: str, current: str) -> bool:
+    """Either abbreviation is a prefix of the other; git shortens freely."""
+    recorded, current = recorded.strip().lower(), current.strip().lower()
+    return bool(recorded) and (current.startswith(recorded) or recorded.startswith(current))
 
 
 AFTER_TASK_FREE = 2
@@ -679,7 +948,7 @@ def is_spec_adversarial_probe(probe) -> bool:
     return str(probe.get("scope", "")).strip().lower().startswith("spec")
 
 
-def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> list[tuple[str, str]]:
     """write-plan accepts a needs-design: yes change only after the spec's
     own review round passed (concept-model §5, §7)."""
     spec_path = artifact_path(manifest, "spec", change_id, repo)
@@ -731,22 +1000,143 @@ def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str
                 "say the spec was what it attacked.",
             )
         ]
+    return check_spec_freshness(repo, spec_path, review, verdicts, round_number, err)
+
+
+def check_spec_freshness(repo, spec_path, review, verdicts, round_number, err):
+    """A pass is a pass over a particular text.
+
+    Rewrite the spec after its round and the verdict is about a document that
+    no longer exists -- and every freshness rule that does exist
+    (`push.reviewed-sha`) fires at push, which is after the plan and the whole
+    build (W2 adversary P09). Three ways to recompute it, in order of how
+    directly they answer the question:
+
+    1. `spec_sha` on the round's own verdicts -- the blob each reviewer read.
+    2. the spec's blob AT `reviewed_sha` -- available on records written
+       before the field existed, which is why the legacy fallback is not
+       simply "fail open".
+    3. nothing, when the spec was not committed at that point -- a WARN
+       naming the gap. This last rung is removed in W4.
+
+    A `reviewed_sha` that resolves to no commit in this repo stops the ladder
+    dead: a round that names a commit nobody has is not a review of this
+    repository, and freshness cannot be recomputed from it at all."""
+    current = blob_sha(spec_path.read_bytes())
+    recorded = [
+        str(entry.get("spec_sha", "")).strip()
+        for entry in verdicts
+        if str(entry.get("spec_sha", "")).strip()
+    ]
+    if recorded:
+        if any(sha_agrees(value, current) for value in recorded):
+            return []
+        return [
+            (
+                "intake.spec-pass",
+                f"spec review round {round_number} passed "
+                f"{', '.join(sorted(set(recorded)))} but "
+                f"{spec_path.relative_to(repo)} is now {current[:7]} -- spec "
+                "changed after review; send it round again.",
+            )
+        ]
+
+    reviewed = str(review.get("reviewed_sha", "")).strip()
+    resolved = (
+        git_maybe(repo, "rev-parse", "--verify", f"{reviewed}^{{commit}}")
+        if reviewed else None
+    )
+    if not resolved:
+        return [
+            (
+                "intake.spec-pass",
+                f"no verdict in spec review round {round_number} records "
+                f"`spec_sha`, and reviewed_sha {reviewed or '(absent)'!r} "
+                "resolves to no commit here, so nothing says which text was "
+                "reviewed -- the spec could have been rewritten after the "
+                "round and nothing would notice. Record `spec_sha` on the "
+                "verdicts and send it round again.",
+            )
+        ]
+    relative = spec_path.relative_to(repo).as_posix()
+    then = git_maybe(repo, "rev-parse", f"{resolved}:{relative}")
+    if then and then != current:
+        return [
+            (
+                "intake.spec-pass",
+                f"the spec was {then[:7]} at reviewed_sha {resolved[:7]} and is "
+                f"now {current[:7]} -- spec changed after review; send it round "
+                "again.",
+            )
+        ]
+    how = (
+        f"freshness was recomputed from the spec's blob at reviewed_sha "
+        f"{resolved[:7]} instead, and it matches"
+        if then else
+        f"{relative} was not committed at reviewed_sha {resolved[:7]}, so "
+        f"freshness was recomputed from nothing"
+    )
+    err.write(
+        f"WARN intake.spec-pass: no verdict in spec review round {round_number} "
+        f"records `spec_sha`; {how}. Legacy records only; the review station "
+        f"writes `spec_sha` now and this fallback is removed in "
+        f"{LEGACY_UNTIL}.\n"
+    )
     return []
 
 
-def check_confirmed_behavior(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+def check_confirmed_behavior(
+    manifest, repo: Path, change_id: str, err=sys.stderr
+) -> list[tuple[str, str]]:
     """Decision point ② leaves exactly one trace: the spec's
-    `confirmed-behavior:` line (concept-model §2c)."""
+    `confirmed-behavior:` line (concept-model §2c).
+
+    The line names the text the user was shown -- `<date> @<spec-blob-sha7>`,
+    where the sha is `git hash-object` over the spec WITHOUT this line (the
+    file as it stood the moment before the agent wrote the confirmation, so
+    the value is not a hash of itself). Rewrite the spec afterwards and the
+    confirmation is about a behaviour nobody agreed to (W2 adversary P02)."""
     spec_path = artifact_path(manifest, "spec", change_id, repo)
     if not spec_path.is_file():
         return []  # already reported by intake.spec-pass
     front, _ = parse_document(read_text(spec_path))
-    if not front.get("confirmed-behavior", "").strip():
+    raw = front.get("confirmed-behavior", "").strip()
+    if not raw:
         return [
             (
                 "intake.confirmed-behavior",
-                "kind: product but the spec has no `confirmed-behavior: <date>` line; "
+                "kind: product but the spec has no "
+                "`confirmed-behavior: <date> @<spec-blob-sha7>` line; "
                 "decision point ② has not happened.",
+            )
+        ]
+    match = CONFIRMED_BEHAVIOR_GRAMMAR.match(raw)
+    if not match:
+        return [
+            (
+                "intake.confirmed-behavior",
+                f"`confirmed-behavior: {raw}` does not match "
+                "`<date> @<spec-blob-sha7>`.",
+            )
+        ]
+    recorded = match.group(2)
+    current = blob_sha(CONFIRMED_BEHAVIOR_LINE.sub(b"", spec_path.read_bytes(), count=1))
+    if not recorded:
+        err.write(
+            f"WARN intake.confirmed-behavior: `confirmed-behavior: {raw}` names "
+            f"no spec sha, so what the user confirmed was NOT checked against "
+            f"what the spec now says (it is {current[:7]}). Legacy records only; "
+            f"this fallback is removed in {LEGACY_UNTIL}.\n"
+        )
+        return []
+    if not sha_agrees(recorded, current):
+        return [
+            (
+                "intake.confirmed-behavior",
+                f"the user confirmed spec @{recorded}, but "
+                f"{spec_path.relative_to(repo)} is now @{current[:7]} -- the "
+                "visible behaviour changed after decision point ②; show it "
+                "again and rewrite the line.",
             )
         ]
     return []
@@ -1797,8 +2187,43 @@ def cmd_standing(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
 RATIFIED_BY = re.compile(r"^ratified-by:\s*\S.*$", re.MULTILINE)
 NON_NEGOTIABLES = re.compile(r"^##\s+non-negotiables\b", re.IGNORECASE)
+
+# --- non-negotiables counting ----------------------------------------------
+# Kept byte-identical to loom-design's validate_principles_output.py on
+# purpose: the two live in plugins that cannot import each other, and
+# loom-design/scripts/principles/test_principles_checker_parity.py runs both
+# over one fixture table, so a drift here is a failing test rather than a
+# silent disagreement about whether a constitution is ratified.
 LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\S")
+LIST_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
+PUNCTUATION = re.compile(r"[^\w\s]+")
+MIN_WORDS_PER_ITEM = 3
 MIN_NON_NEGOTIABLES = 3
+
+
+def normalise_item(line: str) -> str:
+    body = LIST_MARKER.sub("", line)
+    return " ".join(PUNCTUATION.sub(" ", body.lower()).split())
+
+
+def substantive_non_negotiables(body: str) -> list[str]:
+    """The normalised items that actually say something, de-duplicated.
+
+    An item under three words is a slogan, not a commitment, and two items
+    that normalise to the same string are one item typed twice -- counting
+    raw lines let `it must be fast` three times ratify a constitution
+    (W2 adversary P04)."""
+    seen: set[str] = set()
+    kept: list[str] = []
+    for line in body.splitlines():
+        if not LIST_ITEM.match(line):
+            continue
+        item = normalise_item(line)
+        if len(item.split()) < MIN_WORDS_PER_ITEM or item in seen:
+            continue
+        seen.add(item)
+        kept.append(item)
+    return kept
 
 
 def unratified_reason(text: str) -> str | None:
@@ -1807,17 +2232,20 @@ def unratified_reason(text: str) -> str | None:
     an empty document ratifies nothing, so the section is counted here."""
     if not RATIFIED_BY.search(text):
         return "carries no `ratified-by: <name> <date>` line"
-    items, inside = 0, False
+    body, inside = [], False
     for line in text.splitlines():
         if line.startswith("## "):
             inside = bool(NON_NEGOTIABLES.match(line))
             continue
-        if inside and LIST_ITEM.match(line):
-            items += 1
+        if inside:
+            body.append(line)
+    items = len(substantive_non_negotiables("\n".join(body)))
     if items < MIN_NON_NEGOTIABLES:
         return (
             "has no `## Non-negotiables` section carrying at least "
-            f"{MIN_NON_NEGOTIABLES} list items (found {items})"
+            f"{MIN_NON_NEGOTIABLES} list items that are each at least "
+            f"{MIN_WORDS_PER_ITEM} words long and distinct from one another "
+            f"(found {items})"
         )
     return None
 

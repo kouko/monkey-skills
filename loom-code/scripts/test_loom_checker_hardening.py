@@ -455,6 +455,10 @@ def _intake_repo(tmp_path: Path, plan_tasks: str) -> Path:
     git(repo, "init", "-q", "-b", "main")
     git(repo, "config", "user.email", "t@example.com")
     git(repo, "config", "user.name", "T")
+    git(repo, "commit", "-q", "--allow-empty", "-m", "chore: base")
+    # The fixtures work on a branch: branch_base() refuses to recompute a
+    # rule against the trunk itself, where the diff is always empty.
+    git(repo, "checkout", "-q", "-b", "work")
     write(repo, f"docs/loom/intent/{CHANGE}.md", _intent())
     write(repo, f"docs/loom/{CHANGE}/plan.md", PLAN_HEAD + plan_tasks + PLAN_TAIL)
     git(repo, "add", "-A")
@@ -507,11 +511,14 @@ def test_an_unscoped_adversarial_probe_does_not_satisfy_the_spec_gate(tmp_path: 
     git(repo, "init", "-q", "-b", "main")
     git(repo, "config", "user.email", "t@example.com")
     git(repo, "config", "user.name", "T")
+    git(repo, "commit", "-q", "--allow-empty", "-m", "chore: base")
+    git(repo, "checkout", "-q", "-b", "work")
     write(repo, f"docs/loom/intent/{CHANGE}.md", _intent("yes — new CLI surface"))
     write(
         repo,
         f"docs/loom/{CHANGE}/spec.md",
-        f"# spec\nintent: {CHANGE}@abc1234\n\n## Requirements\nREQ-1 — a\n"
+        f"# spec\nintent: {CHANGE}@abc1234\n\n## Requirements\n"
+        "REQ-1 — a\n  one → Acceptance #1\n"
         "\n## Design decision\n- a\n\n## Alternatives considered\n- a\n"
         "\n## Current state evidence\n- Forward: x\n\n## UI flows\nN/A\n",
     )
@@ -544,6 +551,14 @@ def test_an_unscoped_adversarial_probe_does_not_satisfy_the_spec_gate(tmp_path: 
     assert "scope" in result.stderr
 
     review["probes"][0]["scope"] = "spec"
+    # The round has to say which text it read, or intake.spec-pass has no
+    # freshness to recompute (W2 adversary P09).
+    spec_blob = subprocess.run(
+        ["git", "-C", str(repo), "hash-object", f"docs/loom/{CHANGE}/spec.md"],
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    for entry in review["verdicts"]:
+        entry["spec_sha"] = spec_blob
     write(repo, f"docs/loom/{CHANGE}/review.json", json.dumps(review, indent=1))
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "docs(loom): scope the probe")

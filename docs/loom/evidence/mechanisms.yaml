@@ -94,7 +94,7 @@ mechanisms:
     class: skill
     eval: "pending — W4-01"
 
-  # --- checker-rule (20; loom_checker.py --list-rules) ---
+  # --- checker-rule (26; loom_checker.py --list-rules) ---
   - id: contract.requires
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_cli.py::test_contract_require_blocks_a_higher_minor
@@ -110,6 +110,9 @@ mechanisms:
   - id: intake.spec-pass
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_latest_round_all_passing_is_accepted
+  - id: intent.kind-recompute
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_intent.py::test_engineering_kind_over_an_interface_diff_is_blocked
   - id: intent.needs-design-reason
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intent.py::test_needs_design_without_reason_is_blocked
@@ -155,6 +158,12 @@ mechanisms:
   - id: push.verdicts-ge-2
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_one_reviewer_blocks
+  - id: spec.req-grammar
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_intake.py::test_a_skipped_req_number_is_blocked
+  - id: spec.ui-flows-recompute
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_intake.py::test_ui_flows_na_while_the_diff_touches_a_surface_is_blocked
   - id: standing.product-principles-reject
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_standing.py::test_product_without_principles_is_rejected

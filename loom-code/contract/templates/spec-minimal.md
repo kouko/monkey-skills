@@ -1,6 +1,8 @@
 # <title> — spec
 intent: <change-id>@<sha>
-confirmed-behavior: <date>       # 只在 kind: product；決策點②後由 agent 寫
+confirmed-behavior: <date> @<spec-blob-sha7>   # 只在 kind: product；決策點②後由 agent 寫
+#   <spec-blob-sha7> = 寫這一行「之前」的 spec 檔 blob sha 前七碼（`git hash-object spec.md`）；
+#   spec 之後被改寫，這一行就對不上，checker 會要求重新呈現一次可見行為
 
 ## Requirements                                    【使用者可讀；product 時呈現】
 REQ-1 — <name>

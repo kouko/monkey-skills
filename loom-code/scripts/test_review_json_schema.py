@@ -126,7 +126,9 @@ def test_array_entries_carry_the_declared_grammar(declared_fields, template, ski
         for entry in entries:
             # `resolved` / `dismissed` are the two outcomes of one finding;
             # an entry shows either, so neither is required on its own.
-            missing = expected - set(entry) - {"resolved", "dismissed"}
+            # `spec_sha` is declared optional by the manifest note: only a
+            # spec round records the blob its reviewers read.
+            missing = expected - set(entry) - {"resolved", "dismissed", "spec_sha"}
             assert not missing, (
                 f"`{field['name']}` entry in the {source} is missing "
                 f"{sorted(missing)} declared by the manifest grammar."
