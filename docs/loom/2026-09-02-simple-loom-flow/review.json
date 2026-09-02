@@ -1,6 +1,6 @@
 {
- "reviewed_sha": "1c9ed208",
- "scope": "spec — PASS (rounds 1–4 read; round 5 adversarial NEEDS_REVISION adopted; round 9 read PASS_WITH_NOTES, user re-confirmed ②); W0 code — PASS_WITH_NOTES (rounds 6–8)",
+ "reviewed_sha": "ffd9b90a",
+ "scope": "spec — PASS (rounds 1–4 read, 5 adversarial adopted, 9 read); W0 code — PASS_WITH_NOTES (rounds 6–8); W1 loom-code stations — PASS_WITH_NOTES (rounds 10–14); W2 in review",
  "verdicts": [
   {
    "reviewer": "claude-fresh-context",
@@ -177,6 +177,116 @@
    "lens": "spec",
    "verdict": "PASS_WITH_NOTES",
    "findings_file": "evidence/spec-review-r5-read.md"
+  },
+  {
+   "round": 10,
+   "scope": "w1-after-task:W1-01",
+   "reviewer": "sonnet-coldread-writeplan-1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "skill-blind-run",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 10,
+   "scope": "w1-after-task:W1-01",
+   "reviewer": "opus-review-writeplan-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "sonnet-review-docs-w1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "opus-review-code-w1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "sonnet-blindrun-w1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "skill-blind-run",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "opus-adversary-w1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "adversarial",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 12,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w1b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 12,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "opus-review-code-w1b",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 13,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "opus-review-code-w1c",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 14,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "opus-review-code-w1d",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 14,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w1b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
   }
  ],
  "probes": [
@@ -209,6 +319,150 @@
    "sha": "1c9ed208",
    "result": "3 + 4 fatal fail-opens found and fixed",
    "artifact": "evidence/w0-checkpoint-reviews.md"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "w1-code",
+   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+   "sha": "78c5661f",
+   "result": "896 passed (round 3); 889 passed after W2-04 cleanup",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py",
+   "sha": "78c5661f",
+   "result": "escaped-by-design (§0)",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py",
+   "sha": "78c5661f",
+   "result": "escaped-by-design (§0)",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py",
+   "sha": "78c5661f",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
   }
  ],
  "open_findings": [
@@ -771,6 +1025,149 @@
    ],
    "text": "intake.spec-pass picks the latest round across all lenses; a later code round would shadow the spec round",
    "resolved": "88ec6637 intake.spec-pass filters by spec-scoped rounds; 5 tests incl. later-code-round shadowing"
+  },
+  {
+   "id": "W1-01",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "write-plan lacked the needs-design criterion and Codex first-contact step",
+   "resolved": "resolved: c4747e6f, eecb4c9f"
+  },
+  {
+   "id": "W1-02",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "CI pytest step died on a collection error; 46 root guards pinned deleted mechanisms",
+   "resolved": "resolved: da16a0e0, 1a799c0d"
+  },
+  {
+   "id": "W1-03",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "ship referenced a sibling plugin path (boundary)",
+   "resolved": "resolved: da16a0e0"
+  },
+  {
+   "id": "W1-04",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "adversary.md pointed at a non-existent catalogue",
+   "resolved": "resolved: 7a499c02"
+  },
+  {
+   "id": "W1-05",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "no adversary dispatched at the checkpoint; push.probes-adversarial absent from tables",
+   "resolved": "resolved: adversary dispatched (683ebc45); tables 7a499c02"
+  },
+  {
+   "id": "W1-06",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "probe command `true` / comment-substring / `; true` passed the push gate",
+   "resolved": "resolved: 6573958c → 5cc21c57 → ffd9b90a (checker executes artifacts and declared commands, never recorded strings)"
+  },
+  {
+   "id": "W1-07",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "branch-level Task trailer let untagged code commits through",
+   "resolved": "resolved: ffd9b90a per-commit trailer"
+  },
+  {
+   "id": "W1-08",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "dispatch record race; second-vendor silently dropped; after-task budget prose-only; rename hides deletion",
+   "resolved": "resolved: 6573958c push.dispatch-covers-tasks, push.second-vendor-honoured, intake.after-task-budget, --no-renames"
+  },
+  {
+   "id": "W1-09",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "build BLOCKED branch re-opened a stop; questions[] carrier; branch creation; wave-end/branch-end doubling; five tables diverged",
+   "resolved": "resolved: 7a499c02 (tables identical, test)"
+  },
+  {
+   "id": "W1-10",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "spec red-team probe accepted without scope; R3/R4/class checks; host-hygiene skipped R4",
+   "resolved": "resolved: 6573958c, d3b6aefd, 1c9ed208"
+  },
+  {
+   "id": "W1-11",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "KICKOFF lacked package-tests for this repo; fallback masked",
+   "resolved": "resolved: 5cc21c57"
+  },
+  {
+   "id": "W1-12",
+   "severity": "nit",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "dead constant, weak `or` assertion, timeout regressions, ROUTINE.md dead pointer, docstrings, codex longDescription",
+   "resolved": "resolved: 78c5661f, 5cc21c57, 43018f9f"
+  },
+  {
+   "id": "W1-13",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "e43bd203",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "adversarial artifact content unconstrained (empty attack file passes)",
+   "dismissed": "accepted weakest link under §0; recorded in §7 and intent Open questions by opus-review-code-w1d"
   }
  ],
  "vendors": [
