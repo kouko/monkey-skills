@@ -1624,6 +1624,14 @@
    "model": "opus",
    "started": "2026-09-02T12:32:42Z",
    "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end fixes (docs/hooks)",
+   "role": "implementer",
+   "agent_id": "sonnet-w3-fixes-2",
+   "model": "sonnet",
+   "started": "2026-09-02T12:40:48Z",
+   "fresh_context": true
   }
  ]
 }
