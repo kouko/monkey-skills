@@ -148,7 +148,7 @@ Role boundaries enforced by behavior, not reading restrictions:
 ## The loom family (loom-code / loom-design / loom-workflow) — 1.0 flow
 
 One change moves through seven stations. Each station is a skill; each
-station's SKILL.md opens with a station-summary table naming its inputs,
+station's SKILL.md carries a station-summary table naming its inputs,
 its artifact, who decides, and when the checker and the checkpoint fire.
 
 ```
