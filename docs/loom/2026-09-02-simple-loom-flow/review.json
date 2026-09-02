@@ -1,6 +1,6 @@
 {
- "reviewed_sha": "923fb84a09fb405dcd2bbadaea6d15c1ec7ffb8d",
- "scope": "spec — round 3 (delta ecb335ce..74229611); fixes 9d3615ab, 0f907d37; round 4 pending",
+ "reviewed_sha": "6eb0a6a9",
+ "scope": "spec — PASS (round 4: codex PASS, claude PASS_WITH_NOTES; notes fixed in 6eb0a6a9). spec 先審再批 satisfied; write-plan may start.",
  "verdicts": [
   {
    "reviewer": "claude-fresh-context",
@@ -65,9 +65,32 @@
    "model": "opus",
    "verdict": "PASS_WITH_NOTES",
    "findings_file": "evidence/spec-review-r3-claude.md"
+  },
+  {
+   "round": 4,
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "PASS",
+   "findings_file": "evidence/spec-review-r4-codex.md"
+  },
+  {
+   "round": 4,
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r4-claude.md"
   }
  ],
- "probes": [],
+ "probes": [
+  {
+   "kind": "cold-read",
+   "command": "fresh sonnet narrates Task A/B from concept-model.md",
+   "result": "v10: both paths correct, 25 min, 2 genuine guesses fixed",
+   "artifact": "concept-model.md §12"
+  }
+ ],
  "open_findings": [
   {
    "id": "SR1-01",
@@ -315,6 +338,36 @@
    ],
    "text": "§12 歷史列措辭、yaml-extra 檢查、重複性範圍措辭",
    "resolved": "0f907d37"
+  },
+  {
+   "id": "SR4-01",
+   "severity": "important",
+   "anchor": "spec REQ-7",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "§11 第四條紅線未同步進 REQ-7",
+   "resolved": "6eb0a6a9"
+  },
+  {
+   "id": "SR4-02",
+   "severity": "important",
+   "anchor": "spec UI flows",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "flow 7 不符非決策型判準；計數錯",
+   "resolved": "6eb0a6a9: 獨立為非互動提示類"
+  },
+  {
+   "id": "SR4-03",
+   "severity": "nit",
+   "anchor": "spec REQ-9",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "摘要表要含完整站序",
+   "resolved": "6eb0a6a9"
   }
  ],
  "vendors": [
