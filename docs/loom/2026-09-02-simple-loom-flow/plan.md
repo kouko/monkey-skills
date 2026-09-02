@@ -143,7 +143,7 @@ checkpoint：W3 結束必跑。
 - 風：branch protection 必經檢查名（先查）；`.claude/hooks/validate-skill-folder-structure.sh` 對新目錄（`loom-code/contract/templates/`）是單層，合規。
 
 **W3-05 standing docs 與 KICKOFF-DEFAULTS**　after: W0-04
-- 檔：`docs/loom/KICKOFF-DEFAULTS.md` 重寫成新 grammar（`session-start-baseline: 923fb84a 5281`、`second-vendor:`（本 repo：`codex — kouko 2026-09-02`，依本 change 已用 Codex 審 spec 的事實）、`standing-docs:`、介面表面 glob、型別對映覆寫）；`loom-code/contract/templates/KICKOFF-DEFAULTS.md` 同 grammar；本 repo 的 `PRINCIPLES.md` 不新建（engineering repo，只 WARN）。
+- 檔：`docs/loom/KICKOFF-DEFAULTS.md` 重寫成新 grammar（`session-start-baseline: 923fb84a 5281`、`second-vendor:`（本 repo：`codex — kouko 2026-09-02`，依本 change 已用 Codex 審 spec 的事實）、`standing-docs:`、介面表面 glob、型別對映覆寫）；`loom-code/contract/templates/KICKOFF-DEFAULTS.md` 同 grammar；本 repo 的 `PRINCIPLES.md`：原寫「不新建」，但本 change 的 intent 是 `kind: product`，新 standing 閘正確拒收 → 由 orchestrator 依 §0 與 kouko 歷次裁定代填、kouko 決策點①確認後簽 `ratified-by`（2026-09-03，agent-decided 推翻原句）。
 - 測：`test_kickoff_defaults_grammar.py`（每行 `key: value — reason (date)`）。
 - 風：無。
 
