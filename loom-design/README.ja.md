@@ -29,7 +29,7 @@ intent を書き、引き渡す — 設計が要る変更は `write-spec` へ、
 
 | ツール | 生成物 | 読む |
 |---|---|---|
-| `product-principles` | `docs/loom/PRINCIPLES.md` — Who / Non-negotiables（3 件以上）/ Won't do / Failure we must avoid / Fixed choices、そしてユーザー自身の yes が書き込む `ratified-by: <name> <date>` の行 | [SKILL.md](skills/product-principles/SKILL.md) |
+| `product-principles` | `PRINCIPLES.md` — Who / Non-negotiables（3 件以上）/ Won't do / Failure we must avoid / Fixed choices、そしてユーザー自身の yes が書き込む `ratified-by: <name> <date>` の行 | [SKILL.md](skills/product-principles/SKILL.md) |
 | `design-system` | `docs/loom/DESIGN.md` — GUI 向けの色・タイポグラフィ・レイアウト・コンポーネントの token。TUI/CLI は conventions stub | [SKILL.md](skills/design-system/SKILL.md) |
 
 ツールは頼まれたときに動き、ファイルを 1 つ作って止まる。`design-system` は

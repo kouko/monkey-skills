@@ -30,7 +30,7 @@ does both jobs itself, less well.
 
 | Tool | Produces | Read it |
 |---|---|---|
-| `product-principles` | `docs/loom/PRINCIPLES.md` — Who, Non-negotiables (≥3), Won't do, Failure we must avoid, Fixed choices, and a `ratified-by: <name> <date>` line the user's own yes puts there | [SKILL.md](skills/product-principles/SKILL.md) |
+| `product-principles` | `PRINCIPLES.md` — Who, Non-negotiables (≥3), Won't do, Failure we must avoid, Fixed choices, and a `ratified-by: <name> <date>` line the user's own yes puts there | [SKILL.md](skills/product-principles/SKILL.md) |
 | `design-system` | `docs/loom/DESIGN.md` — colour, type, layout and component tokens for a GUI; a conventions stub for TUI/CLI | [SKILL.md](skills/design-system/SKILL.md) |
 
 A tool runs when you ask for it, produces one file, and stops.

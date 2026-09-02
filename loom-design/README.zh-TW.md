@@ -27,7 +27,7 @@ intent、交棒 — 需要設計的交給 `write-spec`，不需要的直接交�
 
 | 工具 | 產物 | 讀這份 |
 |---|---|---|
-| `product-principles` | `docs/loom/PRINCIPLES.md` — Who、Non-negotiables（≥3 條）、Won't do、Failure we must avoid、Fixed choices，以及一行由使用者親口說 yes 才寫上的 `ratified-by: <name> <date>` | [SKILL.md](skills/product-principles/SKILL.md) |
+| `product-principles` | `PRINCIPLES.md` — Who、Non-negotiables（≥3 條）、Won't do、Failure we must avoid、Fixed choices，以及一行由使用者親口說 yes 才寫上的 `ratified-by: <name> <date>` | [SKILL.md](skills/product-principles/SKILL.md) |
 | `design-system` | `docs/loom/DESIGN.md` — GUI 的顏色、字級、版面與元件 token；TUI/CLI 則是 conventions stub | [SKILL.md](skills/design-system/SKILL.md) |
 
 工具是你叫它才跑，產出一個檔案就停。`design-system` 永遠不擋變更：沒有
