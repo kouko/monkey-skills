@@ -65,11 +65,13 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "intake.confirmed",
-        "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>`.",
+        "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
+        "with a date the calendar has.",
     ),
     (
         "intake.confirmed-behavior",
-        "write-plan accepts a product change only when its spec carries a `confirmed-behavior: <date>` line.",
+        "write-plan accepts a product change only when its spec carries a "
+        "`confirmed-behavior: <date> @<spec-blob-sha7>` line naming the spec as it stands.",
     ),
     (
         "intake.after-task-budget",
@@ -78,7 +80,8 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "intake.spec-pass",
-        "write-plan accepts a needs-design: yes change only when the latest spec review round is all PASS or PASS_WITH_NOTES.",
+        "write-plan accepts a needs-design: yes change only when the latest spec review round is "
+        "all PASS or PASS_WITH_NOTES and every one of its verdicts records the spec_sha it read.",
     ),
     (
         "intent.kind-recompute",
@@ -86,7 +89,8 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "intent.needs-design-reason",
-        "The needs-design line carries a reason and the same line appears verbatim in the intent's commit message.",
+        "The needs-design line carries a reason and appears verbatim in the message of the "
+        "commit that last changed the intent's status or needs-design line.",
     ),
     (
         "intent.needs-design-recompute",
@@ -154,12 +158,13 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "spec.ui-flows-recompute",
-        "A spec may not answer `N/A` under UI flows while the diff touches a declared "
-        "interface-surface glob.",
+        "While the diff touches a declared interface-surface glob, the spec's UI flows section "
+        "carries at least one `<operation> -> <reaction>` prose line with two or more words a side.",
     ),
     (
         "standing.product-principles-reject",
-        "A product change is rejected while the repo has no ratified PRINCIPLES.md.",
+        "A product change is rejected until PRINCIPLES.md is ratified: a `ratified-by: <name> "
+        "<YYYY-MM-DD>` signature with a real date, over three or more distinct non-negotiables.",
     ),
     (
         "standing.silence",
@@ -538,6 +543,29 @@ def check_product_no_identifiers(front, sections) -> list[tuple[str, str]]:
 NEEDS_DESIGN_GRAMMAR = re.compile(r"^(yes|no)\s*(?:—|–|--)\s*(\S.*)$")
 
 
+FRONTMATTER_DECISION = ("status:", "needs-design:")
+
+
+def deciding_commit(repo: Path, relative: str) -> str | None:
+    """The newest commit that CHANGED the intent's `status:` or
+    `needs-design:` line -- the one that decided something.
+
+    Reading the newest touching commit instead made every later edit to the
+    intent body (a new open question, an evidence path) owe the needs-design
+    line, which is not what concept-model §2b asks for: the line belongs on
+    the commit that writes or changes the decision (W2 re-review NF-4)."""
+    for sha in git_text(repo, "log", "--format=%H", "--", relative).splitlines():
+        if not sha.strip():
+            continue
+        diff = git_text(repo, "show", "--format=", "--unified=0", sha, "--", relative)
+        for line in diff.splitlines():
+            if line[:1] not in ("+", "-") or line[:3] in ("+++", "---"):
+                continue
+            if line[1:].lstrip().startswith(FRONTMATTER_DECISION):
+                return sha
+    return None
+
+
 def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: Path):
     """`needs-design` carries a reason, and the intent's commit message
     repeats the line verbatim (concept-model §2b). With no `--commit-msg`
@@ -568,8 +596,12 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
         message, source = read_text(commit_msg), str(commit_msg)
     else:
         relative = path.resolve().relative_to(repo.resolve()).as_posix()
-        message = git_text(repo, "log", "-1", "--format=%B", "--", relative)
-        source = f"the last commit touching {relative}"
+        sha = deciding_commit(repo, relative)
+        if sha is None:
+            message, source = "", f"{relative} (no commit has decided it yet)"
+        else:
+            message = git_text(repo, "show", "-s", "--format=%B", sha)
+            source = f"commit {sha[:7]}, which last changed status/needs-design"
     line = f"needs-design: {raw}"
     if _squeeze(line) not in _squeeze(message):
         return (
@@ -818,11 +850,52 @@ def check_req_grammar(manifest, repo: Path, change_id: str, intent_sections):
     return failures
 
 
-# One line of `<operation> -> <reaction>`. The arrow is the whole test: a
-# flow that does not say what the system does back is not a flow, and every
-# spelling of nothing -- `N/A`, `None.`, a full sentence with no arrow --
-# fails it the same way (W2 re-review F2).
-FLOW_LINE = re.compile(r"^.*\S.*(?:\u2192|->)\s*\S", re.MULTILINE)
+# What counts as a flow line, and nothing else counts (W2 re-review NF-2).
+# An arrow alone is not a flow: it shows up inside mermaid and python fences,
+# inside HTML comments, and inside `N/A -> see the concept model`. So the
+# arrow is searched only in prose the user would actually read, and both
+# sides of it have to say something.
+FENCE = re.compile(r"^\s*(?:```|~~~)")
+HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
+ARROW = re.compile(r"\u2192|->")
+FLOW_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s*")
+# Every spelling of "there is no interface", in the two languages the loom
+# artifacts are written in.
+NOTHING_WORDS = ("n/a", "na", "none", "not applicable", "沒有", "無", "なし")
+# A word is a latin/digit run or a CJK run; punctuation is not a word. Two of
+# them a side is the floor: `add -> stored` names nothing anyone can try.
+WORD = re.compile(r"[0-9A-Za-z_]+|[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]+")
+MIN_WORDS_PER_SIDE = 2
+
+
+def prose_lines(body: str) -> list[str]:
+    """The body minus fenced code blocks and HTML comments."""
+    kept, inside_fence = [], False
+    for line in HTML_COMMENT.sub(" ", body).splitlines():
+        if FENCE.match(line):
+            inside_fence = not inside_fence
+            continue
+        if not inside_fence:
+            kept.append(line)
+    return kept
+
+
+def flow_lines(body: str) -> list[str]:
+    """`<operation> -> <reaction>` lines: what decision point 2 reads back."""
+    found = []
+    for line in prose_lines(body):
+        text = FLOW_MARKER.sub("", line).strip()
+        probe = text.lstrip("`\"'*_ ").lower()
+        if any(probe.startswith(word) for word in NOTHING_WORDS):
+            continue
+        arrow = ARROW.search(text)
+        if not arrow:
+            continue
+        left, right = text[:arrow.start()], text[arrow.end():]
+        if (len(WORD.findall(left)) >= MIN_WORDS_PER_SIDE
+                and len(WORD.findall(right)) >= MIN_WORDS_PER_SIDE):
+            found.append(text)
+    return found
 
 
 def check_ui_flows_recompute(manifest, repo: Path, change_id: str, touched: list[str]):
@@ -839,7 +912,7 @@ def check_ui_flows_recompute(manifest, repo: Path, change_id: str, touched: list
         return []  # intake.spec-pass reports the missing spec
     _front, sections = parse_document(read_text(spec_path))
     body = sections.get("UI flows", "")
-    if FLOW_LINE.search(body):
+    if flow_lines(body):
         return []
     shown = _squeeze(body)[:40] or "(empty)"
     return [
@@ -848,9 +921,12 @@ def check_ui_flows_recompute(manifest, repo: Path, change_id: str, touched: list
             f"{spec_path.relative_to(repo)} carries no `<operation> -> "
             f"<reaction>` line under `## UI flows` (it says {shown!r}) while "
             f"the diff touches a declared interface surface: "
-            f"{', '.join(touched[:5])}. Write what the user does and what they "
-            "see back, one line per operation; that section IS decision "
-            "point 2.",
+            f"{', '.join(touched[:5])}. A flow line is prose -- not inside a "
+            "``` fence or an HTML comment -- that does not open with a "
+            "spelling of `none`, and that names at least two words on each "
+            "side of the arrow, e.g. `todo add --due 2026-09-10 'buy milk' -> "
+            "the todo is stored with its due date`. Write one per operation; "
+            "that section IS decision point 2.",
         )
     ]
 
@@ -1057,33 +1133,42 @@ def check_spec_freshness(repo, spec_path, review, verdicts, round_number, err):
     say what it read and does not pass (W2 re-review F3/F4)."""
     current = spec_identity(spec_path)
     relative = spec_path.relative_to(repo).as_posix()
-    recorded = [
-        str(entry.get("spec_sha", "")).strip()
+    # EVERY reviewer of the round, not any of them: two reviewers who read
+    # different texts are not two readings of this spec, and one reviewer who
+    # recorded nothing leaves their own verdict unattached to any text.
+    silent = [
+        str(entry.get("reviewer", "?"))
         for entry in verdicts
-        if str(entry.get("spec_sha", "")).strip()
+        if not str(entry.get("spec_sha", "")).strip()
     ]
-    if not recorded:
+    if silent:
         return [
             (
                 "intake.spec-pass",
-                f"no verdict in spec review round {round_number} records "
-                f"`spec_sha`, so nothing says which text was reviewed -- the "
-                f"spec could have been rewritten afterwards and nothing would "
-                f"notice. Record spec_sha in the spec round ({current[:7]} for "
-                f"{relative} as it stands); {recompute_command(relative)}.",
+                f"{', '.join(sorted(set(silent)))} recorded no `spec_sha` in "
+                f"spec review round {round_number}, so nothing says which text "
+                f"they read -- the spec could have been rewritten afterwards "
+                f"and nothing would notice. Record spec_sha in the spec round "
+                f"({current[:7]} for {relative} as it stands); "
+                f"{recompute_command(relative)}.",
             )
         ]
-    if any(sha_agrees(value, current) for value in recorded):
-        return []
-    return [
-        (
-            "intake.spec-pass",
-            f"spec review round {round_number} passed "
-            f"{', '.join(sorted(set(recorded)))} but {relative} is now "
-            f"{current[:7]} -- spec changed after review; send it round again. "
-            f"To check the value yourself, {recompute_command(relative)}.",
-        )
+    stale = [
+        f"{entry.get('reviewer', '?')}={str(entry['spec_sha']).strip()[:7]}"
+        for entry in verdicts
+        if not sha_agrees(str(entry["spec_sha"]).strip(), current)
     ]
+    if stale:
+        return [
+            (
+                "intake.spec-pass",
+                f"spec review round {round_number} read {', '.join(stale)} but "
+                f"{relative} is now {current[:7]} -- spec changed after "
+                f"review; send it round again. To check the value yourself, "
+                f"{recompute_command(relative)}.",
+            )
+        ]
+    return []
 
 
 def check_confirmed_behavior(

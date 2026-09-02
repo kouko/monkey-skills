@@ -585,3 +585,82 @@ def test_a_later_commit_cannot_supply_the_missing_line(tmp_path: Path) -> None:
     result = run_checker("intent", str(intent), cwd=repo)
     assert result.returncode == 1
     assert "intent.needs-design-reason" in blocked_rules(result)
+
+
+# --- needs-design-reason is about the CONFIRMING commit (re-review NF-4) ---
+
+
+def edit_intent(repo: Path, intent: Path, replacement: tuple[str, str], message: str) -> str:
+    text = intent.read_text(encoding="utf-8").replace(*replacement)
+    intent.write_text(text, encoding="utf-8")
+    git(repo, "add", str(intent.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", message)
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_a_later_evidence_edit_needs_no_needs_design_line(tmp_path: Path) -> None:
+    """The line belongs on the commit that decides -- the one that writes or
+    changes `status:` / `needs-design:`. Every later edit to the intent body
+    (evidence, an open question) is not a re-decision and does not repeat it."""
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="yes — new surface")
+    seal(repo, intent)
+    edit_intent(
+        repo, intent,
+        ("- None yet.", "- Whether the export keeps its old name."),
+        "docs(loom): another open question",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_commit_that_flips_status_without_the_line_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        needs_design="yes — new surface",
+        status="status: open",
+    )
+    seal(repo, intent)
+    sha = edit_intent(
+        repo, intent,
+        ("status: open", "status: confirmed 2026-09-02"),
+        "docs(loom): confirm the intent",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+    assert sha[:7] in result.stderr
+
+
+def test_the_newest_deciding_commit_is_the_one_read(tmp_path: Path) -> None:
+    """An older deciding commit carrying the line does not answer for a newer
+    one that does not."""
+    repo = make_repo(tmp_path)
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        needs_design="yes — new surface",
+        status="status: open",
+    )
+    seal(repo, intent)
+    edit_intent(
+        repo, intent,
+        ("status: open", "status: confirmed 2026-09-02"),
+        "docs(loom): confirm\n\nneeds-design: yes — new surface\n",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_reason_change_needs_the_new_line_on_its_own_commit(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="yes — new surface")
+    seal(repo, intent)
+    sha = edit_intent(
+        repo, intent,
+        ("yes — new surface", "no — nothing user-visible changes"),
+        "docs(loom): narrow the change",
+    )
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.needs-design-reason" in blocked_rules(result)
+    assert sha[:7] in result.stderr

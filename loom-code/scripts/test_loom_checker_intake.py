@@ -429,9 +429,14 @@ def test_the_repos_own_change_matches_its_own_review_json() -> None:
     expected = set()
     if not (passing and fresh):
         expected.add("intake.spec-pass")
+    # Read the line the way the checker reads it: parse_document strips a
+    # trailing ` # …` YAML comment before applying the grammar, so an oracle
+    # that matches the raw line disagrees with the gate it is checking
+    # (W2 re-review NF-1).
+    uncommented = re.sub(r"\s+#\s.*$", "", spec_body, flags=re.MULTILINE)
     confirmation = re.search(
         r"^confirmed-behavior:\s*(\d{4}-\d{2}-\d{2})(?:\s+@([0-9a-f]{7,40}))?\s*$",
-        spec_body, re.MULTILINE,
+        uncommented, re.MULTILINE,
     )
     if not (confirmation and confirmation.group(2)
             and identity.startswith(confirmation.group(2))):
@@ -1002,3 +1007,102 @@ def test_a_single_flow_line_with_either_arrow_is_enough(tmp_path: Path, arrow: s
     write_review(repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)])
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+# --- spec.ui-flows-recompute: what counts as a flow (re-review NF-2) -------
+
+
+def write_ui_flows(repo: Path, body: str, change: str = CHANGE) -> None:
+    path = repo / "docs/loom" / change / "spec.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        SPEC.format(change=change, confirmed_behavior="")
+        .replace("## UI flows\nN/A", f"## UI flows\n{body}"),
+        encoding="utf-8",
+    )
+    write_spec_confirmation(repo, "2026-09-02")
+
+
+def ui_flows_verdict(tmp_path: Path, body: str) -> subprocess.CompletedProcess:
+    repo = make_repo(tmp_path)
+    commit_file(repo, "web/DuePill.tsx")
+    write_intent(repo, kind="product", needs_design="yes — new visible surface")
+    write_ui_flows(repo, body)
+    write_review(repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)])
+    return run_checker("intake", "write-plan", CHANGE, cwd=repo)
+
+
+ESCAPES = {
+    "an arrow inside a placeholder sentence":
+        "N/A — 沒有介面 -> 見 concept-model",
+    "an arrow inside a mermaid fence":
+        "```mermaid\nflowchart LR\n  add --> list\n```",
+    "an arrow inside a python fence":
+        "```python\ndef add(task) -> None: ...\n```",
+    "an arrow inside an HTML comment":
+        "<!-- todo add --due friday → the row shows the date -->",
+    "an arrow with nothing on the left":
+        "→ the todo is stored with its due date",
+    "an arrow with one token on each side":
+        "add → stored",
+    "None. as the whole answer": "None.",
+    "無 as the whole answer": "無",
+}
+
+
+@pytest.mark.parametrize("label", sorted(ESCAPES))
+def test_these_do_not_count_as_a_flow(tmp_path: Path, label: str) -> None:
+    result = ui_flows_verdict(tmp_path, ESCAPES[label])
+    assert result.returncode == 1, result.stderr
+    assert "spec.ui-flows-recompute" in blocked_rules(result)
+
+
+def test_a_real_flow_line_counts(tmp_path: Path) -> None:
+    result = ui_flows_verdict(
+        tmp_path,
+        "todo add --due 2026-09-10 'buy milk' → the todo is stored with its due date",
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_real_flow_survives_a_mermaid_fence_beside_it(tmp_path: Path) -> None:
+    result = ui_flows_verdict(
+        tmp_path,
+        "```mermaid\nflowchart LR\n  add --> list\n```\n"
+        "- `todo list` → every row shows its due date",
+    )
+    assert result.returncode == 0, result.stderr
+
+
+# --- intake.spec-pass: every reviewer names the text (re-review NF-3) ------
+
+
+def test_one_reviewer_without_spec_sha_blocks_and_is_named(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [dict(verdict("a", "PASS", 1), spec_sha=spec_confirmation_blob(repo)),
+         verdict("b", "PASS", 1)],
+        spec_sha=False,
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.spec-pass" in blocked_rules(result)
+    assert "b" in result.stderr and "spec_sha" in result.stderr
+
+
+def test_one_reviewer_naming_a_different_text_blocks(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [dict(verdict("a", "PASS", 1), spec_sha=spec_confirmation_blob(repo)),
+         dict(verdict("b", "PASS", 1), spec_sha="0" * 40)],
+        spec_sha=False,
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.spec-pass" in blocked_rules(result)
