@@ -17,14 +17,14 @@ REQ-5 — 五種 per-change artifact
 REQ-6 — 決定性層靠重算
   checker 對 needs-design 重算介面表面、對測試與 probe 要求實跑記錄、對 reviewer ≠ implementer 機械檢查、對收件與 push 條件重算（完整規則集見 concept-model §7）；不讀 agent 的宣稱。→ Acceptance #1（品質由機器保證）
 REQ-7 — 准入規則可機械驗
-  機制母體＝`docs/loom/evidence/mechanisms.yaml`（skill、checker 規則、hook、action、schema 欄位、散文閘，各帶 eval 連結）；CI 對 PR 重算母體：淨數增且無 budget-exception 行→紅、有機制無 eval→紅。→ Acceptance #7
+  機制母體＝`docs/loom/evidence/mechanisms.yaml`，五類各有可重算面（skill 目錄、checker `--list-rules` 輸出、hooks.json 條目、contract package 宣告、SKILL.md 內 `<!-- gate: id -->` 標記）；checker 必須提供 `--list-rules`；CI 重算五類與 yaml 比對：漏登→紅、淨數增且 CHANGELOG 無 `budget-exception: <id> — <reason>`→紅、無 eval→紅。→ Acceptance #7
 REQ-8 — 瘦身目標
   skill ≤ 18；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝main 當前 `hooks/session-start` 渲染輸出字數，CI 命令固定）。→ Acceptance #5
   （名詞 ≤ 40 屬 intent Open question：計數規則與基線定案前只記錄，不入本 REQ。）
 REQ-9 — 冷讀可執行
-  一個沒看過 loom 的 agent，只拿站文件，對一個指定任務在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 何時擋、審查何時跑。現況 concept-model.md 整份為 25 分鐘（§12）；達標路徑＝落地後各站 SKILL.md 只載自己那段，量測對象為站文件。→ Acceptance #6
+  一個沒看過 loom 的 agent，只拿 concept-model.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑。現況 25 分鐘（concept-model §12）。→ Acceptance #6（對象是否改為站文件屬 intent 裁定，見 Open questions）
 REQ-10 — 不比今天重
-  以 PR #771（refactor）、#772（feature）、#775（docs）三個已合併 change replay 新流程；commit 數、審查派工數、人類決策點三項逐 change 皆 ≤ 今天實測（基線見 evidence/ceremony-cost-old-vs-new.md §Totals：126／94／6）。→ Acceptance #4
+  以 PR #771、#772、#775 三個已合併 change replay 新流程，一律以 engineering 路徑計（三者今天皆為工程改動）；三項逐 change 皆 ≤ 今天實測——#771：31 commit／22 派工／2 決策點；#772：67／58／2；#775：28／14／2（evidence/ceremony-cost-old-vs-new.md §(i)(ii)(iii)）。→ Acceptance #4
 
 ## Design decision                                 【混合；不呈現給使用者】
 全文見同資料夾 `concept-model.md`（v10）。摘要：三 plugin 沿「要什麼／為什麼」對「怎麼做」切線，loom-design 與 loom-workflow 依賴 loom-code 的 versioned contract package；七站、十工具、一 reference、四 action；checkpoint review（wave 結束按門檻、branch 結束必跑、after-task 逃生口 ≤ 2）；review.json 入版控且 push 時 HEAD 為 review-only commit；standing docs 三段式（勸導／拒收／靜音）；decision-map 的 delivery ticket 由 intent 取代；evidence 跟著 artifact 住；准入規則 AND 形式。
@@ -51,13 +51,13 @@ agent-decided 的岔路與理由：
 - Boundary：plugin 間靠 family-reception／relay／plain-relay 功能副本同步；decision-map 靠 `start_delivery` 雙向綁定 brief。見 `evidence/loom-workflow.md`。
 
 ## UI flows                                        【使用者可讀】
-使用者看到的對話有四種決策型、兩種非決策型：
+使用者看到的對話有四種決策型、一種非決策型（非決策型的入場判準：不做就無法繼續的授權或缺件，不得新增）：
 1. intent 確認：「你要的是 ___，做完後你可以 ___、___、___。對嗎？」→ 對／改。
 2. spec 可見行為確認（product）：「你下 ___ 會看到 ___；___ 的情況會 ___。對嗎？」→ 對／改。
 3. 驗收：「照你說的第 1 條，我在乾淨環境這樣試：___，結果 ___（截圖）。第 2 條 ___。有一個地方我不確定你要什麼：___。」→ OK／不 OK／回答問題。
 4. 單向門（併在 1 或 2 裡問，不另外停）：「A 用你的三段錄音測，準確率 91%、每小時 0.9 美元、錄音送雲端；B 本機跑，78%、免費、不外傳。我建議 A，除非你在意隱私。」→ 選一個／問更多。
 非決策型（不計入決策點）：
 5. Codex 第一次用此 repo：「我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 /hooks 按一次授權，我才會繼續。」→ 使用者授權 → 下次指令自動繼續。
-6a. 第一次偵測到第二家模型 CLI：「我看到這台機器也有 ___。要不要讓它當第二個審查者？好處是能抓到同一家模型一起漏掉的問題；代價是每次審查多幾分鐘和它的額度。你選了我就記住，不再問。」→ 要／不要。
-6. product 但 repo 還沒有產品原則：「這個 repo 還沒有產品原則檔，做產品功能前要先有。我可以訪談你產生一份（約十分鐘），或你告訴我這個 repo 不需要，我就不再提。」→ 產生／不需要。
+6. product 但 repo 還沒有產品原則（**併在決策點①的同一段對話**，不另停）：「做產品功能前這個 repo 要先有一份產品原則，我接著問你幾個問題來產生（約十分鐘），最後跟 intent 一起確認。」→ 直接進訪談。
+（要不要用第二家模型當 reviewer，也在該 repo 第一次決策點①裡順帶問一次，答案記進 KICKOFF-DEFAULTS。）
 單向門的觸發規則（哪些算、先量再問、已釘住不問、合成一次）見 Design decision。
