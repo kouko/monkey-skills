@@ -120,9 +120,9 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.dispatch-covers-tasks",
-        "Every commit between the branch base and reviewed_sha that touches code, spec, skill "
-        "or gate work carries a `Task:` trailer, and every id those trailers name is claimed by "
-        "an implementer dispatch entry.",
+        "Every commit between the branch base and reviewed_sha that touches code, skill "
+        "or gate work carries a `Task:` trailer (spec is exempt, like intent and plan), and "
+        "every id those trailers name is claimed by an implementer dispatch entry.",
     ),
     (
         "push.open-findings-closed",
@@ -1924,6 +1924,14 @@ ADVERSARIAL_TYPES = frozenset({"code", "spec", "skill", "gate"})
 
 ADVERSARIAL_FLOOR = 3
 
+# The artifact types that owe a `Task:` trailer under push.dispatch-covers-
+# tasks. spec.md is owned by the write-spec station (like intent.md and
+# plan.md): its edits are user re-confirmations, not planned tasks, and its
+# freshness is recomputed via spec_sha / confirmed-behavior instead. This is
+# deliberately narrower than ADVERSARIAL_TYPES -- adversarial probes still
+# count spec.
+TRAILER_DUTY_TYPES = frozenset({"code", "skill", "gate"})
+
 
 def artifact_types(manifest, paths) -> set[str]:
     """The §6 type of each changed path: first matching glob in the
@@ -2083,7 +2091,9 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     parked on a docs commit while the code commit carries none leaves that
     code belonging to no task, and no dispatch entry can be checked against
     it. A commit touching only documentation, the review record, the intent,
-    the plan or evidence owes no trailer -- none of it is dispatched work.
+    the plan, the spec or evidence owes no trailer -- none of it is
+    dispatched work (the spec is a user re-confirmation owned by the
+    write-spec station, not a planned task).
     """
     if reviewed_id is None:
         return []
@@ -2106,7 +2116,7 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     untrailered: list[tuple[str, str]] = []
     for sha in shas:
         paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
-        kinds = artifact_types(manifest, paths) & ADVERSARIAL_TYPES
+        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
         message = git_text(repo, "log", "-1", "--format=%B", sha)
         ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
         claimed |= ids
