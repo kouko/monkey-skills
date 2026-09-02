@@ -2781,6 +2781,15 @@
    "started": "2026-09-02T18:29:48Z",
    "fresh_context": true,
    "note": "CI-1"
+  },
+  {
+   "task": "W4-10 blind-run addendum 3",
+   "role": "blind-runner",
+   "agent_id": "sonnet-blind-run-final-3",
+   "model": "sonnet",
+   "started": "2026-09-02T18:35:10Z",
+   "fresh_context": true,
+   "note": "CI-1"
   }
  ],
  "questions": [
