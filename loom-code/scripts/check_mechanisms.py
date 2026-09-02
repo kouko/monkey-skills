@@ -269,8 +269,13 @@ def run_checks(
         if mid not in recomputed[cls]:
             findings.append(Finding("R2", mid, f"class {cls}: registered but not found by recompute"))
 
-        # R4 / R4-pending: eval must be non-empty and resolve, unless it is
-        # the literal accepted-but-flagged `pending — <plan task id>` form.
+    # R4 / R4-pending: eval must be non-empty and resolve, unless it is the
+    # literal accepted-but-flagged `pending — <plan task id>` form. This runs
+    # over EVERY entry regardless of class -- a host-hygiene mechanism is
+    # exempt from R2's ordinary recompute match, but not from having a
+    # working eval.
+    for m in mechanisms:
+        mid = m.get("id", "<missing-id>")
         eval_raw = (m.get("eval") or "").strip()
         if not eval_raw:
             findings.append(Finding("R4", mid, "mechanism has no eval:"))

@@ -628,7 +628,11 @@ SEGMENT_SPLIT = re.compile(r"\|\||&&|[;\n|&]")
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # Options that swallow the next word, so it is a value and never the verb.
 GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
-PREFIX_WORDS = {"sudo", "command", "env", "nohup", "time", "nice", "builtin", "exec"}
+PREFIX_WORDS = {"sudo", "command", "env", "nohup", "time", "nice", "builtin", "exec", "xargs"}
+# `bash -c "git push"` / `sh -c` / `zsh -c` / `dash -c` hand the checker a
+# shell line as a single quoted argument -- shlex has already unquoted it, so
+# it is re-read as a shell line of its own, exactly like `eval`'s payload.
+SHELL_PROGRAMS = {"bash", "sh", "zsh", "dash"}
 
 
 def _tokenise(segment: str) -> list[str]:
@@ -676,6 +680,12 @@ def is_push_command(command: str) -> bool:
             # `eval "git push"`: shlex already removed the quoting, so the
             # payload is re-read as a shell line of its own.
             if is_push_command(" ".join(tokens[1:])):
+                return True
+        elif program in SHELL_PROGRAMS and "-c" in tokens[1:]:
+            # `bash -c "git push"` / `sh -c` / `zsh -c` / `dash -c`: the
+            # argument after `-c` is itself a shell line, same as eval's.
+            index = tokens.index("-c")
+            if index + 1 < len(tokens) and is_push_command(tokens[index + 1]):
                 return True
         elif program == "git":
             if _subcommand(tokens[1:], GIT_VALUE_OPTIONS) == "push":
@@ -1226,16 +1236,23 @@ def cmd_contract(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if same_major and int(shipped.group(2)) >= int(wanted.group(2)):
         out.write(f"contract {version} satisfies requires-contract >={required}\n")
         return 0
-    return report(
-        [
-            (
-                "contract.requires",
-                f"this repo ships loom contract {version}, but >={required} is "
-                "required — 請更新 loom-code。",
-            )
-        ],
-        err,
-    )
+    if int(wanted.group(1)) < int(shipped.group(1)):
+        # This repo's contract has already moved past the required major --
+        # the consuming plugin is what is stale, not loom-code.
+        reason = (
+            f"this repo ships loom contract {version}, but the consuming plugin "
+            f"declares an old contract major (--require {required}); update that "
+            "plugin's requires-contract to a supported major."
+        )
+    else:
+        # Either the required major is higher than shipped, or the major
+        # matches but the minor floor isn't met -- either way loom-code
+        # itself is what needs updating.
+        reason = (
+            f"this repo ships loom contract {version}, but >={required} is "
+            "required — 請更新 loom-code。"
+        )
+    return report([("contract.requires", reason)], err)
 
 
 COMMANDS = {

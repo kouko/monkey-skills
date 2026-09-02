@@ -566,6 +566,11 @@ PUSH_SHAPED = (
     "GIT_SSH_COMMAND=ssh git push",
     "true || gh pr merge --admin",
     "/usr/bin/git push",
+    'bash -c "git push"',
+    'sh -c "git push"',
+    'zsh -c "git push"',
+    'dash -c "git push"',
+    "xargs git push",
 )
 
 NOT_PUSH_SHAPED = (
@@ -576,6 +581,8 @@ NOT_PUSH_SHAPED = (
     "git status",
     "gh pr view 12",
     "git log --oneline",
+    'bash -c "ls"',
+    "bash script.sh",
 )
 
 

@@ -337,6 +337,23 @@ class TestEvalResolution:
         assert result.exit_code == 1
         assert any(f.rule == "R4" and f.mechanism_id == mechs[0]["id"] for f in result.findings)
 
+    def test_r4_missing_eval_for_host_hygiene_is_red(self, tmp_path):
+        """A host-hygiene entry skips R2's ordinary recompute match, but it
+        must not also skip R4 -- a missing/unresolved eval is red regardless
+        of class."""
+        mechs = FULL_MECHANISMS + [
+            {"id": "PostToolUse:Skill:language-anchor.py", "class": "host-hygiene",
+             "eval": "tests/does_not_exist.py"}
+        ]
+        repo = _build_repo(tmp_path, mechanisms=mechs)
+        (repo / "loom-code" / "hooks" / "hooks.json").write_text(json.dumps(HOOKS_JSON_WITH_LANGUAGE_ANCHOR))
+        result = cm.run_checks(repo)
+        assert result.exit_code == 1
+        assert any(
+            f.rule == "R4" and f.mechanism_id == "PostToolUse:Skill:language-anchor.py"
+            for f in result.findings
+        )
+
 
 class TestChangelogSection:
     """F7: R3 reads only the `## [<version>]` / `## <version>` section."""

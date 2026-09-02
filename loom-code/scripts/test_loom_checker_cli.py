@@ -126,6 +126,28 @@ def test_contract_require_blocks_a_different_major() -> None:
     assert "contract.requires" in result.stderr
 
 
+def test_contract_require_higher_major_still_says_update_loom_code() -> None:
+    """The shipped contract (major 1) is below a higher required major (2):
+    the checker itself is what's behind, so the old message direction
+    ('please update loom-code') is correct and unchanged."""
+    result = run_checker("contract", "--require", "2.0")
+    assert result.returncode == 1
+    assert "請更新 loom-code" in result.stderr
+
+
+def test_contract_require_lower_major_blames_the_consuming_plugin() -> None:
+    """The shipped contract (major 1) is above a lower required major (0):
+    the CONSUMER declares an old contract major, not loom-code being behind
+    -- the message must point at the consuming plugin, never say
+    '請更新 loom-code'."""
+    result = run_checker("contract", "--require", "0.5")
+    assert result.returncode == 1
+    assert "BLOCK contract.requires:" in result.stderr
+    assert "請更新 loom-code" not in result.stderr
+    assert "consuming plugin" in result.stderr
+    assert "old contract major" in result.stderr
+
+
 def test_contract_require_rejects_a_malformed_floor() -> None:
     assert run_checker("contract", "--require", "1").returncode == 2
     assert run_checker("contract").returncode == 2
