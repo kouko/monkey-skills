@@ -121,7 +121,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 - 沒有獨立 router，沒有先於 intent 的 reception。
 - **人類決策點**：engineering 兩個（① intent 確認、③ 驗收）；product 三個（加 ② spec 的可見行為確認）。plan 永遠由 agent 決定並記理由。（Codex 的一次性 `/hooks` 授信是安裝動作，不是決策。）
-- **問使用者的規則**：預設不問。只有真正的岔路——≥3 個 trade-off 且不同選擇會改變交付物（brief-before-asking 的既有定義）——才問，且用白話、給預設、一次問完。其他決定 agent 做，標 `agent-decided` 記理由；使用者隨時可翻。
+- **問使用者的規則**：決策點的**數量**是結構（engineering 2、product 3），每個決策點**內**問幾個問題不限——訪談問到清楚為止、可見行為逐個操作對、驗收報告列所有不確定。限制是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是少問。決策點之外，只有真正的岔路——≥3 個 trade-off 且不同選擇會改變交付物——才停下來問，用白話、給預設、一次問完；其他決定 agent 做，標 `agent-decided` 記理由；使用者隨時可翻。
 - 所有「問使用者」的舊時機（on-ramp、kickoff briefing、batch checkpoint、waiver）全部取消；on-ramp 1–3 列由 `needs-design` 重算，4–6 列變 standing default。
 
 ## 5. review 站＝checkpoint review（機器是唯一的審查者）
@@ -195,7 +195,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 新增任何機制必須**同時**：(1) 有 regression eval（程式＝測試；閘門＝攻擊案例；散文規則＝冷讀 dogfood，排程 eval suite）；(2) 淨數不增，做不到寫明示 budget 例外進 CHANGELOG。決定性只是形式要求。不再新增散文閘：事故 → memory → eval → 才考慮 hook。
 
-**量測**（CI 或排程算）：skill 數、artifact 種類數、session-start 注入字數（超 main 基線且無例外→紅）；`needs-design: yes` intent 數、逾期未確認 intent 數、**每 change 問使用者次數**（只記錄；後者連續上升＝違背 §0）。名詞數手數。
+**量測**（CI 或排程算）：skill 數、artifact 種類數、session-start 注入字數（超 main 基線且無例外→紅）；`needs-design: yes` intent 數、逾期未確認 intent 數、**每 change 的決策點數與岔路提問數**（只記錄，不是配額；連續上升＝違背 §0）。名詞數手數。
 
 ## 12. 驗收與審查紀錄
 

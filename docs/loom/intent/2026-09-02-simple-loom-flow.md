@@ -20,7 +20,7 @@ loom 的目標重新定為：假定使用者只具備基本軟體工程知識，
 ## Acceptance
 1. 一個只有基本軟體知識的人，能用白話描述想要的功能，在不讀 spec、plan 或 diff 的情況下，只回答「這是我要的嗎」「這個操作會這樣反應對嗎」「做到了嗎」三種問題，就拿到一個測試通過、經兩個獨立 reviewer 審過、有盲跑報告的 PR。
 2. 同一個任務在 Claude Code 和 Codex CLI 上走出來的檔案、決策點、閘門一致；Codex 只多一次每 repo 一次的 `/hooks` 授信。
-3. 一個 engineering 的 change（例如抽共用 helper）從頭到 PR，使用者被問的次數 ≤ 2；product 的 change ≤ 3。
+3. 一個 engineering 的 change（例如抽共用 helper）從頭到 PR，流程停下來等使用者的**決策點** ≤ 2；product 的 change ≤ 3。每個決策點內問幾個問題不限（訪談可以問到清楚為止）；限制的是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是問得少。
 4. 拿三個 2026-08-20 之後真實合併的 change 重走一遍，commit 數、審查派工數、人類決策點都不多於今天的實際數字。
 5. skill 數從 36 降到 18 以內，session-start 注入字數減半以上，每個 change 產生的文件形狀 ≤ 5 種。
 6. 一個沒看過 loom 的 agent，只拿 concept-model.md，能在 15 分鐘內對一個給定任務說出會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑，且沒有需要猜的規則。
