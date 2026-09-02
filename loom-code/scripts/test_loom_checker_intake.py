@@ -351,12 +351,27 @@ def test_the_repos_own_change_matches_its_own_review_json() -> None:
         )
     )
     verdicts = review["verdicts"]
-    newest = max(int(v.get("round", 1)) for v in verdicts)
-    latest = [v for v in verdicts if int(v.get("round", 1)) == newest]
+    # Only the SPEC rounds answer for the spec (W0-13): rounds that name a
+    # spec scope, else the ones that name no scope at all and were scored
+    # through a spec-side lens. A later code round is not a spec review.
+    spec_scoped = [v for v in verdicts if str(v.get("scope", "")).lower().startswith("spec")]
+    spec_rounds = spec_scoped or [
+        v
+        for v in verdicts
+        if not str(v.get("scope", "")).strip()
+        and str(v.get("lens", "")).lower() in {"spec", "docs", "spec-adversarial"}
+    ]
+    newest = max(int(v.get("round", 1)) for v in spec_rounds) if spec_rounds else 0
+    latest = [v for v in spec_rounds if int(v.get("round", 1)) == newest]
     passing = (
-        len({v["reviewer"] for v in latest}) >= 2
+        bool(latest)
+        and len({v["reviewer"] for v in latest}) >= 2
         and all(v["verdict"] in {"PASS", "PASS_WITH_NOTES"} for v in latest)
-        and any(p.get("kind") == "adversarial" for p in review["probes"])
+        and any(
+            p.get("kind") == "adversarial"
+            and str(p.get("scope", "spec")).lower().startswith("spec")
+            for p in review["probes"]
+        )
     )
     result = run_checker("intake", "write-plan", "2026-09-02-simple-loom-flow", cwd=REPO_ROOT)
     if passing:
@@ -415,3 +430,135 @@ def test_a_traversing_change_id_exits_2(tmp_path: Path) -> None:
     for bad in ("../evil", "a/b", "a b", ""):
         result = run_checker("intake", "write-plan", bad, cwd=repo)
         assert result.returncode == 2, bad
+
+
+# --- intake.spec-pass: a later round must not stand in for the spec one ----
+#
+# W0-13. review.json accumulates: the spec round is round 1, and every wave
+# of the build adds another. Reading only the newest round, or only the
+# file-level `scope` line the newest round overwrote, makes a passing code
+# round answer for a spec that was never reviewed -- and makes a failing
+# code round block a spec that passed. The round's own `scope` is what
+# decides; when no verdict carries one, the lens does.
+
+
+def scoped_verdict(name: str, value: str, round_: int, scope: str, lens: str = "spec") -> dict:
+    entry = verdict(name, value, round_)
+    entry["scope"] = scope
+    entry["lens"] = lens
+    return entry
+
+
+def test_a_later_code_round_does_not_stand_in_for_the_spec_round(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [
+            scoped_verdict("a", "NEEDS_REVISION", 1, "spec"),
+            scoped_verdict("b", "PASS", 1, "spec"),
+            scoped_verdict("c", "PASS", 2, "wave-end:1", lens="code"),
+            scoped_verdict("d", "PASS", 2, "wave-end:1", lens="code"),
+        ],
+        scope="wave-end:1",
+        probes=[dict(ADVERSARIAL, scope="spec")],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.spec-pass" in blocked_rules(result)
+
+
+def test_a_passing_spec_round_survives_a_later_failing_code_round(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [
+            scoped_verdict("a", "PASS", 1, "spec"),
+            scoped_verdict("b", "PASS_WITH_NOTES", 1, "spec"),
+            scoped_verdict("c", "NEEDS_REVISION", 2, "wave-end:1", lens="code"),
+            scoped_verdict("d", "PASS", 2, "wave-end:1", lens="code"),
+        ],
+        scope="wave-end:1",
+        probes=[dict(ADVERSARIAL, scope="spec")],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_the_newest_spec_round_still_decides(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [
+            scoped_verdict("a", "PASS", 1, "spec"),
+            scoped_verdict("b", "PASS", 1, "spec"),
+            scoped_verdict("a", "NEEDS_REVISION", 3, "spec round 2"),
+            scoped_verdict("b", "PASS", 3, "spec round 2"),
+        ],
+        scope="spec",
+        probes=[dict(ADVERSARIAL, scope="spec")],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.spec-pass" in blocked_rules(result)
+
+
+def test_only_code_rounds_means_the_spec_was_never_reviewed(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [
+            scoped_verdict("c", "PASS", 1, "wave-end:1", lens="code"),
+            scoped_verdict("d", "PASS", 1, "wave-end:1", lens="code"),
+        ],
+        scope="wave-end:1",
+        probes=[dict(ADVERSARIAL, scope="wave-end:1")],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.spec-pass" in blocked_rules(result)
+
+
+def test_a_code_scoped_adversarial_probe_does_not_count_as_the_spec_red_team(
+    tmp_path: Path,
+) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(
+        repo,
+        [scoped_verdict("a", "PASS", 1, "spec"), scoped_verdict("b", "PASS", 1, "spec")],
+        scope="spec",
+        probes=[dict(ADVERSARIAL, scope="wave-end:1")],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.spec-pass" in blocked_rules(result)
+
+
+def test_unscoped_verdicts_fall_back_to_the_lens(tmp_path: Path) -> None:
+    """Records written before rounds carried a scope still work: the file's
+    own scope line plus a spec-side lens is what they have."""
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    write_review(repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)], scope="spec")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_unscoped_verdicts_from_a_non_spec_lens_do_not_count(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo)
+    code = [verdict("a", "PASS", 1), verdict("b", "PASS", 1)]
+    for entry in code:
+        entry["lens"] = "code"
+    write_review(repo, code, scope="spec")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.spec-pass" in blocked_rules(result)

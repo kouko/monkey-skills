@@ -548,6 +548,56 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return report(failures, err)
 
 
+SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
+
+
+def spec_scoped_verdicts(review) -> tuple[list[dict], str | None]:
+    """The verdicts that reviewed the SPEC, out of a file that accumulates.
+
+    review.json holds every round of a change, and each round overwrites the
+    file-level `scope` line. Reading the newest round alone lets a passing
+    wave-end round answer for a spec nobody reviewed, and lets a failing one
+    block a spec that passed. A round says what it looked at on its own
+    verdicts (`scope: spec…`); records written before rounds carried a scope
+    fall back to the file-level line plus the reviewer's lens."""
+    entries = [entry for entry in review.get("verdicts", []) if isinstance(entry, dict)]
+    explicit = [
+        entry
+        for entry in entries
+        if str(entry.get("scope", "")).strip().lower().startswith("spec")
+    ]
+    if explicit:
+        return explicit, None
+    unscoped = [entry for entry in entries if not str(entry.get("scope", "")).strip()]
+    if not unscoped:
+        return [], (
+            "review.json records no round scoped to the spec; every round it "
+            "carries reviewed something else."
+        )
+    if "spec" not in str(review.get("scope", "")).lower():
+        return [], "review.json scope does not cover the spec."
+    by_lens = [
+        entry for entry in unscoped
+        if str(entry.get("lens", "")).strip().lower() in SPEC_LENSES
+    ]
+    if not by_lens:
+        return [], (
+            "review.json carries no verdict from a spec-side lens "
+            f"({', '.join(sorted(SPEC_LENSES))}); the spec was not what was reviewed."
+        )
+    return by_lens, None
+
+
+def is_spec_adversarial_probe(probe) -> bool:
+    """The red-team half of the spec lens. A probe that names its scope must
+    name the spec; one written before probes carried a scope is taken at its
+    word, the same fallback the verdicts get."""
+    if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
+        return False
+    scope = str(probe.get("scope", "")).strip().lower()
+    return not scope or scope.startswith("spec")
+
+
 def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
     """write-plan accepts a needs-design: yes change only after the spec's
     own review round passed (concept-model §5, §7)."""
@@ -563,9 +613,10 @@ def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str
             )
         ]
     review = json.loads(read_text(review_path))
-    if "spec" not in str(review.get("scope", "")).lower():
-        return [("intake.spec-pass", "review.json scope does not cover the spec.")]
-    round_number, verdicts = latest_round(review.get("verdicts", []))
+    spec_verdicts, selection_failure = spec_scoped_verdicts(review)
+    if selection_failure:
+        return [("intake.spec-pass", selection_failure)]
+    round_number, verdicts = latest_round(spec_verdicts)
     reviewers = {str(entry.get("reviewer", "")) for entry in verdicts}
     if len(reviewers) < 2:
         return [
@@ -590,7 +641,7 @@ def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str
         ]
     # The spec lens is read AND adversarial (concept-model §5, §6): two
     # passing readers without a red-team is half a review.
-    if not any(str(probe.get("kind")) == "adversarial" for probe in review.get("probes", [])):
+    if not any(is_spec_adversarial_probe(probe) for probe in review.get("probes", [])):
         return [
             (
                 "intake.spec-pass",
