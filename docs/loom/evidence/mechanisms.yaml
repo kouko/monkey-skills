@@ -235,6 +235,8 @@ mechanisms:
   - {id: "artifact:review.open_findings",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:review.dispatch",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
 
-  # --- prose-gate: none yet (W0-06 target population; the landed stations
-  #     mark their real `<!-- gate: … -->` paragraphs in W1/W2, W3-06 §11
-  #     recomputes) ---
+  # --- prose-gate: landed stations mark their real `<!-- gate: … -->`
+  #     paragraphs in W1/W2, W3-06 §11 recomputes ---
+  - id: "maintain.dedupe"
+    class: prose-gate
+    eval: "pending — W4-01"
