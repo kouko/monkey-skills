@@ -255,3 +255,15 @@ mechanisms:
   - id: "write-plan.post-decision-conservative-default"
     class: prose-gate
     eval: "pending — W4-01"
+  - id: "review.two-fresh-reviewers"
+    class: prose-gate
+    eval: "pending — W4-01"
+  - id: "review.reviewer-not-implementer"
+    class: prose-gate
+    eval: "pending — W4-01"
+  - id: "review.no-averaging"
+    class: prose-gate
+    eval: "pending — W4-01"
+  - id: "review.review-only-commit"
+    class: prose-gate
+    eval: "pending — W4-01"
