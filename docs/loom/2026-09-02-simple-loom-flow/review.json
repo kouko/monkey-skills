@@ -2348,6 +2348,24 @@
    "vendor": "openai",
    "started": "2026-09-02T18:01:45Z",
    "fresh_context": true
+  },
+  {
+   "task": "branch-end round 26 re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-branch-end-r26",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-02T18:14:31Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 26 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r26",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T18:14:31Z",
+   "fresh_context": true
   }
  ],
  "questions": [
