@@ -267,3 +267,9 @@ mechanisms:
   - id: "review.review-only-commit"
     class: prose-gate
     eval: "pending — W4-01"
+  - id: "ship.no-push-before-acceptance"
+    class: prose-gate
+    eval: "pending — W4-01"
+  - id: "ship.pr-body-carries-trailer-footer"
+    class: prose-gate
+    eval: "pending — W4-01"

@@ -44,11 +44,38 @@ def test_seven_stations_with_owner(manifest):
         assert s["produces"] in ARTIFACTS | {"diff"}, s["name"]
 
 
+# The pre-redesign skill directories. The five stations are added in
+# W1-01..W1-05 and these are deleted together in W1-06, so between those two
+# points both sets are on disk at once; the exemption below is exactly this
+# list and shrinks to nothing when W1-06 lands, at which point the assertion
+# starts doing its work again. A directory that is neither a station nor one
+# of these fails today.
+LEGACY_SKILL_DIRS = {
+    "brainstorming",
+    "dispatching-parallel-agents",
+    "finishing-a-development-branch",
+    "loom-memory",
+    "requesting-code-review",
+    "requesting-docs-review",
+    "subagent-driven-development",
+    "systematic-debugging",
+    "tdd-iron-law",
+    "ui-verification",
+    "using-git-worktrees",
+    "using-loom-code",
+    "verification-before-completion",
+    "writing-plans",
+}
+
+
 def test_loom_code_station_names_match_skill_dirs(manifest):
     declared = {s["name"] for s in manifest["stations"] if s["owner"] == "loom-code"}
     on_disk = {p.name for p in (REPO / "loom-code" / "skills").iterdir() if p.is_dir()}
     if not declared <= on_disk:
         pytest.xfail("stations land in W1 (plan W1-06); until then the dirs do not exist")
+    undeleted = (on_disk - declared) & LEGACY_SKILL_DIRS
+    if undeleted:
+        pytest.xfail(f"pre-redesign skill dirs are deleted in W1-06: {sorted(undeleted)}")
     assert declared == on_disk
 
 
