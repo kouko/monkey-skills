@@ -380,8 +380,11 @@ TRUNK_BRANCH_NAMES = frozenset({"main", "master"})
 
 # Host plumbing: what the Codex scaffold writes into the adopting repo. It is
 # part of loom's own safety belt, never a surface any rule reads as the
-# change's diff (W4-02 finding F3).
-HOST_PLUMBING_PREFIX = ".codex/"
+# change's diff (W4-02 finding F3). The exemption is scoped to the scaffold's
+# own directory, not to all of `.codex/`: everything else there — a prompt
+# file, a config the user edits — is content, and exempting it would blind
+# every rule that recomputes a claim from the diff.
+HOST_PLUMBING_PREFIX = ".codex/hooks/"
 
 
 ON_A_BRANCH = (
@@ -434,7 +437,7 @@ def changed_paths(repo: Path) -> set[str]:
     """Everything this branch changed, committed or not -- a claim about a
     diff must be checked against the whole diff, staging area included.
 
-    `.codex/` is the one exception: it is the host plumbing the Codex
+    `.codex/hooks/` is the one exception: it is the host plumbing the Codex
     scaffold writes (the hook definition and the checker's own copy of the
     contract package), never a surface a user reads. Left in, the scaffold's
     copied `contract/templates/**` matched the manifest's default interface

@@ -762,3 +762,18 @@ def test_codex_scaffold_paths_are_never_an_interface_surface(tmp_path: Path) -> 
     assert result.returncode == 0, result.stderr
     assert "intent.needs-design-recompute" not in blocked_rules(result)
     assert "intent.kind-recompute" not in blocked_rules(result)
+
+
+def test_only_the_scaffold_plumbing_under_codex_hooks_is_ignored(tmp_path: Path) -> None:
+    """The exemption belongs to what the scaffold writes, not to the whole
+    of `.codex/`. `.codex/hooks/` is the scaffold's plumbing; everything
+    else there — a prompt file the user wrote, say — is content the user
+    reads and edits, and a diff claim must still be checked against it."""
+    import loom_checker as lc
+
+    repo = make_repo(tmp_path)
+    commit_file(repo, ".codex/hooks/contract/templates/x.md")
+    commit_file(repo, ".codex/prompts/x.md")
+    paths = lc.changed_paths(repo)
+    assert ".codex/prompts/x.md" in paths
+    assert ".codex/hooks/contract/templates/x.md" not in paths

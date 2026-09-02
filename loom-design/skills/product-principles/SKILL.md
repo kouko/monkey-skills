@@ -64,7 +64,10 @@ what the checker printed, tell the user to update `loom-code`, and
 the scaffold copy is the whole path, so do not append `/scripts/` to it.)
 
 If `.codex/hooks/loom_checker.py` does not exist on Codex, **stop**: run
-`loom-code`'s `write-plan` step 0b (the scaffold and its trust probe) first. Do not produce any
+`loom-code`'s `write-plan` step 0b (the scaffold and its trust probe; that
+station writes the procedure out in `codex-first-contact.md` under its own
+`references/`, which this plugin cannot read — hand the change over rather
+than reproducing it here) first. Do not produce any
 artifact without the checker. The file existing is not proof the hook runs:
 an untrusted Codex hook is skipped in silence, and step 0b's trust probe is
 what tells the two apart.

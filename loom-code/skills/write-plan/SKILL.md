@@ -117,73 +117,19 @@ checker.
 
 ## Step 0b — Codex only: first contact with this repo
 
-Skip this entirely on Claude Code, where the plugin supplies the checker
-and nothing is installed into the repo.
+Skip this on Claude Code. On Codex the checker lives inside the repo and is
+trusted once — an authorisation, not a decision point, once per repo. The
+procedure and the words to print: `references/codex-first-contact.md`.
 
-On Codex CLI, the checker has to live inside the repo and be trusted once.
-From the loom-code checkout — wherever the user installed it; there is no
-plugin root variable on this host:
-
-```
-python3 <loom-code>/scripts/codex_scaffold.py --repo .
-```
-
-Run it; never predict its answer. If it says the sandbox protects `.codex/`,
-the write sandbox refuses the one directory the scaffold needs. Print this
-and **stop**:
-
-> Codex 的沙箱保護 `.codex/`：請在 Codex 之外的終端機跑一次
-> `python3 <loom-code>/scripts/codex_scaffold.py --repo .`，commit 之後我
-> 再繼續。
->
-> (Codex' sandbox protects .codex/ — run
-> `python3 <loom-code>/scripts/codex_scaffold.py --repo .` once in a
-> terminal outside Codex, commit, then continue.)
-
-If it wrote or changed files, commit them with the message
-`chore(loom): scaffold hooks <version>`, using the version the script
-printed. Then check the copy can run at all:
-
-```
-python3 <loom-code>/scripts/codex_scaffold.py --self-test
-```
-
-Exit 0 means the copied checker blocks a fake push. It does **not** mean
-Codex will ever run it: that command runs the checker itself, so Codex'
-trust decision is not in the loop. An untrusted hook is skipped in
-silence, so the only way to tell a live gate from a dead one is to make **Codex** issue the command.
-
-**The trust probe.** Issue this yourself, as an ordinary tool call, not
-through the scaffold:
-
-```
-git push loom-trust-probe HEAD
-```
-
-`loom-trust-probe` is not a remote and never will be, so the command cannot
-succeed. Read the first line of the output:
-
-- It starts with `BLOCK push.` — the loom hook answered before git was
-  reached. The hook is trusted and live: continue to step 1.
-- Anything else — git answered (`'loom-trust-probe' does not appear to be a
-  git repository`, or another git error). The hook did not run: Codex is
-  skipping it because it is not trusted. Print the words below and
-  **stop**. Do not retry and write no artifact: there is no gate.
-
-> 我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 `/hooks` 按一次授
-> 權，我才會繼續。
->
-> (I have installed loom's checks for this repo; please type `/hooks` in
-> Codex and approve them once, then I will carry on.)
-
-After the user approves, run the trust probe again; a `BLOCK push.` answer
-means you can continue from step 1. To report whether the hook has ever
-fired here without issuing a command,
-`python3 <loom-code>/scripts/codex_scaffold.py --trusted` reads the marker
-it leaves behind.
-
-This is an authorisation, not a decision about the work — it is not a
-decision point, and it happens once per repo, not once per change.
+1. `python3 <loom-code>/scripts/codex_scaffold.py --repo .`, then commit its
+   output as `chore(loom): scaffold hooks <version>`. If it says the
+   sandbox protects `.codex/`, **stop**: the user runs it outside Codex.
+2. `python3 <loom-code>/scripts/codex_scaffold.py --self-test` proves the
+   copy runs — never that Codex trusts it.
+3. Issue `git push loom-trust-probe HEAD` yourself, as an ordinary tool call.
+   `BLOCK push.` means the hook is live: continue. A git error means Codex
+   skipped it as untrusted — ask for one `/hooks` approval and **stop**:
+   write no artifact, there is no gate.
 
 ## Step 1 — Find the intent
 

@@ -38,7 +38,10 @@ Two live-tested facts shape this script
   The shim also records its own firing in ``.codex/hooks/.loom-hook-fired``,
   so ``--trusted`` can answer "has Codex ever run this hook here?" with no
   tool call at all. The marker is gitignored: it is local evidence about
-  this machine's trust state, not repository content.
+  this machine's trust state, not repository content. It records firings by
+  Codex only — ``--self-test`` spawns the same shim with ``LOOM_SELF_TEST``
+  set, which suppresses the write, because a marker this script produced
+  would make ``--trusted`` vouch for a trust decision nobody made.
 
 The copy is a package, not a file: the checker imports ``git_exec`` and reads
 its contract manifest, so the scaffold ships both beside it. A copy that
@@ -64,6 +67,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+SELF_TEST_ENV = "LOOM_SELF_TEST"
 SELF_TEST_FAILED = (
     "BLOCK: the copied loom checker did not block a fake push — the scaffold "
     "is broken; re-run codex_scaffold.py --repo . and commit the result"
@@ -78,6 +82,10 @@ SANDBOX_MESSAGE = (
     "then continue"
 )
 GATE_BROKEN_PREFIX = "BLOCK: the loom hook ran but did not judge the push"
+NOT_EXECUTABLE_MESSAGE = (
+    "BLOCK: the loom hook shim is not executable — re-run the scaffold "
+    "(`codex_scaffold.py --repo .`) or `chmod +x {shim}`"
+)
 BLOCK_LINE_PREFIX = "BLOCK push."
 STAMP_PREFIX = "# loom-checker "
 SHIM_COMMAND = ".codex/hooks/loom-checker"
@@ -114,8 +122,13 @@ SHIM_TEMPLATE = """#!/usr/bin/env bash
 set -euo pipefail
 # Record that Codex' hook engine really invoked this hook. Nothing else can
 # observe that: an untrusted hook is skipped in silence. Never fatal — a
-# read-only checkout must still get its verdict.
-{{ : > "$(dirname "$0")/.loom-hook-fired"; }} 2>/dev/null || true
+# read-only checkout must still get its verdict. LOOM_SELF_TEST marks the
+# one caller that is NOT Codex' hook engine — codex_scaffold.py --self-test
+# spawns this shim itself, and a marker written then would let --trusted
+# report a trust decision Codex never made.
+if [ -z "${{LOOM_SELF_TEST:-}}" ]; then
+  {{ : > "$(dirname "$0")/.loom-hook-fired"; }} 2>/dev/null || true
+fi
 exec python3 {checker} push --hook
 """
 
@@ -136,15 +149,24 @@ def stamp_line(version: str) -> str:
     return f"{STAMP_PREFIX}{version}"
 
 
-def _write(path: Path, content: str, executable: bool = False) -> bool:
-    """Write ``content`` if it differs; return True when the file changed."""
+def _write(path: Path, content: str, executable: bool = False) -> str:
+    """Install ``content`` at ``path``; return what had to be done.
+
+    ``""`` when the file was already installed, ``"wrote"`` when the
+    content changed, ``"repaired mode"`` when the content already matched
+    but the executable bit was missing. The third case is not cosmetic: a
+    shim that cannot be executed is a dead gate, and reporting it as
+    ``unchanged`` would say the hook is installed when it cannot run."""
     if path.is_file() and path.read_text(encoding="utf-8") == content:
-        return False
+        if executable and not path.stat().st_mode & 0o111:
+            path.chmod(path.stat().st_mode | 0o755)
+            return "repaired mode"
+        return ""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     if executable:
         path.chmod(path.stat().st_mode | 0o755)
-    return True
+    return "wrote"
 
 
 def _checker_copy_content(version: str) -> str | None:
@@ -173,48 +195,59 @@ def _ignore_marker(repo: Path) -> bool:
 
 def scaffold(repo: Path) -> int:
     version = plugin_version()
-    changed: list[str] = []
+    changed: list[tuple[str, str]] = []
 
-    if _write(repo / ".codex" / "hooks.json", json.dumps(HOOKS_JSON, indent=2) + "\n"):
-        changed.append(".codex/hooks.json")
+    def record(action: str, name: str) -> None:
+        if action:
+            changed.append((action, name))
+
+    record(
+        _write(repo / ".codex" / "hooks.json", json.dumps(HOOKS_JSON, indent=2) + "\n"),
+        ".codex/hooks.json",
+    )
 
     shim = repo / SHIM_COMMAND
-    if _write(
-        shim,
-        SHIM_TEMPLATE.format(stamp=stamp_line(version), checker=CHECKER_COPY),
-        executable=True,
-    ):
-        changed.append(SHIM_COMMAND)
+    record(
+        _write(
+            shim,
+            SHIM_TEMPLATE.format(stamp=stamp_line(version), checker=CHECKER_COPY),
+            executable=True,
+        ),
+        SHIM_COMMAND,
+    )
 
     copy = _checker_copy_content(version)
-    if copy is not None and _write(repo / CHECKER_COPY, copy):
-        changed.append(CHECKER_COPY)
+    if copy is not None:
+        record(_write(repo / CHECKER_COPY, copy), CHECKER_COPY)
 
     # The checker cannot run alone: it imports its siblings and reads the
     # contract manifest and templates. Ship them next to the copy.
     for name in SIBLING_MODULES:
         source = SCRIPTS_SOURCE / name
-        if source.is_file() and _write(
-            repo / HOOK_DIR / name, source.read_text(encoding="utf-8")
-        ):
-            changed.append(f"{HOOK_DIR}/{name}")
+        if source.is_file():
+            record(
+                _write(repo / HOOK_DIR / name, source.read_text(encoding="utf-8")),
+                f"{HOOK_DIR}/{name}",
+            )
 
     for source in sorted(CONTRACT_SOURCE.rglob("*")):
         if not source.is_file():
             continue
         relative = source.relative_to(CONTRACT_SOURCE)
-        if _write(repo / CONTRACT_COPY / relative, source.read_text(encoding="utf-8")):
-            changed.append(f"{CONTRACT_COPY}/{relative}")
+        record(
+            _write(repo / CONTRACT_COPY / relative, source.read_text(encoding="utf-8")),
+            f"{CONTRACT_COPY}/{relative}",
+        )
 
     if _ignore_marker(repo):
-        changed.append(".gitignore")
+        record("wrote", ".gitignore")
 
     if not changed:
         print(f"unchanged — loom hooks already scaffolded at {version}")
         return 0
 
-    for name in changed:
-        print(f"wrote {name}")
+    for action, name in changed:
+        print(f"{action} {name}")
     print(f"suggested commit subject: chore(loom): scaffold hooks {version}")
     print(
         "next: --self-test proves the copy runs; the station's trust probe "
@@ -250,20 +283,38 @@ def self_test(repo: Path) -> int:
     here, this script is. The station's own probe — a doomed ``git push``
     issued as a normal tool call — is the only thing that puts Codex' hook
     engine in the loop, so the passing message says so out loud.
+
+    Which is also why the run must leave no trust marker behind: the shim
+    reads ``LOOM_SELF_TEST`` and skips writing it, and anything that slips
+    through anyway is deleted here, because a marker this run created would
+    make ``--trusted`` report a decision Codex never made.
     """
     shim = repo / SHIM_COMMAND
     if not shim.is_file():
         print(SELF_TEST_FAILED, file=sys.stderr)
         return 2
 
+    marker = repo / MARKER
+    marker_before = marker.is_file()
     payload = dict(PROBE_PAYLOAD, cwd=str(repo))
-    proc = subprocess.run(
-        [str(shim)],
-        cwd=str(repo),
-        input=json.dumps(payload),
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            [str(shim)],
+            cwd=str(repo),
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            env=dict(os.environ, **{SELF_TEST_ENV: "1"}),
+        )
+    except PermissionError:
+        # The shim survived a copy that dropped its mode bits — a distinct
+        # dead end from the sandbox one, and it has its own door out.
+        print(NOT_EXECUTABLE_MESSAGE.format(shim=SHIM_COMMAND), file=sys.stderr)
+        return 2
+    finally:
+        if not marker_before and marker.is_file():
+            marker.unlink()
+
     if proc.returncode == 0:
         print(SELF_TEST_FAILED, file=sys.stderr)
         return 2
@@ -281,6 +332,24 @@ def self_test(repo: Path) -> int:
     )
     print(f"{GATE_BROKEN_PREFIX}: {first.strip()}", file=sys.stderr)
     return 2
+
+
+def _scaffold_or_sandbox(repo: Path) -> int:
+    """``scaffold`` with the sandbox dead end named.
+
+    `--sandbox workspace-write` protects `.codex/` while leaving the rest of
+    the workspace writable, so the scaffold's own writes — and only those —
+    die on EACCES there (W4-02 finding F1). A bare errno left the user with
+    a dead end; name the door out instead. Scoped this tightly on purpose:
+    when the whole CLI wore this handler, a shim that had merely lost its
+    executable bit was reported as a sandbox the user cannot leave."""
+    try:
+        return scaffold(repo)
+    except OSError as exc:
+        if exc.errno in (errno.EACCES, errno.EPERM):
+            print(SANDBOX_MESSAGE.format(script=os.path.abspath(__file__)), file=sys.stderr)
+            return 2
+        raise
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -308,15 +377,8 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         if args.trusted:
             return trusted(repo)
-        return self_test(repo) if args.self_test else scaffold(repo)
+        return self_test(repo) if args.self_test else _scaffold_or_sandbox(repo)
     except OSError as exc:
-        # `--sandbox workspace-write` protects `.codex/` while leaving the
-        # rest of the workspace writable, so the scaffold — and only the
-        # scaffold — dies here (W4-02 finding F1). A bare errno left the
-        # user with a dead end; name the door out instead.
-        if exc.errno in (errno.EACCES, errno.EPERM):
-            print(SANDBOX_MESSAGE.format(script=os.path.abspath(__file__)), file=sys.stderr)
-            return 2
         print(f"loom scaffold failed: {exc}", file=sys.stderr)
         return 2
     except Exception as exc:

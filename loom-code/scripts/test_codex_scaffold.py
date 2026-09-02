@@ -351,3 +351,87 @@ def test_a_write_protected_codex_directory_is_named_not_a_traceback(repo):
     assert SANDBOX_PREFIX in proc.stderr
     assert "outside Codex" in proc.stderr
     assert "Traceback" not in proc.stderr
+
+
+# --- the self-test must not forge the trust marker (branch-end F2) ---------
+
+
+def shim_fires(repo: Path, env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
+    """Invoke the shim the way Codex' hook engine would: a payload on stdin
+    and no self-test flag in the environment."""
+    payload = {
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "git push origin HEAD"},
+        "cwd": str(repo),
+        "permission_mode": "default",
+    }
+    return subprocess.run(
+        [str(repo / ".codex" / "hooks" / "loom-checker")],
+        cwd=str(repo), input=json.dumps(payload),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+
+
+def test_self_test_leaves_no_trust_marker(repo):
+    """`--self-test` spawns the shim itself, so a marker written during it
+    says nothing about Codex' trust decision -- yet `--trusted` would read
+    it as proof and tell the user the gate is live while it is dead."""
+    scaffold(repo)
+    stub_checker(repo, 2)
+    assert run("--repo", str(repo), "--self-test").returncode == 0
+    assert not (repo / MARKER).exists(), "the self-test must not forge the marker"
+    assert run("--repo", str(repo), "--trusted").returncode == 2
+
+
+def test_self_test_keeps_a_marker_it_did_not_create(repo):
+    """Belt and braces cuts one way only: a marker from a real firing is
+    evidence, and the self-test must not destroy it."""
+    scaffold(repo)
+    stub_checker(repo, 2)
+    (repo / MARKER).write_text("", encoding="utf-8")
+    assert run("--repo", str(repo), "--self-test").returncode == 0
+    assert (repo / MARKER).is_file()
+
+
+def test_a_real_firing_still_marks_the_repo_trusted(repo):
+    """The other side of the same fence: without the self-test flag the
+    shim records its firing, which is the only trust evidence there is."""
+    git_repo(repo)
+    assert scaffold(repo).returncode == 0
+    assert shim_fires(repo).returncode == 2
+    assert run("--repo", str(repo), "--trusted").returncode == 0
+
+
+# --- a non-executable shim is its own dead end (branch-end F4) -------------
+
+
+NOT_EXECUTABLE_PREFIX = "BLOCK: the loom hook shim is not executable"
+
+
+def test_a_non_executable_shim_is_named_not_read_as_the_sandbox(repo):
+    """Spawning a shim without +x raises EACCES, which the CLI's sandbox
+    branch used to translate into "Codex' sandbox protects .codex/" -- a
+    door that is not the one the user is standing in front of."""
+    scaffold(repo)
+    (repo / ".codex" / "hooks" / "loom-checker").chmod(0o644)
+    proc = run("--repo", str(repo), "--self-test")
+    assert proc.returncode == 2
+    assert NOT_EXECUTABLE_PREFIX in proc.stderr
+    assert "chmod +x" in proc.stderr
+    assert SANDBOX_PREFIX not in proc.stderr
+    assert "Traceback" not in proc.stderr
+
+
+def test_a_shim_that_lost_its_executable_bit_is_repaired(repo):
+    """Content-identical is not the same as installed: a shim that cannot
+    be executed is a dead gate, so `unchanged` would be a lie."""
+    scaffold(repo)
+    shim = repo / ".codex" / "hooks" / "loom-checker"
+    shim.chmod(0o644)
+    proc = scaffold(repo)
+    assert proc.returncode == 0, proc.stderr
+    assert "repaired mode" in proc.stdout
+    assert "unchanged" not in proc.stdout
+    assert shim.stat().st_mode & 0o111
+    assert "unchanged" in scaffold(repo).stdout
