@@ -57,11 +57,22 @@ def make_repo(tmp_path: Path, *, kind: str = "engineering") -> tuple[Path, Path]
     return repo, intent
 
 
-def add_principles(repo: Path, *, ratified: bool = True) -> None:
+NON_NEGOTIABLES = """
+## Non-negotiables (ordered)
+- Ship the smallest thing that helps.
+- Never lose the user's data.
+- Say what was decided for them.
+"""
+
+
+def add_principles(repo: Path, *, ratified: bool = True,
+                   non_negotiables: str = NON_NEGOTIABLES) -> None:
+    """`ratified` is BOTH halves of concept-model §8: the `ratified-by:`
+    line and a Non-negotiables section carrying at least three items."""
     body = "# Principles\n"
     if ratified:
         body += "ratified-by: kouko 2026-09-02\n"
-    body += "\n## P1\nShip the smallest thing that helps.\n"
+    body += "\n## P1\nShip the smallest thing that helps.\n" + non_negotiables
     (repo / "PRINCIPLES.md").write_text(body, encoding="utf-8")
 
 
@@ -144,7 +155,9 @@ def test_principles_under_docs_loom_also_counts(tmp_path: Path) -> None:
     add_design(repo)
     target = repo / "docs/loom/PRINCIPLES.md"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("# Principles\nratified-by: kouko 2026-09-02\n", encoding="utf-8")
+    target.write_text(
+        "# Principles\nratified-by: kouko 2026-09-02\n" + NON_NEGOTIABLES, encoding="utf-8"
+    )
     result = run_checker("standing", str(intent), cwd=repo)
     assert warn_lines(result) == []
 
@@ -174,6 +187,35 @@ def test_product_with_ratified_principles_passes(tmp_path: Path) -> None:
     add_design(repo)
     result = run_checker("standing", str(intent), cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+def test_principles_without_a_non_negotiables_section_is_not_ratified(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(repo, non_negotiables="")
+    result = run_checker("standing", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "standing.product-principles-reject" in blocked_rules(result)
+    assert "Non-negotiables" in result.stderr
+
+
+def test_a_non_negotiables_section_with_two_items_is_not_ratified(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(
+        repo,
+        non_negotiables="\n## Non-negotiables\n- One thing.\n- Another thing.\n",
+    )
+    result = run_checker("standing", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "standing.product-principles-reject" in blocked_rules(result)
+
+
+def test_a_lowercase_non_negotiables_heading_still_counts(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(
+        repo,
+        non_negotiables="\n## non-negotiables\n1. One.\n2. Two.\n3. Three.\n",
+    )
+    assert run_checker("standing", str(intent), cwd=repo).returncode == 0
 
 
 def test_engineering_is_never_rejected_for_missing_principles(tmp_path: Path) -> None:

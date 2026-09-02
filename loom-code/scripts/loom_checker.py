@@ -11,9 +11,9 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py --list-rules
     loom_checker.py intent <path> [--commit-msg <file>]
     loom_checker.py intake <station> <change-id>
-    loom_checker.py push [--head <ref>]
+    loom_checker.py push [--head <ref>] [--hook]
     loom_checker.py standing <path-to-intent>
-    loom_checker.py hooks-probe
+    loom_checker.py contract --require <major.minor>
 
 Exit codes: 0 pass, 1 a rule failed (`BLOCK <rule.id>: <reason>` on
 stderr), 2 usage or internal error. Any unexpected exception fails
@@ -29,6 +29,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 from pathlib import Path
 
@@ -36,11 +38,29 @@ import yaml
 
 from git_exec import run_git  # sibling module (no __init__.py, no conftest)
 
-MANIFEST_PATH = Path(__file__).resolve().parents[1] / "contract" / "manifest.yaml"
+
+def _contract_dir() -> Path:
+    """Where the contract package sits. In the plugin it is a sibling of
+    `scripts/`; in the Codex scaffold copy (concept-model §7a) the checker
+    is copied next to its own `contract/`, so both layouts resolve."""
+    here = Path(__file__).resolve()
+    candidates = (here.parents[1] / "contract", here.parent / "contract")
+    for candidate in candidates:
+        if (candidate / "manifest.yaml").is_file():
+            return candidate
+    return candidates[0]  # nothing found: fail loudly on the first read
+
+
+CONTRACT_DIR = _contract_dir()
+MANIFEST_PATH = CONTRACT_DIR / "manifest.yaml"
 
 USAGE = __doc__.split("Sub-commands (the CLI contract other stations depend on):", 1)[1]
 
 RULES: list[tuple[str, str]] = [
+    (
+        "contract.requires",
+        "A consumer plugin's requires-contract floor is met by this contract manifest version.",
+    ),
     (
         "intake.confirmed",
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>`.",
@@ -68,6 +88,10 @@ RULES: list[tuple[str, str]] = [
     (
         "intent.schema",
         "The intent file carries every required frontmatter field and H2 section declared in the contract manifest.",
+    ),
+    (
+        "push.dismissed-by-reviewer",
+        "Every dismissed finding names a dispatch reviewer, blind-runner or adversary who never implemented it.",
     ),
     (
         "push.open-findings-closed",
@@ -595,7 +619,74 @@ def check_confirmed_behavior(manifest, repo: Path, change_id: str) -> list[tuple
     return []
 
 
-PUSH_COMMAND_RE = re.compile(r"(^|[;&|]\s*|\s)(git\s+push|gh\s+pr\s+(create|merge))\b")
+# A shell line is not a regex target: `git -C /x push`, `git --git-dir=… push`,
+# `eval "git push"` and `make it; git push` all have to be recognised, and
+# `git pushd` / `git commit -m "push"` must not be. So each `;`/`&&`/`||`/`|`
+# segment is tokenised and its FIRST non-option word after the program name is
+# compared to the verb -- the way the shell would read it.
+SEGMENT_SPLIT = re.compile(r"\|\||&&|[;\n|&]")
+ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+# Options that swallow the next word, so it is a value and never the verb.
+GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
+PREFIX_WORDS = {"sudo", "command", "env", "nohup", "time", "nice", "builtin", "exec"}
+
+
+def _tokenise(segment: str) -> list[str]:
+    try:
+        return shlex.split(segment)
+    except ValueError:  # an unbalanced quote is still worth judging
+        return segment.split()
+
+
+def _strip_prefix(tokens: list[str]) -> list[str]:
+    """Drop `VAR=…` assignments and wrapper words that precede the program."""
+    index = 0
+    while index < len(tokens) and (
+        ASSIGNMENT.match(tokens[index]) or tokens[index] in PREFIX_WORDS
+    ):
+        index += 1
+    return tokens[index:]
+
+
+def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
+    """The first word that is neither an option nor an option's value."""
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "--":
+            return None
+        if token in value_options:
+            index += 2
+            continue
+        if token.startswith("-"):
+            index += 1
+            continue
+        return token
+    return None
+
+
+def is_push_command(command: str) -> bool:
+    """True when any segment of this shell line pushes or opens/merges a PR."""
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens:
+            continue
+        program = Path(tokens[0]).name
+        if program == "eval":
+            # `eval "git push"`: shlex already removed the quoting, so the
+            # payload is re-read as a shell line of its own.
+            if is_push_command(" ".join(tokens[1:])):
+                return True
+        elif program == "git":
+            if _subcommand(tokens[1:], GIT_VALUE_OPTIONS) == "push":
+                return True
+        elif program == "gh":
+            rest = tokens[1:]
+            if _subcommand(rest, set()) == "pr":
+                after = rest[rest.index("pr") + 1:]
+                if _subcommand(after, set()) in {"create", "merge"}:
+                    return True
+    return False
 
 
 def read_hook_payload(stdin=sys.stdin) -> dict | None:
@@ -617,20 +708,27 @@ def read_hook_payload(stdin=sys.stdin) -> dict | None:
 
 
 def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
-    payload = read_hook_payload()
-    if payload is not None:
-        # Hook mode: the matcher is the tool name, so every Bash command
-        # arrives here; only push-shaped commands are judged.
-        command = str((payload.get("tool_input") or {}).get("command", ""))
-        if not PUSH_COMMAND_RE.search(command):
-            return 0
-        cwd = payload.get("cwd")
-        if cwd:
-            os.chdir(cwd)
-        rc = _cmd_push(args, out, err)
-        return 2 if rc == 1 else rc   # hosts block on exit 2
+    """`--hook` is what selects hook mode, never the shape of stdin: a
+    checker run from a station (or a terminal, or any harness that hands it
+    a pipe nobody ever closes) must never block on `stdin.read()`."""
+    rest = list(args)
+    if "--hook" not in rest:
+        return _cmd_push(rest, out, err)
+    rest.remove("--hook")
 
-    return _cmd_push(args, out, err)
+    payload = read_hook_payload()
+    if payload is None:
+        raise UsageError("push --hook expects a PreToolUse JSON payload on stdin.")
+    # The matcher is the tool name, so every Bash command arrives here; only
+    # push-shaped commands are judged.
+    command = str((payload.get("tool_input") or {}).get("command", ""))
+    if not is_push_command(command):
+        return 0
+    cwd = payload.get("cwd")
+    if cwd:
+        os.chdir(cwd)
+    rc = _cmd_push(rest, out, err)
+    return 2 if rc == 1 else rc   # hosts block on exit 2
 
 
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
@@ -673,9 +771,15 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
     failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id)
     failures += check_open_findings_closed(review)
-    failures += check_probes_package_tests(repo, review, reviewed_id)
+    failures += check_probes_package_tests(repo, review, reviewed_id, out)
     failures += check_verdicts(review)
-    failures += check_reviewer_ne_implementer(repo, head_sha, review_rel, review, reviewed_id)
+
+    # `dispatch[]` lives inside the review.json that was read out of the
+    # reviewed commit's tree, so both identity rules recompute from a
+    # committed record and never from the working tree (concept-model §2e).
+    implementers, reviewers, dispatch_error = parse_dispatch(review)
+    failures += check_reviewer_ne_implementer(review, implementers, reviewers, dispatch_error)
+    failures += check_dismissed_by_reviewer(review, implementers, reviewers, dispatch_error)
     return report(failures, err)
 
 
@@ -781,20 +885,24 @@ def check_open_findings_closed(review) -> list[tuple[str, str]]:
     return []
 
 
-def check_probes_package_tests(repo: Path, review, reviewed_id: str | None):
-    """A recorded test run is evidence only when the record says WHICH
-    commit was tested and the artifact it points at is really in that
-    commit's tree. Without that, `result: pass` is a self-claim."""
+PROBE_TIMEOUT = 1800  # 30 minutes: a package suite that never ends is a fail
+
+
+def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
+                               out=sys.stdout):
+    """A recorded test run is not evidence -- the RUN is. The record only
+    says which commit was tested and what to type; the checker then types it
+    itself in a clean tree that is the reviewed tree, and the exit code it
+    observes decides (concept-model §7). The agent's own `result` is kept as
+    a record and never believed."""
     reasons: list[str] = []
     for probe in review.get("probes", []):
         if not isinstance(probe, dict) or str(probe.get("kind")) != "package-tests":
             continue
-        label = str(probe.get("command", "")).strip() or "<no command>"
-        if not str(probe.get("command", "")).strip():
+        command = str(probe.get("command", "")).strip()
+        label = command or "<no command>"
+        if not command:
             reasons.append("a package-tests probe records no command")
-            continue
-        if str(probe.get("result", "")).lower() != "pass":
-            reasons.append(f"`{label}` result is {probe.get('result')!r}, not pass")
             continue
         sha = str(probe.get("sha", "")).strip()
         probe_id = (
@@ -808,6 +916,27 @@ def check_probes_package_tests(repo: Path, review, reviewed_id: str | None):
         artifact = str(probe.get("artifact", "")).strip()
         if artifact and not git_ok(repo, "cat-file", "-e", f"{reviewed_id}:{artifact}"):
             reasons.append(f"`{label}` names artifact {artifact}, absent from the reviewed tree")
+            continue
+        if git_text(repo, "status", "--porcelain").strip():
+            reasons.append(
+                f"`{label}` cannot be re-run: the working tree is not clean, so what "
+                "would be tested is not the reviewed tree"
+            )
+            continue
+        try:
+            observed = subprocess.run(
+                command, shell=True, cwd=str(repo), capture_output=True,
+                text=True, timeout=PROBE_TIMEOUT,
+            ).returncode
+        except subprocess.TimeoutExpired:
+            reasons.append(f"`{label}` did not finish within {PROBE_TIMEOUT}s")
+            continue
+        out.write(
+            f"package-tests `{label}`: observed exit code {observed} "
+            f"(recorded result: {probe.get('result')!r})\n"
+        )
+        if observed != 0:
+            reasons.append(f"`{label}` exited {observed} when the checker ran it")
             continue
         return []
     detail = "; ".join(reasons) if reasons else "no package-tests probe recorded at all"
@@ -855,71 +984,50 @@ def check_verdicts(review) -> list[tuple[str, str]]:
 
 
 REVIEWING_ROLES = {"reviewer", "blind-runner", "adversary"}
+DISPATCH_KEYS = ("task", "role", "agent_id", "model", "started")
 
 
-def check_reviewer_ne_implementer(repo: Path, head_sha: str, review_rel: str, review,
-                                  reviewed_id: str | None):
-    """Recomputed from the committed dispatch record. §0 is explicit that a
-    FORGED record is out of scope; an absent, unreadable or working-tree-only
-    one is not -- only a tree the review commit or its parent carries counts."""
-    dispatch_rel = f"{review_rel}.dispatch"
-    raw = None
-    for tree in (reviewed_id, head_sha):
-        if tree:
-            raw = git_maybe(repo, "show", f"{tree}:{dispatch_rel}")
-            if raw:
-                break
-    if not raw:
-        return [
-            (
-                "push.reviewer-ne-implementer",
-                f"no committed dispatch record at {dispatch_rel}; who reviewed cannot "
-                "be recomputed (a working-tree copy does not count).",
-            )
-        ]
+def parse_dispatch(review) -> tuple[set[str], set[str], str | None]:
+    """Split `review["dispatch"]` into implementer and reviewing agent ids.
 
-    manifest_fields = [
-        field["name"]
-        for field in load_manifest()["artifacts"]["review-dispatch"]["fields"]
-        if field.get("required")
-    ]
+    §0 is explicit that a FORGED record is out of scope; an absent, empty or
+    unreadable one is not -- it makes both identity rules undecidable, and an
+    undecidable rule blocks. `fresh_context` is a record field, not a
+    recomputable condition (concept-model §7), so nothing here reads it."""
+    entries = review.get("dispatch")
+    if not isinstance(entries, list) or not entries:
+        return set(), set(), (
+            "review.json carries no `dispatch` entries; who reviewed and who "
+            "implemented cannot be recomputed."
+        )
     implementers: set[str] = set()
     reviewers: set[str] = set()
-    for number, line in enumerate(raw.splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            entry = json.loads(line)
-        except json.JSONDecodeError:
-            return [
-                (
-                    "push.reviewer-ne-implementer",
-                    f"{dispatch_rel} line {number} is not a JSON object; "
-                    "the record cannot be recomputed.",
-                )
-            ]
+    for number, entry in enumerate(entries, start=1):
         if not isinstance(entry, dict):
-            return [("push.reviewer-ne-implementer", f"{dispatch_rel} line {number} is not an object.")]
-        missing = [key for key in manifest_fields if not str(entry.get(key, "")).strip()]
+            return set(), set(), f"dispatch entry {number} is not an object."
+        missing = [key for key in DISPATCH_KEYS if not str(entry.get(key, "")).strip()]
         if missing:
-            return [
-                (
-                    "push.reviewer-ne-implementer",
-                    f"{dispatch_rel} line {number} is missing {', '.join(missing)}; "
-                    "the record cannot be recomputed.",
-                )
-            ]
+            return set(), set(), (
+                f"dispatch entry {number} is missing {', '.join(missing)}; "
+                "the record cannot be recomputed."
+            )
         agent, role = str(entry["agent_id"]), str(entry["role"])
         if role == "implementer":
             implementers.add(agent)
         elif role in REVIEWING_ROLES:
             reviewers.add(agent)
+    return implementers, reviewers, None
 
+
+def check_reviewer_ne_implementer(review, implementers: set[str], reviewers: set[str],
+                                  dispatch_error: str | None):
+    if dispatch_error:
+        return [("push.reviewer-ne-implementer", dispatch_error)]
     if not reviewers:
         return [
             (
                 "push.reviewer-ne-implementer",
-                f"{dispatch_rel} records no reviewer, blind-runner or adversary dispatch.",
+                "review.json dispatch[] records no reviewer, blind-runner or adversary.",
             )
         ]
     both = sorted(implementers & reviewers)
@@ -937,10 +1045,66 @@ def check_reviewer_ne_implementer(repo: Path, head_sha: str, review_rel: str, re
             (
                 "push.reviewer-ne-implementer",
                 f"verdict reviewer(s) {', '.join(unknown)} were never dispatched as "
-                f"reviewer, blind-runner or adversary in {dispatch_rel}.",
+                "reviewer, blind-runner or adversary in review.json dispatch[].",
             )
         ]
     return []
+
+
+DISMISSED_BY = re.compile(r"\bby\s+(\S+)\s*$")
+
+
+def dismissed_by(entry: dict) -> str | None:
+    """Who dismissed this finding. `dismissed` may be an object carrying
+    `by`, or the prose form concept-model §2e writes,
+    `dismissed: "<reason> by <who>"` -- both name the same field."""
+    value = entry.get("dismissed")
+    if isinstance(value, dict) and str(value.get("by", "")).strip():
+        return str(value["by"]).strip()
+    if str(entry.get("by", "")).strip():
+        return str(entry["by"]).strip()
+    if isinstance(value, str):
+        match = DISMISSED_BY.search(value.strip())
+        if match:
+            return match.group(1)
+    return None
+
+
+def check_dismissed_by_reviewer(review, implementers: set[str], reviewers: set[str],
+                                dispatch_error: str | None):
+    """Only a non-implementing reviewer may wave a finding away
+    (concept-model §5); the checker recomputes that from dispatch[]."""
+    dismissals = [
+        entry
+        for entry in review.get("open_findings", [])
+        if isinstance(entry, dict) and entry.get("dismissed")
+    ]
+    if not dismissals:
+        return []
+    if dispatch_error:
+        return [("push.dismissed-by-reviewer", dispatch_error)]
+    failures = []
+    for entry in dismissals:
+        finding = str(entry.get("id", "<no id>"))
+        who = dismissed_by(entry)
+        if not who:
+            failures.append(
+                (
+                    "push.dismissed-by-reviewer",
+                    f"finding {finding} is dismissed but names nobody; write "
+                    "`dismissed: \"<reason> by <agent_id>\"`.",
+                )
+            )
+            continue
+        if who in implementers or who not in reviewers:
+            failures.append(
+                (
+                    "push.dismissed-by-reviewer",
+                    f"finding {finding} was dismissed by {who}, who is not a "
+                    "non-implementing reviewer, blind-runner or adversary in dispatch[].",
+                )
+            )
+    return failures
 
 
 STANDING_WARN = (
@@ -983,18 +1147,43 @@ def cmd_standing(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
                     "a waiver silences the WARN only, never this rejection.",
                 )
             )
-        elif not RATIFIED_BY.search(read_text(principles)):
-            failures.append(
-                (
-                    "standing.product-principles-reject",
-                    f"{principles.relative_to(repo)} carries no `ratified-by: <name> <date>` "
-                    "line, so it was never ratified.",
+        else:
+            reason = unratified_reason(read_text(principles))
+            if reason:
+                failures.append(
+                    (
+                        "standing.product-principles-reject",
+                        f"{principles.relative_to(repo)} {reason}, so it was never ratified.",
+                    )
                 )
-            )
     return report(failures, err)
 
 
 RATIFIED_BY = re.compile(r"^ratified-by:\s*\S.*$", re.MULTILINE)
+NON_NEGOTIABLES = re.compile(r"^##\s+non-negotiables\b", re.IGNORECASE)
+LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\S")
+MIN_NON_NEGOTIABLES = 3
+
+
+def unratified_reason(text: str) -> str | None:
+    """Ratified is two things, not one (concept-model §8): the signature
+    line AND a Non-negotiables section with something in it. A signature over
+    an empty document ratifies nothing, so the section is counted here."""
+    if not RATIFIED_BY.search(text):
+        return "carries no `ratified-by: <name> <date>` line"
+    items, inside = 0, False
+    for line in text.splitlines():
+        if line.startswith("## "):
+            inside = bool(NON_NEGOTIABLES.match(line))
+            continue
+        if inside and LIST_ITEM.match(line):
+            items += 1
+    if items < MIN_NON_NEGOTIABLES:
+        return (
+            "has no `## Non-negotiables` section carrying at least "
+            f"{MIN_NON_NEGOTIABLES} list items (found {items})"
+        )
+    return None
 
 
 def find_standing_doc(repo: Path, name: str) -> Path | None:
@@ -1005,8 +1194,48 @@ def find_standing_doc(repo: Path, name: str) -> Path | None:
     return None
 
 
-def cmd_hooks_probe(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
-    raise UsageError("hooks-probe is reserved and not implemented yet (plan task W0-05)")
+REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")
+
+
+def cmd_contract(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py contract --require <major>.<minor>` -- the check
+    loom-design and loom-workflow run at station start (concept-model §1).
+    Same major and a high enough minor passes; anything else blocks with the
+    one instruction the user can act on."""
+    required = None
+    rest = list(args)
+    while rest:
+        token = rest.pop(0)
+        if token != "--require":
+            raise UsageError(f"unexpected argument {token!r}.")
+        if not rest:
+            raise UsageError("--require needs a <major>.<minor> version.")
+        required = rest.pop(0)
+    if required is None:
+        raise UsageError("contract needs `--require <major>.<minor>`.")
+    wanted = REQUIRED_VERSION.fullmatch(required.strip())
+    if not wanted:
+        raise UsageError(f"`--require {required}` is not <major>.<minor>.")
+
+    version = str(load_manifest().get("version", "")).strip()
+    shipped = REQUIRED_VERSION.match(version)
+    if not shipped:
+        raise UsageError(f"the contract manifest declares no readable version ({version!r}).")
+
+    same_major = shipped.group(1) == wanted.group(1)
+    if same_major and int(shipped.group(2)) >= int(wanted.group(2)):
+        out.write(f"contract {version} satisfies requires-contract >={required}\n")
+        return 0
+    return report(
+        [
+            (
+                "contract.requires",
+                f"this repo ships loom contract {version}, but >={required} is "
+                "required — 請更新 loom-code。",
+            )
+        ],
+        err,
+    )
 
 
 COMMANDS = {
@@ -1014,7 +1243,7 @@ COMMANDS = {
     "intake": cmd_intake,
     "push": cmd_push,
     "standing": cmd_standing,
-    "hooks-probe": cmd_hooks_probe,
+    "contract": cmd_contract,
 }
 
 

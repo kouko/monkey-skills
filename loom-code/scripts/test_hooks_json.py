@@ -66,10 +66,13 @@ def test_pre_tool_use_matcher_set_is_exactly_bash(hooks):
 
 
 def test_pre_tool_use_runs_the_single_checker_push_rule(hooks):
+    """``--hook`` is what puts the checker in hook mode. Without it the
+    checker reads no stdin at all, so the flag is not decoration: a hook
+    entry that omits it would judge nothing."""
     (command,) = _commands(hooks["PreToolUse"])
     assert command.startswith("python3 ")
     assert "/scripts/loom_checker.py" in command
-    assert command.rstrip().endswith(" push")
+    assert command.rstrip().endswith(" push --hook")
 
 
 def test_post_tool_use_keeps_language_anchor(hooks):

@@ -5,6 +5,16 @@ HEAD and of review.json against that HEAD, so a mocked repo would test
 nothing. The two named risks in the plan get their own cases -- amending
 the code commit under a written review.json, and a review-only commit
 that quietly carries a second file.
+
+Since the W0 wave-end fixes, three things changed shape here:
+
+* the dispatch record lives INSIDE review.json as `dispatch[]`
+  (concept-model §2e), read from the reviewed commit's tree;
+* `push.probes-package-tests` RUNS the recorded command itself
+  (concept-model §7), so every fixture records a command that is cheap to
+  execute and the agent's own `result` is recorded rather than believed;
+* hook mode is entered only by `push --hook`, so a bare `push` never
+  touches stdin and can never hang behind a pipe that stays open.
 """
 from __future__ import annotations
 
@@ -16,7 +26,10 @@ from pathlib import Path
 CHECKER = Path(__file__).with_name("loom_checker.py")
 CHANGE = "2026-09-02-a"
 REVIEW = f"docs/loom/{CHANGE}/review.json"
-DISPATCH = f"docs/loom/{CHANGE}/review.json.dispatch"
+
+# Cheap enough to run once per test, and its exit code is the whole point.
+PASSING_COMMAND = 'python3 -c "raise SystemExit(0)"'
+FAILING_COMMAND = 'python3 -c "import sys; sys.exit(1)"'
 
 
 def git(repo: Path, *args: str) -> str:
@@ -39,6 +52,16 @@ def blocked_rules(result: subprocess.CompletedProcess) -> set[str]:
     }
 
 
+DISPATCH_ENTRIES = [
+    {"task": "T1", "role": "implementer", "agent_id": "agent-imp", "model": "m",
+     "started": "2026-09-02T09:00:00Z", "fresh_context": True},
+    {"task": "T1", "role": "reviewer", "agent_id": "agent-rev", "model": "m",
+     "started": "2026-09-02T10:00:00Z", "fresh_context": True},
+    {"task": "T1", "role": "blind-runner", "agent_id": "agent-blind", "model": "m",
+     "started": "2026-09-02T11:00:00Z", "fresh_context": True},
+]
+
+
 def review_body(reviewed_sha: str, **overrides) -> dict:
     body = {
         "reviewed_sha": reviewed_sha,
@@ -51,29 +74,20 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
              "verdict": "PASS_WITH_NOTES", "dimension_scores": {}, "findings": []},
         ],
         "probes": [
-            {"kind": "package-tests", "command": "pytest -q", "sha": reviewed_sha,
+            {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
              "result": "pass", "artifact": "evidence/tests.txt"},
         ],
         "open_findings": [
             {"id": "F-1", "anchor": "a.py:1", "origin_sha": "deadbee",
              "raised_by": "agent-rev", "resolved": "fixed in HEAD^"},
         ],
+        "dispatch": [dict(entry) for entry in DISPATCH_ENTRIES],
     }
     body.update(overrides)
     return body
 
 
-DISPATCH_LINES = [
-    {"task": "T1", "role": "implementer", "agent_id": "agent-imp", "model": "m",
-     "started": "2026-09-02T09:00:00Z"},
-    {"task": "T1", "role": "reviewer", "agent_id": "agent-rev", "model": "m",
-     "started": "2026-09-02T10:00:00Z"},
-    {"task": "T1", "role": "blind-runner", "agent_id": "agent-blind", "model": "m",
-     "started": "2026-09-02T11:00:00Z"},
-]
-
-
-def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = DISPATCH_LINES) -> Path:
+def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None) -> Path:
     """A branch whose HEAD^ is the code commit and HEAD the review-only one."""
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -88,14 +102,13 @@ def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = DISPATCH_LINES) 
     (repo / "a.py").write_text("value = 1\n", encoding="utf-8")
     (repo / "evidence").mkdir()
     (repo / "evidence/tests.txt").write_text("2199 passed\n", encoding="utf-8")
-    paths = ["a.py", "evidence/tests.txt"]
-    if dispatch is not None:
-        write_dispatch(repo, dispatch)
-        paths.append(DISPATCH)
-    git(repo, "add", *paths)
+    git(repo, "add", "a.py", "evidence/tests.txt")
     git(repo, "commit", "-q", "-m", "feat: a")
 
-    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    body = review_body(git(repo, "rev-parse", "HEAD"))
+    if dispatch is not None:
+        body["dispatch"] = dispatch
+    write_review(repo, body)
     git(repo, "add", REVIEW)
     git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
     return repo
@@ -105,12 +118,6 @@ def write_review(repo: Path, body: dict) -> None:
     path = repo / REVIEW
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(body, indent=1), encoding="utf-8")
-
-
-def write_dispatch(repo: Path, entries: list[dict]) -> None:
-    path = repo / DISPATCH
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(e) + "\n" for e in entries), encoding="utf-8")
 
 
 def rebuild(repo: Path, **overrides) -> dict:
@@ -228,14 +235,115 @@ def test_a_dismissed_finding_counts_as_closed(tmp_path: Path) -> None:
             parent,
             open_findings=[
                 {"id": "F-2", "anchor": "a.py:1", "raised_by": "rev-b",
-                 "dismissed": "out of scope by kouko"}
+                 "dismissed": "out of scope by agent-rev"}
             ],
         ),
     )
     assert run_checker("push", cwd=repo).returncode == 0
 
 
-# --- push.probes-package-tests --------------------------------------------
+# --- push.dismissed-by-reviewer (spec A-2, concept-model §5) ---------------
+
+
+def test_a_dismissal_naming_nobody_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        review_body(
+            parent,
+            open_findings=[
+                {"id": "F-3", "anchor": "a.py:1", "raised_by": "agent-rev",
+                 "dismissed": "not worth it"}
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.dismissed-by-reviewer" in blocked_rules(result)
+    assert "F-3" in result.stderr
+
+
+def test_a_dismissal_by_the_implementer_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        review_body(
+            parent,
+            open_findings=[
+                {"id": "F-4", "anchor": "a.py:1", "raised_by": "agent-rev",
+                 "dismissed": "already handled by agent-imp"}
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.dismissed-by-reviewer" in blocked_rules(result)
+    assert "agent-imp" in result.stderr
+
+
+def test_a_dismissal_by_a_stranger_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        review_body(
+            parent,
+            open_findings=[
+                {"id": "F-5", "anchor": "a.py:1", "raised_by": "agent-rev",
+                 "dismissed": "waved through by kouko"}
+            ],
+        ),
+    )
+    assert "push.dismissed-by-reviewer" in blocked_rules(run_checker("push", cwd=repo))
+
+
+def test_a_dismissal_with_an_explicit_by_field_is_accepted(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        review_body(
+            parent,
+            open_findings=[
+                {"id": "F-6", "anchor": "a.py:1", "raised_by": "agent-rev",
+                 "dismissed": {"reason": "out of scope", "by": "agent-blind"}}
+            ],
+        ),
+    )
+    assert run_checker("push", cwd=repo).returncode == 0, "blind-runner may dismiss"
+
+
+# --- push.probes-package-tests: the checker runs the command itself --------
+
+
+def test_a_probe_command_that_exits_zero_passes(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "exit code 0" in result.stdout
+
+
+def test_a_probe_command_that_exits_one_blocks_despite_result_pass(tmp_path: Path) -> None:
+    """The agent's `result` is a record; the observed exit code decides."""
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-package-tests" in blocked_rules(result)
+    assert "exit code 1" in result.stdout
+
+
+def test_a_dirty_working_tree_blocks_the_probe(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    (repo / "scratch.txt").write_text("uncommitted\n", encoding="utf-8")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-package-tests" in blocked_rules(result)
+    assert "clean" in result.stderr
 
 
 def test_missing_package_test_probe_blocks(tmp_path: Path) -> None:
@@ -247,20 +355,6 @@ def test_missing_package_test_probe_blocks(tmp_path: Path) -> None:
     )
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
-    assert "push.probes-package-tests" in blocked_rules(result)
-
-
-def test_failing_package_test_probe_blocks(tmp_path: Path) -> None:
-    repo = build_repo(tmp_path)
-    parent = git(repo, "rev-parse", "HEAD~1")
-    recommit_review(
-        repo,
-        review_body(
-            parent,
-            probes=[{"kind": "package-tests", "command": "pytest -q", "result": "fail"}],
-        ),
-    )
-    result = run_checker("push", cwd=repo)
     assert "push.probes-package-tests" in blocked_rules(result)
 
 
@@ -317,7 +411,7 @@ def test_a_needs_revision_latest_round_blocks(tmp_path: Path) -> None:
     assert "push.verdicts-ge-2" in blocked_rules(run_checker("push", cwd=repo))
 
 
-# --- push.reviewer-ne-implementer -----------------------------------------
+# --- push.reviewer-ne-implementer, read from review.json `dispatch[]` ------
 
 
 def test_a_reviewer_who_also_implemented_blocks(tmp_path: Path) -> None:
@@ -335,7 +429,7 @@ def test_a_reviewer_who_also_implemented_blocks(tmp_path: Path) -> None:
 
 
 def test_a_missing_dispatch_record_fails_closed(tmp_path: Path) -> None:
-    repo = build_repo(tmp_path, dispatch=None)
+    repo = build_repo(tmp_path, dispatch=[])
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.reviewer-ne-implementer" in blocked_rules(result)
@@ -350,12 +444,55 @@ def test_a_dispatch_record_without_a_reviewer_blocks(tmp_path: Path) -> None:
     assert "push.reviewer-ne-implementer" in blocked_rules(run_checker("push", cwd=repo))
 
 
-def test_a_malformed_dispatch_line_fails_closed(tmp_path: Path) -> None:
-    repo = build_repo(tmp_path, dispatch=None)
-    (repo / DISPATCH).write_text("not json\n", encoding="utf-8")
+def test_a_malformed_dispatch_entry_fails_closed(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, dispatch=["not an object"])
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.reviewer-ne-implementer" in blocked_rules(result)
+
+
+def test_a_dispatch_entry_missing_a_required_key_blocks(tmp_path: Path) -> None:
+    entries = [
+        {"task": "T1", "role": "implementer", "agent_id": "agent-imp", "model": "m",
+         "started": "2026-09-02T09:00:00Z"},
+        {"task": "T1", "role": "reviewer", "agent_id": "agent-rev"},
+        {"task": "T1", "role": "blind-runner", "agent_id": "agent-blind", "model": "m",
+         "started": "2026-09-02T11:00:00Z"},
+    ]
+    repo = build_repo(tmp_path, dispatch=entries)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewer-ne-implementer" in blocked_rules(result)
+    assert "model" in result.stderr
+
+
+def test_a_reviewer_absent_from_the_dispatch_record_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "verdict": "PASS"},
+                {"reviewer": "ghost-reviewer", "verdict": "PASS"},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewer-ne-implementer" in blocked_rules(result)
+    assert "ghost-reviewer" in result.stderr
+
+
+def test_the_working_tree_copy_of_review_json_is_ignored(tmp_path: Path) -> None:
+    """The dispatch record is read from the reviewed commit's tree, so
+    emptying the working-tree copy cannot make a reviewer disappear."""
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    body["dispatch"] = []
+    write_review(repo, body)  # working tree only, never committed
+    result = run_checker("push", cwd=repo)
+    assert "push.reviewer-ne-implementer" not in blocked_rules(result)
 
 
 # --- shape of the run ------------------------------------------------------
@@ -383,14 +520,27 @@ def test_every_failure_is_reported_not_just_the_first(tmp_path: Path) -> None:
     assert {"push.reviewed-sha", "push.probes-package-tests", "push.open-findings-closed"} <= rules
 
 
-# --- hook mode: PreToolUse payload on stdin (Claude Code and Codex share the shape) ---
+# --- hook mode is opt-in: `push --hook` ------------------------------------
 
 
 def run_hook(payload: dict, cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
-        [sys.executable, str(CHECKER), "push"], capture_output=True, text=True,
+        [sys.executable, str(CHECKER), "push", "--hook"], capture_output=True, text=True,
         cwd=str(cwd), input=json.dumps(payload),
     )
+
+
+def test_a_bare_push_never_reads_stdin_and_cannot_hang(tmp_path: Path) -> None:
+    """The hook flag, not the shape of stdin, selects hook mode: a plain
+    `push` behind an open pipe must return instead of blocking on read()."""
+    repo = build_repo(tmp_path)
+    git(repo, "reset", "-q", "--hard", "HEAD~1")  # no review.json in HEAD
+    result = subprocess.run(
+        [sys.executable, str(CHECKER), "push"],
+        stdin=subprocess.PIPE, capture_output=True, text=True, cwd=str(repo), timeout=5,
+    )
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
 
 
 def test_hook_mode_ignores_a_non_push_bash_command(tmp_path: Path) -> None:
@@ -403,15 +553,51 @@ def test_hook_mode_ignores_a_non_push_bash_command(tmp_path: Path) -> None:
     assert "BLOCK" not in result.stderr
 
 
-def test_hook_mode_blocks_a_push_with_exit_2(tmp_path: Path) -> None:
+PUSH_SHAPED = (
+    "git push origin HEAD",
+    "cd sub && git push",
+    "gh pr create --fill",
+    "gh pr merge 12 --squash",
+    "git -C /tmp/other push",
+    "git --git-dir=/tmp/x/.git --work-tree=/tmp/x push",
+    'eval "git push"',
+    "git  push",
+    "make build; git push --force-with-lease",
+    "GIT_SSH_COMMAND=ssh git push",
+    "true || gh pr merge --admin",
+    "/usr/bin/git push",
+)
+
+NOT_PUSH_SHAPED = (
+    "ls -la",
+    "git pushd",
+    "echo git push",
+    'git commit -m "push"',
+    "git status",
+    "gh pr view 12",
+    "git log --oneline",
+)
+
+
+def test_hook_mode_recognises_every_push_shape(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     (repo / "c.py").write_text("x = 1\n", encoding="utf-8")
     git(repo, "add", "c.py")
     git(repo, "commit", "-q", "-m", "feat(x): code on top of the review commit")
-    for cmd in ("git push origin HEAD", "cd sub && git push", "gh pr create --fill", "gh pr merge 12 --squash"):
+    for cmd in PUSH_SHAPED:
         result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
-        assert result.returncode == 2, (cmd, result.stderr)
-        assert "push.review-only-head" in blocked_rules(result)
+        assert result.returncode == 2, (cmd, result.stdout, result.stderr)
+        assert "push.review-only-head" in blocked_rules(result), cmd
+
+
+def test_hook_mode_lets_non_push_shapes_through(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    (repo / "c.py").write_text("x = 1\n", encoding="utf-8")
+    git(repo, "add", "c.py")
+    git(repo, "commit", "-q", "-m", "feat(x): code on top of the review commit")
+    for cmd in NOT_PUSH_SHAPED:
+        result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
+        assert result.returncode == 0, (cmd, result.stderr)
 
 
 def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
@@ -422,8 +608,15 @@ def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
 
 def test_hook_mode_malformed_payload_fails_closed(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
-    result = subprocess.run([sys.executable, str(CHECKER), "push"], capture_output=True, text=True,
-                            cwd=str(repo), input="{not json")
+    result = subprocess.run([sys.executable, str(CHECKER), "push", "--hook"], capture_output=True,
+                            text=True, cwd=str(repo), input="{not json")
+    assert result.returncode == 2
+
+
+def test_hook_mode_without_a_payload_fails_closed(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    result = subprocess.run([sys.executable, str(CHECKER), "push", "--hook"], capture_output=True,
+                            text=True, cwd=str(repo), input="")
     assert result.returncode == 2
 
 
@@ -439,6 +632,17 @@ def test_a_missing_review_key_blocks(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert "push.review-schema" in blocked_rules(result)
     assert "vendors" in result.stderr
+
+
+def test_a_review_without_dispatch_blocks_the_schema(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    del body["dispatch"]
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-schema" in blocked_rules(result)
+    assert "dispatch" in result.stderr
 
 
 def test_a_wrong_container_type_blocks(tmp_path: Path) -> None:
@@ -535,50 +739,6 @@ def test_a_probe_without_an_artifact_is_still_accepted(tmp_path: Path) -> None:
     del body["probes"][0]["artifact"]
     recommit_review(repo, body)
     assert run_checker("push", cwd=repo).returncode == 0
-
-
-# --- push.reviewer-ne-implementer, recomputed from the reviewed tree -------
-
-
-def test_a_dispatch_record_only_in_the_working_tree_is_ignored(tmp_path: Path) -> None:
-    repo = build_repo(tmp_path, dispatch=None)
-    write_dispatch(repo, DISPATCH_LINES)
-    result = run_checker("push", cwd=repo)
-    assert result.returncode == 1
-    assert "push.reviewer-ne-implementer" in blocked_rules(result)
-
-
-def test_a_dispatch_line_missing_a_required_key_blocks(tmp_path: Path) -> None:
-    entries = [
-        {"task": "T1", "role": "implementer", "agent_id": "agent-imp", "model": "m",
-         "started": "2026-09-02T09:00:00Z"},
-        {"task": "T1", "role": "reviewer", "agent_id": "agent-rev"},
-        {"task": "T1", "role": "blind-runner", "agent_id": "agent-blind", "model": "m",
-         "started": "2026-09-02T11:00:00Z"},
-    ]
-    repo = build_repo(tmp_path, dispatch=entries)
-    result = run_checker("push", cwd=repo)
-    assert result.returncode == 1
-    assert "push.reviewer-ne-implementer" in blocked_rules(result)
-    assert "model" in result.stderr
-
-
-def test_a_reviewer_absent_from_the_dispatch_record_blocks(tmp_path: Path) -> None:
-    repo = build_repo(tmp_path)
-    recommit_review(
-        repo,
-        rebuild(
-            repo,
-            verdicts=[
-                {"reviewer": "agent-rev", "verdict": "PASS"},
-                {"reviewer": "ghost-reviewer", "verdict": "PASS"},
-            ],
-        ),
-    )
-    result = run_checker("push", cwd=repo)
-    assert result.returncode == 1
-    assert "push.reviewer-ne-implementer" in blocked_rules(result)
-    assert "ghost-reviewer" in result.stderr
 
 
 # --- operands --------------------------------------------------------------

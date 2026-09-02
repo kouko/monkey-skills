@@ -24,7 +24,7 @@ STATIONS = {
     "ship": "loom-code",
     "maintain": "loom-code",
 }
-ARTIFACTS = {"intent", "spec", "plan", "review", "review-dispatch"}
+ARTIFACTS = {"intent", "spec", "plan", "review"}
 ID_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -78,6 +78,16 @@ def test_markdown_templates_carry_declared_fields(manifest):
         for f in schema["fields"]:
             key = f["name"]
             assert key in tmpl, f"{name}: field {key!r} not in template {schema['template']}"
+
+
+def test_dispatch_is_a_field_of_review_not_a_separate_artifact(manifest):
+    """concept-model §2e folded the dispatch record into review.json, so
+    the separate artifact, its template and its path are all gone."""
+    assert "review-dispatch" not in manifest["artifacts"]
+    names = [f["name"] for f in manifest["artifacts"]["review"]["fields"]]
+    assert "dispatch" in names
+    assert not (TEMPLATES / "review-dispatch.json").exists()
+    assert "review.json.dispatch" not in MANIFEST.read_text(encoding="utf-8")
 
 
 def test_tools_count_and_owner(manifest):

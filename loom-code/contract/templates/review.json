@@ -10,6 +10,9 @@
     {"kind": "package-tests|blind-run|adversarial|codex-walk", "command": "<command>", "sha": "<sha the probe ran against>", "result": "pass|fail", "artifact": "<path>"}
   ],
   "open_findings": [
-    {"id": "<id>", "anchor": "<file:line>", "origin_sha": "<sha>", "raised_by": "<reviewer>", "resolved": "<evidence>"}
+    {"id": "<id>", "anchor": "<file:line>", "origin_sha": "<sha>", "raised_by": "<reviewer>", "resolved": "<evidence>", "dismissed": "<reason> by <agent_id>"}
+  ],
+  "dispatch": [
+    {"task": "<task id>", "role": "implementer|reviewer|blind-runner|adversary", "agent_id": "<id>", "model": "<model>", "started": "<iso timestamp>", "fresh_context": true}
   ]
 }

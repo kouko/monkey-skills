@@ -9,7 +9,7 @@ Only loom-code writes here; the other plugins read.
 | `templates/intent.md` | intent schema (§2b) |
 | `templates/spec-minimal.md` | spec schema (§2c); write-plan uses it to auto-generate a minimal spec when loom-design is not installed |
 | `templates/plan.md` | plan shape (§2d) |
-| `templates/review.json`, `templates/review-dispatch.json` | review.json (§2e) and the dispatch record the push rule `reviewer ≠ implementer` reads |
+| `templates/review.json` | review.json (§2e), including the `dispatch[]` record the push rules `reviewer ≠ implementer` and `dismissed-by-reviewer` read |
 | `templates/PRINCIPLES-interview.md` | the product-principles interview run inside decision point ① when a product intent meets a repo without a ratified PRINCIPLES.md |
 | `templates/KICKOFF-DEFAULTS.md`, `templates/memory-README.md`, `templates/PURPOSE.md` | scaffolds for an adopting repo's `docs/loom/` |
 

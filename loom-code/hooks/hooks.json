@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py\" push"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py\" push --hook"
           }
         ]
       }

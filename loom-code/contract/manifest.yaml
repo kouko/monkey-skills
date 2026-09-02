@@ -52,7 +52,7 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "each implementer works in its own git worktree; the wave merges back before the checkpoint."
   - name: dispatch-record
     owner: build
-    summary: "append one line per dispatch to docs/loom/<change-id>/review.json.dispatch (schema below); the push rule reviewer≠implementer reads it."
+    summary: "append one entry per dispatch to review.json dispatch[] (schema below); the push rules reviewer≠implementer and dismissed-by-reviewer read it."
   - name: read
     owner: review
     summary: "≥2 fresh-context reviewers apply the lens for the artifact type (code 11 dims / docs 5 dims / spec- design- principles-conformance)."
@@ -119,16 +119,8 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: vendors,       kind: json, required: true}
       - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, verdict, dimension_scores, findings}]"}
       - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact}]"}
-      - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed}]"}
-  review-dispatch:
-    path: docs/loom/<change-id>/review.json.dispatch
-    template: review-dispatch.json
-    fields:
-      - {name: task,     kind: json, required: true}
-      - {name: role,     kind: json, required: true, values: [implementer, reviewer, blind-runner, adversary]}
-      - {name: agent_id, kind: json, required: true}
-      - {name: model,    kind: json, required: true}
-      - {name: started,  kind: json, required: true}
+      - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
+      - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
 
 standing_docs:       # not per-change (§2a, §8)
   - {name: PRINCIPLES.md,       tool: product-principles, ratified_by: required, reject_when: "kind: product and missing"}

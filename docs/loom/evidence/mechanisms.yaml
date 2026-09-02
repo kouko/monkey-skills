@@ -90,7 +90,10 @@ mechanisms:
     class: skill
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
 
-  # --- checker-rule (16; loom_checker.py --list-rules) ---
+  # --- checker-rule (19; loom_checker.py --list-rules) ---
+  - id: contract.requires
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_cli.py::test_contract_require_blocks_a_higher_minor
   - id: intake.confirmed
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_confirmed_intent_is_accepted
@@ -112,6 +115,9 @@ mechanisms:
   - id: intent.schema
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intent.py::test_complete_intent_passes
+  - id: push.dismissed-by-reviewer
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_push.py::test_a_dismissal_by_the_implementer_blocks
   - id: push.open-findings-closed
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_an_unresolved_finding_blocks
@@ -149,14 +155,14 @@ mechanisms:
     eval: loom-code/scripts/test_session_start_words.py
   - id: "PreToolUse:Bash:loom_checker.py"
     class: hook
-    eval: loom-code/scripts/test_loom_checker_push.py::test_hook_mode_blocks_a_push_with_exit_2
+    eval: loom-code/scripts/test_loom_checker_push.py::test_hook_mode_recognises_every_push_shape
   - id: "PostToolUse:Skill:language-anchor.py"
     class: host-hygiene   # excluded from the net count — language-anchor is
                           # host infrastructure outside the loom flow, but a
                           # real hook entry, so it must still be listed.
     eval: loom-code/scripts/test_language_anchor_hook.py
 
-  # --- contract (36; loom-code/contract/manifest.yaml — stations, the 10
+  # --- contract (35; loom-code/contract/manifest.yaml — stations, the 10
   #     non-standalone tools, actions and artifact schemas) ---
   - {id: "station:capture-intent", class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_seven_stations_with_owner"}
   - {id: "station:write-spec",     class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_seven_stations_with_owner"}
@@ -193,7 +199,6 @@ mechanisms:
   - {id: "artifact:spec",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
   - {id: "artifact:plan",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
   - {id: "artifact:review",           class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
-  - {id: "artifact:review-dispatch",  class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_artifact_schemas_declare_fields_and_templates"}
 
   # --- prose-gate: none yet (W0-06 target population; the landed stations
   #     mark their real `<!-- gate: … -->` paragraphs in W1/W2, W3-06 §11

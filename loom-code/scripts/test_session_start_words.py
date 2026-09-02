@@ -137,3 +137,33 @@ def test_no_deleted_mechanism_is_mentioned(empty_repo):
 
 if __name__ == "__main__":  # pragma: no cover - manual measurement helper
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_a_decision_point_with_no_match_does_not_abort_the_hook(tmp_path):
+    """`set -e` kills the script when a command substitution's last command
+    fails, and `grep` fails on no match -- so a manifest whose stations
+    declare no decision point used to produce an empty injection instead of
+    the station order. The lookup must tolerate the empty result."""
+    plugin = tmp_path / "plugin"
+    (plugin / "hooks").mkdir(parents=True)
+    (plugin / "contract").mkdir()
+    (plugin / "hooks" / "session-start").write_text(
+        HOOK.read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    (plugin / "contract" / "manifest.yaml").write_text(
+        "version: 1.0.0\n"
+        "stations:\n"
+        "  - {name: write-plan, owner: loom-code, produces: plan}\n"
+        "  - {name: build,      owner: loom-code, produces: diff}\n"
+        "  - {name: maintain,   owner: loom-code, produces: intent}\n",
+        encoding="utf-8",
+    )
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    proc = subprocess.run(
+        ["bash", str(plugin / "hooks" / "session-start")],
+        cwd=str(repo), stdin=subprocess.DEVNULL, capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "write-plan" in _context(proc.stdout), proc.stdout

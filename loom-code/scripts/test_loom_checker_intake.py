@@ -340,21 +340,29 @@ def test_write_spec_never_asks_for_confirmed_behavior(tmp_path: Path) -> None:
 
 
 def test_the_repos_own_change_matches_its_own_review_json() -> None:
-    """The checker agrees with what the file actually records. The spec
-    round passed with two reviewers; whether write-plan may start also
-    depends on an `adversarial` probe being recorded for it."""
+    """The checker agrees with what the file actually records -- whatever
+    that currently is. The expectation is DERIVED from review.json (latest
+    round: two distinct reviewers, all passing, an `adversarial` probe)
+    rather than pinned to one round, so landing a new review round changes
+    the repo's gate state without silently breaking this test."""
     review = json.loads(
         (REPO_ROOT / "docs/loom/2026-09-02-simple-loom-flow/review.json").read_text(
             encoding="utf-8"
         )
     )
-    has_adversarial = any(p.get("kind") == "adversarial" for p in review["probes"])
+    verdicts = review["verdicts"]
+    newest = max(int(v.get("round", 1)) for v in verdicts)
+    latest = [v for v in verdicts if int(v.get("round", 1)) == newest]
+    passing = (
+        len({v["reviewer"] for v in latest}) >= 2
+        and all(v["verdict"] in {"PASS", "PASS_WITH_NOTES"} for v in latest)
+        and any(p.get("kind") == "adversarial" for p in review["probes"])
+    )
     result = run_checker("intake", "write-plan", "2026-09-02-simple-loom-flow", cwd=REPO_ROOT)
-    if has_adversarial:
+    if passing:
         assert result.returncode == 0, result.stderr
     else:
-        assert blocked_rules(result) == {"intake.spec-pass"}
-        assert "adversarial" in result.stderr
+        assert blocked_rules(result) == {"intake.spec-pass"}, result.stderr
 
 
 # --- intake.confirmed grammar (W0-03 review fix 4) -------------------------

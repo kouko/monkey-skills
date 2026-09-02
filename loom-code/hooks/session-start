@@ -52,7 +52,7 @@ station_names="$(stations_block | sed -n 's/^[[:space:]]*-[[:space:]]*{name:[[:s
 # Stations owning a given decision point, joined by " / ".
 stations_for_dp() {
   stations_block \
-    | grep "decision_point: $1" \
+    | { grep "decision_point: $1" || true; } \
     | sed -n 's/^[[:space:]]*-[[:space:]]*{name:[[:space:]]*\([a-z0-9-]*\).*/\1/p' \
     | paste -sd@ - | sed 's/@/ \/ /g'
 }

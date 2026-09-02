@@ -14,6 +14,7 @@ from pathlib import Path
 CHECKER = Path(__file__).with_name("loom_checker.py")
 
 EXPECTED_RULE_IDS = [
+    "contract.requires",
     "intake.confirmed",
     "intake.confirmed-behavior",
     "intake.spec-pass",
@@ -21,6 +22,7 @@ EXPECTED_RULE_IDS = [
     "intent.needs-design-recompute",
     "intent.product-no-identifiers",
     "intent.schema",
+    "push.dismissed-by-reviewer",
     "push.open-findings-closed",
     "push.probes-package-tests",
     "push.review-only-head",
@@ -75,7 +77,7 @@ def test_every_rule_id_is_area_dot_name() -> None:
     for line in run_checker("--list-rules").stdout.splitlines():
         rule_id = line.split("\t")[0]
         area, _, name = rule_id.partition(".")
-        assert area in {"intent", "intake", "push", "standing"}, rule_id
+        assert area in {"contract", "intent", "intake", "push", "standing"}, rule_id
         assert name and "." not in name, rule_id
 
 
@@ -91,10 +93,42 @@ def test_no_arguments_exits_2() -> None:
     assert result.stderr.strip()
 
 
-def test_hooks_probe_is_reserved_and_exits_2() -> None:
+def test_hooks_probe_is_gone() -> None:
+    """`--probe` in codex_scaffold.py owns the belt check; the reserved
+    checker sub-command that never grew a body is deleted, not kept."""
     result = run_checker("hooks-probe")
     assert result.returncode == 2
-    assert "not implemented" in result.stderr
+    assert "unknown sub-command" in result.stderr
+    assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
+
+
+def test_the_rule_population_is_nineteen() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 19
+
+
+# --- contract --require (spec G) -------------------------------------------
+
+
+def test_contract_require_accepts_a_met_floor() -> None:
+    assert run_checker("contract", "--require", "1.0").returncode == 0
+
+
+def test_contract_require_blocks_a_higher_minor() -> None:
+    result = run_checker("contract", "--require", "1.99")
+    assert result.returncode == 1
+    assert "BLOCK contract.requires:" in result.stderr
+    assert "請更新 loom-code" in result.stderr
+
+
+def test_contract_require_blocks_a_different_major() -> None:
+    result = run_checker("contract", "--require", "2.0")
+    assert result.returncode == 1
+    assert "contract.requires" in result.stderr
+
+
+def test_contract_require_rejects_a_malformed_floor() -> None:
+    assert run_checker("contract", "--require", "1").returncode == 2
+    assert run_checker("contract").returncode == 2
 
 
 def test_missing_operand_exits_2(tmp_path: Path) -> None:
