@@ -325,11 +325,14 @@ can block.
 
 Write `docs/loom/<change-id>/plan.md` from `contract/templates/plan.md`.
 
-**Task size.** A task is right-sized when all three hold: you can name one
-test that fails now and passes when the task is done; it touches one module
+**Task size.** A task is right-sized when all three hold: you can name the
+first test — one that fails today and passes when the task is done — so the
+implementer has a concrete RED to start from; it touches one module
 boundary; and it can be done in isolation given only the dependencies it
-declares. If you need three tests, it is three tasks. Never size a task by
-how long it will take.
+declares. That first test is the starting point, not a ceiling: the
+implementer writes as many tests as the behaviour has faces. If the task
+needs tests for three unrelated behaviours, it is three tasks. Never size
+a task by how long it will take.
 
 **Shape.**
 
