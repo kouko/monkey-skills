@@ -1113,6 +1113,22 @@
    "model": "opus",
    "started": "2026-09-02T11:04:48Z",
    "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end fixes (checker)",
+   "role": "implementer",
+   "agent_id": "opus-w2-fixes-checker",
+   "model": "opus",
+   "started": "2026-09-02T11:15:02Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end fixes (prose)",
+   "role": "implementer",
+   "agent_id": "opus-w2-fixes-prose",
+   "model": "opus",
+   "started": "2026-09-02T11:15:02Z",
+   "fresh_context": true
   }
  ]
 }
