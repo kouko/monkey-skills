@@ -128,7 +128,8 @@ plugin root variable on this host:
 python3 <loom-code>/scripts/codex_scaffold.py --repo .
 ```
 
-If the script answers that Codex' sandbox protects `.codex/`, its default
+Run the scaffold for real before reading this branch — predicting its answer
+is not running it. If the script answers that Codex' sandbox protects `.codex/`, its default
 write sandbox is refusing the one directory the scaffold needs. Print this
 and **stop**:
 
