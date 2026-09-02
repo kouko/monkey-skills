@@ -23,10 +23,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PLAN_PATH = (
     REPO_ROOT / "docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md"
 )
-RESEARCH_ESCALATION = (
-    REPO_ROOT
-    / "loom-code/skills/subagent-driven-development/references/research-escalation.md"
-)
 DOMAIN_TAG_TRIAGE = (
     REPO_ROOT / "loom-design/skills/spec-expansion/references/domain-tag-triage.md"
 )
@@ -48,7 +44,6 @@ DESIGN_SYSTEM_TRIAGE = (
 
 # All carrier files must use the three exact bucket-name spellings.
 CARRIER_FILES = {
-    "loom-code/research-escalation.md": RESEARCH_ESCALATION,
     "loom-design/domain-tag-triage.md": DOMAIN_TAG_TRIAGE,
     "loom-design/evidence-template.md": EVIDENCE_TEMPLATE,
     "loom-design/knowledge-triage.md": PRODUCT_PRINCIPLES_TRIAGE,
@@ -60,7 +55,6 @@ CARRIER_FILES = {
 # just the source-type legend, no fenced pin block — see the plan's
 # §Pin usage rules: "Each consuming task transcribes the fenced block...").
 PIN_CARRIER_FILES = {
-    "loom-code/research-escalation.md": RESEARCH_ESCALATION,
     "loom-design/domain-tag-triage.md": DOMAIN_TAG_TRIAGE,
     "loom-design/knowledge-triage.md": PRODUCT_PRINCIPLES_TRIAGE,
     "loom-design/interaction-flows/knowledge-triage.md": INTERACTION_FLOWS_TRIAGE,
@@ -226,11 +220,11 @@ def test_pin_identity_check_is_load_bearing_against_mutated_copy(tmp_path):
     proves the check actually discriminates drift, per grep-tests-scope-to-
     measured-neighborhood's mutation-check requirement.
     """
-    real_pin = _pin_block(RESEARCH_ESCALATION)
+    real_pin = _pin_block(DOMAIN_TAG_TRIAGE)
     mutated = real_pin.replace("craft", "craftx", 1)
     assert mutated != real_pin, "sanity: mutation must actually change the text"
 
-    mutated_file = tmp_path / "mutated-research-escalation.md"
+    mutated_file = tmp_path / "mutated-domain-tag-triage.md"
     mutated_file.write_text(f"```\n{mutated}\n```\n", encoding="utf-8")
 
     assert _pin_block(mutated_file) != _plan_pin_block()

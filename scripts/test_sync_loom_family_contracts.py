@@ -24,7 +24,6 @@ def test_real_functional_copies_match_sibling_neutral_family_policy_ssot():
     for name in POLICY_NAMES:
         source_rel = f"scripts/canonical/loom-family/{name}"
         destination_rels = (
-            f"loom-code/hooks/{name}",
             f"loom-design/skills/using-loom-design/references/{name}",
         )
         source = sync.REPO_ROOT / source_rel
@@ -37,11 +36,10 @@ def test_real_functional_copies_match_sibling_neutral_family_policy_ssot():
             assert destination.read_bytes() == expected
 
 
-def test_identifier_grammar_has_one_neutral_source_and_two_packaged_copies():
+def test_identifier_grammar_has_one_neutral_source_and_one_packaged_copy():
     source_rel = "scripts/canonical/loom-artifacts/requirement-identifiers.md"
     destination_rels = (
         "loom-design/skills/spec-expansion/references/requirement-identifiers.md",
-        "loom-code/skills/writing-plans/references/requirement-identifiers.md",
     )
     source = sync.REPO_ROOT / source_rel
 

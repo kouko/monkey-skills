@@ -272,12 +272,18 @@ Then verify the carrier actually landed, on the squash commit on `main`:
 
 ```
 git switch main && git pull --ff-only
-bash loom-workflow/skills/git-memory/scripts/memory-grep.sh --verify-merged HEAD
+git log -1 --format=%B <squash sha> | grep -E '^(Decision|Learning|Gotcha):'
 ```
 
-Exit 0 — the footer survived. Exit 4 — the merge dropped it: say so, and
-recover the memory from the pull-request page into a follow-up commit. Do
-not treat a red post-merge check as noise.
+Exit 0 — the footer survived, and the matched lines are what survived. Exit
+1 — the merge dropped it: say so, and recover the memory from the
+pull-request page into a follow-up commit. Do not treat a red post-merge
+check as noise. When the memory was an honest "nothing", there is no footer
+to find and this step is skipped, said out loud rather than silently.
+
+When loom-workflow is installed, `loom-workflow:git-memory --verify-merged`
+runs the same check with the trailer grammar it owns; prefer it, and fall
+back to the grep above when it is not there.
 
 Finally, close the intent. The status line cannot be written on the branch
 (the merge has not happened yet there) and this station never commits to

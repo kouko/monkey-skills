@@ -197,7 +197,7 @@ twice.
    > ___. Is that right?
 
 2. **The one-way doors found so far**, in consequence form, per
-   `references/one-way-door.md`. Read that file before deciding whether a
+   `references/one-way-door.md` — load that file before deciding whether a
    fork is one; the five classes and the four gates (check, measure,
    threshold, merge) are there, and a class (e) action — anything
    irreversible to the user's existing data — is asked even when there is

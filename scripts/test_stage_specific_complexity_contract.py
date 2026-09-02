@@ -16,10 +16,6 @@ def test_stage_contract_owns_each_lens_and_forbids_private_plugin_paths(tmp_path
             "skills/interaction-flows/references/interaction-complexity-lens.md",
             "skills/spec-expansion/references/behavioral-complexity-lens.md",
         },
-        "loom-code": {
-            "skills/writing-plans/references/architecture-complexity-lens.md",
-            "skills/requesting-code-review/references/implementation-complexity-lens.md",
-        },
     }
     cold_roots = {
         plugin: shutil.copytree(ROOT / plugin, tmp_path / f"isolated-{plugin}")
@@ -63,8 +59,6 @@ def test_every_lens_carries_all_four_handoff_meanings():
         "loom-design/skills/design-system/references/visual-complexity-lens.md",
         "loom-design/skills/interaction-flows/references/interaction-complexity-lens.md",
         "loom-design/skills/spec-expansion/references/behavioral-complexity-lens.md",
-        "loom-code/skills/writing-plans/references/architecture-complexity-lens.md",
-        "loom-code/skills/requesting-code-review/references/implementation-complexity-lens.md",
     ]
     for relative in lenses:
         text = (root / relative).read_text(encoding="utf-8").lower()

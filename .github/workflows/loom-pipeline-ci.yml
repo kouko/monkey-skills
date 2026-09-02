@@ -29,10 +29,11 @@ on:
     branches: [main]
     paths:
       - 'loom-design/**'
-      # The pipeline plugin's hooks and loom-memory skill now live under
-      # loom-code/, so edits there must fire this gate too.
+      # The pipeline plugin's hooks now live under loom-code/, and the
+      # design stations read loom-code's contract package, so edits to
+      # either must fire this gate too.
       - 'loom-code/hooks/**'
-      - 'loom-code/skills/loom-memory/**'
+      - 'loom-code/contract/**'
       # test_pipeline_marketplace_entry.py reads the repo-root
       # marketplace.json, so an edit there must fire this gate too —
       # else a removed/renamed entry merges ungated (fail-open).
@@ -43,7 +44,7 @@ on:
     paths:
       - 'loom-design/**'
       - 'loom-code/hooks/**'
-      - 'loom-code/skills/loom-memory/**'
+      - 'loom-code/contract/**'
       - '.claude-plugin/marketplace.json'
       - '.github/workflows/loom-pipeline-ci.yml'
 

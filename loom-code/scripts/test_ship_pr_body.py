@@ -138,9 +138,27 @@ def pr_body_template(text: str) -> str:
     raise AssertionError("the PR-body anchor is not followed by a closed fenced block.")
 
 
+INLINE_GREP_RE = re.compile(r"git log -1 --format=%B[^\n]*\|\s*grep -E '(\^\([A-Za-z|]+\)):'")
+
+
+def inline_footer_grep_pattern(skill_text: str) -> str:
+    """The regex the station's step-6 fallback greps the squash commit with."""
+    match = INLINE_GREP_RE.search(skill_text)
+    assert match, (
+        "the ship station no longer carries an inline `git log | grep` fallback "
+        "for the post-merge carrier check; a loom-code-only install would have "
+        "no carrier check at all."
+    )
+    return match.group(1)
+
+
 # --- family 1: the body survives the post-merge carrier check ----------------
 
 
+@pytest.mark.skipif(
+    not WORKFLOW.is_file(),
+    reason="the post-merge workflow is repo-local, not part of the plugin",
+)
 def test_workflow_still_runs_verify_merged():
     """If the workflow stops calling this script, family 1 is checking nothing."""
     text = WORKFLOW.read_text(encoding="utf-8")
@@ -166,9 +184,12 @@ def test_pr_body_template_ends_with_the_raw_trailer_footer(skill_text):
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git is required")
+@pytest.mark.skipif(
+    not MEMORY_GREP.is_file(),
+    reason="loom-workflow is a separate plugin and need not be installed here",
+)
 def test_pr_body_template_passes_the_real_verify_merged(skill_text, tmp_path):
     """Render the template into a squash-shaped commit and run the real script."""
-    assert MEMORY_GREP.is_file(), f"{MEMORY_GREP.relative_to(REPO)} is missing."
     message = "feat(loom-code): example change (#123)\n\n" + pr_body_template(skill_text) + "\n"
 
     work = tmp_path / "repo"
@@ -341,3 +362,49 @@ def test_commit_type_whitelist_matches_ci(skill_body):
 def test_body_word_count(skill_body):
     words = len(skill_body.split())
     assert words <= WORD_CAP, f"SKILL.md body is {words} words (cap {WORD_CAP})."
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git is required")
+def test_pr_body_template_passes_the_stations_own_inline_grep(skill_text, tmp_path):
+    """The station's fallback check must find the footer without loom-workflow.
+
+    Step 6 tells the agent to run an inline `git log | grep` when the sibling
+    plugin is absent. That grep is the only carrier check a loom-code-only
+    install has, so it is run here for real against a squash-shaped commit
+    built from the station's own template.
+    """
+    pattern = inline_footer_grep_pattern(skill_text)
+    message = "feat(loom-code): example change (#123)\n\n" + pr_body_template(skill_text) + "\n"
+
+    work = tmp_path / "repo"
+    work.mkdir()
+    env = {
+        **os.environ,
+        "GIT_AUTHOR_NAME": "t",
+        "GIT_AUTHOR_EMAIL": "t@example.com",
+        "GIT_COMMITTER_NAME": "t",
+        "GIT_COMMITTER_EMAIL": "t@example.com",
+    }
+    subprocess.run(["git", "init", "-q"], cwd=work, check=True, env=env)
+    message_file = tmp_path / "message.txt"
+    message_file.write_text(message, encoding="utf-8")
+    subprocess.run(
+        ["git", "commit", "-q", "--allow-empty", "-F", str(message_file)],
+        cwd=work,
+        check=True,
+        env=env,
+    )
+
+    body = subprocess.run(
+        ["git", "log", "-1", "--format=%B", "HEAD"],
+        cwd=work,
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    ).stdout
+    matched = [line for line in body.splitlines() if re.match(pattern, line)]
+    assert matched, (
+        f"the station's own fallback grep {pattern!r} finds no trailer footer in "
+        "a commit built from its PR-body template."
+    )

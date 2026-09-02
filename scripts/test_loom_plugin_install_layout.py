@@ -109,13 +109,11 @@ def _assert_local_contract_graph(design_root: Path, code_root: Path) -> None:
     implementer = code_root / "agents/implementer.md"
     _resolve_local_contract(
         implementer,
-        "../skills/writing-plans/references/requirement-identifiers.md",
+        "../references/engineering-baseline.md",
         code_root,
     )
-    plan_format = code_root / "skills/writing-plans/references/plan-format.md"
-    _resolve_local_contract(
-        plan_format, "requirement-identifiers.md", code_root
-    )
+    write_plan = code_root / "skills/write-plan/SKILL.md"
+    _resolve_local_contract(write_plan, "references/one-way-door.md", code_root)
 
 
 def _assert_local_behavior_dependencies(design_root: Path, code_root: Path) -> None:
@@ -301,8 +299,8 @@ def _assert_local_behavior_executes(
         design_root / "scripts/spec/validate_spec_output.py",
         design_root / "scripts/spec/mint_critic_verdict.py",
         code_root / "agents/implementer.md",
-        code_root / "skills/writing-plans/references/plan-format.md",
-        code_root / "skills/writing-plans/references/requirement-identifiers.md",
+        code_root / "references/engineering-baseline.md",
+        code_root / "skills/write-plan/references/one-way-door.md",
     )
     for contract in required_contracts:
         hidden = contract.with_suffix(".md.hidden")
@@ -336,29 +334,24 @@ def test_isolated_loom_plugins_are_standalone_and_compose_by_public_contract(
     design_router = (
         design_root / "skills" / "using-loom-design" / "SKILL.md"
     ).read_text(encoding="utf-8")
-    code_ui_verification = (
-        code_root / "skills" / "ui-verification" / "SKILL.md"
-    ).read_text(encoding="utf-8")
     design_spec = (
         design_root / "skills" / "spec-expansion" / "SKILL.md"
     ).read_text(encoding="utf-8")
     code_planning = (
-        code_root / "skills" / "writing-plans" / "SKILL.md"
+        code_root / "skills" / "write-plan" / "SKILL.md"
     ).read_text(encoding="utf-8")
 
     # Composition uses host-resolved public skill names, never sibling paths.
-    assert "`loom-code:using-loom-code`" in design_router
-    assert "`loom-design:interaction-flows`" in code_ui_verification
+    assert "loom-code" in design_router
 
     # The shared state is project-owned loom artifacts, not plugin files.
     assert "PRINCIPLES.md" in design_router
     assert "DESIGN.md" in design_router
     assert "ui-flows.md" in design_router
-    assert "ui-flows.md" in code_ui_verification
     assert "docs/loom/<change-id>/" in design_spec
     assert "docs/loom/<change-id>/" in code_planning
     assert "#### Scenario:" in design_spec
-    assert "#### Scenario:" in code_planning
+    assert "review: after-task" in code_planning
 
 
 def test_isolated_plugins_execute_local_behavior_without_sibling(tmp_path: Path) -> None:

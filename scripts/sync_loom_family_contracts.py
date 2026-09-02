@@ -16,16 +16,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 _CANONICAL = "scripts/canonical/loom-family"
 _ARTIFACT_CANONICAL = "scripts/canonical/loom-artifacts"
-_CODE_HOOKS = "loom-code/hooks"
 _DESIGN_REFERENCES = "loom-design/skills/using-loom-design/references"
 _WORKFLOW_DECISION_MAP_REFERENCES = (
     "loom-workflow/skills/decision-map/references"
 )
 ROUTE: dict[str, tuple[str, ...]] = {
-    f"{_CANONICAL}/{name}": (
-        f"{_CODE_HOOKS}/{name}",
-        f"{_DESIGN_REFERENCES}/{name}",
-    )
+    f"{_CANONICAL}/{name}": (f"{_DESIGN_REFERENCES}/{name}",)
     for name in ("family-reception.md", "family-relay.md", "plain-relay.md")
 }
 ROUTE[f"{_CANONICAL}/family-reception.md"] += (
@@ -33,7 +29,6 @@ ROUTE[f"{_CANONICAL}/family-reception.md"] += (
 )
 ROUTE[f"{_ARTIFACT_CANONICAL}/requirement-identifiers.md"] = (
     "loom-design/skills/spec-expansion/references/requirement-identifiers.md",
-    "loom-code/skills/writing-plans/references/requirement-identifiers.md",
 )
 
 PLUGIN_INTERNAL_PATH = re.compile(

@@ -22,7 +22,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-TARGET = "loom-code/hooks/family-relay.md"
+TARGET = "scripts/canonical/loom-family/family-relay.md"
 
 # The pointer must name plain-relay.md (the contract file from Task 1).
 POINTER_TOKEN = "plain-relay.md"
