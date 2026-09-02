@@ -1,26 +1,23 @@
 name: loom-design CI
 
 # Runs the whole loom-design plugin pytest suite (loom-design/scripts/),
-# covering every station directory — discovery, interface, pipeline,
-# principles and spec — in ONE invocation. That includes the pipeline
-# driver-build tests and the build-drift regression test that checks the
-# generated driver stays in sync with its js segment sources.
+# covering every station directory — interface, principles and spec — in
+# ONE invocation.
 #
 # One job, one invocation: `loom-design/scripts/pytest.ini` sets
-# `--import-mode=importlib`, so the repeated same-basename test files
-# across stations (test_marketplace_entry.py, test_plugin_manifest.py,
-# ...) no longer collide at collection; the same file's `pythonpath` line
-# puts each station directory on `sys.path`, which importlib mode
-# otherwise stops doing and the repo's bare sibling imports need. Before
-# that root existed the stations needed a job each — this job replaces
-# the four that loom-siblings-ci.yml and loom-spec-ci.yml used to run.
+# `--import-mode=importlib`, so same-basename test files across stations
+# no longer collide at collection; the same file's `pythonpath` line puts
+# each station directory on `sys.path`, which importlib mode otherwise
+# stops doing and the repo's bare sibling imports need. Before that root
+# existed the stations needed a job each — this job replaces the four that
+# loom-siblings-ci.yml and loom-spec-ci.yml used to run.
 #
-# The suite's build-drift test shells out to `node --check` on the
-# generated driver segments, so this job needs Node available. It does
-# not set up Node explicitly: ubuntu-latest ships a Node.js runtime by
-# default (see actions/runner-images), and no other workflow in this
-# repo runs its own actions/setup-node step for a similar `node --check`
-# use, so we rely on the runner image's preinstalled Node here too.
+# Renamed from `loom-pipeline-ci.yml` at loom-design 1.0, when the
+# conductor and `scripts/pipeline/` were deleted. No branch-protection
+# check was bound to the old filename, and the job's display name —
+# `loom-design pytest` — is unchanged. The generated-driver tests that
+# needed Node on the runner went with `scripts/pipeline/`, so this job is
+# pure Python now.
 #
 # Status: intended for `main` branch protection.
 
@@ -29,16 +26,15 @@ on:
     branches: [main]
     paths:
       - 'loom-design/**'
-      # The pipeline plugin's hooks now live under loom-code/, and the
-      # design stations read loom-code's contract package, so edits to
-      # either must fire this gate too.
+      # The design stations read loom-code's contract package and are
+      # gated by its hooks, so edits to either must fire this gate too.
       - 'loom-code/hooks/**'
       - 'loom-code/contract/**'
-      # test_pipeline_marketplace_entry.py reads the repo-root
+      # scripts/test_marketplace_entry.py reads the repo-root
       # marketplace.json, so an edit there must fire this gate too —
       # else a removed/renamed entry merges ungated (fail-open).
       - '.claude-plugin/marketplace.json'
-      - '.github/workflows/loom-pipeline-ci.yml'
+      - '.github/workflows/loom-design-ci.yml'
   push:
     branches: [main]
     paths:
@@ -46,13 +42,13 @@ on:
       - 'loom-code/hooks/**'
       - 'loom-code/contract/**'
       - '.claude-plugin/marketplace.json'
-      - '.github/workflows/loom-pipeline-ci.yml'
+      - '.github/workflows/loom-design-ci.yml'
 
 permissions:
   contents: read
 
 jobs:
-  pipeline:
+  design:
     name: loom-design pytest
     runs-on: ubuntu-latest
     steps:
@@ -65,9 +61,8 @@ jobs:
           python-version: '3.11'
 
       - name: Install test deps
-        # pytest = test runner; pyyaml = this suite's own CI-workflow
-        # self-test parses YAML. Superset of what the collapsed
-        # per-station jobs installed.
+        # pytest = test runner; pyyaml = test_ci_workflow.py parses this
+        # workflow to check its own path triggers.
         run: python3 -m pip install --quiet pytest pyyaml
 
       - name: Run the loom-design scripts pytest suite
