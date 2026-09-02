@@ -41,8 +41,10 @@
 ## contract package
 
 `contract/manifest.yaml` 宣告站、action，以及四種 artifact（intent、spec、
-plan、review）的每一個欄位。`loom-design` 與 `loom-workflow` 只讀它並宣告
-`requires-contract`，只有 loom-code 寫它。空白範本在 `contract/templates/`。
+plan、review）的每一個欄位。`loom-design` 讀它並宣告 `requires-contract`；
+`loom-workflow` 不宣告——只有它的 `decision-map` skill 在一次 delivery
+前跑 `contract --require`。只有 loom-code 寫它。空白範本在
+`contract/templates/`。
 
 ## checker
 

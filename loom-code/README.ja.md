@@ -46,9 +46,10 @@
 
 `contract/manifest.yaml` がステーション、アクション、そして 4 つの
 artifact（intent・spec・plan・review）の全フィールドを宣言します。
-`loom-design` と `loom-workflow` はこれを読み `requires-contract` を
-宣言するだけで、書き込むのは loom-code のみ。空のひな型は
-`contract/templates/` にあります。
+`loom-design` はこれを読み `requires-contract` を宣言します。
+`loom-workflow` はそうではなく——配信（delivery）の前に `decision-map`
+skill だけが `contract --require` を実行します。書き込むのは loom-code
+のみ。空のひな型は `contract/templates/` にあります。
 
 ## checker
 

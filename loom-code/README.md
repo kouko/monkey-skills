@@ -47,8 +47,10 @@ consequence.
 
 `contract/manifest.yaml` declares the stations, the actions, and every
 field of the four artifacts — intent, spec, plan, review. `loom-design`
-and `loom-workflow` read it and declare `requires-contract`; only
-loom-code writes it. `contract/templates/` holds the blank of each.
+reads it and declares `requires-contract`; `loom-workflow` does not —
+only its `decision-map` skill runs `contract --require` before a
+delivery. Only loom-code writes it. `contract/templates/` holds the
+blank of each.
 
 ## The checker
 
