@@ -65,7 +65,7 @@ from pathlib import Path
 
 DEFAULT_FROZEN_PREFIXES = (
     "docs/loom/archive/",
-    "docs/loom/dogfood/",
+    "docs/loom/evidence/dogfood/",
 )
 DEFAULT_FROZEN_BASENAMES = frozenset({"CHANGELOG.md"})
 

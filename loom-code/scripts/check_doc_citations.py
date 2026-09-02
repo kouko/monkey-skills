@@ -2,7 +2,7 @@
 """Verify path+anchor and legacy path+line citations in Markdown docs.
 
 Reimplements, as a durable script, the mid-loop ad-hoc check described in
-`docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md` §5: every
+`docs/loom/evidence/audits/2026-07-28-doc-branch-review-loop-audit.md` §5: every
 backtick-quoted citation like `` `loom-code/scripts/foo.py:123` `` or
 `` `docs/loom/BACKLOG.md:10-25` `` is parsed out of a doc, resolved
 against the repo root, and checked that the target file exists and that
@@ -36,7 +36,7 @@ Read-only: this script never writes to any file it inspects.
 Stdlib only (`pathlib`, `re`, `sys`).
 
 Round 2 (2026-07-28, plan Task 3): the round-1 full-corpus dogfood
-(`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md`) measured a
+(`docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md`) measured a
 79.7% false-positive rate, 95% of it one pattern — docs cite files by
 bare name or partial path (`kpi_spine_view.py:1116`), trusting doc-level
 context, which the literal repo-root-relative resolver above cannot
@@ -63,7 +63,7 @@ real file's path END WITH the cited string?):
   the same three-bucket outcome.
 
 Round 3 (2026-07-28, plan Task 3 continued): the round-2 corpus re-run
-(`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md` §Round 2)
+(`docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md` §Round 2)
 found the remaining `section not found` findings (244) were 240/244 one
 pattern: the cited target document uses named (non-numbered) headings
 throughout and simply doesn't use the `## N.` convention at all — the
@@ -84,7 +84,7 @@ judgment a regex heuristic cannot supply safely, the same conclusion
 round 1 already reached.
 
 Round 4 (2026-07-29, plan Task 4 final — split-half shipping): the
-three-round dogfood (`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md`)
+three-round dogfood (`docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md`)
 measured the two checks apart, not just together. The path:line bounds
 check finished at 0% measured false positives (8/8 confirmed true
 positives, zero confirmed false positives across rounds 2-3). The §N
@@ -369,7 +369,7 @@ def check_section_anchor(
 
     Round 3: a resolved target with ZERO numbered headings is ALSO
     UNCHECKED, not a finding — the round-2 corpus re-run
-    (`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md`
+    (`docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md`
     §Round 2) found this is the dominant remaining false-positive class
     (240/244): the `§N` grammar only exists for documents that use the
     `## N.` numbered-heading convention; a doc that uses named headings

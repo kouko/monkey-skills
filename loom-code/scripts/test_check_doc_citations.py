@@ -503,7 +503,7 @@ def test_section_anchor_target_with_no_numbered_headings_is_unchecked(
     tmp_path: Path,
 ) -> None:
     # ROUND 3 (loom-code plan, round 3): the round-2 dogfood
-    # (docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md, §Round 2)
+    # (docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md, §Round 2)
     # measured 240/244 remaining findings as targets that use named
     # (non-numbered) headings only -- the §N grammar simply does not apply
     # to them. A resolved target with ZERO numbered headings can no longer
@@ -548,7 +548,7 @@ def test_multiple_anchors_bind_to_nearest_preceding_doc(tmp_path: Path) -> None:
 
 # --- repo-wide suffix-match fallback (Task 3 round 2) ---
 #
-# Round-1 dogfood (docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md)
+# Round-1 dogfood (docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md)
 # measured a 79.7% false-positive rate, 95% of it one pattern: docs cite
 # files by bare name or partial path, which the literal repo-root resolver
 # can't follow. When the direct repo-root lookup fails, fall back to a
@@ -666,7 +666,7 @@ def test_main_prints_checked_unchecked_findings_summary(
 # --- --sections flag: default off / opt-in on (Task 4 round 4) ---
 #
 # Split-half shipping decision (per the user, after 3 measured rounds --
-# see docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md's Round 4
+# see docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md's Round 4
 # disposition): the path:line bounds check measured 0% FP (8/8 confirmed
 # true positives); the §N anchor check produced zero true positives on
 # the whole corpus. Default invocation now runs ONLY the path:line check;
