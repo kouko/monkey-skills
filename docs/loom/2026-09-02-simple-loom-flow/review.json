@@ -1,6 +1,6 @@
 {
  "reviewed_sha": "923fb84a09fb405dcd2bbadaea6d15c1ec7ffb8d",
- "scope": "spec (docs type) — round 1, before write-plan",
+ "scope": "spec (docs type) — round 2 (delta e75630c5..ecb335ce) + fixes a3d78066 pending round 3",
  "verdicts": [
   {
    "reviewer": "claude-fresh-context",
@@ -33,6 +33,22 @@
     "user-judgment-leak": "fail"
    },
    "findings_file": "evidence/spec-review-r1-codex.md"
+  },
+  {
+   "round": 2,
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-review-r2-codex.md"
+  },
+  {
+   "round": 2,
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-review-r2-claude.md"
   }
  ],
  "probes": [],
@@ -45,7 +61,8 @@
     "claude",
     "codex"
    ],
-   "text": "Acceptance #4 (replay 三個真實 change 不比今天重) 無任何 REQ"
+   "text": "Acceptance #4 (replay 三個真實 change 不比今天重) 無任何 REQ",
+   "resolved": "a3d78066: REQ-10 逐 change 基線 31/22/2、67/58/2、28/14/2，engineering 路徑"
   },
   {
    "id": "SR1-02",
@@ -55,7 +72,8 @@
     "claude",
     "codex"
    ],
-   "text": "單向門與判斷型岔路成為額外停點；engineering 在 write-plan 前問違反 ≤2"
+   "text": "單向門與判斷型岔路成為額外停點；engineering 在 write-plan 前問違反 ≤2",
+   "resolved": "a3d78066: 岔路併入既有決策點；非決策型限授權／缺件；PRINCIPLES 訪談併入決策點①"
   },
   {
    "id": "SR1-03",
@@ -64,7 +82,8 @@
    "raised_by": [
     "codex"
    ],
-   "text": "只裝 loom-code 且 needs-design: yes 時要求使用者手寫 spec ＝ user-judgment leak"
+   "text": "只裝 loom-code 且 needs-design: yes 時要求使用者手寫 spec ＝ user-judgment leak",
+   "resolved": "e11a198f: write-plan 自動產最小 spec；a3d78066 補 product 限定"
   },
   {
    "id": "SR1-04",
@@ -73,7 +92,8 @@
    "raised_by": [
     "codex"
    ],
-   "text": "准入規則的『機制』無機器可讀母體，CI 無法驗淨數不增"
+   "text": "准入規則的『機制』無機器可讀母體，CI 無法驗淨數不增",
+   "resolved": "a3d78066: 散文閘以 <!-- gate: id --> 為母體；checker --list-rules；budget-exception 文法"
   },
   {
    "id": "SR1-05",
@@ -83,7 +103,8 @@
     "claude",
     "codex"
    ],
-   "text": "缺 Codex /hooks 授信、PRINCIPLES 拒收、standing docs WARN 的可見流程"
+   "text": "缺 Codex /hooks 授信、PRINCIPLES 拒收、standing docs WARN 的可見流程",
+   "resolved": "a3d78066: flow 5 授信、flow 6 併入決策點①"
   },
   {
    "id": "SR1-06",
@@ -93,7 +114,8 @@
     "claude",
     "codex"
    ],
-   "text": "複合 REQ 的箭頭只覆蓋部分義務；名詞≤40 與跨 vendor 必用是 intent Open question 卻寫成硬要求"
+   "text": "複合 REQ 的箭頭只覆蓋部分義務；名詞≤40 與跨 vendor 必用是 intent Open question 卻寫成硬要求",
+   "resolved": "e11a198f + ecb335ce：箭頭縮窄；跨 vendor 改使用者選擇"
   },
   {
    "id": "SR1-07",
@@ -102,7 +124,8 @@
    "raised_by": [
     "claude"
    ],
-   "text": "『只多一次授信』為假：hook 定義變即重授信，而 §7a 升版覆寫；command 字串須固定"
+   "text": "『只多一次授信』為假：hook 定義變即重授信，而 §7a 升版覆寫；command 字串須固定",
+   "resolved": "e11a198f: hooks.json command 固定；核對 run E"
   },
   {
    "id": "SR1-08",
@@ -111,7 +134,8 @@
    "raised_by": [
     "codex"
    ],
-   "text": "skill 36→18 應為 ≤18；session-start 減半無 baseline sha；113 名詞未受清單支持"
+   "text": "skill 36→18 應為 ≤18；session-start 減半無 baseline sha；113 名詞未受清單支持",
+   "resolved": "a3d78066: session-start 基線釘 SHA＋命令"
   },
   {
    "id": "SR1-09",
@@ -121,7 +145,8 @@
     "claude",
     "codex"
    ],
-   "text": "REQ-9 措辭『走完』≠ Acceptance #6 的四項輸出；且未帶現況 25 分鐘與拆站對策"
+   "text": "REQ-9 措辭『走完』≠ Acceptance #6 的四項輸出；且未帶現況 25 分鐘與拆站對策",
+   "resolved": "a3d78066: REQ-9 回 Acceptance #6 原句＋固定測例；對象改站文件與否待 intent 裁定"
   },
   {
    "id": "SR1-10",
@@ -130,7 +155,73 @@
    "raised_by": [
     "claude"
    ],
-   "text": "機制規則混進使用者可讀段；『掃讀』理由無證據；REQ-6/7 列舉不完整"
+   "text": "機制規則混進使用者可讀段；『掃讀』理由無證據；REQ-6/7 列舉不完整",
+   "resolved": "e11a198f"
+  },
+  {
+   "id": "SR2-01",
+   "severity": "fatal",
+   "anchor": "intent Proposed outcome / spec REQ-3",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "spec 改跨 vendor 為選配後與 intent『至少一個不同 vendor』牴觸",
+   "resolved": "a3d78066: intent 該句改為使用者選擇；status 退回 open 待重確認"
+  },
+  {
+   "id": "SR2-02",
+   "severity": "fatal",
+   "anchor": "spec UI flows 6 / concept-model §8",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "『不需要產品原則』選項是額外停點且繞過 product 拒收",
+   "resolved": "a3d78066: 訪談併入決策點①；waiver 只靜音 WARN 永不豁免拒收"
+  },
+  {
+   "id": "SR2-03",
+   "severity": "important",
+   "anchor": "spec UI flows 非決策型",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "非決策型類別無上限，6a 是偏好詢問",
+   "resolved": "a3d78066: 入場判準＝不做無法繼續的授權／缺件，不得新增；6a 併入首次決策點①"
+  },
+  {
+   "id": "SR2-04",
+   "severity": "important",
+   "anchor": "concept-model §4 table",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "code-only 格漏 product 限定",
+   "resolved": "a3d78066"
+  },
+  {
+   "id": "SR2-05",
+   "severity": "nit",
+   "anchor": "concept-model §7a",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "未寫明 checker 副本可被改寫的已知限制",
+   "resolved": "a3d78066"
+  },
+  {
+   "id": "SR2-06",
+   "severity": "open-question",
+   "anchor": "intent Acceptance #6 / spec REQ-9",
+   "raised_by": [
+    "codex",
+    "claude"
+   ],
+   "text": "冷讀對象：整份 concept-model.md（現況 25 分）或落地後各站 SKILL.md——intent 裁定",
+   "resolved": null
   }
+ ],
+ "vendors": [
+  "anthropic",
+  "openai"
  ]
 }
