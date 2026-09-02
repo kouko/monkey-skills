@@ -2317,6 +2317,42 @@
    "started": "2026-09-02T17:38:18Z",
    "fresh_context": true,
    "note": "R23-O1 docstring + R23-O3 pin test"
+  },
+  {
+   "task": "W4-02",
+   "role": "implementer",
+   "agent_id": "opus-codex-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T14:03:48Z",
+   "fresh_context": true,
+   "note": "per-task entry for the \"W4-02 fixes\" implementer so the W4-02 trailers resolve; the two docs commits under W4-02 were orchestrator inline"
+  },
+  {
+   "task": "W4-05",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline: 733548d9 landed the blind-runner's report (the blind run itself ran as opus-blind-run-final, fresh); recorded 2026-09-03 when the trailer was found unclaimed"
+  },
+  {
+   "task": "branch-end round 24 re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r24",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T17:41:53Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 24 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r24",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T17:41:53Z",
+   "fresh_context": true
   }
  ],
  "questions": [
