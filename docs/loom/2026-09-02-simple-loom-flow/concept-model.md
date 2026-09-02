@@ -157,7 +157,7 @@ skill 36 → 17（7 站 + 10 計數工具；1 個 reference 不是 skill；2 個
 ## 7. 決定性層（擋手滑，靠重算不靠宣稱）
 
 - **建議性**：skill 散文、standing docs、reference。不用散文當閘。
-- **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」，`--list-rules` 印 26 條、按 `<area>.<name>` 分組（下方每類一句，id 見括號）：
+- **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」，`--list-rules` 印 27 條、按 `<area>.<name>` 分組（下方每類一句，id 見括號）：
   - **intent.\*（5）**：schema 齊全（`intent.schema`）；product 的 Problem 段禁識別字（`intent.product-no-identifiers`）；`needs-design` 行帶理由且進 commit message（`intent.needs-design-reason`）；`needs-design: no` 但 diff 碰介面表面 glob → 擋（`intent.needs-design-recompute`）；`kind: engineering` 但 diff 碰介面表面 glob → 擋（`intent.kind-recompute`，§4）。
   - **intake.\*（4）**：write-spec／write-plan 只收 `status: confirmed` 的 intent（`intake.confirmed`）；write-plan 在 `needs-design: yes` 時只收 spec 最新一輪全 PASS／PASS_WITH_NOTES 的（`intake.spec-pass`）；`kind: product` 另要求 spec 有 `confirmed-behavior:` 行（`intake.confirmed-behavior`）；一個 plan 標 `review: after-task` 免費額度 2，超過要在該 task 行寫理由（`intake.after-task-budget`）。
   - **contract.\*（1）**：loom-design／loom-workflow 的站啟動時對 manifest 版本重算，不符→擋（`contract.requires`）。
