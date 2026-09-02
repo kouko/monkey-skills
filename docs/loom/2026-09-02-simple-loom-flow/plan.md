@@ -208,7 +208,7 @@ checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
 
 ## 2. 全 plan 風險
 
-1. **過渡期的舊守衛**：本 session 裝的是 loom-code 0.110.0 的 git-guard（讀 `.git/loom/*.json`），會擋本 branch 的 push。ship 站落地前不 push；到 W4 結束一次 push 時，若舊 guard 仍擋，請使用者以 `!` 前綴 push（memory：guard 用 shell cwd）；不鑄舊 marker、不 `--no-verify`。
+1. **過渡期的舊守衛（已由 W4-06 取代，僅留存史）**：build 期間本 session 裝的是 loom-code 0.110.0 的 git-guard，會擋本 branch 的 push；W4-06（2026-09-03）已把 repo 內 `.codex` shim 換成新腳手架的 `.codex/hooks/loom-checker`。Claude Code 側的舊 plugin-level guard仍以字串比對擋 push 指令，要等 merge 後 plugin cache 更新到 1.0.0 才會換掉，這是使用者最終那次 push 要加 `!` 前綴的唯一原因——這是 host cache 的過渡限制，不是繞過 loom checker：push 前 `python3 loom-code/scripts/loom_checker.py push` 必須先回 exit 0，`--no-verify` 與鑄舊 marker 仍然禁止。
 2. **plugin cache 是 GitHub main**：本 branch 的新站在 merge 前無法透過 `/reload-plugins` 試；W4 一律用「本 branch 路徑直接 Read SKILL.md」與 scratch repo 的 `--plugin-dir` 型安裝做盲跑。
 3. **刪除量**：~150 檔＋~200 個測試。每個 wave 結尾 `pytest` 全綠才算 wave 結束；刪除型 task 會撞 SDD 的 cat-file 檢查——SDD 本身在 W1 被刪，W0 期間的刪除延到 W1-06 一次做。
 4. **REQ-8 字數**：session-start 減半是硬條件；若站序表放進 session-start 就超——只放一行指向 write-plan／capture-intent。
