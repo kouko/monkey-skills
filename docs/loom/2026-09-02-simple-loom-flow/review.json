@@ -910,6 +910,22 @@
    "model": "opus",
    "started": "2026-09-02T07:41:32Z",
    "fresh_context": true
+  },
+  {
+   "task": "spec r5 read",
+   "role": "reviewer",
+   "agent_id": "opus-spec-r5-read-1",
+   "model": "opus",
+   "started": "2026-09-02T07:54:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec r5 read",
+   "role": "reviewer",
+   "agent_id": "sonnet-spec-r5-read-1",
+   "model": "sonnet",
+   "started": "2026-09-02T07:54:15Z",
+   "fresh_context": true
   }
  ]
 }
