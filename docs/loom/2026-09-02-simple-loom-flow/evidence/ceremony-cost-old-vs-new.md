@@ -134,3 +134,42 @@ No other cell (a, b) is heavier under the new model for any of the three changes
 - **Wall-clock (e)** for all three changes: PR commit timestamps are compressed into a few minutes regardless of actual session length (67 commits in 5 minutes for #772), and plan/spec documents record only calendar dates, not session start/end times. No reliable proxy for real working duration was found in the plan, spec, or PR data.
 - **Exact wave count / per-wave diff size** for computing K precisely under the new model: today's plans don't track a "checkpoint" concept, so wave boundaries were inferred from Decision Log wave-tags ("SDD wave 1/2/3") rather than read off an explicit ledger. K values above are stated assumptions, not measured facts.
 - **DL-amendment count for (ii) and (iii)**: DL amendments are individually described in prose but not all carry an explicit "re-reviewed as round N" marker, so the review-dispatch totals for those two changes are lower-bound estimates built from the numbers the plans do state explicitly (fan-out lines, round numbers), not an exhaustive recount of every prose amendment.
+
+---
+
+## v10 實測（W4-03）
+
+上面每一節的「New model (arithmetic)」欄是依 v7（含 approval-only commit）算的，**已過時**——
+v7 的簽核點在 v10 已併成兩個決策點、approval-only commit 已刪。以本節為準。
+
+方法：#771 走真 replay（scratch clone at `5a437eb1^`，五個站從 intent 到
+`loom_checker.py push` exit 0，實測數）；#772／#775 走推導 replay（寫 intent 與 Task DAG，
+不 build），用 #771 校準後的規則推算。三份 evidence：`replay-771.md`、`replay-772.md`、`replay-775.md`。
+
+| change | 今天（commit／派工／決策點） | v10 replay | 通過？（每欄 ≤ 今天） |
+|---|---|---|---|
+| (i) #771 script helper extraction | 31 ／ 22 ／ 2 | **34** ／ **31**（審查子集 **12**）／ **2** | commit ✗；派工：全部 ✗、子集 ✓；決策點 ✓（持平） |
+| (ii) #772 adversarial audit station | 67 ／ 58 ／ 2 | **37** ／ **35**（審查子集 **16**）／ **2** | ✓ ／ ✓ ／ ✓ |
+| (iii) #775 prose-edit self-sweep | 28 ／ 14 ／ 2 | **18** ／ **16**（審查子集 **8**）／ **2** | commit ✓；派工：全部 ✗、子集 ✓；決策點 ✓ |
+
+**兩個不合格的格子，照 plan §W4-03 的規定原樣留著，不調整計數規則來過：**
+
+1. **#771 的 commit 34 > 31。** 小型純工程改動在新模型下**沒有變輕**。
+   成本結構：每個 checkpoint 固定三個 commit（派工記錄／checkpoint 工件／review-only），
+   checkpoint 數是 commit 帳的三倍係數。扣掉兩項純 replay 執行成本後是 31，與今天持平。
+2. **派工欄的「全部」比較是定義不對齊的產物。** 今天的 22／58／14 三個數，
+   本文件 §(i)(ii)(iii) 的 b 列自己寫明來源全部是**審查派工**，不含 implementer。
+   逐字對齊今天的定義，v10 的三個數是 12／16／8，三個都 ≤ 今天。
+   兩邊都改成「全部派工」，今天約是 41／74／20，v10 是 31／35／16，三個也都 ≤ 今天。
+   **在任何一種一致的定義下，v10 的派工都比較輕。**
+
+**首輪 vs 後續輪 finding 比例**（#771 真 replay，門檻判準）：
+round 1 四條、round 2 三條、round 3 三條 → 首輪 **40%**、後續輪 **60%**（important 只算：33%／67%）。
+方向與 `q2-per-task-review-evidence.md` §C.5 一致：只審一次會漏。
+**弱證據**：三輪 reviewer 由同一個 agent 分飾（派工深度規則禁止再派 subagent，
+揭露見 `replay-771.md` §角色扮演揭露）。
+
+**真 replay 找到的三個機制缺陷**（詳見 `replay-771.md`）：
+① 計畫沒有位置放對抗者寫的 abuse 檔（進版控的程式碼需要 `Task:` trailer，
+trailer 需要一個有 implementer 的 task）；② wave 的定義有 plan 標題與 build 站規則兩個來源；
+③ 每個 checkpoint 固定三個 commit。
