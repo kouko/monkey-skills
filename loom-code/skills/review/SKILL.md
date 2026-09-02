@@ -1,7 +1,7 @@
 ---
 name: review
 description: |
-  Runs one checkpoint review of a change: at least two fresh-context reviewers, a blind run and an adversarial pass over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec for the spec lens (by write-plan when it generated the minimal spec), by build after a task or at the end of a wave, by ship at branch end, and whenever someone asks for a review of the change in progress.
+  Runs one checkpoint review of a change: two or more fresh-context reviewers, a blind run and an adversarial pass over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec (or write-plan for a minimal spec) for the spec lens, by build after a task or wave, by ship at branch end, or when asked to review the change in progress.
 version: 1.0.0
 ---
 
