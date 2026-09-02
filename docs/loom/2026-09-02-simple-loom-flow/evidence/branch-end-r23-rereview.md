@@ -49,3 +49,22 @@ findings:
 notes: []```
 
 Disposition: C2–C5 confirmed closed. New findings R23-C1 (report counts drift with every dispatch-record commit), R23-C2 (plan W4-06 risk note), R23-C3 (§7 whole-.codex claim), R23-C4 (README 20→27) fixed in the docs commit that follows this file; R23-C5 (= R22-O4) is scheduled for the review-only commit. A docs re-review (round 24) is owed.
+
+## opus-review-code-branch-end-r23 (anthropic, lens: code) — NEEDS_REVISION
+
+```yaml
+verdict: NEEDS_REVISION
+lens: code
+reviewed_sha: c3c4d478
+rereview_of: {R22-O1: closed (807e4db5), R22-O2: closed (f79a337a), R22-O3: closed (8331f6c6), R22-O5: closed, R22-O4: not-due (review-only commit)}
+dimension_scores: {security: PASS, architecture: PASS, correctness: PASS_WITH_NOTES, naming: PASS, tests: PASS, refactoring: PASS, cross-task-coherence: NEEDS_REVISION, external-surface-grounding: PASS, principles-conformance: PASS, deliberate-simplification: PASS, deletion-first: PASS}
+findings:
+  - {id: R23-O1, severity: fatal, dimension: cross-task-coherence, anchor: "docs/loom/2026-09-02-simple-loom-flow/review.json:2135", text: "push.dispatch-covers-tasks red at HEAD in both modes: dc78b73b, af6d73a5, 4a70e8cd touch loom-code/skills/** with no Task trailer; W4-01 and W4-04 have no implementer entry; W4-06/W4-08 only inside the combined entry.", fix: "Trailer the three commits (history rewrite, user-run) with their owning task; split W4-06+W4-08; record W4-01/W4-04 (orchestrator-inline); re-run the rule against HEAD and require an empty list."}
+  - {id: R23-O2, severity: important, dimension: correctness, anchor: "loom-code/scripts/loom_checker.py:454", text: "changed_paths docstring still states the directory-wide .codex/hooks/ exemption that R22-O3 removed; copied verbatim into .codex/hooks/loom_checker.py.", fix: "Rewrite the paragraph to the file-scoped exemption; refresh the copy."}
+  - {id: R23-O3, severity: nit, dimension: refactoring, anchor: "loom-code/scripts/loom_checker.py:389", text: "HOST_PLUMBING_FILES hand-copies codex_scaffold's constants; nothing pins them together.", fix: "Test asserting HOST_PLUMBING_FILES == {SHIM_COMMAND, CHECKER_COPY, MARKER} | {HOOK_DIR/m for m in SIBLING_MODULES} and HOST_PLUMBING_DIR_PREFIX == CONTRACT_COPY + '/'."}
+notes:
+  - "1004 passed in 149.64s; --self-test exit 0; check_mechanisms --measure exit 0 (skills 17, session-start 658)."
+  - "reviewer≠implementer holds (85 entries, implementer ∩ judge = ∅). push.frozen-store-untouched returns [] at HEAD."
+```
+
+Disposition: R23-O1 → dispatch record split/added in the commit after this file; the three trailers need a user-run rewrite (rewrite-task-trailers-2.sh). R23-O2/O3 → sonnet-r23-docstring-1 (Task: W4-10). Round 24 re-review owed on both lenses.
