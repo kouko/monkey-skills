@@ -1,6 +1,6 @@
 {
- "reviewed_sha": "6eb0a6a9",
- "scope": "spec — PASS (round 4: codex PASS, claude PASS_WITH_NOTES; notes fixed in 6eb0a6a9). spec 先審再批 satisfied; write-plan may start.",
+ "reviewed_sha": "1c9ed208",
+ "scope": "spec — PASS (rounds 1–4); spec adversarial round 5 NEEDS_REVISION adopted, read-review of the r5 delta pending decision point ② re-confirmation; W0 code — PASS_WITH_NOTES (rounds 6 after-task, 7 wave-end, 8 re-review)",
  "verdicts": [
   {
    "reviewer": "claude-fresh-context",
@@ -90,6 +90,66 @@
    "lens": "spec-adversarial",
    "verdict": "NEEDS_REVISION",
    "findings_file": "evidence/spec-redteam-r5.md"
+  },
+  {
+   "round": 6,
+   "scope": "w0-code",
+   "reviewer": "opus-review-code-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#after-task"
+  },
+  {
+   "round": 6,
+   "scope": "w0-code",
+   "reviewer": "sonnet-review-spec-1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "spec-conformance",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#after-task"
+  },
+  {
+   "round": 7,
+   "scope": "w0-code",
+   "reviewer": "opus-review-code-2",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#wave-end"
+  },
+  {
+   "round": 7,
+   "scope": "w0-code",
+   "reviewer": "sonnet-review-consistency-2",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#wave-end"
+  },
+  {
+   "round": 8,
+   "scope": "w0-code",
+   "reviewer": "opus-review-code-3",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#re-review"
+  },
+  {
+   "round": 8,
+   "scope": "w0-code",
+   "reviewer": "sonnet-review-docs-3",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#re-review"
   }
  ],
  "probes": [
@@ -106,6 +166,22 @@
    "sha": "6eb0a6a9",
    "result": "NEEDS_REVISION — 6 fatal, all adopted",
    "artifact": "evidence/spec-redteam-r5.md"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "w0-code",
+   "command": "python3 -m pytest loom-code/scripts/ -q",
+   "sha": "1c9ed208",
+   "result": "2285 passed, 1 xfailed in 122.29s (0:02:02)",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w0-code",
+   "command": "reviewer probes: 6 checker fail-open probes (after-task) + hook payload shapes / scaffold real-copy / R1–R4 fixtures (wave-end)",
+   "sha": "1c9ed208",
+   "result": "3 + 4 fatal fail-opens found and fixed",
+   "artifact": "evidence/w0-checkpoint-reviews.md"
   }
  ],
  "open_findings": [
@@ -525,6 +601,149 @@
    ],
    "text": "H-5 猜測定義",
    "resolved": "pending — concept-model/spec/plan edits in the next commit; product-visible parts await decision point ② re-confirmation"
+  },
+  {
+   "id": "W0-01",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "branch_base only main",
+   "resolved": "resolved: 7a41e13f"
+  },
+  {
+   "id": "W0-02",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "no review.json schema at push",
+   "resolved": "resolved: 7a41e13f push.review-schema"
+  },
+  {
+   "id": "W0-03",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "package-tests probe unbound",
+   "resolved": "resolved: 7a41e13f (sha) + 6f8f7970 (checker executes)"
+  },
+  {
+   "id": "W0-04",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "push hangs on open stdin",
+   "resolved": "resolved: 6f8f7970 --hook"
+  },
+  {
+   "id": "W0-05",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "push regex misses git -C / eval / shell -c / xargs",
+   "resolved": "resolved: 6f8f7970 + 1c9ed208"
+  },
+  {
+   "id": "W0-06",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "Codex scaffold copy lacks deps; probe misreports",
+   "resolved": "resolved: d9ed517e"
+  },
+  {
+   "id": "W0-07",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "dispatch contract prose vs code",
+   "resolved": "resolved: 6f8f7970 dispatch[] in review.json"
+  },
+  {
+   "id": "W0-08",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "mechanisms registered per artifact not per field",
+   "resolved": "resolved: d3b6aefd"
+  },
+  {
+   "id": "W0-09",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "dismissed not identity-checked",
+   "resolved": "resolved: 6f8f7970 push.dismissed-by-reviewer"
+  },
+  {
+   "id": "W0-10",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "R3 whole-file fallback; R4 unresolved eval; class unvalidated",
+   "resolved": "resolved: d3b6aefd + 1c9ed208"
+  },
+  {
+   "id": "W0-11",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "docs: backlog wording, session-start ②, KICKOFF globs, §3 JSON keys",
+   "resolved": "resolved: 979b1668, 3c8568d4"
+  },
+  {
+   "id": "W0-12",
+   "severity": "nit",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "contract --require message direction; plan lists hooks-probe",
+   "resolved": "resolved: 1c9ed208, 0f1dd2fe"
+  },
+  {
+   "id": "W0-13",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "8a5a3b2f",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "intake.spec-pass picks the latest round across all lenses; a later code round would shadow the spec round",
+   "note": "open until W1-03 lands the lens filter; push stays blocked by design"
   }
  ],
  "vendors": [
