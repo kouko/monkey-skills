@@ -48,3 +48,4 @@ GO。理由：現況的重量已經讓維護者自己都覺得 heavy；儀式成
 - checkpoint 門檻（8 檔或 400 行）與 plan 深度 ≤ 5 都是實驗預設，要用歷史分支 replay 量過才固定。
 - 名詞計數規則下的基線是 36（Codex 數的），目標 ≤ 40；規則本身可能還要調。
 - 跨 vendor reviewer 每次約 5 分鐘、11 萬 token，成本是否可接受要用幾個真實 change 量。
+- 問題三型判準（要什麼／可見行為／做到了嗎＋單向門後果形）的邊界以實際使用回饋調整；量測面＝每 change 記錄的決策點數與岔路提問數（concept-model §11），判定住在 review 的 user-judgment-leak 鏡頭與 write-plan 的 one-way-door reference，改文字不改程式（kouko 2026-09-02）。
