@@ -542,11 +542,259 @@ def check_confirmed_behavior(manifest, repo: Path, change_id: str) -> list[tuple
 
 
 def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
-    raise NotImplementedError("push rules land in plan task W0-04")
+    head, base = "HEAD", None
+    rest = list(args)
+    while rest:
+        token = rest.pop(0)
+        if token in ("--head", "--base"):
+            if not rest:
+                raise UsageError(f"{token} needs a ref.")
+            if token == "--head":
+                head = rest.pop(0)
+            else:
+                base = rest.pop(0)
+        else:
+            raise UsageError(f"unexpected argument {token!r}.")
+
+    manifest = load_manifest()
+    repo = repo_root(Path.cwd())
+    head_sha = run_git(repo, "rev-parse", head)
+    if not head_sha:
+        raise UsageError(f"cannot resolve {head!r} in {repo}.")
+
+    review_rel, failures = check_review_only_head(manifest, repo, head_sha)
+    if review_rel is None:
+        return report(failures, err)
+
+    review = json.loads(run_git(repo, "show", f"{head_sha}:{review_rel}"))
+    failures += check_reviewed_sha(repo, head_sha, review)
+    failures += check_open_findings_closed(review)
+    failures += check_probes_package_tests(review)
+    failures += check_verdicts(review)
+    failures += check_reviewer_ne_implementer(repo, head_sha, review_rel)
+    if base:  # recorded for symmetry with the other sub-commands
+        out.write(f"base: {base}\n")
+    return report(failures, err)
+
+
+def check_review_only_head(manifest, repo: Path, head_sha: str):
+    """A checkpoint push rides on a review-only commit: exactly one file,
+    and that file is this change's review.json (concept-model §2e)."""
+    listing = run_git(repo, "show", "--name-only", "--pretty=format:", head_sha) or ""
+    touched = sorted({line for line in listing.splitlines() if line.strip()})
+    template = manifest["artifacts"]["review"]["path"]
+    is_review = glob_to_regex(template.replace("<change-id>", "*"))
+    reviews = [path for path in touched if is_review.match(path)]
+    if len(touched) == 1 and reviews:
+        return reviews[0], []
+    detail = ", ".join(touched) if touched else "nothing"
+    return None, [
+        (
+            "push.review-only-head",
+            f"HEAD must touch only {template}; it touches {detail}.",
+        )
+    ]
+
+
+def check_reviewed_sha(repo: Path, head_sha: str, review) -> list[tuple[str, str]]:
+    """The reviewed tree must be the tree being pushed: an amend or a new
+    code commit under a written review.json invalidates it."""
+    parent = run_git(repo, "rev-parse", f"{head_sha}^")
+    recorded = str(review.get("reviewed_sha", "")).strip()
+    if not parent:
+        return [("push.reviewed-sha", "HEAD has no parent commit to have reviewed.")]
+    if not recorded or not (parent.startswith(recorded) or recorded.startswith(parent)):
+        return [
+            (
+                "push.reviewed-sha",
+                f"reviewed_sha is {recorded or 'empty'} but HEAD^ is {parent[:8]}; "
+                "the reviewed commit is not the one being pushed.",
+            )
+        ]
+    return []
+
+
+def check_open_findings_closed(review) -> list[tuple[str, str]]:
+    open_ones = [
+        str(entry.get("id", "<no id>"))
+        for entry in review.get("open_findings", [])
+        if not entry.get("resolved") and not entry.get("dismissed")
+    ]
+    if open_ones:
+        return [
+            (
+                "push.open-findings-closed",
+                f"{len(open_ones)} finding(s) neither resolved nor dismissed: "
+                f"{', '.join(open_ones)}.",
+            )
+        ]
+    return []
+
+
+def check_probes_package_tests(review) -> list[tuple[str, str]]:
+    """A test run is a fact only when it was recorded as one."""
+    probes = review.get("probes", [])
+    passing = [
+        probe
+        for probe in probes
+        if str(probe.get("kind")) == "package-tests"
+        and str(probe.get("result", "")).lower() == "pass"
+    ]
+    if passing:
+        return []
+    attempted = [str(probe.get("kind")) for probe in probes]
+    return [
+        (
+            "push.probes-package-tests",
+            "review.json records no passing `package-tests` probe "
+            f"(probes present: {', '.join(attempted) or 'none'}).",
+        )
+    ]
+
+
+def check_verdicts(review) -> list[tuple[str, str]]:
+    round_number, verdicts = latest_round(review.get("verdicts", []))
+    reviewers = {str(entry.get("reviewer", "")) for entry in verdicts}
+    failures = []
+    if len(reviewers) < 2:
+        failures.append(
+            (
+                "push.verdicts-ge-2",
+                f"review round {round_number} carries {len(reviewers)} distinct "
+                "reviewer(s); two fresh contexts are required.",
+            )
+        )
+    not_passing = [
+        f"{entry.get('reviewer')}={entry.get('verdict')}"
+        for entry in verdicts
+        if str(entry.get("verdict")) not in PASSING_VERDICTS
+    ]
+    if not_passing:
+        failures.append(
+            (
+                "push.verdicts-ge-2",
+                f"review round {round_number} is not passing: {', '.join(not_passing)}.",
+            )
+        )
+    return failures
+
+
+REVIEWING_ROLES = {"reviewer", "blind-runner", "adversary"}
+
+
+def check_reviewer_ne_implementer(repo: Path, head_sha: str, review_rel: str):
+    """Recomputed from the dispatch record. §0 is explicit that a forged
+    record is out of scope; an ABSENT one is not -- it fails closed."""
+    dispatch_rel = f"{review_rel}.dispatch"
+    raw = run_git(repo, "show", f"{head_sha}:{dispatch_rel}")
+    if raw is None:
+        raw = read_text(repo / dispatch_rel) if (repo / dispatch_rel).is_file() else None
+    if not raw:
+        return [
+            (
+                "push.reviewer-ne-implementer",
+                f"no dispatch record at {dispatch_rel}; who reviewed cannot be recomputed.",
+            )
+        ]
+    implementers: set[str] = set()
+    reviewers: set[str] = set()
+    for number, line in enumerate(raw.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            return [
+                (
+                    "push.reviewer-ne-implementer",
+                    f"{dispatch_rel} line {number} is not a JSON object; "
+                    "the record cannot be recomputed.",
+                )
+            ]
+        agent = str(entry.get("agent_id", ""))
+        role = str(entry.get("role", ""))
+        if role == "implementer":
+            implementers.add(agent)
+        elif role in REVIEWING_ROLES:
+            reviewers.add(agent)
+    if not reviewers:
+        return [
+            (
+                "push.reviewer-ne-implementer",
+                f"{dispatch_rel} records no reviewer, blind-runner or adversary dispatch.",
+            )
+        ]
+    both = sorted(implementers & reviewers)
+    if both:
+        return [
+            (
+                "push.reviewer-ne-implementer",
+                f"agent(s) {', '.join(both)} both implemented and reviewed this change.",
+            )
+        ]
+    return []
+
+
+STANDING_WARN = (
+    "WARN: this repo has no {missing} yet.",
+    "WARN: without it, the review station cannot check any change for consistency "
+    "against what this product is supposed to be.",
+    "WARN: say the word and I will write one; to stop seeing this, record "
+    "`standing-docs: waived — <reason> (<date>)` in docs/loom/KICKOFF-DEFAULTS.md.",
+)
 
 
 def cmd_standing(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
-    raise NotImplementedError("standing rules land in plan task W0-04")
+    if not args:
+        raise UsageError("standing needs a path to the intent file.")
+    if len(args) > 1:
+        raise UsageError(f"unexpected argument {args[1]!r}.")
+    intent_path = Path(args[0])
+    if not intent_path.is_file():
+        raise UsageError(f"no intent file at {intent_path}")
+
+    repo = repo_root(intent_path)
+    front, _ = parse_document(read_text(intent_path))
+    principles = find_standing_doc(repo, "PRINCIPLES.md")
+    design = find_standing_doc(repo, "DESIGN.md")
+    waived = kickoff_defaults(repo).get("standing-docs", "").strip() == "waived"
+
+    missing = [name for name, path in (("PRINCIPLES.md", principles), ("DESIGN.md", design)) if path is None]
+    if missing and not waived:
+        for line in STANDING_WARN:
+            err.write(line.format(missing=" or ".join(missing)) + "\n")
+
+    failures: list[tuple[str, str]] = []
+    if front.get("kind", "").strip() == "product":
+        # standing.silence: the waiver above silenced the WARN and stops here.
+        if principles is None:
+            failures.append(
+                (
+                    "standing.product-principles-reject",
+                    "kind: product but this repo has no PRINCIPLES.md; "
+                    "a waiver silences the WARN only, never this rejection.",
+                )
+            )
+        elif not RATIFIED_BY.search(read_text(principles)):
+            failures.append(
+                (
+                    "standing.product-principles-reject",
+                    f"{principles.relative_to(repo)} carries no `ratified-by: <name> <date>` "
+                    "line, so it was never ratified.",
+                )
+            )
+    return report(failures, err)
+
+
+RATIFIED_BY = re.compile(r"^ratified-by:\s*\S.*$", re.MULTILINE)
+
+
+def find_standing_doc(repo: Path, name: str) -> Path | None:
+    """Repo root first, then docs/loom/ -- both are in use in the wild."""
+    for candidate in (repo / name, repo / "docs" / "loom" / name):
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 def cmd_hooks_probe(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
