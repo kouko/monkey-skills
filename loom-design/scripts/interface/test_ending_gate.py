@@ -1,4 +1,4 @@
-"""Ending-gate cards in the two drafting skills: an imperative,
+"""Ending-gate card in interaction-flows: an imperative,
 action-moment-anchored line stating that ending a run without the artifact
 file on disk is a FAILED run (docs/loom/memory/
 imperative-trigger-cards-beat-descriptive-preloads.md — imperative cards
@@ -7,15 +7,19 @@ flip weak-model behavior where buried procedure steps do not; incident:
 writing ui-flows.md, never reaching the validate step).
 
 Neighborhood scoping per docs/loom/memory/
-grep-tests-scope-to-measured-neighborhood.md: assertions anchor on each
+grep-tests-scope-to-measured-neighborhood.md: assertions anchor on the
 card's own unique phrase and check its required co-phrases within the
 card's line, not the whole file.
+
+design-system's ending-gate card was removed for loom 1.0 (W2-03): the
+station-shaped modality/ending-gate vocabulary does not carry over to the
+new interview -> DESIGN.md -> ratify -> commit tool shape, so this file no
+longer guards design-system/SKILL.md.
 """
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2] / "skills"
 _FLOWS = _ROOT / "interaction-flows" / "SKILL.md"
-_DESIGN = _ROOT / "design-system" / "SKILL.md"
 
 _ANCHOR = "Ending gate"
 
@@ -38,14 +42,5 @@ def test_flows_ending_gate_names_artifact_and_failed_run():
     assert "before you end" in card.lower()
 
 
-def test_design_ending_gate_names_artifact_and_failed_run():
-    card = _card_line(_DESIGN)
-    assert "DESIGN.md" in card
-    assert "exists on disk" in card
-    assert "FAILED run" in card
-    assert "before you end" in card.lower()
-
-
 def test_cards_point_at_their_validate_steps():
     assert "validator" in _card_line(_FLOWS).lower()
-    assert "validator" in _card_line(_DESIGN).lower()

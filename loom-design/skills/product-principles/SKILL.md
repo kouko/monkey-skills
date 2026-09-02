@@ -1,292 +1,142 @@
 ---
 name: product-principles
-# soft-lint 150-250 exceeded (329 rendered): retains three-jurisdiction principle-guidance triggers the corpus doesn't yet cover
-description: >-
-  Turn a sparse product idea into a PRINCIPLES.md constitution (falsifiable
-  product/design/engineering principles). Use BEFORE design/spec/build, or
-  when asked what principles should guide a product/design/engineering
-  decision or trade-off. Design/spec critique → design-critic/completeness-
-  critic. Triggers: 產品原則 / 設計原則 / 工程原則 / 產品憲章 / プロダクト指針.
-version: 0.4.0
+description: |
+  Interview the user and write a ratified PRINCIPLES.md constitution — Who, Non-negotiables, Won't do, Failure we must avoid, Fixed choices. Use when a product change needs principles and the repo has none ratified yet, or when asked what should govern a product/design/engineering trade-off. Triggers: 產品原則 / 設計原則 / 工程原則 / 產品憲章 / プロダクト指針.
+version: 1.0.0
 ---
 
-# product-principles
+## What this tool does
 
-Turn a sparse product idea into one project-level, key-free, in-repo,
-git-diffable **`PRINCIPLES.md` constitution**. Its falsifiable principles govern
-interface-design, spec-expansion, and code, including headless / CLI / library
-products. See `references/principles-rules.md` for the jurisdiction table.
+Relative paths in this document are relative to this skill's own directory.
 
-## Executor model — who does what
+The user names a product idea. You run one short interview, write
+`PRINCIPLES.md` at the consumer project's root, restate it, and — on
+"yes" — write the `ratified-by:` line that makes it the repo's standing
+constitution. You never invent a principle the user did not confirm, and
+you never ask them to judge anything but their own answers.
 
-You are the executor: probe, map canons, derive falsifiable principles, and
-reject platitudes. There is no external runtime or API key; only the final
-stdlib validators.
+Most of the time you are not invoked directly: `capture-intent` (or, when
+`loom-design` is absent, `loom-code`'s `write-plan`) runs this same
+interview inline, in the same conversation as decision point ①, the first
+time a `kind: product` change meets a repo with no ratified
+`PRINCIPLES.md`. **The interview is the same one `loom-code`'s
+`write-plan` runs when `loom-design` is absent** — this tool exists so a
+user can also run it stand-alone, on request, before any change is in
+flight.
 
-## Boundary — principles, not strategy
+## Station summary
 
-This produces product/design/engineering principles plus the target user, not
-market, business-model, or strategy content. Why the product exists belongs in
-`docs/loom/PURPOSE.md`; read it when present but do not author it. Stop at the
-constitution—no TDD, code, or UI design.
+| station | artifact | who decides | checker | checkpoint |
+|---|---|---|---|---|
+| capture-intent | intent | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
+| write-spec | spec | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
+| write-plan | plan | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
+| build | diff (commits, one `Task: <id>` trailer each) | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| ship | diff / PR | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| maintain | intent | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
-**Tripwire — unanswerable grilling.** If problem/users answers would be
-guesses, never fabricate principles. Route to `using-loom-design`
-(user-insights) for evidence-backed needs mapping, then resume from its value
-commitments.
+## Step 0 — Check the contract version
 
-## Procedure — construction flow (user-stated-first, canon-anchored)
+This tool's artifact is defined by `loom-code`'s contract package, so
+refuse to run against a version that does not declare it.
 
-Run Product, Design, then Engineering with the same shape:
+Plugins cannot read each other's files, so there is no
+`${CLAUDE_PLUGIN_ROOT}` path that reaches `loom-code` from here. Find its
+checkout on this host:
 
-```
-user states direction (their own words)
-  → probe per question set (propose-then-react on stalls)
-  → 2-3 canon candidates + fit/tension notes  → user decides
-  → write: anchors (version-pinned) + deviation ledger
-          + falsifiable principles
-  → per-section read-back  (… final total read-back at the end)
-```
+| Host | Where `loom-code` lives |
+|---|---|
+| Claude Code | the plugin cache — `~/.claude/plugins/cache/<marketplace>/loom-code/<version>/`, one directory per installed version; take the newest |
+| Codex CLI | `.codex/hooks/loom_checker.py` inside this repo, written by `loom-code`'s `write-plan` when it first met this repo |
 
-### Step 1 — Read the authoring contract
-
-Read **`references/principles-rules.md`** before writing. It defines exact
-section formats, counts, examples, and the load-bearing same-line literal
-`— check:` marker. The artifact MUST follow it exactly.
-
-### Step 2 — User states first, then probe
-
-The user states direction **first, in their own words**, including the idea and
-**target user**. Then read and use **`references/question-sets.md`**: Product's
-8 questions, the Design expert lane for a **design stance**, and Engineering's
-5 questions plus tech-stack slot for an **engineering stance**. "Delegate to
-agent" is always legal. Do not inline the questions here.
-
-Probing rules:
-
-- **Push until falsifiable**: each answer must reach a trade-off-bearing
-  "X > Y" shape.
-- **Propose-then-react on stalls** — when the user stalls, offer a concrete
-  hypothesis to attack; **never repeat** the open question.
-- **Cross-section answer propagation**: do not re-ask what an earlier decision
-  answers; present the derived stance for confirmation-as-durable-principle.
-- **Coverage self-check**: before leaving a section, **enumerate** its question
-  set; each item was asked, propagated, or skipped with a reason.
-
-Treat the lanes as one accumulating conversation, not independent interviews.
-Product answers establish the user, values, exclusions, and success trade-offs.
-Design and Engineering should expose only choices those answers have not
-settled, turning prior commitments into proposed defaults for confirmation.
-Preserve the user's vocabulary while sharpening it: clarification may make a
-claim testable, but must not silently replace the domain object or trade-off
-they named.
-
-### Step 3 — Canon candidates (completeness audit)
-
-When a section's stance is collected, **immediately** run the canon audit and
-propose; this transition is mandatory. A **subagent** may run the audit.
-
-- Propose 2-3 canon candidates with **fit/tension** notes from **≥2 distinct traditions**.
-  One round contains **same-axis** alternatives answering the
-  **same question**. Canons answering different questions are
-  **complementary**: pin separate `## Anchors` rows, never one exclusive menu.
-- **Per-round**, surface 1-2 **considered-but-rejected** candidates and reasons
-  to the user. This applies to **every section**, not just the first.
-- Before finalizing, consult all four lists as a **completeness audit**:
-  `references/canon-product.md`, `references/canon-design-interaction.md`,
-  `references/canon-design-visual.md`,
-  `references/canon-engineering.md`. Re-check if all candidates sit in a
-  popularity head. The user never sees the **raw lists**; Engineering's list
-  is agent-only.
-- **Tone & manner first.** Derive **3-5 tone & manner adjectives** from the
-  product's values / **Product Principles**. They are the primary visual anchor
-  and get their own **version-pinned `## Anchors` row**, pinned to the
-  PRINCIPLES.md version that produced them.
-- Run one **single Axis-A candidate round** (Axis A) from
-  `references/canon-design-visual.md`. It is downstream of the tone & manner anchor,
-  supplies mood / creative-direction inspiration, and is never a pick-one menu.
-  The **surface-treatment axis** is decided downstream at the DESIGN station
-  (`loom-design`), so separation is structural, not
-  instructional; do not pin a surface-treatment row here.
-- **Visual carve-out:** propose **3-5 canon candidates**, including 1-2 labeled
-  divergent/exploratory choices, instead of the generic 2-3. They may challenge
-  aesthetic stance but must remain **defensible** against Product Principles.
-- **Anti-costume law:** a movement may enrich candidates but never overrides a PRINCIPLES value.
-  Values win; e.g. low-stimulus still excludes Memphis.
-
-Candidate notes must make the decision legible. For each option, state which
-collected stance it fits, which commitment it tensions, and which default it
-would establish. Rejection reasons must identify real mismatches, not mere
-unfamiliarity. If canons on different axes both fit, retain complementary
-anchors instead of forcing a false choice. Canon is recall insurance and a
-source of tested defaults; it never outranks the constitution or authorizes
-importing an entire doctrine wholesale.
-
-When no candidate fits cleanly, explain the gap instead of stretching a famous
-canon until it appears relevant. The bespoke escape hatch is preferable to a
-misleading citation, provided its principles carry stronger checks and the
-read-back makes the absent external default explicit.
-
-### Step 4 — User decides
-
-The user picks. **Mix allowed**; **bespoke** is a legal **escape hatch**, with
-no third-party anchor and stricter falsifiability/read-back. Canons set defaults,
-not product-specific trade-offs, so they never supply every principle.
-
-### Step 5 — Write the sections
-
-Write per `references/principles-rules.md`:
-
-- **`## Product Principles`**: **3–7** non-negotiable top-level ordered entries;
-  each has a same-line literal `— check:` that is observable, binary or
-  thresholded, and artifact-bound.
-- **`## Design Principles`** / **`## Engineering Principles`**: optional,
-  **1–7** entries with the same marker. Emit only actually **committed** (or
-  seeded agent-decided) clauses, never placeholders or an empty section. Test
-  rigor is a **ceiling** above the TDD iron-law **floor**, never below it.
-- **`## Anchors`** (likewise optional; omit when empty): chosen base canons,
-  **version-pinned** with a non-empty edition/version.
-- **`## Deviation Ledger`** (likewise optional; omit when empty): every canon
-  break, with same-line `— reason:` + `— principle:` markers binding its
-  justification and licensing Product Principle.
-
-**Reject platitudes — push back.** A statement without an artifact-falsifiable
-check is not a principle; ask for a checkable form. Fewer than 3 is not a
-constitution and more than 7 dilutes it. See the contract's ✅/❌ examples.
-
-**Before writing a `— check:` clause that requires guessing an unverified
-fact, classify it via `references/knowledge-triage.md` FIRST.**
-
-A principle must change a later decision. State the preference, its losing
-side, and a check tied to an inspectable artifact. Thresholds need a named
-measurement surface; binary rules need a clear pass/fail observation. Do not
-hide unresolved evidence behind precise-looking numbers. If the project has
-not committed a Design or Engineering clause, omit that jurisdiction rather
-than filling it with generally desirable behavior. Anchors document chosen
-external defaults; the Deviation Ledger records intentional exceptions, not
-ordinary project-specific details.
-
-**Draft-time count self-check:** count the entries **before presenting** (3-7
-Product; 1-7 optional); if over, merge before showing—do not wait for the
-validator.
-
-**Artifact language:** repo convention wins; otherwise use the user's
-**conversation language**.
-
-**Anchor-consistency check:** every row must support the stance it cites; fix a
-canon that contradicts that stance before read-back.
-
-### Step 6 — Read-back
-
-Read back **per-section**, then do a **final total** read-back. Surface the
-artifact's exact **key terms** in its language so meaning shifts cannot hide in
-paraphrase. Confirmation closes; corrections return to Step 5.
-
-### Step 7 — Emit `PRINCIPLES.md` into the consumer project
-
-Emit one project-level file at **`docs/loom/PRINCIPLES.md`** in the consumer
-project, never per-feature copies.
-
-### Step 8 — Validate, then fix
-
-Run from the consumer root with the plugin script's absolute path; fix every
-failure before declaring done:
+Then run, with that directory in place of `<loom-code>`:
 
 ```
-cd <consumer-project-root>
-argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/principles/validate_principles_output.py", "<principles-file>"]
+python3 <loom-code>/scripts/loom_checker.py contract --require 1.0
 ```
 
-Pass argv directly to process execution; never through a shell. The validator
-enforces the rules contract's structure, counts, markers, optional sections,
-and legacy-heading migration; you remain responsible for check quality.
+Exit 0: continue. Anything else, the rule is `contract.requires`: print
+what the checker printed, tell the user to update `loom-code`, and
+**stop**. Do not work around it and do not guess a path.
 
-**Interactive sessions also run seed coverage.** Derive `seed-inventory.md`
-from confirmed user's answers in Steps 2-4, then run
-`argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/principles/check_seed_traceability.py", "<principles-file>", "<seed-inventory-file>"]`.
-Fix every miss and proceed only on **exit 0**.
+## Step 1 — Run the interview
 
-The inventory and artifact are paired evidence: the inventory records named
-inputs that must remain traceable; the artifact records resolved, deferred, or
-bounded outcomes. A green structural validator does not prove semantic
-coverage, and a green traceability checker does not prove a principle is truly
-falsifiable. Both gates must pass; interactive work still ends with read-back.
+Read `<loom-code>/contract/templates/PRINCIPLES-interview.md` and ask
+exactly its five questions, in the user's own words, until each answer is
+clear. One line each on their intent:
 
-## Headless / seeded mode
+1. **Who** it is for, and how they solve this today without it.
+2. **The one thing** that cannot be compromised (fast, accurate, cheap,
+   private, offline, good-looking) — ranked.
+3. **What it explicitly will not do.**
+4. **The worst failure**, and who it hurts.
+5. **What is already fixed** and cannot change (platform, language, a
+   paid service, a data format).
 
-With **no user available**, every decision becomes **"delegate to agent"**:
+Push until each answer is falsifiable — a later decision can be checked
+against it, not just admired.
 
-- Pick canons and stances from caller intent; a **run-input seed** may answer
-  any question and counts as user-stated.
-- **Thin seed → refuse loudly.** If grounding principles requires guessing who
-  needs what, return a structured **BLOCKED** refusal stating what the seed
-  lacks and naming `using-loom-design` (user-insights) as the human remedy.
-  Never fabricate a principle.
-- **Inventory before drafting.** Write every seed-named canon, guideline,
-  model, framework, language, library, format, technology, and deferred stance
-  to `seed-inventory.md`, one entity per semicolon-separated token:
-  `named_anchors:` for canons/traditions/stack and `deferred_items:` for
-  undecidable stances; use `none in this seed` when empty. Never use `negative:`
-  (it means must-be-absent). This is **write-only**; run no script.
-- **Seed-traceability invariant (no silent drops)** — the headless mirror
-  of the interactive coverage self-check: EVERY seed item must land in the
-  artifact in at least one of a carrying principle, an `## Anchors` row, an
-  Open Question (with a re-trigger condition, formatted per the
-  `## Open Questions` contract in `references/principles-rules.md`), or an
-  explicit `## Deviation Ledger` entry. A seed **item** is each individual
-  stance, named canon, tech-stack choice, or deferred marker, even when
-  several of them share one bullet or line of the seed — a walk at
-  bullet granularity that drops stances packed inside one bullet
-  violates the invariant. Seed content outside this skill's jurisdiction (per §Boundary
-  — market / business-model / strategy turf, plus the product's original
-  idea and success condition, now `docs/loom/PURPOSE.md`'s jurisdiction) is
-  explicitly noted as **out-of-jurisdiction** during the seed walk — not
-  silently skipped, and not laundered into a spurious Open Question. The
-  target user is NOT out-of-jurisdiction — it still lands via a carrying
-  `## Product Principles` (or `## Design Principles`) entry. A seed-named
-  canon, tradition, or tech-stack choice is never out-of-jurisdiction
-  either — that landing applies **only to the §Boundary-listed categories**
-  plus the PURPOSE.md-bound idea/success pair named above; classifying a
-  named canon or stack choice as "downstream spec" or "TECH-SPEC turf"
-  during the seed walk is a **violation** of this invariant. Name it as
-  such (the flow's own tech-stack slot proves stack choices are
-  in-jurisdiction). A seed stance marked
-  undecidable/deferred (e.g. 無法判斷) MUST become an Open Question with a
-  re-trigger — never dropped; every seed-named canon or tech-stack choice
-  MUST land as a version-pinned `## Anchors` row; every seed stance MUST
-  have a carrying principle — merging stances is fine, dropping one is not.
-- **Seed-coverage gate — mechanical, not a self-report walk.** The
-  item-by-item seed walk is no longer a self-report step here: Step 8's
-  checker gate (`check_seed_traceability.py`, run against the
-  `seed-inventory.md` written above) enforces this invariant
-  mechanically after drafting — see Step 8. Do not additionally rely on
-  memory to re-walk the seed; the pipeline runs the check.
-- Record every choice you made alone with the literal marker
-  **`(agent-decided)`**, appended at the **end of the same physical line**
-  as the choice it tags — a `## Deviation Ledger` entry when it breaks an
-  anchor, or the principle's `— check:` clause line otherwise — so a
-  human can late-veto it.
-- Read-back has no reader: mark it **deferred-to-human** in the run output
-  instead of silently claiming confirmation. The deferred read-back is
-  mechanical: grep `(agent-decided)` and walk the human through each hit.
+## Step 2 — Write PRINCIPLES.md
 
-## Downstream — the cross-cutting constitution
+Emit `PRINCIPLES.md` at the consumer project's root (not per-feature),
+with exactly these five `##` sections, in this order:
 
-`PRINCIPLES.md` is the supreme, **always-on** input that governs every
-downstream station — **interface-design, spec-expansion, and code** (incl.
-**headless / CLI** products with no UI). It is **key-free** and **git-diffable**,
-so it lives in the repo and reviews like code. Downstream stations *read* it as
-a governing constraint, each via its own intake section:
-`loom-design:design-system` / `interaction-flows` (generators),
-`loom-design:spec-expansion` (§Governing constraint), and the critics'
-principles lenses (`design-critic`'s conditional PRINCIPLES lens,
-`completeness-critic` lens 6).
-At the code station the conformance gate is **live**: loom-code's
-whole-branch `code-reviewer` scores a `principles-conformance` dimension
-(D8, writer≠judge) against these principles when the file is present.
-This skill *writes* the constitution; enforcement lives in those
-downstream gates.
+```
+# Product principles
+## Who
+## Non-negotiables (ordered)
+## Won't do
+## Failure we must avoid
+## Fixed choices
+```
 
-**Next station.** Once `PRINCIPLES.md` is shipped, hand off to
-`using-loom-design` for UI-bearing products, or to `using-loom-design`
-to expand a feature directly when the product is headless / CLI-only.
+`## Non-negotiables` is an ordered list of **at least three** entries,
+each **falsifiable**: state the choice and a concrete pair that would
+tell a stranger it held or broke. For example — good: "offline-first: the
+app must complete a save with the network off (bad: 'the app should feel
+fast')." A non-negotiable with no such pair is a slogan, not a principle;
+push back and ask again rather than write it down.
+
+## Step 3 — Restate and ratify
+
+Read the whole file back to the user in their own words — not a diff, the
+actual sections. On a correction, fix it and read back again; there is no
+round limit. On "yes", write one line at the top of the file, directly
+under the title:
+
+```
+ratified-by: <name> <date>
+```
+
+`<name>` is the user's own name or handle; `<date>` is today,
+`YYYY-MM-DD`. A file with no `ratified-by:` line, or one whose
+`## Non-negotiables` has fewer than three entries, is not ratified —
+`loom-code`'s checker (`standing.product-principles-reject`) recomputes
+both conditions itself and rejects a `kind: product` change against an
+unratified file; nothing here can talk it out of that.
+
+## Step 4 — Commit
+
+```
+git add PRINCIPLES.md
+git commit -m "docs(loom): PRINCIPLES.md ratified"
+```
+
+## Downstream — how the rest of the flow uses it
+
+`PRINCIPLES.md` is the standing, always-on constraint every later station
+reads: `write-spec` loads it before drafting `Requirements`; a product
+change with no ratified copy is refused there
+(`standing.product-principles-reject`), never silently allowed through.
+At `review`, the `principles-conformance` dimension scores the diff
+against these Non-negotiables; when nothing in the file speaks to a given
+finding, the dimension is scored **N/A with a one-line reason**, never
+forced to a number it cannot support. Engineering-only changes are never
+blocked by a missing or unratified file — the reject rule fires only on
+`kind: product`.
+
+<!-- gate: product-principles.ratified-requires-user-yes -->
+**No `ratified-by:` line is ever written without the user having said
+yes to the restatement in Step 3.** Writing it on an assumed confirmation
+makes a constitution nobody actually agreed to.

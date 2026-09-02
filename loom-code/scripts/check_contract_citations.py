@@ -262,12 +262,6 @@ def evaluate(
 DEBT_LIST: frozenset[str] = frozenset(
     {
         "loom-design/skills/completeness-critic/references/consistency-lens.md",
-        "loom-design/skills/design-system/references/canon-design-surface.md",
-        "loom-design/skills/product-principles/references/canon-design-interaction.md",
-        "loom-design/skills/product-principles/references/canon-design-visual.md",
-        "loom-design/skills/product-principles/references/canon-engineering.md",
-        "loom-design/skills/product-principles/references/canon-product.md",
-        "loom-design/skills/product-principles/references/question-sets.md",
         "loom-design/skills/using-loom-pipeline/SKILL.md",
         # Pre-existing loom-workflow violations, on the list since the
         # scan set widened to cover that tree (R6). Shrink-only applies.
