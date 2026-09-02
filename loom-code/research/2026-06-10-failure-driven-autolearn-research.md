@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Deep-research — fully-automated failure-driven self-improvement for coding agents (Station 4 / C), code-toolkit-integrable
 
 > **Date**: 2026-06-10 · **Method**: deep-research pipeline (5 angles → ~18 sources fetched → ~50 claims → 13 load-bearing claims × 3 independent adversarial voters). 12/13 survived quorum; magnitude/version caveats noted inline. EN+JA.

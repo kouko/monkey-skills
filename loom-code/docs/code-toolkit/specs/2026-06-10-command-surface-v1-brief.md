@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Brainstorming brief — Command Surface v1 (野心 A: command resolution)
 
 > **Type**: brainstorming output (consumed by `writing-plans`)

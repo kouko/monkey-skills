@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Worked examples — loom-code end-to-end flows
 
 > Three worked examples covering the full loom-code flow from `using-loom-code` SessionStart hook injection through to `finishing-a-development-branch` close-out. Each example exercises a different combination of skills + stack, so reading all three covers the toolkit's behavioral surface.

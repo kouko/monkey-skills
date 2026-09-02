@@ -91,7 +91,7 @@
     },
     {
       "name": "loom-code",
-      "description": "Canon-grounded coding-discipline workflow (TDD/brainstorm/SDD/review) for Claude Code + Codex.",
+      "description": "Five stations — write-plan, build, review, ship, maintain — carry one change from plan to merged PR, with a checker that recomputes the review before every push. Claude Code + Codex.",
       "source": "./loom-code/"
     },
     {

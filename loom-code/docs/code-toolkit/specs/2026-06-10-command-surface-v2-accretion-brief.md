@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Brainstorming brief — Command Surface v2 (野心 B, accretion-discipline half only)
 
 > **Type**: brainstorming output (consumed by `writing-plans`)

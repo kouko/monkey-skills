@@ -1,7 +1,7 @@
 {
   "name": "loom-code",
-  "version": "0.110.0",
-  "description": "Canon-grounded coding-discipline workflow (TDD/brainstorm/SDD/review) for Claude Code + Codex.",
+  "version": "1.0.0",
+  "description": "Five stations — write-plan, build, review, ship, maintain — carry one change from plan to merged PR, with a checker that recomputes the review before every push. Claude Code + Codex.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -11,17 +11,17 @@
   "license": "MIT",
   "keywords": [
     "loom-code",
-    "tdd",
-    "subagent-driven-development",
-    "brainstorming",
-    "code-review",
-    "process-discipline",
-    "primary-source-grounding",
-    "clean-code",
-    "solid",
-    "owasp-asvs",
+    "write-plan",
+    "build",
+    "review",
+    "ship",
+    "maintain",
+    "contract-package",
+    "loom-checker",
+    "blind-run",
+    "adversarial-review",
     "session-start-hook",
-    "superpowers-parity",
+    "codex-cli",
     "loom-design"
   ],
   "skills": "./skills/",

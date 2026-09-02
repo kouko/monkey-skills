@@ -1,200 +1,84 @@
 # loom-code
 
-> **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 13-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
+> **五個站，把一次變更從計畫送到合併的 PR；外加一個 checker，擋掉「審查
+> 其實沒發生」的 push。** loom-code 假設你具備基本軟體工程知識，而不是
+> 熟悉這個 plugin：每次變更只問你三個問題，其餘自己決定。因為品質的來源
+> 是機器檢查機器 —— 寫的 agent 永遠不會是審的 agent。
 
-**狀態**：v0.71.0 — 13 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
-**語言**：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
-**Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
-
----
-
-## 30 秒範例
-
-在全新 Claude Code session 貼入（安裝後 — 見下方）：
-
-```
-我想加一個 feature flag 系統，這樣可以 gate 新功能。我們還沒有。
-就做基本版：env var 檢查 + 一個寫死的 enabled list。不用 brainstorm，
-設計很明顯。
-```
-
-**會發生什麼**（裝了 loom-code）：
-
-SessionStart 注入的 router 觸發 Rule #1（*"implementing 前先 brainstorm"*）。`brainstorming` skill 用 5-axis HARD-GATE 措辭啟動。它拒絕跳過 discovery、把 JTBD framing 講白、攤開 alternatives（什麼都不做 / 只用一個 env var / 完整 flag system），最後以 `loom-workflow:complexity-critique` 作為下一步建議委派 — 因為 feature flag 系統正是 PAGNI 的典型 smell。
-
-**你沒得到的**：200 行為了還沒出現的問題而早寫的 feature flag infrastructure。
-
-詳見 [`docs/examples/`](docs/examples/) 內 3 個 end-to-end 完整流程（Python / TypeScript / Swift）。
+**狀態**：v1.0.0 — 5 個 skill。破壞性變更：1.0 之前的 skill、agent、script
+是刪除而非改名。詳見 [CHANGELOG.md](CHANGELOG.md)。
+**語言**：[English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+**儲存庫**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
 ---
+
+## 五個站
+
+| 站 | 產物 | 內文 |
+|---|---|---|
+| `write-plan` | `docs/loom/<change-id>/plan.md` — 任務 DAG | [SKILL.md](skills/write-plan/SKILL.md) |
+| `build` | commit，一個任務一個，各帶 `Task: <id>` trailer | [SKILL.md](skills/build/SKILL.md) |
+| `review` | `docs/loom/<change-id>/review.json` — verdict、probe、finding | [SKILL.md](skills/review/SKILL.md) |
+| `ship` | PR、memory trailer、合併 | [SKILL.md](skills/ship/SKILL.md) |
+| `maintain` | 把告警或事故變成一份 intent | [SKILL.md](skills/maintain/SKILL.md) |
+
+說出你要什麼，入口是 `write-plan`。裝了 `loom-design` 時，上游會多出
+`capture-intent` 與 `write-spec`；沒裝時，`write-plan` 自己兼這兩件事。
+
+## 會問你的三個問題
+
+其餘全部代你決定，並記下理由。
+
+1. **這是你要的嗎？** —— 在任何程式碼存在之前，用白話覆述你的意圖。
+2. **你打 X，會看到 Y，對嗎？** —— 可見的行為。只有 product 變更會問，
+   engineering 不問。
+3. **做到了嗎？** —— 你讀的是一份盲跑報告，由從未碰過這次變更的 agent
+   寫的，不是 diff。
+
+不可逆的岔路（刪資料、公開介面、單向遷移）併進當時開著的 ① 或 ②，
+用後果的形式問。
+
+## contract package
+
+`contract/manifest.yaml` 宣告站、action，以及四種 artifact（intent、spec、
+plan、review）的每一個欄位。`loom-design` 與 `loom-workflow` 只讀它並宣告
+`requires-contract`，只有 loom-code 寫它。空白範本在 `contract/templates/`。
+
+## checker
+
+`scripts/loom_checker.py` 就是整個決定性層 —— 20 條規則，`--list-rules`
+可列出。它掛在 SessionStart hook 與 `git push` / `gh pr create` /
+`gh pr merge` 之前，而且是重算而非採信：package 測試與對抗 probe 都由它
+自己重跑一次，看退出碼。它擋的是手滑，不宣稱擋得住蓄意作弊。
 
 ## 安裝
 
 ### Claude Code
 
 ```bash
-# 一次性：加 marketplace
 claude plugin marketplace add https://github.com/kouko/monkey-skills.git
-
-# 安裝
 claude plugin install loom-code@monkey-skills
-
-# 驗證
 claude plugin list | grep loom-code       # 預期：enabled
-claude plugin details loom-code           # 預期：13 skills + SessionStart & PreToolUse hooks
 ```
 
-### Codex CLI（build 完成、實機驗證延後）
+`loom-design` 與 `loom-workflow` 安裝方式相同。三者可獨立安裝，loom-code
+不需要另外兩個；某一站走到選配的交接而該 plugin 不在時，該步驟以 N/A 加理由
+回報，並在自身契約允許的範圍內繼續。相接處只有帶 plugin 名的 skill 名（例如
+`loom-design:write-spec`）、contract package，以及專案自己的 `docs/loom/`
+產物 —— 不會去讀別的 plugin 的 `hooks/`、`skills/`、`scripts/`。
 
-⚠️ Codex CLI manifest 已 build 完成，並與 Claude Code 變體 lockstep 同步（透過 `scripts/sync_codex_manifests.py`，每次 release 都同步），但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
+### Codex CLI
 
-### 本地開發（給貢獻者）
+Codex 沒有 plugin marketplace，所以 checker 是複製進 repo 的：
 
 ```bash
-# Clone monkey-skills + 註冊為 local marketplace
-git clone https://github.com/kouko/monkey-skills.git
-cd monkey-skills
-
-# 加為 local-scope marketplace（測試 loom-code 變更用）
-claude plugin marketplace add . --scope local
-claude plugin install loom-code@monkey-skills --scope local
+python3 scripts/codex_scaffold.py --probe
 ```
 
----
-
-## 13 個 skill
-
-| # | Skill | Stage | 做什麼 |
-|---|---|---|---|
-| Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | SessionStart 注入 ~2 KB router card（coding mandate＋5 條 load-bearing rules）；完整 router（含 Skill Priority 表）於調用時載入（0.24.0） |
-| 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis 探索（Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete）；v0.7.0+ brief 帶 `Current State Evidence` 5 維 recon section；拒絕跳過 discovery 的合理化 |
-| 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan + 每個 task RED-GREEN acceptance；BLOCKED → child-test fallback（Beck Part II §Child Test）；v0.8.0+ 加入 `Independent` + `Files touched` 欄位作為 parallel-dispatch 入場條件 |
-| 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | 每個 task 派 triad（implementer + spec-reviewer + code-quality-reviewer）；reviewer 四件套攜帶 `reviewer-discipline-v1` SSOT 注入區塊（R1+R2） |
-| 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "沒先有 failing test 不准寫 production code"（Beck 2002 Preface, ISBN 978-0321146533）；§Feathers (2004) 對 legacy code backfill 的合法區別 |
-| 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 階段 REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "沒重現不准 fix" |
-| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全 branch 審查、11 維度評分（cross-task-coherence 為 branch 限定維度）；v0.7.0+ verdict 帶 `standards_version` stamp、findings 必填 `where:` file:line；push-as-trigger |
-| 6b | [`requesting-docs-review`](skills/requesting-docs-review/) | Review（docs 臂） | 逐檔整篇審查所有變更的 `.md` — 散文五維度、instruction/evidence 阻擋分級、收斂上限（0.42.0+） |
-| 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "沒跑 package-level test 不准 done"；涵蓋 20+ 種 stack 的 canonical command |
-| 7b | [`ui-verification`](skills/ui-verification/) | Verification（條件式） | 用 host 的 browser/device 自動化把 `ui-flows.md` 列舉的狀態實機走一遍；條件或工具不在時明講 N/A；token 合規檢查排除在外（已停車） |
-| 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | 分支收尾 | 7 步 orchestrator（review → verify → git-memory 強制 → commit → push → 可選 PR + worktree 清理） |
-| Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | 原生 `git worktree` 流程；`.worktrees/<slug>/` 慣例 |
-| Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral（v0.8.0+） | 跨 domain `Agent` 派遣，**單一 assistant message 多 `Agent` call** 同時跑；2+ 獨立問題 domain（無共用檔、無共用 symbol、無 sequential data 依賴）才適用；TDD iron-law per branch；verdict 在本 skill 層聚合 |
-
-skill 粒度的執行流程（實線 = 線性 stage 流程、虛線 = 條件式 / on-demand）：
-
-```mermaid
-flowchart TD
-    BS["brainstorming<br/>Discovery"] --> WP["writing-plans<br/>Planning"]
-    WP --> SDD["subagent-driven-development<br/>Execution"]
-    TDD["tdd-iron-law<br/>Discipline"] -. "約束每個 implementer" .-> SDD
-    SDD -. "遇 bug / 卡住" .-> DBG["systematic-debugging<br/>Repair"]
-    DBG -. "修好並驗證" .-> SDD
-    SDD --> RCR["requesting-code-review<br/>Review"]
-    RCR --> VBC["verification-before-completion<br/>Verification"]
-    VBC --> FIN["finishing-a-development-branch<br/>分支收尾"]
-    VBC -. "碰到 UI + 有 ui-flows.md" .-> UIV["ui-verification<br/>條件式"]
-    UIV -.-> FIN
-    subgraph AUX["輔助（on-demand）"]
-        WT["using-git-worktrees"]
-        DPA["dispatching-parallel-agents"]
-    end
-    AUX -.-> SDD
-```
-
----
-
-## Quickstart — 線性流程
-
-非 trivial task 預期的使用者流程：
-
-```
-你: "我想加 feature X"
-  ↓ (SessionStart hook router 自動觸發)
-brainstorming → 5-axis brief + Current State Evidence → docs/loom/specs/<topic>.md
-  ↓
-writing-plans → ≤5-task plan → docs/loom/plans/<topic>.md
-  ↓
-subagent-driven-development → 每個 task 派 triad
-  ↓ (每個 implementer subagent 內)
-  tdd-iron-law → RED-GREEN-REFACTOR
-  ↓ (implementer 回 BLOCKED 並帶 decomposition 訊號)
-  writing-plans (re-invoked) → Child Test 子分解
-  ↓ (每個 task DONE)
-SDD orchestrator 繼續
-  ↓ (所有 task 都 DONE)
-finishing-a-development-branch
-  ↓ Step 1: requesting-code-review (cross-task-coherence 維度；verdict 帶 standards_version)
-  ↓ Step 2: verification-before-completion (npm test / pytest / 等)
-  ↓ Step 3: loom-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
-  ↓ Step 4: git commit (privacy gate 通過後)
-  ↓ Step 5: git push (review-gated——不再問)
-  ↓ Step 6: gh pr create (request-derived——不再問、可事先 opt-out)
-  ↓ Step 7: git worktree remove (可選，確認)
-```
-
-加上 on-demand：
-- **`systematic-debugging`** 在遇到不是「明顯一行 fix」的 bug 時觸發 — 間歇性、"在我電腦正常"、race condition 等。
-- **`using-git-worktrees`** 在需要平行 branch 時觸發（本 plugin 就是在 worktree 上開發）。
-
----
-
-## 相容性
-
-| Harness | 狀態 |
-|---|---|
-| **Claude Code** | ✅ 多輪 ritual 完整驗證 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 維度全 branch 審查 (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest 已 build 完成，並每次 release lockstep 追蹤；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
-
-SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpecificOutput.additionalContext`、Codex CLI 的 `additional_context` 以及 legacy `additionalContext` keys — 同一個 hook 服務兩種 harness。
-
----
-
-## 並存
-
-本 plugin 設計上與相關 plugin 並存而非競爭：
-
-| Plugin | 關係 |
-|---|---|
-| **[`domain-teams:code-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/code-team)** | 被動 gate compliance reviewer。loom-code 是主動構建 orchestrator，把 code-team 的 standards 作為知識層使用（透過 `scripts/distribute.py` byte-identical functional copy，由 `scripts/verify-drift.py` 做 drift check）。同樣的一級書目、不同的呼叫模式。 |
-| **[`loom-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/git-memory)** | `finishing-a-development-branch` Step 3 強制委派目標（P3-D）。決定 commit-trailer 判斷（Decision: / Learning: / Gotcha:）；loom-code 不重複實作。 |
-| **[`loom-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/complexity-critique)** | `brainstorming` Axis 3 出現 complexity smell 時的選擇性委派。同樣的 SSOT-and-functional-copy mindset framing。 |
-| **[`obra/superpowers`](https://github.com/obra/superpowers)** | 設計靈感；透過 `LOOM_CODE_MODE=off` 環境變數 escape hatch 並存（設定後關閉 loom-code 的 hook、只有 superpowers 啟動）。兩個 plugin 都可以裝；用環境變數切換。 |
-
-跨 plugin 行為由 [`tests/integration/`](tests/integration/) 內 5 個 integration test script 驗證。
-
----
-
-## 為什麼有這個 plugin
-
-`monkey-skills` 已經有兩個相關 plugin：
-
-- **`domain-teams:code-team`** — 一級書目 grounded standards / rubrics / checklists（從 Beck 到 徳丸本 共 8 本書）。強知識層、弱呼叫：agent 必須記得 call。
-- **`obra/superpowers`（獨立 repo）** — SessionStart hook + measure rhetoric（"Delete it. Start over."）。強呼叫、弱 grounding：規則引用自己、不引 canon。
-
-`loom-code` 是綜合體：Superpowers 風自動注入 + code-team 風一級書目 grounded measures。每條規則既被結構性強制（透過 SKILL.md HARD-GATE + Red Flags 拒絕模式），又有實質根據（透過 ISBN / URL / 章節級的一級書目引用）。
-
----
-
-## 文件
-
-- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — 設計意圖、目標使用者、Q-lock 決策
-- [TECH-SPEC.md](TECH-SPEC.md) — 架構、SSOT 機制、hook contracts
-- [ROADMAP.md](ROADMAP.md) — phase 計畫、決策台帳、Phase 1.5 rolling backlog（歷史設計紀錄——後續方向見 `docs/loom/backlog/` 佇列儲存區）
-- [CHANGELOG.md](CHANGELOG.md) — Journey overview + 每版細節
-- [docs/examples/](docs/examples/) — 3 個 end-to-end 完整範例（Python / TypeScript / Swift）
-- [docs/announcement/v1.0.0-announcement.md](docs/announcement/v1.0.0-announcement.md) — 公開 announcement 草稿（v1.0.0 時發布）
-- [research/grounding-v0.1.0.md](research/grounding-v0.1.0.md) — 每版 grounding audit
-
----
-
-## 貢獻
-
-歡迎 issue + PR：https://github.com/kouko/monkey-skills/issues 加上 `loom-code:` 前綴。
-
-實際使用 dogfood notes（v1.0.0 阻擋的 P15-5 backlog 項）請丟到 `research/dogfood-YYYY-MM-DD-<topic>.md` — 即使簡短的 notes 也有助校準工具紀律強度。
-
----
+它會寫出 `.codex/hooks.json` 與一份帶版本戳的 checker 副本，然後對它發一次
+假 push。若沒被擋下就 exit 2，並要你在 Codex 裡跑 `/hooks` —— 未授信的 hook
+會被靜默跳過，那個狀態和「檢查通過」長得一模一樣。
 
 ## 授權
 
-MIT — 見 repository 的 [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE)。
+MIT，作為 `monkey-skills` 的一部分。

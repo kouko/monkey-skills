@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Plan: Payments — Part 1 (card on file → single charge)
 
 **Source brief**: inline chat brief, 2026-05-16 (payment processing module). Split into 4 sequential parts per writing-plans §Plan size ceiling — original brief's Smallest End State enumerated five distinct features (card on file, auto-billed monthly, dashboard receipts, webhook-driven status sync, refund flow), violating the 5-task ceiling. This is Part 1 of 4.

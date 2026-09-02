@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Brainstorming evaluation — "auto-build harness" (go / no-go)
 
 > **Type**: brainstorming evaluation brief (decision aid, not a build spec)

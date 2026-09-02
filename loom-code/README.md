@@ -1,223 +1,96 @@
 # loom-code
 
-> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 13-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
+> **Five stations that carry one change from a plan to a merged pull
+> request, and a checker that refuses a push whose review never happened.**
+> loom-code assumes you know basic software engineering, not this plugin:
+> it asks you three questions per change and decides the rest itself,
+> because the quality comes from machines checking machines — the agent
+> that writes is never the agent that reviews.
 
-**Status**: v0.71.0 — 13 skills; full Superpowers parity since v0.3.0. Per-version detail (rule-sheet injection, reviewer-discipline, parallel dispatch, spec→code seam, memory verify gate, …) lives in [CHANGELOG.md](CHANGELOG.md).
+**Status**: v1.0.0 — 5 skills. Breaking: the pre-1.0 skills, agents and
+scripts were deleted, not renamed. See [CHANGELOG.md](CHANGELOG.md).
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
 ---
 
-## The 30-second example
+## The five stations
 
-Paste this into a fresh Claude Code session (after install — see below):
+| Station | Produces | Read it |
+|---|---|---|
+| `write-plan` | `docs/loom/<change-id>/plan.md` — a task DAG | [SKILL.md](skills/write-plan/SKILL.md) |
+| `build` | commits, one per task, each carrying a `Task: <id>` trailer | [SKILL.md](skills/build/SKILL.md) |
+| `review` | `docs/loom/<change-id>/review.json` — verdicts, probes, findings | [SKILL.md](skills/review/SKILL.md) |
+| `ship` | the pull request, the memory trailers, the merge | [SKILL.md](skills/ship/SKILL.md) |
+| `maintain` | an intent, out of an alert or an incident | [SKILL.md](skills/maintain/SKILL.md) |
 
-```
-I want to add a feature flag system to our codebase so we can gate
-new features. We don't have one yet. Just build the basic version:
-env var checks + a hardcoded enabled list. No need to brainstorm,
-the design is obvious.
-```
+Say what you want; `write-plan` is the door. With `loom-design` installed,
+`capture-intent` and `write-spec` sit upstream of it; without it,
+`write-plan` does both jobs itself.
 
-**What happens** (with loom-code installed):
+## The three questions you are asked
 
-The router auto-injected at SessionStart fires Rule #1 (*"Brainstorm before implementing"*). The `brainstorming` skill activates with the 5-axis HARD-GATE measure. It refuses to skip discovery, articulates the JTBD framing, surfaces the alternatives (do nothing / single env var only / full flag system), and ends with `loom-workflow:complexity-critique` as the recommended next-step delegation — because feature-flag systems are the canonical PAGNI smell.
+Everything else is decided for you, with the reason recorded.
 
-**What you didn't get**: 200 lines of premature feature-flag infrastructure for a problem that hasn't surfaced yet.
+1. **Is this what you want?** — your intent, restated in plain words
+   before any code exists.
+2. **You type X and you see Y — right?** — the visible behaviour, asked
+   only for a product change, never for an engineering one.
+3. **Did it do it?** — you read a blind-run report written by an agent
+   that never touched the change, not the diff.
 
-See [`docs/examples/`](docs/examples/) for 3 fully-worked end-to-end flows (Python / TypeScript / Swift).
+An irreversible fork (deleting data, a public interface, a one-way
+migration) is added to whichever of ① or ② is open, phrased as its
+consequence.
 
----
+## The contract package
+
+`contract/manifest.yaml` declares the stations, the actions, and every
+field of the four artifacts — intent, spec, plan, review. `loom-design`
+and `loom-workflow` read it and declare `requires-contract`; only
+loom-code writes it. `contract/templates/` holds the blank of each.
+
+## The checker
+
+`scripts/loom_checker.py` is the whole deterministic layer — 20 rules,
+listed by `--list-rules`. It runs on the SessionStart hook and before
+`git push` / `gh pr create` / `gh pr merge`, and it recomputes rather than
+believes: it re-runs the package-test and adversarial probes itself and
+reads the exit code. It stops a slip, not a determined cheat.
 
 ## Install
-
-`loom-code` and `loom-design` are independently installable. `loom-code`
-does not require `loom-design`; when a workflow reaches an optional design
-handoff and the sibling is absent, report the handoff as N/A with the reason
-and continue only where the current skill's contract allows it.
-
-When both plugins are installed, they compose only through public,
-plugin-qualified skill names such as `loom-design:interaction-flows` and
-project-owned `docs/loom/` artifacts. Neither plugin reads the other's
-private `hooks/`, `skills/`, or `scripts/` paths.
 
 ### Claude Code
 
 ```bash
-# One-time: add the marketplace
 claude plugin marketplace add https://github.com/kouko/monkey-skills.git
-
-# Install
 claude plugin install loom-code@monkey-skills
-
-# Verify
 claude plugin list | grep loom-code       # expect: enabled
-claude plugin details loom-code           # expect: 13 skills + SessionStart & PreToolUse hooks
 ```
 
-### Codex CLI (build complete; live verification deferred)
+`loom-design` and `loom-workflow` install the same way. The three are
+independently installable: loom-code needs neither of them, and when a
+station reaches an optional handoff whose sibling is absent it reports that
+handoff as N/A with the reason and continues where its own contract allows.
+They compose only through plugin-qualified skill names such as
+`loom-design:write-spec`, the contract package, and the project's own
+`docs/loom/` artifacts — never through another plugin's private `hooks/`,
+`skills/` or `scripts/` paths.
 
-⚠️ Codex CLI manifest is built and bumped in lockstep with the Claude
-Code variant (synced every release via `scripts/sync_codex_manifests.py`),
-but a live install + verification ritual on a real Codex CLI instance
-is still deferred per user direction. See
-[`tests/codex-cli/README.md`](tests/codex-cli/README.md) for the install
-+ verify procedure when ready.
+### Codex CLI
 
-### Local development (for contributors)
+Codex has no plugin marketplace, so the checker is copied into the repo
+instead:
 
 ```bash
-# Clone monkey-skills + register as local marketplace
-git clone https://github.com/kouko/monkey-skills.git
-cd monkey-skills
-
-# Add as local-scope marketplace (for testing loom-code changes)
-claude plugin marketplace add . --scope local
-claude plugin install loom-code@monkey-skills --scope local
+python3 scripts/codex_scaffold.py --probe
 ```
 
-The shared family-policy source lives at
-`scripts/canonical/loom-family/` in this repository. Regenerate the packaged
-copies with `python3 scripts/sync_loom_family_contracts.py`; use `--check` in
-CI. Verify independent installs and their optional composition with
-`python3 -m pytest scripts/test_loom_plugin_install_layout.py
-scripts/test_loom_plugin_composition.py -q`.
+That writes `.codex/hooks.json` and a stamped copy of the checker, then
+fires a fake push at it. If the push is not blocked it exits 2 and tells
+you to run `/hooks` in Codex — an untrusted hook is silently skipped, which
+looks exactly like a passing check.
 
----
+## Licence
 
-## The 13 skills
-
-| # | Skill | Stage | What it does |
-|---|---|---|---|
-| Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | SessionStart injects a ~2 KB router card (coding mandate + 5 load-bearing rules); the full router incl. the Skill Priority table loads on invocation (0.24.0) |
-| 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis exploration (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete); refuses skip-discovery rationalizations |
-| 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan with per-task RED-GREEN acceptance; BLOCKED → child-test fallback (Beck Part II §Child Test); v0.8.0 adds `Independent` + `Files touched` markup for parallel-dispatch eligibility |
-| 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | Per-task triad dispatch (implementer + spec-reviewer + code-quality-reviewer) |
-| 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" (Beck 2002 Preface, ISBN 978-0321146533); §Feathers (2004) legitimate legacy-code backfill distinction |
-| 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4-phase REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY; HARD-GATE "NO FIXING WITHOUT REPRODUCING" |
-| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | Whole-branch review with 11-dimension scoring (cross-task-coherence as branch-only dimension); push-as-trigger |
-| 6b | [`requesting-docs-review`](skills/requesting-docs-review/) | Review (docs arm) | Whole-artifact review of every changed `.md` file — five prose dimensions, instruction/evidence blocking class, bounded convergence cap (0.42.0+) |
-| 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "NO DONE WITHOUT PACKAGE-LEVEL TEST INVOCATION"; 20+ stack canonical commands |
-| 7b | [`ui-verification`](skills/ui-verification/) | Verification (conditional) | Drives the rendered app through `ui-flows.md`'s enumerated states via host browser/device automation; N/A-loud when conditions/tooling absent; token conformance excluded (parked) |
-| 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7-step orchestrator (review → verify → git-memory mandatory → commit → push → optional PR + worktree cleanup) |
-| Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | Native `git worktree` workflow; `.worktrees/<slug>/` convention |
-| Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral (v0.8.0+) | Across-domain `Agent` dispatch in one assistant message when 2+ problem domains are independent (disjoint files, no shared symbol, no sequential data dep); TDD iron-law applies per branch; verdict aggregation at this skill's layer |
-
-Execution flow at skill granularity (solid = linear stage flow, dotted = conditional / on-demand):
-
-```mermaid
-flowchart TD
-    BS["brainstorming<br/>Discovery"] --> WP["writing-plans<br/>Planning"]
-    WP --> SDD["subagent-driven-development<br/>Execution"]
-    TDD["tdd-iron-law<br/>Discipline"] -. "governs each implementer" .-> SDD
-    SDD -. "bug / stuck" .-> DBG["systematic-debugging<br/>Repair"]
-    DBG -. "verified fix" .-> SDD
-    SDD --> RCR["requesting-code-review<br/>Review"]
-    RCR --> VBC["verification-before-completion<br/>Verification"]
-    VBC --> FIN["finishing-a-development-branch<br/>Branch close"]
-    VBC -. "UI touched + ui-flows.md exists" .-> UIV["ui-verification<br/>conditional"]
-    UIV -.-> FIN
-    subgraph AUX["Auxiliary (on-demand)"]
-        WT["using-git-worktrees"]
-        DPA["dispatching-parallel-agents"]
-    end
-    AUX -.-> SDD
-```
-
----
-
-## Quickstart — the linear flow
-
-The intended user flow on a non-trivial task:
-
-```
-You: "I want to add feature X"
-  ↓ (SessionStart hook router auto-fires)
-brainstorming → 5-axis brief → docs/loom/specs/<topic>.md
-  ↓
-writing-plans → ≤5-task plan → docs/loom/plans/<topic>.md
-  ↓
-subagent-driven-development → per-task triad dispatch
-  ↓ (per implementer subagent)
-  tdd-iron-law → RED-GREEN-REFACTOR
-  ↓ (if implementer returns BLOCKED with decomposition signal)
-  writing-plans (re-invoked) → Child Test child decomposition
-  ↓ (per task DONE)
-SDD orchestrator continues
-  ↓ (when all tasks DONE)
-finishing-a-development-branch
-  ↓ Step 1: requesting-code-review (cross-task-coherence dimension)
-  ↓ Step 2: verification-before-completion (npm test / pytest / etc.)
-  ↓ Step 3: loom-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
-  ↓ Step 4: git commit (after the privacy gate passes)
-  ↓ Step 5: git push (review-gated — no re-ask)
-  ↓ Step 6: gh pr create (request-derived — no re-ask, opt-out honored)
-  ↓ Step 7: git worktree remove (optional, confirm)
-```
-
-Plus on-demand:
-- **`systematic-debugging`** fires when you hit a bug that's not "obvious one-line fix" — intermittent, "works on my machine", race conditions, etc.
-- **`using-git-worktrees`** fires when you need parallel branches (this very plugin is developed on a worktree).
-
----
-
-## Compatibility
-
-| Harness | Status |
-|---|---|
-| **Claude Code** | ✅ Verified end-to-end through multiple ritual cycles — Phase 3 orchestrator (v0.3.0), Phase 4 prep (v0.4.0), multilingual research (v0.5.1), plugin-level agent dispatch (v0.5.2 + v0.6.0), whole-branch code-review with cross-task-coherence dimension (v0.6.0), reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest built + tracked in lockstep with each release; live install + verification ritual deferred per user (see `tests/codex-cli/README.md`) |
-
-The SessionStart hook emits a portable JSON shape covering Claude Code's `hookSpecificOutput.additionalContext`, Codex CLI's `additional_context`, and legacy `additionalContext` keys — same hook serves both harnesses.
-
----
-
-## Coexistence
-
-This plugin is designed to coexist with related plugins, not compete:
-
-| Plugin | Relationship |
-|---|---|
-| **[`domain-teams:code-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/code-team)** | Passive-gate compliance reviewer. loom-code is the active-build orchestrator that uses code-team's standards as its knowledge layer (byte-identical functional-copied via `scripts/distribute.py`, drift-checked by `scripts/verify-drift.py`). Same primary sources, different invocation mode. |
-| **[`loom-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/git-memory)** | Mandatory delegation target in `finishing-a-development-branch` Step 3 per P3-D. Decides commit-trailer decisions (Decision: / Learning: / Gotcha:); loom-code does NOT duplicate. |
-| **[`loom-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/complexity-critique)** | Optional delegation from `brainstorming` Axis 3 when complexity smell surfaces. Same SSOT-and-functional-copy mindset framing. |
-| **[`obra/superpowers`](https://github.com/obra/superpowers)** | Design inspiration; coexists via `LOOM_CODE_MODE=off` escape hatch (set env var to disable loom-code hook; only superpowers fires). Both plugins can be installed; switch via env var. |
-
-Cross-plugin behavior is verified by 5 integration test scripts in [`tests/integration/`](tests/integration/).
-
----
-
-## Why this plugin exists
-
-`monkey-skills` already had two related plugins:
-
-- **`domain-teams:code-team`** — primary-source-grounded standards / rubrics / checklists (8 books from Beck to 徳丸本). Strong knowledge layer. Weak invocation: agent must remember to call it.
-- **`obra/superpowers` (separate repo)** — SessionStart hook + measure rhetoric ("Delete it. Start over."). Strong invocation. Weak grounding: rules cite themselves, not canon.
-
-`loom-code` is the synthesis: Superpowers-style auto-injection + code-team-style canon-grounded measures. Each rule is BOTH structurally enforced (via SKILL.md HARD-GATE + Red Flags refusal patterns) AND substantively justified (via primary-source citation with ISBN / URL / chapter reference).
-
----
-
-## Documentation
-
-- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — design intent, target users, Q-lock decisions
-- [TECH-SPEC.md](TECH-SPEC.md) — architecture, SSOT mechanism, hook contracts
-- [ROADMAP.md](ROADMAP.md) — phase plan, decision ledger, Phase 1.5 rolling backlog (historical design record — forward direction: the `docs/loom/backlog/` queue store)
-- [CHANGELOG.md](CHANGELOG.md) — Journey overview + per-version detail
-- [docs/examples/](docs/examples/) — 3 worked end-to-end examples (Python / TypeScript / Swift)
-- [docs/announcement/v1.0.0-announcement.md](docs/announcement/v1.0.0-announcement.md) — public announcement draft (publishes at v1.0.0)
-- [research/grounding-v0.1.0.md](research/grounding-v0.1.0.md) — per-version grounding audit
-
----
-
-## Contributing
-
-Issues + PRs welcome at https://github.com/kouko/monkey-skills/issues with `loom-code:` prefix.
-
-For real-use dogfood notes (the v1.0.0-blocking P15-5 backlog item), drop them at `research/dogfood-YYYY-MM-DD-<topic>.md` — even short notes help calibrate the toolkit's measure strength.
-
----
-
-## License
-
-MIT — see the repository [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE).
+MIT, as part of `monkey-skills`.

@@ -5,6 +5,102 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] — 2026-09-02 — Five stations
+
+**Breaking.** The pre-1.0 surface is deleted, not renamed or aliased. A
+repo running the old flow keeps its old artifacts on disk; nothing reads
+them. See `docs/loom/intent/` for how a change starts now.
+
+`budget-exception:` is not needed for this version — the mechanism net
+count falls sharply (14 skills → 5, ~50 scripts → 11, 4 verdict agents →
+1); nothing is added without a listed `eval:`.
+
+### Added
+
+- **Five stations**, one artifact each: `write-plan` (plan.md), `build`
+  (commits carrying `Task: <id>`), `review` (review.json), `ship` (PR and
+  merge), `maintain` (an intent out of an incident).
+- **Four agent contracts**: `implementer`, `reviewer` (one contract, a
+  `lens:` parameter), `blind-runner`, `adversary`. The implementer carries
+  the prose-edit self-sweep rule; the baseline it works under is
+  `references/engineering-baseline.md` (tdd-iron-law + systematic-debugging
+  merged into one reference, not a skill).
+- **Contract package** — `contract/manifest.yaml` declares the stations,
+  the actions, and every field of intent / spec / plan / review;
+  `contract/README.md` and `contract/templates/` ship with it.
+  `loom-design` and `loom-workflow` read it and declare
+  `requires-contract`; only loom-code writes it.
+- **`scripts/loom_checker.py`** — the whole deterministic layer, 20 rules
+  under `--list-rules`: the `contract.*`, `intent.*`, `intake.*`, `push.*`
+  and `standing.*` families. It recomputes rather than believes: it re-runs
+  the recorded package-test and adversarial probes and reads the exit code.
+  New in this version's final pass: `push.probes-adversarial` (a change
+  whose artifact types include code / spec / skill / gate owes at least
+  three passing adversarial probes against the reviewed commit) and the
+  optional `questions[]` schema check inside `push.review-schema`.
+- **`docs/loom/evidence/mechanisms.yaml`** — the mechanism population, five
+  recomputed classes, each entry carrying an `eval:`;
+  `scripts/check_mechanisms.py` diffs it against repo state.
+- **`scripts/codex_scaffold.py`** — the repo-local checker copy and
+  `.codex/hooks.json` for Codex CLI, with `--probe` to prove the hook is
+  trusted (an untrusted Codex hook is skipped silently).
+
+### Removed
+
+- **Skills (14 → 5)**: brainstorming, writing-plans,
+  subagent-driven-development, dispatching-parallel-agents,
+  using-git-worktrees, tdd-iron-law, systematic-debugging,
+  requesting-code-review, requesting-docs-review,
+  verification-before-completion, ui-verification,
+  finishing-a-development-branch, loom-memory, using-loom-code. Parallel
+  dispatch, worktrees, package tests and UI verification are actions inside
+  a station now, not skills; there is no router.
+- **Agents**: code-reviewer, code-quality-reviewer, docs-reviewer,
+  spec-reviewer.
+- **Hooks**: ask-triage, language-stop-check, git-guard, family-reception,
+  family-relay, plain-relay, router-card. `language-anchor` and its
+  `lang_detect` stay, listed as `class: host-hygiene` — user-language
+  discipline, not a loom mechanism.
+- **Script families**: the Review Batch pipeline (batch_review_cli,
+  propose_review_batches, review_batch, review_context, review_scope,
+  check_review_batches, task_batch_replay, plan_card); the docs-reviewer
+  delta protocol (adjudication_lint / _profiles / _render / _split, and
+  its bundled mermaid.min.js); gate markers and live host probes
+  (loom_gate_markers, live_gate_adapter_probe, live_gate_station_receipt,
+  live_host_review_gate); the living spec (living_spec_*,
+  check-living-spec-index); the brief and backlog gates
+  (check_north_star_link, check_onramp_choice, check_proposal_status,
+  check_queue_relation, check_scenario_coverage, check_seam_coverage,
+  check_field_microstructure, backlog_index, archive_change_folder);
+  check_attack_catalogue; the knowledge SSOT (distribute, verify-drift,
+  canonical/); loom_init; post_pr_ci; prose_selfsweep_tally;
+  loom_firing_harness; and the reviewer prose SSOTs `_baseline.md`,
+  `_reviewer-discipline.md`, `_rule-sheet.md`, folded into
+  `skills/review/references/lenses.md`.
+- **Concepts**: waiver, approval-only commits, `Approved-by` as a gate,
+  human sign-off on a spec or plan, the plan's Status / Decision Log /
+  Review Batches / Stage fields, brief / seed / backlog, the
+  family-reception contract, the on-ramp questionnaire, the kickoff
+  briefing, per-task three-arm review as the standing layer, and the
+  writing-plans reviewer's Check 22 (direction exposure) and Check 23
+  (batch observation).
+- **Tests**: the manual prompt clusters (`tests/*-pressure/`,
+  `tests/skill-triggering/`, `tests/codex-cli/`) and the integration
+  scripts for the command surface, the rule sheet and the
+  complexity-critique delegation. Their successor is the cold-read dogfood
+  registered in mechanisms.yaml.
+
+### Changed
+
+- `PRODUCT-SPEC.md`, `TECH-SPEC.md` and `ROADMAP.md` are now pointers to
+  the contract package and the station files; the pre-1.0 contents
+  described mechanisms that no longer exist and are not migrated.
+- `check_open_questions.py` reads an intent's `## Open questions` instead
+  of a plan's; the six adversarial attack classes moved from
+  requesting-code-review's references into `skills/review/references/`.
+- `.github/workflows/loom-code-ci.yml` drops the living-spec,
+  attack-catalogue, knowledge-SSOT and integration-test steps.
+
 ## [0.110.0] — 2026-09-01 — Prose-edit self-sweep
 
 Ships a silent, same-turn self-sweep rule for the implementer contract,
