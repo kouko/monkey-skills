@@ -9,7 +9,9 @@ import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-PROPOSAL_MD = REPO_ROOT / "docs" / "loom" / "outcome-map-v3" / "proposal.md"
+# W3-03 moved the seven inherited repo-level stores under
+# docs/loom/evidence/; the v3 proposal went with outcome-map-v3/.
+PROPOSAL_MD = REPO_ROOT / "docs" / "loom" / "evidence" / "outcome-map-v3" / "proposal.md"
 PLAN_MD = REPO_ROOT / "docs" / "loom" / "plans" / "2026-08-30-outcome-map-v3.md"
 
 RATIFIED_LINE = "Status: ratified — kouko, 2026-08-31"
