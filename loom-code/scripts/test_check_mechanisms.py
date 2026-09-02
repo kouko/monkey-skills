@@ -657,6 +657,16 @@ class TestWcWordsLocaleIndependent:
 
     def test_count_is_stable_across_locales(self, monkeypatch):
         data = "not in ①;".encode("utf-8")
+        unpinned = []
+        for locale in ("C", "C.UTF-8", "en_US.UTF-8"):
+            monkeypatch.setenv("LC_ALL", locale)
+            result = subprocess.run(["wc", "-w"], input=data,
+                                     capture_output=True)
+            unpinned.append(int(result.stdout.split()[0]))
+        if len(set(unpinned)) == 1:
+            pytest.skip("host has no UTF-8 locale that splits the probe "
+                        "differently — cannot exercise the locale-pin")
+
         counts = set()
         for locale in ("C", "C.UTF-8", "en_US.UTF-8"):
             monkeypatch.setenv("LC_ALL", locale)

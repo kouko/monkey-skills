@@ -1,13 +1,17 @@
 """W0-05 / REQ-8 — the SessionStart injection must shrink to at most half
-the pre-change baseline (plan §0: baseline 923fb84a = 5281 words, target
-<= 2640) and must carry only the orientation a session cannot derive:
-the station order, the three human decision points in plain words, a
-pointer to the entry station's SKILL.md for the full summary table, and
-the repo's KICKOFF-DEFAULTS lines when that file exists.
+the pre-change baseline (plan §0: baseline 923fb84a = 5278 words, counted
+with ``LC_ALL=C wc -w``, target <= 2639) and must carry only the
+orientation a session cannot derive: the station order, the three human
+decision points in plain words, a pointer to the entry station's
+SKILL.md for the full summary table, and the repo's KICKOFF-DEFAULTS
+lines when that file exists.
 
 The measurement command is fixed by concept-model §11:
-``bash loom-code/hooks/session-start </dev/null | wc -w`` with cwd = an
-empty git repo. These tests run exactly that.
+``bash loom-code/hooks/session-start </dev/null | LC_ALL=C wc -w`` with
+cwd = an empty git repo. The budget test below counts with Python's
+``str.split()``, which agrees with ``LC_ALL=C wc -w`` on this hook's
+output; the recorded baseline number itself comes from
+``check_mechanisms.py --measure``.
 
 Station names and decision-point numbers are asserted against
 ``loom-code/contract/manifest.yaml`` — the hook derives them from the
@@ -28,7 +32,7 @@ REPO = Path(__file__).resolve().parents[2]
 HOOK = REPO / "loom-code" / "hooks" / "session-start"
 MANIFEST = REPO / "loom-code" / "contract" / "manifest.yaml"
 
-WORD_CAP = 2640
+WORD_CAP = 2639
 
 
 @pytest.fixture(scope="module")

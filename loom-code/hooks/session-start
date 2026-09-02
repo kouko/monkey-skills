@@ -11,9 +11,11 @@
 # loom-code/contract/manifest.yaml — the contract package is the single
 # source; this script must never carry a second hand-typed copy.
 #
-# Budget: `bash loom-code/hooks/session-start </dev/null | wc -w` with cwd =
-# an empty git repo must stay <= 2640 words (half of the 923fb84a baseline
-# of 5281). Guarded by scripts/test_session_start_words.py.
+# Budget: `bash loom-code/hooks/session-start </dev/null | LC_ALL=C wc -w`
+# (LC_ALL on wc, not on bash — GNU and BSD wc split a few characters
+# differently under a UTF-8 locale) with cwd = an empty git repo must stay
+# <= 2639 words (half of the 923fb84a baseline of 5278). Guarded by
+# scripts/test_session_start_words.py.
 #
 # CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext.
 # DEFENSIVE keys (`additional_context`, bare `additionalContext`) are emitted
