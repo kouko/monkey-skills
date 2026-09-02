@@ -1,5 +1,5 @@
 """Tests for loom_gate_markers — the gate-marker CLI the SDD orchestrator
-runs so hooks/git-guard.py can enforce review/verify gates mechanically.
+runs so the loom checker can enforce review/verify gates mechanically.
 
 Each test builds a THROWAWAY git repo under tmp_path (git init + empty
 commit). No dependency on the outer repo. Marker JSON is parsed and
@@ -2457,9 +2457,6 @@ def test_default_branch_ref_is_importable_as_a_public_name():
 
 # ------------------------------------------------------ mint (record-only)
 
-_GIT_GUARD_HOOK = Path(__file__).resolve().parent.parent / "hooks" / "git-guard.py"
-
-
 def _init_repo_with_main(tmp_path: Path) -> Path:
     """Like `_init_repo`, but guarantees a local branch literally named
     `main` regardless of the environment's `init.defaultBranch` —
@@ -2483,34 +2480,12 @@ def _commit_new_files(repo: Path, files: dict[str, str], message: str) -> None:
     _git(repo, "commit", "-m", message)
 
 
-def _run_git_guard_push(repo: Path) -> subprocess.CompletedProcess:
-    env = os.environ.copy()
-    env.pop("LOOM_CODE_MODE", None)
-    env.pop("GIT_DIR", None)
-    env.pop("GIT_WORK_TREE", None)
-    env["GIT_CONFIG_GLOBAL"] = ""
-    env["GIT_CONFIG_SYSTEM"] = ""
-    return subprocess.run(
-        [sys.executable, str(_GIT_GUARD_HOOK)],
-        input=json.dumps(
-            {
-                "tool_name": "Bash",
-                "tool_input": {"command": "git push"},
-                "cwd": str(repo),
-            }
-        ),
-        capture_output=True,
-        text=True,
-        env=env,
-    )
-
-
 def test_record_only_exemption_mints_and_validates(tmp_path):
     """mint --review-na-record-only on an all-record-class branch (a
     bare `docs/**.md` file, per rcr SKILL.md's own "incl. docs/**"
-    example) mints a review-pass marker git-guard.py's arm-agnostic
-    push gate then accepts (`validate` = the push gate this exemption
-    exists to satisfy, per the plan's Task 14 spec)."""
+    example) mints a review-pass marker plus its verified.json half —
+    the marker pair the arm-agnostic push gate reads (per the plan's
+    Task 14 spec)."""
     repo = _init_repo_with_main(tmp_path)
     _git(repo, "checkout", "-b", "feat/docs-only")
     _commit_new_files(
@@ -2530,16 +2505,12 @@ def test_record_only_exemption_mints_and_validates(tmp_path):
     assert data["verdict"] in {"PASS", "PASS_WITH_NOTES"}
     datetime.fromisoformat(data["written_at"])
 
-    # Task 14's own scope is the review-pass half of the push gate —
-    # mint the verified.json half separately (unchanged `verified`
-    # command) to prove the FULL arm-agnostic gate now accepts a
-    # record-only branch end-to-end, not merely that this marker's
-    # fields look right in isolation.
+    # The verified.json half of the same marker pair (unchanged `verified`
+    # command). The end-to-end push assertion that used to follow ran
+    # hooks/git-guard.py, deleted in W0-05 — the push rule now lives in
+    # scripts/loom_checker.py and is covered by its own tests.
     rc_verified = main(["verified", "--repo", str(repo), "--run", "true"])
     assert rc_verified == 0
-
-    result = _run_git_guard_push(repo)
-    assert result.returncode == 0, result.stderr
 
 
 def test_record_only_mint_refuses_packet_head_drift_without_marker(tmp_path, capsys):
