@@ -44,55 +44,55 @@ mechanisms:
   #     landed shape, plan §0's convergence table) ---
   - id: capture-intent
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: write-spec
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: write-plan
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A-interim.md"
   - id: build
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: review
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: ship
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: maintain
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: product-principles
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: design-system
     class: skill
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: decision-map
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/skills/decision-map/scripts/test_decision_map_intent_binding.py"
   - id: handoff
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/scripts/test_handoff_compaction.py"
   - id: recap-state
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/scripts/test_recap_state_compaction.py"
   - id: cot-explain
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/scripts/test_cot_explain_compaction.py"
   - id: distill-sessions
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/scripts/test_distill_sessions_compaction.py"
   - id: git-memory
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/scripts/test_git_memory_compaction.py"
   - id: independent-advisor
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/scripts/test_independent_advisor_compaction.py"
   - id: critique
     class: skill
-    eval: "pending — W4-01"
+    eval: "loom-workflow/scripts/test_critique_compaction.py"
 
   # --- checker-rule (26; loom_checker.py --list-rules) ---
   - id: contract.requires
@@ -261,55 +261,55 @@ mechanisms:
   #     paragraphs in W1/W2, W3-06 §11 recomputes ---
   - id: "maintain.dedupe"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "build.no-dispatch-without-a-record"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "build.after-task-review-before-next-task"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "write-plan.no-plan-without-confirmed-intent"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A-interim.md"
   - id: "write-plan.product-spec-needs-confirmed-behavior"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A-interim.md"
   - id: "write-plan.post-decision-conservative-default"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A-interim.md"
   - id: "review.two-fresh-reviewers"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "review.reviewer-not-implementer"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "review.no-averaging"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "review.review-only-commit"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "ship.no-push-before-acceptance"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "ship.pr-body-carries-trailer-footer"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: "capture-intent.no-confirmed-without-restatement"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: "capture-intent.product-problem-plain-words"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: "write-spec.product-visible-behaviour-confirmed-before-review"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: "write-spec.no-design-decision-shown-to-user"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: "product-principles.ratified-requires-user-yes"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
   - id: "design-system.never-blocks"
     class: prose-gate
-    eval: "pending — W4-01"
+    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
