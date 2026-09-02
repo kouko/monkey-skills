@@ -27,6 +27,7 @@ package this checker ships with.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -541,7 +542,45 @@ def check_confirmed_behavior(manifest, repo: Path, change_id: str) -> list[tuple
     return []
 
 
+PUSH_COMMAND_RE = re.compile(r"(^|[;&|]\s*|\s)(git\s+push|gh\s+pr\s+(create|merge))\b")
+
+
+def read_hook_payload(stdin=sys.stdin) -> dict | None:
+    """PreToolUse payload (Claude Code and Codex share the shape) when the
+    checker is invoked as a hook; None when run from a terminal or with an
+    empty stdin. Malformed JSON is a UsageError → exit 2 (fail-closed)."""
+    if stdin is None or stdin.isatty():
+        return None
+    raw = stdin.read()
+    if not raw.strip():
+        return None
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise UsageError(f"hook payload is not JSON: {exc}")
+    if not isinstance(payload, dict):
+        raise UsageError("hook payload must be a JSON object.")
+    return payload
+
+
 def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    payload = read_hook_payload()
+    if payload is not None:
+        # Hook mode: the matcher is the tool name, so every Bash command
+        # arrives here; only push-shaped commands are judged.
+        command = str((payload.get("tool_input") or {}).get("command", ""))
+        if not PUSH_COMMAND_RE.search(command):
+            return 0
+        cwd = payload.get("cwd")
+        if cwd:
+            os.chdir(cwd)
+        rc = _cmd_push(args, out, err)
+        return 2 if rc == 1 else rc   # hosts block on exit 2
+
+    return _cmd_push(args, out, err)
+
+
+def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     head, base = "HEAD", None
     rest = list(args)
     while rest:

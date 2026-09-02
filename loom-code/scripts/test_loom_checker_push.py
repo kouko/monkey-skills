@@ -374,3 +374,47 @@ def test_every_failure_is_reported_not_just_the_first(tmp_path: Path) -> None:
     )
     rules = blocked_rules(run_checker("push", cwd=repo))
     assert {"push.reviewed-sha", "push.probes-package-tests", "push.open-findings-closed"} <= rules
+
+
+# --- hook mode: PreToolUse payload on stdin (Claude Code and Codex share the shape) ---
+
+
+def run_hook(payload: dict, cwd: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(CHECKER), "push"], capture_output=True, text=True,
+        cwd=str(cwd), input=json.dumps(payload),
+    )
+
+
+def test_hook_mode_ignores_a_non_push_bash_command(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    (repo / "c.py").write_text("x = 1\n", encoding="utf-8")
+    git(repo, "add", "c.py")
+    git(repo, "commit", "-q", "-m", "feat(x): code on top of the review commit")
+    result = run_hook({"tool_name": "Bash", "tool_input": {"command": "ls -la"}, "cwd": str(repo)}, cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+    assert "BLOCK" not in result.stderr
+
+
+def test_hook_mode_blocks_a_push_with_exit_2(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    (repo / "c.py").write_text("x = 1\n", encoding="utf-8")
+    git(repo, "add", "c.py")
+    git(repo, "commit", "-q", "-m", "feat(x): code on top of the review commit")
+    for cmd in ("git push origin HEAD", "cd sub && git push", "gh pr create --fill", "gh pr merge 12 --squash"):
+        result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
+        assert result.returncode == 2, (cmd, result.stderr)
+        assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    result = run_hook({"tool_name": "Bash", "tool_input": {"command": "git push"}, "cwd": str(repo)}, cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+
+
+def test_hook_mode_malformed_payload_fails_closed(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    result = subprocess.run([sys.executable, str(CHECKER), "push"], capture_output=True, text=True,
+                            cwd=str(repo), input="{not json")
+    assert result.returncode == 2
