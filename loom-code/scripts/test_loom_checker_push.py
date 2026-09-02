@@ -76,6 +76,14 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
         "probes": [
             {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
              "result": "pass", "artifact": "evidence/tests.txt"},
+            # The branch touches `a.py`, which the §6 mapping types as code,
+            # so push.probes-adversarial wants three of these.
+            {"kind": "adversarial", "command": PASSING_COMMAND, "sha": reviewed_sha,
+             "result": "pass", "artifact": "evidence/abuse_empty.txt"},
+            {"kind": "adversarial", "command": PASSING_COMMAND, "sha": reviewed_sha,
+             "result": "pass", "artifact": "evidence/abuse_boundary.txt"},
+            {"kind": "adversarial", "command": PASSING_COMMAND, "sha": reviewed_sha,
+             "result": "pass", "artifact": "evidence/abuse_hostile.txt"},
         ],
         "open_findings": [
             {"id": "F-1", "anchor": "a.py:1", "origin_sha": "deadbee",
@@ -358,6 +366,90 @@ def test_missing_package_test_probe_blocks(tmp_path: Path) -> None:
     assert "push.probes-package-tests" in blocked_rules(result)
 
 
+# --- push.probes-adversarial: the floor, the type gate, the re-run ---------
+
+
+def _adversarial(reviewed_sha: str, count: int, command: str = PASSING_COMMAND):
+    return [
+        {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
+         "result": "pass", "artifact": "evidence/tests.txt"},
+    ] + [
+        {"kind": "adversarial", "command": command, "sha": reviewed_sha,
+         "result": "pass", "artifact": f"evidence/abuse_{n}.txt"}
+        for n in range(count)
+    ]
+
+
+def test_two_adversarial_probes_do_not_meet_the_floor(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    reviewed = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(repo, rebuild(repo, probes=_adversarial(reviewed, 2)))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-adversarial" in blocked_rules(result)
+    assert "2 are usable" in result.stderr
+
+
+def test_no_adversarial_probe_at_all_blocks_a_code_change(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    reviewed = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(repo, rebuild(repo, probes=_adversarial(reviewed, 0)))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-adversarial" in blocked_rules(result)
+    assert "none recorded" in result.stderr
+
+
+def test_an_adversarial_probe_that_no_longer_passes_does_not_count(tmp_path: Path) -> None:
+    """The recorded `result: pass` is never believed; the checker runs it."""
+    repo = build_repo(tmp_path)
+    reviewed = git(repo, "rev-parse", "HEAD~1")
+    probes = _adversarial(reviewed, 3)
+    probes[-1]["command"] = FAILING_COMMAND
+    recommit_review(repo, rebuild(repo, probes=probes))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-adversarial" in blocked_rules(result)
+    assert "exited 1 when the checker ran it" in result.stderr
+
+
+def test_an_adversarial_probe_against_another_sha_does_not_count(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    reviewed = git(repo, "rev-parse", "HEAD~1")
+    probes = _adversarial(reviewed, 3)
+    probes[-1]["sha"] = git(repo, "rev-parse", "main")
+    recommit_review(repo, rebuild(repo, probes=probes))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-adversarial" in blocked_rules(result)
+    assert "not the reviewed commit" in result.stderr
+
+
+def test_a_docs_only_change_owes_no_adversarial_probe(tmp_path: Path) -> None:
+    """The §6 mapping types `notes.md` as docs, which needs no adversary."""
+    repo = tmp_path / "docsrepo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    git(repo, "add", "seed.txt")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    (repo / "notes.md").write_text("prose\n", encoding="utf-8")
+    (repo / "evidence").mkdir()
+    (repo / "evidence/tests.txt").write_text("ok\n", encoding="utf-8")
+    git(repo, "add", "notes.md", "evidence/tests.txt")
+    git(repo, "commit", "-q", "-m", "docs: notes")
+    reviewed = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(reviewed, probes=_adversarial(reviewed, 0)))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
 # --- push.verdicts-ge-2 ----------------------------------------------------
 
 
@@ -628,6 +720,54 @@ def test_hook_mode_without_a_payload_fails_closed(tmp_path: Path) -> None:
 
 
 # --- push.review-schema ----------------------------------------------------
+
+
+def test_questions_is_optional(tmp_path: Path) -> None:
+    """A change with no fork asks nothing; absence is not a schema error."""
+    repo = build_repo(tmp_path)
+    body = rebuild(repo)
+    assert "questions" not in body
+    recommit_review(repo, body)
+    assert run_checker("push", cwd=repo).returncode == 0
+
+
+def test_a_well_formed_questions_entry_passes(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, rebuild(repo, questions=[
+        {"decision_point": 1, "text": "Is this what you want?", "type": "what"},
+        {"decision_point": 3, "text": "Delete the old rows?", "type": "consequence"},
+    ]))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_questions_entry_with_an_unknown_type_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, rebuild(repo, questions=[
+        {"decision_point": 1, "text": "?", "type": "vibes"},
+    ]))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-schema" in blocked_rules(result)
+    assert "type: vibes" in result.stderr
+
+
+def test_a_questions_entry_missing_its_decision_point_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, rebuild(repo, questions=[{"text": "?", "type": "what"}]))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-schema" in blocked_rules(result)
+    assert "decision_point" in result.stderr
+
+
+def test_questions_as_an_object_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    recommit_review(repo, rebuild(repo, questions={"decision_point": 1}))
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-schema" in blocked_rules(result)
+    assert "not list" in result.stderr
 
 
 def test_a_missing_review_key_blocks(tmp_path: Path) -> None:

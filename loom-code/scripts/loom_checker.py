@@ -98,6 +98,11 @@ RULES: list[tuple[str, str]] = [
         "Every open_findings entry in review.json is resolved or dismissed.",
     ),
     (
+        "push.probes-adversarial",
+        "A change carrying a code / spec / skill / gate artifact records at least three "
+        "adversarial probes against the reviewed commit, and each one still passes.",
+    ),
+    (
         "push.probes-package-tests",
         "review.json probes[] records a package-test run for this branch whose result is pass.",
     ),
@@ -833,6 +838,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id)
     failures += check_open_findings_closed(review)
     failures += check_probes_package_tests(repo, review, reviewed_id, out)
+    failures += check_probes_adversarial(repo, review, reviewed_id, out)
     failures += check_verdicts(review)
 
     # `dispatch[]` lives inside the review.json that was read out of the
@@ -901,6 +907,49 @@ def check_review_schema(manifest, review, review_rel: str) -> list[tuple[str, st
                 f"`reviewed_sha: {recorded}` is not 7-40 lowercase hex digits.",
             )
         )
+    failures += check_questions(review, review_rel)
+    return failures
+
+
+# `questions[]` records what the user was asked at a decision point. It is
+# optional -- a change with no fork asks nothing -- but a present one is
+# checked, because an unchecked optional key is a key nobody may read.
+QUESTION_TYPES = frozenset({"what", "behaviour", "done", "consequence"})
+
+
+def check_questions(review, review_rel: str) -> list[tuple[str, str]]:
+    if "questions" not in review:
+        return []
+    entries = review["questions"]
+    if not isinstance(entries, list):
+        return [
+            (
+                "push.review-schema",
+                f"`questions` is {type(entries).__name__}, not list as the "
+                "template declares.",
+            )
+        ]
+    failures = []
+    for index, entry in enumerate(entries):
+        where = f"{review_rel} questions[{index}]"
+        if not isinstance(entry, dict):
+            failures.append(("push.review-schema", f"{where} is not an object."))
+            continue
+        if not isinstance(entry.get("decision_point"), int):
+            failures.append(
+                ("push.review-schema", f"{where} has no integer `decision_point`.")
+            )
+        if not str(entry.get("text", "")).strip():
+            failures.append(("push.review-schema", f"{where} has no `text`."))
+        kind = str(entry.get("type", ""))
+        if kind not in QUESTION_TYPES:
+            failures.append(
+                (
+                    "push.review-schema",
+                    f"{where} `type: {kind or '(absent)'}` is not one of "
+                    f"{'|'.join(sorted(QUESTION_TYPES))}.",
+                )
+            )
     return failures
 
 
@@ -1002,6 +1051,107 @@ def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
         return []
     detail = "; ".join(reasons) if reasons else "no package-tests probe recorded at all"
     return [("push.probes-package-tests", f"no usable package-tests probe: {detail}.")]
+
+
+# The artifact types whose review demands the adversarial action
+# (concept-model §6: code -> mutation/fuzz or >=3 abuse cases, spec ->
+# red-team, skill/gate -> the attack catalogue). A change touching none of
+# them -- documentation, memory, evidence -- owes no adversarial probe.
+ADVERSARIAL_TYPES = frozenset({"code", "spec", "skill", "gate"})
+
+ADVERSARIAL_FLOOR = 3
+
+
+def artifact_types(manifest, paths) -> set[str]:
+    """The §6 type of each changed path: first matching glob in the
+    manifest's declared order wins, which is why `**` sits last there."""
+    rules = [(glob_to_regex(entry["glob"]), entry["type"])
+             for entry in manifest["artifact_types"]]
+    found = set()
+    for path in paths:
+        for pattern, kind in rules:
+            if pattern.match(path):
+                found.add(kind)
+                break
+    return found
+
+
+def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
+                             out=sys.stdout):
+    """Same discipline as the package-tests rule: the record says which
+    commit was attacked and what to type, and the checker types it itself.
+    An adversarial case that only ran in the adversary's head is not
+    evidence, and one that no longer passes is not a regression eval."""
+    try:
+        manifest = load_manifest()
+        changed = changed_paths(repo)
+    except (UsageError, OSError, KeyError) as exc:
+        return [("push.probes-adversarial", f"cannot recompute artifact types: {exc}")]
+
+    # The review file is the output of reviewing, never part of what is
+    # reviewed; left in, its `.json` extension falls through to `code` and
+    # every change on earth would owe an adversary.
+    is_review = glob_to_regex(manifest["artifacts"]["review"]["path"].replace("<change-id>", "*"))
+    changed = {path for path in changed if not is_review.match(path)}
+
+    kinds = artifact_types(manifest, changed) & ADVERSARIAL_TYPES
+    if not kinds:
+        return []
+
+    usable = 0
+    reasons: list[str] = []
+    for probe in review.get("probes", []):
+        if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
+            continue
+        command = str(probe.get("command", "")).strip()
+        label = command or "<no command>"
+        if not command:
+            reasons.append("an adversarial probe records no command")
+            continue
+        sha = str(probe.get("sha", "")).strip()
+        probe_id = (
+            git_maybe(repo, "rev-parse", "--verify", f"{sha}^{{commit}}")
+            if SHA_HEX.fullmatch(sha)
+            else None
+        )
+        if probe_id is None or reviewed_id is None or probe_id != reviewed_id:
+            reasons.append(
+                f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed commit"
+            )
+            continue
+        if git_text(repo, "status", "--porcelain").strip():
+            reasons.append(
+                f"`{label}` cannot be re-run: the working tree is not clean, so what "
+                "would be attacked is not the reviewed tree"
+            )
+            continue
+        try:
+            observed = subprocess.run(
+                command, shell=True, cwd=str(repo), capture_output=True,
+                text=True, timeout=PROBE_TIMEOUT,
+            ).returncode
+        except subprocess.TimeoutExpired:
+            reasons.append(f"`{label}` did not finish within {PROBE_TIMEOUT}s")
+            continue
+        out.write(
+            f"adversarial `{label}`: observed exit code {observed} "
+            f"(recorded result: {probe.get('result')!r})\n"
+        )
+        if observed != 0:
+            reasons.append(f"`{label}` exited {observed} when the checker ran it")
+            continue
+        usable += 1
+
+    if usable >= ADVERSARIAL_FLOOR:
+        return []
+    detail = "; ".join(reasons) if reasons else "none recorded"
+    return [
+        (
+            "push.probes-adversarial",
+            f"this change touches {', '.join(sorted(kinds))}, which needs "
+            f"{ADVERSARIAL_FLOOR} adversarial probes; {usable} are usable ({detail}).",
+        )
+    ]
 
 
 def scored_verdicts(review) -> tuple[int, list[dict]]:

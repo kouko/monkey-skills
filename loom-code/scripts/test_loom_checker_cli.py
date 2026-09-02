@@ -24,6 +24,7 @@ EXPECTED_RULE_IDS = [
     "intent.schema",
     "push.dismissed-by-reviewer",
     "push.open-findings-closed",
+    "push.probes-adversarial",
     "push.probes-package-tests",
     "push.review-only-head",
     "push.review-schema",
@@ -102,8 +103,8 @@ def test_hooks_probe_is_gone() -> None:
     assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
 
 
-def test_the_rule_population_is_nineteen() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 19
+def test_the_rule_population_is_twenty() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 20
 
 
 # --- contract --require (spec G) -------------------------------------------

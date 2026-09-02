@@ -94,7 +94,7 @@ mechanisms:
     class: skill
     eval: "pending — W4-01"
 
-  # --- checker-rule (19; loom_checker.py --list-rules) ---
+  # --- checker-rule (20; loom_checker.py --list-rules) ---
   - id: contract.requires
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_cli.py::test_contract_require_blocks_a_higher_minor
@@ -125,6 +125,9 @@ mechanisms:
   - id: push.open-findings-closed
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_an_unresolved_finding_blocks
+  - id: push.probes-adversarial
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_push.py::test_two_adversarial_probes_do_not_meet_the_floor
   - id: push.probes-package-tests
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_missing_package_test_probe_blocks
