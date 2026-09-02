@@ -191,7 +191,9 @@ jobs:
           #   <type>(<scope>): <subject> (vX.Y.Z N/M)
           #   <type>(<scope>): <subject> (vX.Y.Z gate-feedback)
           #
-          # type   ∈ {refactor, feat, fix, chore, docs, test}
+          # type   ∈ {refactor, feat, fix, chore, docs, test, ci}; an optional
+          #          `!` before the colon marks a breaking change (Conventional
+          #          Commits 1.0.0 §Specification 13)
           # scope  = kebab-case identifier (team name, domain-teams,
           #          or other tracked plugin/component name)
           # subject= human-readable summary, no trailing period
@@ -205,8 +207,8 @@ jobs:
           # load-bearing parts are: type, scope, colon, subject body,
           # no trailing period.
           pattern = re.compile(
-              r"^(refactor|feat|fix|chore|docs|test)"
-              r"\(([a-z][a-z0-9-]*(?:/[a-z0-9-]+)?)\):\s+"
+              r"^(refactor|feat|fix|chore|docs|test|ci)"
+              r"\(([a-z][a-z0-9-]*(?:/[a-z0-9-]+)?)\)!?:\s+"
               r"(\S.+?)$"
           )
 
