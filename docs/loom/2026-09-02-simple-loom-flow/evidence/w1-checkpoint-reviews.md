@@ -26,3 +26,9 @@
 | reviewer | lens | verdict | 摘要 |
 |---|---|---|---|
 | opus-review-code-w1c | code＋gate | NEEDS_REVISION | N1–N6 全關；🔴 F1 `python3 attack.py ; true` 洗白 exit（根因＝執行記錄字串）→ 改為執行 artifact／宣告指令、不經 shell；🔴 F2 零 trailer 閘只看分支彙總，docs commit 帶 trailer 即可掩護無 trailer 的 code commit → 改逐 commit 要求；🟡 fallback 用 match 非 fullmatch；🟡 `#` 剝除不認引號；🟢 review-only-head 失敗即 early return。並確認 13 支對抗探針中 5 支是被 package-tests 泛用規則擋而非目標規則（fixture 未宣告測試指令）→ 改 fixture |
+
+## wave-end 複審第四輪（ffd9b90a）
+| reviewer | lens | verdict | 摘要 |
+|---|---|---|---|
+| opus-review-code-w1d | code＋gate | PASS_WITH_NOTES | F1–F3 全關；13 支閉環探針（`; true`／`\|\| true`／不可執行 artifact／`..` 逃逸／宣告指令帶 metachar／引號解析／逐 commit trailer 三型／fullmatch）0 mismatch；timeout 兩分支 fail-closed；evil merge 被擋。notes：🟠 artifact 內容無機械約束（空殼檔合格）＝最弱環，§7 已記；🟠 對抗套件 fixture 缺 trailer 致 F2 規則遮蔽判定（p06 真逃脫＝散文限制，設計接受）；🟡 §7 句自相矛盾（已修）、死常數、測試 `or` 恆真、timeout 無回歸測試 |
+處置：§7／intent Open question（20b4074d）；notes #3–#6＋探針套件移入 evidence/probes-w1/（sonnet）。W1 輪＝PASS_WITH_NOTES，reviewed_sha → ffd9b90a。
