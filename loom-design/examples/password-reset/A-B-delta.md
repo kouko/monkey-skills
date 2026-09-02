@@ -1,5 +1,7 @@
 # A/B differential dogfood — password reset via emailed link
 
+> **ARCHIVED (loom 1.0, 2026-09-02)** — this record was produced by `spec-expansion`, `completeness-critic` and their siblings, skills that no longer exist. It is kept as evidence of what they did, not as instructions for anything to run.
+
 > **Seed**: "Let a user reset their password via an emailed link."
 > **Date**: 2026-06-11
 > **Arm A**: loom-spec (spec-expansion 3-phase + completeness-critic), blind to Arm B → `proposal.md` + `specs/password-reset/spec.md`

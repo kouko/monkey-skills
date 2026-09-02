@@ -10,6 +10,7 @@
 |--------|---------|---------:|-----------:|------|
 | [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skill — planning、code、design、research、copywriting を checkpoint ベースの quality gate と共に提供。 |
 | [`loom-code`](loom-code/) | 1.0.0 | 5 | 0 | write-plan・build・review・ship・maintain の 5 ステーションが 1 つの変更を計画からマージ済み PR まで運び、checker が push のたびにレビューを再計算する。Claude Code + Codex 対応。 |
+| [`loom-design`](loom-design/) | 1.0.0 | 4 | 0 | capture-intent・write-spec の 2 ステーションが、曖昧なアイデアを確認済みの intent と、ユーザー自身の言葉で読み返す spec に変える。product-principles と design-system の 2 ツール付き。loom-code の contract package を読む。Claude Code + Codex 対応。 |
 | [`loom-workflow`](loom-workflow/) | 1.0.0 | 7 | 4 | git ベースの project memory、意思決定 brief、critique、recap、handoff、session distill 向けの loom workflow skills。 |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | 問題の明確化と深い推論のための哲学的思考 framework。 |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |

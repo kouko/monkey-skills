@@ -1,5 +1,7 @@
 # Proposal — shift-scheduler
 
+> **ARCHIVED (loom 1.0, 2026-09-02)** — this record was produced by `spec-expansion`, `completeness-critic` and their siblings, skills that no longer exist. It is kept as evidence of what they did, not as instructions for anything to run.
+
 **Seed:** "Let a manager auto-generate a weekly staff schedule respecting
 availability, skills, and labor rules."
 

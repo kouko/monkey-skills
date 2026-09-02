@@ -1,5 +1,7 @@
 # A/B dogfood — cross-seed summary (7 seeds)
 
+> **ARCHIVED (loom 1.0, 2026-09-02)** — this record was produced by `spec-expansion`, `completeness-critic` and their siblings, skills that no longer exist. It is kept as evidence of what they did, not as instructions for anything to run.
+
 > **Date**: 2026-06-11
 > **Design**: per seed, two mutually-blind subagents — Arm A (loom-design: spec-expansion 3-phase + completeness-critic) vs Arm B (a capable model's unaided one-shot brainstorm). Orchestrator diffs. Goal: test whether the scaffold's omission-recall beats a strong baseline, and where.
 > All 7 Arm-A outputs pass `validate_spec_output.py` (exit 0): 5 visible sections, non-empty blind spots, OpenSpec-pure delta with GIVEN/WHEN/THEN scenarios.

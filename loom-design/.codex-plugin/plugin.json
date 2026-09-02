@@ -1,7 +1,7 @@
 {
   "name": "loom-design",
-  "version": "0.6.0",
-  "description": "The loom family's design side: discovery (what users need, is it worth building) → product principles → interface design → spec, plus the deterministic pipeline conductor.",
+  "version": "1.0.0",
+  "description": "Two stations — capture-intent, write-spec — turn a rough idea into a confirmed intent and a spec the user reads back in their own words, plus two tools: product-principles and design-system. Reads loom-code's contract package. Claude Code + Codex.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -11,27 +11,25 @@
   "license": "MIT",
   "keywords": [
     "loom-design",
-    "discovery",
-    "user-insights",
-    "business-value",
+    "capture-intent",
+    "write-spec",
     "product-principles",
+    "design-system",
+    "intent",
+    "spec",
+    "ui-flows",
+    "design-tokens",
     "interface-design",
     "ui-ux",
-    "design-system",
     "constitution",
     "principles",
-    "interaction-flows",
-    "spec-expansion",
-    "completeness-critic",
-    "conductor",
-    "pipeline-driver",
     "portable"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "loom-design",
-    "shortDescription": "Discovery → principles → interface design → spec, the loom family's design side",
-    "longDescription": "loom-design is the design-side plugin of the loom suite. One entry router (using-loom-design) routes to four stations: discovery (user-insights maps evidence-linked needs; business-value renders an adversarial worth-it verdict), product-principles (a PRINCIPLES.md constitution — north star + falsifiable principles), interface-design (design-system emits DESIGN.md tokens, interaction-flows emits ui-flows.md, design-critic hunts surface omissions), and spec (spec-expansion fans a seed into a high-recall spec draft, completeness-critic adversarially hunts omissions). It also ships using-loom-pipeline, the deterministic conductor that drives the four Workflow-driven stations end-to-end — NOTE: the conductor requires the Claude Code Workflow primitive and is N/A on Codex hosts, where the stations run interactively instead.",
+    "shortDescription": "Intent and spec stations for the loom flow, for Codex CLI",
+    "longDescription": "The design side of the loom flow. capture-intent interviews the user until the change has a problem statement in their own words, writes it as an intent, and reads it back for confirmation — decision point ①, the first of the three the user ever answers. write-spec turns that confirmed intent into a spec: requirements with acceptance criteria, the design decisions and who made each, the evidence for the current state, and the UI flows; for a product change it reads the visible behaviour back before any plan exists — decision point ②. Two tools sit beside them: product-principles writes a product's PRINCIPLES.md and records who ratified it, and design-system emits DESIGN.md tokens (or a conventions stub for TUI/CLI) and never blocks. Verdicts are not rendered here — the spec goes to loom-code's review station under its spec and design-conformance lenses. This plugin reads loom-code's versioned contract package and declares the version it requires.",
     "developerName": "kouko",
     "category": "Productivity",
     "capabilities": [
@@ -40,10 +38,10 @@
       "Write"
     ],
     "defaultPrompt": [
-      "What do users actually need here?",
+      "I have a rough idea — help me pin down what the change actually is.",
+      "Turn this confirmed intent into a spec.",
       "Draft the product principles for this idea.",
-      "Design the UI/UX for this feature.",
-      "Expand this seed into a spec."
+      "Design the look for this feature."
     ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/loom-design",
     "brandColor": "#0E7490"

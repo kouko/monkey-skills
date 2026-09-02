@@ -1,5 +1,7 @@
 # Proposal — Revenue Split (incoming-payment allocation)
 
+> **ARCHIVED (loom 1.0, 2026-09-02)** — this record was produced by `spec-expansion`, `completeness-critic` and their siblings, skills that no longer exist. It is kept as evidence of what they did, not as instructions for anything to run.
+
 **Seed:** "Let the system split each incoming payment across multiple revenue
 accounts by configurable rules."
 
