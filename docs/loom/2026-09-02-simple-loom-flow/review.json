@@ -1935,6 +1935,51 @@
    "model": "opus",
    "started": "2026-09-02T12:52:41Z",
    "fresh_context": true
+  },
+  {
+   "task": "W4-03",
+   "role": "implementer",
+   "agent_id": "opus-replay-1",
+   "model": "opus",
+   "started": "2026-09-02T13:12:48Z",
+   "fresh_context": true
+  }
+ ],
+ "questions": [
+  {
+   "decision_point": 1,
+   "text": "你要的是簡化 loom：基本知識的使用者只答三處…對嗎？（intent 覆述，三次重確認：跨 vendor 選配、Acceptance #6 對象、Acceptance #2 切換日）",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "要不要用第二家模型（Codex）當 reviewer？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "產品原則覆述（誰用、五條不能妥協、不做、最怕、定死）對嗎？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "goal-create／dbt-model-style 算不算 loom skill 數？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "loom-workflow 的 requires-contract 降到 decision-map？",
+   "type": "consequence"
+  },
+  {
+   "decision_point": 2,
+   "text": "spec 可見行為：人至少確認可見操作與反應；三處重確認（不可逆動作必問、盲跑報告兩固定段、問題三型判準）對嗎？",
+   "type": "behaviour"
+  },
+  {
+   "decision_point": 2,
+   "text": "單向門：重大架構／框架／輸出品質選型要問使用者嗎？加不加語言辨識模型這類？",
+   "type": "consequence"
   }
  ]
 }
