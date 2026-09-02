@@ -19,7 +19,7 @@
 |---|---|---|---|
 | **loom-design** | 要什麼、為什麼、應該長怎樣 | 站：capture-intent、write-spec；工具：product-principles、design-system | 可選 |
 | **loom-code** | 怎麼做 | 站：write-plan、build、review、ship、maintain；checker；host hooks；reference 一份；intent／spec／plan／review 的檔案契約 | 可獨立 |
-| **loom-workflow** | 使用者點名的工具 | decision-map、handoff、recap、cot-explain、distill、git-memory、independent-advisor、critique | 可選 |
+| **loom-workflow** | 使用者點名的工具 | decision-map、handoff、recap-state、cot-explain、distill-sessions、git-memory、independent-advisor、critique（＋2 個不計數的 standalone skill：goal-create、dbt-model-style） | 可選 |
 
 - 依賴單向：loom-design 與 loom-workflow 依賴 loom-code 的 **versioned contract package**（schema、checker）；兩者各宣告 `requires-contract: >=<major>.<minor>`，站點啟動時對 manifest 版本重算，不符→BLOCK 印「請更新 loom-code」。design 寫檔、code 讀檔；decision-map 寫 intent.md；沒有反向呼叫。
 - 契約由消費者定義：schema 與 checker 住在 loom-code；loom-design 的站是「產生這個格式的比較好的方法」。
@@ -35,7 +35,7 @@
 | **spec.md** | Claude，套 standing docs；含 UI flows 段 | **決策點 ②（只在 `kind: product`）**：使用者確認可見行為——Requirements 與 UI flows 用白話呈現，Design decision 以下不呈現；engineering 不問 | `docs/loom/<change-id>/spec.md`（只在 `needs-design: yes`） |
 | **plan.md** | Claude | 無；agent-decided | `docs/loom/<change-id>/plan.md` |
 | **diff / PR** | Claude | **決策點 ③**：使用者讀盲跑報告後驗收 | git |
-| **review.json** | review 站 | 無 | `docs/loom/<change-id>/review.json`（入版控；`.git/loom/ready.json` 為本機鏡像）|
+| **review.json** | review 站 | 無 | `docs/loom/<change-id>/review.json`（入版控） |
 
 memory（git trailer ＋ `docs/loom/memory/`）與 standing docs（`PRINCIPLES.md`、`DESIGN.md`、`KICKOFF-DEFAULTS.md`）不是 per-change artifact。evidence 是附件（§9）。
 
@@ -56,10 +56,10 @@ status: open | confirmed <date> | withdrawn — <reason>   # 缺＝open
 ## Constraints
 ## Value case         ← 可選；product 的 GO/NO-GO 與理由
 ## Out of scope
-## Open questions
+## Open questions     ← 必填；沒有就寫 `- none`（intent.schema 擋空段）
 ```
 
-- `needs-design: yes` 當任一成立：(a) 動到使用者看得到的介面——任何使用者讀或輸入的表面（GUI、TUI、CLI 參數與輸出、對外 API）——且無 DESIGN.md／ui-flows 覆蓋；(b) 多狀態或多物件行為且無 spec。否則 `no`。所有 kind 同一判定。(a) 由 checker 對 repo 宣告的介面表面 glob **重算**，agent 標 `no` 而 diff 碰到就擋。
+- `needs-design: yes` 當任一成立：(a) 動到使用者看得到的介面——任何使用者讀或輸入的表面（GUI、TUI、CLI 參數與輸出、對外 API）——且無 DESIGN.md／ui-flows 覆蓋；(b) 多狀態或多物件行為且無 spec。否則 `no`。所有 kind 同一判定。(a) 由 checker 對 repo 宣告的介面表面 glob **重算**，agent 標 `no` 而 diff 碰到就擋（`intent.needs-design-recompute`）。`kind: engineering` 也對同一組 glob 重算：diff 碰到介面表面時 `kind: engineering` 直接被擋，不論 `needs-design` 怎麼標（`intent.kind-recompute`）。
 - **決策點 ①**：用白話覆述 Problem／Acceptance 給使用者，使用者說「對」→ agent 寫 `status: confirmed <date>`。這個「覆述並確認」是 contract package 裡的 **action**，不屬於任何一站：有 loom-design 時由 capture-intent 做；只裝 loom-code 時由 write-plan 在收到未確認的 intent 時做（先確認再拆任務）。這是記錄，不是防偽。未確認的 intent 可以 commit（backlog）；write-spec／write-plan 只收 confirmed 的。
 - `needs-design` 行必須帶理由，且 intent 的 commit message 含同一行。
 - 狀態：open → confirmed → closed（PR merged）；withdrawn＝closed。
@@ -70,6 +70,7 @@ status: open | confirmed <date> | withdrawn — <reason>   # 缺＝open
 ```
 # <title>
 intent: <change-id>@<sha>
+confirmed-behavior: <date> @<sha7>   # 可選；kind: product 必填（§2b、§4）
 ## Requirements        ← REQ-<n> — <name>，每條可驗，並對回 intent 的 Acceptance      【使用者可讀；product 時呈現給使用者確認】
 ## Design decision     ← 做什麼、不做什麼、為什麼；agent-decided 的岔路各附一句理由   【混合；不呈現】
 ## Alternatives considered                                                          【工程；不呈現】
@@ -77,7 +78,7 @@ intent: <change-id>@<sha>
 ## UI flows            ← 有介面必填：每個操作與系統的反應（指令／畫面 → 輸出／狀態）；無介面 N/A 【使用者可讀；product 時呈現給使用者確認】
 ```
 
-- **決策點 ②（product 限定）**：write-spec 完成後、spec 審查前，agent 把 Requirements 與 UI flows 用白話呈現（「你下 X 會看到 Y」），使用者說「對」或改；改了重寫再呈現。這是「行為是不是我要的」的確認，不是品質審查；Design decision 以下永不呈現。agent 寫 `confirmed-behavior: <date>` 進 spec frontmatter；write-plan 對 product 只收有此行的 spec。engineering 的 spec 不問，agent-decided。
+- **決策點 ②（product 限定）**：write-spec 完成後、spec 審查前，agent 把 Requirements 與 UI flows 用白話呈現（「你下 X 會看到 Y」），使用者說「對」或改；改了重寫再呈現。這是「行為是不是我要的」的確認，不是品質審查；Design decision 以下永不呈現。agent 寫 `confirmed-behavior: <date> @<sha7>` 進 spec frontmatter（sha7 是這一版 spec 內容的 blob sha，spec 決策點②後重寫即不再匹配）；write-plan 對 product 只收有此行的 spec。engineering 的 spec 不問，agent-decided。
 
 ### 2d. plan.md
 
@@ -88,9 +89,9 @@ Task DAG（每 task 穩定 ID）／檔案／測試／風險。`needs-design: no`
 ```
 reviewed_sha         # 初值 branch base；只有 PASS／PASS_WITH_NOTES 推進
 scope                # 這一輪審的是什麼（spec | code | …）
-verdicts[]           # 每個 reviewer 一份：{reviewer, vendor, model, lens, verdict, dimension_scores, findings}
+verdicts[]           # 每個 reviewer 一份：{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback, spec_sha}；spec_sha（可選）＝這輪讀的 spec blob sha，intake.spec-pass 拿它與磁碟上的 spec 比對
 vendors[]            # 本次 checkpoint 用到的 vendor 清單（記錄，不是條件）
-probes[]             # 實際跑過的 probe／測試／盲跑：{kind, command, sha, result, artifact}；sha == reviewed_sha
+probes[]             # 實際跑過的 probe／測試／盲跑：{kind, command, sha, result, artifact, scope}；sha == reviewed_sha；scope 說這筆探針打的是什麼（spec 閘只收 scope: spec 的對抗探針）；checker 在乾淨工作樹自己執行 artifact 或宣告指令，從不執行 command 這個記錄字串（§7）
 open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> | dismissed: <reason> by <who>}
 questions[]          # 每個決策點問過的問題：{decision_point, text, type: what|behaviour|done|consequence}；§4 三型判準與 §11 提問數量測讀這裡
 dispatch[]           # build／review 站每次派工一筆：{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}；push 規則 reviewer≠implementer 與 dismissed 身分讀這裡
@@ -111,7 +112,7 @@ dispatch[]           # build／review 站每次派工一筆：{task, role: imple
 | **reference** | 建議性規則，不是 skill | 1 | engineering-baseline＝tdd-iron-law ＋ systematic-debugging |
 | **action** | 站內可執行步驟，不是 skill，不計 | — | package 測試、UI 盲跑、平行派工、worktree |
 
-skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2 個 standalone 工具——goal-create、dbt-model-style——不計）。名詞 ≤ 40（計數規則：artifact 名、站／工具／action 名、frontmatter 與 JSON 頂層欄位名、狀態物件名；standalone 工具不計；不數段落標題、欄位子值、型別列舉值、git 詞、alias）。
+skill 36 → 17（7 站 + 10 計數工具；1 個 reference 不是 skill；2 個 standalone 工具——goal-create、dbt-model-style——不計）。名詞計數規則：artifact 名、站／工具／action 名、frontmatter 與 JSON 頂層欄位名、狀態物件名；standalone 工具不計；不數段落標題、欄位子值、型別列舉值、git 詞、alias。名詞手數 2026-09-03：61（清單見 review record；超過本 plan 未承諾的 ≤40，如實記錄不裁剪）。
 
 ## 4. 入口、路由、人類決策點
 
@@ -156,18 +157,20 @@ skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2
 ## 7. 決定性層（擋手滑，靠重算不靠宣稱）
 
 - **建議性**：skill 散文、standing docs、reference。不用散文當閘。
-- **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」：
-  - intent：schema；product 的 Problem 禁識別字；`needs-design` 行帶理由且進 commit message；`no` 但 diff 碰介面表面 glob → 擋。
-  - 站點啟動：`contract.requires`——loom-design／loom-workflow 的站對 manifest 版本重算，不符→擋。
-  - 收件：write-spec／write-plan 只收 `status: confirmed` 的 intent；write-plan 在 `needs-design: yes` 時只收有 spec PASS 的，且 `kind: product` 時另要求 spec 有 `confirmed-behavior:` 行。
-  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有 package 測試記錄，且 artifact 型別要求對抗時有 ≥3 筆 `kind: adversarial` 記錄；**checker 在乾淨工作樹（== reviewed_sha）自行執行，以自己觀察到的 exit code 為準，且從不執行記錄裡的字串**：package 測試跑的是 KICKOFF-DEFAULTS 宣告的指令（argv，不經 shell），adversarial 跑的是 `artifact` 檔本身（依副檔名 argv 執行；exit 0＝案例被擋住）；`command` 只是記錄，必須與實際執行物一致（W1 對抗：`; true` 可洗白 shell 字串的 exit）——信任邊界：被 checkout 的分支其 review.json 指到的 `artifact` 檔會在 push 前被 checker 執行；artifact 的**內容**沒有機械約束（空殼攻擊檔也算「跑得過」），唯一把關是 reviewer 鏡頭讀它——這是本設計已知的最弱環（W1 對抗第四輪），這在 §0 的單人／自家 agent 威脅模型下可接受，多人 repo 要另加 branch protection、`verdicts[]` ≥ 2（vendor 數不是條件；`fresh-context` 是 dispatch 記錄欄位，不是可重算條件）、reviewer ≠ implementer、`dismissed` 者屬 dispatch 的審查角色。
+- **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」，`--list-rules` 印 26 條、按 `<area>.<name>` 分組（下方每類一句，id 見括號）：
+  - **intent.\*（5）**：schema 齊全（`intent.schema`）；product 的 Problem 段禁識別字（`intent.product-no-identifiers`）；`needs-design` 行帶理由且進 commit message（`intent.needs-design-reason`）；`needs-design: no` 但 diff 碰介面表面 glob → 擋（`intent.needs-design-recompute`）；`kind: engineering` 但 diff 碰介面表面 glob → 擋（`intent.kind-recompute`，§4）。
+  - **intake.\*（4）**：write-spec／write-plan 只收 `status: confirmed` 的 intent（`intake.confirmed`）；write-plan 在 `needs-design: yes` 時只收 spec 最新一輪全 PASS／PASS_WITH_NOTES 的（`intake.spec-pass`）；`kind: product` 另要求 spec 有 `confirmed-behavior:` 行（`intake.confirmed-behavior`）；一個 plan 標 `review: after-task` 免費額度 2，超過要在該 task 行寫理由（`intake.after-task-budget`）。
+  - **contract.\*（1）**：loom-design／loom-workflow 的站啟動時對 manifest 版本重算，不符→擋（`contract.requires`）。
+  - **spec.\*（2）**：Requirements 每條 `REQ-<n> — <name>` 連續唯一且指得回 intent 的 Acceptance 編號（`spec.req-grammar`）；diff 碰介面表面 glob 時 UI flows 不得答 N/A（`spec.ui-flows-recompute`）。
+  - **push.\*（11）**：HEAD 是 review-only commit 且只動 `review.json`（`push.review-only-head`）；`reviewed_sha == HEAD^`（`push.reviewed-sha`）；`review.json` 逐鍵對齊 manifest 宣告的容器型別（`push.review-schema`）；`open_findings` 全關（`push.open-findings-closed`）；`probes[]` 有這個分支的 package 測試記錄且 pass（`push.probes-package-tests`）；code／spec／skill／gate artifact 有 ≥3 筆 `kind: adversarial` 記錄且都通過（`push.probes-adversarial`）；最新一輪 `verdicts[]` ≥ 2 個 fresh-context reviewer（`push.verdicts-ge-2`）；dispatch 記錄裡沒有一個 reviewer／blind-runner／adversary 同時是 implementer（`push.reviewer-ne-implementer`）；每筆 `dismissed` 都指名一個沒實作過它的 dispatch 角色（`push.dismissed-by-reviewer`）；分支上每個 `Task: <id>` trailer 都對得到一筆 implementer dispatch（`push.dispatch-covers-tasks`）；KICKOFF-DEFAULTS 記的第二家 vendor 若出現在最新一輪 verdicts 或有缺席理由（`push.second-vendor-honoured`）。**checker 在乾淨工作樹（== reviewed_sha）自行執行，以自己觀察到的 exit code 為準，且從不執行記錄裡的字串**：package 測試跑的是 KICKOFF-DEFAULTS 宣告的指令（argv，不經 shell），adversarial 跑的是 `artifact` 檔本身（依副檔名 argv 執行；exit 0＝案例被擋住）；`command` 只是記錄，必須與實際執行物一致（W1 對抗：`; true` 可洗白 shell 字串的 exit）——信任邊界：被 checkout 的分支其 review.json 指到的 `artifact` 檔會在 push 前被 checker 執行；artifact 的**內容**沒有機械約束（空殼攻擊檔也算「跑得過」），唯一把關是 reviewer 鏡頭讀它——這是本設計已知的最弱環（W1 對抗第四輪），這在 §0 的單人／自家 agent 威脅模型下可接受，多人 repo 要另加 branch protection（`fresh-context` 是 dispatch 記錄欄位，不是可重算條件）。
+  - **standing.\*（3）**：缺 `PRINCIPLES.md`／`DESIGN.md` 印固定三行 WARN、不擋（`standing.warn`）；`kind: product` 且無 ratified `PRINCIPLES.md` → 拒收（`standing.product-principles-reject`）；KICKOFF-DEFAULTS `standing-docs: waived` 只靜音 WARN，不解除 product 拒收（`standing.silence`）。
   - 明說：這層擋的是漏步驟，不擋有目標的 agent；多人 repo 要作弊防護時加 branch protection。
 - **稽核**：git（trailer、review.json）。
 
 ### 7a. host hooks
 
 - Claude Code：plugin hooks，零動作。
-- Codex：adopting repo 內 `.codex/hooks.json` ＋ checker 副本，站第一次碰到 repo 時寫入並以 `chore(loom): scaffold hooks <version>` commit。**hooks.json 的 command 字串固定為相對路徑且不含版本**（`.codex/hooks/loom-checker`），升級只換 checker 副本內容、版本戳寫在副本檔內——因為 Codex 的 trust 綁 hook 定義，定義不變就不重授信（實測 run E）；這是「每 repo 一次授信」成立的條件。已知限制：repo 內 checker 副本可被工作分支上的 agent 改寫而 trust 不撤（run E）；本層不防有目標的 agent（§0），需要時靠 CI 比對 main 的 digest。順序：寫入 → 若有寫入立刻 probe（派一個必被擋的假指令）→ 沒被擋＝安全帶不存在 → BLOCK，指名「請在 Codex 跑 /hooks」→ 使用者授信 → 下次 probe 通過才繼續。fail-closed：shim 或 checker 執行錯誤一律擋。
+- Codex：adopting repo 內 `.codex/hooks.json` ＋ checker 副本，站第一次碰到 repo 時寫入並以 `chore(loom): scaffold hooks <version>` commit。副本是一個小套件、不是單一檔：`.codex/hooks/loom-checker`（固定相對路徑的 shim，command 字串本身不含版本）旁放 `loom_checker.py`、`git_exec.py`、`contract/`（manifest 與 templates 的副本），因為 checker 執行時要 import `git_exec` 並讀自己的 contract manifest。**hooks.json 的 command 字串固定為相對路徑且不含版本**，升級只換 checker 副本內容、版本戳寫在副本檔內——因為 Codex 的 trust 綁 hook 定義，定義不變就不重授信（實測 run E）；這是「每 repo 一次授信」成立的條件。已知限制：repo 內 checker 副本可被工作分支上的 agent 改寫而 trust 不撤（run E）；本層不防有目標的 agent（§0），需要時靠 CI 比對 main 的 digest。順序：寫入 → 若有寫入立刻 probe（派一個必被擋的假指令）→ 沒被擋＝安全帶不存在 → BLOCK，指名「請在 Codex 跑 /hooks」→ 使用者授信 → 下次 probe 通過才繼續。fail-closed：shim 或 checker 執行錯誤一律擋。
 - 不做 git hook。
 - CI 是**可選的第二層**：有 CI 的 repo 用同一支 checker 重跑相同規則；沒有的 repo 不假裝有。
 
@@ -218,3 +221,4 @@ skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2
 | v6–v7 | Codex 情境審＋冷讀者 | 12＋5 修；拓樸全對，14 分鐘 |
 | v7→v10 | 紅隊（11/13 閘可偽造）＋儀式成本量測（人類決策點 6→10 變重）＋目標敘述重定 | 威脅模型改為「品質不夠而人看不出」；人類決策點 4→2；刪 waiver／approval commit／身分錨；獨立審查升為必要（≥2 fresh reviewer；跨 vendor 當時寫必用，spec 審查後改為使用者選配）；盲跑報告＝驗收介面 |
 | v10 | 冷讀者；決策點 ② 新增（product 的 spec 可見行為確認） | 兩條路徑、決策點、單 vendor 降級全對；每個問使用者的時刻皆判定基本知識可答；抓到「決策點①機制只在 capture-intent」與「after-task／wave-end 是一次還是兩次」——已修。25 分鐘（未達 15；文件密度是主因，落地後 SKILL.md 各站只載自己那段） |
+| W0–W2 落地 | checkpoint review（見 `evidence/w{0,1,2}-checkpoint-reviews.md`） | W0 三輪：after-task NEEDS_REVISION→修、wave-end NEEDS_REVISION→修、wave-end 複審 PASS_WITH_NOTES。W1 五輪：after-task、wave-end（4 個致命類別 F1–F4 從根修——push 掛住、push regex 放行、Codex scaffold 副本殘缺、dispatch 契約文件與程式脫節）、複審三輪至 PASS_WITH_NOTES；冷讀 Task A 首輪 7 猜測，複審輪達零猜測（開檔 2）。W2 wave-end 一輪四份 verdict（docs／adversary NEEDS_REVISION、code PASS_WITH_NOTES、盲跑走得通）；冷讀 Task B 該輪 3 猜測（站序表無路徑），已有修正 commit（`b435739e`、`3b5948c2`）但 evidence 檔未記到再審輪與零猜測——W2 尚未複審到位，與本行前段「W0–W2 落地」的其餘兩 wave 不同步，留給 W3／W4 checkpoint 補證 |

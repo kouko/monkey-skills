@@ -152,6 +152,7 @@ checkpoint：W3 結束必跑。
 - 測：無（docs 鏡頭在 W3 checkpoint 審）。
 - 殘：§1 copies line updated for one-way-door (W2)。
 - 風：改 spec 會使 review.json 的 scope PASS 失效——規則寫死在上面。
+- done（2026-09-03）：§1 工具清單改用完整 skill 名＋standalone 註記（copies 行 checker＋one-way-door 措辭核對無誤，未動）；§2c 補 `confirmed-behavior: <date> @<sha7>`；§2e 刪 `.git/loom/ready.json` 子句、probes 補 `scope`、verdicts 補 `spec_sha`；§3 換計數句、記名詞手數 61（2026-09-03）；§4 補 `intent.kind-recompute` 一句；§7 26 條規則按 area 分組列 id（intent 5／intake 4／contract 1／spec 2／push 11／standing 3，非 plan 原估的 6/10 分法，已用 `--list-rules` 實測校正）；§7a 補 scaffold 檔案層（shim＋`loom_checker.py`＋`git_exec.py`＋`contract/`）；§12 加 W0–W2 落地列。`spec.md` 未動；發現 spec.md 既有 `confirmed-behavior: 2026-09-02` 缺 `@<sha7>`，與 manifest／概念模型的新 grammar 不符，留待 review 站處理，見 review record。
 
 ### W4 — 驗收（REQ-9／REQ-10／REQ-2）與盲跑報告
 checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
