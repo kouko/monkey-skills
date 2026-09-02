@@ -26,6 +26,23 @@ Schema and operation authority lives in `references/map-format.md`. The
 prototype boundary lives in `references/prototype-contract.md`. Read both
 before charting or mutating a Map.
 
+## Requires loom-code
+
+This is the only loom-workflow skill that depends on loom-code: starting a
+delivery writes an intent from loom-code's contract template, and the
+checker validates it. Every other loom-workflow tool works with
+loom-workflow installed alone. Before the first delivery operation on a
+repo, run the contract check and stop on anything but exit 0:
+
+```
+python3 <loom-code checkout>/scripts/loom_checker.py contract --require 1.0
+```
+
+(Codex form: `python3 .codex/hooks/loom_checker.py contract --require 1.0`.)
+Exit 1 means loom-code is missing or older than contract 1.0 — tell the
+user to install or update loom-code; charting, grilling, research and
+prototype tickets do not need it.
+
 ## Store and lifecycle
 
 Every Map has stable identity at `docs/loom/maps/<map-id>/` and uses

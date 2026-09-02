@@ -21,7 +21,7 @@
 | **loom-code** | 怎麼做 | 站：write-plan、build、review、ship、maintain；checker；host hooks；reference 一份；intent／spec／plan／review 的檔案契約 | 可獨立 |
 | **loom-workflow** | 使用者點名的工具 | decision-map、handoff、recap-state、cot-explain、distill-sessions、git-memory、independent-advisor、critique（＋2 個不計數的 standalone skill：goal-create、dbt-model-style） | 可選 |
 
-- 依賴單向：loom-design 與 loom-workflow 依賴 loom-code 的 **versioned contract package**（schema、checker）；兩者各宣告 `requires-contract: >=<major>.<minor>`，站點啟動時對 manifest 版本重算，不符→BLOCK 印「請更新 loom-code」。design 寫檔、code 讀檔；decision-map 寫 intent.md；沒有反向呼叫。
+- 依賴單向：loom-design 與 loom-workflow 依賴 loom-code 的 **versioned contract package**（schema、checker）；loom-design 在 plugin 層宣告 `requires-contract: >=<major>.<minor>`（兩站都用契約）；loom-workflow 只有 decision-map 一個 skill 在交付前跑 `contract --require`，其餘工具單獨安裝可用（kouko 2026-09-03）；不符→BLOCK 印「請更新 loom-code」。design 寫檔、code 讀檔；decision-map 寫 intent.md；沒有反向呼叫。
 - 契約由消費者定義：schema 與 checker 住在 loom-code；loom-design 的站是「產生這個格式的比較好的方法」。
 - 仍需同步的功能副本，明列：checker（Codex scaffold 的 repo 內副本）、單向門類別清單（loom-code write-plan reference 為正本，loom-design 兩站為副本，測試釘住）。除此之外沒有。
 

@@ -8,7 +8,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 Breaking. loom-workflow keeps eight counted tools plus two standalone
 skills (`goal-create`, `dbt-model-style`); the plugin now declares
-`requires-contract: ">=1.0"` against loom-code's contract manifest.
+the contract check (`loom_checker.py contract --require 1.0`) lives in decision-map only — the one skill that needs loom-code; the plugin itself declares no `requires-contract`, so handoff, recap-state, cot-explain, distill-sessions, git-memory, independent-advisor, critique, goal-create and dbt-model-style work with loom-workflow installed alone.
 
 ### Removed
 
