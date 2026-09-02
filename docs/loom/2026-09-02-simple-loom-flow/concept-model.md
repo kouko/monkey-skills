@@ -130,7 +130,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 ## 5. review 站＝checkpoint review（機器是唯一的審查者）
 
 - **一份契約**：verdict schema、`reviewed_sha`、輪次規則一套。鏡頭多個（code 11 維、docs 5 維；spec-conformance、design-conformance 各一維；correctness 必跑 probe）。
-- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer（同 host 的兩個 fresh session 即可）。**跨 vendor 是選配，由使用者選**：KICKOFF-DEFAULTS 記 `second-vendor: <cli> | none — <reason> (<date>)`（vendor＝不同模型供應商的可非互動 CLI，例如 Codex CLI、Gemini CLI）。未記錄且站偵測到第二家 CLI 時，在該 repo **第一次決策點①裡順帶建議一次**（一段白話：能打到同模型盲點、每次約幾分鐘與額度）並記下使用者的選擇；之後不再提。選了就用，沒選就不用，兩者都不 WARN、不擋。review.json 只記 `vendors: [...]`。reviewer 分歧記進 verdicts，不平均。
+- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer（同 host 的兩個 fresh session 即可）。**跨 vendor 是選配，由使用者選**：KICKOFF-DEFAULTS 記 `second-vendor: <cli> | none — <reason> (<date>)`（vendor＝不同模型供應商的可非互動 CLI，例如 Codex CLI、Gemini CLI）。未記錄且站偵測到第二家 CLI 時，在決策點①裡順帶建議（一段白話：能打到同模型盲點、每次約幾分鐘與額度），**同一個 change 至多一次**，並把選擇記進 KICKOFF-DEFAULTS；記了就不再提。選了就用，沒選就不用，兩者都不 WARN、不擋。review.json 只記 `vendors: [...]`。reviewer 分歧記進 verdicts，不平均。
 - **何時跑**：wave 結束算未審 delta，任一超過門檻（8 檔或 400 行，實驗預設，replay 後固定）才跑；branch 結束必跑；含 after-task 的 wave 結束一律跑。`needs-design: yes` 時 spec 進 plan 前必跑 spec 型別的「讀＋對抗」且 PASS。build 階段 checkpoint ≤ 5（plan 深度上限）。
 - **after-task**：plan 標記的 task commit 後立刻跑同一套；每 plan ≤ 2。它是獨立的一次 checkpoint；該 wave 結束時的 checkpoint 是**另一次**（只審 after-task 之後的 delta ＋ 跨任務一致性；delta 為零時只跑一致性，很便宜）。
 - **第 N 次審什麼**：`reviewed_sha` 後的 delta ＋ 跨任務一致性 ＋ 回歸 probe。
@@ -204,7 +204,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 ## 12. 驗收與審查紀錄
 
-冷讀者只拿本頁，15 分鐘內零猜測地說出指定任務的檔、決策點、checker、checkpoint。
+驗收對象是落地後各站的 SKILL.md（intent Acceptance #6）：冷讀者只拿該站文件，15 分鐘內零猜測說出指定任務的檔、決策點、checker、checkpoint；零猜測優先於時間。本頁的冷讀結果只作記錄。
 
 | 版本 | 檢查 | 結果 |
 |---|---|---|

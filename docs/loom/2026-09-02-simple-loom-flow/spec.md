@@ -8,7 +8,7 @@ REQ-1 — 決策點數固定
 REQ-2 — 兩個 host 一致
   Claude Code 與 Codex CLI 走出相同的檔案、決策點、閘門；Codex 只多一次每 repo 的 `/hooks` 授信，成立條件是 `.codex/hooks.json` 的 command 字串固定（相對路徑、不含版本），升級只換 checker 副本內容。→ Acceptance #2
 REQ-3 — 機器審查為唯一品質來源
-  每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer；跨 vendor 為使用者常設選擇（KICKOFF-DEFAULTS `second-vendor:`），機制只在首次偵測到第二家 CLI 時建議一次；盲跑 agent ≠ implementer。→ Acceptance #1
+  每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer；跨 vendor 為使用者常設選擇（KICKOFF-DEFAULTS `second-vendor:`），機制在同一個 change 裡至多建議一次，答案記住後不再問；盲跑 agent ≠ implementer。→ Acceptance #1
   （對抗動作按 artifact 型別觸發屬 Design decision，不對應 Acceptance。）
 REQ-4 — 盲跑報告是驗收介面
   對 intent 的每條 Acceptance（product 時加 spec 的 UI flows）寫「怎麼試、結果、證據」。→ Acceptance #1
@@ -22,7 +22,7 @@ REQ-8 — 瘦身目標
   skill ≤ 18；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝main 當前 `hooks/session-start` 渲染輸出字數，CI 命令固定）。→ Acceptance #5
   （名詞 ≤ 40 屬 intent Open question：計數規則與基線定案前只記錄，不入本 REQ。）
 REQ-9 — 冷讀可執行
-  一個沒看過 loom 的 agent，只拿 concept-model.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑。現況 25 分鐘（concept-model §12）。→ Acceptance #6（對象是否改為站文件屬 intent 裁定，見 Open questions）
+  一個沒看過 loom 的 agent，只拿該站的 SKILL.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑；零猜測優先於 15 分鐘。concept-model.md 只記錄（v10：25 分鐘、零猜測），不作驗收。→ Acceptance #6
 REQ-10 — 不比今天重
   以 PR #771、#772、#775 三個已合併 change replay 新流程，一律以 engineering 路徑計（三者今天皆為工程改動）；三項逐 change 皆 ≤ 今天實測——#771：31 commit／22 派工／2 決策點；#772：67／58／2；#775：28／14／2（evidence/ceremony-cost-old-vs-new.md §(i)(ii)(iii)）。→ Acceptance #4
 

@@ -3,7 +3,7 @@ originator: kouko
 kind: product
 needs-design: yes — 多站、多 artifact、多 plugin 的狀態與互動要重定義，現有 spec 不存在（條件 b）
 evidence: [docs/loom/2026-09-02-simple-loom-flow/evidence/]
-status: open   # 內容於確認後修改（跨 vendor 改選配），待重確認
+status: confirmed 2026-09-02   # 重確認：跨 vendor 改選配、Acceptance #6 對象改站文件
 
 ## Problem
 loom 現在太重：三個 plugin 共 36 個 skill、約 38 種文件形狀、113 個專有名詞，每個 session 開頭要塞進五千多字的說明。重量集中在「治理」——拆計畫、批次審查、閘門標記——而不是在幫使用者把東西做好。每次出事故就長一個新機制，沒有准入規則，砍了也會長回來。
@@ -13,7 +13,7 @@ loom 現在太重：三個 plugin 共 36 個 skill、約 38 種文件形狀、11
 ## Proposed outcome
 loom 的目標重新定為：假定使用者只具備基本軟體工程知識，盡量自動化判斷並維持高品質的實作，避免讓使用者做過多的決策。
 
-做法：每個 change 從一份人寫的 intent 開始，視需要經 spec、plan、實作、機器審查到 PR；使用者只在「要什麼」「可見的操作與反應」「做到了嗎」三處回答，其餘決定由 agent 做並記錄理由。品質來自機器：寫的 agent 和審的 agent 分開（至少兩個 fresh-context reviewer；用不用第二家模型由使用者選，機制只建議一次）、沒寫過的 agent 照 Acceptance 盲跑、另一個 agent 試著弄壞它、每個事故變永久 eval。新機制必須同時有回歸 eval 且淨數不增。舊的 plan、spec、brief 原地封存，硬切換。
+做法：每個 change 從一份人寫的 intent 開始，視需要經 spec、plan、實作、機器審查到 PR；使用者只在「要什麼」「可見的操作與反應」「做到了嗎」三處回答，其餘決定由 agent 做並記錄理由。品質來自機器：寫的 agent 和審的 agent 分開（至少兩個 fresh-context reviewer；用不用第二家模型由使用者選，機制在同一個 change 裡至多建議一次，答案記住後不再問）、沒寫過的 agent 照 Acceptance 盲跑、另一個 agent 試著弄壞它、每個事故變永久 eval。新機制必須同時有回歸 eval 且淨數不增。舊的 plan、spec、brief 原地封存，硬切換。
 
 完整設計見同名資料夾的 concept-model.md（v10，經六輪冷讀、兩輪 Codex、一輪 opus 邏輯審、一輪紅隊與一次儀式成本量測）。
 
@@ -23,7 +23,7 @@ loom 的目標重新定為：假定使用者只具備基本軟體工程知識，
 3. 一個 engineering 的 change（例如抽共用 helper）從頭到 PR，流程停下來等使用者的**決策點** ≤ 2；product 的 change ≤ 3。每個決策點內問幾個問題不限（訪談可以問到清楚為止）；限制的是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是問得少。
 4. 拿三個 2026-08-20 之後真實合併的 change 重走一遍，commit 數、審查派工數、人類決策點都不多於今天的實際數字。
 5. skill 數從 36 降到 18 以內，session-start 注入字數減半以上，每個 change 產生的文件形狀 ≤ 5 種。
-6. 一個沒看過 loom 的 agent，只拿 concept-model.md，能在 15 分鐘內對一個給定任務說出會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑，且沒有需要猜的規則。
+6. 一個沒看過 loom 的 agent，只拿該站的 SKILL.md（落地後），能在 15 分鐘內對一個給定任務說出會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑，且沒有需要猜的規則。零猜測優先於 15 分鐘。concept-model.md 本身只記錄冷讀結果（v10：25 分鐘、零猜測），不作驗收。
 7. 新增任何機制的 PR 若沒有回歸 eval 或沒有刪／併既有機制且沒有 budget 例外行，CI 會紅。
 
 ## Constraints
