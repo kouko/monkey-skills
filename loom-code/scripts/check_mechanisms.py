@@ -481,10 +481,14 @@ def run_measure(repo: Path) -> int:
 
     print(f"skill count (counted): {skill_count}")
     print(f"artifact-type count (manifest): {artifact_types}")
+    if skill_count > 18:
+        print(f"RED: skill count {skill_count} exceeds the loom budget of 18")
+    if artifact_types > 5:
+        print(f"RED: artifact-type count {artifact_types} exceeds the per-change budget of 5")
     print(f"session-start word count: {words}")
 
     baseline = _session_start_baseline(repo)
-    exit_code = 0
+    exit_code = 1 if (skill_count > 18 or artifact_types > 5) else 0
     if baseline is None:
         print("session-start-baseline: not recorded in KICKOFF-DEFAULTS.md (no comparison)")
     else:

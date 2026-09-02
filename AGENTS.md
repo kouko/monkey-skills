@@ -225,7 +225,7 @@ Philosophical thinking frameworks for problem clarification and deeper
 reasoning — 12 shipped skills (11 frameworks + 1 router).
 `philosophers-toolkit/ROADMAP.md` is a historical design record that
 holds the original planned-frameworks list; future planned work, when
-it exists, lives in `docs/loom/backlog/` entries.
+it exists, starts as an intent in `docs/loom/intent/` (the backlog store is frozen).
 
 ## Installation
 

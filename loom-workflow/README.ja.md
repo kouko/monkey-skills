@@ -4,7 +4,7 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 
 > Claude Code と Codex 用の loom workflow plugin — 意思決定 brief、deletion-first critique gate、git-native な project memory、recap、handoff、session distill。
 
-**Version**: 1.0.0 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
+**Version**: 4.0.0 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
 
 ## Background
 
