@@ -34,7 +34,7 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "decision point ① — restate Problem/Acceptance in plain words; merge one-way doors, the once-per-change second-vendor suggestion and a missing-PRINCIPLES interview into the same dialogue; write `status: confirmed <date>`."
   - name: one-way-door
     owner: write-plan
-    summary: "classes (a)–(d) and four gates (check / measure / threshold 20% / merge); asked in consequence form inside decision point ① or ②; answers marked user-decided in spec Design decision."
+    summary: "classes (a)–(e) — (e) irreversible actions on existing user data, asked even without a fork — and four gates (check / measure / threshold 20% / merge); asked in consequence form inside decision point ① or ②; answers marked user-decided in spec Design decision."
   - name: minimal-spec
     owner: write-plan
     summary: "code-only install with needs-design yes — derive Requirements from Acceptance and UI flows from intent using templates/spec-minimal.md; same spec review gate."
