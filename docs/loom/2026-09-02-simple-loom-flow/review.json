@@ -1,6 +1,6 @@
 {
- "reviewed_sha": "96d90f1b",
- "scope": "spec — PASS (rounds 1–4 read, 5 adversarial adopted, 9 read); W0 code — PASS_WITH_NOTES (rounds 6–8); W1 loom-code stations — PASS_WITH_NOTES (rounds 10–14); W2 in review",
+ "reviewed_sha": "fbe8cfba",
+ "scope": "spec PASS (r1–4, r5 adversarial, r9); W0 PWN (6–8); W1 PWN (10–14); W2 PWN (15–19); W3 PWN (20–21); W4 pending",
  "verdicts": [
   {
    "reviewer": "claude-fresh-context",
@@ -289,6 +289,156 @@
    "lens": "docs",
    "verdict": "PASS",
    "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "sonnet-review-docs-w2",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "opus-review-code-w2",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "sonnet-blindrun-w2",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "skill-blind-run",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "opus-adversary-w2",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "adversarial",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 16,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w2b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 16,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w2b",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 17,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w2c",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 18,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w2d",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 19,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w23",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 19,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w2b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 20,
+   "scope": "w3-wave-end",
+   "reviewer": "sonnet-review-docs-w3",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 20,
+   "scope": "w3-wave-end",
+   "reviewer": "opus-review-code-w3",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 20,
+   "scope": "w3-wave-end",
+   "reviewer": "opus-adversary-w3",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "adversarial",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 21,
+   "scope": "w3-wave-end re-review",
+   "reviewer": "opus-review-code-w23",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 21,
+   "scope": "w3-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w3",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
   }
  ],
  "probes": [
@@ -465,6 +615,30 @@
    "sha": "0e719e27",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "w3-code",
+   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+   "sha": "fbe8cfba",
+   "result": "985 passed (round 21 reviewer run)",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w2-skill",
+   "command": "scratchpad/adversary-w2 (13 probes; 11 held, p07/p12 by design)",
+   "sha": "fbe8cfba",
+   "result": "held",
+   "artifact": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w3-gate",
+   "command": "scratchpad/adversary-w3 (15 probes; 14 caught, p14 by design)",
+   "sha": "fbe8cfba",
+   "result": "caught",
+   "artifact": "evidence/w3-checkpoint-reviews.md"
   }
  ],
  "open_findings": [
@@ -1170,6 +1344,127 @@
    ],
    "text": "adversarial artifact content unconstrained (empty attack file passes)",
    "dismissed": "accepted weakest link under §0; recorded in §7 and intent Open questions by opus-review-code-w1d"
+  },
+  {
+   "id": "W2-01",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "design-system read docs/loom/PRINCIPLES.md; design-md-schema depended on the old ## Anchors",
+   "resolved": "resolved: b435739e"
+  },
+  {
+   "id": "W2-02",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "four loom-design stations' Codex command template composed a non-existent path",
+   "resolved": "resolved: b435739e"
+  },
+  {
+   "id": "W2-03",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "trunk-branch diff empty (P13); kind self-reported (P05)",
+   "resolved": "resolved: 3b5948c2 branch_base fail-closed, intent.kind-recompute"
+  },
+  {
+   "id": "W2-04",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "checker accepted ratified-by: pending; UI flows N/A synonyms; legacy freshness fallback unbounded",
+   "resolved": "resolved: 79efc3a9, a1a4a321, f05a2ec2 (structural ui-flows rule)"
+  },
+  {
+   "id": "W2-05",
+   "severity": "important",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "spec freshness any() one reviewer; deciding-commit reads HEAD; descriptions drift; identifier false positives; principles substance; date validity; REQ grammar; validate_design_output missing",
+   "resolved": "resolved: 3b5948c2, bcb6ce0e, a1a4a321"
+  },
+  {
+   "id": "W2-06",
+   "severity": "important",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "docs: examples not archived, knowledge-triage seed, bilingual ①, station table paths, spec caller row, questions[] carrier, branch creation, (e) vs check gate",
+   "resolved": "resolved: b435739e, d7d31008, 7bf27b96"
+  },
+  {
+   "id": "W3-01",
+   "severity": "fatal",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "Conventional Commits check rejected ! and ci; four review( commits; one docs+test commit",
+   "resolved": "resolved: f73f826f regex; four subjects rewritten (docs(loom-review)) by kouko; docs+test rewrite pending kouko"
+  },
+  {
+   "id": "W3-02",
+   "severity": "fatal",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "PRINCIPLES.md untracked/unsigned",
+   "resolved": "resolved: 9a15f1b7 tracked, 07e6cdac ratified by kouko"
+  },
+  {
+   "id": "W3-03",
+   "severity": "important",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "R4 verified path existence only; --measure fail-open; frozen stores prose-only; two DAs one intent; host-hygiene self-exemption; map: unchecked; counting prose unbound",
+   "resolved": "resolved: f05a2ec2, 98a583eb, fbe8cfba"
+  },
+  {
+   "id": "W3-04",
+   "severity": "important",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "9 eval pointers had no trace in the cited evidence; doc citations fail-open; hook and workflow pointed at frozen/moved paths; README requires-contract claim; KICKOFF contradiction",
+   "resolved": "resolved: nine W3-04 docs commits (pending — W4-01 evals now red by design)"
+  },
+  {
+   "id": "W3-05",
+   "severity": "nit",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "dead FLOW_MARKER, nested ARCHIVED.md exemption, indented code as flow line, ui-flows scope statement",
+   "resolved": "resolved: fbe8cfba"
   }
  ],
  "vendors": [
