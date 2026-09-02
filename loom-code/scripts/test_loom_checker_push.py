@@ -28,8 +28,8 @@ CHANGE = "2026-09-02-a"
 REVIEW = f"docs/loom/{CHANGE}/review.json"
 
 # Cheap enough to run once per test, and its exit code is the whole point.
-PASSING_COMMAND = 'python3 -c "raise SystemExit(0)"'
-FAILING_COMMAND = 'python3 -c "import sys; sys.exit(1)"'
+PASSING_COMMAND = "python3 -c pass"
+FAILING_COMMAND = "python3 -c 1/0"
 
 
 def git(repo: Path, *args: str) -> str:

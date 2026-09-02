@@ -1130,13 +1130,56 @@ def command_names_artifact(command: str, artifact: str) -> bool:
     be one of those arguments. `./x/y.py` and `x/y.py` name the same file
     and both count.
     """
-    without_comment = re.sub(r"(?:(?<=\s)|^)#.*$", "", command).strip()
     try:
-        tokens = shlex.split(without_comment)
+        tokens = shlex.split(command, comments=True)
     except ValueError as exc:
         raise ValueError(str(exc)) from exc
     wanted = os.path.normpath(artifact)
     return any(os.path.normpath(token) == wanted for token in tokens)
+
+
+# A declared command is executed argv-style, so anything the shell would
+# have to interpret makes it undeclarable rather than silently reinterpreted.
+SHELL_METACHARACTERS = re.compile(r"[;&|<>()$`*?\[\]{}\n]")
+
+PROBE_RUN_TIMEOUT = 600  # 10 minutes for one artifact or one declared suite
+
+
+def argv_for(command: str) -> list[str]:
+    """`command` as an argv list, or ValueError if a shell would be needed."""
+    if SHELL_METACHARACTERS.search(command):
+        raise ValueError(
+            "it contains shell metacharacters; declare a plain argv command "
+            "(a program and its arguments) instead"
+        )
+    tokens = shlex.split(command, comments=True)
+    if not tokens:
+        raise ValueError("it is empty")
+    return tokens
+
+
+def artifact_argv(repo: Path, artifact: str) -> list[str]:
+    """How to RUN `artifact`, chosen from the file rather than from prose.
+
+    The recorded command is a record of what an agent says it did; running
+    it hands the exit code to a shell pipeline the agent wrote, and
+    `python3 case.py ; true` then exits 0 whatever the case does. The
+    checker runs the file itself, so the exit code it observes is the
+    file's.
+    """
+    path = repo / artifact
+    suffix = Path(artifact).suffix.lower()
+    if suffix == ".py":
+        return [sys.executable, artifact]
+    if suffix == ".sh":
+        return ["bash", artifact]
+    if path.is_file() and os.access(path, os.X_OK):
+        return [os.path.join(".", artifact)]
+    raise ValueError(
+        f"{artifact} is not runnable: it is neither a .py nor a .sh file, and "
+        "carries no executable bit, so there is no way to execute the case it "
+        "claims to be"
+    )
 
 
 def declared_test_command(repo: Path) -> tuple[str | None, str]:
@@ -1218,16 +1261,28 @@ def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
                 "would be tested is not the reviewed tree"
             )
             continue
+        # What runs is the DECLARED command, read as argv and executed with
+        # no shell: the recorded string has already been checked to equal
+        # it, and handing a shell a string an agent wrote hands it the
+        # exit code too.
+        try:
+            argv = argv_for(expected)
+        except ValueError as exc:
+            reasons.append(f"the declared command `{expected}` cannot be run: {exc}")
+            break
         try:
             observed = subprocess.run(
-                command, shell=True, cwd=str(repo), capture_output=True,
-                text=True, timeout=PROBE_TIMEOUT,
+                argv, cwd=str(repo), capture_output=True,
+                text=True, timeout=PROBE_RUN_TIMEOUT,
             ).returncode
+        except FileNotFoundError:
+            reasons.append(f"the declared command `{expected}` names no program on PATH")
+            break
         except subprocess.TimeoutExpired:
-            reasons.append(f"`{label}` did not finish within {PROBE_TIMEOUT}s")
+            reasons.append(f"`{expected}` did not finish within {PROBE_RUN_TIMEOUT}s")
             continue
         out.write(
-            f"package-tests `{label}`: observed exit code {observed} "
+            f"package-tests `{expected}`: observed exit code {observed} "
             f"(recorded result: {probe.get('result')!r})\n"
         )
         if observed != 0:
@@ -1355,19 +1410,31 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
             )
             continue
         try:
+            argv = artifact_argv(repo, artifact)
+        except ValueError as exc:
+            reasons.append(str(exc))
+            continue
+        try:
             observed = subprocess.run(
-                command, shell=True, cwd=str(repo), capture_output=True,
-                text=True, timeout=PROBE_TIMEOUT,
+                argv, cwd=str(repo), capture_output=True,
+                text=True, timeout=PROBE_RUN_TIMEOUT,
             ).returncode
+        except (FileNotFoundError, PermissionError) as exc:
+            reasons.append(f"{artifact} could not be executed: {exc}")
+            continue
         except subprocess.TimeoutExpired:
-            reasons.append(f"`{label}` did not finish within {PROBE_TIMEOUT}s")
+            reasons.append(f"{artifact} did not finish within {PROBE_RUN_TIMEOUT}s")
             continue
         out.write(
-            f"adversarial `{label}`: observed exit code {observed} "
-            f"(recorded result: {probe.get('result')!r})\n"
+            f"adversarial {artifact}: observed exit code {observed} "
+            f"(recorded command: {label!r}, recorded result: {probe.get('result')!r})\n"
         )
         if observed != 0:
-            reasons.append(f"`{label}` exited {observed} when the checker ran it")
+            reasons.append(
+                f"{artifact} exited {observed} when the checker ran it — a case "
+                "that no longer passes is not a regression eval, whatever the "
+                "recorded command wraps it in"
+            )
             continue
         usable += 1
 
@@ -1386,47 +1453,68 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
 TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$", re.MULTILINE)
 
 
+def commit_paths(repo: Path, sha: str) -> set[str]:
+    """Every path one commit touches, with rename detection off."""
+    listing = git_text(repo, "show", "--raw", "--no-renames", "--pretty=format:", sha)
+    return {
+        line.split("\t", 1)[1].strip()
+        for line in listing.splitlines()
+        if "\t" in line and line.startswith(":")
+    }
+
+
 def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
-    """Every task the branch claims to have done was dispatched to someone.
+    """Every commit that changes real work names the task it belongs to.
 
     `Task: <id>` trailers are how progress is derived (concept-model §2d)
-    and `dispatch[]` is how "who wrote this" is recomputed (§2e). When a
-    task appears in the history with no implementer entry behind it, the
-    identity rules have nothing to check that task against -- a lost
-    concurrent write to review.json looks exactly like this."""
+    and `dispatch[]` is how "who wrote this" is recomputed (§2e). The pair
+    only holds if the trailer is on the commit that did the work: a trailer
+    parked on a docs commit while the code commit carries none leaves that
+    code belonging to no task, and no dispatch entry can be checked against
+    it. A commit touching only documentation, the review record, the intent,
+    the plan or evidence owes no trailer -- none of it is dispatched work.
+    """
     if reviewed_id is None:
         return []
     try:
         base = branch_base(repo)
-    except UsageError as exc:
+        manifest = load_manifest()
+    except (UsageError, OSError, KeyError) as exc:
         return [("push.dispatch-covers-tasks", f"cannot recompute the branch base: {exc}")]
-    log = git_text(repo, "log", "--format=%B%x00", f"{base}..{reviewed_id}")
-    claimed = {match.group(1) for match in TASK_TRAILER.finditer(log)}
+
+    is_review = glob_to_regex(
+        manifest["artifacts"]["review"]["path"].replace("<change-id>", "*")
+    )
+    shas = [
+        line.strip()
+        for line in git_text(repo, "log", "--format=%H", f"{base}..{reviewed_id}").splitlines()
+        if line.strip()
+    ]
+
+    claimed: set[str] = set()
+    untrailered: list[tuple[str, str]] = []
+    for sha in shas:
+        paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
+        kinds = artifact_types(manifest, paths) & ADVERSARIAL_TYPES
+        message = git_text(repo, "log", "-1", "--format=%B", sha)
+        ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
+        claimed |= ids
+        if kinds and not ids:
+            untrailered.append((sha[:8], ", ".join(sorted(kinds))))
+
+    if untrailered:
+        listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)
+        return [
+            (
+                "push.dispatch-covers-tasks",
+                f"no `Task:` trailer on {len(untrailered)} commit(s) that change "
+                f"dispatched work: {listing}. Progress is derived from those "
+                "trailers, so this work belongs to no planned task.",
+            )
+        ]
     if not claimed:
-        # No trailer at all is the same hole one commit wider: nothing ties
-        # this work to a planned task, so nothing can be checked against a
-        # dispatch record. A docs-only branch owes no plan and stays exempt.
-        try:
-            manifest = load_manifest()
-            changed = changed_paths(repo)
-        except (UsageError, OSError, KeyError) as exc:
-            return [("push.dispatch-covers-tasks", f"cannot recompute artifact types: {exc}")]
-        is_review = glob_to_regex(
-            manifest["artifacts"]["review"]["path"].replace("<change-id>", "*")
-        )
-        changed = {path for path in changed if not is_review.match(path)}
-        kinds = artifact_types(manifest, changed) & ADVERSARIAL_TYPES
-        if kinds:
-            return [
-                (
-                    "push.dispatch-covers-tasks",
-                    f"no `Task:` trailer on a change that touches "
-                    f"{', '.join(sorted(kinds))}; progress is derived from those "
-                    "trailers, so this work belongs to no planned task and no "
-                    "dispatch entry can be checked against it.",
-                )
-            ]
         return []
+
     dispatched = {
         str(entry.get("task", "")).strip()
         for entry in review.get("dispatch", [])
@@ -1473,13 +1561,13 @@ def check_second_vendor_honoured(repo: Path, review):
     # The fallback is a dated statement about THIS cli, not a free-text
     # field: `n/a` is not a reason the second opinion is missing, and a
     # fallback naming some other tool explains nothing about this one.
-    grammar = re.compile(rf"^{re.escape(cli)} missing at \d{{4}}-\d{{2}}-\d{{2}}")
+    grammar = re.compile(rf"{re.escape(cli)} missing at \d{{4}}-\d{{2}}-\d{{2}}")
     written = [
         str(entry.get("fallback", "")).strip()
         for entry in verdicts
         if str(entry.get("fallback", "")).strip()
     ]
-    if any(grammar.match(value) for value in written):
+    if any(grammar.fullmatch(value) for value in written):
         return []
     saw = f"; it records fallback {written[0]!r}" if written else ""
     return [
