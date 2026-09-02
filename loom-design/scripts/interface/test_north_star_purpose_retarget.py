@@ -5,8 +5,15 @@ the loom-design skills that derive from or check against the retired
 Task 2 retired `## North Star` from PRINCIPLES.md's authoring contract
 (loom-design/skills/product-principles/). This test guards the sibling
 consumers of that section: they must no longer instruct reading a
-North Star section out of PRINCIPLES.md, and must each name PURPOSE.md
-where they previously named the section.
+North Star section out of PRINCIPLES.md.
+
+NARROWED, 2026-09-02 (W2): the second half of this guard used to require
+that each file name `PURPOSE.md` where it had named the retired section.
+loom 1.0 has no PURPOSE.md standing doc at all -- §8 lists PRINCIPLES.md,
+DESIGN.md and KICKOFF-DEFAULTS.md and nothing else -- so that half asserted
+a redirect target that no longer exists, and design-system removing the
+fallback is the design, not a regression. The forbidden-mention half is
+the part that still guards something real and is kept as it was.
 
 Excluded on purpose: `product-principles/references/canon-product.md`
 cites Amplitude's "North Star Framework" as a named external methodology —
@@ -33,7 +40,6 @@ FILES = [
 # consumer still instructs readers to look for a section that Task 2
 # retired from PRINCIPLES.md's authoring contract.
 _FORBIDDEN = "North Star"
-_REQUIRED = "PURPOSE.md"
 
 
 def test_no_loom_design_skill_reads_north_star_out_of_principles():
@@ -45,11 +51,3 @@ def test_no_loom_design_skill_reads_north_star_out_of_principles():
             f"(retired from PRINCIPLES.md by Task 2)"
         )
 
-
-def test_each_file_names_purpose_md_instead():
-    for path in FILES:
-        text = path.read_text(encoding="utf-8")
-        assert _REQUIRED in text, (
-            f"{path} does not name PURPOSE.md where it previously named "
-            f"the North Star section"
-        )
