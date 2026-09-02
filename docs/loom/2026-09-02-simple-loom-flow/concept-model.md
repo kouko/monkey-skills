@@ -115,21 +115,21 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 | | 有裝 loom-design | 只裝 loom-code |
 |---|---|---|
 | 入口 | capture-intent 站 | write-plan 站：讀 intent.md，沒有就停下來要（給模板） |
-| `needs-design: yes` | write-spec 站 | 大聲 N/A：裝 loom-design 或照 §2c 手寫 spec.md |
+| `needs-design: yes` | write-spec 站 | write-plan 用 contract package 的 §2c 模板**自動產生最小 spec.md**（Requirements 從 Acceptance 派生、UI flows 從 intent 推），走同一個 spec 審查閘，使用者只做決策點②；印一行建議「裝 loom-design 可得到更完整的 spec」。使用者永遠不手寫 spec |
 | `needs-design: no` | 交 loom-code | 直接 write-plan |
 | checker | 兩邊都跑（同一支） | loom-code 跑 |
 
 - 沒有獨立 router，沒有先於 intent 的 reception。
 - **人類決策點**：engineering 兩個（① intent 確認、③ 驗收）；product 三個（加 ② spec 的可見行為確認）。plan 永遠由 agent 決定並記理由。（Codex 的一次性 `/hooks` 授信是安裝動作，不是決策。）
-- **問使用者的規則**：決策點的**數量**是結構（engineering 2、product 3），每個決策點**內**問幾個問題不限——訪談問到清楚為止、可見行為逐個操作對、驗收報告列所有不確定。限制是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是少問。決策點之外，只有真正的岔路才停下來問，用白話、給預設、一次問完；其他決定 agent 做，標 `agent-decided` 記理由；使用者隨時可翻。岔路有兩類：
+- **問使用者的規則**：決策點的**數量**是結構（engineering 2、product 3），每個決策點**內**問幾個問題不限——訪談問到清楚為止、可見行為逐個操作對、驗收報告列所有不確定。限制是「不問使用者看不懂的問題」（spec 品質、plan 拆法、審查裁定），不是少問。**岔路不新增停點**：所有岔路問題都併進既有決策點——engineering 併進決策點①（intent 確認時一起問；若岔路在 plan 階段才浮現，agent 選預設並標 `agent-decided`，寫進盲跑報告的「我替你決定了」段讓決策點③看到）；product 併進決策點②。決策點之外 agent 不停。其他決定 agent 做，標 `agent-decided` 記理由；使用者隨時可翻。岔路有兩類：
   - **判斷型**：≥3 個 trade-off 且不同選擇會改變交付物（brief-before-asking 既有定義）。
-  - **單向門（必問，不靠判斷）**：任一成立——(a) 之後難以更換：框架、語言、資料庫、認證方式、託管平台、套件管理器；(b) 產生金錢或持續義務：付費服務、需帳號的第三方 API、要維護的基礎設施；(c) 限制使用者未來能做的事：資料格式、匯出能力、平台綁定；(d) **決定輸出品質上限的選型**：辨識／生成模型、演算法、資料來源等，且候選在使用者感受得到的軸（準確率、速度、每次費用、語言／格式覆蓋、隱私）上差異顯著——任一軸差 ≥ 20%，或金錢／隱私／覆蓋的有無；純內部差異（記憶體、行數、可維護性）不算。四道閘依序：**先查**（intent 的 Acceptance／Constraints 或 PRINCIPLES.md 已釘住該軸→不問，選符合的）→ **先量**（能用使用者真實樣本快速比較的，量了再問，問結果不問假設）→ **門檻**（上述顯著性）→ **合併**（一個 change 的所有單向門合成一次問，product 附在決策點②、engineering 在 write-plan 前；每 change 至多一次）。問法固定為**後果形**：「選 A：以後只能在 ___ 跑、每月 ___、換掉要重寫 ___。選 B：___。我建議 A，因為 ___。」不出現機制名詞。答案寫進 spec 的 Design decision 並標 `user-decided`。
+  - **單向門（必問，不靠判斷）**：任一成立——(a) 之後難以更換：框架、語言、資料庫、認證方式、託管平台、套件管理器；(b) 產生金錢或持續義務：付費服務、需帳號的第三方 API、要維護的基礎設施；(c) 限制使用者未來能做的事：資料格式、匯出能力、平台綁定；(d) **決定輸出品質上限的選型**：辨識／生成模型、演算法、資料來源等，且候選在使用者感受得到的軸（準確率、速度、每次費用、語言／格式覆蓋、隱私）上差異顯著——任一軸差 ≥ 20%，或金錢／隱私／覆蓋的有無；純內部差異（記憶體、行數、可維護性）不算。四道閘依序：**先查**（intent 的 Acceptance／Constraints 或 PRINCIPLES.md 已釘住該軸→不問，選符合的）→ **先量**（能用使用者真實樣本快速比較的，量了再問，問結果不問假設）→ **門檻**（上述顯著性）→ **合併**（一個 change 的所有單向門合成一次問，附在既有決策點內；決策點過後才浮現的，agent 選預設、標 `agent-decided`、在盲跑報告揭露）。問法固定為**後果形**：「選 A：以後只能在 ___ 跑、每月 ___、換掉要重寫 ___。選 B：___。我建議 A，因為 ___。」不出現機制名詞。答案寫進 spec 的 Design decision 並標 `user-decided`。
 - 所有「問使用者」的舊時機（on-ramp、kickoff briefing、batch checkpoint、waiver）全部取消；on-ramp 1–3 列由 `needs-design` 重算，4–6 列變 standing default。
 
 ## 5. review 站＝checkpoint review（機器是唯一的審查者）
 
 - **一份契約**：verdict schema、`reviewed_sha`、輪次規則一套。鏡頭多個（code 11 維、docs 5 維；spec-conformance、design-conformance 各一維；correctness 必跑 probe）。
-- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer，**host 上有第二個 vendor 時必須用它**（vendor＝不同模型供應商的可非互動執行 CLI；本機目前是 Codex CLI，Gemini CLI 等亦可）。只有一個 vendor 時：兩個 fresh-context 同 vendor reviewer，review.json 標 `degraded: single-vendor`，checker 印 WARN 不擋。reviewer 分歧記進 verdicts，不平均。
+- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer，**host 上有第二個 vendor 時預設用它**（vendor＝不同模型供應商的可非互動執行 CLI；本機目前是 Codex CLI，Gemini CLI 等亦可）；跨 vendor 成本（intent Open question）量完前，缺第二 vendor 只 WARN 不紅。只有一個 vendor 時：兩個 fresh-context 同 vendor reviewer，review.json 標 `degraded: single-vendor`，checker 印 WARN 不擋。reviewer 分歧記進 verdicts，不平均。
 - **何時跑**：wave 結束算未審 delta，任一超過門檻（8 檔或 400 行，實驗預設，replay 後固定）才跑；branch 結束必跑；含 after-task 的 wave 結束一律跑。`needs-design: yes` 時 spec 進 plan 前必跑 spec 型別的「讀＋對抗」且 PASS。build 階段 checkpoint ≤ 5（plan 深度上限）。
 - **after-task**：plan 標記的 task commit 後立刻跑同一套；每 plan ≤ 2。它是獨立的一次 checkpoint；該 wave 結束時的 checkpoint 是**另一次**（只審 after-task 之後的 delta ＋ 跨任務一致性；delta 為零時只跑一致性，很便宜）。
 - **第 N 次審什麼**：`reviewed_sha` 後的 delta ＋ 跨任務一致性 ＋ 回歸 probe。
@@ -162,7 +162,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 ### 7a. host hooks
 
 - Claude Code：plugin hooks，零動作。
-- Codex：adopting repo 內 `.codex/hooks.json` ＋ checker 副本，站第一次碰到 repo 時寫入並以 `chore(loom): scaffold hooks <version>` commit；版本舊就覆寫。順序：寫入 → 若有寫入立刻 probe（派一個必被擋的假指令）→ 沒被擋＝安全帶不存在 → BLOCK，指名「請在 Codex 跑 /hooks」→ 使用者授信 → 下次 probe 通過才繼續。fail-closed：shim 或 checker 執行錯誤一律擋。
+- Codex：adopting repo 內 `.codex/hooks.json` ＋ checker 副本，站第一次碰到 repo 時寫入並以 `chore(loom): scaffold hooks <version>` commit。**hooks.json 的 command 字串固定為相對路徑且不含版本**（`.codex/hooks/loom-checker`），升級只換 checker 副本內容、版本戳寫在副本檔內——因為 Codex 的 trust 綁 hook 定義，定義不變就不重授信（實測 run E）；這是「每 repo 一次授信」成立的條件。順序：寫入 → 若有寫入立刻 probe（派一個必被擋的假指令）→ 沒被擋＝安全帶不存在 → BLOCK，指名「請在 Codex 跑 /hooks」→ 使用者授信 → 下次 probe 通過才繼續。fail-closed：shim 或 checker 執行錯誤一律擋。
 - 不做 git hook。
 - CI 是**可選的第二層**：有 CI 的 repo 用同一支 checker 重跑相同規則；沒有的 repo 不假裝有。
 
@@ -197,7 +197,9 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 新增任何機制必須**同時**：(1) 有 regression eval（程式＝測試；閘門＝攻擊案例；散文規則＝冷讀 dogfood，排程 eval suite）；(2) 淨數不增，做不到寫明示 budget 例外進 CHANGELOG。決定性只是形式要求。不再新增散文閘：事故 → memory → eval → 才考慮 hook。
 
-**量測**（CI 或排程算）：skill 數、artifact 種類數、session-start 注入字數（超 main 基線且無例外→紅）；`needs-design: yes` intent 數、逾期未確認 intent 數、**每 change 的決策點數與岔路提問數**（只記錄，不是配額；連續上升＝違背 §0）。名詞數手數。
+**機制母體**：`docs/loom/evidence/mechanisms.yaml`（repo 級常駐證據）列出每個機制——skill、checker 規則、hook、action、schema 欄位、散文閘——各帶 `eval:` 指向其回歸案例。CI 對 PR diff 重算此清單（skill＝`skills/*/SKILL.md`；checker 規則＝checker 的 rule 表；hook＝hooks.json 條目；action／schema 欄位＝contract package 宣告），淨數增加且無 `budget-exception:` 行→紅；有機制無 `eval:`→紅。
+
+**量測**（CI 或排程算）：機制淨數（上述）、skill 數、artifact 種類數、session-start 注入字數（超 main 基線且無例外→紅；session-start 基線＝main 上 `hooks/session-start` 渲染輸出的字數，命令固定於 CI）；`needs-design: yes` intent 數、逾期未確認 intent 數、**每 change 的決策點數與岔路提問數**（只記錄，不是配額；連續上升＝違背 §0）。名詞數手數。
 
 ## 12. 驗收與審查紀錄
 
