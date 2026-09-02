@@ -112,7 +112,7 @@ jobs:
         # the one non-stdlib runtime import under loom-code/scripts/, and three
         # test modules fail at COLLECTION without it (not at assert time), which
         # takes the whole suite down rather than one test.
-        run: python3 -m pip install --quiet pytest markdown-it-py
+        run: python3 -m pip install --quiet pytest markdown-it-py pyyaml
 
       - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
@@ -138,6 +138,16 @@ jobs:
         # any drift OR any missing eligible manifest across all plugins, so a
         # manual edit can't diverge the two.
         run: python3 scripts/sync_codex_manifests.py --check --all
+
+      - name: Recompute mechanism population
+        # W3-04 removes continue-on-error once the old skills are deleted
+        continue-on-error: true
+        # Recomputes the five admission-rule classes (concept-model §11,
+        # spec REQ-7) against docs/loom/evidence/mechanisms.yaml. Expected
+        # red until W1-W3 land the new stations/tools and delete the old
+        # skill directories — continue-on-error keeps that expected red
+        # from blocking merges during the transition.
+        run: python3 loom-code/scripts/check_mechanisms.py --baseline origin/main
 
       - name: Verify skill cross-references resolve
         # Every relative markdown link in a SKILL.md must point at an existing

@@ -155,6 +155,11 @@ EXEMPT = {
                                 "file, not a backlog store or handoff "
                                 "brief; its own CLI catches OSError/"
                                 "JSONDecodeError and exits non-zero",
+    "check_mechanisms.py": "recomputes the mechanism-population evidence "
+                           "(manifest.yaml, mechanisms.yaml, hooks.json, "
+                           "loom_checker.py --list-rules), not the backlog "
+                           "store or handoff brief; its whole CLI runs "
+                           "under one fail-closed exit-2 handler",
 }
 
 FAMILY = (
