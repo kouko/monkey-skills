@@ -22,9 +22,9 @@ REQ-8 — 瘦身目標
   skill ≤ 18；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝本 change 合併前 main 的固定 SHA，落地時記進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`；命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo）。→ Acceptance #5
   （名詞 ≤ 40 屬 intent Open question：計數規則與基線定案前只記錄，不入本 REQ。）
 REQ-9 — 冷讀可執行
-  一個沒看過 loom 的 agent，只拿該站的 SKILL.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑；零猜測優先於 15 分鐘。concept-model.md 只記錄（v10：25 分鐘、零猜測），不作驗收。→ Acceptance #6
+  一個沒看過 loom 的 agent，只拿該站的 SKILL.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑；零猜測優先於 15 分鐘。受測站＝該任務的入口站（Task A：write-plan；Task B：capture-intent）；入口站文件必含一張「本 change 接下來會經過的站、產生的檔、checker 時機、checkpoint 時機」摘要表，冷讀者只靠它回答。concept-model.md 只記錄（v10：25 分鐘、零猜測），不作驗收。→ Acceptance #6
 REQ-10 — 不比今天重
-  以 PR #771、#772、#775 三個已合併 change replay 新流程，一律以 engineering 路徑計（三者今天皆為工程改動）；三項逐 change 皆 ≤ 今天實測——#771：31 commit／22 派工／2 決策點；#772：67／58／2；#775：28／14／2（evidence/ceremony-cost-old-vs-new.md §(i)(ii)(iii)）。→ Acceptance #4
+  以 PR #771、#772、#775 三個已合併 change replay 新流程，一律以 engineering 路徑計（三者今天皆為工程改動）；三項逐 change 皆 ≤ 今天實測——#771：31 commit／22 派工／2 決策點；#772：67／58／2；#775：28／14／2（evidence/ceremony-cost-old-vs-new.md §(i)(ii)(iii)）。該 evidence 的「New model」欄是依 v7（含 approval-only commit）算的，已過時；以 replay 實測為準。→ Acceptance #4
 
 ## Design decision                                 【混合；不呈現給使用者】
 全文見同資料夾 `concept-model.md`（v10）。摘要：三 plugin 沿「要什麼／為什麼」對「怎麼做」切線，loom-design 與 loom-workflow 依賴 loom-code 的 versioned contract package；七站、十工具、一 reference、四 action；checkpoint review（wave 結束按門檻、branch 結束必跑、after-task 逃生口 ≤ 2）；review.json 入版控且 push 時 HEAD 為 review-only commit；standing docs 三段式（勸導／拒收／靜音）；decision-map 的 delivery ticket 由 intent 取代；evidence 跟著 artifact 住；准入規則 AND 形式。
@@ -60,5 +60,5 @@ agent-decided 的岔路與理由：
 5. Codex 第一次用此 repo：「我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 /hooks 按一次授權，我才會繼續。」→ 使用者授權 → 下次指令自動繼續。
 6. product 但 repo 還沒有產品原則（**併在決策點①的同一段對話**，不另停）：「做產品功能前這個 repo 要先有一份產品原則，我接著問你幾個問題來產生（約十分鐘），最後跟 intent 一起確認。」→ 直接進訪談。
 7. 缺 DESIGN.md（或 engineering 缺 PRINCIPLES.md）時，每份 intent 開頭固定三行提示，不需回答：「這個 repo 還沒有 ___。沒有它，___ 無法檢查一致性。想要的話說一聲我來做；不想再看到這行，我可以在設定裡記住。」
-（要不要用第二家模型當 reviewer，也在該 repo 第一次決策點①裡順帶問一次，答案記進 KICKOFF-DEFAULTS。）
+（要不要用第二家模型當 reviewer，在決策點①裡順帶問，同一個 change 至多一次，答案記進 KICKOFF-DEFAULTS 後不再問。）
 單向門的觸發規則（哪些算、先量再問、已釘住不問、合成一次）見 Design decision。

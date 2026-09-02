@@ -169,7 +169,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 ## 8. Standing docs
 
-- product-principles／design-system 是工具，產 `PRINCIPLES.md`／`DESIGN.md`；文件要有 `ratified-by: <name> <date>`（使用者確認後 agent 寫）。沒裝 loom-design 可照 loom-code 附的模板手寫。
+- product-principles／design-system 是工具，產 `PRINCIPLES.md`／`DESIGN.md`；文件要有 `ratified-by: <name> <date>`（使用者確認後 agent 寫）。沒裝 loom-design 時，write-plan 用 contract package 的模板**代做訪談並代寫** PRINCIPLES.md，使用者只確認；使用者永遠不手寫。
 - **勸導（每份 intent）**：repo 缺任一份 → checker 印固定三行 WARN；站原樣呈現。
 - **拒收（只有一種）**：`kind: product` 且無 ratified PRINCIPLES.md → write-spec／write-plan 拒收。DESIGN.md 永不拒。engineering 永不因此被拒。**不另開停點**：capture-intent（或 code-only 的 write-plan）在決策點①的同一段對話裡發現缺件時，直接接著做產品原則訪談，訪談結束一起確認；使用者不會被單獨問「要不要」。
 - **靜音**：KICKOFF-DEFAULTS 記 `standing-docs: waived — <reason> (<date>)`，只靜音 WARN（DESIGN.md、與 engineering 的 PRINCIPLES 提醒）；**永不豁免 product 的 PRINCIPLES 拒收**。
@@ -198,7 +198,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 
 新增任何機制必須**同時**：(1) 有 regression eval（程式＝測試；閘門＝攻擊案例；散文規則＝冷讀 dogfood，排程 eval suite）；(2) 淨數不增，做不到寫明示 budget 例外進 CHANGELOG。決定性只是形式要求。不再新增散文閘：事故 → memory → eval → 才考慮 hook。
 
-**機制母體**：`docs/loom/evidence/mechanisms.yaml`（repo 級常駐證據）列出每個機制，各帶 `eval:` 指向其回歸案例。每類都有可重算面：skill＝`skills/*/SKILL.md` 目錄；checker 規則＝checker 以 `--list-rules` 輸出的 rule id 表（checker 必須提供此輸出）；hook＝hooks.json 條目；action／schema 欄位＝contract package 的宣告檔 `loom-code/contract/manifest.yaml`（列 actions、artifact schema 欄位、station 名，機器可讀，版本戳在檔內）；**散文閘＝SKILL.md／reference 內以 `<!-- gate: <id> -->` 標記的段落**——沒有標記的散文不算閘，也就不得當閘用（審查維度 user-judgment-leak／omission 抓未標記的閘）。CI 重算五類清單與 mechanisms.yaml 比對：清單有而 yaml 無→紅（漏登）；淨數增加且 CHANGELOG 該版條目無 `budget-exception: <mechanism-id> — <reason>` 行→紅；有機制無 `eval:`→紅。
+**機制母體**：`docs/loom/evidence/mechanisms.yaml`（repo 級常駐證據）列出每個機制，各帶 `eval:` 指向其回歸案例。每類都有可重算面：skill＝`skills/*/SKILL.md` 目錄；checker 規則＝checker 以 `--list-rules` 輸出的 rule id 表（checker 必須提供此輸出）；hook＝hooks.json 條目；action／schema 欄位＝contract package 的宣告檔 `loom-code/contract/manifest.yaml`（列 actions、artifact schema 欄位、station 名，機器可讀，版本戳在檔內）；**散文閘＝SKILL.md／reference 內以 `<!-- gate: <id> -->` 標記的段落**——沒有標記的散文不算閘，也就不得當閘用（審查維度 user-judgment-leak／omission 抓未標記的閘）。CI 重算五類清單與 mechanisms.yaml 比對：清單有而 yaml 無→紅（漏登）；**yaml 有而清單無→紅（殘留條目墊高基線）**；淨數增加且 CHANGELOG 該版條目無 `budget-exception: <mechanism-id> — <reason>` 行→紅；有機制無 `eval:`→紅。
 
 **量測**（CI 或排程算）：機制淨數（上述）、skill 數、artifact 種類數、session-start 注入字數（超 main 基線且無例外→紅；session-start 基線＝本 change 合併前 main 的固定 SHA（落地時寫進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`），計數命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo）；`needs-design: yes` intent 數、逾期未確認 intent 數、**每 change 的決策點數與岔路提問數**（只記錄，不是配額；連續上升＝違背 §0）。名詞數手數。
 
@@ -212,5 +212,5 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 | v4 | Codex 獨立審 | 14 項處置 |
 | v5 | 自審＋opus 邏輯審 | 18 缺陷修 |
 | v6–v7 | Codex 情境審＋冷讀者 | 12＋5 修；拓樸全對，14 分鐘 |
-| v7→v10 | 紅隊（11/13 閘可偽造）＋儀式成本量測（人類決策點 6→10 變重）＋目標敘述重定 | 威脅模型改為「品質不夠而人看不出」；人類決策點 4→2；刪 waiver／approval commit／身分錨；獨立審查升為必要（≥2 reviewer、跨 vendor）；盲跑報告＝驗收介面 |
+| v7→v10 | 紅隊（11/13 閘可偽造）＋儀式成本量測（人類決策點 6→10 變重）＋目標敘述重定 | 威脅模型改為「品質不夠而人看不出」；人類決策點 4→2；刪 waiver／approval commit／身分錨；獨立審查升為必要（≥2 fresh reviewer；跨 vendor 當時寫必用，spec 審查後改為使用者選配）；盲跑報告＝驗收介面 |
 | v10 | 冷讀者；決策點 ② 新增（product 的 spec 可見行為確認） | 兩條路徑、決策點、單 vendor 降級全對；每個問使用者的時刻皆判定基本知識可答；抓到「決策點①機制只在 capture-intent」與「after-task／wave-end 是一次還是兩次」——已修。25 分鐘（未達 15；文件密度是主因，落地後 SKILL.md 各站只載自己那段） |
