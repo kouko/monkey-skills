@@ -30,7 +30,7 @@ on:
       # gated by its hooks, so edits to either must fire this gate too.
       - 'loom-code/hooks/**'
       - 'loom-code/contract/**'
-      # scripts/test_marketplace_entry.py reads the repo-root
+      # loom-design/scripts/test_marketplace_entry.py reads the repo-root
       # marketplace.json, so an edit there must fire this gate too —
       # else a removed/renamed entry merges ungated (fail-open).
       - '.claude-plugin/marketplace.json'
