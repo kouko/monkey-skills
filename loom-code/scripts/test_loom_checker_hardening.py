@@ -314,6 +314,64 @@ def test_every_task_covered_by_an_implementer_passes(tmp_path: Path) -> None:
     assert "push.dispatch-covers-tasks" not in blocked_rules(result)
 
 
+# --- W4-07: spec commits owe no Task trailer --------------------------------
+
+
+def _repo_with_untrailered_work_commit(tmp_path: Path, *, paths: dict[str, str]) -> Path:
+    """A repo whose sole work commit (no `Task:` trailer) writes `paths`."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    write(repo, "seed.txt", "seed\n")
+    git(repo, "add", "seed.txt")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+
+    for rel, text in paths.items():
+        write(repo, rel, text)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): confirm behavior")
+
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return repo
+
+
+def test_a_spec_only_commit_with_no_trailer_is_exempt(tmp_path: Path) -> None:
+    repo = _repo_with_untrailered_work_commit(
+        tmp_path, paths={f"docs/loom/{CHANGE}/spec.md": "# Spec\n\nconfirmed.\n"}
+    )
+    result = run_checker("push", cwd=repo)
+    assert "push.dispatch-covers-tasks" not in blocked_rules(result), result.stderr
+
+
+def test_a_code_only_commit_with_no_trailer_still_blocks(tmp_path: Path) -> None:
+    repo = _repo_with_untrailered_work_commit(tmp_path, paths={"a.py": "value = 1\n"})
+    result = run_checker("push", cwd=repo)
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+
+
+def test_a_spec_and_code_commit_with_no_trailer_blocks_and_omits_spec(
+    tmp_path: Path,
+) -> None:
+    repo = _repo_with_untrailered_work_commit(
+        tmp_path,
+        paths={
+            f"docs/loom/{CHANGE}/spec.md": "# Spec\n\nconfirmed.\n",
+            "a.py": "value = 1\n",
+        },
+    )
+    result = run_checker("push", cwd=repo)
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    for line in result.stderr.splitlines():
+        if line.startswith("BLOCK push.dispatch-covers-tasks"):
+            assert "spec" not in line
+            assert "code" in line
+
+
 # --- P07: a second vendor that was named and never used --------------------
 
 
