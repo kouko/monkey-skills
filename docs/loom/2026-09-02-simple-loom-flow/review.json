@@ -1,0 +1,136 @@
+{
+ "reviewed_sha": "923fb84a09fb405dcd2bbadaea6d15c1ec7ffb8d",
+ "scope": "spec (docs type) — round 1, before write-plan",
+ "verdicts": [
+  {
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "NEEDS_REVISION",
+   "dimension_scores": {
+    "omission": "fail",
+    "ambiguity": "fail",
+    "inconsistency": "fail",
+    "incorrect-fact": "fail",
+    "missing-population": "fail",
+    "spec-conformance": "fail",
+    "user-judgment-leak": "pass"
+   },
+   "findings_file": "evidence/spec-review-r1-claude.md"
+  },
+  {
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "NEEDS_REVISION",
+   "dimension_scores": {
+    "omission": "fail",
+    "ambiguity": "fail",
+    "inconsistency": "fail",
+    "incorrect-fact": "fail",
+    "missing-population": "fail",
+    "spec-conformance": "fail",
+    "user-judgment-leak": "fail"
+   },
+   "findings_file": "evidence/spec-review-r1-codex.md"
+  }
+ ],
+ "probes": [],
+ "open_findings": [
+  {
+   "id": "SR1-01",
+   "severity": "fatal",
+   "anchor": "spec.md:Requirements",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "Acceptance #4 (replay 三個真實 change 不比今天重) 無任何 REQ"
+  },
+  {
+   "id": "SR1-02",
+   "severity": "fatal",
+   "anchor": "spec.md:REQ-1 / UI flows / concept-model §4",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "單向門與判斷型岔路成為額外停點；engineering 在 write-plan 前問違反 ≤2"
+  },
+  {
+   "id": "SR1-03",
+   "severity": "fatal",
+   "anchor": "concept-model.md:§4 table",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "只裝 loom-code 且 needs-design: yes 時要求使用者手寫 spec ＝ user-judgment leak"
+  },
+  {
+   "id": "SR1-04",
+   "severity": "fatal",
+   "anchor": "spec.md:REQ-7 / concept-model §11",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "准入規則的『機制』無機器可讀母體，CI 無法驗淨數不增"
+  },
+  {
+   "id": "SR1-05",
+   "severity": "important",
+   "anchor": "spec.md:UI flows",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "缺 Codex /hooks 授信、PRINCIPLES 拒收、standing docs WARN 的可見流程"
+  },
+  {
+   "id": "SR1-06",
+   "severity": "important",
+   "anchor": "spec.md:REQ-3/6/8",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "複合 REQ 的箭頭只覆蓋部分義務；名詞≤40 與跨 vendor 必用是 intent Open question 卻寫成硬要求"
+  },
+  {
+   "id": "SR1-07",
+   "severity": "important",
+   "anchor": "spec.md:REQ-2 / concept-model §7a",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "『只多一次授信』為假：hook 定義變即重授信，而 §7a 升版覆寫；command 字串須固定"
+  },
+  {
+   "id": "SR1-08",
+   "severity": "important",
+   "anchor": "spec.md:REQ-8 / Current state evidence",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "skill 36→18 應為 ≤18；session-start 減半無 baseline sha；113 名詞未受清單支持"
+  },
+  {
+   "id": "SR1-09",
+   "severity": "important",
+   "anchor": "spec.md:REQ-9",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "REQ-9 措辭『走完』≠ Acceptance #6 的四項輸出；且未帶現況 25 分鐘與拆站對策"
+  },
+  {
+   "id": "SR1-10",
+   "severity": "nit",
+   "anchor": "spec.md:UI flows 4 / Alternatives 2 / REQ-6,7",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "機制規則混進使用者可讀段；『掃讀』理由無證據；REQ-6/7 列舉不完整"
+  }
+ ]
+}
