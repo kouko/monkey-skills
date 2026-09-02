@@ -1,5 +1,5 @@
 {
- "reviewed_sha": "b45446bb",
+ "reviewed_sha": "c3c4d478",
  "scope": "spec PASS (r1–4, r5 adversarial, r9); W0 PWN (6–8); W1 PWN (10–14); W2 PWN (15–19); W3 PWN (20–21); W4 pending",
  "verdicts": [
   {
@@ -460,7 +460,7 @@
    "kind": "package-tests",
    "scope": "w0-code",
    "command": "python3 -m pytest loom-code/scripts/ -q",
-   "sha": "423efe92",
+   "sha": "257bdd81",
    "result": "2285 passed, 1 xfailed in 122.29s (0:02:02)",
    "artifact": "loom-code/scripts/"
   },
@@ -468,7 +468,7 @@
    "kind": "adversarial",
    "scope": "w0-code",
    "command": "reviewer probes: 6 checker fail-open probes (after-task) + hook payload shapes / scaffold real-copy / R1–R4 fixtures (wave-end)",
-   "sha": "423efe92",
+   "sha": "257bdd81",
    "result": "3 + 4 fatal fail-opens found and fixed",
    "artifact": "evidence/w0-checkpoint-reviews.md"
   },
@@ -476,7 +476,7 @@
    "kind": "package-tests",
    "scope": "w1-code",
    "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "896 passed (round 3); 889 passed after W2-04 cleanup",
    "artifact": "loom-code/scripts/"
   },
@@ -484,7 +484,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py"
   },
@@ -492,7 +492,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py"
   },
@@ -500,7 +500,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py"
   },
@@ -508,7 +508,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py"
   },
@@ -516,7 +516,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py"
   },
@@ -524,7 +524,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "escaped-by-design (§0)",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py"
   },
@@ -532,7 +532,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py"
   },
@@ -540,7 +540,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py"
   },
@@ -548,7 +548,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py"
   },
@@ -556,7 +556,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "escaped-by-design (§0)",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py"
   },
@@ -564,7 +564,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py"
   },
@@ -572,7 +572,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py"
   },
@@ -580,7 +580,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py"
   },
@@ -588,7 +588,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py"
   },
@@ -596,7 +596,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py"
   },
@@ -604,7 +604,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py"
   },
@@ -612,7 +612,7 @@
    "kind": "adversarial",
    "scope": "w1-code",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py",
-   "sha": "0e719e27",
+   "sha": "d6cb7ea0",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
   },
@@ -620,7 +620,7 @@
    "kind": "package-tests",
    "scope": "w3-code",
    "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
-   "sha": "b45446bb",
+   "sha": "c3c4d478",
    "result": "985 passed (round 21 reviewer run)",
    "artifact": "loom-code/scripts/"
   },
@@ -628,7 +628,7 @@
    "kind": "adversarial",
    "scope": "w2-skill",
    "command": "scratchpad/adversary-w2 (13 probes; 11 held, p07/p12 by design)",
-   "sha": "b45446bb",
+   "sha": "c3c4d478",
    "result": "held",
    "artifact": "evidence/w2-checkpoint-reviews.md"
   },
@@ -636,7 +636,7 @@
    "kind": "adversarial",
    "scope": "w3-gate",
    "command": "scratchpad/adversary-w3 (15 probes; 14 caught, p14 by design)",
-   "sha": "b45446bb",
+   "sha": "c3c4d478",
    "result": "caught",
    "artifact": "evidence/w3-checkpoint-reviews.md"
   }
@@ -927,7 +927,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-1 probes[] 自填→checker 自跑",
-   "resolved": "7b972f12 §7 + bb85a744 checker executes probes — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §7 + 3c5d14ca checker executes probes — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-02",
@@ -937,7 +937,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "C/D 決策點後單向門取保守預設",
-   "resolved": "7b972f12 §4; 343e95f2 NF-1 no-reversible-option exit — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §4; 82726dcd NF-1 no-reversible-option exit — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-03",
@@ -947,7 +947,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "C-2 類別 (e) 不可逆動作",
-   "resolved": "7b972f12 §4 (e) + UI flow 4 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §4 (e) + UI flow 4 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-04",
@@ -957,7 +957,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "A-1 無工具時自寫 abuse 案例",
-   "resolved": "7b972f12 §6; push.probes-adversarial scheduled W1-06 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §6; push.probes-adversarial scheduled W1-06 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-05",
@@ -967,7 +967,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "A-2 dismissed 身分",
-   "resolved": "7b972f12 §5/§7 + bb85a744 push.dismissed-by-reviewer — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §5/§7 + 3c5d14ca push.dismissed-by-reviewer — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-06",
@@ -977,7 +977,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-2 問題型判準",
-   "resolved": "7b972f12 §4/REQ-1; questions[] field for the record — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §4/REQ-1; questions[] field for the record — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-07",
@@ -987,7 +987,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "B-2 建議句用 5/7",
-   "resolved": "7b972f12 §5 (5/7 verified by r5 reviewer) — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §5 (5/7 verified by r5 reviewer) — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-08",
@@ -997,7 +997,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "E-1 修正輪不計、after-task 預算",
-   "resolved": "7b972f12 §5; build SKILL + manifest wording synced — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §5; build SKILL + manifest wording synced — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-09",
@@ -1017,7 +1017,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "F ratified 實質條件",
-   "resolved": "7b972f12 §8 + bb85a744 non-negotiables ≥3 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §8 + 3c5d14ca non-negotiables ≥3 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-11",
@@ -1027,7 +1027,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "G 切換日三事實",
-   "resolved": "7b972f12 §1/§10/REQ-2 + contract.requires rule — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §1/§10/REQ-2 + contract.requires rule — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-12",
@@ -1037,7 +1037,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-3 降為記錄欄位",
-   "resolved": "7b972f12 §7 + dispatch[] fresh_context field — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §7 + dispatch[] fresh_context field — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "SR5-13",
@@ -1057,7 +1057,7 @@
     "opus-spec-redteam-1"
    ],
    "text": "H-5 猜測定義",
-   "resolved": "7b972f12 §12 — by kouko decision point ② re-confirmation 2026-09-02"
+   "resolved": "6c2cb1d9 §12 — by kouko decision point ② re-confirmation 2026-09-02"
   },
   {
    "id": "W0-01",
@@ -1068,7 +1068,7 @@
     "w0-reviewers"
    ],
    "text": "branch_base only main",
-   "resolved": "resolved: b2e9e1c0"
+   "resolved": "resolved: af0870e4"
   },
   {
    "id": "W0-02",
@@ -1079,7 +1079,7 @@
     "w0-reviewers"
    ],
    "text": "no review.json schema at push",
-   "resolved": "resolved: b2e9e1c0 push.review-schema"
+   "resolved": "resolved: af0870e4 push.review-schema"
   },
   {
    "id": "W0-03",
@@ -1090,7 +1090,7 @@
     "w0-reviewers"
    ],
    "text": "package-tests probe unbound",
-   "resolved": "resolved: b2e9e1c0 (sha) + bb85a744 (checker executes)"
+   "resolved": "resolved: af0870e4 (sha) + 3c5d14ca (checker executes)"
   },
   {
    "id": "W0-04",
@@ -1101,7 +1101,7 @@
     "w0-reviewers"
    ],
    "text": "push hangs on open stdin",
-   "resolved": "resolved: bb85a744 --hook"
+   "resolved": "resolved: 3c5d14ca --hook"
   },
   {
    "id": "W0-05",
@@ -1112,7 +1112,7 @@
     "w0-reviewers"
    ],
    "text": "push regex misses git -C / eval / shell -c / xargs",
-   "resolved": "resolved: bb85a744 + 423efe92"
+   "resolved": "resolved: 3c5d14ca + 257bdd81"
   },
   {
    "id": "W0-06",
@@ -1123,7 +1123,7 @@
     "w0-reviewers"
    ],
    "text": "Codex scaffold copy lacks deps; probe misreports",
-   "resolved": "resolved: 0459e0ac"
+   "resolved": "resolved: ae1be4bd"
   },
   {
    "id": "W0-07",
@@ -1134,7 +1134,7 @@
     "w0-reviewers"
    ],
    "text": "dispatch contract prose vs code",
-   "resolved": "resolved: bb85a744 dispatch[] in review.json"
+   "resolved": "resolved: 3c5d14ca dispatch[] in review.json"
   },
   {
    "id": "W0-08",
@@ -1145,7 +1145,7 @@
     "w0-reviewers"
    ],
    "text": "mechanisms registered per artifact not per field",
-   "resolved": "resolved: 2f91feb7"
+   "resolved": "resolved: 4c4aa20f"
   },
   {
    "id": "W0-09",
@@ -1156,7 +1156,7 @@
     "w0-reviewers"
    ],
    "text": "dismissed not identity-checked",
-   "resolved": "resolved: bb85a744 push.dismissed-by-reviewer"
+   "resolved": "resolved: 3c5d14ca push.dismissed-by-reviewer"
   },
   {
    "id": "W0-10",
@@ -1167,7 +1167,7 @@
     "w0-reviewers"
    ],
    "text": "R3 whole-file fallback; R4 unresolved eval; class unvalidated",
-   "resolved": "resolved: 2f91feb7 + 423efe92"
+   "resolved": "resolved: 4c4aa20f + 257bdd81"
   },
   {
    "id": "W0-11",
@@ -1178,7 +1178,7 @@
     "w0-reviewers"
    ],
    "text": "docs: backlog wording, session-start ②, KICKOFF globs, §3 JSON keys",
-   "resolved": "resolved: 8b325a7f, c51d4518"
+   "resolved": "resolved: e31c4703, b28d7586"
   },
   {
    "id": "W0-12",
@@ -1189,7 +1189,7 @@
     "w0-reviewers"
    ],
    "text": "contract --require message direction; plan lists hooks-probe",
-   "resolved": "resolved: 423efe92, 6e8e2c92"
+   "resolved": "resolved: 257bdd81, a6f583a8"
   },
   {
    "id": "W0-13",
@@ -1200,145 +1200,145 @@
     "w0-reviewers"
    ],
    "text": "intake.spec-pass picks the latest round across all lenses; a later code round would shadow the spec round",
-   "resolved": "1ffc8bca intake.spec-pass filters by spec-scoped rounds; 5 tests incl. later-code-round shadowing"
+   "resolved": "44dbdc24 intake.spec-pass filters by spec-scoped rounds; 5 tests incl. later-code-round shadowing"
   },
   {
    "id": "W1-01",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "write-plan lacked the needs-design criterion and Codex first-contact step",
-   "resolved": "resolved: dc6e8bf7, dead30e5"
+   "resolved": "resolved: 19fbb94b, 3b539cc2"
   },
   {
    "id": "W1-02",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "CI pytest step died on a collection error; 46 root guards pinned deleted mechanisms",
-   "resolved": "resolved: 114ea813, b25b88e6"
+   "resolved": "resolved: 5a21d6a1, 3c1186f7"
   },
   {
    "id": "W1-03",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "ship referenced a sibling plugin path (boundary)",
-   "resolved": "resolved: 114ea813"
+   "resolved": "resolved: 5a21d6a1"
   },
   {
    "id": "W1-04",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "adversary.md pointed at a non-existent catalogue",
-   "resolved": "resolved: 2cc406a8"
+   "resolved": "resolved: 60435d64"
   },
   {
    "id": "W1-05",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "no adversary dispatched at the checkpoint; push.probes-adversarial absent from tables",
-   "resolved": "resolved: adversary dispatched (2eeb18d2); tables 2cc406a8"
+   "resolved": "resolved: adversary dispatched (67233188); tables 60435d64"
   },
   {
    "id": "W1-06",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "probe command `true` / comment-substring / `; true` passed the push gate",
-   "resolved": "resolved: 4558a4ce → 2260fe69 → 96d90f1b (checker executes artifacts and declared commands, never recorded strings)"
+   "resolved": "resolved: 67fe4b84 → 7ca26ddb → 57e72d00 (checker executes artifacts and declared commands, never recorded strings)"
   },
   {
    "id": "W1-07",
    "severity": "fatal",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "branch-level Task trailer let untagged code commits through",
-   "resolved": "resolved: 96d90f1b per-commit trailer"
+   "resolved": "resolved: 57e72d00 per-commit trailer"
   },
   {
    "id": "W1-08",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "dispatch record race; second-vendor silently dropped; after-task budget prose-only; rename hides deletion",
-   "resolved": "resolved: 4558a4ce push.dispatch-covers-tasks, push.second-vendor-honoured, intake.after-task-budget, --no-renames"
+   "resolved": "resolved: 67fe4b84 push.dispatch-covers-tasks, push.second-vendor-honoured, intake.after-task-budget, --no-renames"
   },
   {
    "id": "W1-09",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "build BLOCKED branch re-opened a stop; questions[] carrier; branch creation; wave-end/branch-end doubling; five tables diverged",
-   "resolved": "resolved: 2cc406a8 (tables identical, test)"
+   "resolved": "resolved: 60435d64 (tables identical, test)"
   },
   {
    "id": "W1-10",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "spec red-team probe accepted without scope; R3/R4/class checks; host-hygiene skipped R4",
-   "resolved": "resolved: 4558a4ce, 2f91feb7, 423efe92"
+   "resolved": "resolved: 67fe4b84, 4c4aa20f, 257bdd81"
   },
   {
    "id": "W1-11",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "KICKOFF lacked package-tests for this repo; fallback masked",
-   "resolved": "resolved: 2260fe69"
+   "resolved": "resolved: 7ca26ddb"
   },
   {
    "id": "W1-12",
    "severity": "nit",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
    "text": "dead constant, weak `or` assertion, timeout regressions, ROUTINE.md dead pointer, docstrings, codex longDescription",
-   "resolved": "resolved: 0e719e27, 2260fe69, babe8bb1"
+   "resolved": "resolved: d6cb7ea0, 7ca26ddb, c34b6434"
   },
   {
    "id": "W1-13",
    "severity": "important",
    "anchor": "W1",
-   "origin_sha": "4cbb40d0",
+   "origin_sha": "81099ae3",
    "raised_by": [
     "w1-reviewers"
    ],
@@ -1420,7 +1420,7 @@
     "w2-w3-reviewers"
    ],
    "text": "Conventional Commits check rejected ! and ci; four review( commits; one docs+test commit",
-   "resolved": "resolved: f73f826f regex; four subjects rewritten (docs(loom-review)) by kouko; docs+test rewrite pending kouko"
+   "resolved": "resolved: 52553a27 regex; four subjects rewritten (docs(loom-review)) by kouko; docs+test rewrite pending kouko"
   },
   {
    "id": "W3-02",
@@ -1431,7 +1431,7 @@
     "w2-w3-reviewers"
    ],
    "text": "PRINCIPLES.md untracked/unsigned",
-   "resolved": "resolved: 9a15f1b7 tracked, 8d077e65 ratified by kouko"
+   "resolved": "resolved: 9a15f1b7 tracked, f593e46d ratified by kouko"
   },
   {
    "id": "W3-03",
@@ -1442,7 +1442,7 @@
     "w2-w3-reviewers"
    ],
    "text": "R4 verified path existence only; --measure fail-open; frozen stores prose-only; two DAs one intent; host-hygiene self-exemption; map: unchecked; counting prose unbound",
-   "resolved": "resolved: f05a2ec2, 98a583eb, b45446bb"
+   "resolved": "resolved: f05a2ec2, 98a583eb, c3c4d478"
   },
   {
    "id": "W3-04",
@@ -1464,7 +1464,7 @@
     "w2-w3-reviewers"
    ],
    "text": "dead FLOW_MARKER, nested ARCHIVED.md exemption, indented code as flow line, ui-flows scope statement",
-   "resolved": "resolved: b45446bb"
+   "resolved": "resolved: c3c4d478"
   }
  ],
  "vendors": [
@@ -2015,7 +2015,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: a35698c8 fca9a37f bb1e926b (review.json.dispatch sidecar records) 8b325a7f (W0 wave-end docs fixes) b43d1477 (manifest class e) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: ba93a984 cc7431ce 80234688 (review.json.dispatch sidecar records) e31c4703 (W0 wave-end docs fixes) eccd7a4d (manifest class e) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
   },
   {
    "task": "W1-06",
@@ -2024,7 +2024,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 4da9ed6a (drop @req-tag tests) f0ae8877 83a9eee3 (staged W1-06 deletions swept into docs commits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 73510303 (drop @req-tag tests) f8d20fe7 59bf5a99 (staged W1-06 deletions swept into docs commits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
   },
   {
    "task": "W1-03",
@@ -2033,7 +2033,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: ffbaefd8 5b391076 (review skill description edits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 58dd98c4 b096f93d (review skill description edits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
   },
   {
    "task": "W3-06",
@@ -2042,7 +2042,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 6683be45 (spec round 9 + concept-model §4/§7) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 294559ad (spec round 9 + concept-model §4/§7) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
   },
   {
    "task": "W3-01",
@@ -2051,7 +2051,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 513d974b (requires-contract moves to decision-map, user-decided) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 99bc49fc (requires-contract moves to decision-map, user-decided) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
   },
   {
    "task": "W3-04",
@@ -2060,7 +2060,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 4a521327 (W3 docs notes, check_mechanisms measure gates) f73f826f (CC regex ci type + !) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: c0f49194 (W3 docs notes, check_mechanisms measure gates) 52553a27 (CC regex ci type + !) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
   }
  ],
  "questions": [
