@@ -162,8 +162,10 @@ jobs:
         # docs/loom/evidence/ are historical records whose line cites went
         # stale by design when the files they cite moved on.
         run: |
-          files=$(git ls-files '*.md' | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)')
-          python3 loom-code/scripts/check_doc_citations.py $files
+          set -euo pipefail
+          git ls-files '*.md' \
+            | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)' \
+            | xargs python3 loom-code/scripts/check_doc_citations.py
 
       - name: Verify skill cross-references resolve
         # Every relative markdown link in a SKILL.md must point at an existing
