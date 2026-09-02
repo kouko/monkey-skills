@@ -292,3 +292,9 @@ mechanisms:
   - id: "capture-intent.product-problem-plain-words"
     class: prose-gate
     eval: "pending — W4-01"
+  - id: "write-spec.product-visible-behaviour-confirmed-before-review"
+    class: prose-gate
+    eval: "pending — W4-01"
+  - id: "write-spec.no-design-decision-shown-to-user"
+    class: prose-gate
+    eval: "pending — W4-01"
