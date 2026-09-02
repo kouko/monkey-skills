@@ -823,6 +823,8 @@ def test_a_code_commit_without_its_own_trailer_blocks(tmp_path: Path) -> None:
     write(repo, "b.py", "value = 2\n")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "feat: b with no trailer")
+    # loom_checker.py reports the offending sha truncated to 8 hex chars.
+    untrailered_sha = git(repo, "rev-parse", "HEAD")[:8]
     write(repo, "notes.md", "prose\n")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "docs: notes\n\nTask: T1")
@@ -833,7 +835,9 @@ def test_a_code_commit_without_its_own_trailer_blocks(tmp_path: Path) -> None:
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.dispatch-covers-tasks" in blocked_rules(result)
-    assert "feat: b" in result.stderr or "no `Task:` trailer" in result.stderr
+    # The offending commit -- the trailerless "feat: b" -- must be named,
+    # not just any commit mentioning a trailer in general.
+    assert untrailered_sha in result.stderr
 
 
 def test_a_docs_only_commit_needs_no_trailer(tmp_path: Path) -> None:
@@ -861,3 +865,88 @@ def test_a_fallback_with_trailing_junk_blocks(tmp_path: Path) -> None:
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.second-vendor-honoured" in blocked_rules(result)
+
+
+# --- round-4 #5: both TimeoutExpired branches ------------------------------
+#
+# `PROBE_RUN_TIMEOUT` reads `LOOM_PROBE_RUN_TIMEOUT` (loom_checker.py) so a
+# test can force the timeout in seconds instead of waiting on the real
+# 10-minute default. `run_checker` spawns a subprocess without an explicit
+# `env=`, so it inherits the current process environment — the one
+# `monkeypatch.setenv` edits — and the checker under test reads the
+# monkeypatched value at startup.
+
+
+def init_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    write(repo, "seed.txt", "seed\n")
+    git(repo, "add", "seed.txt")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    return repo
+
+
+def test_a_hung_package_tests_command_times_out_and_blocks(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = init_repo(tmp_path)
+    write(repo, "a.py", "value = 1\n")
+    write(repo, "evidence/hang.py", "import time\ntime.sleep(3)\n")
+    for n in range(3):
+        write(repo, f"evidence/abuse_{n}.py", "raise SystemExit(0)\n")
+    write(
+        repo, KICKOFF,
+        "# Kickoff Defaults\n\n"
+        "- package-tests: python3 evidence/hang.py — fixture (2026-09-02)\n",
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: a\n\nTask: T1")
+    sha = git(repo, "rev-parse", "HEAD")
+
+    body = review_body(sha)
+    body["probes"][0] = {
+        "kind": "package-tests", "command": "python3 evidence/hang.py",
+        "sha": sha, "result": "pass", "artifact": "evidence/hang.py",
+    }
+    write_review(repo, body)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    monkeypatch.setenv("LOOM_PROBE_RUN_TIMEOUT", "1")
+    result = run_checker("push", cwd=repo)
+
+    assert result.returncode == 1
+    assert "push.probes-package-tests" in blocked_rules(result)
+    assert "did not finish within 1s" in result.stderr
+
+
+def test_a_hung_adversarial_probe_times_out_and_blocks(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = init_repo(tmp_path)
+    write(repo, "a.py", "value = 1\n")
+    write(repo, "evidence/tests.txt", "2199 passed\n")
+    for n in range(3):
+        write(repo, f"evidence/abuse_{n}.py", "import time\ntime.sleep(3)\n")
+    write(
+        repo, KICKOFF,
+        f"# Kickoff Defaults\n\n- package-tests: {DECLARED_TESTS} — fixture (2026-09-02)\n",
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: a\n\nTask: T1")
+    sha = git(repo, "rev-parse", "HEAD")
+
+    write_review(repo, review_body(sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    monkeypatch.setenv("LOOM_PROBE_RUN_TIMEOUT", "1")
+    result = run_checker("push", cwd=repo)
+
+    assert result.returncode == 1
+    assert "push.probes-adversarial" in blocked_rules(result)
+    assert "did not finish within 1s" in result.stderr

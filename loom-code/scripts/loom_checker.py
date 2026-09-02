@@ -1087,9 +1087,6 @@ def check_open_findings_closed(review) -> list[tuple[str, str]]:
     return []
 
 
-PROBE_TIMEOUT = 1800  # 30 minutes: a package suite that never ends is a fail
-
-
 # A command that exits 0 for reasons unrelated to the thing it claims to
 # have run. `true` is the whole attack: it is a real command, it really
 # exits 0, and it tests nothing.
@@ -1142,7 +1139,9 @@ def command_names_artifact(command: str, artifact: str) -> bool:
 # have to interpret makes it undeclarable rather than silently reinterpreted.
 SHELL_METACHARACTERS = re.compile(r"[;&|<>()$`*?\[\]{}\n]")
 
-PROBE_RUN_TIMEOUT = 600  # 10 minutes for one artifact or one declared suite
+# 10 minutes for one artifact or one declared suite; overridable so a test
+# can force the TimeoutExpired branches without waiting 10 minutes.
+PROBE_RUN_TIMEOUT = int(os.environ.get("LOOM_PROBE_RUN_TIMEOUT", "600"))
 
 
 def argv_for(command: str) -> list[str]:
