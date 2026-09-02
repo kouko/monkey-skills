@@ -169,6 +169,46 @@ def test_no_deleted_vocabulary(pattern):
     )
 
 
+# Facts the station cannot be followed without. Each one was a cold-read
+# guess or an after-task review finding before it was written down, so each
+# is pinned by the substring that carries it rather than by its section.
+LOAD_BEARING = [
+    ("SKILL.md", "five of the seven"),                       # second-vendor number
+    ("SKILL.md", "when it is done you will be able to"),     # UI flow 1 restatement
+    ("SKILL.md", "Is that right?"),
+    ("SKILL.md", "reads or types into"),                     # needs-design (a)
+    ("SKILL.md", "multi-state or multi-object"),             # needs-design (b)
+    ("SKILL.md", "intent.needs-design-recompute"),           # who has the last word on `no`
+    ("SKILL.md", "Budget **2 per plan**"),                   # after-task budget
+    ("SKILL.md", "at most 5 checkpoints during build"),      # the cap is on checkpoints
+    ("SKILL.md", "contract.requires"),                       # step 0's rule id
+    ("SKILL.md", "/hooks"),                                  # Codex first contact
+    ("SKILL.md", "codex_scaffold.py --probe"),
+    ("SKILL.md", "user-judgment-leak"),                      # the dimension that catches a bad question
+    ("SKILL.md", "<YYYY-MM-DD>-<slug>"),                     # change-id grammar
+    ("SKILL.md", "user-decided —"),                          # where answers land with no spec
+    ("one-way-door.md", "(a) Hard to swap later"),
+    ("one-way-door.md", "(b) Creates money or a standing obligation"),
+    ("one-way-door.md", "(c) Limits what the user can do in future"),
+    ("one-way-door.md", "(d) Sets the ceiling on output quality"),
+    ("one-way-door.md", "(e) An irreversible action on the user's existing state"),
+    ("one-way-door.md", "Check first"),
+    ("one-way-door.md", "Measure first"),
+    ("one-way-door.md", "Threshold"),
+    ("one-way-door.md", "Merge"),
+]
+
+
+@pytest.mark.parametrize("filename,fact", LOAD_BEARING)
+def test_load_bearing_facts_are_stated(filename, fact):
+    path = SKILL if filename == "SKILL.md" else SKILL_DIR / "references" / filename
+    text = path.read_text(encoding="utf-8")
+    assert fact in text, (
+        f"{path.relative_to(REPO)} no longer states {fact!r}; without it the "
+        "cold reader has to guess (REQ-9 counts a guess as a failure)."
+    )
+
+
 def test_body_word_count(skill_body):
     words = len(skill_body.split())
     assert words <= WORD_CAP, f"SKILL.md body is {words} words (cap {WORD_CAP})."

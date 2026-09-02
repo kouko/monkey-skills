@@ -24,15 +24,25 @@ places on the two hosts:
 | Host | Command prefix |
 |---|---|
 | Claude Code | `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py` |
-| Codex CLI | `python3 .codex/hooks/loom_checker.py` (written into the repo by the scaffold) |
+| Codex CLI | `python3 .codex/hooks/loom_checker.py` (written into the repo by the scaffold, step 0b) |
 
 Below, the Claude Code form is written out. On Codex, substitute the other
 prefix; nothing else changes.
 
+**Vocabulary you need.** `kind: product` means the user-visible behaviour
+of a product changes — what someone using it reads, types, or sees
+happen. `kind: engineering` is everything else: refactors, internal
+plumbing, tooling, tests, docs. `<change-id>` is `<YYYY-MM-DD>-<slug>`,
+where the date is the day the work starts and the slug is the intent's
+title in kebab-case — for "six scripts share a git helper" started on
+2026-09-02, `2026-09-02-scripts-share-git-helper`.
+
 ## What you will be asked, in plain words
 
 Give the user this list if they ask what is coming. It is the whole list:
-there are no other stops.
+there are no other **decision points**. On Codex there is also one
+non-decision authorisation stop, the first time this repo is used (step
+0b) — it asks for permission to run, not for a decision about the work.
 
 1. **"Is this what you want?"** — I restate the problem and what you will
    be able to do when it is done. You say yes, or you correct me.
@@ -61,10 +71,10 @@ shapes.
 | Station | Artifact produced (path) | Who decides | Checker rules that can block, and when | Checkpoint |
 |---|---|---|---|---|
 | capture-intent | `docs/loom/intent/<change-id>.md` | User — **decision point ①** ("is this what you want?"). Absent `loom-design`: step 3 of this file does it | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` — when the intent is committed | none |
-| write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering: agent-decided. Absent `loom-design`: step 4 of this file writes a minimal spec and runs ② | `standing.warn`, `standing.product-principles-reject`, `standing.silence` — while the spec is being started | spec review (read + adversarial) must PASS before any plan is written |
-| **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | `intake.confirmed`, `intake.spec-pass`, `intake.confirmed-behavior` — at step 4, before the plan is written | none of its own |
-| build | commits (the diff); one commit per task carrying a `Task: <id>` trailer | Agent | none | end of a wave when the unreviewed change exceeds 8 files or 400 lines; immediately after any task the plan marked `review: after-task` |
-| review | `docs/loom/<change-id>/review.json` | Agent — two or more fresh reviewers; their disagreement is recorded, not averaged | none directly; it writes the record the push rules read | every checkpoint; the end of the branch always; at most 5 during build |
+| write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering: agent-decided. Absent `loom-design`: step 4 of this file writes a minimal spec and runs ② | `standing.product-principles-reject` blocks a product change with no ratified `PRINCIPLES.md`, when the spec is started | spec review (read + adversarial) must PASS before any plan is written |
+| **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | step 2, every change, before ①: `standing.warn` and `standing.silence` are notice-only and never block, `standing.product-principles-reject` blocks. Step 4, before the plan: `intake.confirmed`, `intake.spec-pass`, `intake.confirmed-behavior` | none of its own |
+| build | commits (the diff); one commit per task carrying a `Task: <id>` trailer | Agent | none | end of a wave when the unreviewed change exceeds 8 files or 400 lines; immediately after any task the plan marked `review: after-task`; a wave containing an after-task task always ends with a checkpoint too, and that one reviews only the delta after the after-task review plus cross-task consistency |
+| review | `docs/loom/<change-id>/review.json` — created here, at the first checkpoint (the spec review, or the first wave end); never written by write-plan | Agent — two or more fresh reviewers; their disagreement is recorded, not averaged | none directly; it writes the record the push rules read | every checkpoint; the end of the branch always; at most 5 during build |
 | ship | pull request and merge (git) | User — **decision point ③**: they read the blind-run report, not the diff | `push.review-only-head`, `push.reviewed-sha`, `push.open-findings-closed`, `push.probes-package-tests`, `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.review-schema` — on `git push`, `gh pr create`, `gh pr merge` | the end-of-branch checkpoint must have passed first |
 | maintain | a new or updated `docs/loom/intent/<change-id>.md` | Agent turns an incident into an intent; the user then answers ① for that new change | `intent.schema` and the rest of the `intent.*` family, when that intent is committed | none |
 
@@ -80,14 +90,49 @@ file, and the user sees exactly the same questions.
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 1.0
 ```
 
-Exit 0: continue. Anything else: print what the checker printed, tell the
-user to update `loom-code`, and **stop**. Do not work around it.
+Exit 0: continue. Anything else, the rule is `contract.requires`: print
+what the checker printed, tell the user to update `loom-code`, and
+**stop**. Do not work around it.
+
+## Step 0b — Codex only: first contact with this repo
+
+Skip this entirely on Claude Code, where the plugin supplies the checker
+and nothing is installed into the repo.
+
+On Codex CLI, the checker has to live inside the repo and be trusted once.
+From the loom-code checkout — wherever the user installed it; there is no
+plugin root variable on this host:
+
+```
+python3 <loom-code>/scripts/codex_scaffold.py --repo .
+```
+
+If it wrote or changed files, commit them with the message
+`chore(loom): scaffold hooks <version>`, using the version the script
+printed. Then prove the belt is actually live:
+
+```
+python3 <loom-code>/scripts/codex_scaffold.py --probe
+```
+
+The probe fires a command that **must** be blocked. If it was blocked,
+continue to step 1. If it was not, an untrusted hook is being skipped
+silently — print the script's BLOCK message and **stop**, in these words:
+
+> 我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 `/hooks` 按一次授
+> 權，我才會繼續。
+>
+> (I have installed loom's checks for this repo; please type `/hooks` in
+> Codex and approve them once, then I will carry on.)
+
+The user approves once, and the next command continues from step 1. This
+is an authorisation, not a decision about the work — it is not a decision
+point, and it happens once per repo, not once per change.
 
 ## Step 1 — Find the intent
 
-The intent lives at `docs/loom/intent/<change-id>.md`, where `<change-id>`
-is `<date>-<slug>` — the date the work started and the title in
-kebab-case. Look there first; if the user named a change, match the slug.
+The intent lives at `docs/loom/intent/<change-id>.md`. Look there first; if
+the user named a change, match the slug.
 
 **If an intent exists**, read it and go to step 2.
 
@@ -117,14 +162,16 @@ early cannot be shipped anyway.
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py standing docs/loom/intent/<change-id>.md
 ```
 
-Print its WARN lines to the user **verbatim** — do not summarise them, do
-not add to them, and do not act on them. They are a notice, not a
-question, and they never block.
+Run this on **every** change, before decision point ①. Print its WARN lines
+to the user **verbatim** — do not summarise them, do not add to them, and
+do not act on them. `standing.warn` and `standing.silence` are notices;
+they never block.
 
-One outcome does block: `kind: product` in a repo with no ratified
-`PRINCIPLES.md` (ratified = the file carries a `ratified-by: <name>
-<date>` line and a `## Non-negotiables` section with at least three
-items). Then, if `loom-design` is not installed, you run the interview in
+One outcome does block, `standing.product-principles-reject`: `kind:
+product` in a repo with no ratified `PRINCIPLES.md` (ratified = the file
+carries a `ratified-by: <name> <date>` line and a `## Non-negotiables`
+section with at least three items). Then, if `loom-design` is not
+installed, you run the interview in
 `contract/templates/PRINCIPLES-interview.md` — **inside the same
 conversation as step 3**, not as a separate stop. Open with the line that
 template gives you, ask its questions until the answers are clear, write
@@ -152,16 +199,22 @@ twice.
    irreversible to the user's existing data — is asked even when there is
    no fork.
 
-3. **The second-reviewer suggestion, at most once per change.** Include it
-   only if `docs/loom/KICKOFF-DEFAULTS.md` has no `second-vendor:` line and
-   a second AI command-line tool is present (`which codex gemini`). Say it
-   in one plain sentence with the number in it: reviewing with a second
-   vendor costs a few minutes and some quota, and when this system's own
-   spec was reviewed, five of the seven serious problems were found by only
-   one of the two vendors. Whatever the answer, write it into
-   `docs/loom/KICKOFF-DEFAULTS.md` as
-   `- second-vendor: <cli> | none — <reason> (<date>)` and never ask again.
-   If the line already exists, say nothing about it.
+3. **The second-reviewer suggestion, at most once per change.** A second
+   reviewer only counts if it is a non-interactive command-line tool from a
+   **different model vendor than the host you are running on**: on Claude
+   Code look for `codex` or `gemini`, on Codex look for `claude` or
+   `gemini` (`which codex gemini` / `which claude gemini`). Never suggest
+   the host itself. Include the suggestion only if
+   `docs/loom/KICKOFF-DEFAULTS.md` has no `second-vendor:` line and such a
+   tool is present. Say it in one plain sentence with the number in it:
+   reviewing with a second vendor costs a few minutes and some quota, and
+   when this system's own spec was reviewed, five of the seven serious
+   problems were found by only one of the two vendors. Whatever the answer,
+   record it in `docs/loom/KICKOFF-DEFAULTS.md` as
+   `- second-vendor: <cli> | none — <reason> (<date>)` and never ask again;
+   if that file does not exist yet, create it first from
+   `contract/templates/KICKOFF-DEFAULTS.md`. If the line already exists,
+   say nothing about it.
 
 4. **The principles interview**, if step 2 demanded it.
 
@@ -174,9 +227,10 @@ the list before sending:
 - did it work (acceptance — decision point ③),
 - a one-way door in consequence form.
 
-A question that fits none of them is a question the user cannot answer, and
-the review station fails the change for it. Ask nothing about spec quality,
-task splitting, or review verdicts.
+A question that fits none of them is a question the user cannot answer.
+The review station has a dimension for exactly this, `user-judgment-leak`,
+and it returns NEEDS_REVISION when it finds one. Ask nothing about spec
+quality, task splitting, or review verdicts.
 
 **On "yes":**
 
@@ -192,7 +246,26 @@ limit on rounds here; there is on guessing.
 
 ## Step 4 — Does this need a spec?
 
-Read the intent's `needs-design:` line.
+Read the intent's `needs-design:` line. It is `yes` when either holds:
+
+- **(a)** the change touches a surface the user reads or types into — a
+  GUI, a TUI, CLI arguments and output, an external API — and no
+  `DESIGN.md` or ui-flows document already covers that surface; or
+- **(b)** the behaviour is multi-state or multi-object, and there is no
+  spec for it.
+
+Otherwise it is `no`. The same rule applies to every `kind`; product and
+engineering are not judged differently here.
+
+You do not get the last word on `no`: the checker recomputes it
+(`intent.needs-design-recompute`) against this repo's declared
+interface-surface globs, and a diff that touches one of them while the
+intent says `no` is blocked.
+
+Worked example — Task A, "six scripts share a git helper": nothing the
+user reads or types into changes, and it is one object with no states, so
+neither (a) nor (b) holds → `needs-design: no — internal refactor, no
+surface the user reads or types into`.
 
 **`no`** — go to step 5. The plan carries the Current State Evidence
 section instead of a spec.
@@ -206,6 +279,8 @@ intake check below.
 **`yes`, spec missing, `loom-design` not installed** — you write a minimal
 spec yourself, from `contract/templates/spec-minimal.md`:
 
+- **Frontmatter** — `intent: <change-id>@<sha>`, where the sha is the
+  commit you made in step 3 confirming the intent.
 - **Requirements** — one `REQ-<n> — <name>` per line of the intent's
   Acceptance list, each ending `→ Acceptance #<n>`. One-to-one; do not
   merge two Acceptance lines into one requirement.
@@ -252,9 +327,12 @@ how long it will take.
 
 **Shape.**
 
-- Group tasks into **waves**. Each wave ends in a checkpoint, and there are
-  at most **5 waves** — a deeper chain means the change is too big, and the
-  answer is to say so, not to nest further.
+- Group tasks into **waves**. The hard limit is on reviews, not waves:
+  **at most 5 checkpoints during build**, counting wave-end checkpoints and
+  after-task ones together, with the fix rounds after a NEEDS_REVISION not
+  counted. Derive the wave count from that budget; as a rough guide that
+  leaves about five waves, and needing more usually means the change is too
+  big — say so rather than nesting further.
 - Task ids are `W<n>-<nn>` and are **stable**: once written, an id is never
   renumbered, because commits refer to it in their `Task: <id>` trailer.
 - Dependencies go on the task line as `after: <ids>`. Tasks in one wave
@@ -265,23 +343,34 @@ how long it will take.
   first**, and **its risk**.
 - `review: after-task` marks a task that gets its own review immediately
   after its commit. Budget **2 per plan**; more is allowed, and each extra
-  one carries a one-line reason on that task.
+  one carries a one-line reason on that task. A wave holding one still ends
+  with its own wave-end checkpoint, and both count against the 5.
 
 **Sections.**
 
 - When `needs-design: no`, the plan opens with **Current State Evidence** —
   Forward, Reverse, Error, Data, Boundary, each with a path and an anchor.
   With a spec, that section lives there instead and the plan cites the spec.
-- A closing **Risks** section for risks that span the whole plan.
+- A closing **Risks** section for risks that span the whole plan. When
+  there is no spec, this section is also where the answers to one-way-door
+  questions live: one `user-decided — <what they chose and why>` line each,
+  because with no spec there is no `## Design decision` to hold them.
 
 **Forks you decided yourself.** Every one gets a one-line reason on its
 task: what you chose and why. Any one-way door that surfaces now — after
 decision point ① closed — is not a reason to go back to the user: take the
 default, mark it `agent-decided`, and list it so the blind-run report can
-show it at decision point ③. For classes (b), (c) and (e) in
-`references/one-way-door.md` the default is forced: the zero-obligation,
-reversible option that touches no existing data, recorded as
-`agent-decided — not authorised, took the conservative option`.
+show it at decision point ③.
+
+<!-- gate: write-plan.post-decision-conservative-default -->
+**After the decision point, classes (b), (c) and (e) have no free
+default.** For those three classes in `references/one-way-door.md` — money
+or a standing obligation, a limit on what the user can do later, and any
+irreversible action on the user's existing data — you must take the
+zero-obligation, reversible option that touches no existing data, and
+record it as `agent-decided — not authorised, took the conservative
+option`. Choosing a committing option unasked is never allowed, however
+obvious it looks.
 
 ## Step 6 — Commit and hand off
 

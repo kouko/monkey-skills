@@ -252,3 +252,6 @@ mechanisms:
   - id: "write-plan.product-spec-needs-confirmed-behavior"
     class: prose-gate
     eval: "pending — W4-01"
+  - id: "write-plan.post-decision-conservative-default"
+    class: prose-gate
+    eval: "pending — W4-01"
