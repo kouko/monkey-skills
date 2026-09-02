@@ -1,6 +1,6 @@
 {
  "reviewed_sha": "923fb84a09fb405dcd2bbadaea6d15c1ec7ffb8d",
- "scope": "spec (docs type) — round 2 (delta e75630c5..ecb335ce) + fixes a3d78066 pending round 3",
+ "scope": "spec — round 3 (delta ecb335ce..74229611); fixes 9d3615ab, 0f907d37; round 4 pending",
  "verdicts": [
   {
    "reviewer": "claude-fresh-context",
@@ -49,6 +49,22 @@
    "model": "opus",
    "verdict": "NEEDS_REVISION",
    "findings_file": "evidence/spec-review-r2-claude.md"
+  },
+  {
+   "round": 3,
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-review-r3-codex.md"
+  },
+  {
+   "round": 3,
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r3-claude.md"
   }
  ],
  "probes": [],
@@ -218,6 +234,87 @@
    ],
    "text": "冷讀對象：整份 concept-model.md（現況 25 分）或落地後各站 SKILL.md——intent 裁定",
    "resolved": "user decided 2026-09-02: 對象改站文件，零猜測優先；concept-model 只記錄（intent Acceptance #6 amended, re-confirmed）"
+  },
+  {
+   "id": "SR3-01",
+   "severity": "fatal",
+   "anchor": "concept-model §0.2",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "§0 仍寫『至少一個不同 vendor』，與重確認 intent 衝突",
+   "resolved": "9d3615ab"
+  },
+  {
+   "id": "SR3-02",
+   "severity": "important",
+   "anchor": "spec REQ-8",
+   "raised_by": [
+    "codex",
+    "claude"
+   ],
+   "text": "REQ-8 基線仍寫『main 當前』",
+   "resolved": "9d3615ab"
+  },
+  {
+   "id": "SR3-03",
+   "severity": "important",
+   "anchor": "concept-model §11 / spec REQ-7",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "contract package 宣告檔無固定路徑",
+   "resolved": "9d3615ab: loom-code/contract/manifest.yaml"
+  },
+  {
+   "id": "SR3-04",
+   "severity": "important",
+   "anchor": "spec UI flows",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "缺 standing docs 三行 WARN 流程",
+   "resolved": "9d3615ab: flow 7"
+  },
+  {
+   "id": "SR3-05",
+   "severity": "important",
+   "anchor": "spec REQ-9",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "測例未指明受測站",
+   "resolved": "0f907d37: 入口站＋摘要表"
+  },
+  {
+   "id": "SR3-06",
+   "severity": "important",
+   "anchor": "spec REQ-10",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "evidence New-model 欄依 v7 算，自證不可通過",
+   "resolved": "0f907d37: 註明過時、以 replay 為準"
+  },
+  {
+   "id": "SR3-07",
+   "severity": "important",
+   "anchor": "concept-model §8",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "code-only product 缺件仍寫『手寫』",
+   "resolved": "0f907d37: write-plan 代做訪談代寫"
+  },
+  {
+   "id": "SR3-08",
+   "severity": "nit",
+   "anchor": "concept-model §12 / §11 / spec 括號",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "§12 歷史列措辭、yaml-extra 檢查、重複性範圍措辭",
+   "resolved": "0f907d37"
   }
  ],
  "vendors": [
