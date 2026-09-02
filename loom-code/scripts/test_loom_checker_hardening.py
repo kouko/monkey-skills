@@ -965,3 +965,20 @@ def test_a_hung_adversarial_probe_times_out_and_blocks(
     assert result.returncode == 1
     assert "push.probes-adversarial" in blocked_rules(result)
     assert "did not finish within 1s" in result.stderr
+
+
+# --- W3 re-review notes: nested ARCHIVED.md is content; indented code is not prose ---
+
+
+def test_frozen_store_marker_must_sit_at_the_store_root():
+    import loom_checker as lc
+    assert lc.FROZEN_STORE_RE.match("docs/loom/plans/ARCHIVED.md").group("name") == "ARCHIVED.md"
+    nested = lc.FROZEN_STORE_RE.match("docs/loom/plans/2026-01/ARCHIVED.md")
+    assert nested is not None and nested.group("name") != "ARCHIVED.md"
+
+
+def test_indented_code_block_is_not_a_flow_line():
+    import loom_checker as lc
+    body = "Nothing user-visible changes.\n\n    def apply(x):\n        return transform(x)  # inputs -> outputs unchanged\n"
+    assert lc.flow_lines(body) == []
+    assert lc.flow_lines("type todo add --due D → the todo is stored with its due date\n")

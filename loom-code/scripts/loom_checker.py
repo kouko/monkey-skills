@@ -173,10 +173,11 @@ RULES: list[tuple[str, str]] = [
     (
         "spec.ui-flows-recompute",
         "While the diff touches a declared interface-surface glob, the spec's UI flows section "
-        "carries at least one prose line (outside fences and HTML comments) with an arrow and "
+        "carries at least one prose line (outside fences, indented code and HTML comments) with an arrow and "
         "at least four visible characters on each side. This is a structural floor only -- "
         "whether the flow says anything true or useful is the reviewer lens's job, not a "
-        "keyword list's.",
+        "keyword list's. Runs at write-plan intake only; spec changes after that are caught "
+        "by intake.spec-pass freshness, not re-checked at push.",
     ),
     (
         "standing.product-principles-reject",
@@ -945,9 +946,6 @@ def check_req_grammar(manifest, repo: Path, change_id: str, intent_sections):
 FENCE = re.compile(r"^\s*(?:```|~~~)")
 HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 ARROW = re.compile(r"\u2192|->")
-FLOW_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s*")
-# Every spelling of "there is no interface", in the two languages the loom
-# artifacts are written in.
 # A flow line is recognised STRUCTURALLY: an arrow with enough text on each
 # side of it. Three rounds of keyword patches (`n/a`, `none`, `沒有`, ...)
 # each reopened, because "a spelling of nothing" is unbounded and a checker
@@ -988,8 +986,13 @@ def prose_lines(body: str) -> list[str]:
         if FENCE.match(line):
             inside_fence = not inside_fence
             continue
-        if not inside_fence:
-            kept.append(line)
+        if inside_fence:
+            continue
+        if line.startswith(("    ", "\t")):
+            # Indented code block (CommonMark): the same semantic class as a
+            # fence, so it is not prose either.
+            continue
+        kept.append(line)
     return kept
 
 
@@ -2130,8 +2133,10 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
 # still write, because closing a store is how a store gets frozen.
 FROZEN_STORES = ("plans", "specs", "backlog", "design", "archive")
 FROZEN_STORE_RE = re.compile(
-    r"^docs/loom/(?:" + "|".join(FROZEN_STORES) + r")/(?:.*/)?(?P<name>[^/]+)$"
+    r"^docs/loom/(?:" + "|".join(FROZEN_STORES) + r")/(?P<name>.+)$"
 )
+# The only file a frozen store may still receive is its OWN marker, at the
+# store root -- an ARCHIVED.md nested anywhere deeper is content, not a marker.
 
 
 def check_frozen_store_untouched(repo: Path, reviewed_id: str | None):
