@@ -23,3 +23,9 @@
 | opus-review-code-w2c | code＋gate | NEEDS_REVISION | F1–F6 全關（獨立探針 30+ 例）；🔴 NF-1 測試 oracle 不認 YAML 行尾註解、與 checker 對同一檔給相反答案；🔴 NF-2 UI flows 反轉只認一個箭頭字元：`N/A … ->`、code fence 內箭頭、HTML 註解內箭頭皆過；🟡 NF-3 spec_sha 用 any()，一位 reviewer 對得上即新鮮；🟡 NF-4 「最後動過 intent 的 commit」語意讓任何後續 evidence 編輯把閘打紅（本 repo 現在就紅）；🟡 NF-5 `--list-rules` 描述停在舊語意 |
 處置：同 agent 第四輪（內容判定：fence／註解外、箭頭兩側各 ≥2 token；spec_sha all()；needs-design 行綁「改動 status／needs-design 行的 commit」；描述同步）。
 教訓（進 memory）：對抗型 finding 的修法若只加一個 token（子字串→argv、N/A→箭頭），下一輪必再開一個 token；要一次換成語意判定或直接執行物本身。
+
+## 複審第四輪（a1a4a321）
+| reviewer | lens | verdict | 摘要 |
+|---|---|---|---|
+| opus-review-code-w2d | code＋gate | NEEDS_REVISION | NF-1／3／4 關閉；NF-2 關了自列的八個逃脫但開兩個新洞：🔴 `>`／`#` 前綴繞過否定詞、🔴 中日文合法 flow 因「兩個詞」規則全被誤擋；🟡 五條 `--list-rules` 描述仍漂移；🟡 換句話說即過（關鍵字法天花板）；🟡 deciding-commit 偵測會被正文 fenced 範例誤觸 |
+處置：同 ID 第三輪 → 換設計：`spec.ui-flows-recompute` 改純結構判定（剝所有 markdown 前綴、fence／註解外、箭頭兩側各 ≥4 字元、無否定詞表），內容品質交 reviewer 鏡頭；deciding-commit 只看 front-matter 區；五條描述重寫（併入 W3 修正 agent 的 loom_checker 修改）。
