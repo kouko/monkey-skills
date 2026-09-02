@@ -46,8 +46,8 @@ GO。理由：現況的重量已經讓維護者自己都覺得 heavy；儀式成
 
 ## Open questions
 - checkpoint 門檻（8 檔或 400 行）與 plan 深度 ≤ 5 都是實驗預設，要用歷史分支 replay 量過才固定。
-- 名詞計數規則下的基線是 36（Codex 數的），目標 ≤ 40；規則本身可能還要調。
+- 名詞計數規則下的基線是 36（Codex 數的），原目標 ≤ 40；規則本身可能還要調。**2026-09-03 user-decided：目標改為 ≤ 60（實測 61 → 已達；40 是設計前的估計值，未經量測）。合併後第一次真跑時記錄哪些名詞讓使用者卡住，作為下一輪裁剪的證據。**
 - 跨 vendor reviewer 每次約 5 分鐘、11 萬 token，成本是否可接受要用幾個真實 change 量。
 - 問題三型判準（要什麼／可見行為／做到了嗎＋單向門後果形）的邊界以實際使用回饋調整；量測面＝每 change 記錄的決策點數與岔路提問數（concept-model §11），判定住在 review 的 user-judgment-leak 鏡頭與 write-plan 的 one-way-door reference，改文字不改程式（kouko 2026-09-02）。
 - 對抗 artifact 的內容無機械約束（空殼檔也算合格）；可能的便宜硬化＝要求 artifact 在刻意弄壞的樹上必須失敗（mutation 式自證）。W1 對抗第四輪記錄，待實際使用後決定。
-- checkpoint 的固定成本＝每次三個 commit（派工記錄、checkpoint 工件、review-only）；#771 真 replay 因此 34 commit 對今天 31（Acceptance #4 該格不合格，派工與決策點合格）。可能的便宜硬化＝派工記錄與 checkpoint 工件併進同一 commit、或以 wave 為單位記錄一次。W4-03 記錄，落地後用真實 change 量再決定（agent-decided 不在本 change 內改）。
+- checkpoint 的固定成本＝每次三個 commit（派工記錄、checkpoint 工件、review-only）；#771 真 replay 因此 34 commit 對今天 31（Acceptance #4 該格不合格，派工與決策點合格）。可能的便宜硬化＝派工記錄與 checkpoint 工件併進同一 commit、或以 wave 為單位記錄一次。W4-03 記錄，落地後用真實 change 量再決定。**2026-09-03 user-decided：本 change 不動，Acceptance #4 該格如實記為未達；merge 後以真實改動量過再調。首跑安排（user-decided 2026-09-03）：merge 後第一個 change 就是這條「checkpoint commit 係數」，同時作為 v10 在真實 Claude Code session（plugin 1.0.0 已裝）內的首次完整實走；本 change 內的實走全在臨時 repo 由 subagent 執行，未在真 session 走過。**

@@ -184,6 +184,28 @@ checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
 - 檔：`docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md`；review.json 收尾（reviewed_sha 推進、probes[] 含 package 測試與 Codex walk）。
 - 風：Acceptance #1 的「基本知識使用者」無法由 agent 扮演證明——盲跑報告如實寫「由 W4-01 冷讀＋決策點措辭審查間接證明」。
 
+### W4 fix round — 決策點③前 push 閘首次真跑（2026-09-03，user-decided：全修）
+
+決策點③討論第四項時發現本分支的 push 閘從未跑到綠燈（各站記的「三閘 exit 0」是 intent／standing／contract）。乾淨 HEAD 首跑擋五條；以下五個 task 修到 `loom_checker.py push` exit 0，再回決策點③。
+
+**W4-06 對本 repo 跑 Codex scaffold**　after: W4-05
+- 做：`codex_scaffold.py --repo .` 的產出 commit（`.codex/hooks.json`、`.codex/hooks/loom-checker`、checker 與 sibling 副本、`contract/`、`.gitignore` 一行）；補回 monkey-skills 專用的兩支 PostToolUse hook（validate-skill-folder-structure、remind-memory-mirror）；刪 `git-guard-shim.sh`（指向 W1-06 已刪的 git-guard.py，`set -e` 下 exit 2＝每個 Bash 都被擋）。
+- 風：scaffold 重跑會整檔覆寫 hooks.json，repo 自帶的 PostToolUse 條目會掉——記為 open question，不在本 change 改 scaffold。
+
+**W4-07 `push.dispatch-covers-tasks` 免除 spec 型**　after: W4-05
+- 做：spec.md 由 write-spec 站擁有（同 intent／plan），其新鮮度已由 `spec_sha`／`confirmed-behavior` 守；規則的 trailer 義務型別改為 code／skill／gate。先寫失敗測試（只動 spec.md 的 commit 無 trailer → 不擋；動 code 無 trailer → 仍擋）。
+- 風：只改這一條規則的型別集合，不動 `ADVERSARIAL_TYPES`（對抗探針仍算 spec）。
+
+**W4-08 還原凍結區**　after: W4-05
+- 做：`docs/loom/backlog/2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates.md` 在 W0-05 被順手改了計數（17→18）；還原成 923fb84a 的內容。凍結區規則＝除 ARCHIVED.md 外一律不寫。
+
+**W4-09 歷史補 `Task:` trailer（使用者親跑改寫腳本）**　after: W4-06, W4-07, W4-08
+- 做：W4-07 後仍無 trailer 的 14 個 commit——11 個是 orchestrator 未派 implementer 自己 inline 做的修正（含兩次吃進別人 staged 刪除的 W1-06 檔案）、3 個是早期 `review.json.dispatch` 側檔——由改寫腳本補上所屬 task 的 trailer；`dispatch[]` 誠實補 `agent_id: orchestrator-inline`、`fresh_context: false` 的 implementer 記錄，不偽稱派工。改寫後重對應記錄內的短 sha（第三次）。
+- 風：這是機制的違規事實，不是規則缺陷；記錄方式要讓 reviewer≠implementer 重算仍成立（reviewer 全是 fresh-context 派工）。
+
+**W4-10 round 22 收尾**　after: W4-09
+- 做：對抗探針的 4 筆 artifact 路徑改成 repo 相對（`docs/loom/<change-id>/evidence/…`）；全部探針與 package-tests 在最終 code commit 的 sha 重跑；branch-end 派 ≥2 fresh reviewer ＋ **一個 Codex reviewer**（user-decided 2026-09-03 同意外送：整支 diff＋review.json）；`reviewed_sha` 推進到 review-only commit 的 HEAD^；`loom_checker.py push` exit 0 後回決策點③。
+
 ## 2. 全 plan 風險
 
 1. **過渡期的舊守衛**：本 session 裝的是 loom-code 0.110.0 的 git-guard（讀 `.git/loom/*.json`），會擋本 branch 的 push。ship 站落地前不 push；到 W4 結束一次 push 時，若舊 guard 仍擋，請使用者以 `!` 前綴 push（memory：guard 用 shell cwd）；不鑄舊 marker、不 `--no-verify`。
