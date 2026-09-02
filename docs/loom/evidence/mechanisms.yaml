@@ -236,6 +236,7 @@ mechanisms:
   - {id: "artifact:review.verdicts",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:review.probes",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:review.open_findings",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:review.questions",           class: contract, eval: "loom-code/scripts/test_loom_checker_push.py::test_a_questions_entry_with_an_unknown_type_blocks"}
   - {id: "artifact:review.dispatch",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
 
   # --- prose-gate: landed stations mark their real `<!-- gate: … -->`
