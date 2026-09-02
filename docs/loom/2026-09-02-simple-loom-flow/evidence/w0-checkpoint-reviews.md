@@ -22,3 +22,12 @@
 - 平行派工的接縫只有真打一次才抓到：hooks matcher＝工具名 → checker 必須讀 payload；兩個 implementer 各自都對。
 - 「文件先改、程式後跟」在同一個 wave 內就會被下一個 reviewer 當成矛盾抓——契約改動要和程式同 commit，或在 review.json 記 pending。
 - 對抗（red-team）與讀（review）抓到的東西幾乎不重疊：四輪讀之後的一次對抗仍出六條致命。
+
+## wave-end 複審（6f8f7970 / d9ed517e / d3b6aefd / 979b1668 / 3c8568d4）
+
+| reviewer | lens | verdict | 閉環 | notes |
+|---|---|---|---|---|
+| opus-review-code-3 | code | PASS_WITH_NOTES | F1–F12＋spec-G 全部實跑驗證關閉（7 種 push 形狀 rc=2、4 反例 rc=0；scaffold 真副本 shim 擋、破壞後 probe 報 gate broken；probe exit(1) BLOCK、髒樹 BLOCK；dismissed by implementer BLOCK；R3 無版本段紅；R4 缺檔紅＋pending 紅；R0 未知 class；contract 63/63） | N1 `bash -c`／`xargs` 放行；N2 host-hygiene 跳過 R4；N3 `contract --require` 主版本低時訊息反向；N4 `shell=True` 執行 review.json 的 command 需在 §7 寫信任邊界；N5 plan 仍列 hooks-probe |
+| sonnet-review-docs-3 | docs | PASS_WITH_NOTES | 1–7 全關 | plan W0-01 模板清單仍列 review-dispatch.json；REQ-1 漏「不動既有資料」；§3 的 18 含 reference 與 plan 的 17 對不上；§8 的 standing 規則無 REQ 直指 |
+
+處置：docs notes → 3c8568d4、0f1dd2fe；N1–N3 → sonnet implementer（見 review.json W0 輪）。
