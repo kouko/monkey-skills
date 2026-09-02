@@ -1001,6 +1001,14 @@
    "model": "opus",
    "started": "2026-09-02T09:21:38Z",
    "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end fixes",
+   "role": "implementer",
+   "agent_id": "opus-w1-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T09:23:15Z",
+   "fresh_context": true
   }
  ]
 }
