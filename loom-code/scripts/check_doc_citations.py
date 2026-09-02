@@ -99,6 +99,19 @@ its value is prospective, not yet demonstrated on real drift. Re-measure
 (and reconsider default-on) once the corpus's `§N` usage has grown
 materially past this run's population (401 refs, round 1 §1).
 
+Round 5 (2026-09-03, W3-04): round 2's "zero-or-multiple is UNCHECKED"
+fallback conflated two different failure shapes under one bucket. A
+BARE filename or partial suffix with zero matches (the round-2 corpus's
+dominant false-positive shape) stays UNCHECKED — that reasoning holds.
+But an EXPLICIT path citation (contains `/`, e.g.
+`docs/loom/BACKLOG.md`) that ALSO fails the repo-wide suffix search
+(zero matches) is not doc-level-context noise — the author already
+wrote out the full path, so a zero-match result is real drift (a
+renamed or deleted target with no alias) and must be a finding, not a
+silent skip. `_is_explicit_path_citation_with_no_match` implements this
+split; a citation with multiple (ambiguous) matches, explicit or not,
+keeps the original UNCHECKED treatment.
+
 The repo-wide file list (`list_repo_files`) walks the tree once via
 `os.walk`, excluding only `.git`. This over-includes untracked/ignored
 files relative to `git ls-files` (e.g. `__pycache__`), but that is the
@@ -238,6 +251,39 @@ def resolve_cited_path(
     return None
 
 
+def _is_explicit_path_citation_with_no_match(
+    cited_path: str, repo_files: list[str]
+) -> bool:
+    """True when `cited_path` is a real (multi-segment) path with zero hits.
+
+    Round 2's "zero-or-multiple is UNCHECKED" fallback (module docstring)
+    was calibrated against the corpus's dominant false-positive shape — a
+    BARE filename or partial suffix (`kpi_spine_view.py:1116`) trusting
+    doc-level context the resolver cannot follow. That reasoning does not
+    extend to a citation already written as an explicit path from the
+    repo root (contains `/`, e.g. `docs/loom/BACKLOG.md`): such a
+    citation is unambiguous about what it means, so when it ALSO fails
+    the repo-wide suffix search (zero candidates, not merely ambiguous)
+    the citation is drift, not noise, and must be a finding rather than
+    a silent UNCHECKED. A bare filename with zero matches, or ANY
+    citation with multiple (ambiguous) matches, keeps the original
+    UNCHECKED treatment.
+
+    A citation containing `<` or `>` is a grammar PLACEHOLDER (e.g.
+    `docs/loom/intent/<change-id>.md`) rather than a literal path — the
+    loom-scaffolded-store exemption (CLAUDE.md's Contract Citations
+    section) applies: it names a schema slot, not a file this repo can
+    ever resolve, so it is excluded from the explicit-path rule and
+    stays UNCHECKED like any other non-explicit citation.
+    """
+    if "/" not in cited_path:
+        return False
+    if "<" in cited_path or ">" in cited_path:
+        return False
+    matches = [f for f in repo_files if f.endswith("/" + cited_path)]
+    return len(matches) == 0
+
+
 def check_citation(
     repo_root: Path,
     cited_path: str,
@@ -251,10 +297,12 @@ def check_citation(
     `checked` is `False` when `cited_path` is UNCHECKED (see
     `resolve_cited_path`); `reason` is then always `None`. When
     `checked` is `True`, `reason` is a finding string for an
-    out-of-range line or a missing anchor substring, or `None` for a
-    clean citation. A resolved target is by construction a real file,
-    so "file not found" can no longer occur here (round 2 — see module
-    docstring).
+    out-of-range line, a missing anchor substring, or an unresolvable
+    EXPLICIT path citation (contains `/`, zero repo-wide matches — see
+    `_is_explicit_path_citation_with_no_match`), or `None` for a clean
+    citation. A resolved target is by construction a real file, so
+    "file not found" only fires via that explicit-path branch, never
+    from a resolved `target` (round 2 — see module docstring).
 
     `anchor` (the paired `"..."` string from the same line, or `None`)
     is the PRIMARY check: when present and resolved as a verbatim
@@ -268,6 +316,8 @@ def check_citation(
     """
     target = resolve_cited_path(repo_root, cited_path, repo_files)
     if target is None:
+        if _is_explicit_path_citation_with_no_match(cited_path, repo_files):
+            return True, "file not found"
         return False, None
     file_text = target.read_text(encoding="utf-8", errors="replace")
     # Primary check: the anchor (verbatim substring). When an anchor is
@@ -495,7 +545,17 @@ def check_snapshot_doc_report(
     for lineno, cited_path, start, end, anchor in extract_citations(text):
         target = _resolve_snapshot_cited_path(cited_path, repo_files)
         if target is None:
-            unchecked += 1
+            if _is_explicit_path_citation_with_no_match(cited_path, repo_files):
+                checked += 1
+                if start is None:
+                    findings.append(f"{doc_path}:{lineno} -> {cited_path} file not found")
+                else:
+                    cited_repr = f"{start}-{end}" if end is not None else str(start)
+                    findings.append(
+                        f"{doc_path}:{lineno} -> {cited_path}:{cited_repr} file not found"
+                    )
+            else:
+                unchecked += 1
             continue
         file_text = _read_snapshot_file(repo_root, reviewed_sha, target)
         reason: str | None = None

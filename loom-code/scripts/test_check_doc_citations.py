@@ -92,6 +92,70 @@ def test_missing_file_zero_suffix_match_is_unchecked(tmp_path: Path) -> None:
     assert report.checked == 0
 
 
+def test_explicit_path_citation_with_no_match_is_a_finding(tmp_path: Path) -> None:
+    # ROUND 5 (W3-04): unlike a bare filename (round 2's dominant
+    # false-positive shape, see the test above), a citation already
+    # written as an explicit path from the repo root (contains `/`) that
+    # ALSO fails the repo-wide suffix search is real drift, not
+    # doc-level-context noise — it must be a finding, not UNCHECKED.
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `docs/loom/does-not-exist.md:1`.\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.checked == 1
+    assert report.unchecked == 0
+    assert len(report.findings) == 1
+    assert report.findings[0] == f"{doc}:1 -> docs/loom/does-not-exist.md:1 file not found"
+
+
+def test_main_exits_1_on_explicit_missing_path_citation(
+    tmp_path: Path, capsys
+) -> None:
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `docs/loom/does-not-exist.md:1`.\n")
+    (tmp_path / ".git").mkdir()
+
+    exit_code = main([str(doc), "--repo-root", str(tmp_path)])
+
+    assert exit_code == 1
+    out = capsys.readouterr().out
+    assert "file not found" in out
+
+
+def test_explicit_path_citation_ambiguous_match_stays_unchecked(
+    tmp_path: Path,
+) -> None:
+    # An explicit-looking path that is ALSO ambiguous (multiple repo-wide
+    # suffix matches) keeps the original UNCHECKED treatment — only a
+    # ZERO-match explicit path becomes a finding.
+    _write(tmp_path / "a" / "sub" / "shared.py", "x = 1\n")
+    _write(tmp_path / "b" / "sub" / "shared.py", "x = 2\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `sub/shared.py:1`.\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.findings == []
+    assert report.unchecked == 1
+    assert report.checked == 0
+
+
+def test_explicit_path_grammar_placeholder_stays_unchecked(tmp_path: Path) -> None:
+    # A `<...>` grammar slot (e.g. `docs/loom/intent/<change-id>.md`) is a
+    # schema placeholder, not a literal path — it must never become a
+    # "file not found" finding even though it contains `/` and matches
+    # nothing repo-wide.
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `docs/loom/intent/<change-id>.md:1`.\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.findings == []
+    assert report.unchecked == 1
+    assert report.checked == 0
+
+
 def test_pathless_shorthand_citation_is_unchecked_not_dropped(
     tmp_path: Path,
 ) -> None:
