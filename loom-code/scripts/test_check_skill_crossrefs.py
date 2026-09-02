@@ -116,3 +116,57 @@ def test_anchor_suffix_is_stripped_before_existence_check(tmp_path):
 
     assert broken == [], \
         f"the #anchor suffix must be stripped before checking, got: {broken!r}"
+
+
+# --- Guard: agent files are scanned too ------------------------------------
+
+def test_a_dangling_link_in_a_skills_agent_file_is_reported(tmp_path):
+    """Agent prose carries the same relative links SKILL.md does, and the
+    station rewrite left a dead one in `agents/implementer.md` that only an
+    isolated-install test noticed. The dead-link gate reads agent files."""
+    skills = tmp_path / "skills"
+    _make_skill(skills, "epsilon", "No links here.\n")
+    agents = skills / "epsilon" / "agents"
+    agents.mkdir(parents=True)
+    (agents / "worker.md").write_text(
+        "Follow [the catalogue](../references/gone.md).\n", encoding="utf-8"
+    )
+
+    checker = _load_checker()
+    broken = checker.find_broken_crossrefs(skills)
+
+    assert any("gone.md" in entry for entry in broken), \
+        f"a dangling link in an agent file must be reported, got: {broken!r}"
+
+
+def test_a_resolving_link_in_an_agent_file_is_accepted(tmp_path):
+    skills = tmp_path / "skills"
+    _make_skill(skills, "zeta", "No links here.\n")
+    references = skills / "zeta" / "references"
+    references.mkdir(parents=True)
+    (references / "here.md").write_text("# here\n", encoding="utf-8")
+    agents = skills / "zeta" / "agents"
+    agents.mkdir(parents=True)
+    (agents / "worker.md").write_text(
+        "Follow [the catalogue](../references/here.md).\n", encoding="utf-8"
+    )
+
+    checker = _load_checker()
+    assert checker.find_broken_crossrefs(skills) == []
+
+
+def test_the_plugin_level_agents_directory_is_scanned(tmp_path):
+    """loom-code's agents live beside `skills/`, not inside it."""
+    skills = tmp_path / "skills"
+    _make_skill(skills, "eta", "No links here.\n")
+    agents = tmp_path / "agents"
+    agents.mkdir()
+    (agents / "implementer.md").write_text(
+        "Read [the baseline](../references/engineering-baseline.md).\n",
+        encoding="utf-8",
+    )
+
+    checker = _load_checker()
+    broken = checker.find_broken_crossrefs(skills)
+    assert any("engineering-baseline.md" in entry for entry in broken), \
+        f"the plugin-level agents/ tree must be scanned, got: {broken!r}"

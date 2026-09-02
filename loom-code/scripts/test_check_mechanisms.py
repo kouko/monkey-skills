@@ -241,6 +241,28 @@ class TestChecks:
         assert result.exit_code == 1
         assert any(f.rule == "R3" for f in result.findings)
 
+    def test_r3_is_a_warning_when_the_baseline_was_only_approximated(self, tmp_path):
+        """An approximated baseline counts SKILL.md files and hook entries —
+        a different population from the mechanisms.yaml net count. Comparing
+        the two and calling the difference a budget breach is arithmetic on
+        two different quantities, so it warns and does not gate."""
+        repo = _build_repo(tmp_path)  # the ref carries no mechanisms.yaml
+        _git(repo, "init", "-q")
+        _git(repo, "add", "-A")
+        _git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "base")
+        (repo / "docs" / "loom" / "evidence" / "mechanisms.yaml").write_text(
+            yaml.safe_dump(
+                {"version": "1.0.0", "counting": "five classes, see script",
+                 "mechanisms": FULL_MECHANISMS},
+                sort_keys=False,
+            )
+        )
+
+        result = cm.run_checks(repo, baseline_ref="HEAD")
+        assert result.baseline_approx is True
+        assert not any(f.rule == "R3" for f in result.findings)
+        assert any("approximated" in w for w in result.warnings)
+
     def test_r3_green_when_changelog_has_budget_exception_line(self, tmp_path):
         mechs = FULL_MECHANISMS + [{"id": "new-thing", "class": "skill", "eval": "cold-read: evidence/a.md"}]
         repo = _build_repo(tmp_path, mechanisms=mechs)

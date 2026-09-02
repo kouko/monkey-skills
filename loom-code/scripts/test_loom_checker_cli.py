@@ -15,6 +15,7 @@ CHECKER = Path(__file__).with_name("loom_checker.py")
 
 EXPECTED_RULE_IDS = [
     "contract.requires",
+    "intake.after-task-budget",
     "intake.confirmed",
     "intake.confirmed-behavior",
     "intake.spec-pass",
@@ -23,6 +24,7 @@ EXPECTED_RULE_IDS = [
     "intent.product-no-identifiers",
     "intent.schema",
     "push.dismissed-by-reviewer",
+    "push.dispatch-covers-tasks",
     "push.open-findings-closed",
     "push.probes-adversarial",
     "push.probes-package-tests",
@@ -30,6 +32,7 @@ EXPECTED_RULE_IDS = [
     "push.review-schema",
     "push.reviewed-sha",
     "push.reviewer-ne-implementer",
+    "push.second-vendor-honoured",
     "push.verdicts-ge-2",
     "standing.product-principles-reject",
     "standing.silence",
@@ -103,8 +106,8 @@ def test_hooks_probe_is_gone() -> None:
     assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
 
 
-def test_the_rule_population_is_twenty() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 20
+def test_the_rule_population_is_twenty_three() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 23
 
 
 # --- contract --require (spec G) -------------------------------------------

@@ -8,7 +8,9 @@ spec: docs/loom/<change-id>/spec.md@<sha>     # 只在 needs-design: yes
 ## Task DAG
 <wave 分段；每 task 穩定 ID；同 wave 無依賴者可平行>
 
-**<W0-01> <title>**　after: <ids>　review: after-task（每 plan ≤ 2）
+**<W0-01> <title>**　after: <ids>　review: after-task
+<!-- 前兩個 after-task 免理由；第三個起寫成 `review: after-task — <理由>`，
+     checker 規則 intake.after-task-budget 讀這一行 -->
 - 檔：<會動的檔案>
 - 測：<先寫失敗的測試>
 - 風：<風險與預設選擇；agent-decided 標記>

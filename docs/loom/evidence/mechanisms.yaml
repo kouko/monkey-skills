@@ -104,6 +104,9 @@ mechanisms:
   - id: intake.confirmed-behavior
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_product_spec_without_confirmed_behavior_is_blocked
+  - id: intake.after-task-budget
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_hardening.py::test_a_fourth_after_task_without_a_reason_blocks
   - id: intake.spec-pass
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_latest_round_all_passing_is_accepted
@@ -122,6 +125,9 @@ mechanisms:
   - id: push.dismissed-by-reviewer
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_a_dismissal_by_the_implementer_blocks
+  - id: push.dispatch-covers-tasks
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_hardening.py::test_a_task_with_no_implementer_dispatch_blocks
   - id: push.open-findings-closed
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_an_unresolved_finding_blocks
@@ -140,6 +146,9 @@ mechanisms:
   - id: push.reviewed-sha
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_reviewed_sha_pointing_elsewhere_is_blocked
+  - id: push.second-vendor-honoured
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_hardening.py::test_a_named_second_vendor_absent_from_the_round_blocks
   - id: push.reviewer-ne-implementer
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_a_reviewer_who_also_implemented_blocks

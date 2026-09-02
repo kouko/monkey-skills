@@ -70,6 +70,11 @@ RULES: list[tuple[str, str]] = [
         "write-plan accepts a product change only when its spec carries a `confirmed-behavior: <date>` line.",
     ),
     (
+        "intake.after-task-budget",
+        "A plan may mark two tasks `review: after-task` for free; every further "
+        "one carries a reason on its own task line.",
+    ),
+    (
         "intake.spec-pass",
         "write-plan accepts a needs-design: yes change only when the latest spec review round is all PASS or PASS_WITH_NOTES.",
     ),
@@ -92,6 +97,11 @@ RULES: list[tuple[str, str]] = [
     (
         "push.dismissed-by-reviewer",
         "Every dismissed finding names a dispatch reviewer, blind-runner or adversary who never implemented it.",
+    ),
+    (
+        "push.dispatch-covers-tasks",
+        "Every `Task: <id>` trailer between the branch base and reviewed_sha names "
+        "a task some implementer dispatch entry claims.",
     ),
     (
         "push.open-findings-closed",
@@ -117,6 +127,11 @@ RULES: list[tuple[str, str]] = [
     (
         "push.reviewed-sha",
         "review.json reviewed_sha names the commit HEAD^, so the reviewed tree is the pushed tree.",
+    ),
+    (
+        "push.second-vendor-honoured",
+        "A second vendor named in KICKOFF-DEFAULTS either appears in the latest "
+        "round's verdicts or that round records why it could not.",
     ),
     (
         "push.reviewer-ne-implementer",
@@ -271,15 +286,26 @@ def kickoff_defaults(repo: Path) -> dict[str, str]:
 def interface_surfaces(repo: Path, manifest) -> tuple[list[str], str]:
     """The globs `needs-design` is recomputed against, and where they came
     from -- printed so the answer is never a mystery."""
-    declared = kickoff_defaults(repo).get("interface-surfaces")
-    if declared:
-        return [part.strip() for part in declared.split(",") if part.strip()], (
-            "docs/loom/KICKOFF-DEFAULTS.md"
-        )
+    default: list[str] = []
     for entry in manifest.get("kickoff_defaults", []):
         if entry.get("name") == "interface-surfaces":
-            return [part.strip() for part in entry["default"].split(",")], "manifest default"
-    raise UsageError("the contract manifest declares no interface-surfaces default.")
+            default = [part.strip() for part in entry["default"].split(",") if part.strip()]
+            break
+    else:
+        raise UsageError("the contract manifest declares no interface-surfaces default.")
+
+    # A repo may ADD its own surfaces; it may not take the contract's away.
+    # The narrowing move -- point the key at a glob that matches nothing --
+    # is how a `needs-design: no` claim becomes unfalsifiable, so the two
+    # sets are unioned rather than one replacing the other.
+    declared = kickoff_defaults(repo).get("interface-surfaces")
+    extra = [part.strip() for part in (declared or "").split(",") if part.strip()]
+    added = [glob for glob in extra if glob not in default]
+    if not extra:
+        return default, "manifest default"
+    if added:
+        return default + added, "manifest default + docs/loom/KICKOFF-DEFAULTS.md"
+    return default, "manifest default (KICKOFF-DEFAULTS adds nothing new)"
 
 
 def glob_to_regex(pattern: str) -> re.Pattern[str]:
@@ -545,12 +571,57 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
 
     failures: list[tuple[str, str]] = []
+    failures += check_after_task_budget(manifest, repo, change_id)
     needs_design = front.get("needs-design", "").strip().split()[:1]
     if station == "write-plan" and needs_design[:1] == ["yes"]:
         failures += check_spec_pass(manifest, repo, change_id)
         if front.get("kind", "").strip() == "product":
             failures += check_confirmed_behavior(manifest, repo, change_id)
     return report(failures, err)
+
+
+AFTER_TASK_FREE = 2
+
+# A plan's task line, per templates/plan.md:
+# `**<id> <title>**  after: <ids>  review: after-task[ — <reason>]`
+TASK_LINE = re.compile(r"^\*\*(?P<id>[A-Za-z0-9][A-Za-z0-9._-]*)[^*]*\*\*(?P<rest>.*)$")
+
+
+def check_after_task_budget(manifest, repo: Path, change_id: str):
+    """Two `review: after-task` tasks are free; the rest justify themselves.
+
+    The budget is not a hard cap (concept-model §5) -- it is a prompt to
+    say why this task cannot wait for the wave. Without the reason the
+    marker is free, and a plan can turn every task into a checkpoint
+    without anyone noticing the cost."""
+    plan_path = artifact_path(manifest, "plan", change_id, repo)
+    if not plan_path.is_file():
+        return []
+    unjustified: list[str] = []
+    seen = 0
+    for line in read_text(plan_path).splitlines():
+        match = TASK_LINE.match(line.strip())
+        if not match:
+            continue
+        rest = match.group("rest")
+        if "review: after-task" not in _squeeze(rest):
+            continue
+        seen += 1
+        if seen <= AFTER_TASK_FREE:
+            continue
+        tail = _squeeze(rest).split("review: after-task", 1)[1]
+        if not re.match(r"\s*(?:—|–|--)\s*\S", tail):
+            unjustified.append(match.group("id"))
+    if unjustified:
+        return [
+            (
+                "intake.after-task-budget",
+                f"{seen} tasks are marked `review: after-task`; past the first "
+                f"{AFTER_TASK_FREE}, each carries `— <reason>` on its own task line. "
+                f"Missing on: {', '.join(unjustified)}.",
+            )
+        ]
+    return []
 
 
 SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
@@ -594,13 +665,16 @@ def spec_scoped_verdicts(review) -> tuple[list[dict], str | None]:
 
 
 def is_spec_adversarial_probe(probe) -> bool:
-    """The red-team half of the spec lens. A probe that names its scope must
-    name the spec; one written before probes carried a scope is taken at its
-    word, the same fallback the verdicts get."""
+    """The red-team half of the spec lens, and only that half.
+
+    review.json accumulates every round of a change, so an unscoped
+    adversarial probe -- one recorded against the code, or against nothing
+    in particular -- used to answer for a spec no adversary ever attacked.
+    The probe says what it attacked on itself now: `scope: spec`, or it is
+    not the spec's red team."""
     if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
         return False
-    scope = str(probe.get("scope", "")).strip().lower()
-    return not scope or scope.startswith("spec")
+    return str(probe.get("scope", "")).strip().lower().startswith("spec")
 
 
 def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
@@ -650,8 +724,9 @@ def check_spec_pass(manifest, repo: Path, change_id: str) -> list[tuple[str, str
         return [
             (
                 "intake.spec-pass",
-                "no `adversarial` probe recorded for the spec; the spec lens is "
-                "read + adversarial, and only the read half ran.",
+                "no `adversarial` probe carrying `scope: spec` is recorded; the "
+                "spec lens is read + adversarial, and an unscoped probe does not "
+                "say the spec was what it attacked.",
             )
         ]
     return []
@@ -840,6 +915,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_probes_package_tests(repo, review, reviewed_id, out)
     failures += check_probes_adversarial(repo, review, reviewed_id, out)
     failures += check_verdicts(review)
+    failures += check_second_vendor_honoured(repo, review)
+    failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
 
     # `dispatch[]` lives inside the review.json that was read out of the
     # reviewed commit's tree, so both identity rules recompute from a
@@ -856,8 +933,21 @@ SHA_HEX = re.compile(r"[0-9a-f]{7,40}")
 def check_review_only_head(manifest, repo: Path, head_sha: str):
     """A checkpoint push rides on a review-only commit: exactly one file,
     and that file is this change's review.json (concept-model §2e)."""
-    listing = git_text(repo, "show", "--name-only", "--pretty=format:", head_sha)
-    touched = sorted({line for line in listing.splitlines() if line.strip()})
+    # `--name-only` lets rename detection collapse a delete and an add into
+    # one path, so a commit that renames a tracked file INTO the review path
+    # deletes that file while the gate counts one path. `--raw
+    # --no-renames` reports the delete and the add separately, which is what
+    # "touches nothing but review.json" has to mean.
+    listing = git_text(
+        repo, "show", "--raw", "--no-renames", "--pretty=format:", head_sha
+    )
+    touched = sorted(
+        {
+            line.split("\t", 1)[1].strip()
+            for line in listing.splitlines()
+            if "\t" in line and line.startswith(":")
+        }
+    )
     template = manifest["artifacts"]["review"]["path"]
     is_review = glob_to_regex(template.replace("<change-id>", "*"))
     reviews = [path for path in touched if is_review.match(path)]
@@ -998,6 +1088,55 @@ def check_open_findings_closed(review) -> list[tuple[str, str]]:
 PROBE_TIMEOUT = 1800  # 30 minutes: a package suite that never ends is a fail
 
 
+# A command that exits 0 for reasons unrelated to the thing it claims to
+# have run. `true` is the whole attack: it is a real command, it really
+# exits 0, and it tests nothing.
+TRIVIAL_COMMANDS = frozenset({"true", ":", "/bin/true", "/usr/bin/true", "exit"})
+
+# How a repo's package-test command is recomputed when KICKOFF-DEFAULTS
+# does not name one: first marker present wins, in this order (the build
+# station's §6 detection order, same list, same result).
+TEST_COMMAND_MARKERS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("pyproject.toml", "pytest.ini", "tox.ini", "setup.cfg"), "python3 -m pytest -q"),
+    (("package.json",), "npm test"),
+    (("Cargo.toml",), "cargo test"),
+    (("go.mod",), "go test ./..."),
+)
+
+NO_PACKAGE_TESTS = "none"
+
+
+def is_trivial_command(command: str) -> bool:
+    """True when the command's exit code says nothing about any artifact."""
+    stripped = command.strip()
+    if not stripped:
+        return True
+    head = stripped.split()[0]
+    if head in TRIVIAL_COMMANDS:
+        return True
+    # `test -f x`, `[ -f x ]` -- shell predicates, not runs of anything.
+    return head in {"test", "["}
+
+
+def declared_test_command(repo: Path) -> tuple[str | None, str]:
+    """The repo's own package-test command, and where it was read from.
+
+    A recorded probe is compared against THIS, so that a command which
+    exits 0 without running the suite cannot stand in for the suite. The
+    repo's own KICKOFF-DEFAULTS line wins, because only the repo knows;
+    otherwise the same markers the build station reads are read here."""
+    declared = kickoff_defaults(repo).get("package-tests", "").strip()
+    if declared:
+        return declared, "docs/loom/KICKOFF-DEFAULTS.md"
+    for markers, command in TEST_COMMAND_MARKERS:
+        if any((repo / marker).is_file() for marker in markers):
+            return command, f"detected {markers[0]}"
+    for pattern in ("test_*.py", "*_test.py"):
+        if next(repo.rglob(pattern), None) is not None:
+            return "python3 -m pytest -q", f"detected {pattern} files"
+    return None, ""
+
+
 def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
                                out=sys.stdout):
     """A recorded test run is not evidence -- the RUN is. The record only
@@ -1005,6 +1144,24 @@ def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
     itself in a clean tree that is the reviewed tree, and the exit code it
     observes decides (concept-model §7). The agent's own `result` is kept as
     a record and never believed."""
+    expected, source = declared_test_command(repo)
+    if expected is None:
+        return [
+            (
+                "push.probes-package-tests",
+                "this repo declares no package-test command and none can be "
+                "recomputed from it; record `- package-tests: <command>` (or "
+                "`- package-tests: none — <why>`) in docs/loom/KICKOFF-DEFAULTS.md "
+                "so the recorded run has something to be checked against",
+            )
+        ]
+    if expected.strip().lower() == NO_PACKAGE_TESTS:
+        out.write(
+            f"package-tests: none — declared in {source}; no run is owed and "
+            "the review station records the gap\n"
+        )
+        return []
+
     reasons: list[str] = []
     for probe in review.get("probes", []):
         if not isinstance(probe, dict) or str(probe.get("kind")) != "package-tests":
@@ -1013,6 +1170,13 @@ def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
         label = command or "<no command>"
         if not command:
             reasons.append("a package-tests probe records no command")
+            continue
+        if _squeeze(command) != _squeeze(expected):
+            reasons.append(
+                f"`{label}` is not this repo's test command `{expected}` "
+                f"({source}); a command that exits 0 for another reason is not "
+                "a test run"
+            )
             continue
         sha = str(probe.get("sha", "")).strip()
         probe_id = (
@@ -1108,6 +1272,31 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
         if not command:
             reasons.append("an adversarial probe records no command")
             continue
+        if is_trivial_command(command):
+            reasons.append(
+                f"`{label}` exits 0 without running anything; an adversarial "
+                "case is a file the checker can execute, not a shell builtin"
+            )
+            continue
+        artifact = str(probe.get("artifact", "")).strip()
+        if not artifact:
+            reasons.append(
+                f"`{label}` names no artifact; the case must be a committed file"
+            )
+            continue
+        if reviewed_id is None or not git_ok(
+            repo, "cat-file", "-e", f"{reviewed_id}:{artifact}"
+        ):
+            reasons.append(
+                f"`{label}` names artifact {artifact}, absent from the reviewed tree"
+            )
+            continue
+        if artifact not in command:
+            reasons.append(
+                f"`{label}` never mentions its artifact {artifact}, so what it "
+                "actually ran cannot be recomputed from the record"
+            )
+            continue
         sha = str(probe.get("sha", "")).strip()
         probe_id = (
             git_maybe(repo, "rev-parse", "--verify", f"{sha}^{{commit}}")
@@ -1150,6 +1339,82 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
             "push.probes-adversarial",
             f"this change touches {', '.join(sorted(kinds))}, which needs "
             f"{ADVERSARIAL_FLOOR} adversarial probes; {usable} are usable ({detail}).",
+        )
+    ]
+
+
+TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$", re.MULTILINE)
+
+
+def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
+    """Every task the branch claims to have done was dispatched to someone.
+
+    `Task: <id>` trailers are how progress is derived (concept-model §2d)
+    and `dispatch[]` is how "who wrote this" is recomputed (§2e). When a
+    task appears in the history with no implementer entry behind it, the
+    identity rules have nothing to check that task against -- a lost
+    concurrent write to review.json looks exactly like this."""
+    if reviewed_id is None:
+        return []
+    try:
+        base = branch_base(repo)
+    except UsageError as exc:
+        return [("push.dispatch-covers-tasks", f"cannot recompute the branch base: {exc}")]
+    log = git_text(repo, "log", "--format=%B%x00", f"{base}..{reviewed_id}")
+    claimed = {match.group(1) for match in TASK_TRAILER.finditer(log)}
+    if not claimed:
+        return []
+    dispatched = {
+        str(entry.get("task", "")).strip()
+        for entry in review.get("dispatch", [])
+        if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "implementer"
+    }
+    missing = sorted(claimed - dispatched)
+    if missing:
+        return [
+            (
+                "push.dispatch-covers-tasks",
+                f"{len(claimed)} task(s) carry a `Task:` trailer on this branch but "
+                f"{', '.join(missing)} name no implementer dispatch entry; the "
+                "record lost a writer or the work was never dispatched.",
+            )
+        ]
+    return []
+
+
+# The vendor behind each CLI a repo can name as its second opinion.
+VENDOR_OF_CLI = {"codex": "openai", "gemini": "google", "claude": "anthropic"}
+
+
+def check_second_vendor_honoured(repo: Path, review):
+    """A second vendor the repo chose is used, or the round says why not.
+
+    Choosing a second vendor is the user's call (concept-model §5) and the
+    checker does not require one. What it does require is that a recorded
+    choice is not silently dropped: either that vendor reviewed this round,
+    or the round carries `fallback: <cli> missing at <date>` and everyone
+    can see the review ran single-vendor."""
+    declared = kickoff_defaults(repo).get("second-vendor", "").strip()
+    if not declared or declared.lower() == "none":
+        return []
+    cli = declared.split()[0].lower()
+    wanted = VENDOR_OF_CLI.get(cli, cli)
+    _round, verdicts = latest_round(
+        [entry for entry in review.get("verdicts", []) if isinstance(entry, dict)]
+    )
+    if not verdicts:
+        return []
+    used = {str(entry.get("vendor", "")).strip().lower() for entry in verdicts}
+    if wanted in used:
+        return []
+    if any(str(entry.get("fallback", "")).strip() for entry in verdicts):
+        return []
+    return [
+        (
+            "push.second-vendor-honoured",
+            f"KICKOFF-DEFAULTS names `second-vendor: {declared}` ({wanted}), but the "
+            f"latest round used {', '.join(sorted(used)) or 'nothing'} and records no "
+            "`fallback` saying the CLI was unavailable.",
         )
     ]
 

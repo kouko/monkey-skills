@@ -207,6 +207,7 @@ class CheckResult:
     baseline_total: int | None = None
     baseline_approx: bool = False
     host_hygiene_ids: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 def net_count(mechanisms: list[dict]) -> int:
@@ -225,6 +226,7 @@ def run_checks(
     recomputed = recompute_all(repo)
 
     findings: list[Finding] = []
+    warnings: list[str] = []
     summary: dict[str, tuple[int, int]] = {}
 
     # R0: class must be one of ALL_CLASSES.
@@ -298,7 +300,20 @@ def run_checks(
     elif baseline_ref is not None:
         baseline_total, baseline_approx = compute_baseline_total(repo, baseline_ref)
 
-    if baseline_total is not None and net_total > baseline_total:
+    if baseline_total is not None and net_total > baseline_total and baseline_approx:
+        # The approximation counts SKILL.md files plus hooks.json entries at
+        # the ref, which is a different population from the mechanisms.yaml
+        # net count -- the ref simply had no mechanisms.yaml to read. A rise
+        # between two different quantities is not a budget breach, so it is
+        # said out loud and the exit code is left alone.
+        warnings.append(
+            f"R3 not gated: the baseline ({baseline_total}) was approximated from "
+            f"SKILL.md and hooks.json at the ref because it ships no "
+            f"docs/loom/evidence/mechanisms.yaml, so the rise to {net_total} "
+            "compares two different populations. Re-run against a ref that "
+            "carries mechanisms.yaml to gate on it."
+        )
+    elif baseline_total is not None and net_total > baseline_total:
         changelog_path = changelog or _default_changelog(repo)
         version_str = version or _default_version(repo)
         if not version_str:
@@ -328,6 +343,7 @@ def run_checks(
         baseline_total=baseline_total,
         baseline_approx=baseline_approx,
         host_hygiene_ids=host_hygiene_ids,
+        warnings=warnings,
     )
 
 
@@ -500,6 +516,8 @@ def _print_summary(result: CheckResult) -> None:
         print(f"baseline net count: {result.baseline_total}{approx}")
     for mid in result.host_hygiene_ids:
         print(f"exempt from net count: {mid}")
+    for warning in result.warnings:
+        print(f"WARN {warning}")
     if result.findings:
         print()
         for f in result.findings:

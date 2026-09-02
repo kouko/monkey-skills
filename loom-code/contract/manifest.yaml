@@ -117,8 +117,8 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: reviewed_sha,  kind: json, required: true}
       - {name: scope,         kind: json, required: true}
       - {name: vendors,       kind: json, required: true}
-      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, verdict, dimension_scores, findings}]"}
-      - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact}]"}
+      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback}]", note: "scope says what the round reviewed; fallback records a named second vendor that was unavailable"}
+      - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact, scope}]", note: "scope says what the probe attacked; the spec gate accepts an adversarial probe only with scope: spec"}
       - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
       - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}
       - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
@@ -130,6 +130,7 @@ standing_docs:       # not per-change (§2a, §8)
 
 kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
   - {name: second-vendor,          grammar: "<cli> | none"}
+  - {name: package-tests,          grammar: "<command> | none", note: "the command push.probes-package-tests compares the recorded run against; absent = recomputed from the repo's build markers"}
   - {name: standing-docs,          grammar: "waived"}
   - {name: session-start-baseline, grammar: "<sha> <words>"}
   - {name: interface-surfaces,     grammar: "<glob>[, <glob>…]", default: "**/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/**"}

@@ -106,7 +106,7 @@ def write_spec(repo: Path, *, confirmed_behavior: str = "", change: str = CHANGE
     )
 
 
-ADVERSARIAL = {"kind": "adversarial", "command": "red-team the spec", "sha": "abc1234",
+ADVERSARIAL = {"kind": "adversarial", "scope": "spec", "command": "red-team the spec", "sha": "abc1234",
                "result": "pass", "artifact": "evidence/red-team.md"}
 
 

@@ -62,6 +62,26 @@ DISPATCH_ENTRIES = [
 ]
 
 
+# Since the W1 adversary, an adversarial probe names a committed file and
+# the command has to run THAT file: `true` exits 0 without attacking
+# anything, and so does a command pointed at nothing.
+ABUSE_CASES = ("empty", "boundary", "hostile")
+
+
+def _adversarial_records(reviewed_sha: str, count: int,
+                         command: str | None = None) -> list[dict]:
+    return [
+        {
+            "kind": "adversarial",
+            "command": command or f"python3 evidence/abuse_{name}.py",
+            "sha": reviewed_sha,
+            "result": "pass",
+            "artifact": f"evidence/abuse_{name}.py",
+        }
+        for name in ABUSE_CASES[:count]
+    ]
+
+
 def review_body(reviewed_sha: str, **overrides) -> dict:
     body = {
         "reviewed_sha": reviewed_sha,
@@ -78,12 +98,7 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
              "result": "pass", "artifact": "evidence/tests.txt"},
             # The branch touches `a.py`, which the §6 mapping types as code,
             # so push.probes-adversarial wants three of these.
-            {"kind": "adversarial", "command": PASSING_COMMAND, "sha": reviewed_sha,
-             "result": "pass", "artifact": "evidence/abuse_empty.txt"},
-            {"kind": "adversarial", "command": PASSING_COMMAND, "sha": reviewed_sha,
-             "result": "pass", "artifact": "evidence/abuse_boundary.txt"},
-            {"kind": "adversarial", "command": PASSING_COMMAND, "sha": reviewed_sha,
-             "result": "pass", "artifact": "evidence/abuse_hostile.txt"},
+            *_adversarial_records(reviewed_sha, 3),
         ],
         "open_findings": [
             {"id": "F-1", "anchor": "a.py:1", "origin_sha": "deadbee",
@@ -95,7 +110,8 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
     return body
 
 
-def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None) -> Path:
+def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None,
+               package_tests: str | None = None) -> Path:
     """A branch whose HEAD^ is the code commit and HEAD the review-only one."""
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -110,7 +126,23 @@ def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None) -> Path:
     (repo / "a.py").write_text("value = 1\n", encoding="utf-8")
     (repo / "evidence").mkdir()
     (repo / "evidence/tests.txt").write_text("2199 passed\n", encoding="utf-8")
-    git(repo, "add", "a.py", "evidence/tests.txt")
+    for name in ABUSE_CASES:
+        (repo / f"evidence/abuse_{name}.py").write_text(
+            "raise SystemExit(0)\n", encoding="utf-8"
+        )
+    # A committed case that no longer passes -- the "regression eval that
+    # stopped being one" the adversarial rule has to notice.
+    (repo / "evidence/abuse_regressed.py").write_text(
+        "raise SystemExit(1)\n", encoding="utf-8"
+    )
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text(
+        f"# Kickoff Defaults\n\n- package-tests: {package_tests or PASSING_COMMAND}"
+        " — the fixture's whole suite (2026-09-02)\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "feat: a")
 
     body = review_body(git(repo, "rev-parse", "HEAD"))
@@ -335,7 +367,7 @@ def test_a_probe_command_that_exits_zero_passes(tmp_path: Path) -> None:
 
 def test_a_probe_command_that_exits_one_blocks_despite_result_pass(tmp_path: Path) -> None:
     """The agent's `result` is a record; the observed exit code decides."""
-    repo = build_repo(tmp_path)
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
     body = rebuild(repo)
     body["probes"][0]["command"] = FAILING_COMMAND
     recommit_review(repo, body)
@@ -369,15 +401,11 @@ def test_missing_package_test_probe_blocks(tmp_path: Path) -> None:
 # --- push.probes-adversarial: the floor, the type gate, the re-run ---------
 
 
-def _adversarial(reviewed_sha: str, count: int, command: str = PASSING_COMMAND):
+def _adversarial(reviewed_sha: str, count: int, command: str | None = None):
     return [
         {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
          "result": "pass", "artifact": "evidence/tests.txt"},
-    ] + [
-        {"kind": "adversarial", "command": command, "sha": reviewed_sha,
-         "result": "pass", "artifact": f"evidence/abuse_{n}.txt"}
-        for n in range(count)
-    ]
+    ] + _adversarial_records(reviewed_sha, count, command)
 
 
 def test_two_adversarial_probes_do_not_meet_the_floor(tmp_path: Path) -> None:
@@ -405,7 +433,8 @@ def test_an_adversarial_probe_that_no_longer_passes_does_not_count(tmp_path: Pat
     repo = build_repo(tmp_path)
     reviewed = git(repo, "rev-parse", "HEAD~1")
     probes = _adversarial(reviewed, 3)
-    probes[-1]["command"] = FAILING_COMMAND
+    probes[-1]["artifact"] = "evidence/abuse_regressed.py"
+    probes[-1]["command"] = "python3 evidence/abuse_regressed.py"
     recommit_review(repo, rebuild(repo, probes=probes))
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
@@ -439,7 +468,14 @@ def test_a_docs_only_change_owes_no_adversarial_probe(tmp_path: Path) -> None:
     (repo / "notes.md").write_text("prose\n", encoding="utf-8")
     (repo / "evidence").mkdir()
     (repo / "evidence/tests.txt").write_text("ok\n", encoding="utf-8")
-    git(repo, "add", "notes.md", "evidence/tests.txt")
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text(
+        f"# Kickoff Defaults\n\n- package-tests: {PASSING_COMMAND} — the "
+        "fixture's whole suite (2026-09-02)\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "docs: notes")
     reviewed = git(repo, "rev-parse", "HEAD")
     write_review(repo, review_body(reviewed, probes=_adversarial(reviewed, 0)))

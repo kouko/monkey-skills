@@ -256,6 +256,7 @@ A worked record:
   "verdicts": [
     {"round": 1, "scope": "wave-end:1", "reviewer": "rev-w1-a", "vendor": "anthropic",
      "model": "sonnet", "lens": "code", "verdict": "PASS_WITH_NOTES",
+     "fallback": "codex missing at 2026-09-02",
      "dimension_scores": {"security": "PASS", "tests": "PASS_WITH_NOTES"},
      "findings": [{"severity": "important", "anchor": "loom-code/scripts/x.py:41",
                    "text": "the empty-input path is untested",

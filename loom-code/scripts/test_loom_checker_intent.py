@@ -318,22 +318,28 @@ def test_needs_design_yes_skips_the_recompute(tmp_path: Path) -> None:
     assert "intent.needs-design-recompute" not in blocked_rules(result)
 
 
-def test_kickoff_defaults_override_the_interface_surfaces(tmp_path: Path) -> None:
+def test_kickoff_defaults_add_interface_surfaces_and_never_narrow(tmp_path: Path) -> None:
+    """A repo knows its own surfaces; it does not get to un-know the
+    contract's. Pointing the key at one glob used to REPLACE the manifest
+    default, which made `needs-design: no` unfalsifiable in one line
+    (W1 adversary P11)."""
     repo = make_repo(tmp_path)
     kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
     kickoff.parent.mkdir(parents=True, exist_ok=True)
     kickoff.write_text(
-        "# Kickoff Defaults\n\n- interface-surfaces: **/public/** — only this one (2026-09-02)\n",
+        "# Kickoff Defaults\n\n- interface-surfaces: **/public/** — this repo's own (2026-09-02)\n",
         encoding="utf-8",
     )
-    commit_file(repo, "src/cli/main.py")
     intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
-    passing = run_checker("intent", str(intent), cwd=repo)
-    assert "intent.needs-design-recompute" not in blocked_rules(passing)
 
     commit_file(repo, "src/public/thing.py")
-    failing = run_checker("intent", str(intent), cwd=repo)
-    assert "intent.needs-design-recompute" in blocked_rules(failing)
+    added = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.needs-design-recompute" in blocked_rules(added)
+
+    commit_file(repo, "src/cli/main.py")
+    still_default = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.needs-design-recompute" in blocked_rules(still_default)
+    assert "src/cli/main.py" in still_default.stderr
 
 
 def test_the_glob_set_in_use_is_printed(tmp_path: Path) -> None:
