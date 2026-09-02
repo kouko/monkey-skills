@@ -180,9 +180,9 @@ Dispatch `agents/adversary.md` — again never an implementer of this change.
   forgot — runs them, and records each as a probe.
 - **spec**: red-team it — read each requirement for the behaviour it fails
   to forbid.
-- **skill / gate**: work the attack catalogue in
-  `contract/templates/ATTACK-CATALOGUE.md` against the file, one attempt
-  per class.
+- **skill / gate**: work the six classes of
+  `references/attack-catalogue.md` against the file, one attempt per
+  class.
 
 Recipes and the probe shape are in `references/adversarial.md`. Whatever
 the adversary finds enters `findings` like any other finding; whatever it

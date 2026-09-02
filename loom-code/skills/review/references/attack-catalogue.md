@@ -1,8 +1,9 @@
 # Attack catalogue — the six classes an adversarial auditor works
 
-Serves `requesting-code-review`'s adversarial-audit station: a branch
-under audit "touches an exemption, a gate, a self-check", and the six
-classes below are how that touch gets probed rather than merely read.
+Serves the review station's **adversarial** action on a skill or gate
+artifact (`adversarial.md`): the change under review touches an
+exemption, a gate or a self-check, and the six classes below are how
+that touch gets probed rather than merely read.
 
 Each class below is a question the auditor answers about the branch, plus
 the evidence rule a `reproduced` verdict must meet. The rule is the same
@@ -15,7 +16,7 @@ watching it refuse (or not) is.
 ### Class: forge an artifact the gate trusts
 
 - Question: can the auditor hand-craft (or edit) the artifact a gate
-  reads — a receipt, a verdict marker, a ledger entry — so the gate
+  reads — a review.json, a dispatch entry, a probe record — so the gate
   accepts it without the work the artifact claims having happened?
 - Evidence: a `reproduced` verdict requires a command that ran against
   the forged artifact and the gate's actual accept/refuse output — never
@@ -32,10 +33,10 @@ watching it refuse (or not) is.
 
 ### Class: replay a stale artifact
 
-- Question: can the auditor resubmit an artifact — a receipt, a review
-  verdict, a passing test run — that was genuine once but no longer
+- Question: can the auditor resubmit an artifact — a review verdict, a
+  probe, a passing test run — that was genuine once but no longer
   reflects the current state (a later commit, a rotated key, a closed
-  batch), and have the gate accept it as current?
+  finding), and have the gate accept it as current?
 - Evidence: a `reproduced` verdict requires a command that ran the gate
   against the stale artifact after the state moved on, with its output
   showing acceptance or refusal — never a reading of a freshness check's
@@ -45,7 +46,7 @@ watching it refuse (or not) is.
 
 - Question: can an action taken in one repo, worktree, or process reach
   across into another and take effect there — a guard evaluated in the
-  wrong cwd, a marker written to a directory a different checkout reads,
+  wrong cwd, a file written to a directory a different checkout reads,
   a subprocess inheriting privilege it shouldn't?
 - Evidence: a `reproduced` verdict requires a command run from the other
   side of the boundary (the other worktree, the other cwd, the other

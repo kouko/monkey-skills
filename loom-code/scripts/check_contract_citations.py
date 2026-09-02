@@ -261,18 +261,6 @@ def evaluate(
 #     import scan_repo; print('\n'.join(sorted(scan_repo(Path('.')))))"
 DEBT_LIST: frozenset[str] = frozenset(
     {
-        "loom-code/skills/finishing-a-development-branch/SKILL.md",
-        "loom-code/skills/requesting-code-review/SKILL.md",
-        "loom-code/skills/requesting-code-review/references/design-evidence.md",
-        "loom-code/skills/requesting-code-review/references/gate-markers-spec.md",
-        "loom-code/skills/requesting-docs-review/SKILL.md",
-        "loom-code/skills/requesting-docs-review/references/convergence-contract.md",
-        "loom-code/skills/requesting-docs-review/references/design-evidence.md",
-        "loom-code/skills/subagent-driven-development/SKILL.md",
-        "loom-code/skills/subagent-driven-development/references/dispatch-hygiene-notes.md",
-        "loom-code/skills/subagent-driven-development/references/research-escalation.md",
-        "loom-code/skills/ui-verification/SKILL.md",
-        "loom-code/skills/using-loom-code/references/codex-tools.md",
         "loom-design/skills/completeness-critic/references/consistency-lens.md",
         "loom-design/skills/design-system/references/canon-design-surface.md",
         "loom-design/skills/product-principles/references/canon-design-interaction.md",

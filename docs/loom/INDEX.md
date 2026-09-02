@@ -380,26 +380,6 @@
 
 - test_plan_contract_matrix
 
-### REQ-105
-
-- test_packet_readiness_and_immutability_matrix
-
-### REQ-106
-
-- test_batch_dispatch_and_fallback_contract
-
-### REQ-107
-
-- test_aggregate_resolution_matrix
-
-### REQ-109
-
-- test_historical_plan_is_refused
-
-### REQ-110
-
-- test_batch_pass_does_not_skip_whole_branch_review
-
 ### REQ-111
 
 - test_baseline_candidate_comparison_is_same_corpus_and_safety_gated
@@ -416,7 +396,12 @@
 
 - REQ-103
 - REQ-104
+- REQ-105
+- REQ-106
+- REQ-107
 - REQ-108
+- REQ-109
+- REQ-110
 - REQ-17
 - REQ-25
 - REQ-26

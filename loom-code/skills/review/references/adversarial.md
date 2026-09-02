@@ -36,8 +36,9 @@ requirement as its anchor.
 
 ## Skill and gate
 
-Work the classes in `contract/templates/ATTACK-CATALOGUE.md` against the
-file, one attempt per class, and write down what the file made you do:
+Work the six classes in [`attack-catalogue.md`](attack-catalogue.md)
+against the file, one attempt per class, and write down what the file made
+you do:
 
 - Read the instruction as an agent under time pressure — is there a reading
   that skips the expensive step and still looks compliant?
