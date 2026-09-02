@@ -56,13 +56,18 @@ Every run becomes a `probes[]` entry in `review.json`:
 
 ```json
 {"kind": "adversarial", "command": "python3 -m pytest tests/test_abuse_empty_input.py -q",
- "sha": "<the sha it ran against>", "result": "pass", "artifact": "tests/test_abuse_empty_input.py",
+ "sha": "<the sha it ran against>", "result": "pass", "artifact": "docs/loom/<change-id>/evidence/probes/abuse_empty_input.py",
  "scope": "wave-end:1"}
 ```
 
 - `command` must be re-runnable by someone else in a clean tree.
 - `sha` is the commit tested — for a checkpoint, `HEAD`.
 - `artifact` is where the case now lives, so the next round can run it
-  again. A probe with no artifact is a one-off.
+  again. A probe with no artifact is a one-off. Put probes under
+  `docs/loom/<change-id>/evidence/probes/` — that path is the `evidence`
+  artifact type, so committing them needs no `Task:` trailer and no plan
+  task (the W4-03 replay found abuse files under `tests/` tripping
+  `push.dispatch-covers-tasks`). Promote a probe into the repo's real test
+  suite only through a plan task.
 - `result` is a record only; anything the adversary found that matters
   becomes a `finding` with an anchor and a fix, like any other.

@@ -63,8 +63,11 @@ Then locate the change:
 
 ## 1. The wave loop
 
-A wave is the set of tasks whose `after:` dependencies are all satisfied.
-Take them in plan order.
+A wave is the group the plan names (`W<n>-*`); take waves in plan order
+and do not regroup them. Inside a wave, a task whose `after:` dependencies
+are all satisfied may start; one that is not yet satisfied waits for its
+dependency within the same wave. (The W4-03 replay lost a dispatch to the
+ambiguity between these two readings; the plan's grouping wins.)
 
 - Tasks in the same wave with no dependency between them run **in
   parallel**: dispatch them in one message, one `Agent` call per task
