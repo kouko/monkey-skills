@@ -4,7 +4,7 @@ confirmed-behavior: 2026-09-02
 
 ## Requirements                                    【使用者可讀】
 REQ-1 — 決策點數固定
-  engineering 兩處（intent 確認、驗收）、product 三處（加可見行為確認）；單向門與判斷型岔路一律併進既有決策點，不新增停點；決策點後才浮現的岔路由 agent 選預設、標 agent-decided、在盲跑報告揭露。每個決策點內問題數不限，但每個問題必須可歸入三型之一（要什麼／可見行為／做到了嗎）或單向門的後果形；歸不進去的由 review 的 user-judgment-leak 維度判 NEEDS_REVISION。決策點過後才浮現的單向門若屬金錢／綁定／動既有資料三類，agent 只能選零義務、可逆的預設。→ Acceptance #1, #3
+  engineering 兩處（intent 確認、驗收）、product 三處（加可見行為確認）；單向門與判斷型岔路一律併進既有決策點，不新增停點；決策點後才浮現的岔路由 agent 選預設、標 agent-decided、在盲跑報告揭露。每個決策點內問題數不限，但每個問題必須可歸入三型之一（要什麼／可見行為／做到了嗎）或單向門的後果形；歸不進去的由 review 的 user-judgment-leak 維度判 NEEDS_REVISION。決策點過後才浮現的單向門若屬金錢／綁定／動既有資料三類，agent 只能選零義務、可逆、不動既有資料的預設。→ Acceptance #1, #3
 REQ-2 — 兩個 host 一致
   Claude Code 與 Codex CLI 走出相同的檔案、決策點、閘門；Codex 只多一次每 repo 的 `/hooks` 授信，成立條件是 `.codex/hooks.json` 的 command 字串固定（相對路徑、不含版本），升級只換 checker 副本內容；切換日既有 Codex repo 因定義改變需重授信一次（一次性，spec 明示）。→ Acceptance #2
 REQ-3 — 機器審查為唯一品質來源
@@ -15,11 +15,11 @@ REQ-4 — 盲跑報告是驗收介面
 REQ-5 — 五種 per-change artifact
   intent.md、spec.md、plan.md、diff/PR、review.json；memory 與 standing docs 不算 per-change。→ Acceptance #5
 REQ-6 — 決定性層靠重算
-  checker 對 needs-design 重算介面表面、對 package 測試在乾淨工作樹自行重跑（agent 填的結果只作記錄）、對 reviewer ≠ implementer 與 dismissed 者身分機械檢查、對收件與 push 條件重算（完整規則集見 concept-model §7）；不讀 agent 的宣稱。→ Acceptance #1（品質由機器保證）
+  checker 對 needs-design 重算介面表面、對 package 測試在乾淨工作樹自行重跑（agent 填的結果只作記錄）、對 reviewer ≠ implementer 與 dismissed 者身分機械檢查、對收件與 push 條件重算、對 standing docs 的勸導／拒收／靜音三段重算（完整規則集見 concept-model §7 與 §8）；不讀 agent 的宣稱。→ Acceptance #1（品質由機器保證）
 REQ-7 — 准入規則可機械驗
   機制母體＝`docs/loom/evidence/mechanisms.yaml`，五類各有可重算面（skill 目錄、checker `--list-rules` 輸出、hooks.json 條目、`loom-code/contract/manifest.yaml` 宣告、SKILL.md 內 `<!-- gate: id -->` 標記）；checker 必須提供 `--list-rules`；CI 重算五類與 yaml 比對：漏登→紅、yaml 有而清單無→紅、淨數增且 CHANGELOG 無 `budget-exception: <id> — <reason>`→紅、無 eval→紅。→ Acceptance #7
 REQ-8 — 瘦身目標
-  skill ≤ 18；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝本 change 合併前 main 的固定 SHA，落地時記進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`；命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo）。→ Acceptance #5
+  skill ≤ 18（站＋計數工具；reference 與 standalone 工具不計；plan 目標 17）；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝本 change 合併前 main 的固定 SHA，落地時記進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`；命令 `bash loom-code/hooks/session-start </dev/null | wc -w`，cwd 為空 git repo）。→ Acceptance #5
   （名詞 ≤ 40 屬 intent Open question：計數規則與基線定案前只記錄，不入本 REQ。）
 REQ-9 — 冷讀可執行
   一個沒看過 loom 的 agent，只拿該站的 SKILL.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑；零猜測優先於 15 分鐘。受測站＝該任務的入口站（Task A：write-plan；Task B：capture-intent）；入口站文件必含一張「本 change 的完整站序（含上游已完成者）、各站產生的檔與決策者、checker 時機、checkpoint 時機」摘要表，冷讀者只靠它回答。concept-model.md 只記錄（v10：25 分鐘、零猜測），不作驗收。→ Acceptance #6

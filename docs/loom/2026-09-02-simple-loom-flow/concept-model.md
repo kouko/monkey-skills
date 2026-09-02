@@ -110,7 +110,7 @@ dispatch[]           # build／review 站每次派工一筆：{task, role: imple
 | **reference** | 建議性規則，不是 skill | 1 | engineering-baseline＝tdd-iron-law ＋ systematic-debugging |
 | **action** | 站內可執行步驟，不是 skill，不計 | — | package 測試、UI 盲跑、平行派工、worktree |
 
-36 → 18。名詞 ≤ 40（計數規則：artifact 名、站／工具／action 名、frontmatter 與 JSON 頂層欄位名、狀態物件名；standalone 工具不計；不數段落標題、欄位子值、型別列舉值、git 詞、alias）。
+skill 36 → 17（7 站＋10 計數工具；另 1 個 reference 不是 skill，2 個 standalone 工具不計）。名詞 ≤ 40（計數規則：artifact 名、站／工具／action 名、frontmatter 與 JSON 頂層欄位名、狀態物件名；standalone 工具不計；不數段落標題、欄位子值、型別列舉值、git 詞、alias）。
 
 ## 4. 入口、路由、人類決策點
 
