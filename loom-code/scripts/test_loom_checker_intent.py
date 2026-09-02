@@ -664,3 +664,77 @@ def test_a_reason_change_needs_the_new_line_on_its_own_commit(tmp_path: Path) ->
     result = run_checker("intent", str(intent), cwd=repo)
     assert "intent.needs-design-reason" in blocked_rules(result)
     assert sha[:7] in result.stderr
+
+
+# --- intent.schema: a `map:` names a Map that exists (W3 adversary P13) ----
+
+
+def write_map(repo: Path, map_id: str) -> None:
+    path = repo / "docs/loom/maps" / map_id / "MAP.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\nmap-id: {map_id}\n---\n\n## Destination\n", encoding="utf-8")
+
+
+def write_mapped_intent(repo: Path, map_id: str, *, originator: str | None = None) -> Path:
+    intent = write_intent(
+        repo / "docs/loom/intent/2026-09-02-a.md",
+        originator=originator if originator is not None else f"originator: map:{map_id}",
+    )
+    text = intent.read_text(encoding="utf-8").replace(
+        "kind: engineering", f"map: {map_id}\nkind: engineering", 1
+    )
+    intent.write_text(text, encoding="utf-8")
+    return intent
+
+
+def test_map_field_naming_a_map_that_exists_passes(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_map(repo, "alpha")
+    intent = write_mapped_intent(repo, "alpha")
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_map_field_naming_no_map_blocks(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_mapped_intent(repo, "no-such-map-anywhere")
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.schema" in blocked_rules(result)
+    assert "no-such-map-anywhere" in result.stderr
+    assert "map" in result.stderr
+
+
+def test_originator_map_id_is_resolved_too(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_map(repo, "alpha")
+    intent = write_intent(
+        repo / "docs/loom/intent/2026-09-02-a.md",
+        originator="originator: map:ghost-map",
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.schema" in blocked_rules(result)
+    assert "ghost-map" in result.stderr
+
+
+# --- intent.needs-design-reason: only the front matter decides (W2 review) --
+
+
+def test_a_fenced_status_line_in_the_body_is_not_a_decision(tmp_path: Path) -> None:
+    """A commit that only adds an EXAMPLE `status:`/`needs-design:` line
+    inside the body (a fence, a quoted template) decided nothing; reading it
+    as the deciding commit makes the rule fail on the wrong message."""
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/2026-09-02-a.md")
+    seal(repo, intent)
+    text = intent.read_text(encoding="utf-8")
+    text += "\n## Notes\n\n```\nstatus: open\nneeds-design: no — example only\n```\n"
+    intent.write_text(text, encoding="utf-8")
+    git(repo, "add", str(intent.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", "docs(loom): add an example block\n")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr

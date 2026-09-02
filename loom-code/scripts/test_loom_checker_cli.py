@@ -26,6 +26,7 @@ EXPECTED_RULE_IDS = [
     "intent.schema",
     "push.dismissed-by-reviewer",
     "push.dispatch-covers-tasks",
+    "push.frozen-store-untouched",
     "push.open-findings-closed",
     "push.probes-adversarial",
     "push.probes-package-tests",
@@ -109,8 +110,8 @@ def test_hooks_probe_is_gone() -> None:
     assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
 
 
-def test_the_rule_population_is_twenty_six() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 26
+def test_the_rule_population_is_twenty_seven() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 27
 
 
 # --- contract --require (spec G) -------------------------------------------
@@ -171,3 +172,33 @@ def test_internal_failure_fails_closed_with_exit_2(tmp_path: Path) -> None:
     """A path that cannot be read is an internal error, never a silent pass."""
     result = run_checker("intent", str(tmp_path / "nope.md"), cwd=tmp_path)
     assert result.returncode == 2
+
+
+# --- descriptions carry the load-bearing condition (W2 re-review) ---------
+#
+# `--list-rules` is what a reader consults to learn what a rule actually
+# recomputes. A description that stops short of the condition that blocks
+# is how a reader forms the wrong model of the gate, so each one is pinned
+# to the words that name its own mechanism.
+
+LOAD_BEARING_WORDS = {
+    "push.probes-package-tests": ["re-runs", "declared", "not trusted"],
+    "push.verdicts-ge-2": ["two distinct", "not passing"],
+    "push.dispatch-covers-tasks": ["Task:", "implementer dispatch"],
+    "push.frozen-store-untouched": ["frozen store", "ARCHIVED.md"],
+    "intake.spec-pass": ["spec_sha", "two distinct", "adversarial"],
+    "contract.requires": ["same major", "minor"],
+    "spec.ui-flows-recompute": ["visible characters", "reviewer"],
+}
+
+
+def test_descriptions_name_their_load_bearing_condition() -> None:
+    described = dict(
+        line.split("\t", 1)
+        for line in run_checker("--list-rules").stdout.splitlines()
+        if "\t" in line
+    )
+    for rule_id, words in LOAD_BEARING_WORDS.items():
+        description = described[rule_id]
+        missing = [word for word in words if word not in description]
+        assert not missing, f"{rule_id} description omits {missing}: {description!r}"

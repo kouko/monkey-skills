@@ -79,8 +79,15 @@ artifacts:
 """
 
 
+DEFAULT_COUNTING = (
+    "Five classes are recomputed and diffed against this file: skill, "
+    "checker-rule, hook, contract and prose-gate. A sixth class, "
+    "host-hygiene, is declared but never recomputed and never counted."
+)
+
+
 def _build_repo(tmp_path: Path, *, mechanisms: list[dict] | None = None,
-                 counting: str = "five classes, see script") -> Path:
+                 counting: str = DEFAULT_COUNTING) -> Path:
     repo = tmp_path / "repo"
     (repo / "loom-code" / "skills" / "write-plan").mkdir(parents=True)
     (repo / "loom-code" / "skills" / "write-plan" / "SKILL.md").write_text("# write-plan\n")
@@ -252,7 +259,7 @@ class TestChecks:
         _git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "base")
         (repo / "docs" / "loom" / "evidence" / "mechanisms.yaml").write_text(
             yaml.safe_dump(
-                {"version": "1.0.0", "counting": "five classes, see script",
+                {"version": "1.0.0", "counting": DEFAULT_COUNTING,
                  "mechanisms": FULL_MECHANISMS},
                 sort_keys=False,
             )
@@ -298,23 +305,29 @@ class TestClassValidation:
         assert any(f.rule == "R2" and f.mechanism_id == "write-plan" for f in result.findings)
 
     def test_host_hygiene_id_not_in_hook_or_skill_recompute_is_red(self, tmp_path):
+        """Even an allowlisted host-hygiene id must be real infrastructure:
+        this hooks.json never declares language-anchor, so the entry is
+        stale rather than exempt."""
         mechs = FULL_MECHANISMS + [
-            {"id": "nonexistent-thing", "class": "host-hygiene", "eval": "tests/test_hook.py"}
+            {"id": "PostToolUse:Skill:language-anchor.py", "class": "host-hygiene",
+             "eval": "tests/test_hook.py"}
         ]
         repo = _build_repo(tmp_path, mechanisms=mechs)
         result = cm.run_checks(repo)
         assert result.exit_code == 1
-        assert any(f.rule == "R2" and f.mechanism_id == "nonexistent-thing" for f in result.findings)
+        assert any(f.rule == "R2" and f.mechanism_id == "PostToolUse:Skill:language-anchor.py"
+                   for f in result.findings)
 
     def test_host_hygiene_id_found_in_skill_recompute_is_accepted(self, tmp_path):
         mechs = FULL_MECHANISMS + [
-            {"id": "write-plan-alias-not-real", "class": "host-hygiene", "eval": "tests/test_hook.py"}
+            {"id": "lang_detect", "class": "host-hygiene", "eval": "tests/test_hook.py"}
         ]
-        # replace with an id that IS in the skill recompute set
-        mechs[-1]["id"] = "write-plan"
         repo = _build_repo(tmp_path, mechanisms=mechs)
+        (repo / "loom-code" / "skills" / "lang_detect").mkdir(parents=True)
+        (repo / "loom-code" / "skills" / "lang_detect" / "SKILL.md").write_text("# lang_detect\n")
         result = cm.run_checks(repo)
-        assert not any(f.rule == "R2" and f.mechanism_id == "write-plan" for f in result.findings)
+        assert not any(f.rule in ("R0", "R1", "R2") and f.mechanism_id == "lang_detect"
+                       for f in result.findings), result.findings
 
     def test_host_hygiene_printed_as_exempt_line(self, tmp_path):
         mechs = FULL_MECHANISMS + [
@@ -506,3 +519,183 @@ def test_cli_measure_runs_without_error(tmp_path):
     )
     assert proc.returncode in (0, 1), proc.stderr
     assert "skill" in proc.stdout.lower()
+
+
+class TestEvalIsAlive:
+    """W3-04 / P02+P12 — R4 checks that the eval could actually FAIL: a
+    bare path must be a test file or a `cold-read:` evidence file, and a
+    `<path>::<node>` eval must name a node that exists in that file."""
+
+    def _repo(self, tmp_path, eval_value):
+        mechs = [dict(m) for m in FULL_MECHANISMS]
+        mechs[0]["eval"] = eval_value
+        return _build_repo(tmp_path, mechanisms=mechs), mechs[0]["id"]
+
+    def test_bare_non_test_file_is_red(self, tmp_path):
+        (tmp_path / "repo").mkdir(exist_ok=True)
+        repo, mid = self._repo(tmp_path, "README.md")
+        (repo / "README.md").write_text("# readme\n")
+        result = cm.run_checks(repo)
+        assert result.exit_code == 1
+        assert any(
+            f.rule == "R4" and f.mechanism_id == mid and "not a test or cold-read" in f.detail
+            for f in result.findings
+        ), result.findings
+
+    def test_bare_test_file_is_accepted(self, tmp_path):
+        repo, _ = self._repo(tmp_path, "tests/test_a.py")
+        result = cm.run_checks(repo)
+        assert result.exit_code == 0, result.findings
+
+    def test_shell_probe_under_tests_is_accepted(self, tmp_path):
+        repo, _ = self._repo(tmp_path, "tests/probe.sh")
+        (repo / "tests" / "probe.sh").write_text("#!/bin/sh\nexit 0\n")
+        result = cm.run_checks(repo)
+        assert result.exit_code == 0, result.findings
+
+    def test_node_that_does_not_exist_is_red(self, tmp_path):
+        repo, mid = self._repo(tmp_path, "tests/test_a.py::test_never_existed")
+        result = cm.run_checks(repo)
+        assert result.exit_code == 1
+        assert any(
+            f.rule == "R4" and f.mechanism_id == mid and "test_never_existed" in f.detail
+            for f in result.findings
+        ), result.findings
+
+    def test_node_that_exists_is_accepted(self, tmp_path):
+        repo, _ = self._repo(tmp_path, "tests/test_a.py::test_x")
+        result = cm.run_checks(repo)
+        assert result.exit_code == 0, result.findings
+
+    def test_node_on_a_non_test_file_is_red(self, tmp_path):
+        repo, mid = self._repo(tmp_path, "README.md::test_x")
+        (repo / "README.md").write_text("# readme\n")
+        result = cm.run_checks(repo)
+        assert result.exit_code == 1
+        assert any(f.rule == "R4" and f.mechanism_id == mid for f in result.findings)
+
+
+class TestHostHygieneAllowlist:
+    """W3-04 / P10 — `class: host-hygiene` is spendable only on the named
+    host-infrastructure ids; anything else is R0, and it never suppresses
+    R1 for a skill or hook inside the loom flow."""
+
+    def test_unlisted_id_under_host_hygiene_is_r0(self, tmp_path):
+        mechs = FULL_MECHANISMS + [
+            {"id": "smuggle", "class": "host-hygiene", "eval": "tests/test_a.py::test_x"}
+        ]
+        repo = _build_repo(tmp_path, mechanisms=mechs)
+        (repo / "loom-code" / "skills" / "smuggle").mkdir(parents=True)
+        (repo / "loom-code" / "skills" / "smuggle" / "SKILL.md").write_text("# smuggle\n")
+        result = cm.run_checks(repo)
+        assert result.exit_code == 1
+        assert any(f.rule == "R0" and f.mechanism_id == "smuggle" for f in result.findings)
+
+    def test_unlisted_id_does_not_suppress_r1(self, tmp_path):
+        mechs = FULL_MECHANISMS + [
+            {"id": "smuggle", "class": "host-hygiene", "eval": "tests/test_a.py::test_x"}
+        ]
+        repo = _build_repo(tmp_path, mechanisms=mechs)
+        (repo / "loom-code" / "skills" / "smuggle").mkdir(parents=True)
+        (repo / "loom-code" / "skills" / "smuggle" / "SKILL.md").write_text("# smuggle\n")
+        result = cm.run_checks(repo)
+        assert any(f.rule == "R1" and f.mechanism_id == "smuggle" for f in result.findings), result.findings
+        assert "smuggle" not in result.host_hygiene_ids
+
+    def test_allowlisted_id_is_still_exempt(self, tmp_path):
+        mechs = FULL_MECHANISMS + [
+            {"id": "PostToolUse:Skill:language-anchor.py", "class": "host-hygiene",
+             "eval": "tests/test_hook.py"}
+        ]
+        repo = _build_repo(tmp_path, mechanisms=mechs)
+        (repo / "loom-code" / "hooks" / "hooks.json").write_text(
+            json.dumps(HOOKS_JSON_WITH_LANGUAGE_ANCHOR)
+        )
+        result = cm.run_checks(repo)
+        assert result.exit_code == 0, result.findings
+        assert result.host_hygiene_ids == ["PostToolUse:Skill:language-anchor.py"]
+
+
+class TestCountingProse:
+    """W3-04 / P15 — the `counting:` paragraph is the prose twin of this
+    module; it must name every class the code knows, so prose that invents
+    an exemption is red rather than quietly misleading."""
+
+    def test_real_yaml_counting_names_every_class(self):
+        path = REPO / "docs" / "loom" / "evidence" / "mechanisms.yaml"
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        assert cm.counting_classes(data["counting"]) == set(cm.ALL_CLASSES)
+
+    def test_drifted_paragraph_is_red(self, tmp_path):
+        repo = _build_repo(
+            tmp_path, mechanisms=FULL_MECHANISMS,
+            counting=("Net count excludes host-hygiene and any skill whose id starts "
+                      "with legacy- (declared exempt by this paragraph)."),
+        )
+        result = cm.run_checks(repo)
+        assert result.exit_code == 1
+        assert any(f.rule == "R5" for f in result.findings), result.findings
+
+    def test_missing_paragraph_is_red(self, tmp_path):
+        repo = _build_repo(tmp_path, mechanisms=FULL_MECHANISMS)
+        path = repo / "docs" / "loom" / "evidence" / "mechanisms.yaml"
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        del data["counting"]
+        path.write_text(yaml.safe_dump(data, sort_keys=False))
+        result = cm.run_checks(repo)
+        assert result.exit_code == 1
+        assert any(f.rule == "R5" for f in result.findings), result.findings
+
+
+def _measure_repo(tmp_path, *, words: int, baseline_line: str | None,
+                  keep_hook: bool = True) -> Path:
+    repo = _build_repo(tmp_path, mechanisms=FULL_MECHANISMS)
+    hook = repo / "loom-code" / "hooks" / "session-start"
+    hook.write_text("#!/usr/bin/env bash\necho '" + " ".join(["w"] * words) + "'\n")
+    hook.chmod(0o755)
+    _git(repo, "init", "-q")
+    _git(repo, "add", "-A")
+    _git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "base")
+    sha = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                         capture_output=True, text=True, check=True).stdout.strip()[:8]
+    kickoff = repo / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
+    if baseline_line is not None:
+        kickoff.write_text("# Kickoff\n\n" + baseline_line.replace("<sha>", sha) + "\n")
+    else:
+        kickoff.write_text("# Kickoff\n\n- second-vendor: codex\n")
+    if not keep_hook:
+        hook.unlink()
+    return repo
+
+
+class TestMeasureFailsClosed:
+    """W3-04 / P04+P11 — --measure refuses a missing baseline line, a
+    missing hook, and a baseline number that its own sha does not produce."""
+
+    def test_recorded_baseline_matching_its_sha_is_green(self, tmp_path):
+        repo = _measure_repo(tmp_path, words=10, baseline_line="- session-start-baseline: <sha> 10 — measured")
+        assert cm.run_measure(repo) == 0
+
+    def test_missing_baseline_line_is_red(self, tmp_path):
+        repo = _measure_repo(tmp_path, words=10, baseline_line=None)
+        assert cm.run_measure(repo) == 1
+
+    def test_missing_hook_is_red(self, tmp_path):
+        repo = _measure_repo(tmp_path, words=10,
+                             baseline_line="- session-start-baseline: <sha> 10 — measured",
+                             keep_hook=False)
+        assert cm.run_measure(repo) == 1
+
+    def test_baseline_number_not_produced_by_its_sha_is_red(self, tmp_path, capsys):
+        repo = _measure_repo(tmp_path, words=10,
+                             baseline_line="- session-start-baseline: <sha> 99999 — 'remeasured'")
+        assert cm.run_measure(repo) == 1
+        assert "does not match" in capsys.readouterr().out
+
+    def test_unresolvable_baseline_sha_is_red(self, tmp_path):
+        repo = _measure_repo(tmp_path, words=10,
+                             baseline_line="- session-start-baseline: deadbee 10 — bogus sha")
+        assert cm.run_measure(repo) == 1
+
+    def test_real_repo_measure_is_green(self):
+        assert cm.run_measure(REPO) == 0

@@ -61,7 +61,8 @@ USAGE = __doc__.split("Sub-commands (the CLI contract other stations depend on):
 RULES: list[tuple[str, str]] = [
     (
         "contract.requires",
-        "A consumer plugin's requires-contract floor is met by this contract manifest version.",
+        "A consumer plugin's requires-contract floor is met by this contract manifest version: "
+        "the same major, and a minor at or above the required one.",
     ),
     (
         "intake.confirmed",
@@ -80,8 +81,10 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "intake.spec-pass",
-        "write-plan accepts a needs-design: yes change only when the latest spec review round is "
-        "all PASS or PASS_WITH_NOTES and every one of its verdicts records the spec_sha it read.",
+        "write-plan accepts a needs-design: yes change only when the latest spec review round "
+        "carries at least two distinct reviewers all passing, every verdict records a spec_sha "
+        "equal to the spec's current identity, and the round carries a `scope: spec` "
+        "adversarial probe.",
     ),
     (
         "intent.kind-recompute",
@@ -105,13 +108,20 @@ RULES: list[tuple[str, str]] = [
         "The intent file carries every required frontmatter field and H2 section declared in the contract manifest.",
     ),
     (
+        "push.frozen-store-untouched",
+        "No commit between the branch base and reviewed_sha writes into a frozen store "
+        "(docs/loom/plans, specs, backlog, design or archive); only each store's own "
+        "ARCHIVED.md marker stays writable.",
+    ),
+    (
         "push.dismissed-by-reviewer",
         "Every dismissed finding names a dispatch reviewer, blind-runner or adversary who never implemented it.",
     ),
     (
         "push.dispatch-covers-tasks",
-        "Every `Task: <id>` trailer between the branch base and reviewed_sha names "
-        "a task some implementer dispatch entry claims.",
+        "Every commit between the branch base and reviewed_sha that touches code, spec, skill "
+        "or gate work carries a `Task:` trailer, and every id those trailers name is claimed by "
+        "an implementer dispatch entry.",
     ),
     (
         "push.open-findings-closed",
@@ -124,7 +134,10 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.probes-package-tests",
-        "review.json probes[] records a package-test run for this branch whose result is pass.",
+        "The checker re-runs the package-test command KICKOFF-DEFAULTS declares, at the "
+        "reviewed tree, and believes its own exit code: the recorded result is not trusted, "
+        "the probe's sha must be the reviewed commit, and its recorded command must be the "
+        "declared one.",
     ),
     (
         "push.review-schema",
@@ -149,7 +162,8 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.verdicts-ge-2",
-        "The latest review round carries at least two distinct fresh-context reviewers.",
+        "The latest review round carries at least two distinct fresh-context reviewers, and "
+        "blocks when any verdict in that round is not passing.",
     ),
     (
         "spec.req-grammar",
@@ -159,7 +173,10 @@ RULES: list[tuple[str, str]] = [
     (
         "spec.ui-flows-recompute",
         "While the diff touches a declared interface-surface glob, the spec's UI flows section "
-        "carries at least one `<operation> -> <reaction>` prose line with two or more words a side.",
+        "carries at least one prose line (outside fences and HTML comments) with an arrow and "
+        "at least four visible characters on each side. This is a structural floor only -- "
+        "whether the flow says anything true or useful is the reviewer lens's job, not a "
+        "keyword list's.",
     ),
     (
         "standing.product-principles-reject",
@@ -448,6 +465,7 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures: list[tuple[str, str]] = []
 
     failures += check_intent_schema(manifest, front, sections)
+    failures += check_map_exists(repo, front)
     failures += check_product_no_identifiers(front, sections)
 
     reason_failures, needs_design = check_needs_design_reason(
@@ -485,6 +503,36 @@ def check_intent_schema(manifest, front, sections) -> list[tuple[str, str]]:
             failures.append(
                 ("intent.schema", f"`{name}: {value}` is not one of {allowed}.")
             )
+    return failures
+
+
+MAP_ORIGINATOR = re.compile(r"^map:\s*(\S+)$")
+
+
+def check_map_exists(repo: Path, front) -> list[tuple[str, str]]:
+    """A `map:` id names a Map that exists.
+
+    `start_delivery.py` writes both sides at once, but an intent written or
+    edited by hand carries free text, and a dangling id points the reader at
+    a Map that is not there while the change looks map-originated (W3
+    adversary P13). Both spellings of the same claim are resolved: the
+    `map:` field and an `originator: map:<id>`."""
+    failures = []
+    claims: list[tuple[str, str]] = []
+    map_id = front.get("map", "").strip()
+    if map_id:
+        claims.append(("map", map_id))
+    originator = front.get("originator", "").strip()
+    if (match := MAP_ORIGINATOR.match(originator)):
+        claims.append(("originator", match.group(1)))
+    for field, value in claims:
+        if not (repo / "docs" / "loom" / "maps" / value / "MAP.md").is_file():
+            failures.append((
+                "intent.schema",
+                f"`{field}: {'map:' if field == 'originator' else ''}{value}` names a "
+                f"Map that does not exist: no docs/loom/maps/{value}/MAP.md. An intent "
+                "cannot originate in a Map that is not there.",
+            ))
     return failures
 
 
@@ -557,13 +605,52 @@ def deciding_commit(repo: Path, relative: str) -> str | None:
     for sha in git_text(repo, "log", "--format=%H", "--", relative).splitlines():
         if not sha.strip():
             continue
-        diff = git_text(repo, "show", "--format=", "--unified=0", sha, "--", relative)
-        for line in diff.splitlines():
-            if line[:1] not in ("+", "-") or line[:3] in ("+++", "---"):
-                continue
-            if line[1:].lstrip().startswith(FRONTMATTER_DECISION):
-                return sha
+        if _decides_in_frontmatter(repo, sha, relative):
+            return sha
     return None
+
+
+HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
+
+def frontmatter_end(text: str) -> int:
+    """The 1-based line number where the front matter stops: the first `## `
+    heading. Everything at or after it is body -- an example `status:` line
+    inside a fence decides nothing."""
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line.startswith("## "):
+            return number
+    return len(text.splitlines()) + 1
+
+
+def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
+    """Did this commit change a `status:`/`needs-design:` line that lived in
+    the intent's FRONT MATTER? A quoted or fenced copy in the body is an
+    example, not a decision (W2 re-review)."""
+    diff = git_text(repo, "show", "--format=", "--unified=0", sha, "--", relative)
+    after = frontmatter_end(git_maybe(repo, "show", f"{sha}:{relative}") or "")
+    before = frontmatter_end(git_maybe(repo, "show", f"{sha}^:{relative}") or "")
+    old_line = new_line = 0
+    for line in diff.splitlines():
+        if (header := HUNK_HEADER.match(line)):
+            old_line, new_line = int(header.group(1)), int(header.group(2))
+            continue
+        if line[:3] in ("+++", "---"):
+            continue
+        marker, body = line[:1], line[1:]
+        if marker == "+":
+            decisive = body.lstrip().startswith(FRONTMATTER_DECISION) and new_line < after
+            new_line += 1
+        elif marker == "-":
+            decisive = body.lstrip().startswith(FRONTMATTER_DECISION) and old_line < before
+            old_line += 1
+        else:
+            old_line += 1
+            new_line += 1
+            continue
+        if decisive:
+            return True
+    return False
 
 
 def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: Path):
@@ -861,11 +948,37 @@ ARROW = re.compile(r"\u2192|->")
 FLOW_MARKER = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s*")
 # Every spelling of "there is no interface", in the two languages the loom
 # artifacts are written in.
-NOTHING_WORDS = ("n/a", "na", "none", "not applicable", "沒有", "無", "なし")
-# A word is a latin/digit run or a CJK run; punctuation is not a word. Two of
-# them a side is the floor: `add -> stored` names nothing anyone can try.
-WORD = re.compile(r"[0-9A-Za-z_]+|[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]+")
-MIN_WORDS_PER_SIDE = 2
+# A flow line is recognised STRUCTURALLY: an arrow with enough text on each
+# side of it. Three rounds of keyword patches (`n/a`, `none`, `沒有`, ...)
+# each reopened, because "a spelling of nothing" is unbounded and a checker
+# that guesses at meaning is a checker that can be talked around. What
+# survives is the shape; whether the flow is TRUE or USEFUL is the reviewer
+# lens's job, and the rule says so.
+VISIBLE = re.compile(r"[^\W_]", re.UNICODE)
+MIN_VISIBLE_PER_SIDE = 4
+
+# Leading markdown markers, stripped repeatedly: quote, heading, list item.
+LINE_MARKER = re.compile(r"^\s*(?:>|#{1,6}|[-*+]|\d+[.)])\s*")
+EMPHASIS = str.maketrans("", "", "*_~`")
+
+
+def strip_markup(line: str) -> str:
+    """One line, minus the markdown that decorates it: leading quote /
+    heading / list markers, table pipes, emphasis characters."""
+    text = line.replace("|", " ")
+    while True:
+        stripped = LINE_MARKER.sub("", text, count=1)
+        if stripped == text:
+            break
+        text = stripped
+    return text.translate(EMPHASIS).strip()
+
+
+def visible_count(text: str) -> int:
+    """Characters that carry content -- letters and digits in any script.
+    Counted as CHARACTERS, not words: CJK writes a whole flow with no
+    spaces in it."""
+    return len(VISIBLE.findall(text))
 
 
 def prose_lines(body: str) -> list[str]:
@@ -884,16 +997,13 @@ def flow_lines(body: str) -> list[str]:
     """`<operation> -> <reaction>` lines: what decision point 2 reads back."""
     found = []
     for line in prose_lines(body):
-        text = FLOW_MARKER.sub("", line).strip()
-        probe = text.lstrip("`\"'*_ ").lower()
-        if any(probe.startswith(word) for word in NOTHING_WORDS):
-            continue
+        text = strip_markup(line)
         arrow = ARROW.search(text)
         if not arrow:
             continue
         left, right = text[:arrow.start()], text[arrow.end():]
-        if (len(WORD.findall(left)) >= MIN_WORDS_PER_SIDE
-                and len(WORD.findall(right)) >= MIN_WORDS_PER_SIDE):
+        if (visible_count(left) >= MIN_VISIBLE_PER_SIDE
+                and visible_count(right) >= MIN_VISIBLE_PER_SIDE):
             found.append(text)
     return found
 
@@ -922,11 +1032,13 @@ def check_ui_flows_recompute(manifest, repo: Path, change_id: str, touched: list
             f"<reaction>` line under `## UI flows` (it says {shown!r}) while "
             f"the diff touches a declared interface surface: "
             f"{', '.join(touched[:5])}. A flow line is prose -- not inside a "
-            "``` fence or an HTML comment -- that does not open with a "
-            "spelling of `none`, and that names at least two words on each "
-            "side of the arrow, e.g. `todo add --due 2026-09-10 'buy milk' -> "
-            "the todo is stored with its due date`. Write one per operation; "
-            "that section IS decision point 2.",
+            "``` fence or an HTML comment -- carrying an arrow with at least "
+            f"{MIN_VISIBLE_PER_SIDE} visible characters on each side, e.g. "
+            "`todo add --due 2026-09-10 'buy milk' -> the todo is stored with "
+            "its due date`. That is a shape check only: whether the flow is "
+            "true, complete or worth reading is the reviewer's judgement, not "
+            "this rule's. Write one per operation; that section IS decision "
+            "point 2.",
         )
     ]
 
@@ -1398,6 +1510,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_verdicts(review)
     failures += check_second_vendor_honoured(repo, review)
     failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
+    failures += check_frozen_store_untouched(repo, reviewed_id)
 
     # `dispatch[]` lives inside the review.json that was read out of the
     # reviewed commit's tree, so both identity rules recompute from a
@@ -2009,6 +2122,55 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
             )
         ]
     return []
+
+
+# The stores loom 1.0 froze: old plans, specs, briefs, backlog and design
+# notes stay where they are and are never converted (concept-model §10, the
+# hard switch). Their own ARCHIVED.md marker is the one file a change may
+# still write, because closing a store is how a store gets frozen.
+FROZEN_STORES = ("plans", "specs", "backlog", "design", "archive")
+FROZEN_STORE_RE = re.compile(
+    r"^docs/loom/(?:" + "|".join(FROZEN_STORES) + r")/(?:.*/)?(?P<name>[^/]+)$"
+)
+
+
+def check_frozen_store_untouched(repo: Path, reviewed_id: str | None):
+    """A frozen store is frozen in fact, not in prose.
+
+    `docs/loom/BACKLOG.md` said "no reads, no writes" and nothing recomputed
+    it, so a station could keep writing plans into the store the switch
+    retired and every reader would go on trusting it (W3 adversary P07). The
+    diff between the branch base and the reviewed commit is the fact."""
+    if reviewed_id is None:
+        return []
+    try:
+        base = branch_base(repo)
+    except (UsageError, OSError) as exc:
+        return [("push.frozen-store-untouched", f"cannot recompute the branch base: {exc}")]
+    touched = sorted({
+        line.strip()
+        for line in git_text(
+            repo, "diff", "--name-only", base, reviewed_id
+        ).splitlines()
+        if line.strip()
+    })
+    written = [
+        path for path in touched
+        if (match := FROZEN_STORE_RE.match(path)) and match.group("name") != "ARCHIVED.md"
+    ]
+    if not written:
+        return []
+    return [
+        (
+            "push.frozen-store-untouched",
+            f"{len(written)} path(s) under a frozen store changed on this branch: "
+            f"{', '.join(written[:5])}. Loom 1.0 froze docs/loom/"
+            f"{{{','.join(FROZEN_STORES)}}}/ in place -- nothing converts them and "
+            "nothing writes to them; only each store's ARCHIVED.md marker stays "
+            "writable. New work belongs in docs/loom/intent/ and "
+            "docs/loom/<change-id>/.",
+        )
+    ]
 
 
 # The vendor behind each CLI a repo can name as its second opinion.

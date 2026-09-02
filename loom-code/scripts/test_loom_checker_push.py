@@ -23,6 +23,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 CHECKER = Path(__file__).with_name("loom_checker.py")
 CHANGE = "2026-09-02-a"
 REVIEW = f"docs/loom/{CHANGE}/review.json"
@@ -934,3 +936,44 @@ def test_the_dead_base_flag_is_gone(tmp_path: Path) -> None:
     result = run_checker("push", "--base", "main", cwd=repo)
     assert result.returncode == 2
     assert "--base" in result.stderr
+
+
+# --- push.frozen-store-untouched (W3 adversary P07) ------------------------
+
+
+FROZEN_STORES = ("plans", "specs", "backlog", "design", "archive")
+
+
+def _rewrite_history_with(repo: Path, rel: str) -> subprocess.CompletedProcess:
+    """Replace the branch's code commit with one that also writes `rel`."""
+    git(repo, "reset", "-q", "--hard", "HEAD~1")
+    target = repo / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("frozen store write\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): write into a frozen store\n\nTask: T1")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return run_checker("push", cwd=repo)
+
+
+@pytest.mark.parametrize("store", FROZEN_STORES)
+def test_a_write_into_a_frozen_store_blocks(tmp_path: Path, store: str) -> None:
+    repo = build_repo(tmp_path)
+    result = _rewrite_history_with(repo, f"docs/loom/{store}/2026-09-02-note.md")
+    assert result.returncode == 1, result.stdout
+    assert "push.frozen-store-untouched" in blocked_rules(result)
+    assert store in result.stderr
+
+
+def test_the_archived_marker_itself_is_still_writable(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    result = _rewrite_history_with(repo, "docs/loom/plans/ARCHIVED.md")
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_live_store_is_untouched_by_the_freeze(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    result = _rewrite_history_with(repo, "docs/loom/intent/2026-09-02-a.md")
+    assert result.returncode == 0, result.stderr

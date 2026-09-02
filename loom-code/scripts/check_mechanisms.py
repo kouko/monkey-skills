@@ -6,11 +6,15 @@ Five classes are recomputed straight from repo state: skill, checker-rule,
 hook, contract, prose-gate (see mechanisms.yaml's `counting:` field for the
 prose paragraph — this module is its executable twin and must not drift
 from it). A sixth class, host-hygiene, is declared but never recomputed and
-never counted toward the net total.
+never counted toward the net total -- and, because that is an exemption, it
+is spendable only on the ids in HOST_HYGIENE_ALLOWLIST.
 
 Red conditions (class-scoped: R1/R2 compare a mechanism's id within its
 declared class, not across classes):
-  R0 unknown-class — a mechanism's `class:` is not one of ALL_CLASSES.
+  R0 unknown-class — a mechanism's `class:` is not one of ALL_CLASSES, or it
+                      claims `host-hygiene` without being on
+                      HOST_HYGIENE_ALLOWLIST (which also leaves it counted
+                      and R1-visible: the class launders nothing).
   R1 unregistered  — a recomputed id (for class X) is not registered in the
                       yaml under class X.
   R2 stale         — a yaml id registered under class X was not found by
@@ -22,12 +26,23 @@ declared class, not across classes):
                       <reason>` line (no matching section at all is also
                       red, distinctly, and never falls back to a whole-file
                       scan).
-  R4 missing-eval   — a mechanism's `eval:` is empty, or points at a path
+  R4 missing-eval   — a mechanism's `eval:` is empty; or points at a path
                       (before `::`) or `cold-read: <path>` that does not
-                      exist on disk.
+                      exist on disk; or is a bare path that is neither a test
+                      file (`test_*.py`, `*.sh` under tests/) nor a
+                      `cold-read:` evidence file; or names a `::<node>` that
+                      the file does not define and pytest does not collect.
+                      An eval that cannot fail is not an eval.
   R4-pending        — a mechanism's `eval:` is the literal
                       `pending — <plan task id>` form: accepted syntax, but
                       always printed red so it is never silently green.
+  R5 counting-drift — mechanisms.yaml carries no `counting:` paragraph, or
+                      that paragraph does not name every class this module
+                      knows: the prose twin has drifted from the code.
+
+`--measure` fails closed: a missing session-start hook, a missing
+`session-start-baseline: <sha> <words>` line, or a baseline number its own
+sha does not reproduce are each red.
 
 Exit codes: 0 clean, 1 any red finding, 2 internal error (fail-closed).
 
@@ -57,6 +72,20 @@ BUDGET_EXCEPTION_RE = re.compile(r"budget-exception:\s*(\S+)\s*—\s*(.+)")
 QUOTED_TOKEN_RE = re.compile(r'"([^"]+)"|(\S+)')
 PENDING_RE = re.compile(r"^pending\s*—\s*(\S.*)$")
 
+# `class: host-hygiene` buys an exemption from the net count and from R1's
+# registration gap, so it is spendable only on the named host-infrastructure
+# mechanisms -- otherwise any new mechanism launders itself through it (W3
+# adversary P10). An id qualifies when one of these names appears in it.
+HOST_HYGIENE_ALLOWLIST = ("language-anchor", "lang_detect")
+
+# An eval only earns its name if it can fail. A bare path must be a test
+# file (or a `cold-read:` evidence file, handled separately); a `<path>::
+# <node>` eval must name a node that file actually defines (W3 adversary
+# P02/P12).
+TEST_FILE_RE = re.compile(r"(?:^|/)test_[^/]+\.py$")
+SHELL_TEST_RE = re.compile(r"(?:^|/)tests/[^/]+\.sh$")
+DEF_RE = "(?m)^\\s*(?:async\\s+)?(?:def|class)\\s+{}\\b"
+
 
 # --------------------------------------------------------------------------
 # Manifest / mechanisms.yaml loading
@@ -81,8 +110,55 @@ def load_mechanisms(repo: Path) -> list[dict]:
     return list(data.get("mechanisms") or [])
 
 
+def load_mechanisms_doc(repo: Path) -> dict:
+    path = repo / "docs" / "loom" / "evidence" / "mechanisms.yaml"
+    if not path.is_file():
+        return {}
+    return _load_yaml(path)
+
+
 def _standalone_tool_names(manifest: dict) -> set[str]:
     return {t["name"] for t in manifest.get("tools", []) if t.get("standalone")}
+
+
+def host_hygiene_allowed(mechanism_id: str) -> bool:
+    """True when this id is one of the named host-infrastructure mechanisms
+    `class: host-hygiene` exists for."""
+    return any(name in mechanism_id for name in HOST_HYGIENE_ALLOWLIST)
+
+
+def counting_classes(counting: str | None) -> set[str]:
+    """The class names the `counting:` paragraph names, as whole words."""
+    text = counting or ""
+    found = set()
+    for cls in ALL_CLASSES:
+        if re.search(rf"(?<![\w-]){re.escape(cls)}(?![\w-])", text):
+            found.add(cls)
+    return found
+
+
+def is_test_path(relative: str) -> bool:
+    return bool(TEST_FILE_RE.search(relative) or SHELL_TEST_RE.search(relative))
+
+
+def node_is_alive(repo: Path, relative: str, node: str) -> bool:
+    """Does `<relative>::<node>` name something that exists?
+
+    Cheap first: the file defines a `def`/`class` for every segment of the
+    node id, or carries the node text verbatim. Only when that fails do we
+    pay for `pytest --collect-only -q`, which is the authority."""
+    try:
+        text = (repo / relative).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    segments = [s for s in node.split("::") if s.strip()]
+    if segments and all(re.search(DEF_RE.format(re.escape(s)), text) for s in segments):
+        return True
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", relative],
+        cwd=repo, capture_output=True, text=True,
+    )
+    return any(node in line for line in proc.stdout.splitlines())
 
 
 # --------------------------------------------------------------------------
@@ -211,7 +287,14 @@ class CheckResult:
 
 
 def net_count(mechanisms: list[dict]) -> int:
-    return sum(1 for m in mechanisms if m.get("class") != "host-hygiene")
+    """Everything except the allowlisted host-hygiene entries. An entry that
+    claims host-hygiene without being on the allowlist still counts, so the
+    class cannot be used to launder a new mechanism past the budget."""
+    return sum(
+        1 for m in mechanisms
+        if m.get("class") != "host-hygiene"
+        or not host_hygiene_allowed(str(m.get("id", "")))
+    )
 
 
 def run_checks(
@@ -235,6 +318,13 @@ def run_checks(
         mid = m.get("id", "<missing-id>")
         if cls not in ALL_CLASSES:
             findings.append(Finding("R0", mid, f"unknown class {cls!r} (must be one of {ALL_CLASSES})"))
+        elif cls == "host-hygiene" and not host_hygiene_allowed(mid):
+            findings.append(Finding(
+                "R0", mid,
+                "class host-hygiene is reserved for host infrastructure "
+                f"({', '.join(HOST_HYGIENE_ALLOWLIST)}); this id is none of them, "
+                "so it is an ordinary mechanism and owes a class, a net count and an eval",
+            ))
 
     # host-hygiene ids draw from the hook/skill recompute but are registered
     # under a separate class; a *valid* host-hygiene id (one actually found
@@ -243,7 +333,9 @@ def run_checks(
     host_hygiene_universe = recomputed["hook"] | recomputed["skill"]
     host_hygiene_ids: list[str] = [
         m["id"] for m in mechanisms
-        if m.get("class") == "host-hygiene" and m.get("id") in host_hygiene_universe
+        if m.get("class") == "host-hygiene"
+        and m.get("id") in host_hygiene_universe
+        and host_hygiene_allowed(str(m.get("id", "")))
     ]
 
     # R1: a recomputed id for class X not registered in yaml under class X.
@@ -265,6 +357,8 @@ def run_checks(
         if cls not in ALL_CLASSES:
             continue  # already reported as R0
         if cls == "host-hygiene":
+            if not host_hygiene_allowed(mid):
+                continue  # already reported as R0
             if mid not in host_hygiene_universe:
                 findings.append(Finding("R2", mid, "class host-hygiene: id not found in hook or skill recompute"))
             continue
@@ -288,9 +382,44 @@ def run_checks(
             if not (repo / cold_read_path).is_file():
                 findings.append(Finding("R4", mid, f"cold-read path does not exist: {cold_read_path}"))
         else:
-            file_part = eval_raw.split("::", 1)[0].strip()
+            file_part, _, node = eval_raw.partition("::")
+            file_part, node = file_part.strip(), node.strip()
             if not (repo / file_part).is_file():
                 findings.append(Finding("R4", mid, f"eval path does not exist: {file_part}"))
+            elif not is_test_path(file_part):
+                findings.append(Finding(
+                    "R4", mid,
+                    f"eval is not a test or cold-read: {file_part} is neither a "
+                    "`test_*.py` file, a `*.sh` under tests/, nor a "
+                    "`cold-read: <path>` evidence file, so nothing about it can fail",
+                ))
+            elif node and not node_is_alive(repo, file_part, node):
+                findings.append(Finding(
+                    "R4", mid,
+                    f"eval names a node {file_part} does not define: {node} "
+                    "(not defined in the file and not collected by pytest)",
+                ))
+
+    # R5: the `counting:` paragraph is this module's prose twin. It must
+    # name every class the code knows, so a paragraph that quietly invents an
+    # exemption (W3 adversary P15) is red instead of merely misleading.
+    counting = load_mechanisms_doc(repo).get("counting")
+    if counting is None:
+        findings.append(Finding(
+            "R5", "<counting>",
+            "mechanisms.yaml has no `counting:` paragraph; the prose twin of "
+            "this module is what a reader checks the recompute against",
+        ))
+    else:
+        named = counting_classes(counting)
+        if named != set(ALL_CLASSES):
+            missing = sorted(set(ALL_CLASSES) - named)
+            findings.append(Finding(
+                "R5", "<counting>",
+                f"the `counting:` paragraph does not name every class the "
+                f"recompute knows (missing: {', '.join(missing) or 'none'}); "
+                "prose and code have drifted",
+            ))
 
     net_total = net_count(mechanisms)
     baseline_total: int | None = None
@@ -450,6 +579,14 @@ def measure_artifact_type_count(repo: Path) -> int:
     return len(manifest.get("artifacts") or {})
 
 
+def wc_words(data: bytes) -> int:
+    """Word count the way KICKOFF-DEFAULTS records it: `| wc -w`. Python's
+    str.split() disagrees with wc on a handful of unicode separators, and the
+    recorded baseline is the command's number, not Python's."""
+    proc = subprocess.run(["wc", "-w"], input=data, capture_output=True)
+    return int(proc.stdout.split()[0])
+
+
 def measure_session_start_words(repo: Path) -> int:
     script = repo / "loom-code" / "hooks" / "session-start"
     if not script.is_file():
@@ -459,9 +596,43 @@ def measure_session_start_words(repo: Path) -> int:
         subprocess.run(["git", "-C", str(tmp_path), "init", "-q"], check=True, capture_output=True)
         proc = subprocess.run(
             ["bash", str(script)],
-            cwd=tmp_path, input="", capture_output=True, text=True,
+            cwd=tmp_path, input=b"", capture_output=True,
         )
-        return len(proc.stdout.split())
+        return wc_words(proc.stdout)
+
+
+def recompute_baseline_words(repo: Path, sha: str) -> int | None:
+    """Re-run the session-start hook AS IT WAS at `sha` and count its words.
+
+    The recorded number is only evidence while the sha that produced it can
+    still produce it (W3 adversary P11: raising the number in
+    KICKOFF-DEFAULTS.md is otherwise a one-line way past the budget). The
+    hook reads sibling files out of its own directory, so the whole
+    `loom-code/hooks` tree is extracted at that sha, and it is run with cwd
+    set to an empty git repo -- the command KICKOFF-DEFAULTS records.
+    Returns None when the sha or the tree cannot be resolved."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tree = Path(tmp) / "tree"
+        tree.mkdir()
+        archive = subprocess.run(
+            ["git", "-C", str(repo), "archive", sha, "loom-code/hooks"],
+            capture_output=True,
+        )
+        if archive.returncode != 0:
+            return None
+        untar = subprocess.run(
+            ["tar", "-x", "-C", str(tree)], input=archive.stdout, capture_output=True,
+        )
+        script = tree / "loom-code" / "hooks" / "session-start"
+        if untar.returncode != 0 or not script.is_file():
+            return None
+        empty = Path(tmp) / "empty"
+        empty.mkdir()
+        subprocess.run(["git", "-C", str(empty), "init", "-q"], check=True, capture_output=True)
+        proc = subprocess.run(
+            ["bash", str(script)], cwd=empty, input=b"", capture_output=True,
+        )
+        return wc_words(proc.stdout)
 
 
 def _session_start_baseline(repo: Path) -> tuple[str, int] | None:
@@ -475,6 +646,8 @@ def _session_start_baseline(repo: Path) -> tuple[str, int] | None:
 
 
 def run_measure(repo: Path) -> int:
+    """Every measurement fails closed: a budget whose evidence is missing is
+    not a budget that passed (W3 adversary P04)."""
     skill_count = measure_skill_count(repo)
     artifact_types = measure_artifact_type_count(repo)
     words = measure_session_start_words(repo)
@@ -487,21 +660,40 @@ def run_measure(repo: Path) -> int:
         print(f"RED: artifact-type count {artifact_types} exceeds the per-change budget of 5")
     print(f"session-start word count: {words}")
 
-    baseline = _session_start_baseline(repo)
     exit_code = 1 if (skill_count > 18 or artifact_types > 5) else 0
+    if words < 0:
+        print("RED: no loom-code/hooks/session-start to measure; the injection "
+              "budget cannot be recomputed")
+        return 1
+
+    baseline = _session_start_baseline(repo)
     if baseline is None:
-        print("session-start-baseline: not recorded in KICKOFF-DEFAULTS.md (no comparison)")
+        print("RED: docs/loom/KICKOFF-DEFAULTS.md records no "
+              "`session-start-baseline: <sha> <words>` line, so there is "
+              "nothing to measure against")
+        return 1
+
+    sha, baseline_words = baseline
+    print(f"session-start-baseline ({sha}): {baseline_words} words")
+    recomputed = recompute_baseline_words(repo, sha)
+    if recomputed is None:
+        print(f"RED: cannot recompute the baseline from sha {sha}: no "
+              "loom-code/hooks tree resolves there")
+        return 1
+    if recomputed != baseline_words:
+        print(f"RED: baseline number does not match sha {sha}: it prints "
+              f"{recomputed} words, not the recorded {baseline_words}")
+        return 1
+    print(f"baseline recomputed from {sha}: {recomputed} words (matches)")
+
+    half = baseline_words / 2
+    if words > baseline_words:
+        print(f"RED: session-start word count {words} exceeds baseline {baseline_words}")
+        exit_code = 1
+    elif words <= half:
+        print(f"info: session-start word count {words} is at or under half the baseline target ({half:.0f})")
     else:
-        sha, baseline_words = baseline
-        print(f"session-start-baseline ({sha}): {baseline_words} words")
-        half = baseline_words / 2
-        if words > baseline_words:
-            print(f"RED: session-start word count {words} exceeds baseline {baseline_words}")
-            exit_code = 1
-        elif words <= half:
-            print(f"info: session-start word count {words} is at or under half the baseline target ({half:.0f})")
-        else:
-            print(f"info: session-start word count {words} is under baseline but over half target ({half:.0f})")
+        print(f"info: session-start word count {words} is under baseline but over half target ({half:.0f})")
     return exit_code
 
 

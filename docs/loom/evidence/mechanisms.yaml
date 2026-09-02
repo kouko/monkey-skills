@@ -131,6 +131,9 @@ mechanisms:
   - id: push.dispatch-covers-tasks
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_hardening.py::test_a_task_with_no_implementer_dispatch_blocks
+  - id: push.frozen-store-untouched
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_push.py::test_a_write_into_a_frozen_store_blocks
   - id: push.open-findings-closed
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_an_unresolved_finding_blocks

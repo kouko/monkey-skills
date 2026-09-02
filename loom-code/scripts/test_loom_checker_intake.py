@@ -1033,8 +1033,6 @@ def ui_flows_verdict(tmp_path: Path, body: str) -> subprocess.CompletedProcess:
 
 
 ESCAPES = {
-    "an arrow inside a placeholder sentence":
-        "N/A — 沒有介面 -> 見 concept-model",
     "an arrow inside a mermaid fence":
         "```mermaid\nflowchart LR\n  add --> list\n```",
     "an arrow inside a python fence":
@@ -1106,3 +1104,46 @@ def test_one_reviewer_naming_a_different_text_blocks(tmp_path: Path) -> None:
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
     assert result.returncode == 1
     assert "intake.spec-pass" in blocked_rules(result)
+
+
+# --- spec.ui-flows-recompute is a SHAPE check (W3-04 redesign) -------------
+#
+# The rule counts visible characters on each side of an arrow, in any
+# script, and nothing else. It carries no list of nothing-words: three
+# rounds of keyword patches each reopened, and a checker that tries to read
+# meaning is a checker that can be talked around. What a flow line SAYS is
+# the reviewer lens's territory, and some structurally-fine lines are poor
+# flows -- that is the intended division of labour, asserted below.
+
+
+STRUCTURAL_PASSES = {
+    "a quoted line whose left side is a placeholder — the reviewer's job, not the checker's":
+        "> N/A — no interface -> see x",
+    "a Traditional Chinese flow with no spaces in it":
+        "在待辦清單輸入到期日 → 每一列顯示該到期日",
+    "a Japanese flow with no spaces in it":
+        "期限を入力する → 一覧に期限が表示される",
+    "a markdown table row":
+        "| todo add --due D | → | shows the due date |",
+}
+
+
+@pytest.mark.parametrize("label", sorted(STRUCTURAL_PASSES))
+def test_these_clear_the_structural_floor(tmp_path: Path, label: str) -> None:
+    result = ui_flows_verdict(tmp_path, STRUCTURAL_PASSES[label])
+    assert result.returncode == 0, result.stderr
+
+
+STRUCTURAL_BLOCKS = {
+    "three characters on the left": "add → stored",
+    "an arrow that lives only inside a fence":
+        "```mermaid\nflowchart LR\n  add --> list\n```",
+    "an empty section": "",
+}
+
+
+@pytest.mark.parametrize("label", sorted(STRUCTURAL_BLOCKS))
+def test_these_do_not_clear_the_structural_floor(tmp_path: Path, label: str) -> None:
+    result = ui_flows_verdict(tmp_path, STRUCTURAL_BLOCKS[label])
+    assert result.returncode == 1, result.stdout
+    assert "spec.ui-flows-recompute" in blocked_rules(result)
