@@ -82,13 +82,17 @@ Codex には plugin マーケットプレースがないため、checker をリ�
 複製します：
 
 ```bash
-python3 scripts/codex_scaffold.py --probe
+python3 scripts/codex_scaffold.py --repo .
+python3 scripts/codex_scaffold.py --self-test
 ```
 
-`.codex/hooks.json` とバージョン刻印付きの checker のコピーを書き、偽の
-push を撃ち込みます。ブロックされなければ exit 2 で「Codex で `/hooks` を
-実行してください」と表示します — 未信頼の hook は黙って飛ばされ、それは
-検査に通った状態と見分けがつかないからです。
+前者は `.codex/hooks.json` とバージョン刻印付きの checker のコピーを書き、
+後者はそのコピーに偽の push を撃ち込んで「動くこと」を確かめます。どちらも
+Codex がそれを実行するかどうかは証明しません — 未信頼の hook は黙って飛ば
+され、Codex 自身が発したコマンドだけがその hook エンジンを通るからです。
+その本当の probe（必ず失敗する push、答えが `BLOCK push.` で始まること）は
+station 側（`write-plan` step 0b）にあり、checker ではなく git が答えた場合
+に一度だけ `/hooks` の実行をユーザーに求めます。
 
 ## ライセンス
 

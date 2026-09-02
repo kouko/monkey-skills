@@ -31,10 +31,15 @@ REPO = Path(__file__).resolve().parents[2]
 SCAFFOLD = REPO / "loom-code" / "scripts" / "codex_scaffold.py"
 PLUGIN_JSON = REPO / "loom-code" / ".claude-plugin" / "plugin.json"
 
-BLOCK_MESSAGE = (
-    "BLOCK: loom hooks are not trusted in this repo yet — "
+SELF_TEST_FAILED = (
+    "BLOCK: the copied loom checker did not block a fake push — the scaffold "
+    "is broken; re-run codex_scaffold.py --repo . and commit the result"
+)
+NOT_TRUSTED_MESSAGE = (
+    "BLOCK: loom hooks have never fired in this repo — "
     "run /hooks in Codex once, then retry"
 )
+SANDBOX_PREFIX = "BLOCK: Codex' sandbox protects .codex/"
 GATE_BROKEN_PREFIX = "BLOCK: the loom hook ran but did not judge the push"
 
 
@@ -177,27 +182,27 @@ def test_newer_version_replaces_only_the_copies(repo):
     assert (repo / ".codex" / "hooks.json").read_bytes() == hooks_json_before
 
 
-# --- probe ---------------------------------------------------------------
+# --- self-test -----------------------------------------------------------
 
 
-def test_probe_passes_when_the_fake_push_is_blocked(repo):
+def test_self_test_passes_when_the_fake_push_is_blocked(repo):
     scaffold(repo)
     stub_checker(repo, 2)
-    proc = run("--repo", str(repo), "--probe")
+    proc = run("--repo", str(repo), "--self-test")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert BLOCK_MESSAGE not in proc.stdout + proc.stderr
+    assert SELF_TEST_FAILED not in proc.stdout + proc.stderr
 
 
-def test_probe_reports_a_broken_gate_apart_from_an_untrusted_one(repo):
+def test_self_test_reports_a_broken_gate_apart_from_a_dead_one(repo):
     """A checker that crashes exits non-zero too; reading that as a live
     safety belt is the exact failure the probe exists to catch."""
     scaffold(repo)
     stub_checker(repo, 1, stderr="Traceback: ModuleNotFoundError: git_exec")
-    proc = run("--repo", str(repo), "--probe")
+    proc = run("--repo", str(repo), "--self-test")
     assert proc.returncode == 2
     assert GATE_BROKEN_PREFIX in proc.stderr
     assert "git_exec" in proc.stderr
-    assert BLOCK_MESSAGE not in proc.stdout + proc.stderr
+    assert SELF_TEST_FAILED not in proc.stdout + proc.stderr
 
 
 def test_the_scaffolded_checker_really_blocks_a_push_end_to_end(repo):
@@ -219,18 +224,18 @@ def test_the_scaffolded_checker_really_blocks_a_push_end_to_end(repo):
     )
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert proc.stderr.lstrip().startswith("BLOCK push."), proc.stderr
-    assert run("--repo", str(repo), "--probe").returncode == 0
+    assert run("--repo", str(repo), "--self-test").returncode == 0
 
 
-def test_probe_blocks_when_the_fake_push_is_not_blocked(repo):
+def test_self_test_blocks_when_the_fake_push_is_not_blocked(repo):
     scaffold(repo)
     stub_checker(repo, 0)
-    proc = run("--repo", str(repo), "--probe")
+    proc = run("--repo", str(repo), "--self-test")
     assert proc.returncode == 2
-    assert BLOCK_MESSAGE in proc.stdout + proc.stderr
+    assert SELF_TEST_FAILED in proc.stdout + proc.stderr
 
 
-def test_probe_feeds_a_pre_tool_use_bash_payload_on_stdin(repo):
+def test_self_test_feeds_a_pre_tool_use_bash_payload_on_stdin(repo):
     scaffold(repo)
     checker = repo / ".codex" / "hooks" / "loom_checker.py"
     checker.write_text(
@@ -241,7 +246,7 @@ def test_probe_feeds_a_pre_tool_use_bash_payload_on_stdin(repo):
         "sys.exit(2)\n",
         encoding="utf-8",
     )
-    proc = run("--repo", str(repo), "--probe")
+    proc = run("--repo", str(repo), "--self-test")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     payload = json.loads((repo / "payload.json").read_text(encoding="utf-8"))
     assert payload["hook_event_name"] == "PreToolUse"
@@ -249,11 +254,100 @@ def test_probe_feeds_a_pre_tool_use_bash_payload_on_stdin(repo):
     assert "git push" in payload["tool_input"]["command"]
 
 
-def test_probe_fails_closed_when_the_shim_is_missing(repo):
-    proc = run("--repo", str(repo), "--probe")
+def test_self_test_fails_closed_when_the_shim_is_missing(repo):
+    proc = run("--repo", str(repo), "--self-test")
     assert proc.returncode == 2
 
 
 def test_fails_closed_when_the_repo_path_does_not_exist(tmp_path):
     proc = run("--repo", str(tmp_path / "nope"))
     assert proc.returncode == 2
+
+
+# --- the trust marker (W4-02 finding F2) ----------------------------------
+
+
+MARKER = Path(".codex") / "hooks" / ".loom-hook-fired"
+
+
+def test_self_test_says_it_does_not_prove_trust(repo):
+    """The old `--probe` invoked the shim itself, so Codex' trust decision
+    was never in the loop, and it printed "the loom gate is live" while the
+    gate was dead (W4-02 finding F2). What it really proves is that the
+    copied checker runs, and it must say so."""
+    scaffold(repo)
+    stub_checker(repo, 2)
+    proc = run("--repo", str(repo), "--self-test")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "does not prove" in proc.stdout.lower()
+    assert "/hooks" in proc.stdout
+
+
+def test_the_shim_leaves_a_marker_when_it_actually_runs(repo):
+    """Only Codex' own hook engine can prove the hook is trusted, and it
+    reports nothing when it skips one. So the shim records its own firing:
+    the marker exists if and only if the hook has really run here."""
+    git_repo(repo)
+    assert scaffold(repo).returncode == 0
+    assert not (repo / MARKER).exists(), "no hook has fired yet"
+    shim = repo / ".codex" / "hooks" / "loom-checker"
+    payload = {
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "git push origin HEAD"},
+        "cwd": str(repo),
+        "permission_mode": "default",
+    }
+    proc = subprocess.run(
+        [str(shim)], cwd=str(repo), input=json.dumps(payload),
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert (repo / MARKER).is_file(), "the shim must record that it fired"
+
+
+def test_trusted_reports_whether_the_hook_ever_fired(repo):
+    scaffold(repo)
+    before = run("--repo", str(repo), "--trusted")
+    assert before.returncode == 2
+    assert NOT_TRUSTED_MESSAGE in before.stderr
+    (repo / MARKER).write_text("", encoding="utf-8")
+    after = run("--repo", str(repo), "--trusted")
+    assert after.returncode == 0, after.stdout + after.stderr
+
+
+def test_the_marker_is_gitignored_idempotently(repo):
+    scaffold(repo)
+    gitignore = repo / ".gitignore"
+    assert ".codex/hooks/.loom-hook-fired" in gitignore.read_text(encoding="utf-8")
+    before = gitignore.read_bytes()
+    assert scaffold(repo).returncode == 0
+    assert gitignore.read_bytes() == before
+
+
+def test_an_existing_gitignore_keeps_its_content(repo):
+    gitignore = repo / ".gitignore"
+    gitignore.write_text("*.pyc\n", encoding="utf-8")
+    scaffold(repo)
+    text = gitignore.read_text(encoding="utf-8")
+    assert text.startswith("*.pyc\n")
+    assert ".codex/hooks/.loom-hook-fired" in text
+
+
+# --- Codex' sandbox protects .codex/ (W4-02 finding F1) -------------------
+
+
+def test_a_write_protected_codex_directory_is_named_not_a_traceback(repo):
+    """`--sandbox workspace-write` forbids writing `.codex/` while the rest
+    of the workspace stays writable; the scaffold used to die with a bare
+    errno and leave the user nowhere."""
+    (repo / ".codex").mkdir()
+    (repo / ".codex").chmod(0o500)
+    try:
+        proc = scaffold(repo)
+    finally:
+        (repo / ".codex").chmod(0o700)
+    assert proc.returncode == 2
+    assert SANDBOX_PREFIX in proc.stderr
+    assert "outside Codex" in proc.stderr
+    assert "Traceback" not in proc.stderr

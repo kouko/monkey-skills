@@ -74,12 +74,16 @@ claude plugin list | grep loom-code       # 預期：enabled
 Codex 沒有 plugin marketplace，所以 checker 是複製進 repo 的：
 
 ```bash
-python3 scripts/codex_scaffold.py --probe
+python3 scripts/codex_scaffold.py --repo .
+python3 scripts/codex_scaffold.py --self-test
 ```
 
-它會寫出 `.codex/hooks.json` 與一份帶版本戳的 checker 副本，然後對它發一次
-假 push。若沒被擋下就 exit 2，並要你在 Codex 裡跑 `/hooks` —— 未授信的 hook
-會被靜默跳過，那個狀態和「檢查通過」長得一模一樣。
+前者寫出 `.codex/hooks.json` 與一份帶版本戳的 checker 副本；後者對那份副本
+發一次假 push，證明它跑得起來。兩者都證明不了 Codex 會去跑它 —— 未授信的
+hook 會被靜默跳過，只有 Codex 自己發出的指令才會經過它的 hook 引擎。真正的
+probe（一次注定失敗的 push，答案必須以 `BLOCK push.` 開頭）屬於站本身
+（`write-plan` step 0b）：當回答的是 git 而不是 checker，它就請使用者跑一次
+`/hooks`。
 
 ## 授權
 

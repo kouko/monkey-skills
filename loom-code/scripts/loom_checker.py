@@ -378,6 +378,11 @@ TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master", "@{upstrea
 # The branch names loom treats as the trunk; standing on one is the P13 hole.
 TRUNK_BRANCH_NAMES = frozenset({"main", "master"})
 
+# Host plumbing: what the Codex scaffold writes into the adopting repo. It is
+# part of loom's own safety belt, never a surface any rule reads as the
+# change's diff (W4-02 finding F3).
+HOST_PLUMBING_PREFIX = ".codex/"
+
 
 ON_A_BRANCH = (
     "work on a branch: `git switch -c <change-id>`, then re-run -- "
@@ -427,7 +432,15 @@ def branch_base(repo: Path) -> str:
 
 def changed_paths(repo: Path) -> set[str]:
     """Everything this branch changed, committed or not -- a claim about a
-    diff must be checked against the whole diff, staging area included."""
+    diff must be checked against the whole diff, staging area included.
+
+    `.codex/` is the one exception: it is the host plumbing the Codex
+    scaffold writes (the hook definition and the checker's own copy of the
+    contract package), never a surface a user reads. Left in, the scaffold's
+    copied `contract/templates/**` matched the manifest's default interface
+    glob and every Codex engineering change whose branch carried the
+    scaffold commit was blocked by the safety belt's own installation
+    (W4-02 finding F3)."""
     merge_base = branch_base(repo)
     paths: set[str] = set()
     for command in (
@@ -437,7 +450,7 @@ def changed_paths(repo: Path) -> set[str]:
         ("ls-files", "--others", "--exclude-standard"),
     ):
         for line in git_text(repo, *command).splitlines():
-            if line.strip():
+            if line.strip() and not line.startswith(HOST_PLUMBING_PREFIX):
                 paths.add(line)
     return paths
 

@@ -35,8 +35,10 @@ Exit 0 continue; non-zero, stop and report the contract mismatch — do not
 work around it.
 
 On Codex, if `.codex/hooks/loom_checker.py` does not exist, **stop**: run
-`loom-code:write-plan` step 0b (the scaffold) first. Do not produce any
-artifact without the checker.
+`loom-code:write-plan` step 0b (the scaffold and its trust probe) first. Do not produce any
+artifact without the checker. The file existing is not proof the hook runs:
+an untrusted Codex hook is skipped in silence, and step 0b's trust probe is
+what tells the two apart.
 
 Then locate the change:
 

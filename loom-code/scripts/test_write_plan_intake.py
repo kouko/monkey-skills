@@ -183,9 +183,12 @@ LOAD_BEARING = [
     ("SKILL.md", "at most 5 checkpoints during build"),      # the cap is on checkpoints
     ("SKILL.md", "contract.requires"),                       # step 0's rule id
     ("SKILL.md", "/hooks"),                                  # Codex first contact
-    ("SKILL.md", "codex_scaffold.py --probe"),
+    ("SKILL.md", "codex_scaffold.py --self-test"),
+    ("SKILL.md", "loom-trust-probe"),                     # the probe Codex itself issues
+    ("SKILL.md", "sandbox protects `.codex/`"),           # the dead end F1 left
     ("SKILL.md", "user-judgment-leak"),                      # the dimension that catches a bad question
-    ("SKILL.md", "<YYYY-MM-DD>-<slug>"),                     # change-id grammar
+    ("SKILL.md", "<today YYYY-MM-DD>-<slug>"),               # change-id grammar
+    ("SKILL.md", "not the example's"),                      # W4-02 F4: the date is today's
     ("SKILL.md", "user-decided —"),                          # where answers land with no spec
     ("one-way-door.md", "(a) Hard to swap later"),
     ("one-way-door.md", "(b) Creates money or a standing obligation"),

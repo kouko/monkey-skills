@@ -85,13 +85,17 @@ Codex has no plugin marketplace, so the checker is copied into the repo
 instead:
 
 ```bash
-python3 scripts/codex_scaffold.py --probe
+python3 scripts/codex_scaffold.py --repo .
+python3 scripts/codex_scaffold.py --self-test
 ```
 
-That writes `.codex/hooks.json` and a stamped copy of the checker, then
-fires a fake push at it. If the push is not blocked it exits 2 and tells
-you to run `/hooks` in Codex — an untrusted hook is silently skipped, which
-looks exactly like a passing check.
+The first writes `.codex/hooks.json` and a stamped copy of the checker; the
+second fires a fake push at that copy to prove it runs. Neither proves
+Codex will run it: an untrusted hook is skipped in silence, and only a
+command Codex itself issues goes through its hook engine. That probe — a
+doomed push whose answer must start with `BLOCK push.` — belongs to the
+station (`write-plan` step 0b), which tells the user to run `/hooks` once
+when git answers instead of the checker.
 
 ## Licence
 

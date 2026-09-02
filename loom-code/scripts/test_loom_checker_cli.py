@@ -102,7 +102,7 @@ def test_no_arguments_exits_2() -> None:
 
 
 def test_hooks_probe_is_gone() -> None:
-    """`--probe` in codex_scaffold.py owns the belt check; the reserved
+    """`--self-test` in codex_scaffold.py owns the copy check; the reserved
     checker sub-command that never grew a body is deleted, not kept."""
     result = run_checker("hooks-probe")
     assert result.returncode == 2

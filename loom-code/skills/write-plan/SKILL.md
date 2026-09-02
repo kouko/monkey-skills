@@ -34,10 +34,11 @@ prefix; nothing else changes.
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees
 happen. `kind: engineering` is everything else: refactors, internal
-plumbing, tooling, tests, docs. `<change-id>` is `<YYYY-MM-DD>-<slug>`,
+plumbing, tooling, tests, docs. `<change-id>` is `<today YYYY-MM-DD>-<slug>`,
 where the date is the day the work starts and the slug is the intent's
 title in kebab-case — for "six scripts share a git helper" started on
-2026-09-02, `2026-09-02-scripts-share-git-helper`.
+2026-09-02, `2026-09-02-scripts-share-git-helper` (the date is today's
+date, not the example's).
 
 ## Station summary
 
@@ -127,17 +128,47 @@ plugin root variable on this host:
 python3 <loom-code>/scripts/codex_scaffold.py --repo .
 ```
 
+If the script answers that Codex' sandbox protects `.codex/`, its default
+write sandbox is refusing the one directory the scaffold needs. Print this
+and **stop**:
+
+> Codex 的沙箱保護 `.codex/`：請在 Codex 之外的終端機跑一次
+> `python3 <loom-code>/scripts/codex_scaffold.py --repo .`，commit 之後我
+> 再繼續。
+>
+> (Codex' sandbox protects .codex/ — run
+> `python3 <loom-code>/scripts/codex_scaffold.py --repo .` once in a
+> terminal outside Codex, commit, then continue.)
+
 If it wrote or changed files, commit them with the message
 `chore(loom): scaffold hooks <version>`, using the version the script
-printed. Then prove the belt is actually live:
+printed. Then check the copy can run at all:
 
 ```
-python3 <loom-code>/scripts/codex_scaffold.py --probe
+python3 <loom-code>/scripts/codex_scaffold.py --self-test
 ```
 
-The probe fires a command that **must** be blocked. If it was blocked,
-continue to step 1. If it was not, an untrusted hook is being skipped
-silently — print the script's BLOCK message and **stop**, in these words:
+Exit 0 means the copied checker blocks a fake push. It does **not** mean
+Codex will ever run it: that command runs the checker itself, so Codex'
+trust decision is not in the loop. An untrusted hook is skipped in
+silence, so the only way to tell a live gate from a dead one is to make **Codex** issue the command.
+
+**The trust probe.** Issue this yourself, as an ordinary tool call, not
+through the scaffold:
+
+```
+git push loom-trust-probe HEAD
+```
+
+`loom-trust-probe` is not a remote and never will be, so the command cannot
+succeed. Read the first line of the output:
+
+- It starts with `BLOCK push.` — the loom hook answered before git was
+  reached. The hook is trusted and live: continue to step 1.
+- Anything else — git answered (`'loom-trust-probe' does not appear to be a
+  git repository`, or another git error). The hook did not run: Codex is
+  skipping it because it is not trusted. Print the words below and
+  **stop**. Do not retry and write no artifact: there is no gate.
 
 > 我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 `/hooks` 按一次授
 > 權，我才會繼續。
@@ -145,9 +176,14 @@ silently — print the script's BLOCK message and **stop**, in these words:
 > (I have installed loom's checks for this repo; please type `/hooks` in
 > Codex and approve them once, then I will carry on.)
 
-The user approves once, and the next command continues from step 1. This
-is an authorisation, not a decision about the work — it is not a decision
-point, and it happens once per repo, not once per change.
+After the user approves, run the trust probe again; a `BLOCK push.` answer
+means you can continue from step 1. To report whether the hook has ever
+fired here without issuing a command,
+`python3 <loom-code>/scripts/codex_scaffold.py --trusted` reads the marker
+it leaves behind.
+
+This is an authorisation, not a decision about the work — it is not a
+decision point, and it happens once per repo, not once per change.
 
 ## Step 1 — Find the intent
 

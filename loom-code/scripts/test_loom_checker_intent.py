@@ -738,3 +738,27 @@ def test_a_fenced_status_line_in_the_body_is_not_a_decision(tmp_path: Path) -> N
     git(repo, "commit", "-q", "-m", "docs(loom): add an example block\n")
     result = run_checker("intent", str(intent), cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+# --- the Codex scaffold is host plumbing, not a user surface (W4-02 F3) ----
+
+
+def test_codex_scaffold_paths_are_never_an_interface_surface(tmp_path: Path) -> None:
+    """The Codex scaffold copies the contract's own templates into
+    `.codex/hooks/contract/templates/`, which matches the manifest default
+    glob `**/templates/**`. Read literally, that made every Codex
+    engineering change whose branch carries the scaffold commit fail both
+    recomputes on the safety belt's own installation (W4-02 finding F3).
+    `.codex/` is host plumbing: it is never a surface a user reads."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, ".codex/hooks/contract/templates/x.md")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="engineering",
+        needs_design="no — internal only",
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "intent.needs-design-recompute" not in blocked_rules(result)
+    assert "intent.kind-recompute" not in blocked_rules(result)
