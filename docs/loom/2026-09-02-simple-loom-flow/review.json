@@ -1,5 +1,5 @@
 {
- "reviewed_sha": "c3c4d478",
+ "reviewed_sha": "d0f96886",
  "scope": "spec PASS (r1–4, r5 adversarial, r9); W0 PWN (6–8); W1 PWN (10–14); W2 PWN (15–19); W3 PWN (20–21); W4 pending",
  "verdicts": [
   {
@@ -439,6 +439,106 @@
    "lens": "docs",
    "verdict": "PASS_WITH_NOTES",
    "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 22,
+   "scope": "branch-end",
+   "findings_file": "evidence/branch-end-r22-reviews.md",
+   "reviewer": "opus-review-code-branch-end-r22",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 22,
+   "scope": "branch-end",
+   "findings_file": "evidence/branch-end-r22-reviews.md",
+   "reviewer": "codex-review-docs-branch-end-r22",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 23,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r23-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r23",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 23,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r23-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r23",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 24,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r24-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r24",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 24,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r24-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r24",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 25,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r25-rereview.md",
+   "reviewer": "sonnet-review-docs-branch-end-r25",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS"
+  },
+  {
+   "round": 25,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r25-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r25",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 26,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r26-rereview.md",
+   "reviewer": "sonnet-review-docs-branch-end-r26",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 26,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r26-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r26",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "PASS"
   }
  ],
  "probes": [
@@ -607,6 +707,158 @@
    "sha": "c3c4d478",
    "result": "985 passed (round 21 reviewer run)",
    "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "branch-end",
+   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+   "sha": "d0f96886",
+   "result": "1005 passed in 135.62s (0:02:15)",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/fixture.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/fixture.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py",
+   "sha": "d0f96886",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
   }
  ],
  "open_findings": [
@@ -1443,7 +1695,7 @@
     "opus-review-code-branch-end-r22"
    ],
    "text": "tests for the deleted git-guard shim left behind; package command red (5 failed)",
-   "resolved": "open"
+   "resolved": "resolved: c45dcb15"
   },
   {
    "id": "R22-O2",
@@ -1454,7 +1706,7 @@
     "opus-review-code-branch-end-r22"
    ],
    "text": "scaffold overwrites an adopting repo's hooks.json wholesale (PRINCIPLES non-negotiable 5)",
-   "resolved": "open"
+   "resolved": "resolved: a8bcbbf9"
   },
   {
    "id": "R22-O3",
@@ -1465,7 +1717,7 @@
     "opus-review-code-branch-end-r22"
    ],
    "text": "HOST_PLUMBING_PREFIX hides real gate scripts under .codex/hooks/ from changed_paths",
-   "resolved": "open"
+   "resolved": "resolved: 68d8855d"
   },
   {
    "id": "R22-O4",
@@ -1476,7 +1728,7 @@
     "opus-review-code-branch-end-r22"
    ],
    "text": "orchestrator-inline notes say shas are pre-rewrite after they were remapped",
-   "resolved": "open"
+   "resolved": "resolved: d0f96886 (review-only commit note rewrite)"
   },
   {
    "id": "R22-O5",
@@ -1487,7 +1739,7 @@
     "opus-review-code-branch-end-r22"
    ],
    "text": "stale \"# interim; W4-01 replaces\" comments (53, 276, 279)",
-   "resolved": "open"
+   "resolved": "resolved: 68d8855d"
   },
   {
    "id": "R22-C1",
@@ -1498,7 +1750,7 @@
     "codex-review-docs-branch-end-r22"
    ],
    "text": "blind-run report predates the W4 fix round (sha c43641e6, 63 dispatches)",
-   "resolved": "open"
+   "resolved": "resolved: f0066ed5 (addendum) + 923ba1c6 (counts as-of statement)"
   },
   {
    "id": "R22-C2",
@@ -1509,7 +1761,7 @@
     "codex-review-docs-branch-end-r22"
    ],
    "text": "plan risk 1 still instructs a `!` push around the deleted git-guard",
-   "resolved": "open"
+   "resolved": "resolved: c5fc1346"
   },
   {
    "id": "R22-C3",
@@ -1520,7 +1772,7 @@
     "codex-review-docs-branch-end-r22"
    ],
    "text": "memory entry names git-guard.py / git-guard-shim.sh as the only cross-host enforcement surface",
-   "resolved": "open"
+   "resolved": "resolved: c5fc1346"
   },
   {
    "id": "R22-C4",
@@ -1531,7 +1783,7 @@
     "codex-review-docs-branch-end-r22"
    ],
    "text": "push.dispatch-covers-tasks summary omits trailer duty and spec exemption",
-   "resolved": "open"
+   "resolved": "resolved: c5fc1346"
   },
   {
    "id": "R22-C5",
@@ -1542,7 +1794,150 @@
     "codex-review-docs-branch-end-r22"
    ],
    "text": "ship table describes only one of the rule's two failure modes",
-   "resolved": "open"
+   "resolved": "resolved: 784606bb"
+  },
+  {
+   "id": "R24-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "codex-review-docs-branch-end-r24"
+   ],
+   "text": "report claimed records-only commits after the tested tree; f600c281 changed checker code",
+   "resolved": "resolved: 501a4ead (claim withdrawn) + second addendum"
+  },
+  {
+   "id": "R24-C2",
+   "severity": "fatal",
+   "anchor": "loom-code/CHANGELOG.md:33",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "codex-review-docs-branch-end-r24"
+   ],
+   "text": "CHANGELOG said 20 rules; --list-rules prints 27",
+   "resolved": "resolved: 501a4ead"
+  },
+  {
+   "id": "R24-O1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/review.json:633",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "opus-review-code-branch-end-r24"
+   ],
+   "text": "four prose adversarial probes are not runnable (change-relative artifact, prose command, scratchpad gone)",
+   "resolved": "resolved: d0f96886 (entries removed from probes[]; findings files stay in evidence/)"
+  },
+  {
+   "id": "R24-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/loom_checker.py:455",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "opus-review-code-branch-end-r24"
+   ],
+   "text": "docstring says the constants are \"below\"; they are above",
+   "resolved": "accepted, not fixed: a code edit after the final blind run would reopen R24-C1; first post-merge change"
+  },
+  {
+   "id": "R24-O3",
+   "severity": "nit",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "opus-review-code-branch-end-r24"
+   ],
+   "text": "HEAD moved during the round-24 review (docs-only commit 501a4ead)",
+   "resolved": "accepted: round 25 ran on a frozen tree"
+  },
+  {
+   "id": "R25-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/evidence/branch-end-r24-rereview.md:60",
+   "origin_sha": "6089e62b",
+   "raised_by": [
+    "codex-review-docs-branch-end-r25"
+   ],
+   "text": "disposition read as already done while the four prose probes were still in probes[]",
+   "resolved": "resolved: 4e0449d5"
+  },
+  {
+   "id": "R23-O1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/review.json:2135",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "opus-review-code-branch-end-r23"
+   ],
+   "text": "push.dispatch-covers-tasks red at HEAD: three untrailered SKILL.md commits; W4-01/W4-04/W4-02/W4-05 unclaimed; W4-06+W4-08 combined",
+   "resolved": "resolved: e2a8df91 (record) + user-run trailer rewrite 2026-09-03"
+  },
+  {
+   "id": "R23-O2",
+   "severity": "important",
+   "anchor": "loom-code/scripts/loom_checker.py:454",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "opus-review-code-branch-end-r23"
+   ],
+   "text": "changed_paths docstring kept the directory-wide .codex/hooks/ exemption",
+   "resolved": "resolved: f600c281"
+  },
+  {
+   "id": "R23-O3",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/loom_checker.py:389",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "opus-review-code-branch-end-r23"
+   ],
+   "text": "HOST_PLUMBING_FILES not pinned to codex_scaffold constants",
+   "resolved": "resolved: f600c281"
+  },
+  {
+   "id": "R23-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "report quoted dispatch counts that drift with every dispatch-record commit",
+   "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "R23-C2",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:193",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "W4-06 risk note still said the scaffold overwrite was deferred",
+   "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "R23-C3",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/concept-model.md:173",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "§7 said the checker ignores all of .codex/",
+   "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "R23-C4",
+   "severity": "fatal",
+   "anchor": "loom-code/README.md:57",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "README said 20 rules; --list-rules prints 27",
+   "resolved": "resolved: 923ba1c6"
   }
  ],
  "vendors": [
@@ -2132,7 +2527,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: ba93a984 cc7431ce 80234688 (review.json.dispatch sidecar records) e31c4703 (W0 wave-end docs fixes) eccd7a4d (manifest class e) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: ba93a984 cc7431ce 80234688 (review.json.dispatch sidecar records) e31c4703 (W0 wave-end docs fixes) eccd7a4d (manifest class e) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
   },
   {
    "task": "W1-06",
@@ -2141,7 +2536,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 73510303 (drop @req-tag tests) f8d20fe7 59bf5a99 (staged W1-06 deletions swept into docs commits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 73510303 (drop @req-tag tests) f8d20fe7 59bf5a99 (staged W1-06 deletions swept into docs commits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
   },
   {
    "task": "W1-03",
@@ -2150,7 +2545,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 58dd98c4 b096f93d (review skill description edits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 58dd98c4 b096f93d (review skill description edits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
   },
   {
    "task": "W3-06",
@@ -2159,7 +2554,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 294559ad (spec round 9 + concept-model §4/§7) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 294559ad (spec round 9 + concept-model §4/§7) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
   },
   {
    "task": "W3-01",
@@ -2168,7 +2563,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: 99bc49fc (requires-contract moves to decision-map, user-decided) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: 99bc49fc (requires-contract moves to decision-map, user-decided) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
   },
   {
    "task": "W3-04",
@@ -2177,7 +2572,7 @@
    "model": "fable",
    "started": "2026-09-02",
    "fresh_context": false,
-   "note": "orchestrator inline, no fresh dispatch: c0f49194 (W3 docs notes, check_mechanisms measure gates) 52553a27 (CC regex ci type + !) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+   "note": "orchestrator inline, no fresh dispatch: c0f49194 (W3 docs notes, check_mechanisms measure gates) 52553a27 (CC regex ci type + !) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
   },
   {
    "task": "branch-end round 22",
