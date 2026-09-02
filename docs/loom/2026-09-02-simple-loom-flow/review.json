@@ -1949,6 +1949,72 @@
    ],
    "text": "test_real_repo_measure_is_green red on CI: session-start word count is locale-dependent (`wc -w` counts 5281 under macOS UTF-8 locale, 5278 under LC_ALL=C / GNU on the runner; python str.split agrees with 5278), so the recorded baseline 923fb84a 5281 does not reproduce on CI",
    "resolved": "open"
+  },
+  {
+   "id": "R27-C1",
+   "severity": "fatal",
+   "anchor": "loom-code/hooks/session-start:14",
+   "origin_sha": "5ada2a26",
+   "raised_by": [
+    "codex-review-docs-branch-end-r27"
+   ],
+   "text": "hook comment still prescribes unpinned wc -w and 5281/2640",
+   "resolved": "open"
+  },
+  {
+   "id": "R27-C2",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/spec.md:22",
+   "origin_sha": "5ada2a26",
+   "raised_by": [
+    "codex-review-docs-branch-end-r27"
+   ],
+   "text": "REQ-8 defined the count with locale-dependent wc -w",
+   "resolved": "resolved: 5afd3a7c (spec REQ-8 + confirmed-behavior re-pin)"
+  },
+  {
+   "id": "R27-C3",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:13",
+   "origin_sha": "5ada2a26",
+   "raised_by": [
+    "codex-review-docs-branch-end-r27"
+   ],
+   "text": "plan still presents 5281 / 2640 / unpinned command as landed",
+   "resolved": "resolved: 5afd3a7c"
+  },
+  {
+   "id": "R27-O1",
+   "severity": "important",
+   "anchor": "loom-code/scripts/test_session_start_words.py:2",
+   "origin_sha": "5ada2a26",
+   "raised_by": [
+    "opus-review-code-branch-end-r27"
+   ],
+   "text": "test docstring/cap carry the retracted 5281/2640",
+   "resolved": "open"
+  },
+  {
+   "id": "R27-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_session_start_words.py:9",
+   "origin_sha": "5ada2a26",
+   "raised_by": [
+    "opus-review-code-branch-end-r27"
+   ],
+   "text": "docstring claims the wc command runs; budget test uses str.split",
+   "resolved": "open"
+  },
+  {
+   "id": "R27-O3",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:659",
+   "origin_sha": "5ada2a26",
+   "raised_by": [
+    "opus-review-code-branch-end-r27"
+   ],
+   "text": "locale test passes vacuously without a UTF-8 locale",
+   "resolved": "open"
   }
  ],
  "vendors": [
@@ -2808,6 +2874,15 @@
    "vendor": "openai",
    "started": "2026-09-02T18:49:37Z",
    "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r27-code-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T19:06:08Z",
+   "fresh_context": true,
+   "note": "R27-C1 R27-O1 R27-O2 R27-O3"
   }
  ],
  "questions": [
