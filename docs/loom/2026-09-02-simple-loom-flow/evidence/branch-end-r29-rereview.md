@@ -1,4 +1,4 @@
-# Branch-end round 29 — final re-review (frozen tree 133df323)
+# Branch-end round 29 — final re-review (frozen tree bcb71dca)
 
 ## codex-review-docs-branch-end-r29 (openai, lens: docs) — PASS
 
@@ -21,7 +21,7 @@ dimension_scores:
 findings: []
 
 notes:
-  - "HEAD is 133df323; `git diff --stat 5c9b1c8f..HEAD -- . ':!docs/loom'` is empty."
+  - "HEAD is bcb71dca; `git diff --stat 85bc04ff..HEAD -- . ':!docs/loom'` is empty."
   - "Round-28 Disposition truthfully represents both legs: Codex's R28-C1/R28-C2, and Opus's overlapping R28-O1 plus accepted R28-O2."
   - "The relevant documentation hits for 5281 are historical and state the old locale-dependent/Mac method and the corrected LC_ALL=C-on-wc method."
   - "The exact repository-wide grep also returns unrelated numeric substrings containing 2640 or 5281 in investing fixtures and a SHA-256. These are pattern false positives, not stale session-start claims; a token-bounded or docs-scoped grep would avoid them."
@@ -39,9 +39,9 @@ findings:
 notes:
   - "Round-28 Disposition accurate on both legs (R28-C1 attributed to the station's own wording error)."
   - "Final sweep: every live 5281/658/2640 hit outside evidence/review.json is labelled historical with its method; other hits are unrelated fixtures."
-  - "pytest / checker not re-run this round (read-only lens); Codex's leg confirmed the tree diff empty since 5c9b1c8f."
+  - "pytest / checker not re-run this round (read-only lens); Codex's leg confirmed the tree diff empty since 85bc04ff."
 ```
 
 ## Disposition
 
-Both legs pass. R29-S1 (nit) applied in the same commit as this file (a gloss on the report's first use of "W4 fix round"). No program/hook/skill file changed after 5c9b1c8f. The review-only commit follows: rounds 27–29 recorded, probes re-pinned at the reviewed tree, CI-1 / R27-* / R28-* closed, `reviewed_sha` = its parent. Still owed before the push: the user's one-line re-confirmation of the spec's REQ-8 wording (recorded on spec.md line 3 as pending).
+Both legs pass. R29-S1 (nit) applied in the same commit as this file (a gloss on the report's first use of "W4 fix round"). No program/hook/skill file changed after 85bc04ff. The review-only commit follows: rounds 27–29 recorded, probes re-pinned at the reviewed tree, CI-1 / R27-* / R28-* closed, `reviewed_sha` = its parent. Still owed before the push: the user's one-line re-confirmation of the spec's REQ-8 wording (recorded on spec.md line 3 as pending).

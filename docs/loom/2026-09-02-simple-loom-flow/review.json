@@ -1954,7 +1954,7 @@
    "id": "R27-C1",
    "severity": "fatal",
    "anchor": "loom-code/hooks/session-start:14",
-   "origin_sha": "5ada2a26",
+   "origin_sha": "8165915c",
    "raised_by": [
     "codex-review-docs-branch-end-r27"
    ],
@@ -1965,29 +1965,29 @@
    "id": "R27-C2",
    "severity": "fatal",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/spec.md:22",
-   "origin_sha": "5ada2a26",
+   "origin_sha": "8165915c",
    "raised_by": [
     "codex-review-docs-branch-end-r27"
    ],
    "text": "REQ-8 defined the count with locale-dependent wc -w",
-   "resolved": "resolved: 5afd3a7c (spec REQ-8 + confirmed-behavior re-pin)"
+   "resolved": "resolved: 3e33bca9 (spec REQ-8 + confirmed-behavior re-pin)"
   },
   {
    "id": "R27-C3",
    "severity": "important",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:13",
-   "origin_sha": "5ada2a26",
+   "origin_sha": "8165915c",
    "raised_by": [
     "codex-review-docs-branch-end-r27"
    ],
    "text": "plan still presents 5281 / 2640 / unpinned command as landed",
-   "resolved": "resolved: 5afd3a7c"
+   "resolved": "resolved: 3e33bca9"
   },
   {
    "id": "R27-O1",
    "severity": "important",
    "anchor": "loom-code/scripts/test_session_start_words.py:2",
-   "origin_sha": "5ada2a26",
+   "origin_sha": "8165915c",
    "raised_by": [
     "opus-review-code-branch-end-r27"
    ],
@@ -1998,7 +1998,7 @@
    "id": "R27-O2",
    "severity": "nit",
    "anchor": "loom-code/scripts/test_session_start_words.py:9",
-   "origin_sha": "5ada2a26",
+   "origin_sha": "8165915c",
    "raised_by": [
     "opus-review-code-branch-end-r27"
    ],
@@ -2009,7 +2009,7 @@
    "id": "R27-O3",
    "severity": "nit",
    "anchor": "loom-code/scripts/test_check_mechanisms.py:659",
-   "origin_sha": "5ada2a26",
+   "origin_sha": "8165915c",
    "raised_by": [
     "opus-review-code-branch-end-r27"
    ],
@@ -2020,40 +2020,40 @@
    "id": "R28-C1",
    "severity": "fatal",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/spec.md:3",
-   "origin_sha": "a20db4e9",
+   "origin_sha": "eff1d649",
    "raised_by": [
     "codex-review-docs-branch-end-r28"
    ],
    "text": "confirmed-behavior comment claimed a user re-confirmation not yet given",
-   "resolved": "resolved: 28ac50f7"
+   "resolved": "resolved: 33e83725"
   },
   {
    "id": "R28-C2",
    "severity": "important",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:56",
-   "origin_sha": "a20db4e9",
+   "origin_sha": "eff1d649",
    "raised_by": [
     "codex-review-docs-branch-end-r28"
    ],
    "text": "plan lines 56/57/179 still ≤2640",
-   "resolved": "resolved: 28ac50f7"
+   "resolved": "resolved: 33e83725"
   },
   {
    "id": "R28-O1",
    "severity": "important",
    "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:56",
-   "origin_sha": "a20db4e9",
+   "origin_sha": "eff1d649",
    "raised_by": [
     "opus-review-code-branch-end-r28"
    ],
    "text": "same as R28-C2",
-   "resolved": "resolved: 28ac50f7"
+   "resolved": "resolved: 33e83725"
   },
   {
    "id": "R28-O2",
    "severity": "nit",
    "anchor": "loom-code/scripts/test_check_mechanisms.py:664",
-   "origin_sha": "a20db4e9",
+   "origin_sha": "eff1d649",
    "raised_by": [
     "opus-review-code-branch-end-r28"
    ],

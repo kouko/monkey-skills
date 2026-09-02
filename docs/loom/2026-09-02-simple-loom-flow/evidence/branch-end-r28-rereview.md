@@ -1,4 +1,4 @@
-# Branch-end round 28 — re-review after the round-27 fixes (frozen tree a20db4e9)
+# Branch-end round 28 — re-review after the round-27 fixes (frozen tree eff1d649)
 
 ## codex-review-docs-branch-end-r28 (openai, lens: docs) — NEEDS_REVISION
 
@@ -7,9 +7,9 @@ verdict: NEEDS_REVISION
 lens: docs
 reviewed_sha: c3c4d478
 rereview_of:
-  R27-C1: "closed — commit 5c9b1c8f pins LC_ALL=C to wc and records 5278/2639."
-  R27-C2: "closed — commit 5afd3a7c corrects REQ-8; the recomputed spec blob is 8844407, matching @8844407."
-  R27-C3: "closed — commit 5afd3a7c corrects the originally cited plan lines 13 and 146."
+  R27-C1: "closed — commit 85bc04ff pins LC_ALL=C to wc and records 5278/2639."
+  R27-C2: "closed — commit 3e33bca9 corrects REQ-8; the recomputed spec blob is 8844407, matching @8844407."
+  R27-C3: "closed — commit 3e33bca9 corrects the originally cited plan lines 13 and 146."
 dimension_scores:
   omission: PASS
   ambiguity: PASS
@@ -44,7 +44,7 @@ findings:
   - {id: R28-O2, severity: nit, dimension: tests, anchor: "loom-code/scripts/test_check_mechanisms.py:664", text: "The skip guard's probe subprocess.run lacks check=True; a missing wc would die with IndexError.", fix: "Pass check=True."}
 notes:
   - "655 via `| LC_ALL=C wc -w` and via str.split(); --measure exit 0 (5278 matches); 1006 passed; --self-test exit 0."
-  - "push gate at the last review-only head 5ada2a26: only push.reviewed-sha; 19 adversarial probes exit 0."
+  - "push gate at the last review-only head 8165915c: only push.reviewed-sha; 19 adversarial probes exit 0."
   - "confirmed-behavior @8844407 matches the blob; the user's re-confirmation is outside scope."
 ```
 
@@ -53,4 +53,4 @@ notes:
 - R28-C1 (Codex, fatal): the confirmed-behavior comment claimed a re-confirmation the user had not given — the station's own wording error. Fixed in the docs commit after this frozen tree: the comment now says the re-confirmation is pending; the user is asked for it before the push.
 - R28-C2 / R28-O1 (plan ≤2640 ×3): fixed in the same docs commit.
 - R28-O2 (nit): accepted, not fixed — a test edit after the final blind run would reopen the records-only claim; carried to the first post-merge change together with R24-O2.
-- Round 29: two docs-lens legs (Codex + sonnet) on the frozen tree; no code changed after 5c9b1c8f.
+- Round 29: two docs-lens legs (Codex + sonnet) on the frozen tree; no code changed after 85bc04ff.

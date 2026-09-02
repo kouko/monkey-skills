@@ -1,4 +1,4 @@
-# Branch-end round 27 — re-review after CI-1 (frozen tree 5ada2a26)
+# Branch-end round 27 — re-review after CI-1 (frozen tree 8165915c)
 
 ## codex-review-docs-branch-end-r27 (openai, lens: docs) — NEEDS_REVISION
 
