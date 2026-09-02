@@ -2007,6 +2007,60 @@
    "model": "sonnet",
    "started": "2026-09-02T16:34:15Z",
    "fresh_context": true
+  },
+  {
+   "task": "W0-01",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: a35698c8 fca9a37f bb1e926b (review.json.dispatch sidecar records) 8b325a7f (W0 wave-end docs fixes) b43d1477 (manifest class e) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+  },
+  {
+   "task": "W1-06",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 4da9ed6a (drop @req-tag tests) f0ae8877 83a9eee3 (staged W1-06 deletions swept into docs commits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+  },
+  {
+   "task": "W1-03",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: ffbaefd8 5b391076 (review skill description edits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+  },
+  {
+   "task": "W3-06",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 6683be45 (spec round 9 + concept-model §4/§7) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+  },
+  {
+   "task": "W3-01",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 513d974b (requires-contract moves to decision-map, user-decided) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
+  },
+  {
+   "task": "W3-04",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 4a521327 (W3 docs notes, check_mechanisms measure gates) f73f826f (CC regex ci type + !) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the commits' short shas above are pre-rewrite"
   }
  ],
  "questions": [
