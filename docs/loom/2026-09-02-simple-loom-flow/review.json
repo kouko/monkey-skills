@@ -993,6 +993,14 @@
    "model": "sonnet",
    "started": "2026-09-02T09:07:49Z",
    "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end",
+   "role": "adversary",
+   "agent_id": "opus-adversary-w1",
+   "model": "opus",
+   "started": "2026-09-02T09:21:38Z",
+   "fresh_context": true
   }
  ]
 }
