@@ -88,7 +88,7 @@ Task DAG（每 task 穩定 ID）／檔案／測試／風險。`needs-design: no`
 ```
 reviewed_sha         # 初值 branch base；只有 PASS／PASS_WITH_NOTES 推進
 verdicts[]           # 每個 reviewer 一份：{reviewer, vendor, model, dimension_scores, findings}
-degraded?            # single-vendor（host 無第二 vendor 時）
+vendors[]            # 本次 checkpoint 用到的 vendor 清單（記錄，不是條件）
 probes[]             # 實際跑過的 probe／測試／盲跑：{kind, command, result, artifact}
 open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> | dismissed: <reason> by <who>}
 ```
@@ -129,7 +129,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 ## 5. review 站＝checkpoint review（機器是唯一的審查者）
 
 - **一份契約**：verdict schema、`reviewed_sha`、輪次規則一套。鏡頭多個（code 11 維、docs 5 維；spec-conformance、design-conformance 各一維；correctness 必跑 probe）。
-- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer，**host 上有第二個 vendor 時預設用它**（vendor＝不同模型供應商的可非互動執行 CLI；本機目前是 Codex CLI，Gemini CLI 等亦可）；跨 vendor 成本（intent Open question）量完前，缺第二 vendor 只 WARN 不紅。只有一個 vendor 時：兩個 fresh-context 同 vendor reviewer，review.json 標 `degraded: single-vendor`，checker 印 WARN 不擋。reviewer 分歧記進 verdicts，不平均。
+- **獨立性是必要條件**：每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer（同 host 的兩個 fresh session 即可）。**跨 vendor 是選配，由使用者選**：KICKOFF-DEFAULTS 記 `second-vendor: <cli> | none — <reason> (<date>)`（vendor＝不同模型供應商的可非互動 CLI，例如 Codex CLI、Gemini CLI）。未記錄且站偵測到第二家 CLI 時，**建議一次**（一段白話：能打到同模型盲點、每次約幾分鐘與額度）並記下使用者的選擇；之後不再提。選了就用，沒選就不用，兩者都不 WARN、不擋。review.json 只記 `vendors: [...]`。reviewer 分歧記進 verdicts，不平均。
 - **何時跑**：wave 結束算未審 delta，任一超過門檻（8 檔或 400 行，實驗預設，replay 後固定）才跑；branch 結束必跑；含 after-task 的 wave 結束一律跑。`needs-design: yes` 時 spec 進 plan 前必跑 spec 型別的「讀＋對抗」且 PASS。build 階段 checkpoint ≤ 5（plan 深度上限）。
 - **after-task**：plan 標記的 task commit 後立刻跑同一套；每 plan ≤ 2。它是獨立的一次 checkpoint；該 wave 結束時的 checkpoint 是**另一次**（只審 after-task 之後的 delta ＋ 跨任務一致性；delta 為零時只跑一致性，很便宜）。
 - **第 N 次審什麼**：`reviewed_sha` 後的 delta ＋ 跨任務一致性 ＋ 回歸 probe。
@@ -155,7 +155,7 @@ open_findings[]      # {id, anchor, origin_sha, raised_by, resolved: <evidence> 
 - **決定性**：一支 **loom checker**，host hook 呼叫，規則全部是「重算」：
   - intent：schema；product 的 Problem 禁識別字；`needs-design` 行帶理由且進 commit message；`no` 但 diff 碰介面表面 glob → 擋。
   - 收件：write-spec／write-plan 只收 `status: confirmed` 的 intent；write-plan 在 `needs-design: yes` 時只收有 spec PASS 的，且 `kind: product` 時另要求 spec 有 `confirmed-behavior:` 行。
-  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有本 branch 的 package 測試結果且為 pass、`verdicts[]` ≥ 2（vendor ≥ 2，或標 `degraded: single-vendor` 且 host 確無第二 vendor——checker 用 §7a 同樣的靜態偵測查）、reviewer ≠ implementer。
+  - push：HEAD 是 review-only commit、`reviewed_sha == HEAD^`、`open_findings` 全關、`probes[]` 裡有本 branch 的 package 測試結果且為 pass、`verdicts[]` ≥ 2（fresh-context；vendor 數不是條件）、reviewer ≠ implementer。
   - 明說：這層擋的是漏步驟，不擋有目標的 agent；多人 repo 要作弊防護時加 branch protection。
 - **稽核**：git（trailer、review.json）。
 

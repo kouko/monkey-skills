@@ -8,7 +8,7 @@ REQ-1 — 決策點數固定
 REQ-2 — 兩個 host 一致
   Claude Code 與 Codex CLI 走出相同的檔案、決策點、閘門；Codex 只多一次每 repo 的 `/hooks` 授信，成立條件是 `.codex/hooks.json` 的 command 字串固定（相對路徑、不含版本），升級只換 checker 副本內容。→ Acceptance #2
 REQ-3 — 機器審查為唯一品質來源
-  每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer；host 有第二 vendor 時預設用（成本量完前缺第二 vendor 只 WARN）；盲跑 agent ≠ implementer。→ Acceptance #1
+  每個判斷型 checkpoint ≥ 2 個 fresh-context reviewer；跨 vendor 為使用者常設選擇（KICKOFF-DEFAULTS `second-vendor:`），機制只在首次偵測到第二家 CLI 時建議一次；盲跑 agent ≠ implementer。→ Acceptance #1
   （對抗動作按 artifact 型別觸發屬 Design decision，不對應 Acceptance。）
 REQ-4 — 盲跑報告是驗收介面
   對 intent 的每條 Acceptance（product 時加 spec 的 UI flows）寫「怎麼試、結果、證據」。→ Acceptance #1
@@ -58,5 +58,6 @@ agent-decided 的岔路與理由：
 4. 單向門（併在 1 或 2 裡問，不另外停）：「A 用你的三段錄音測，準確率 91%、每小時 0.9 美元、錄音送雲端；B 本機跑，78%、免費、不外傳。我建議 A，除非你在意隱私。」→ 選一個／問更多。
 非決策型（不計入決策點）：
 5. Codex 第一次用此 repo：「我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 /hooks 按一次授權，我才會繼續。」→ 使用者授權 → 下次指令自動繼續。
+6a. 第一次偵測到第二家模型 CLI：「我看到這台機器也有 ___。要不要讓它當第二個審查者？好處是能抓到同一家模型一起漏掉的問題；代價是每次審查多幾分鐘和它的額度。你選了我就記住，不再問。」→ 要／不要。
 6. product 但 repo 還沒有產品原則：「這個 repo 還沒有產品原則檔，做產品功能前要先有。我可以訪談你產生一份（約十分鐘），或你告訴我這個 repo 不需要，我就不再提。」→ 產生／不需要。
 單向門的觸發規則（哪些算、先量再問、已釘住不問、合成一次）見 Design decision。
