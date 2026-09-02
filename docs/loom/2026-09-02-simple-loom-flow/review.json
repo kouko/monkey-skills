@@ -862,6 +862,30 @@
    "model": "sonnet",
    "started": "2026-09-02T07:00:55Z",
    "fresh_context": true
+  },
+  {
+   "task": "W1-01",
+   "role": "implementer",
+   "agent_id": "opus-write-plan-1",
+   "model": "opus",
+   "started": "2026-09-02T07:25:06Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-02",
+   "role": "implementer",
+   "agent_id": "opus-build-1",
+   "model": "opus",
+   "started": "2026-09-02T07:25:06Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-05",
+   "role": "implementer",
+   "agent_id": "sonnet-maintain-1",
+   "model": "sonnet",
+   "started": "2026-09-02T07:25:06Z",
+   "fresh_context": true
   }
  ]
 }

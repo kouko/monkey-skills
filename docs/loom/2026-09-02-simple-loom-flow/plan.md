@@ -64,6 +64,7 @@ checkpoint：W0 結束必跑（新增檔 > 8）。
 
 ### W1 — loom-code 五站
 checkpoint：W1 結束必跑。
+執行註記（agent-decided，W0 經驗）：W1-01～05 只**新增**站與 agents／references，不刪舊 skill 目錄與舊測試；所有刪除集中到 W1-06 序列做。理由：舊測試家族互相牽連（拔一支連鎖紅），三個平行 implementer 若各自刪會在共用測試檔（gate-script 分類帳、cross-ref 檢查）互撞。W0-13（intake.spec-pass 未按 lens 過濾）併入 W1-03。
 
 **W1-01 write-plan 站**　after: W0-03　`review: after-task`
 - 檔：`loom-code/skills/write-plan/SKILL.md`（收件：讀 intent→未 confirmed 時執行「覆述並確認」action（決策點①，含單向門合併問法、second-vendor 一次建議、product 缺 PRINCIPLES 時接訪談）→needs-design 判定→code-only 且 yes 時用 `spec-minimal.md` 自動產 spec 並送 review 站 spec 鏡頭→Task DAG；**站序摘要表**（REQ-9：完整站序含上游、各站產物與決策者、checker 時機、checkpoint 時機）；`<!-- gate: … -->` 只標真閘）；`loom-code/skills/write-plan/references/one-way-door.md`（(a)–(d)＋四道閘＋後果形問法，逐字自 concept-model §4）；刪 `writing-plans/`、`brainstorming/`，連同 `loom-code/scripts/test_brainstorming_*.py`、`test_brief_*.py`、`test_plan_*.py`、`test_writing_plans*`、`test_anchor_primary_*.py`、`test_check_onramp_choice.py`、`test_asking_user_briefing_escalation.py`、`test_request_derived_authorization.py`、`test_authorization_boundary_regressions.py` 一併 `git rm`。
