@@ -14,6 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 CHECKER = Path(__file__).with_name("loom_checker.py")
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -102,11 +104,36 @@ def write_intent(
     )
 
 
-def write_spec(repo: Path, *, confirmed_behavior: str = "", change: str = CHANGE) -> None:
+def write_spec(
+    repo: Path,
+    *,
+    confirmed_behavior: str = "",
+    change: str = CHANGE,
+    sha: bool = True,
+) -> None:
+    """`sha=True` appends the `@<spec-blob-sha7>` the confirmation line owes,
+    computed the way the checker recomputes it (the spec WITHOUT that line).
+    Pass sha=False to write the pre-W2 shape a test wants rejected."""
     path = repo / "docs/loom" / change / "spec.md"
     path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(SPEC.format(change=change, confirmed_behavior=""), encoding="utf-8")
+    if not confirmed_behavior:
+        return
+    # Write the line first, THEN hash: the identity is the file with that
+    # line removed, and removing it is not the same as never writing it (the
+    # template leaves a blank line in its place).
     path.write_text(
-        SPEC.format(change=change, confirmed_behavior=confirmed_behavior), encoding="utf-8"
+        SPEC.format(change=change, confirmed_behavior=confirmed_behavior),
+        encoding="utf-8",
+    )
+    if not sha or "@" in confirmed_behavior:
+        return
+    path.write_text(
+        SPEC.format(
+            change=change,
+            confirmed_behavior=f"{confirmed_behavior} @{spec_confirmation_sha(repo, change)}",
+        ),
+        encoding="utf-8",
     )
 
 
@@ -122,9 +149,17 @@ def write_review(
     scope: str = "spec",
     probes: list[dict] | None = None,
     reviewed_sha: str | None = None,
+    spec_sha: bool = True,
 ) -> None:
     path = repo / "docs/loom" / change / "review.json"
     path.parent.mkdir(parents=True, exist_ok=True)
+    spec_path = repo / "docs/loom" / change / "spec.md"
+    if spec_sha and spec_path.is_file():
+        current = spec_confirmation_blob(repo, change)
+        verdicts = [
+            entry if entry.get("spec_sha") else {**entry, "spec_sha": current}
+            for entry in verdicts
+        ]
     path.write_text(
         json.dumps(
             {
@@ -381,11 +416,30 @@ def test_the_repos_own_change_matches_its_own_review_json() -> None:
             for p in review["probes"]
         )
     )
+    # Freshness is derived the same way (W2 re-review F3/F4): the round has
+    # to name the spec it read, and the confirmation line has to name the
+    # spec the user saw. Both are recomputed from the same identity -- the
+    # spec WITHOUT its `confirmed-behavior:` line.
+    spec_path = REPO_ROOT / "docs/loom/2026-09-02-simple-loom-flow/spec.md"
+    spec_body = spec_path.read_text(encoding="utf-8")
+    identity = blob_sha(CONFIRMED_LINE.sub("", spec_body, count=1))
+    named = [str(v.get("spec_sha", "")).strip() for v in latest]
+    fresh = any(value and identity.startswith(value[:7]) for value in named)
+
+    expected = set()
+    if not (passing and fresh):
+        expected.add("intake.spec-pass")
+    confirmation = re.search(
+        r"^confirmed-behavior:\s*(\d{4}-\d{2}-\d{2})(?:\s+@([0-9a-f]{7,40}))?\s*$",
+        spec_body, re.MULTILINE,
+    )
+    if not (confirmation and confirmation.group(2)
+            and identity.startswith(confirmation.group(2))):
+        expected.add("intake.confirmed-behavior")
+
     result = run_checker("intake", "write-plan", "2026-09-02-simple-loom-flow", cwd=REPO_ROOT)
-    if passing:
-        assert result.returncode == 0, result.stderr
-    else:
-        assert blocked_rules(result) == {"intake.spec-pass"}, result.stderr
+    assert blocked_rules(result) == expected, result.stderr
+    assert (result.returncode == 0) == (not expected), result.stderr
 
 
 # --- intake.confirmed grammar (W0-03 review fix 4) -------------------------
@@ -592,15 +646,30 @@ def spec_text(repo: Path, change: str = CHANGE) -> str:
     return (repo / "docs/loom" / change / "spec.md").read_text(encoding="utf-8")
 
 
-def spec_review_sha(repo: Path, change: str = CHANGE) -> str:
-    """What a reviewer read: the whole spec file."""
-    return blob_sha(spec_text(repo, change))
+def spec_confirmation_blob(repo: Path, change: str = CHANGE) -> str:
+    """The one spec identity both freshness rules use: the file MINUS the
+    `confirmed-behavior:` line, so the value is not a hash of itself and
+    writing the confirmation does not invalidate the review that preceded
+    it."""
+    return blob_sha(CONFIRMED_LINE.sub("", spec_text(repo, change), count=1))
 
 
 def spec_confirmation_sha(repo: Path, change: str = CHANGE) -> str:
-    """What decision point (2) showed: the spec MINUS the confirmation line
-    the agent is about to append, so the value is not a hash of itself."""
-    return blob_sha(CONFIRMED_LINE.sub("", spec_text(repo, change), count=1))[:7]
+    return spec_confirmation_blob(repo, change)[:7]
+
+
+def write_spec_confirmation(repo: Path, date: str, change: str = CHANGE) -> None:
+    """Append the confirmation line to a spec already on disk, naming the sha
+    of the text it confirms."""
+    path = repo / "docs/loom" / change / "spec.md"
+    text = CONFIRMED_LINE.sub("", path.read_text(encoding="utf-8"), count=1)
+    line = f"confirmed-behavior: {date} @{blob_sha(text)[:7]}"
+    lines = text.splitlines()
+    for index, existing in enumerate(lines):
+        if existing.startswith("intent:"):
+            lines.insert(index + 1, line)
+            break
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def commit_file(repo: Path, rel: str, content: str = "x\n") -> None:
@@ -612,7 +681,7 @@ def commit_file(repo: Path, rel: str, content: str = "x\n") -> None:
 
 
 def fresh_verdicts(repo: Path, change: str = CHANGE) -> list[dict]:
-    sha = spec_review_sha(repo, change)
+    sha = spec_confirmation_blob(repo, change)
     return [
         dict(verdict("a", "PASS", 1), spec_sha=sha),
         dict(verdict("b", "PASS", 1), spec_sha=sha),
@@ -665,17 +734,20 @@ def test_a_spec_rewritten_after_its_passing_round_is_blocked(tmp_path: Path) -> 
     assert "send it round again" in result.stderr
 
 
-def test_a_round_without_spec_sha_warns_and_still_passes(tmp_path: Path) -> None:
-    """Fail-open for records written before the field existed -- and loud
-    about it, so the gap is visible until W4 retires the tolerance."""
+def test_a_round_without_spec_sha_is_blocked(tmp_path: Path) -> None:
+    """No tolerance: a round that does not say which text it read cannot be
+    checked for freshness, so it does not pass."""
     repo = make_repo(tmp_path)
     write_intent(repo, needs_design="yes — many states, no spec exists")
     write_spec(repo)
-    write_review(repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)])
+    write_review(
+        repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)], spec_sha=False
+    )
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
-    assert result.returncode == 0, result.stderr
-    assert "WARN" in result.stderr and "spec_sha" in result.stderr
-    assert "W4" in result.stderr
+    assert result.returncode == 1
+    assert "intake.spec-pass" in blocked_rules(result)
+    assert "spec_sha in the spec round" in result.stderr
+    assert "git hash-object" in result.stderr and "grep -v" in result.stderr
 
 
 # --- intake.confirmed-behavior freshness (W2 adversary P02) ----------------
@@ -704,14 +776,44 @@ def test_a_confirmation_naming_another_spec_is_blocked(tmp_path: Path) -> None:
     assert "intake.confirmed-behavior" in blocked_rules(result)
 
 
-def test_a_confirmation_without_a_sha_warns_and_still_passes(tmp_path: Path) -> None:
+def test_a_confirmation_without_a_sha_is_blocked(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     write_intent(repo, kind="product", needs_design="yes — new visible surface")
-    write_spec(repo, confirmed_behavior="confirmed-behavior: 2026-09-02")
+    write_spec(repo, confirmed_behavior="confirmed-behavior: 2026-09-02", sha=False)
     write_review(repo, fresh_verdicts(repo))
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
-    assert result.returncode == 0, result.stderr
-    assert "WARN" in result.stderr and "W4" in result.stderr
+    assert result.returncode == 1
+    assert "intake.confirmed-behavior" in blocked_rules(result)
+    assert "git hash-object" in result.stderr
+
+
+def test_an_impossible_confirmation_date_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, kind="product", needs_design="yes — new visible surface")
+    write_spec(repo, confirmed_behavior="confirmed-behavior: 9999-99-99")
+    write_review(repo, fresh_verdicts(repo))
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed-behavior" in blocked_rules(result)
+    assert "not a real date" in result.stderr
+
+
+# --- intake.confirmed: the status date is a date too (W2 re-review F6) -----
+
+
+def test_an_impossible_confirmed_status_date_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: confirmed 9999-99-99")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "not a real date" in result.stderr
+
+
+def test_a_real_confirmed_status_date_is_accepted(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: confirmed 2028-02-29")
+    assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
 
 
 # --- spec.req-grammar (W2 adversary P03) ----------------------------------
@@ -848,7 +950,10 @@ def test_real_ui_flows_over_a_surface_diff_are_fine(tmp_path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         SPEC.format(change=CHANGE, confirmed_behavior="confirmed-behavior: 2026-09-02")
-        .replace("## UI flows\nN/A", "## UI flows\nYou open the list and each row shows its due date."),
+        .replace(
+            "## UI flows\nN/A",
+            "## UI flows\n- `todo list` → every row shows its due date\n",
+        ),
         encoding="utf-8",
     )
     write_review(repo, fresh_verdicts(repo))
@@ -856,42 +961,44 @@ def test_real_ui_flows_over_a_surface_diff_are_fine(tmp_path: Path) -> None:
     assert "spec.ui-flows-recompute" not in blocked_rules(result)
 
 
-def test_a_legacy_round_naming_an_unknown_commit_is_blocked(tmp_path: Path) -> None:
-    """No `spec_sha` AND a reviewed_sha this repo does not have: nothing says
-    which text was reviewed, so the pass cannot be believed."""
+@pytest.mark.parametrize("placeholder", [
+    "N/A", "N/A — no interface", "None.", "沒有介面", "_none_", "Not applicable",
+    "The list gets a due-date column.",     # prose, but no operation → reaction
+])
+def test_ui_flows_without_a_flow_line_is_blocked(tmp_path: Path, placeholder: str) -> None:
+    """The rule is not "does not say N/A" -- five spellings of nothing exist.
+    It is "carries at least one `<operation> → <reaction>` line", which is
+    what decision point 2 reads back to the user."""
     repo = make_repo(tmp_path)
-    write_intent(repo, needs_design="yes — many states, no spec exists")
-    write_spec(repo)
-    write_review(
-        repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)], reviewed_sha="deadbeef"
-    )
-    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
-    assert result.returncode == 1
-    assert "intake.spec-pass" in blocked_rules(result)
-    assert "deadbeef" in result.stderr
-
-
-def test_a_legacy_round_still_catches_a_rewrite_via_reviewed_sha(tmp_path: Path) -> None:
-    """Records written before `spec_sha` existed are not fail-open: the spec's
-    blob AT the reviewed commit answers the same question."""
-    repo = make_repo(tmp_path)
-    write_intent(repo, needs_design="yes — many states, no spec exists")
-    write_spec(repo)
-    git(repo, "add", "-A")
-    git(repo, "commit", "-q", "-m", "docs(loom): spec round 1")
-    write_review(repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)])
-    assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
-
+    commit_file(repo, "web/DuePill.tsx")
+    write_intent(repo, kind="product", needs_design="yes — new visible surface")
     path = repo / "docs/loom" / CHANGE / "spec.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        spec_text(repo).replace(
-            "## Design decision",
-            "REQ-2 — cloud mirror\n  Every row goes to a paid service. "
-            "→ Acceptance #1\n\n## Design decision",
-        ),
+        SPEC.format(change=CHANGE, confirmed_behavior="")
+        .replace("## UI flows\nN/A", f"## UI flows\n{placeholder}"),
         encoding="utf-8",
     )
+    write_spec_confirmation(repo, "2026-09-02")
+    write_review(repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)])
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
-    assert result.returncode == 1
-    assert "intake.spec-pass" in blocked_rules(result)
-    assert "spec changed after review" in result.stderr
+    assert result.returncode == 1, result.stderr
+    assert "spec.ui-flows-recompute" in blocked_rules(result)
+
+
+@pytest.mark.parametrize("arrow", ["→", "->"])
+def test_a_single_flow_line_with_either_arrow_is_enough(tmp_path: Path, arrow: str) -> None:
+    repo = make_repo(tmp_path)
+    commit_file(repo, "web/DuePill.tsx")
+    write_intent(repo, kind="product", needs_design="yes — new visible surface")
+    path = repo / "docs/loom" / CHANGE / "spec.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        SPEC.format(change=CHANGE, confirmed_behavior="")
+        .replace("## UI flows\nN/A", f"## UI flows\n- `todo list` {arrow} rows show the due date"),
+        encoding="utf-8",
+    )
+    write_spec_confirmation(repo, "2026-09-02")
+    write_review(repo, [verdict("a", "PASS", 1), verdict("b", "PASS", 1)])
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr

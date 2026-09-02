@@ -557,3 +557,31 @@ def test_a_none_placeholder_satisfies_a_required_section(tmp_path: Path) -> None
     seal(repo, intent)
     result = run_checker("intent", str(intent), cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+# --- intent.needs-design-reason reads the INTENT's commit (re-review F5) ---
+
+
+def test_the_intent_commit_message_is_found_behind_a_later_commit(tmp_path: Path) -> None:
+    """The station commits the intent, then work continues. Reading HEAD's
+    message made the rule pass or fail on whatever was committed last."""
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="yes — new surface")
+    seal(repo, intent)
+    commit_file(repo, "src/store/index.py")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_later_commit_cannot_supply_the_missing_line(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="yes — new surface")
+    seal(repo, intent, message="docs(loom): add an intent\n\nno mention of the line\n")
+    commit_file(
+        repo, "notes.txt", "x\n",
+    )
+    git(repo, "commit", "-q", "--allow-empty",
+        "-m", "chore: later\n\nneeds-design: yes — new surface\n")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)

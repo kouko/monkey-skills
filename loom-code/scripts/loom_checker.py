@@ -33,6 +33,7 @@ import re
 import shlex
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -444,7 +445,9 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_intent_schema(manifest, front, sections)
     failures += check_product_no_identifiers(front, sections)
 
-    reason_failures, needs_design = check_needs_design_reason(front, commit_msg, repo)
+    reason_failures, needs_design = check_needs_design_reason(
+        front, commit_msg, repo, path
+    )
     failures += reason_failures
 
     kind = front.get("kind", "").strip()
@@ -535,11 +538,15 @@ def check_product_no_identifiers(front, sections) -> list[tuple[str, str]]:
 NEEDS_DESIGN_GRAMMAR = re.compile(r"^(yes|no)\s*(?:—|–|--)\s*(\S.*)$")
 
 
-def check_needs_design_reason(front, commit_msg: Path | None, repo: Path):
+def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: Path):
     """`needs-design` carries a reason, and the intent's commit message
     repeats the line verbatim (concept-model §2b). With no `--commit-msg`
-    (the post-commit and station calls) the message is HEAD's own, read
-    from git -- the check is never skipped for want of a flag."""
+    (the post-commit and station calls) the message is that of the last commit
+    that TOUCHED THIS INTENT, not HEAD's -- reading HEAD made the rule pass or
+    fail on whatever happened to be committed last, so one unrelated commit
+    after the intent broke it and one unrelated commit carrying the line
+    could satisfy it (W2 re-review F5). The check is never skipped for want
+    of a flag."""
     raw = front.get("needs-design", "").strip()
     if not raw:
         return [], None
@@ -560,7 +567,9 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path):
             raise UsageError(f"no commit message file at {commit_msg}")
         message, source = read_text(commit_msg), str(commit_msg)
     else:
-        message, source = git_text(repo, "log", "-1", "--format=%B"), "HEAD"
+        relative = path.resolve().relative_to(repo.resolve()).as_posix()
+        message = git_text(repo, "log", "-1", "--format=%B", "--", relative)
+        source = f"the last commit touching {relative}"
     line = f"needs-design: {raw}"
     if _squeeze(line) not in _squeeze(message):
         return (
@@ -632,7 +641,7 @@ def check_kind_recompute(touched: list[str]) -> list[tuple[str, str]]:
 
 
 CHANGE_ID = re.compile(r"[A-Za-z0-9._-]+")
-CONFIRMED = re.compile(r"confirmed \d{4}-\d{2}-\d{2}(\s+#.*)?")
+CONFIRMED = re.compile(r"confirmed (\d{4}-\d{2}-\d{2})(\s+#.*)?")
 
 INTAKE_STATIONS = ("write-spec", "write-plan")  # the two stations that accept an intent
 
@@ -665,13 +674,25 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     front, sections = parse_document(read_text(intent_path))
 
     status = front.get("status", "").strip()
-    if not CONFIRMED.fullmatch(status):
+    confirmed = CONFIRMED.fullmatch(status)
+    if not confirmed:
         shown = status or "absent (= open)"
         return report(
             [
                 (
                     "intake.confirmed",
                     f"{station} accepts only `status: confirmed <date>`; status is {shown}.",
+                )
+            ],
+            err,
+        )
+    if not is_real_date(confirmed.group(1)):
+        return report(
+            [
+                (
+                    "intake.confirmed",
+                    f"`status: confirmed {confirmed.group(1)}` names something "
+                    "that is not a real date.",
                 )
             ],
             err,
@@ -797,6 +818,13 @@ def check_req_grammar(manifest, repo: Path, change_id: str, intent_sections):
     return failures
 
 
+# One line of `<operation> -> <reaction>`. The arrow is the whole test: a
+# flow that does not say what the system does back is not a flow, and every
+# spelling of nothing -- `N/A`, `None.`, a full sentence with no arrow --
+# fails it the same way (W2 re-review F2).
+FLOW_LINE = re.compile(r"^.*\S.*(?:\u2192|->)\s*\S", re.MULTILINE)
+
+
 def check_ui_flows_recompute(manifest, repo: Path, change_id: str, touched: list[str]):
     """`## UI flows: N/A` is a claim; the diff is the fact.
 
@@ -810,16 +838,19 @@ def check_ui_flows_recompute(manifest, repo: Path, change_id: str, touched: list
     if not spec_path.is_file():
         return []  # intake.spec-pass reports the missing spec
     _front, sections = parse_document(read_text(spec_path))
-    body = _squeeze(sections.get("UI flows", ""))
-    if not re.match(r"(?i)^n/?a\b", body):
+    body = sections.get("UI flows", "")
+    if FLOW_LINE.search(body):
         return []
+    shown = _squeeze(body)[:40] or "(empty)"
     return [
         (
             "spec.ui-flows-recompute",
-            f"{spec_path.relative_to(repo)} answers `{body[:40]}` under "
-            "`## UI flows` while the diff touches a declared interface "
-            f"surface: {', '.join(touched[:5])}. Write the operations and what "
-            "the user sees back; that section IS decision point 2.",
+            f"{spec_path.relative_to(repo)} carries no `<operation> -> "
+            f"<reaction>` line under `## UI flows` (it says {shown!r}) while "
+            f"the diff touches a declared interface surface: "
+            f"{', '.join(touched[:5])}. Write what the user does and what they "
+            "see back, one line per operation; that section IS decision "
+            "point 2.",
         )
     ]
 
@@ -831,16 +862,28 @@ CONFIRMED_BEHAVIOR_GRAMMAR = re.compile(
 )
 CONFIRMED_BEHAVIOR_LINE = re.compile(rb"^confirmed-behavior:.*\n?", re.MULTILINE)
 
-# The one tolerance in this file, and it has an end date: records written
-# before `spec_sha` / `@<sha>` existed cannot prove freshness, so they WARN
-# instead of blocking. W4 removes the fallback; until then the WARN names
-# exactly what was not checked.
-LEGACY_UNTIL = "W4"
-
-
 def blob_sha(data: bytes) -> str:
     """`git hash-object` without shelling out -- the same value git stores."""
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+
+
+def spec_identity(spec_path: Path) -> str:
+    """The one blob sha both freshness rules compare against: the spec WITHOUT
+    its `confirmed-behavior:` line.
+
+    Two reasons it is not simply `git hash-object spec.md`. The confirmation
+    line names this value, so hashing the whole file would make it a hash of
+    itself; and decision point 2 writes that line AFTER the reviewers read the
+    text, so a whole-file hash would make every confirmation invalidate the
+    review that preceded it."""
+    return blob_sha(CONFIRMED_BEHAVIOR_LINE.sub(b"", spec_path.read_bytes(), count=1))
+
+
+def recompute_command(relative: str) -> str:
+    return (
+        "recompute it with `git hash-object <(grep -v '^confirmed-behavior:' "
+        f"{relative})`"
+    )
 
 
 def sha_agrees(recorded: str, current: str) -> bool:
@@ -1007,82 +1050,40 @@ def check_spec_freshness(repo, spec_path, review, verdicts, round_number, err):
     """A pass is a pass over a particular text.
 
     Rewrite the spec after its round and the verdict is about a document that
-    no longer exists -- and every freshness rule that does exist
-    (`push.reviewed-sha`) fires at push, which is after the plan and the whole
-    build (W2 adversary P09). Three ways to recompute it, in order of how
-    directly they answer the question:
-
-    1. `spec_sha` on the round's own verdicts -- the blob each reviewer read.
-    2. the spec's blob AT `reviewed_sha` -- available on records written
-       before the field existed, which is why the legacy fallback is not
-       simply "fail open".
-    3. nothing, when the spec was not committed at that point -- a WARN
-       naming the gap. This last rung is removed in W4.
-
-    A `reviewed_sha` that resolves to no commit in this repo stops the ladder
-    dead: a round that names a commit nobody has is not a review of this
-    repository, and freshness cannot be recomputed from it at all."""
-    current = blob_sha(spec_path.read_bytes())
+    no longer exists, and the only freshness rule that used to exist
+    (`push.reviewed-sha`) fires at push -- after the plan and the whole build
+    (W2 adversary P09). There is one way to answer the question and no
+    fallback: the round's own verdicts carry `spec_sha`, or the round cannot
+    say what it read and does not pass (W2 re-review F3/F4)."""
+    current = spec_identity(spec_path)
+    relative = spec_path.relative_to(repo).as_posix()
     recorded = [
         str(entry.get("spec_sha", "")).strip()
         for entry in verdicts
         if str(entry.get("spec_sha", "")).strip()
     ]
-    if recorded:
-        if any(sha_agrees(value, current) for value in recorded):
-            return []
-        return [
-            (
-                "intake.spec-pass",
-                f"spec review round {round_number} passed "
-                f"{', '.join(sorted(set(recorded)))} but "
-                f"{spec_path.relative_to(repo)} is now {current[:7]} -- spec "
-                "changed after review; send it round again.",
-            )
-        ]
-
-    reviewed = str(review.get("reviewed_sha", "")).strip()
-    resolved = (
-        git_maybe(repo, "rev-parse", "--verify", f"{reviewed}^{{commit}}")
-        if reviewed else None
-    )
-    if not resolved:
+    if not recorded:
         return [
             (
                 "intake.spec-pass",
                 f"no verdict in spec review round {round_number} records "
-                f"`spec_sha`, and reviewed_sha {reviewed or '(absent)'!r} "
-                "resolves to no commit here, so nothing says which text was "
-                "reviewed -- the spec could have been rewritten after the "
-                "round and nothing would notice. Record `spec_sha` on the "
-                "verdicts and send it round again.",
+                f"`spec_sha`, so nothing says which text was reviewed -- the "
+                f"spec could have been rewritten afterwards and nothing would "
+                f"notice. Record spec_sha in the spec round ({current[:7]} for "
+                f"{relative} as it stands); {recompute_command(relative)}.",
             )
         ]
-    relative = spec_path.relative_to(repo).as_posix()
-    then = git_maybe(repo, "rev-parse", f"{resolved}:{relative}")
-    if then and then != current:
-        return [
-            (
-                "intake.spec-pass",
-                f"the spec was {then[:7]} at reviewed_sha {resolved[:7]} and is "
-                f"now {current[:7]} -- spec changed after review; send it round "
-                "again.",
-            )
-        ]
-    how = (
-        f"freshness was recomputed from the spec's blob at reviewed_sha "
-        f"{resolved[:7]} instead, and it matches"
-        if then else
-        f"{relative} was not committed at reviewed_sha {resolved[:7]}, so "
-        f"freshness was recomputed from nothing"
-    )
-    err.write(
-        f"WARN intake.spec-pass: no verdict in spec review round {round_number} "
-        f"records `spec_sha`; {how}. Legacy records only; the review station "
-        f"writes `spec_sha` now and this fallback is removed in "
-        f"{LEGACY_UNTIL}.\n"
-    )
-    return []
+    if any(sha_agrees(value, current) for value in recorded):
+        return []
+    return [
+        (
+            "intake.spec-pass",
+            f"spec review round {round_number} passed "
+            f"{', '.join(sorted(set(recorded)))} but {relative} is now "
+            f"{current[:7]} -- spec changed after review; send it round again. "
+            f"To check the value yourself, {recompute_command(relative)}.",
+        )
+    ]
 
 
 def check_confirmed_behavior(
@@ -1110,31 +1111,34 @@ def check_confirmed_behavior(
                 "decision point ② has not happened.",
             )
         ]
+    current = spec_identity(spec_path)
+    relative = spec_path.relative_to(repo).as_posix()
     match = CONFIRMED_BEHAVIOR_GRAMMAR.match(raw)
-    if not match:
+    if not match or not match.group(2):
         return [
             (
                 "intake.confirmed-behavior",
                 f"`confirmed-behavior: {raw}` does not match "
-                "`<date> @<spec-blob-sha7>`.",
+                f"`<date> @<spec-blob-sha7>`; the sha names the text the user "
+                f"was actually shown ({current[:7]} for {relative} as it "
+                f"stands) -- {recompute_command(relative)}.",
+            )
+        ]
+    if not is_real_date(match.group(1)):
+        return [
+            (
+                "intake.confirmed-behavior",
+                f"`confirmed-behavior: {raw}` names {match.group(1)!r}, which "
+                "is not a real date.",
             )
         ]
     recorded = match.group(2)
-    current = blob_sha(CONFIRMED_BEHAVIOR_LINE.sub(b"", spec_path.read_bytes(), count=1))
-    if not recorded:
-        err.write(
-            f"WARN intake.confirmed-behavior: `confirmed-behavior: {raw}` names "
-            f"no spec sha, so what the user confirmed was NOT checked against "
-            f"what the spec now says (it is {current[:7]}). Legacy records only; "
-            f"this fallback is removed in {LEGACY_UNTIL}.\n"
-        )
-        return []
     if not sha_agrees(recorded, current):
         return [
             (
                 "intake.confirmed-behavior",
-                f"the user confirmed spec @{recorded}, but "
-                f"{spec_path.relative_to(repo)} is now @{current[:7]} -- the "
+                f"the user confirmed spec @{recorded}, but {relative} is now "
+                f"@{current[:7]} -- the "
                 "visible behaviour changed after decision point ②; show it "
                 "again and rewrite the line.",
             )
@@ -2185,7 +2189,22 @@ def cmd_standing(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return report(failures, err)
 
 
-RATIFIED_BY = re.compile(r"^ratified-by:\s*\S.*$", re.MULTILINE)
+# Byte-identical to loom-design's validate_principles_output.py (parity test:
+# loom-design/scripts/principles/test_principles_checker_parity.py): a
+# non-empty name, a space, then an ISO date the calendar actually has.
+# `ratified-by: pending — kouko to confirm` is a placeholder, not a signature
+# (W2 re-review F1).
+RATIFIED_BY_ANY = re.compile(r"^ratified-by:.*$", re.MULTILINE)
+RATIFIED_BY = re.compile(r"^ratified-by:\s*\S.+\s(\d{4}-\d{2}-\d{2})\s*$", re.MULTILINE)
+
+
+def is_real_date(value: str) -> bool:
+    """`9999-99-99` has the shape and is not a day."""
+    try:
+        date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
 NON_NEGOTIABLES = re.compile(r"^##\s+non-negotiables\b", re.IGNORECASE)
 
 # --- non-negotiables counting ----------------------------------------------
@@ -2230,8 +2249,20 @@ def unratified_reason(text: str) -> str | None:
     """Ratified is two things, not one (concept-model §8): the signature
     line AND a Non-negotiables section with something in it. A signature over
     an empty document ratifies nothing, so the section is counted here."""
-    if not RATIFIED_BY.search(text):
+    match = RATIFIED_BY.search(text)
+    if not match:
+        if RATIFIED_BY_ANY.search(text):
+            return (
+                "carries a `ratified-by:` line that is not a signature; the "
+                "grammar is `ratified-by: <name> <YYYY-MM-DD>` (a name, one "
+                "space, an ISO date) -- a placeholder ratifies nothing"
+            )
         return "carries no `ratified-by: <name> <date>` line"
+    if not is_real_date(match.group(1)):
+        return (
+            f"names {match.group(1)!r} on its `ratified-by:` line, which is "
+            "not a real date"
+        )
     body, inside = [], False
     for line in text.splitlines():
         if line.startswith("## "):

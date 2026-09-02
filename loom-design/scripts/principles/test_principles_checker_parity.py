@@ -52,7 +52,7 @@ Make it fast.
 """
 
 PRINCIPLES = """# Product principles
-ratified-by: Alex Rivera 2026-09-02
+{ratified}
 ## Who
 Solo developers tracking personal tasks.
 ## Non-negotiables (ordered)
@@ -89,8 +89,29 @@ FIXTURES = {
 }
 
 
-def _principles(items: list[str]) -> str:
-    return PRINCIPLES.format(items="".join(f"- {item}\n" for item in items))
+SUBSTANTIVE = [
+    "saving works with the network off",
+    "never require a sign-up",
+    "one plain-text file holds everything",
+]
+
+# The signature line is the other half of "ratified" (concept-model §8), and
+# the two implementations have to agree on it too: a placeholder is not a
+# signature, and a date that does not exist is not a date.
+RATIFIED_LINES = {
+    "a name and a real date": ("ratified-by: kouko 2026-09-03", True),
+    "a placeholder instead of a name and date": (
+        "ratified-by: pending — kouko to confirm", False,
+    ),
+    "a date that does not exist": ("ratified-by: kouko 2026-13-45", False),
+    "a name with no date": ("ratified-by: kouko", False),
+}
+
+
+def _principles(items: list[str], ratified: str = "ratified-by: Alex Rivera 2026-09-02") -> str:
+    return PRINCIPLES.format(
+        ratified=ratified, items="".join(f"- {item}\n" for item in items)
+    )
 
 
 def _git(repo: Path, *args: str) -> None:
@@ -113,6 +134,17 @@ def _checker_says_ratified(tmp_path: Path, text: str) -> bool:
     )
     assert result.returncode in (0, 1), result.stderr
     return result.returncode == 0
+
+
+@pytest.mark.parametrize("label", sorted(RATIFIED_LINES))
+def test_both_implementations_agree_on_the_signature_line(tmp_path: Path, label: str) -> None:
+    line, expected = RATIFIED_LINES[label]
+    text = _principles(SUBSTANTIVE, ratified=line)
+    path = tmp_path / "PRINCIPLES.md"
+    path.write_text(text, encoding="utf-8")
+    authoring_ok, problems = validate(path)
+    gate_ok = _checker_says_ratified(tmp_path, text)
+    assert authoring_ok == gate_ok == expected, (label, problems)
 
 
 @pytest.mark.parametrize("label", sorted(FIXTURES))

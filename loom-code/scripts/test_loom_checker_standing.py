@@ -316,3 +316,47 @@ def test_three_distinct_substantive_non_negotiables_ratify(tmp_path: Path) -> No
     add_principles(repo)
     add_design(repo)
     assert run_checker("standing", str(intent), cwd=repo).returncode == 0
+
+
+# --- standing.product-principles-reject: the signature line (re-review F1) --
+
+
+def test_a_pending_ratified_by_is_not_a_signature(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(repo)
+    (repo / "PRINCIPLES.md").write_text(
+        (repo / "PRINCIPLES.md").read_text(encoding="utf-8").replace(
+            "ratified-by: kouko 2026-09-02", "ratified-by: pending — kouko to confirm"
+        ),
+        encoding="utf-8",
+    )
+    result = run_checker("standing", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "standing.product-principles-reject" in blocked_rules(result)
+
+
+def test_an_impossible_ratified_by_date_is_not_a_signature(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(repo)
+    (repo / "PRINCIPLES.md").write_text(
+        (repo / "PRINCIPLES.md").read_text(encoding="utf-8").replace(
+            "2026-09-02", "2026-13-45"
+        ),
+        encoding="utf-8",
+    )
+    result = run_checker("standing", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "not a real date" in result.stderr
+
+
+def test_a_real_name_and_date_ratifies(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path, kind="product")
+    add_principles(repo)
+    add_design(repo)
+    (repo / "PRINCIPLES.md").write_text(
+        (repo / "PRINCIPLES.md").read_text(encoding="utf-8").replace(
+            "ratified-by: kouko 2026-09-02", "ratified-by: kouko 2026-09-03"
+        ),
+        encoding="utf-8",
+    )
+    assert run_checker("standing", str(intent), cwd=repo).returncode == 0
