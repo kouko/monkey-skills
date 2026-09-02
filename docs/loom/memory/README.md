@@ -12,11 +12,15 @@
 
 | Knowledge shape | Home |
 |---|---|
-| Open item / debt / re-trigger | an entry file in `docs/loom/backlog/` per its charter (`docs/loom/backlog/README.md`, cross-plugin) or plugin README §parked (local) |
+| Open item / debt / re-trigger | an intent file in `docs/loom/intent/` (the maintain station opens one, or appends evidence to the same-subject open intent) |
 | Decision bound to a commit | git-memory trailers (`Decision:`) |
 | Distilled practice / habit / process / recurring gotcha | **`docs/loom/memory/`** (this store) |
-| One-off event artifact | `docs/loom/{specs,plans,audits,dogfood,research}/` |
+| One-off event artifact (audit, dogfood, measurement, review record) | `docs/loom/<change-id>/evidence/` when it belongs to one change; `docs/loom/evidence/` when it outlives the change |
 | Harness/dcg friction (plugin-shipped) | `loom-code/.../environment-gotchas.md` — stays, NOT migrated |
+
+> `docs/loom/backlog/` and `docs/loom/{plans,specs,design}/` are frozen at
+> loom 1.0 (see `docs/loom/README.md` §Frozen stores). Nothing is written
+> into them any more; a recurring open item comes back as a new intent.
 
 > Durable lessons live in the repo's committed memory store
 > (`docs/loom/memory/` here) — the authoritative carrier. Commit trailers are
