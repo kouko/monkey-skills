@@ -11,23 +11,15 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 SKILL_MD = SKILL_DIR / "SKILL.md"
 MAP_FORMAT_MD = SKILL_DIR / "references" / "map-format.md"
 PROTOTYPE_CONTRACT_MD = SKILL_DIR / "references" / "prototype-contract.md"
-FAMILY_RECEPTION_MD = SKILL_DIR / "references" / "family-reception.md"
 PLUGIN_ROOT = SKILL_DIR.parents[1]
 CHANGELOG_MD = PLUGIN_ROOT / "CHANGELOG.md"
 GOVERNANCE_MD = PLUGIN_ROOT / "docs" / "skill-governance.md"
 CLAUDE_MANIFEST = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
 CODEX_MANIFEST = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
-FINISHING_SKILL_MD = (
-    Path(__file__).resolve().parents[4]
-    / "loom-code"
-    / "skills"
-    / "finishing-a-development-branch"
-    / "SKILL.md"
-)
-
 SCRIPT_NAMES = (
     "map_init.py",
+    "start_delivery.py",
     "map_store.py",
     "check_map_links.py",
     "check_map_fog.py",
@@ -52,6 +44,14 @@ DOCUMENTED_COMMANDS = (
     'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_links.py" "<map-dir>" --repo-root "<path>"',
     'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_fog.py" "<map-dir>" --repo-root "<path>"',
     'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" "<target>" --repo-root "<path>"',
+    'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/start_delivery.py" "<map-dir>" "<DA-id>" "<change-id>" --repo-root "<path>"',
+)
+
+# start_delivery.py is a writer that requires an active Map with an open
+# criterion, so the doc-runner cannot drive it from the bare scaffold above;
+# test_start_delivery.py owns its behaviour.
+RUNNABLE_FROM_SCAFFOLD = tuple(
+    command for command in DOCUMENTED_COMMANDS if "start_delivery.py" not in command
 )
 
 
@@ -192,14 +192,13 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
     skill = _normalize(skill_source)
     map_format = _normalize(map_format_source)
     prototype = _normalize(PROTOTYPE_CONTRACT_MD.read_text(encoding="utf-8"))
-    family = _normalize(FAMILY_RECEPTION_MD.read_text(encoding="utf-8"))
     changelog = CHANGELOG_MD.read_text(encoding="utf-8")
     governance = _normalize(GOVERNANCE_MD.read_text(encoding="utf-8"))
     claude_manifest = json.loads(CLAUDE_MANIFEST.read_text(encoding="utf-8"))
     codex_manifest = json.loads(CODEX_MANIFEST.read_text(encoding="utf-8"))
 
-    assert claude_manifest["version"] == "3.2.0"
-    assert codex_manifest["version"] == "3.2.0"
+    assert claude_manifest["version"] == "4.0.0"
+    assert codex_manifest["version"] == "4.0.0"
     for manifest in (claude_manifest, codex_manifest):
         assert "Outcome Map" in manifest["description"]
         assert "decision-map" in manifest["keywords"]
@@ -217,8 +216,8 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
     for public_contract in (skill, map_format):
         assert "one persistent outcome-control loop" in public_contract
         assert "multiple independently closed delivery arcs" in public_contract
-        assert "exactly four closure types" in public_contract.lower()
-        assert "`grilling`, `research`, `prototype`, and `delivery`" in public_contract
+        assert "exactly three ticket closure types" in public_contract.lower()
+        assert "`grilling`, `research`, and `prototype`" in public_contract
         assert "one outcome-advancing slice" in public_contract
         assert "source of truth" in public_contract
         assert "Map clear" in public_contract
@@ -229,7 +228,6 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
     assert "research" in prototype
     assert "human evaluates" in prototype
     assert "prototype" in prototype
-    assert "multiple sessions" in family and "decision-map" in family
 
     operations = (
         "Start",
@@ -251,7 +249,10 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
         assert command in map_format
     extracted_commands = list(dict.fromkeys(_script_commands(skill_source)))
     assert set(extracted_commands) == set(DOCUMENTED_COMMANDS)
-    _run_documented_commands(tmp_path, extracted_commands)
+    _run_documented_commands(
+        tmp_path,
+        [c for c in extracted_commands if c in RUNNABLE_FROM_SCAFFOLD],
+    )
 
     expected_reentry_states = {
         "absent", "broken", "ambiguous-live", "live", "blocked", "claimed", "da-gap"
@@ -267,9 +268,10 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
         "`ambiguous-live`, `live`, `blocked`, `claimed`, and `da-gap`."
     )
     phase_sentence = (
-        "Delivery phase values are separate: `unbriefed`, `briefed`, "
-        "`planning`, `implementing`, `reviewing`, `finishing`, "
-        "`repair-required`, and `delivered`."
+        "Legacy delivery phase values are separate and resolve only for "
+        "pre-1.0 delivery tickets: `unbriefed`, `briefed`, `planning`, "
+        "`implementing`, `reviewing`, `finishing`, `repair-required`, and "
+        "`delivered`."
     )
     for public_contract in (skill, map_format):
         assert state_sentence in public_contract
@@ -282,7 +284,7 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
     assert "ticket_slug" in map_format and "ticket_type" in map_format
     assert "only a `ticket` route may carry" in map_format.lower()
     assert "[a-z0-9]+(?:-[a-z0-9]+)*" in map_format
-    assert "`grilling`, `research`, `prototype`, or `delivery`" in map_format
+    assert "`grilling`, `research`, or `prototype`" in map_format
     assert "`(destination, text, ticket_slug)` is unique" in map_format
     assert "unique `ticket_slug`" in map_format
 
@@ -293,7 +295,7 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
     assert close_checks.index(risk_step) < close_checks.index(DOCUMENTED_COMMANDS[1])
 
     ticket_template = (
-        "type: <grilling|research|prototype|delivery> status: open "
+        "type: <grilling|research|prototype> status: open "
         "claim: null graduated-from: null"
     )
     assert ticket_template in map_format
@@ -306,7 +308,7 @@ def test_v3_contract_pins_release_boundary_and_metric_definition():
 
     assert "schema_version: 3" in map_format_text
     assert "v1" not in map_format_text
-    assert "Exactly four closure types exist" in skill_text
+    assert "Exactly three ticket closure types exist" in skill_text
     assert "Dependencies are graph edges, not ticket types" in map_format_text
     assert "A closed delivery alone is never a clear transition" in map_format_text
 
@@ -321,13 +323,3 @@ def test_no_live_contract_or_command_surface_references_map_parts():
     for path in (SKILL_MD, MAP_FORMAT_MD):
         text = path.read_text(encoding="utf-8").lower()
         assert "map_parts.py" not in text, f"{path} still references map_parts.py"
-
-
-def test_no_live_finishing_skill_map_parts_writeback_instruction():
-    """Close-out instructions must not invoke the retired Parts flipper."""
-    text = FINISHING_SKILL_MD.read_text(encoding="utf-8").lower()
-    assert "map delivery-progress check" in text
-    assert "map-parts check" not in text
-    assert "parts flipper" not in text
-    assert "map_parts.py" not in text
-    assert "flip that part's parts row" not in text

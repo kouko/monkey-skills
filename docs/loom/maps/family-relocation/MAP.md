@@ -22,6 +22,7 @@ user-ratified: kouko, 2026-08-29
 
 - 本圖是 decision-map 層的第一張 dogfood 圖（arc E 交付的實地驗證）。
 - deep-research 類票的執行需使用者逐次授權（常設授權只涵蓋 Agent 工具）。
+- loom 1.0 硬切換（2026-09-03）：delivery ticket 與 Brief 綁定已刪。本圖既有票原地封存、不轉換；`task-relocate-family-hooks`（type: delivery）維持可讀歷史，不再依它開工。新的交付片段改寫 `docs/loom/intent/<change-id>.md`（帶 `map: family-relocation`），並在本節列 `- delivery-intent: DA-<n> | <intent 路徑>`。無 DA 綁定舊 brief，故本圖沒有 `retired — 硬切換` 的 DA。
 
 ## Decisions-so-far
 

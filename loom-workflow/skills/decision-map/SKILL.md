@@ -2,7 +2,7 @@
 name: decision-map
 version: 3.0.0
 description: |
-  Chart and work through a persistent Outcome Map at docs/loom/maps/<map-id>/ — one long-term outcome-control loop whose fog becomes typed tickets and whose delivery arcs close independently across many sessions. Use for '開地圖' / '開一張決策地圖' / 'chart a decision map' / 'work through the map' / '推進地圖' / 'デシジョンマップを開く' / 'ワークスルー', and to start, resume, claim, re-chart, migrate, retire, or assess a live Map. Not for one self-contained task (use loom-code:writing-plans) or one factual question (use research-toolkit).
+  Chart and work through a persistent Outcome Map at docs/loom/maps/<map-id>/ — one long-term outcome-control loop whose fog becomes typed tickets and whose delivery arcs close independently across many sessions. Use for '開地圖' / '開一張決策地圖' / 'chart a decision map' / 'work through the map' / '推進地圖' / 'デシジョンマップを開く' / 'ワークスルー', and to start, resume, claim, re-chart, migrate, retire, or assess a live Map. Not for one self-contained task (use loom-code:write-plan) or one factual question (use research-toolkit).
 ---
 
 # Decision map
@@ -12,22 +12,19 @@ multiple independently closed delivery arcs. It is the long-term control
 surface for a Destination whose whole route cannot yet be enumerated. Closing
 a delivery arc must not clear the Map.
 
-Exactly four closure types exist: `grilling`, `research`, `prototype`, and
-`delivery`. A delivery is one outcome-advancing slice, not a generic task and
-not proof that the whole Destination is complete. Dependencies order tickets;
-they never create a `task` or `unblock` type.
+Exactly three ticket closure types exist: `grilling`, `research`, and
+`prototype`. Dependencies order tickets; they never create a `task` or
+`unblock` type. A delivery is not a ticket: it is one outcome-advancing
+slice promised by an intent, not a generic task and not proof that the whole
+Destination is complete.
 
 `MAP.md` and its Tickets are the source of truth for durable outcome state.
-Briefs, Plans, Git, PRs, and CI retain ownership of delivery progress;
+Intents, Plans, Git, PRs, and CI retain ownership of delivery progress;
 decision-map reads that state but never copies it into the Map or Ticket.
 
 Schema and operation authority lives in `references/map-format.md`. The
-prototype boundary lives in `references/prototype-contract.md`. The
-map↔backlog boundary rules live in the `## Backlog boundary contract`
-section of `references/map-format.md` — cite that section, never restate
-its rules here or elsewhere. Read `map-format.md`, `prototype-contract.md`,
-and that `## Backlog boundary contract` section before charting or
-mutating a Map.
+prototype boundary lives in `references/prototype-contract.md`. Read both
+before charting or mutating a Map.
 
 ## Store and lifecycle
 
@@ -58,7 +55,7 @@ author at least one stable Destination acceptance criterion, add the first
 closure-typed tickets, and record genuine fog.
 
 If every open question can already be stated and there is no fog, stop: the
-work needs `loom-code:writing-plans`, not an Outcome Map. Before activation,
+work needs one intent and `loom-code:write-plan`, not an Outcome Map. Before activation,
 run the risk pass from `references/prototype-contract.md`, record
 `user-ratified: <name/handle>, <YYYY-MM-DD>`, run
 `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_store.py" validate "<map-dir>" --repo-root "<path>"`, then make the explicit
@@ -71,10 +68,11 @@ similarity never chooses it. Run
 `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" "<target>" --repo-root "<path>"`
 with a repository root, Ticket, or Plan. Add `--map-id <map-id>` when several
 live Maps exist. Top-level re-entry states are exactly `absent`, `broken`,
-`ambiguous-live`, `live`, `blocked`, `claimed`, and `da-gap`. Delivery phase
-values are separate: `unbriefed`, `briefed`, `planning`, `implementing`,
-`reviewing`, `finishing`, `repair-required`, and `delivered`. The report names
-the authoritative owner and gives the next CTA.
+`ambiguous-live`, `live`, `blocked`, `claimed`, and `da-gap`. Legacy delivery
+phase values are separate and resolve only for pre-1.0 delivery tickets:
+`unbriefed`, `briefed`, `planning`, `implementing`, `reviewing`, `finishing`,
+`repair-required`, and `delivered`. The report names the authoritative owner
+and gives the next CTA.
 
 Broken is not absent. Repair a broken store before initialization or work.
 Within the selected Map, prefer an open ticket whose `blocked-by` targets are
@@ -89,14 +87,33 @@ retry, and surface conflicts rather than weakening the write.
 
 ### Start
 
-Start a new Map with the installed `map_init.py` command above. Start a
-claimed delivery arc with
-`start_delivery.start_delivery(ticket_path, brief_path, repo_root=repo_root)`.
-It creates or recovers one reciprocal Ticket-to-Brief binding; loom-code owns
-the Brief, Plan, implementation, review, PR, and CI thereafter. If Ticket
-binding fails after publishing the expected Brief, the operation preserves it
-as a recoverable orphan. Retry with the same Ticket and Brief path binds it;
-a changed or concurrently replaced Brief is refused and never deleted.
+Start a new Map with the installed `map_init.py` command above.
+
+Start a delivery arc by writing its intent:
+`python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/start_delivery.py" "<map-dir>" "<DA-id>" "<change-id>" --repo-root "<path>"`.
+It writes `docs/loom/intent/<change-id>.md` carrying `originator: map:<map-id>`
+and `map: <map-id>`, and lists that change-id under the Destination acceptance
+criterion the slice serves as `- delivery-intent: <DA-id> | <intent path>` in
+Notes. Re-running with the same change-id reuses the existing intent and never
+rewrites it. Hand the intent to `loom-design:capture-intent` when loom-design
+is installed, otherwise to `loom-code:write-plan`; that station owns the
+intent, spec, plan, implementation, review, and PR thereafter.
+
+### Delivery state
+
+Delivery state is derived from the intent's own `status:` field and is never
+copied into the Map:
+
+- `open` — the arc is not confirmed yet; the criterion stays blocked and no
+  second arc opens against it.
+- `confirmed <date>` — in delivery, owned by the loom-code stations.
+- `closed` — the criterion may be satisfied once its own evidence pointer is
+  recorded.
+- `withdrawn — <reason>` — note `retired — <reason>` beside the change-id.
+  Satisfying that criterion then needs a replacement intent or direct
+  Destination acceptance evidence.
+
+The Map is read-only on intents: it reads `status:` and never edits it.
 
 ### Resume
 
@@ -130,11 +147,9 @@ session can see why the result matters and what remains. Its result reports
 Map-clear eligibility; it does not equate one closed delivery with Map
 completion.
 
-For a `delivery` Ticket, also pass
-`delivery_closure=map_transaction.DeliveryClosureInputs(...)` with the current
-Brief, terminal Plan, acceptance result, exact reviewed/verified heads, PR
-roles, and the complete PR-owner population. Closure re-queries current PR and
-check state; unavailable or stale evidence leaves the Ticket claimed.
+A legacy `delivery` Ticket also passes
+`delivery_closure=map_transaction.DeliveryClosureInputs(...)`; that path exists
+only to terminalize pre-1.0 tickets and authors no new arc.
 
 Each item in `unknowns` is a `map_transaction.UnknownRoute`; use the exact
 field and destination grammar in `references/map-format.md`. For example:
@@ -161,16 +176,16 @@ Archive changes state at the stable Map path; it never relocates the store.
 
 - `grilling` closes a value, direction, or trade-off decision with a named,
   dated human ratification. Delegate discussion to
-  `loom-code:brainstorming` when available.
+  `loom-design:capture-intent` when available.
 - `research` closes a factual question with an answer and inspectable
   evidence. Machine-measured feasibility is research.
 - `prototype` closes only when a human evaluates or selects a newly created
   candidate artifact and records named, dated ratification. Follow
   `references/prototype-contract.md`.
-- `delivery` closes one promised outcome slice under the closure policy its
-  Brief authors: `pr-ci`, `merged`, or `artifact`. Current formal evidence is
-  queried from its owning artifacts; stale or unavailable evidence cannot
-  close the Ticket.
+
+Delivery tickets written before loom 1.0 stay in place, read-only, and are
+never converted; their `brief:` binding and derived delivery phase remain
+readable history. No new delivery ticket is authored.
 
 Research may span sessions. Every other ticket should be sized to one sitting.
 Terminal `closed` and `withdrawn` Tickets are immutable; corrections become
@@ -199,4 +214,3 @@ is required.
   signatures, migration, and command surface.
 - `references/prototype-contract.md` — human-evaluated candidate protocol and
   risk-front-loading rule.
-- `references/family-reception.md` — family on-ramp for long, foggy efforts.

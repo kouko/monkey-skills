@@ -4,6 +4,48 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.0.0] — 2026-09-03 — loom 1.0 hard switch
+
+Breaking. loom-workflow keeps eight counted tools plus two standalone
+skills (`goal-create`, `dbt-model-style`); the plugin now declares
+`requires-contract: ">=1.0"` against loom-code's contract manifest.
+
+### Removed
+
+- **The delivery ticket and its Brief binding.** `decision-map` no longer
+  mints a Brief: a delivery arc is an intent. Delivery tickets and Briefs
+  written before loom 1.0 stay in place, read-only, and are never
+  converted; `map_progress.py` still resolves their legacy delivery phase.
+- **The map↔backlog boundary contract** (`map-format.md`) and
+  `test_boundary_contract.py`, with the backlog store the loom 1.0
+  concept model deletes.
+- **`brief-before-asking`** — its judgement-fork definition now lives in
+  loom-code's one-way-door action at the write-plan station. Note for
+  users: a personal `CLAUDE.md` that names `loom-workflow:brief-before-asking`
+  as its default path must be repointed by hand; this repo cannot do it.
+- **`proposal-critique` and `complexity-critique`** as separate skills,
+  with `test-bba-description.sh` and the three per-skill compaction tests.
+
+### Added
+
+- **`critique`** — one skill, two lenses: `mode: proposal` triages a list,
+  plan, or prose recommendation into KEEP / DEFER / DROP; `mode: complexity`
+  weighs one proposed change on before/after lines and what it obsoletes.
+  Third-party attribution from `complexity-critique` moves with it.
+- **`start_delivery.py` rewritten** — writes
+  `docs/loom/intent/<change-id>.md` with `originator: map:<map-id>` and
+  `map: <map-id>`, then lists the change-id under the Destination
+  acceptance criterion it serves as
+  `- delivery-intent: DA-<n> | <intent path>` in Notes. Re-running reuses
+  the intent and rewrites nothing.
+- **Derived delivery state** — the intent's `status:` is the state
+  (`open` blocks its criterion, `confirmed` is in delivery, `closed` lets
+  the criterion be satisfied, `withdrawn` is annotated `retired — <reason>`
+  and needs a replacement intent or direct DA evidence). The Map is
+  read-only on intents.
+- `test_skill_count.py`, `test_decision_map_intent_binding.py`,
+  and a rewritten `test_start_delivery.py`.
+
 ## [3.2.0] — 2026-08-31 — goal-create Stop-when repair
 
 ### Changed
