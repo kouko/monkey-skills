@@ -71,6 +71,28 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 4,
+      "scope": "spec",
+      "spec_sha": "7e12444",
+      "findings_file": "evidence/spec-review-r4.md",
+      "reviewer": "codex-review-spec-4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 4,
+      "scope": "spec",
+      "spec_sha": "7e12444",
+      "findings_file": "evidence/spec-review-r4.md",
+      "reviewer": "sonnet-review-spec-4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS_WITH_NOTES"
     }
   ],
   "probes": [
@@ -129,6 +151,22 @@
       "sha": "cc5a67a9",
       "result": "NEEDS_REVISION — 1 fatal, 4 important; 5 round-2 escapes hold",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r3.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v5 alone (sonnet-coldread-spec-4)",
+      "sha": "bc122370",
+      "result": "4 guesses, 2 anchor mismatches (one a real incorrect fact: R28-O2's target no longer exists)",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r4.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v5 (sonnet-redteam-spec-4)",
+      "sha": "bc122370",
+      "result": "NEEDS_REVISION — 0 fatal, 5 important; round-3 fatal and 2c/2e/2f hold, 2a reopened via new attack (c)",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r4.md"
     }
   ],
   "questions": [
@@ -388,7 +426,8 @@
       "raised_by": [
         "sonnet-redteam-spec-2"
       ],
-      "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches"
+      "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
     },
     {
       "id": "spec-R9",
@@ -422,7 +461,8 @@
         "sonnet-review-spec-3",
         "sonnet-redteam-spec-3"
       ],
-      "text": "REQ-1 residual assigns catching a smuggled file in the close commit to the user reading the PR diff — contradicts PRINCIPLES.md Non-negotiables 1-2 and the 'Won't do' line; the close commit needs a machine review, not a user diff read (same substance as spec-R8, which is therefore not closable by disclosure)"
+      "text": "REQ-1 residual assigns catching a smuggled file in the close commit to the user reading the PR diff — contradicts PRINCIPLES.md Non-negotiables 1-2 and the 'Won't do' line; the close commit needs a machine review, not a user diff read (same substance as spec-R8, which is therefore not closable by disclosure)",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
     },
     {
       "id": "spec-C10",
@@ -432,7 +472,8 @@
       "raised_by": [
         "codex-review-spec-3"
       ],
-      "text": "Acceptance #3 negative case covers altered byte and extra file only; deletion and mode-only plumbing changes promised by REQ-3 are unverified (spec-C8 partly reopened)"
+      "text": "Acceptance #3 negative case covers altered byte and extra file only; deletion and mode-only plumbing changes promised by REQ-3 are unverified (spec-C8 partly reopened)",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
     },
     {
       "id": "spec-S7",
@@ -443,7 +484,8 @@
         "sonnet-review-spec-3",
         "sonnet-redteam-spec-3"
       ],
-      "text": "'closed is terminal' overstates: a branch that never carries the close commit (forked from trunk before the merge, or rebased around it) has an empty -S history and current status confirmed, so intake passes"
+      "text": "'closed is terminal' overstates: a branch that never carries the close commit (forked from trunk before the merge, or rebased around it) has an empty -S history and current status confirmed, so intake passes",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
     },
     {
       "id": "spec-R11",
@@ -453,7 +495,8 @@
       "raised_by": [
         "sonnet-redteam-spec-3"
       ],
-      "text": "reopen check uses a literal single-space pickaxe -S'status: closed' while the grammar regex may be whitespace-lenient; a hand-edited double-space closed line parses as closed but never matches the pickaxe"
+      "text": "reopen check uses a literal single-space pickaxe -S'status: closed' while the grammar regex may be whitespace-lenient; a hand-edited double-space closed line parses as closed but never matches the pickaxe",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
     },
     {
       "id": "spec-R12",
@@ -463,7 +506,8 @@
       "raised_by": [
         "sonnet-redteam-spec-3"
       ],
-      "text": "Path(__file__).resolve() test: a symlink or copy of the checker placed outside .codex/hooks/ flips the exemption on even on Codex, falsifying 'no exemption applies'"
+      "text": "Path(__file__).resolve() test: a symlink or copy of the checker placed outside .codex/hooks/ flips the exemption on even on Codex, falsifying 'no exemption applies'",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
     },
     {
       "id": "spec-R13",
@@ -473,7 +517,78 @@
       "raised_by": [
         "sonnet-redteam-spec-3"
       ],
-      "text": "'canonical is whichever checkout the hook invoked' lets a deliberately older cached plugin version serve as canonical, so plumbing matching superseded weaker content escapes trailer duty"
+      "text": "'canonical is whichever checkout the hook invoked' lets a deliberately older cached plugin version serve as canonical, so plumbing matching superseded weaker content escapes trailer duty",
+      "resolved": "resolved: 219a4653 (spec v5) for the run-by-hand case (round 4 codex/red team); the loaded-plugin-is-old case reopened as spec-S8"
+    },
+    {
+      "id": "spec-S8",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-review-spec-4"
+      ],
+      "text": "a deliberately downgraded loaded plugin is its own (older, weaker) canonical; no freshness check; v5 frames it as 'not ambiguous' instead of a disclosed residual"
+    },
+    {
+      "id": "spec-R14",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "'not widened' undersells: the verdict-sha gap moves from occasional to the critical path of every ship (one close commit per change by design)"
+    },
+    {
+      "id": "spec-R15",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "'a closed on the trunk is itself the proof of the merge — no PR-number verification is needed' assumes nobody pushes to trunk directly; this repo's branch protection has enforce_admins false and zero required approvals (gh api), loom checks neither"
+    },
+    {
+      "id": "spec-R16",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "case (ii) trunk resolution can be absent (no trunk ref: skipped, not stale) or degenerate to the attacker's own branch via @{upstream}; composed with a rebase the reopen has zero defenses"
+    },
+    {
+      "id": "spec-R17",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "self-identification offset ../contract/manifest.yaml is the plugin/repo layout only; the Codex scaffold puts contract/ inside .codex/hooks/ (codex_scaffold.py CONTRACT_COPY) — one formula stated for two layouts"
+    },
+    {
+      "id": "spec-R18",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "the close round's 'delta is one status line' is a reviewer-stated claim, not a recompute; the tension with the Won't-do line on prose-only gates and Non-negotiable 3 is not named among REQ-1's residuals"
+    },
+    {
+      "id": "spec-B4",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-coldread-spec-4"
+      ],
+      "text": "REQ-6 lists R28-O2 (check=True on the wc skip-guard probe, test_check_mechanisms.py:664) but that probe was deleted by the round-30 rewrite to Python str.split — the nit's target no longer exists; R30-O1's wording reads as current state rather than the fix"
     }
   ],
   "dispatch": [
