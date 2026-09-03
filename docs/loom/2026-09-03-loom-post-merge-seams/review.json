@@ -996,6 +996,64 @@
           "fix": "cite AGENTS.md:35-37"
         }
       ]
+    },
+    {
+      "round": 25,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:4",
+          "text": "needs-design reason still describes two implementations (delete or align grammar), contradicting the single delete path at :12-15",
+          "fix": "rewrite the reason to deletion only"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r7",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:2604",
+          "text": "the AGENTS.md:37 citation fix covered four of five occurrences; the r5-02 resolved note still cites :37",
+          "fix": "fix the fifth occurrence"
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:961",
+          "text": "sonnet r6 record carries a lone nit but verdict PASS_WITH_NOTES; lenses rubric says lone nits yield PASS",
+          "fix": "correct or state the policy"
+        }
+      ]
     }
   ],
   "probes": [
@@ -2601,7 +2659,7 @@
       "raised_by": "sonnet-review-branch-end-r5",
       "severity": "fatal",
       "text": "round-4 resolution claims check_open_questions.py is not wired anywhere; AGENTS.md lists it as an intake self-check and it exits 1 on both intents (`- none` is not in its grammar)",
-      "resolved": "closed in this record — the four round-4 resolved notes now carry the correction (script listed in AGENTS.md:37, exits 1 on `- none`); intents keep `- none` per the 1.0 template SSOT (contract/templates/intent.md:28), drift recorded as open intent c734eb24"
+      "resolved": "closed in this record — the four round-4 resolved notes now carry the correction (script listed in AGENTS.md:35-37, exits 1 on `- none`); intents keep `- none` per the 1.0 template SSOT (contract/templates/intent.md:28), drift recorded as open intent c734eb24"
     },
     {
       "id": "branch-end-r5-03",
@@ -2629,6 +2687,24 @@
       "severity": "important",
       "text": "Proposed outcome offers two mutually exclusive paths (delete vs keep-and-wire) and Acceptance #1 accepts either",
       "resolved": "closed by 5dbadea9 — single path: delete script, test and AGENTS.md entry (agent-decided); Acceptance #1 rewritten to that path only"
+    },
+    {
+      "id": "branch-end-r7-01",
+      "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:4",
+      "origin_sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "raised_by": "codex-review-branch-end-r7",
+      "severity": "important",
+      "text": "needs-design reason still describes two implementations (delete or align grammar), contradicting the single delete path at :12-15",
+      "resolved": "closed by 27d55261 — needs-design reason now names deletion only; the commit body carries the new line verbatim"
+    },
+    {
+      "id": "branch-end-r7-02",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:2604",
+      "origin_sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "raised_by": "sonnet-review-branch-end-r7",
+      "severity": "important",
+      "text": "the AGENTS.md:37 citation fix covered four of five occurrences; the r5-02 resolved note still cites :37",
+      "resolved": "closed in this record — the r5-02 resolved note now reads AGENTS.md:35-37; the only remaining `:37` string is inside the round-6 sonnet finding text itself, which is a verbatim reviewer record and is not edited"
     }
   ],
   "dispatch": [
@@ -3448,6 +3524,30 @@
       "agent_id": "codex-review-branch-end-r7",
       "model": "codex",
       "started": "2026-09-03T17:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r8",
+      "model": "sonnet",
+      "started": "2026-09-03T17:08:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r8",
+      "model": "sonnet",
+      "started": "2026-09-03T17:08:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r8",
+      "model": "codex",
+      "started": "2026-09-03T17:08:39+08:00",
       "fresh_context": true
     }
   ]
