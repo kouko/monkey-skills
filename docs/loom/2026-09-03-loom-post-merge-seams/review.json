@@ -340,6 +340,26 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "PASS"
+    },
+    {
+      "round": 12,
+      "scope": "spec",
+      "spec_sha": "dbe620d",
+      "findings_file": "evidence/design-review-close-shape-opus.md",
+      "reviewer": "opus-design-review-close-shape",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "design",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "deliberate-simplification",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+          "text": "keep the rule as regenerate-and-compare; delete v11's line-level sub-conditions",
+          "fix": "adopted as spec v12"
+        }
+      ]
     }
   ],
   "probes": [
@@ -1159,7 +1179,8 @@
       "raised_by": [
         "sonnet-redteam-spec-10"
       ],
-      "text": "parse_document is last-wins on a headingless or malformed-heading document, so a later spurious status: line overrides the real one and defeats both the transition detection and the before-heading boundary"
+      "text": "parse_document is last-wins on a headingless or malformed-heading document, so a later spurious status: line overrides the real one and defeats both the transition detection and the before-heading boundary",
+      "resolved": "resolved: spec v12 — regenerate-and-compare: a second status line makes the blobs differ; the implementation also counts exactly one status: line per version"
     }
   ],
   "dispatch": [
@@ -1611,6 +1632,22 @@
       "agent_id": "opus-design-review-close-shape",
       "model": "opus",
       "started": "2026-09-03T13:31:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-11",
+      "model": "sonnet",
+      "started": "2026-09-03T13:34:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-11",
+      "model": "codex",
+      "started": "2026-09-03T13:34:51+08:00",
       "fresh_context": true
     }
   ]
