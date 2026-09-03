@@ -1,0 +1,7 @@
+# Package-test suite dependencies (docs/loom/KICKOFF-DEFAULTS.md package-tests).
+# Both CI (.github/workflows/loom-code-ci.yml) and local runs install from
+# this one file — see docs/loom/2026-09-03-package-tests-run-in-parallel.
+pytest
+pytest-xdist
+pyyaml
+markdown-it-py

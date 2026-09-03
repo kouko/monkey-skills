@@ -85,6 +85,10 @@ This is a personal marketplace. Issues and PRs are welcome via the
 skill-development conventions (file paths, two-layer spec, quality
 gates, agent roles, cross-plugin delegation), see [`CLAUDE.md`](CLAUDE.md).
 
+To run the test suite: `python3 -m pip install -r requirements-dev.txt`,
+then run the command in the `package-tests:` line of
+[`docs/loom/KICKOFF-DEFAULTS.md`](docs/loom/KICKOFF-DEFAULTS.md).
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
