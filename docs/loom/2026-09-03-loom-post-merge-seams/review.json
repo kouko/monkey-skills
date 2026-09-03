@@ -115,6 +115,28 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "PASS"
+    },
+    {
+      "round": 6,
+      "scope": "spec",
+      "spec_sha": "9a6f71e",
+      "findings_file": "evidence/spec-review-r6.md",
+      "reviewer": "codex-review-spec-6",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 6,
+      "scope": "spec",
+      "spec_sha": "9a6f71e",
+      "findings_file": "evidence/spec-review-r6.md",
+      "reviewer": "sonnet-review-spec-6",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
     }
   ],
   "probes": [
@@ -205,6 +227,22 @@
       "sha": "de4517d3",
       "result": "NEEDS_REVISION — 0 fatal, 2 important, 1 nit; all six round-4 findings HOLD",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r5.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v7 alone and writes out the two tightened checks as code (sonnet-coldread-spec-6)",
+      "sha": "e6f3062c",
+      "result": "8 guesses (all implementation detail: messages, regex text, -G pattern, version source, round filter, co-firing), 0 anchor mismatches",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r6.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v7's two tightenings (sonnet-redteam-spec-6)",
+      "sha": "e6f3062c",
+      "result": "NEEDS_REVISION — 2 fatal, 0 important; all five round-5 items HOLD",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r6.md"
     }
   ],
   "questions": [
@@ -648,7 +686,8 @@
       "raised_by": [
         "codex-review-spec-5"
       ],
-      "text": "disclosure is not conformance: the close-commit review round is enforced by station prose only (verdicts not tied to reviewed_sha) and v6 makes it once per ship; fix = fold a verdict-to-reviewed_sha comparison and the close-commit diff-shape recompute into an existing rule in THIS change (Constraint revision), or a close flow with no commit after the verified checkpoint. Second vendor disagrees (sonnet-review-spec-5 PASS) — recorded whole"
+      "text": "disclosure is not conformance: the close-commit review round is enforced by station prose only (verdicts not tied to reviewed_sha) and v6 makes it once per ship; fix = fold a verdict-to-reviewed_sha comparison and the close-commit diff-shape recompute into an existing rule in THIS change (Constraint revision), or a close flow with no commit after the verified checkpoint. Second vendor disagrees (sonnet-review-spec-5 PASS) — recorded whole",
+      "resolved": "resolved: d3d96241 (spec v7, option A user-decided), confirmed by round 6 (sonnet-review-spec-6 PASS, codex-review-spec-6 notes, sonnet-redteam-spec-6 HOLDS); the tie itself reopened in sharper form as spec-R21/R22"
     },
     {
       "id": "spec-R19",
@@ -658,7 +697,8 @@
       "raised_by": [
         "sonnet-redteam-spec-5"
       ],
-      "text": "case (ii) trusts whatever local ref resolves under the four trunk names; a locally fabricated ref (git branch main <old-sha>, update-ref refs/remotes/origin/main) is indistinguishable from a real fetch — third residual not stated"
+      "text": "case (ii) trusts whatever local ref resolves under the four trunk names; a locally fabricated ref (git branch main <old-sha>, update-ref refs/remotes/origin/main) is indistinguishable from a real fetch — third residual not stated",
+      "resolved": "resolved: d3d96241 (spec v7, option A user-decided), confirmed by round 6 (sonnet-review-spec-6 PASS, codex-review-spec-6 notes, sonnet-redteam-spec-6 HOLDS); the tie itself reopened in sharper form as spec-R21/R22"
     },
     {
       "id": "spec-R20",
@@ -668,7 +708,38 @@
       "raised_by": [
         "sonnet-redteam-spec-5"
       ],
-      "text": "Path(__file__).resolve() follows a symlink: a symlinked .codex/hooks/loom_checker.py pointing at a genuine canonical resolves outside .codex/hooks/, classifies itself as canonical and grants Codex the exemption REQ-3 says it never has; fix = classify by the invoked path (no resolve) and treat a symlink at a plumbing path as gate work"
+      "text": "Path(__file__).resolve() follows a symlink: a symlinked .codex/hooks/loom_checker.py pointing at a genuine canonical resolves outside .codex/hooks/, classifies itself as canonical and grants Codex the exemption REQ-3 says it never has; fix = classify by the invoked path (no resolve) and treat a symlink at a plumbing path as gate work",
+      "resolved": "resolved: d3d96241 (spec v7, option A user-decided), confirmed by round 6 (sonnet-review-spec-6 PASS, codex-review-spec-6 notes, sonnet-redteam-spec-6 HOLDS); the tie itself reopened in sharper form as spec-R21/R22"
+    },
+    {
+      "id": "spec-C12",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "codex-review-spec-6"
+      ],
+      "text": "REQ-1 says unconditionally 'closed reaches the trunk only by the merge' while Design decision 1 conditions it on the trunk receiving only merges (admin direct push not caught) — one sentence contradicts its own stated boundary"
+    },
+    {
+      "id": "spec-R21",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "sonnet-redteam-spec-6"
+      ],
+      "text": "the sha tie exempts verdicts whose self-reported scope is `spec`; a round reviewing the close commit (or any code delta) labelled scope: spec, or one mislabelled verdict in a mixed round, owes no sha and check_verdicts never partitions by scope — the exemption is a label, not a recompute"
+    },
+    {
+      "id": "spec-R22",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "sonnet-redteam-spec-6"
+      ],
+      "text": "two-commit dodge: R1 → A (docs-typed, no trailer duty) → C (close, one line vs its own parent A) → R2; the shape recompute reads only HEAD^'s own diff, so A is invisible to every push rule while the close round's prose claims the delta is one line"
     }
   ],
   "dispatch": [
