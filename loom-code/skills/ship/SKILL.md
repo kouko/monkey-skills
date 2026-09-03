@@ -291,7 +291,36 @@ mandatory.
 Resolve the number once and reuse it: `gh pr view "$PR_URL" --json number
 --jq .number`.
 
-## 6. Merge, verify, close the intent
+## 6. Close the intent, then merge, then verify
+
+Close the intent on the branch, before the merge — the pull request
+already has a number (§5), so the status line can be written now:
+
+```
+git commit -m "docs(loom): close intent <change-id>" \
+  -- docs/loom/intent/<change-id>.md
+```
+
+The commit changes exactly one line, `status:`, from `confirmed <date>` to
+`closed <YYYY-MM-DD> — PR #<N>`; nothing else in the file moves.
+
+That commit needs its own checkpoint before it can be pushed. Call
+`loom-code:review` again, scope `branch-end`, delta
+`<reviewed_sha>..<close commit>`: two fresh reviewers under the docs and
+user-judgment-leak lenses, each stating the delta is that one status line
+and nothing else; every verdict carries `sha: <close commit>`; package
+tests and adversarial probes are re-pinned there. No blind run is owed —
+an intent-typed delta has no Acceptance line to walk, and the branch-end
+blind-run report already covers the change. Then the review-only commit,
+`reviewed_sha` set to the close commit, and push again.
+
+Consequence: the commit right before a review-only commit may not touch
+any intent file for a reason other than closing it — not decision point
+①'s confirmation commit, not a new intent from `maintain`, not an
+amendment; each of those goes in its own, earlier commit.
+`push.review-only-head` blocks any other shape there and says so. Merging
+before this sequence finishes leaves the intent looking unfinished on
+`main`; say so in the final report if the session ends first.
 
 Merge when the user asks and CI is green. Read the body back from the pull
 request itself rather than from the file written earlier — the file may be
@@ -322,24 +351,6 @@ to find and this step is skipped, said out loud rather than silently.
 When loom-workflow is installed, `loom-workflow:git-memory --verify-merged`
 runs the same check with the trailer grammar it owns; prefer it, and fall
 back to the grep above when it is not there.
-
-Finally, close the intent. The status line cannot be written on the branch
-(the merge has not happened yet there) and this station never commits to
-`main` mid-flow, so it is written **after** the merge — by whoever touches
-the repo next, which is usually this session:
-
-```
-git switch main && git pull --ff-only
-# edit docs/loom/intent/<change-id>.md:
-#   status: closed <YYYY-MM-DD> — PR #<N>
-git add docs/loom/intent/<change-id>.md
-git commit -m "docs(loom): close intent <change-id>"
-```
-
-An intent left `confirmed` after its pull request merged is a change that
-looks unfinished to every later station, and to the decision map that
-points at it. If the merge happens later, out of session, say this
-explicitly in the final report so the user or the next change can do it.
 
 ## 7. Clean-up
 
