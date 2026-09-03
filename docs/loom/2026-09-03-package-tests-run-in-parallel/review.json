@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+  "reviewed_sha": "8a6a2824355d899248af3d83cf6bb8b5f3ce47ab",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -94,7 +94,7 @@
       "model": "codex",
       "lens": "docs",
       "verdict": "NEEDS_REVISION",
-      "sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "dimension_scores": {
         "omission": "PASS_WITH_NOTES",
         "ambiguity": "PASS",
@@ -131,7 +131,7 @@
       "model": "sonnet",
       "lens": "docs",
       "verdict": "NEEDS_REVISION",
-      "sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "dimension_scores": {
         "omission": "PASS_WITH_NOTES",
         "ambiguity": "PASS",
@@ -143,13 +143,13 @@
         {
           "severity": "fatal",
           "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: probes[] adversarial result",
-          "text": "at 94a0b077 the probe file gives 1 failed, 11 passed: 5e1cc51c put trailing comments on requirements lines and the probe mutation matches whole lines, so the attack silently stopped attacking; the recorded pass (pinned at 5668d542) does not hold at the reviewed sha",
-          "fix": "re-run at the reviewed sha or fold in the whole-line fix (21c2c1e9) and re-verify"
+          "text": "at 4e0a0a65 the probe file gives 1 failed, 11 passed: 8ae7ee6d put trailing comments on requirements lines and the probe mutation matches whole lines, so the attack silently stopped attacking; the recorded pass (pinned at 5668d542) does not hold at the reviewed sha",
+          "fix": "re-run at the reviewed sha or fold in the whole-line fix (48bee4d5) and re-verify"
         },
         {
           "severity": "fatal",
           "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: open_findings[branch-end-04].resolved",
-          "text": "the cited proof (probe passes) does not hold at 94a0b077",
+          "text": "the cited proof (probe passes) does not hold at 4e0a0a65",
           "fix": "reopen or re-verify at the reviewed sha"
         },
         {
@@ -169,7 +169,7 @@
       "model": "codex",
       "lens": "docs",
       "verdict": "PASS_WITH_NOTES",
-      "sha": "220992c1e845fc70d782f4715fdf7005bec9b080",
+      "sha": "32b5213be4cf29a49466560245b526c14bd523a7",
       "dimension_scores": {
         "omission": "PASS",
         "ambiguity": "PASS",
@@ -194,7 +194,7 @@
       "model": "sonnet",
       "lens": "docs",
       "verdict": "PASS_WITH_NOTES",
-      "sha": "220992c1e845fc70d782f4715fdf7005bec9b080",
+      "sha": "32b5213be4cf29a49466560245b526c14bd523a7",
       "dimension_scores": {
         "omission": "PASS",
         "ambiguity": "PASS",
@@ -220,7 +220,7 @@
       "model": "codex",
       "lens": "docs",
       "verdict": "PASS",
-      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "sha": "8a6a2824355d899248af3d83cf6bb8b5f3ce47ab",
       "dimension_scores": {
         "omission": "PASS",
         "ambiguity": "PASS",
@@ -238,7 +238,7 @@
       "model": "sonnet",
       "lens": "docs",
       "verdict": "PASS",
-      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "sha": "8a6a2824355d899248af3d83cf6bb8b5f3ce47ab",
       "dimension_scores": {
         "omission": "PASS",
         "ambiguity": "PASS",
@@ -277,7 +277,7 @@
     {
       "kind": "package-tests",
       "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
-      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "sha": "8a6a2824355d899248af3d83cf6bb8b5f3ce47ab",
       "result": "1063 passed in 36.19s",
       "artifact": "",
       "scope": "branch-end"
@@ -285,7 +285,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q",
-      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "sha": "8a6a2824355d899248af3d83cf6bb8b5f3ce47ab",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
       "scope": "branch-end"
@@ -306,7 +306,7 @@
       "raised_by": "codex-review-branch-end",
       "severity": "important",
       "text": "README path does not establish a clean environment",
-      "resolved": "closed by 5e1cc51c — README Contributing now carries clone, cd, venv (python -m venv or uv venv), install and the package-tests line"
+      "resolved": "closed by 8ae7ee6d — README Contributing now carries clone, cd, venv (python -m venv or uv venv), install and the package-tests line"
     },
     {
       "id": "branch-end-02",
@@ -324,7 +324,7 @@
       "raised_by": "sonnet-review-branch-end",
       "severity": "nit",
       "text": "no per-dependency rationale in the file",
-      "resolved": "closed by 5e1cc51c — one trailing comment per package"
+      "resolved": "closed by 8ae7ee6d — one trailing comment per package"
     },
     {
       "id": "branch-end-04",
@@ -338,65 +338,65 @@
     {
       "id": "branch-end-05",
       "anchor": "README.md:92",
-      "origin_sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "origin_sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "raised_by": "codex-review-branch-end-r2",
       "severity": "important",
       "text": "uv alternative omits activation, so pytest may run on the system interpreter",
-      "resolved": "closed by aceff4e8 — uv path now activates .venv before install and pytest"
+      "resolved": "closed by b5080e2c — uv path now activates .venv before install and pytest"
     },
     {
       "id": "branch-end-06",
       "anchor": "README.md:99",
-      "origin_sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "origin_sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "raised_by": "codex-review-branch-end-r2",
       "severity": "important",
       "text": "\"CI runs the same line\" is false: README/KICKOFF use -q, CI uses -v",
-      "resolved": "closed by aceff4e8 — README says CI runs the same test paths and -n auto with -v in place of -q"
+      "resolved": "closed by b5080e2c — README says CI runs the same test paths and -n auto with -v in place of -q"
     },
     {
       "id": "branch-end-07",
       "anchor": "requirements-dev.txt:4",
-      "origin_sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "origin_sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "raised_by": "codex-review-branch-end-r2",
       "severity": "nit",
       "text": "-n auto is one worker per detected available CPU, not per core",
-      "resolved": "closed by aceff4e8 — \"one worker per detected available CPU\""
+      "resolved": "closed by b5080e2c — \"one worker per detected available CPU\""
     },
     {
       "id": "branch-end-08",
       "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: probes[] adversarial result",
-      "origin_sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "origin_sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "raised_by": "sonnet-review-branch-end-r2",
       "severity": "fatal",
-      "text": "at 94a0b077 the probe file gives 1 failed, 11 passed: 5e1cc51c put trailing comments on requirements lines and the probe mutation matches whole lines, so the attack silently stopped attacking; the recorded pass (pinned at 5668d542) does not hold at the reviewed sha",
-      "resolved": "closed by 21c2c1e9 — requirements-dev.txt back to whole-line package entries (reason on the line above); the probe file gives 12 passed at 21c2c1e9 and again at aceff4e8; the round-3 review-only commit re-pins the probe at its reviewed sha (the round-1 record was pinned at 5668d542, where it did pass — the regression was introduced by 5e1cc51c inside round 2)"
+      "text": "at 4e0a0a65 the probe file gives 1 failed, 11 passed: 8ae7ee6d put trailing comments on requirements lines and the probe mutation matches whole lines, so the attack silently stopped attacking; the recorded pass (pinned at 5668d542) does not hold at the reviewed sha",
+      "resolved": "closed by 48bee4d5 — requirements-dev.txt back to whole-line package entries (reason on the line above); the probe file gives 12 passed at 48bee4d5 and again at b5080e2c; the round-3 review-only commit re-pins the probe at its reviewed sha (the round-1 record was pinned at 5668d542, where it did pass — the regression was introduced by 8ae7ee6d inside round 2)"
     },
     {
       "id": "branch-end-09",
       "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: open_findings[branch-end-04].resolved",
-      "origin_sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "origin_sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "raised_by": "sonnet-review-branch-end-r2",
       "severity": "fatal",
-      "text": "the cited proof (probe passes) does not hold at 94a0b077",
-      "resolved": "closed by 21c2c1e9 — branch-end-04 resolution holds again: the probe passes at every commit from 21c2c1e9 on; re-pinned in the round-3 review-only commit"
+      "text": "the cited proof (probe passes) does not hold at 4e0a0a65",
+      "resolved": "closed by 48bee4d5 — branch-end-04 resolution holds again: the probe passes at every commit from 48bee4d5 on; re-pinned in the round-3 review-only commit"
     },
     {
       "id": "branch-end-10",
       "anchor": "README.md:100-102",
-      "origin_sha": "94a0b077fc8aec60eab5d973f98dd93e661f59bc",
+      "origin_sha": "4e0a0a6583b6cc067ca775eea17e922ab67615db",
       "raised_by": "sonnet-review-branch-end-r2",
       "severity": "important",
       "text": "\"CI runs the same line\" is not literally true (-v vs -q)",
-      "resolved": "closed by aceff4e8 — same wording fix as branch-end-06"
+      "resolved": "closed by b5080e2c — same wording fix as branch-end-06"
     },
     {
       "id": "branch-end-11",
       "anchor": "docs/loom/KICKOFF-DEFAULTS.md:8",
-      "origin_sha": "220992c1e845fc70d782f4715fdf7005bec9b080",
+      "origin_sha": "32b5213be4cf29a49466560245b526c14bd523a7",
       "raised_by": "sonnet-review-branch-end-r3",
       "severity": "important",
       "text": "KICKOFF comment still claims \"same line as CI\"",
-      "resolved": "closed by e26c6ae4 — comment now reads \"CI runs the same test paths and -n auto with -v in place of -q\", and the CPU wording matches requirements-dev.txt"
+      "resolved": "closed by 18b9cac2 — comment now reads \"CI runs the same test paths and -n auto with -v in place of -q\", and the CPU wording matches requirements-dev.txt"
     }
   ],
   "dispatch": [
@@ -511,6 +511,36 @@
       "model": "codex",
       "started": "2026-09-03T22:38:44+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "orchestrator-inline",
+      "model": "fable",
+      "started": "2026-09-03T19:30:00+08:00",
+      "fresh_context": false,
+      "note": "README/requirements-dev.txt/KICKOFF wording fixes in rounds 1-3, committed inline by the orchestrator; recorded after the fact (the dispatch was never written) — this entry is the honest reconstruction"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T22:47:53+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r5",
+      "model": "codex",
+      "started": "2026-09-03T22:47:53+08:00",
+      "fresh_context": true
     }
-  ]
+  ],
+  "history_rewrite": {
+    "date": "2026-09-03",
+    "why": "push.dispatch-covers-tasks: three orchestrator-inline commits (README/requirements-dev.txt/KICKOFF wording fixes) lacked a Task trailer; kouko ran git filter-branch --msg-filter adding `Task: W0-01` to them; every sha after 05ff96dd changed, so the sha fields above were remapped by commit subject and a fresh round (5) re-reads the tree",
+    "old_reviewed_sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4"
+  }
 }
