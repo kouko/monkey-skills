@@ -10,7 +10,7 @@ kind: engineering　needs-design: yes（spec 已 PASS，本段不含 Current Sta
 - 五個 wave＝五次 checkpoint（build 上限 5，concept-model §5）；`review: after-task` 兩處（上限 2）。
 - 進度＝commit 的 `Task: <id>` trailer；沒有 Status 帳。
 - 版本：loom-code 0.110.0 → **1.0.0**、loom-design 0.6.0 → **1.0.0**、loom-workflow 3.2.0 → **4.0.0**（皆 breaking）。三表面各 bump：`plugin.json`、CHANGELOG、root README 的該列（版本＋skill 數欄＋描述句都要改；歷史上第 13 次漏掉的表面）＋ `.claude-plugin/marketplace.json` 三段描述（loom-design 現寫「deterministic pipeline conductor」）。
-- 基線（落地時寫進 `docs/loom/KICKOFF-DEFAULTS.md`）：`session-start-baseline: 923fb84a 5278`（merge-base `923fb84a`，命令 `bash loom-code/hooks/session-start </dev/null | LC_ALL=C wc -w`，cwd 為空 git repo；本 plan 撰寫時在 Mac 語系下實測 5281，CI-1 後改用 LC_ALL=C 計法為 5278）。目標 ≤ 2639。
+- 基線（落地時寫進 `docs/loom/KICKOFF-DEFAULTS.md`）：`session-start-baseline: 923fb84a 5278`（merge-base `923fb84a`，命令 `bash loom-code/hooks/session-start </dev/null | python3 -c 'import sys;print(len(sys.stdin.read().split()))'`，cwd 為空 git repo；本 plan 撰寫時用 Mac 的 wc 實測 5281，CI-1／CI-2 後改用 Python str.split 計法為 5278）。目標 ≤ 2639。
 
 ### skill 收斂表（36 → 17，另 2 個不計數）
 
@@ -53,8 +53,8 @@ checkpoint：W0 結束必跑（新增檔 > 8）。
 - 風：`reviewer ≠ implementer` 只能查記錄，記錄本身可造（§0 明說不防）；測試只驗「有記錄且不同」。
 
 **W0-05 host hooks：Claude Code 接線＋Codex scaffold**　after: W0-04
-- 檔：`loom-code/hooks/hooks.json` 重寫（SessionStart→新 session-start；PreToolUse Bash 匹配 `git push`／`gh pr create`／`gh pr merge`→`loom_checker.py push`；刪 ask-triage、language-stop-check、git-guard、family-reception、family-relay、plain-relay、router-card；**保留 language-anchor＋lang_detect**（理由見風）；連同 `loom-code/scripts/test_ask_triage_hook.py`、`test_git_guard.py`、`test_language_stop_check_hook.py`、`test_family_relay_artifact_routing.py`、`test_reception_onramp_choice.py`、`test_continuous_mode_router.py` 與 `loom-code/tests/integration/test-router-card-slim.sh` 一併 `git rm`）；`loom-code/hooks/session-start`（重寫，≤2639（LC_ALL=C 計法，CI-1 後） words，只印：站序一行、三個決策點、KICKOFF-DEFAULTS 摘要）；`loom-code/scripts/codex_scaffold.py`（寫 `.codex/hooks.json` 固定 command `.codex/hooks/loom-checker` ＋ checker 副本含版本戳；`--self-test` 自己叫起副本派假 push 必被擋（只證明副本跑得起來，不證明信任）；未擋→exit 2。信任由站自己發一道必敗的 `git push loom-trust-probe HEAD`「誰回答」來判，答的是 git→印「請在 Codex 跑 /hooks」）。
-- 測：`test_hooks_json.py`（matcher 集合、無舊 hook）、`test_session_start_words.py`（≤2639，cwd 空 repo；LC_ALL=C 計法）、`test_codex_scaffold.py`（command 字串不含版本、重跑冪等、self-test 未擋 exit 2）。
+- 檔：`loom-code/hooks/hooks.json` 重寫（SessionStart→新 session-start；PreToolUse Bash 匹配 `git push`／`gh pr create`／`gh pr merge`→`loom_checker.py push`；刪 ask-triage、language-stop-check、git-guard、family-reception、family-relay、plain-relay、router-card；**保留 language-anchor＋lang_detect**（理由見風）；連同 `loom-code/scripts/test_ask_triage_hook.py`、`test_git_guard.py`、`test_language_stop_check_hook.py`、`test_family_relay_artifact_routing.py`、`test_reception_onramp_choice.py`、`test_continuous_mode_router.py` 與 `loom-code/tests/integration/test-router-card-slim.sh` 一併 `git rm`）；`loom-code/hooks/session-start`（重寫，≤2639（Python str.split 計法，CI-2 後） words，只印：站序一行、三個決策點、KICKOFF-DEFAULTS 摘要）；`loom-code/scripts/codex_scaffold.py`（寫 `.codex/hooks.json` 固定 command `.codex/hooks/loom-checker` ＋ checker 副本含版本戳；`--self-test` 自己叫起副本派假 push 必被擋（只證明副本跑得起來，不證明信任）；未擋→exit 2。信任由站自己發一道必敗的 `git push loom-trust-probe HEAD`「誰回答」來判，答的是 git→印「請在 Codex 跑 /hooks」）。
+- 測：`test_hooks_json.py`（matcher 集合、無舊 hook）、`test_session_start_words.py`（≤2639，cwd 空 repo；Python str.split 計法）、`test_codex_scaffold.py`（command 字串不含版本、重跑冪等、self-test 未擋 exit 2）。
 - 風：language-anchor／stop-check 是使用者語言守則（不是 loom 機制），刪掉會失去對話語言錨；**agent-decided：保留 language-anchor＋lang_detect 兩檔**（非 loom 流程機制，登進 mechanisms.yaml 標 `class: host-hygiene`），刪 language-stop-check（與 anchor 重複）。盲跑報告揭露。relay 散文（family-relay／plain-relay）刪除與 concept-model §1「仍需同步的副本」清單衝突——由 W3-06 把 §1 清單改為只剩 checker（§10 已刪 family-reception 契約，relay 是它的配件）。
 
 **W0-06 mechanisms.yaml 與 CI 重算**　after: W0-02, W0-05
@@ -176,7 +176,7 @@ checkpoint：branch 結束必跑（＝W4 checkpoint，含盲跑與對抗）。
 - 風：這個 agent-decided 偏離會在盲跑報告「我替你決定了」段揭露；使用者不接受時的替代＝三個都真 replay（估三個 session）。
 
 **W4-04 量測與 mechanisms 收尾**　after: W3-04, W4-03
-- 做：`check_mechanisms.py --baseline 923fb84a` 淨數；skill 數（17，排除 standalone）；artifact 種類（≤5）；session-start 字數（≤2639，LC_ALL=C 計法）；名詞手數；`needs-design` intent 數等記錄項——結果寫 `evidence/measurements.md` 並貼進盲跑報告。
+- 做：`check_mechanisms.py --baseline 923fb84a` 淨數；skill 數（17，排除 standalone）；artifact 種類（≤5）；session-start 字數（≤2639，Python str.split 計法）；名詞手數；`needs-design` intent 數等記錄項——結果寫 `evidence/measurements.md` 並貼進盲跑報告。
 - 風：淨數基線在 923fb84a 沒有 mechanisms.yaml——`--baseline` 對舊 ref 用「skill 目錄＋hooks.json 條目」兩類近似，寫明。
 
 **W4-05 盲跑報告（決策點③）**　after: W4-01..04

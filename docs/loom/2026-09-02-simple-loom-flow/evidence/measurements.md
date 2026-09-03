@@ -4,7 +4,7 @@
 |---|---|---|---|
 | skill 數（計數） | 17（loom-code 5、loom-design 4、loom-workflow 8＋2 standalone） | ≤18（REQ-8） | `check_mechanisms.py --measure`；`ls */skills` |
 | artifact 種類（manifest） | 4（intent／spec／plan／review）＋diff/PR＝5 形狀 | ≤5（REQ-5／REQ-8） | 同上 |
-| session-start 注入字數 | 655（LC_ALL=C；先前 658／5281 是 Mac 語系下數的） | ≤2639（基線 5278 的一半；REQ-8） | `bash loom-code/hooks/session-start </dev/null \| LC_ALL=C wc -w`（空 repo）；基線由 923fb84a 重算相符 |
+| session-start 注入字數 | 655（Python str.split 計法；先前 658／5281 是 Mac 的 wc 數的） | ≤2639（基線 5278 的一半；REQ-8） | `bash loom-code/hooks/session-start </dev/null \| python3 -c 'import sys;print(len(sys.stdin.read().split()))'`（空 repo）；基線由 923fb84a 重算相符 |
 | checker 規則 | 27 | — | `loom_checker.py --list-rules \| wc -l` |
 | 機制淨數 | 128（不含 host-hygiene） | 基線 41 為近似值（origin/main 無 mechanisms.yaml）；R3 在 merge 後才真正 gate | `check_mechanisms.py --baseline origin/main` |
 | 名詞（手數，§3 規則） | 61 | ≤40 為 intent Open question，**未達** | concept-model §3（W3-06） |

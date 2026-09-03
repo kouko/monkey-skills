@@ -1,6 +1,6 @@
 # loom 重設計 — spec
 intent: 2026-09-02-simple-loom-flow@be19b961
-confirmed-behavior: 2026-09-03 @8844407   # 2026-09-03 REQ-8 只改計數命令措辭（LC_ALL=C 加在 wc 上，CI-1），非可見行為變更；此行由 agent 重釘到新 blob，kouko 的重確認尚未取得（ship 前請 kouko 一句確認）
+confirmed-behavior: 2026-09-03 @7c92f36   # 2026-09-03 REQ-8 只改計數命令措辭（改為 Python str.split 計數，CI-1／CI-2），非可見行為變更；此行由 agent 重釘到新 blob，kouko 的重確認尚未取得（ship 前請 kouko 一句確認）
 
 ## Requirements                                    【使用者可讀】
 REQ-1 — 決策點數固定
@@ -19,7 +19,7 @@ REQ-6 — 決定性層靠重算
 REQ-7 — 准入規則可機械驗
   機制母體＝`docs/loom/evidence/mechanisms.yaml`，五類各有可重算面（skill 目錄、checker `--list-rules` 輸出、hooks.json 條目、`loom-code/contract/manifest.yaml` 宣告、SKILL.md 內 `<!-- gate: id -->` 標記）；checker 必須提供 `--list-rules`；CI 重算五類與 yaml 比對：漏登→紅、yaml 有而清單無→紅、淨數增且 CHANGELOG 無 `budget-exception: <id> — <reason>`→紅、無 eval→紅。→ Acceptance #7
 REQ-8 — 瘦身目標
-  skill ≤ 18（站＋計數工具；reference 與 standalone 工具不計；plan 目標 17）；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝本 change 合併前 main 的固定 SHA，落地時記進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`；命令 `bash loom-code/hooks/session-start </dev/null | LC_ALL=C wc -w`，LC_ALL 加在 wc 上，cwd 為空 git repo）。→ Acceptance #5
+  skill ≤ 18（站＋計數工具；reference 與 standalone 工具不計；plan 目標 17）；每 change 文件形狀 ≤ 5；session-start 注入字數 ≤ 基線之半（基線＝本 change 合併前 main 的固定 SHA，落地時記進 KICKOFF-DEFAULTS `session-start-baseline: <sha> <words>`；命令 `bash loom-code/hooks/session-start </dev/null | python3 -c 'import sys;print(len(sys.stdin.read().split()))'`（Python str.split 計數，不用 wc：GNU 與 BSD wc 對非 ASCII 詞的判定不一致），cwd 為空 git repo）。→ Acceptance #5
   （名詞 ≤ 40 屬 intent Open question：計數規則與基線定案前只記錄，不入本 REQ。）
 REQ-9 — 冷讀可執行
   一個沒看過 loom 的 agent，只拿該站的 SKILL.md，對指定任務（測例固定：Task A「六支腳本抽共用 git helper，只裝 loom-code，Codex」與 Task B「CLI todo 加到期日，兩 plugin，Claude Code」）在 15 分鐘內零猜測說出：會產生哪些檔、誰決定什麼、哪個 checker 在何時擋、審查何時跑；零猜測優先於 15 分鐘。受測站＝該任務的入口站（Task A：write-plan；Task B：capture-intent）；入口站文件必含一張「本 change 的完整站序（含上游已完成者）、各站產生的檔與決策者、checker 時機、checkpoint 時機」摘要表，冷讀者只靠它回答。concept-model.md 只記錄（v10：25 分鐘、零猜測），不作驗收。→ Acceptance #6
