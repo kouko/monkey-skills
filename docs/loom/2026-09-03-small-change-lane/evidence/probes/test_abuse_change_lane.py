@@ -281,7 +281,11 @@ def test_clean_revert_nets_to_zero_diff_is_small(tmp_path: Path) -> None:
     base..HEAD tree diff `changed_paths()` uses (RIGHT: nets to nothing).
     Expected (after W0-02): change_lane == "small" (the file does not even
     appear in changed_paths, since it is byte-identical to main's copy).
-    Observed (before W0-02): FAIL -- change_lane does not exist."""
+    Observed (after W0-02, commit 4c1ac027): PASS -- change_lane == "small".
+    Fixture note: the original `git revert -q --no-edit HEAD` failed with
+    exit 129 under Apple Git 2.50.1 (`-q` is not a valid `git revert` flag
+    there); dropping `-q` (keeping `--no-edit`) fixed the fixture itself,
+    not the assertion."""
     repo = tmp_path / "repo"
     repo.mkdir()
     git(repo, "init", "-q", "-b", "main")
@@ -297,7 +301,7 @@ def test_clean_revert_nets_to_zero_diff_is_small(tmp_path: Path) -> None:
     target.write_text("value = 2\n", encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "feat: bump")
-    git(repo, "revert", "-q", "--no-edit", "HEAD")
+    git(repo, "revert", "--no-edit", "HEAD")
     sha = git(repo, "rev-parse", "HEAD")
     assert _change_lane(repo, sha) == "small"
 
