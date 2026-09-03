@@ -75,13 +75,53 @@ yourself scores `PASS_WITH_NOTES` naming what you did not verify.
 
 ## Severity
 
+Severity is decided by consequence, not by where the finding lands or how
+literally wrong the text reads:
+
 - `fatal` — a defect that ships: a wrong result, an exploitable hole, a
   lost guarantee, an instruction that makes an executor do the wrong thing.
-- `important` — should be fixed before merge, but nothing is broken today.
-- `nit` — informational; the author may ignore it.
+- `important` — a reader following the text would act wrongly, or a fact
+  the checker or CI relies on (a path, a command, a number a rule reads
+  back) is wrong.
+- `nit` — everything else: wording, terminology, units, the same fact
+  stated two ways, readability. A sentence can be literally incorrect and
+  still a `nit` if a reader following it still does the right thing and no
+  checker or CI step reads the wrong part. `nit`s never open a round —
+  `ship` folds them into one commit before push and you confirm each fix
+  in one line, not a new round.
+
+**Style, when the repo declares `docs-lint`.** Read
+`docs/loom/KICKOFF-DEFAULTS.md`. When it carries a `docs-lint: <command>`
+line, style is out of scope entirely for you: raise no finding of any
+severity — not even a `nit` — for wording, phrasing, or terminology; that
+command is the repo's own style gate and runs separately. When the line is
+`none` or absent, style findings are capped at `nit` — never `important`
+or `fatal` on style alone.
 
 Any `fatal` → `NEEDS_REVISION`. Two or more `important` → `NEEDS_REVISION`.
 One `important` → `PASS_WITH_NOTES`. Only nits, or none → `PASS`.
+
+## Fix rounds — when you are the resumed reader
+
+`NEEDS_REVISION` sends the change back for fix work, then this station
+dispatches again for the next round of the same checkpoint — resuming
+**the same agent that wrote the previous round's verdict**, never a fresh
+one. You are given your own previous `findings` list and the delta since
+that round's reviewed commit (the fix commits only, not the whole
+checkpoint again):
+
+- Mark each of your previous findings `fixed` or `unfixed`, against the
+  fix delta you were just given.
+- Raise no new finding outside that delta, unless the fix itself broke
+  something the delta touches — you are re-reading your own list, not
+  re-reviewing the checkpoint.
+- Do not re-run probes; the push gate re-runs them itself.
+- The orchestrator may rebut a finding with evidence; accept it and mark
+  the finding `dismissed`, or hold your ground and say why.
+- A third round on the same checkpoint means the fix is not converging —
+  hand your finding history to a higher-tier agent for a one-question
+  design re-look before any further fix round, rather than iterating a
+  fourth time on the same wording.
 
 ## Output
 

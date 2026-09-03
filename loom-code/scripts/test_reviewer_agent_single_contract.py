@@ -287,7 +287,7 @@ def test_body_word_count(skill_text):
 # Facts the station cannot be run without: each is pinned by the substring
 # that carries it rather than by the section it happens to live in.
 LOAD_BEARING = [
-    ("SKILL.md", "two fresh-context reviewers"),
+    ("SKILL.md", "two or more fresh-context reviewers"),
     ("SKILL.md", "second-vendor:"),
     ("SKILL.md", "codex exec --sandbox read-only"),
     ("SKILL.md", "never suggests"),
