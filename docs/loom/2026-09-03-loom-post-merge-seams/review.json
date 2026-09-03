@@ -5,8 +5,56 @@
   "anthropic",
   "openai"
  ],
- "verdicts": [],
- "probes": [],
+ "verdicts": [
+  {
+   "round": 1,
+   "scope": "spec",
+   "spec_sha": "702f5b7",
+   "findings_file": "evidence/spec-review-r1.md",
+   "reviewer": "codex-review-spec-1",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "spec",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 1,
+   "scope": "spec",
+   "spec_sha": "702f5b7",
+   "findings_file": "evidence/spec-review-r1.md",
+   "reviewer": "sonnet-review-spec-1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "spec",
+   "verdict": "NEEDS_REVISION"
+  }
+ ],
+ "probes": [
+  {
+   "kind": "package-tests",
+   "scope": "spec",
+   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+   "sha": "93b6ea10",
+   "result": "1007 passed in 121.91s (0:02:01)",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "blind-run",
+   "scope": "spec",
+   "command": "cold reader walks Acceptance 1-5 from the spec alone (sonnet-coldread-spec-1)",
+   "sha": "93b6ea10",
+   "result": "3 guesses, 1 anchor mismatch",
+   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r1.md"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "spec",
+   "command": "red-team of REQ-1..6 (sonnet-redteam-spec-1)",
+   "sha": "93b6ea10",
+   "result": "NEEDS_REVISION — 3 fatal, 3 important",
+   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r1.md"
+  }
+ ],
  "questions": [
   {
    "decision_point": 1,
@@ -24,7 +72,173 @@
    "type": "what"
   }
  ],
- "open_findings": [],
+ "open_findings": [
+  {
+   "id": "spec-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "codex-review-spec-1"
+   ],
+   "text": "close-commit push path incomplete: which push rules apply, where review.json / reviewed_sha come from for a post-merge commit",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-C2",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:35",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "codex-review-spec-1"
+   ],
+   "text": "test anchor cites only the declaration; the oracle is dynamic (lines 429-447); PR #781 failure not cited as an artifact",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-C3",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "codex-review-spec-1"
+   ],
+   "text": "\"six\" carried nits; only five are enumerated (intent Constraints too)",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-C4",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "codex-review-spec-1"
+   ],
+   "text": "exact package-test commands and CI jobs not named",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-C5",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "codex-review-spec-1"
+   ],
+   "text": "\"exactly one line\" undefined in git terms (mode, rename, duplicate status field, newline)",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-S1",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: second accepted shape",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-review-spec-1"
+   ],
+   "text": "review-only-head extension conflicts with the intent Constraint \"no rule semantics change\"",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-S2",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: REQ-6 → Acceptance #2",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-review-spec-1"
+   ],
+   "text": "REQ-6 traces to no Acceptance line; it is a Constraint",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-redteam-spec-1"
+   ],
+   "text": "PR number is grammar-only; nothing recomputes that the change merged",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R2",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-redteam-spec-1"
+   ],
+   "text": "closed date not routed through is_real_date",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R3",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-redteam-spec-1"
+   ],
+   "text": "--no-renames not pinned for the new shape",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R6",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:20",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-redteam-spec-1"
+   ],
+   "text": "closed not terminal; silent reopen closed→confirmed unaddressed",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R7",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-redteam-spec-1"
+   ],
+   "text": "REQ-3 exemption is a path prefix, not a content check; doubles a blind spot onto a second gate",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-B1",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-coldread-spec-1"
+   ],
+   "text": "close-commit message text not restated in the spec",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-B2",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-coldread-spec-1"
+   ],
+   "text": "package command not given literally",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-B3",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:14",
+   "origin_sha": "93b6ea10",
+   "raised_by": [
+    "sonnet-coldread-spec-1"
+   ],
+   "text": "how the bumped version is observed after update is unstated",
+   "resolved": "open"
+  }
+ ],
  "dispatch": [
   {
    "task": "spec",
