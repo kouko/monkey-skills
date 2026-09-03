@@ -468,6 +468,81 @@
           "fix": "update like probe 5"
         }
       ]
+    },
+    {
+      "round": 16,
+      "scope": "after-task:W0-05",
+      "sha": "26185d8ed87b9df7a602600a127ae0a04a071455",
+      "findings_file": "evidence/review-after-task-w0-05-r1.md",
+      "reviewer": "codex-review-w0-05",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2672",
+          "text": "stamp equality checked only for loom_checker.py changes",
+          "fix": "gate every plumbing path on the committed copy's stamp"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2753",
+          "text": "rejected plumbing path loses the failure reason",
+          "fix": "carry the reason"
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_loom_checker_push.py:1816",
+          "text": "mixed-commit test green before the exemption exists",
+          "fix": "assert per-path removal"
+        },
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2625",
+          "text": "_plumbing_path_matches_canonical 63 lines",
+          "fix": "split"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "scope": "after-task:W0-05",
+      "sha": "26185d8ed87b9df7a602600a127ae0a04a071455",
+      "findings_file": "evidence/review-after-task-w0-05-r1.md",
+      "reviewer": "sonnet-review-w0-05",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2690",
+          "text": "check_dispatch_covers_tasks grew to 106 lines",
+          "fix": "extract the plumbing filter"
+        },
+        {
+          "severity": "important",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/loom_checker.py:2625",
+          "text": "four canonical branches repeat is_file+mode+byte-compare",
+          "fix": "one shared helper"
+        },
+        {
+          "severity": "nit",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2634",
+          "text": "docstring says the version gates the blob read; it gates the canonical compare",
+          "fix": "reword"
+        }
+      ]
     }
   ],
   "probes": [
@@ -1506,6 +1581,36 @@
         "codex-review-w0-05"
       ],
       "text": "_plumbing_path_matches_canonical is 63 lines"
+    },
+    {
+      "id": "after-task:W0-05-05",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2690",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "sonnet-review-w0-05"
+      ],
+      "text": "check_dispatch_covers_tasks 106 lines"
+    },
+    {
+      "id": "after-task:W0-05-06",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2625",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "sonnet-review-w0-05"
+      ],
+      "text": "four canonical branches duplicate the compare pattern"
+    },
+    {
+      "id": "after-task:W0-05-07",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:2634",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "sonnet-review-w0-05"
+      ],
+      "text": "docstring overstates when the version gate runs"
     }
   ],
   "dispatch": [
