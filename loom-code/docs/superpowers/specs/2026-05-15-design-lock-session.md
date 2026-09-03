@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # 2026-05-15 — loom-code Design Lock Session
 
 > **Type**: Session handoff + decision rationale archive

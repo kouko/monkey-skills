@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Worked example — Swift: refactor network layer to async/await
 
 > **Stack**: Swift 5.9 + iOS 17 + URLSession + XCTest

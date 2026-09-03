@@ -1,0 +1,80 @@
+name: loom-design CI
+
+# Runs the whole loom-design plugin pytest suite (loom-design/scripts/),
+# covering every station directory — interface, principles and spec — in
+# ONE invocation.
+#
+# One job, one invocation: `loom-design/scripts/pytest.ini` sets
+# `--import-mode=importlib`, so same-basename test files across stations
+# no longer collide at collection; the same file's `pythonpath` line puts
+# each station directory on `sys.path`, which importlib mode otherwise
+# stops doing and the repo's bare sibling imports need. Before that root
+# existed the stations needed a job each — this job replaces the four that
+# loom-siblings-ci.yml and loom-spec-ci.yml used to run.
+#
+# Renamed from `loom-pipeline-ci.yml` at loom-design 1.0, when the
+# conductor and `scripts/pipeline/` were deleted. No branch-protection
+# check was bound to the old filename, and the job's display name —
+# `loom-design pytest` — is unchanged. The generated-driver tests that
+# needed Node on the runner went with `scripts/pipeline/`, so this job is
+# pure Python now.
+#
+# Status: intended for `main` branch protection.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'loom-design/**'
+      # The design stations read loom-code's contract package and are
+      # gated by its hooks, so edits to either must fire this gate too.
+      - 'loom-code/hooks/**'
+      - 'loom-code/contract/**'
+      # loom-design/scripts/test_marketplace_entry.py reads the repo-root
+      # marketplace.json, so an edit there must fire this gate too —
+      # else a removed/renamed entry merges ungated (fail-open).
+      - '.claude-plugin/marketplace.json'
+      - '.github/workflows/loom-design-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'loom-design/**'
+      - 'loom-code/hooks/**'
+      - 'loom-code/contract/**'
+      - '.claude-plugin/marketplace.json'
+      - '.github/workflows/loom-design-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  design:
+    name: loom-design pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        # pytest = test runner; pyyaml = test_ci_workflow.py parses this
+        # workflow to check its own path triggers.
+        run: python3 -m pip install --quiet pytest pyyaml
+
+      - name: Run the loom-design scripts pytest suite
+        # Trade accepted deliberately: the deleted per-station jobs gave
+        # per-station visibility in the Actions UI and ran -v, and this one
+        # step gives up both. -q is kept because a >1000-test -v listing is
+        # log noise nobody reads, and pytest still prints the full traceback
+        # plus the `station/test_file.py::test_name` path for every FAILURE,
+        # which is what a red build is actually read for. The unified root is
+        # worth it: one collection means a same-named module cannot be
+        # collected twice under different identities, which is what forced
+        # the fan-out in the first place.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest loom-design/scripts/ -q

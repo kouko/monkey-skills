@@ -1,58 +1,107 @@
 #!/usr/bin/env bash
-# SessionStart hook for loom-code.
-# Reads hooks/router-card.md (slim pre-invocation card: coding mandate +
-# five load-bearing rules + SUBAGENT-STOP) AND hooks/family-reception.md
-# (loom family front door: family map + three doors + on-ramp criteria) and
-# injects both as additionalContext. The full using-loom-code SKILL.md body
-# is NOT injected — the Skill tool loads it on invocation (pull, not push).
-# Rationale + firing gate: docs/loom/plans/2026-07-06-loom-code-router-card-slim.md.
-# DRIFT NOTE: router-card.md's five rules are a hand-maintained tightened
-# copy of skills/using-loom-code/SKILL.md's — edit BOTH on any rule change
-# (rule-level sync is guarded by scripts/test_router_card_rule_tokens.py,
-# which asserts each rule's anchor token in both files; card wording stays
-# deliberately compressed, not byte-identical).
+# SessionStart hook for loom-code (concept-model §4, §7a; plan W0-05 / REQ-8).
 #
-# CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext
-# Per the official Codex hooks contract (developers.openai.com/codex/hooks):
-# "That additionalContext text is added as extra developer context." Claude
-# Code reads the SAME nested camelCase key, so this one shape is what both
-# hosts actually consume.
+# What it injects, and nothing else:
+#   1. one line naming the station order,
+#   2. the three human decision points in plain words,
+#   3. a pointer to the entry station's SKILL.md for the full summary table,
+#   4. the repo's KICKOFF-DEFAULTS lines when that file exists.
 #
-# DEFENSIVE keys (belt-and-suspenders, emitted for cross-version/host
-# portability — NOT because Codex requires snake_case):
-#   additional_context   (top-level snake_case)
-#   additionalContext    (bare top-level camelCase)
-# These are harmless extras a host ignores if it doesn't read them; we emit
-# all three so the router survives host/version shape drift. This is a
-# deliberate design — tests/integration/test-superpowers-mode-off.sh asserts
-# all 3 keys are present (Check 4).
+# Station names and decision-point owners are DERIVED at runtime from
+# loom-code/contract/manifest.yaml — the contract package is the single
+# source; this script must never carry a second hand-typed copy.
 #
-# Escape hatch (Phase 1.5):
-#   export LOOM_CODE_MODE=off   # skip injection (no-op JSON returned)
+# Budget: `bash loom-code/hooks/session-start </dev/null | python3 -c
+# 'import sys;print(len(sys.stdin.read().split()))'` with cwd = an empty
+# git repo must stay <= 2639 words (half of the 923fb84a baseline of 5278).
+# Python str.split(): BSD and GNU wc disagree on this output in every
+# locale. Guarded by scripts/test_session_start_words.py.
 #
-# Reference: loom-code/TECH-SPEC.md §2.3
+# CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext.
+# DEFENSIVE keys (`additional_context`, bare `additionalContext`) are emitted
+# too, for cross-version/host shape drift; a host that does not read them
+# ignores them.
+#
+# Escape hatch: export LOOM_CODE_MODE=off  # no-op JSON, no injection.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CARD_PATH="${SCRIPT_DIR}/router-card.md"
+MANIFEST="${SCRIPT_DIR}/../contract/manifest.yaml"
 
-# Escape hatch — Superpowers coexistence.
-# Emit canonical nested key + both defensive top-level keys (all empty).
+emit_empty() {
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
+}
+
 if [ "${LOOM_CODE_MODE:-on}" = "off" ]; then
-  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
+  emit_empty
   exit 0
 fi
 
-# Card file missing → fail open with empty context (do not crash the session).
-# Same 3-key shape as the escape hatch.
-if [ ! -f "${CARD_PATH}" ]; then
-  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
+# Manifest missing → fail open (never crash the session).
+if [ ! -f "${MANIFEST}" ]; then
+  emit_empty
   exit 0
 fi
 
-content="$(cat "${CARD_PATH}")"
+# --- derived from the contract package ------------------------------------
+# One `- {name: <station>, ...}` line per station, in manifest order.
+stations_block() {
+  awk '/^stations:/{f=1;next} /^[a-z_]+:/{f=0} f' "${MANIFEST}"
+}
 
-# JSON-escape via bash parameter substitution (mirror Superpowers).
+station_names="$(stations_block | sed -n 's/^[[:space:]]*-[[:space:]]*{name:[[:space:]]*\([a-z0-9-]*\).*/\1/p')"
+
+# Stations owning a given decision point, joined by " / ".
+stations_for_dp() {
+  stations_block \
+    | { grep "decision_point: $1" || true; } \
+    | sed -n 's/^[[:space:]]*-[[:space:]]*{name:[[:space:]]*\([a-z0-9-]*\).*/\1/p' \
+    | paste -sd@ - | sed 's/@/ \/ /g'
+}
+
+flow=""
+tail_station=""
+for name in ${station_names}; do
+  if [ "${name}" = "maintain" ]; then
+    tail_station="${name}"
+    continue
+  fi
+  if [ -z "${flow}" ]; then flow="${name}"; else flow="${flow} → ${name}"; fi
+done
+
+dp1="$(stations_for_dp 1)"
+dp2="$(stations_for_dp 2)"
+dp3="$(stations_for_dp 3)"
+
+entry_station="${dp1%% *}"
+
+# --- the injected body ----------------------------------------------------
+body="You have loom-code. Work on this repo runs through stations, one artifact each.
+
+Station order: ${flow}; ${tail_station} on alerts.
+
+You ask the user exactly three times. Everything else you decide yourself and record the reason as agent-decided:
+① after the intent is written (${dp1}) — restate the problem and the acceptance conditions in plain words and get \"yes, this is what I want\"; fold the once-per-change second-vendor suggestion, a missing-principles interview, and (engineering changes) any one-way-door choice into this same conversation.
+② only for a product change, after the spec is written (${dp2}) — read back the visible behaviour (\"you type X, you see Y\") and get \"yes\"; product one-way-door choices and irreversible actions on existing data are asked here, not in ①; never show design rationale.
+③ at the end (${dp3}) — the user reads the blind-run report, one line per acceptance condition, and accepts. They never review a diff.
+
+Never ask the user to judge spec quality, plan shape, or a review verdict — they cannot, and the machines are the reviewers.
+
+The full station summary table (what each station reads, produces, and when the checker and the checkpoints fire) lives in the entry station's SKILL.md: ${entry_station}, or write-plan when loom-design is not installed. Load it there; it is not repeated here."
+
+# --- repo defaults --------------------------------------------------------
+DEFAULTS_FILE="docs/loom/KICKOFF-DEFAULTS.md"
+if [ -f "${DEFAULTS_FILE}" ]; then
+  defaults="$(sed -n 's/^-[[:space:]]\{1,\}\(.*: .*\)$/- \1/p' "${DEFAULTS_FILE}")"
+  if [ -n "${defaults}" ]; then
+    body="${body}
+
+This repo's standing defaults (docs/loom/KICKOFF-DEFAULTS.md):
+${defaults}"
+  fi
+fi
+
+# JSON-escape via bash parameter substitution.
 escape_for_json() {
   local s="$1"
   s="${s//\\/\\\\}"
@@ -62,45 +111,7 @@ escape_for_json() {
   s="${s//$'\t'/\\t}"
   printf '%s' "$s"
 }
-escaped="$(escape_for_json "${content}")"
+context="$(escape_for_json "${body}")"
 
-# Wrap in EXTREMELY-IMPORTANT block so the agent treats the router as load-bearing.
-banner_open='<EXTREMELY_IMPORTANT>\nYou have loom-code. Routing through this skill is mandatory when applicable.\n\n'
-banner_close='\n</EXTREMELY_IMPORTANT>'
-context="${banner_open}${escaped}${banner_close}"
-
-# Family reception (front door) — merged from loom-code/hooks/session-start.
-# Reference: docs/loom/specs/2026-07-04-loom-family-connective-tissue.md
-RECEPTION_PATH="${SCRIPT_DIR}/family-reception.md"
-FAMILY_RELAY_PATH="${SCRIPT_DIR}/family-relay.md"
-
-# Reception file missing → skip silently (router still injects; fail open).
-if [ -f "${RECEPTION_PATH}" ]; then
-  reception="$(cat "${RECEPTION_PATH}")"
-
-  # Extract "### (b) Visual defaults" from family-relay.md AT RUNTIME
-  # (heading-boundary awk range) and append it to the injected reception.
-  # family-relay.md stays the SSOT — this script must never carry a copy of
-  # the rule text. Fail open: missing file or missing section → skip
-  # silently, reception still injects without it.
-  if [ -f "${FAMILY_RELAY_PATH}" ]; then
-    visual_defaults="$(awk '/^### \(b\) Visual defaults/{flag=1} /^### \(c\)/{flag=0} flag' "${FAMILY_RELAY_PATH}")"
-    if [ -n "${visual_defaults}" ]; then
-      reception="${reception}
-${visual_defaults}"
-    fi
-  fi
-
-  escaped_reception="$(escape_for_json "${reception}")"
-
-  # Wrap in EXTREMELY-IMPORTANT block so the agent treats the reception as
-  # load-bearing awareness (not a mandate — the reception recommends, it does
-  # not gate).
-  reception_banner_open='<EXTREMELY_IMPORTANT>\nYou have the loom family of plugins available. Read this reception before deciding where to route work.\n\n'
-  reception_banner_close='\n</EXTREMELY_IMPORTANT>'
-  context="${context}\n\n${reception_banner_open}${escaped_reception}${reception_banner_close}"
-fi
-
-# Emit canonical nested key + both defensive top-level keys (same content).
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
   "${context}" "${context}" "${context}"

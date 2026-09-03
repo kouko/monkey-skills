@@ -246,9 +246,9 @@ def is_harness_injection(stripped_text: str) -> bool:
 def _majority_language(texts, n_turns: int = 3) -> Optional[str]:
     """Majority language over the last ``n_turns`` DETECTABLE texts.
 
-    Shared building block for both a whole-file vote
-    (``conversation_language``) and a rolling, point-in-time vote
-    (loom-design/scripts/pipeline/comms_metrics.py): turns whose script can't
+    Shared building block for a whole-file vote
+    (``conversation_language``) and for any rolling, point-in-time vote
+    a caller builds on it: turns whose script can't
     be determined (too short, or no script majority) are dropped
     BEFORE sampling rather than counted as a diluting non-vote — a run
     of short confirmations ("好" / "修", <20 visible chars) must not

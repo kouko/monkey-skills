@@ -2,8 +2,10 @@
 
 Task 1 of this arc gave `loom-design/scripts/` a pytest root that collects
 every station directory in a single invocation. This test pins the CI side
-of that: the five per-directory pytest jobs collapse to one, and no workflow
-comment may keep asserting that the suites need separate invocations.
+of that: the per-directory pytest jobs collapse to one, and no workflow
+comment may keep asserting that the suites need separate invocations. (There
+were five station directories when this was written and three from loom 1.0
+on; the count is not what the guard pins — the single invocation is.)
 
 SCOPE, stated plainly because a guard that overstates itself is worse than
 one that is honest: this is a TEXT scan of the workflow YAML, not a parse of
@@ -100,7 +102,7 @@ def test_workflows_invoke_loom_design_suite_once():
         if SEPARATE_CLAIM.search(prose):
             offending_comments.append(path.name)
 
-    assert invocations == ["loom-pipeline-ci.yml: loom-design/scripts/"], (
+    assert invocations == ["loom-design-ci.yml: loom-design/scripts/"], (
         "expected exactly one unified loom-design pytest invocation across "
         f".github/workflows/, got {invocations}"
     )

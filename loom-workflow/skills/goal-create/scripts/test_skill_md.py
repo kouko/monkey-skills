@@ -44,8 +44,9 @@ from pathlib import Path
 SKILL_DIR = Path(__file__).parent.parent
 SKILL_PATH = SKILL_DIR / "SKILL.md"
 GOAL_LINT_PATH = SKILL_DIR / "scripts" / "goal_lint.py"
+# loom 1.0 moved the templates into loom-code's contract package.
 PURPOSE_TEMPLATE_PATH = (
-    SKILL_DIR.parent.parent.parent / "loom-code" / "scripts" / "templates" / "PURPOSE.md"
+    SKILL_DIR.parent.parent.parent / "loom-code" / "contract" / "templates" / "PURPOSE.md"
 )
 
 
@@ -285,14 +286,10 @@ def test_invocation_contract_is_offer_not_trigger():
     # Pinned verbatim for the same reason as above.
     offer_points_pin = (
         "It is named as an available\n"
-        "option at exactly three points where the need for a goal is already\n"
+        "option at exactly one point where the need for a goal is already\n"
         "visible: `loom-workflow:handoff`'s Prepare mode, when a user closes a\n"
-        "session without capturing an explicit goal; the unanswered-purpose\n"
-        "message `loom-code`'s purpose-link check (`check_north_star_link.py`)\n"
-        "prints when `docs/loom/PURPOSE.md` is still template text; and\n"
-        "`loom-code`'s `finishing-a-development-branch`, which offers it where\n"
-        "`docs/loom/PURPOSE.md` is absent altogether. All three name this skill\n"
-        "as an option the user can invoke; none invokes it."
+        "session without capturing an explicit goal. That surface names this\n"
+        "skill as an option the user can invoke; it never invokes it."
     )
     assert _normalize_ws(offer_points_pin) in _normalize_ws(invocation_body), (
         "The offer-points sentence changed — if this is a deliberate "
@@ -303,9 +300,9 @@ def test_invocation_contract_is_offer_not_trigger():
     # brainstorming; this skill runs only after its brief exists. ---
     # Pinned verbatim for the same reason as above.
     ordering_pin = (
-        "When `brainstorming` is already running for the same work,\n"
-        "brainstorming keeps discovery and this skill runs only after its brief\n"
-        "exists, rather than competing for the same turn."
+        "When `loom-design:capture-intent` is already running for the same "
+        "work,\nthat station keeps discovery and this skill runs only after "
+        "its intent\nexists, rather than competing for the same turn."
     )
     assert _normalize_ws(ordering_pin) in _normalize_ws(invocation_body), (
         "The brainstorming-ordering sentence changed — if this is a "
@@ -319,11 +316,9 @@ def test_invocation_contract_is_offer_not_trigger():
 # expected to refer to one. A scanned path missing from this map fails
 # loudly, because a new offer site the section has never heard of is the
 # exact drift this test exists for.
+# loom 1.0 deleted the purpose-link check and the finishing station, so
+# handoff is the only surviving offer site.
 _OFFER_SITE_MARKERS = {
-    "loom-code/scripts/check_north_star_link.py": "check_north_star_link.py",
-    "loom-code/skills/finishing-a-development-branch/SKILL.md": (
-        "finishing-a-development-branch"
-    ),
     "loom-workflow/skills/handoff/SKILL.md": "loom-workflow:handoff",
 }
 _COUNT_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
@@ -374,10 +369,15 @@ def test_invocation_section_counts_the_offer_sites_that_exist():
     )
 
     invocation_body = _section(_read_skill_md(), "Invocation")
-    assert f"exactly {_COUNT_WORDS[len(sites)]} points" in invocation_body, (
+    # "one point", "two points" — the sentence has to read as English.
+    expected = (
+        f"exactly {_COUNT_WORDS[len(sites)]} point"
+        + ("" if len(sites) == 1 else "s")
+    )
+    assert expected in invocation_body, (
         f"{len(sites)} surfaces offer this skill "
         f"({sorted(sites)}), but the Invocation section does not say "
-        f"'exactly {_COUNT_WORDS[len(sites)]} points'"
+        f"{expected!r}"
     )
     for site in sorted(sites):
         assert _OFFER_SITE_MARKERS[site] in invocation_body, (

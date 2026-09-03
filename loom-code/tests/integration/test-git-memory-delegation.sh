@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # test-git-memory-delegation.sh
 #
-# Verify loom-code's finishing-a-development-branch skill invokes
-# loom-workflow:git-memory (Default-flow Step 6 / Phase 3) per ROADMAP P3-D MANDATORY.
+# Verify loom-code's ship station invokes loom-workflow:git-memory and
+# carries the memory in both carriers (commit trailer + PR body).
+#
+# Repointed at loom-code 1.0: the subject moved from
+# finishing-a-development-branch to skills/ship. The checks tied to the old
+# document's shape (the ROADMAP P3-D Q-lock, the numbered "Step 6", the
+# compose-pr.md pointer) are dropped with that shape; the delegation, the
+# verify gate and the two carriers are what survived and are checked here.
 #
 # Usage:
 #   bash loom-code/tests/integration/test-git-memory-delegation.sh
@@ -10,7 +16,7 @@
 set -u
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-FINISH_SKILL="${REPO_ROOT}/loom-code/skills/finishing-a-development-branch/SKILL.md"
+SHIP_SKILL="${REPO_ROOT}/loom-code/skills/ship/SKILL.md"
 GIT_MEMORY_SKILL="${REPO_ROOT}/loom-workflow/skills/git-memory/SKILL.md"
 
 PASS_COUNT=0
@@ -22,36 +28,17 @@ fail() { echo "FAIL — $1"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
 skip() { echo "SKIP — $1"; SKIP_COUNT=$((SKIP_COUNT + 1)); }
 
 # -------------------------------------------------------------------------
-# Check 1 — offline: finishing-a-development-branch references git-memory
+# Check 1 — offline: the ship station references git-memory
 
-if [ ! -f "${FINISH_SKILL}" ]; then
-  fail "finishing-a-development-branch SKILL.md not found"
+if [ ! -f "${SHIP_SKILL}" ]; then
+  fail "ship/SKILL.md not found"
   exit 1
 fi
 
-if grep -q "loom-workflow:git-memory" "${FINISH_SKILL}"; then
-  pass "finishing-a-development-branch references loom-workflow:git-memory"
+if grep -q "loom-workflow:git-memory" "${SHIP_SKILL}"; then
+  pass "ship references loom-workflow:git-memory"
 else
-  fail "finishing-a-development-branch does NOT reference loom-workflow:git-memory"
-fi
-
-# -------------------------------------------------------------------------
-# Check 2 — offline: P3-D mandatory framing present
-
-if grep -qE "P3-D|MANDATORY|mandatory" "${FINISH_SKILL}"; then
-  pass "P3-D MANDATORY framing present in finishing-a-development-branch"
-else
-  fail "P3-D MANDATORY framing missing — git-memory delegation is supposed to be non-optional per ROADMAP §Phase 3 Q-lock"
-fi
-
-# -------------------------------------------------------------------------
-# Check 3 — offline: the Default flow's git-memory step names git-memory
-# (git-memory is Step 6 of the numbered Default flow — "Invoke loom-workflow:git-memory")
-
-if grep -E "^6\. Invoke loom-workflow:git-memory" "${FINISH_SKILL}" >/dev/null; then
-  pass "Default-flow Step 6 names loom-workflow:git-memory"
-else
-  fail "Default-flow Step 6 does NOT explicitly name loom-workflow:git-memory"
+  fail "ship does NOT reference loom-workflow:git-memory"
 fi
 
 # -------------------------------------------------------------------------
@@ -59,16 +46,19 @@ fi
 # After the close-out commit, finishing must run memory-grep.sh --verify HEAD
 # and STOP a memory-worthy branch whose commit carrier is empty (exit 4).
 
-if grep -- '--verify' "${FINISH_SKILL}" >/dev/null; then
-  pass "finishing-a-development-branch names the --verify commit-carrier gate (F4)"
+if grep -- '--verify' "${SHIP_SKILL}" >/dev/null; then
+  pass "ship names the --verify commit-carrier gate (F4)"
 else
-  fail "finishing-a-development-branch does NOT name the --verify commit-carrier gate — memory-worthy branch can ship with an empty commit carrier (#445 leak)"
+  fail "ship does NOT name the --verify commit-carrier gate — memory-worthy branch can ship with an empty commit carrier (#445 leak)"
 fi
 
-if grep -- 'memory-grep.sh' "${FINISH_SKILL}" >/dev/null; then
-  pass "finishing-a-development-branch references the memory-grep.sh script by path"
+# The station may NOT reach into loom-workflow's file tree (the plugins
+# install independently), so it carries its own post-merge carrier check
+# and names the sibling skill for installs that have it.
+if grep -qE "git log -1 --format=%B[^|]*\\| *grep -E '\\^\\(Decision" "${SHIP_SKILL}"; then
+  pass "ship carries its own inline post-merge carrier grep"
 else
-  fail "finishing-a-development-branch does NOT reference loom-workflow's memory-grep.sh script"
+  fail "ship has NO inline carrier check — a loom-code-only install would verify nothing"
 fi
 
 # -------------------------------------------------------------------------
@@ -76,42 +66,32 @@ fi
 # At PR creation, finishing must confirm the PR body carries a ## Memory section
 # for a memory-worthy branch.
 
-if grep -- '## Memory' "${FINISH_SKILL}" >/dev/null; then
-  pass "finishing-a-development-branch names the PR ## Memory carrier check (F4)"
+if grep -- '## Memory' "${SHIP_SKILL}" >/dev/null; then
+  pass "ship names the PR ## Memory carrier check (F4)"
 else
-  fail "finishing-a-development-branch does NOT name the PR ## Memory carrier check — PR-carrier half of both-carrier policy missing"
+  fail "ship does NOT name the PR ## Memory carrier check — PR-carrier half of both-carrier policy missing"
 fi
 
 # -------------------------------------------------------------------------
-# Check 3d — offline: F4 PR-carrier check verifies BOTH carriers, not just
-# `## Memory`. compose-pr.md Step 4 (both-carrier mandate) also requires a
-# raw trailer footer as the PR body's true last block — a PR can pass the
-# `## Memory`-only check while violating that mandate (the #575 failure
-# class). Scoped to the PR-carrier check's own neighborhood.
+# Check 3d — offline: the PR body carries BOTH carriers, not just `## Memory`.
+# A PR can pass the `## Memory`-only check while dropping the raw trailer
+# footer that the post-merge grep actually reads (the #575 failure class).
 
-PR_CARRIER_BLOCK="$(grep -A 12 -- 'PR-carrier check' "${FINISH_SKILL}")"
-
-if echo "${PR_CARRIER_BLOCK}" | grep -qi 'raw trailer'; then
-  pass "PR-carrier check also names the raw trailer footer carrier"
+if grep -qi 'raw trailer footer' "${SHIP_SKILL}"; then
+  pass "ship names the raw trailer footer as the PR body's last block"
 else
-  fail "PR-carrier check does NOT verify the raw trailer footer — a PR can pass with ## Memory present but the raw trailer footer missing/broken (the #575 failure class)"
-fi
-
-if echo "${PR_CARRIER_BLOCK}" | grep -q 'compose-pr.md'; then
-  pass "PR-carrier check points to compose-pr.md Step 4's both-carrier mandate"
-else
-  fail "PR-carrier check does NOT point to compose-pr.md Step 4 — placement rules would need restating instead of pointing"
+  fail "ship does NOT name the raw trailer footer — a PR can pass with ## Memory present but the footer missing/broken (the #575 failure class)"
 fi
 
 # -------------------------------------------------------------------------
 # Check 3e — offline: F4 PR-carrier check gives an inline discriminator for
 # what a raw trailer block LOOKS like, so a context-blind executor can judge
-# without opening compose-pr.md. A context-blind haiku run rejected a valid
+# without opening another file. A context-blind haiku run rejected a valid
 # single-line `Decision: …` last block as "prose" because Step 11's text
 # never states the shape (the #576 finding). "single such line qualifies"
 # is the minimal pinned phrase for the fix.
 
-if echo "${PR_CARRIER_BLOCK}" | grep -qi 'single such line qualifies'; then
+if grep -qi 'single such line qualifies' "${SHIP_SKILL}"; then
   pass "PR-carrier check names the inline raw-trailer-block discriminator"
 else
   fail "PR-carrier check does NOT define what a raw trailer block looks like inline — a context-blind executor must guess (the #576 failure class)"
@@ -154,23 +134,22 @@ cat <<'EOF'
 
 Offline checks PASSED. Live verification (manual, in fresh Claude session):
 
-  1. cd to a repo with a non-trivial branch ready to close (e.g. this
-     very repo's feat/loom-code-design branch — it has 20+ commits
-     that would warrant memory trailers)
+  1. cd to a repo with a non-trivial branch whose branch-end checkpoint
+     has returned PASS and whose blind-run report exists — it should
+     have enough commits to warrant memory trailers
   2. claude
   3. Prompt: "finish this branch"
   4. Expected agent behavior:
-     - Skill(loom-code:finishing-a-development-branch) auto-loads
-     - Phases 1 + 2 run (requesting-code-review + verification-before-
-       completion)
-     - Phase 3 EXPLICITLY invokes loom-workflow:git-memory (transcript
+     - Skill(loom-code:ship) auto-loads
+     - Step 1 recomputes the preconditions and step 2 presents the
+       blind-run report for acceptance
+     - Step 3 EXPLICITLY invokes loom-workflow:git-memory (transcript
        should show "Skill(loom-workflow:git-memory) → Successfully
-       loaded skill" before commit message draft)
-     - Step 4 commit message includes git-memory's trailer decisions
+       loaded skill" before the trailers are drafted)
+     - The amended review-only commit carries git-memory's trailers
        (Decision: / Learning: / Gotcha: as warranted)
 
-  5. PASS if transcript shows Phase 3 git-memory invocation BEFORE the
-     commit subject is finalized. FAIL if commit message is drafted
-     without git-memory dispatch.
+  5. PASS if the transcript shows the step-3 git-memory invocation BEFORE
+     the trailers are finalized. FAIL if they are drafted without it.
 EOF
 exit 0

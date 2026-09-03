@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Worked example — TypeScript: app-wide toast notification system in React
 
 > **Stack**: React 18 + TypeScript 5 + Zustand + Vitest + Testing Library

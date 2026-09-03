@@ -84,7 +84,7 @@ def test_finds_an_unwrapped_copy_too(tmp_path):
 def test_reports_every_copy_not_just_the_first(tmp_path):
     write(tmp_path, "docs/loom/specs/a.md", f"{CLAIM}\n")
     write(tmp_path, "docs/loom/plans/b.md", f"x\n{CLAIM}\n")
-    write(tmp_path, "docs/loom/audits/c.md", f"{CLAIM}\n")
+    write(tmp_path, "docs/loom/evidence/audits/c.md", f"{CLAIM}\n")
     result = run(tmp_path, "--claim", CLAIM)
     for expected in ("specs/a.md:1", "plans/b.md:2", "audits/c.md:1"):
         assert expected in result.stdout, (expected, result.stdout)
@@ -111,11 +111,11 @@ def test_changelog_copy_is_classified_frozen(tmp_path):
 
 def test_archive_and_dogfood_copies_are_frozen(tmp_path):
     write(tmp_path, "docs/loom/archive/old.md", f"{CLAIM}\n")
-    write(tmp_path, "docs/loom/dogfood/run.md", f"{CLAIM}\n")
+    write(tmp_path, "docs/loom/evidence/dogfood/run.md", f"{CLAIM}\n")
     result = run(tmp_path, "--claim", CLAIM)
     frozen_section = result.stdout.split("frozen locations")[-1]
     assert "docs/loom/archive/old.md:1" in frozen_section, result.stdout
-    assert "docs/loom/dogfood/run.md:1" in frozen_section, result.stdout
+    assert "docs/loom/evidence/dogfood/run.md:1" in frozen_section, result.stdout
 
 
 def test_spec_copy_is_classified_operative(tmp_path):
@@ -427,7 +427,7 @@ def test_report_echoes_the_frozen_rule_in_effect(tmp_path):
         ("loom-code/CHANGELOG.md", (), True),
         ("docs/RELEASE-CHANGELOG.md", (), False),
         ("docs/loom/archive/old.md", (), True),
-        ("docs/loom/dogfood/run.md", (), True),
+        ("docs/loom/evidence/dogfood/run.md", (), True),
         ("docs/loom/specs/live.md", (), False),
         ("vendor/notes.md", ("vendor/",), True),
         ("vendorlib/live.md", ("vendor",), True),  # raw prefix: documented, echoed

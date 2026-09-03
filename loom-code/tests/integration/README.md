@@ -6,9 +6,8 @@
 
 | Script | What it tests | Prereqs (auto-detected) |
 |---|---|---|
-| `test-complexity-critique-delegation.sh` | `brainstorming` SKILL.md references `loom-workflow:complexity-critique` as Axis 3 delegate; both plugins installed | loom-workflow plugin installed |
-| `test-git-memory-delegation.sh` | `finishing-a-development-branch` SKILL.md invokes `loom-workflow:git-memory` at Step 3 per P3-D MANDATORY | loom-workflow plugin installed |
-| `test-code-team-coexistence.sh` | loom-code + domain-teams:code-team coexist (no skill collisions; SSOT-and-functional-copy intact; coexistence framing in SKILL.md) | domain-teams plugin installed; verify-drift.py works |
+| `test-git-memory-delegation.sh` | `ship` SKILL.md invokes `loom-workflow:git-memory` and names both memory carriers (commit trailer + PR body footer) | loom-workflow plugin installed |
+| `test-code-team-coexistence.sh` | loom-code + domain-teams:code-team coexist — both installable, no skill-name collision with the five stations | domain-teams plugin installed |
 | `test-superpowers-mode-on.sh` | Default mode (LOOM_CODE_MODE unset or =on) → both plugins fire | obra/superpowers (optional; some checks offline-only) |
 | `test-superpowers-mode-off.sh` | LOOM_CODE_MODE=off escape hatch → loom-code hook silenced; superpowers fires alone | obra/superpowers (optional) |
 
@@ -20,7 +19,7 @@ All scripts gracefully skip when their prerequisites are missing — safe to run
 cd /path/to/monkey-skills/.worktrees/loom-code-design
 
 # Run individual test:
-bash loom-code/tests/integration/test-complexity-critique-delegation.sh
+bash loom-code/tests/integration/test-git-memory-delegation.sh
 
 # Run all integration tests:
 for t in loom-code/tests/integration/test-*.sh; do
@@ -44,37 +43,16 @@ The **manual verification handoff** is the actual integration test — offline c
 
 | Test | Offline scope | Manual scope |
 |---|---|---|
-| complexity-critique delegation | SKILL.md reference; loom-workflow installed; complexity-critique exists | Live: PAGNI prompt → agent invokes complexity-critique |
-| git-memory delegation | SKILL.md reference + P3-D MANDATORY framing; Step 3 names git-memory; loom-workflow installed | Live: "finish this branch" → Step 3 dispatches git-memory before commit |
-| code-team coexistence | No skill-name collisions; verify-drift PASS; both plugins discoverable; coexistence framing in router | Live: hybrid prompt invoking both plugins in same session without conflict |
+| git-memory delegation | ship/SKILL.md names git-memory, `memory-grep.sh --verify`, and both PR carriers; loom-workflow installed | Live: "ship it" → the memory step dispatches git-memory before push |
+| code-team coexistence | No skill-name collisions; both plugins discoverable | Live: hybrid prompt invoking both plugins in same session without conflict |
 | superpowers ON | Hook emits >1000 char context when var unset or =on; superpowers installation check | Live: both plugins' SessionStart hooks fire; skill lists discoverable |
 | superpowers OFF | Hook emits valid JSON with EMPTY context when LOOM_CODE_MODE=off; hookEventName + 3 portable keys still present; sanity check unset mode | Live: LOOM_CODE_MODE=off → only superpowers active; unset → both active |
 
-## Where these tests fit in the Phase plan
+## Scope note (loom-code 1.0)
 
-- **Phase 4 GA acceptance** per ROADMAP §Phase 4:
-  - 與 Superpowers 並存（LOOM_CODE_MODE=on）測試通過 ← `test-superpowers-mode-on.sh`
-  - 與 Superpowers 並存（LOOM_CODE_MODE=off）測試通過 ← `test-superpowers-mode-off.sh`
-  - 三個 cross-plugin delegation（git-memory / complexity-critique / code-team）全綠 ← `test-git-memory-delegation.sh` + `test-complexity-critique-delegation.sh` + `test-code-team-coexistence.sh`
-
-When all 5 PASS (offline + manual), Phase 4 GA acceptance criteria are met.
-
-## Related test surfaces
-
-- `loom-code/tests/skill-triggering/` — per-skill auto-fire pressure prompts (Phase 1 ship)
-- `loom-code/tests/tdd-iron-law-pressure/` — Iron Law refusal pressure prompts (Phase 1 ship)
-- `loom-code/tests/brainstorming-pressure/` — HARD-GATE refusal pressure prompts (Phase 2 ship)
-- `loom-code/tests/writing-plans-pressure/` — splitting framework + plan-doc-reviewer (Phase 2 ship)
-- `loom-code/tests/systematic-debugging-pressure/` — 4-phase HARD-GATE pressure prompts (Phase 2 ship)
-- `loom-code/tests/requesting-code-review-pressure/` — push-as-trigger + skip-review refusal (Phase 3 ship)
-- `loom-code/tests/verification-before-completion-pressure/` — package-level-test HARD-GATE (Phase 3 ship)
-- `loom-code/tests/using-git-worktrees-pressure/` — stash-and-clone alternative refusal (Phase 3 ship)
-- `loom-code/tests/finishing-a-development-branch-pressure/` — orchestrator skip-step refusal (Phase 3 ship)
-- `loom-code/tests/codex-cli/` — Codex CLI install + hook injection (Phase 2.5 ship)
-- `loom-code/tests/integration/` — **this dir** (Phase 4 build)
-
-## See also
-
-- [`../../../loom-code/PRODUCT-SPEC.md`](../../PRODUCT-SPEC.md) §4.3 + §5.6 — coexistence contracts
-- [`../../../loom-code/ROADMAP.md`](../../ROADMAP.md) §Phase 4 — GA acceptance criteria
-- [`../../../loom-code/skills/finishing-a-development-branch/SKILL.md`](../../skills/finishing-a-development-branch/SKILL.md) — P3-D MANDATORY git-memory invocation
+These four are the cross-plugin contracts that survived the station
+redesign. `test-complexity-critique-delegation.sh`,
+`test-command-surface-*.sh` and `test-rule-sheet-drift.sh` were deleted with
+their subjects (the brainstorming skill, the command surface, the reviewer
+rule sheet). They are local-only: none of them runs in CI, because each
+reads the installed CLI's plugin state.

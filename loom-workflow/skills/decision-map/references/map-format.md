@@ -10,14 +10,16 @@ closed delivery arcs. Closing a delivery arc must not clear the Map. Each
 delivery advances one outcome-advancing slice; the wider loop remains active
 while another Ticket, fog entry, or Destination acceptance gap remains.
 
-Exactly four closure types exist: `grilling`, `research`, `prototype`, and
-`delivery`. They are mutually exclusive because each names different closure
+Exactly three ticket closure types exist: `grilling`, `research`, and
+`prototype`. They are mutually exclusive because each names different closure
 evidence. Dependencies are graph edges, not ticket types; schema v3 rejects
-`task` and `unblock`.
+`task` and `unblock`. A delivery is not a ticket: it is one outcome-advancing
+slice promised by an intent under `docs/loom/intent/`.
 
-`MAP.md` and Tickets are the source of truth for durable outcome state. Brief,
-Plan, Git, PR, and CI artifacts own delivery progress. The Map resolves that
-progress read-only and never persists a duplicate phase or status.
+`MAP.md` and Tickets are the source of truth for durable outcome state.
+Intent, Plan, Git, PR, and CI artifacts own delivery progress. The Map
+resolves that progress read-only and never persists a duplicate phase or
+status.
 
 ## Store layout
 
@@ -99,6 +101,15 @@ also requires named, dated human ratification. Retired ids remain in Notes as
 `retired-da: DA-<n> | <history>` and remain part of the high-water mark.
 DA-shaped bullets outside the exact grammar are errors, never invisible prose.
 
+Delivery arcs opened against a criterion are listed in Notes as
+`- delivery-intent: DA-<n> | docs/loom/intent/<change-id>.md`. The line is the
+whole binding: the intent's own `status:` (`open`, `confirmed <date>`,
+`closed`, `withdrawn — <reason>`) is the delivery state, the Map never copies
+it, and a withdrawn arc is annotated `retired — <reason>` beside its
+change-id. A criterion with an `open` delivery arc opens no second arc; it is
+satisfied either by that arc closing with evidence, by a replacement intent,
+or by direct Destination acceptance evidence.
+
 ### Decisions, fog, and scope
 
 Every closed Ticket has exactly one gist in Decisions-so-far:
@@ -116,31 +127,11 @@ shrink in place, graduate exactly once to a Ticket carrying
 `graduated-from: F-<n>`, or move intact to Out-of-scope. It never silently
 vanishes.
 
-## Backlog boundary contract
-
-The loom-code backlog store (`docs/loom/backlog/`, chartered by its own
-`README.md`) and a Map are separate stores with a one-way promotion
-boundary. Three rules govern every crossing; this section is their
-single definition point — the backlog charter keeps its own store-side
-copy, and every other surface cites here rather than restating them.
-
-- **Close-and-cite.** Promotion is close-and-cite: close the backlog
-  entry and write `origin: promoted to <ticket>` before creating the
-  Ticket. There is no blocked state, standing bidirectional link, or
-  close-on-delivery step.
-- **Release-only.** Map-to-backlog travel is release-only. A
-  destination artifact is optional discovery context, never a live or
-  standing link.
-- **Reopen-on-archive.** On archive, reopen every backlog entry whose
-  Ticket is still non-closed and whose frontmatter says
-  `origin: promoted to <ticket>`; the map then remains a historical
-  record, not a stranded-promotion target.
-
 ## Ticket template
 
 ```markdown
 ---
-type: <grilling|research|prototype|delivery>
+type: <grilling|research|prototype>
 status: open
 claim: null
 graduated-from: null
@@ -149,14 +140,14 @@ graduated-from: null
 <one-session-sized question or promised slice>
 ```
 
-Normalized template fields are: `type: <grilling|research|prototype|delivery>
+Normalized template fields are: `type: <grilling|research|prototype>
 status: open claim: null graduated-from: null`.
 
 Optional frontmatter:
 
 - `blocked-by: <slug>, <slug>` — unique sibling Tickets in the same Map.
-- `brief: <repo-relative-path>` — delivery only; points to one reciprocal
-  regular-file Brief relation.
+- `brief: <repo-relative-path>` — legacy delivery tickets only. Pre-1.0
+  bindings stay readable; no new ticket carries this field.
 - `ratification: pending` — a prototype candidate awaits human evaluation.
 - `withdrawn-from: open|claimed` — required on withdrawn history.
 
@@ -191,12 +182,13 @@ contract:
 - `prototype`: `candidate-artifact:`, `evaluation:`, and named, dated
   `user-ratified:` evidence. A human evaluates or selects a newly created
   candidate; machine feasibility alone is not prototype closure.
-- `delivery`: `delivery-evidence:` for the promised slice, after the bound
-  Brief's authored `pr-ci`, `merged`, or `artifact` policy is currently met.
+- `delivery` (legacy only): `delivery-evidence:` for the promised slice, after
+  the bound Brief's authored `pr-ci`, `merged`, or `artifact` policy is
+  currently met. Schema v3 still validates pre-1.0 delivery tickets so they
+  can be terminalized in place; a new arc is an intent instead.
 
 Unavailable, stale, unauthorized, pending, invalid, or contradictory evidence
-does not close work. Each delivery owns one reciprocal Brief, at most one Plan,
-one or more ordered PRs, and exclusive ownership of every cited PR.
+does not close work.
 
 ## Public operations
 
@@ -206,19 +198,21 @@ filesystem safety assumptions refuse before mutation. The exact Python call
 templates below match the implemented scripts; capture a fresh revision when
 the signature requires it and reuse `operation_id` on retry.
 
-- Start delivery:
-  `start_delivery.start_delivery(ticket_path, brief_path, repo_root=repo_root)`
-  If Ticket binding fails after the expected Brief is published, that Brief
-  remains as a recoverable orphan. Retry with the same Ticket and Brief path
-  binds it; a changed or concurrently replaced Brief is refused and never
-  deleted.
+- Start delivery: the installed
+  `start_delivery.py` command in `## Command surface`. It writes
+  `docs/loom/intent/<change-id>.md` with `originator: map:<map-id>` and
+  `map: <map-id>`, then appends the `delivery-intent:` line to Notes. It
+  refuses an unknown or already-satisfied criterion, a non-slug change-id, a
+  charting or immutable Map, and an existing intent bound to another Map.
+  Re-running with the same change-id reuses the intent and rewrites nothing.
 - Claim:
   `map_transaction.claim_ticket(map_dir, ticket_slug, owner=owner, claimed_on=date, operation_id=operation_id, expected_revision=revision)`
 - Update blockers:
   `map_transaction.update_blockers(map_dir, ticket_slug, blockers, operation_id=operation_id, expected_revision=revision)`
 - Close and re-chart:
   `map_transaction.close_and_rechart(map_dir, ticket_slug, gist=gist, resolution=resolution, unknowns=unknowns)`
-  A delivery also passes current inputs:
+  A legacy delivery ticket also passes current inputs, only to terminalize a
+  pre-1.0 arc:
 
   ```python
   delivery_closure=map_transaction.DeliveryClosureInputs(
@@ -252,7 +246,7 @@ The exact grammar is:
 - `destination` is exactly `fog`, `ticket`, or `out-of-scope`.
 - A `ticket` destination requires `ticket_slug` matching
   `[a-z0-9]+(?:-[a-z0-9]+)*` and `ticket_type` equal to `grilling`, `research`,
-  `prototype`, or `delivery`.
+  or `prototype`.
 - Only a `ticket` route may carry `ticket_slug` or `ticket_type`; both are
   `None` for `fog` and `out-of-scope`.
 - The tuple `(destination, text, ticket_slug)` is unique within one close, and
@@ -273,9 +267,9 @@ source digests and closure classifications. Only then run
 
 V2 `task` and feasibility `prototype` names are not mechanically renamed.
 Factual or measured evidence becomes research; a formally delivered slice
-becomes delivery and must already have a canonical reciprocal Brief; a
-human-evaluated candidate becomes prototype; a ratified value decision becomes
-grilling. Ambiguity refuses. Any source, membership, or binding change after
+becomes a legacy delivery ticket and must already have a canonical reciprocal
+Brief; a human-evaluated candidate becomes prototype; a ratified value decision
+becomes grilling. Ambiguity refuses. Any source, membership, or binding change after
 preview refuses apply. Repeating an applied migration produces no duplicates.
 
 ## Command surface
@@ -287,6 +281,7 @@ These exact runnable templates match the shipped CLI parsers:
 - `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_links.py" "<map-dir>" --repo-root "<path>"`
 - `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_fog.py" "<map-dir>" --repo-root "<path>"`
 - `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" "<target>" --repo-root "<path>"`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/start_delivery.py" "<map-dir>" "<DA-id>" "<change-id>" --repo-root "<path>"`
 
 `${CLAUDE_PLUGIN_ROOT}` is a load-time substitution performed when Claude or
 Codex renders the skill, not a run-time shell variable. Quoting the installed
@@ -298,13 +293,16 @@ spaces.
 `--base <git-ref>`; otherwise it resolves the default comparison base.
 
 Top-level re-entry states are exactly `absent`, `broken`, `ambiguous-live`,
-`live`, `blocked`, `claimed`, and `da-gap`. Delivery phase values are separate:
-`unbriefed`, `briefed`, `planning`, `implementing`, `reviewing`, `finishing`,
-`repair-required`, and `delivered`.
+`live`, `blocked`, `claimed`, and `da-gap`. Legacy delivery phase values are
+separate and resolve only for pre-1.0 delivery tickets: `unbriefed`, `briefed`,
+`planning`, `implementing`, `reviewing`, `finishing`, `repair-required`, and
+`delivered`.
 
-`map_init.py` is the writer carve-out: exit `0` creates, exit `1` refuses an
-existing store or reports an operational error, and exit `2` rejects the slug.
-The four reader commands share:
+`map_init.py` and `start_delivery.py` are the writer carve-outs: `map_init.py`
+exits `0` on create, `1` on an existing store or operational error, and `2` on
+a rejected slug; `start_delivery.py` exits `0` when the intent is created or
+reused, `1` on an operational failure, and `2` on any structural refusal. The
+four reader commands share:
 
 - `0` — clean.
 - `1` — missing, unreadable, unavailable, or environmental failure.

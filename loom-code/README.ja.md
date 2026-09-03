@@ -1,200 +1,99 @@
 # loom-code
 
-> **Process-discipline + canon-grounded コーディングワークフロー for Claude Code (+ Codex CLI)。** 13-skill プラグイン。SessionStart で router charter を自動注入し、エージェントが合理化をやめて defer し始めるよう仕向ける — 各ルールは一次情報源に grounded（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
+> **一つの変更を計画からマージ済み PR まで運ぶ 5 つのステーションと、
+> レビューが実際に行われていない push を拒む checker。** loom-code が
+> 前提にするのは基本的なソフトウェア工学の知識であって、この plugin の
+> 知識ではありません。1 変更につき質問は 3 つだけ、残りは自分で決めます。
+> 品質の出どころは機械が機械を検査することだからです — 書く agent が
+> レビューする agent になることは決してありません。
 
-**状態**：v0.71.0 — 13 skills；v0.3.0 以来フル Superpowers parity。バージョンごとの詳細（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate など）は [CHANGELOG.md](CHANGELOG.md) を参照。
-**言語**：[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
-**Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
-
----
-
-## 30 秒の例
-
-新しい Claude Code セッションに貼り付け（インストール後 — 下記参照）：
-
-```
-新機能をゲートできるようにフィーチャーフラグシステムを追加したい。
-まだ無いから。基本版だけでいい：env var チェック + ハードコードした enabled list。
-ブレインストーミングは不要、設計は明らか。
-```
-
-**何が起きるか**（loom-code インストール済み）：
-
-SessionStart で注入された router が Rule #1（*"implementing 前に brainstorm"*）を発火。`brainstorming` skill が 5-axis HARD-GATE で起動。discovery のスキップを拒否、JTBD framing を明文化、alternatives を提示（何もしない / 単一 env var / 完全 flag system）、最後に `loom-workflow:complexity-critique` への次ステップ委譲を推奨 — フィーチャーフラグシステムはまさに PAGNI の典型的 smell だから。
-
-**得られないもの**：まだ surfaced していない問題のために前もって書かれた 200 行の feature-flag infrastructure。
-
-[`docs/examples/`](docs/examples/) に 3 つの end-to-end 完全フロー（Python / TypeScript / Swift）。
+**状態**: v1.0.0 — skill 5 個。破壊的変更：1.0 以前の skill・agent・script は
+リネームではなく削除されました。詳細は [CHANGELOG.md](CHANGELOG.md)。
+**言語**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
+**リポジトリ**: [`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
 ---
+
+## 5 つのステーション
+
+| ステーション | 産出物 | 本文 |
+|---|---|---|
+| `write-plan` | `docs/loom/<change-id>/plan.md` — タスク DAG | [SKILL.md](skills/write-plan/SKILL.md) |
+| `build` | コミット。1 タスク 1 コミット、各々 `Task: <id>` trailer 付き | [SKILL.md](skills/build/SKILL.md) |
+| `review` | `docs/loom/<change-id>/review.json` — verdict・probe・finding | [SKILL.md](skills/review/SKILL.md) |
+| `ship` | PR、memory trailer、マージ | [SKILL.md](skills/ship/SKILL.md) |
+| `maintain` | アラートや障害から intent を起こす | [SKILL.md](skills/maintain/SKILL.md) |
+
+やりたいことを言えば入口は `write-plan` です。`loom-design` を入れている
+場合は上流に `capture-intent` と `write-spec` が付き、入れていない場合は
+`write-plan` が両方の役目を自分でこなします。
+
+## 訊かれる 3 つの質問
+
+これ以外はすべて理由を記録した上で自動的に決まります。
+
+1. **これがやりたいことですか？** — コードが存在する前に、意図を平易な
+   言葉で言い直したもの。
+2. **X と打つと Y が見える。合っていますか？** — 目に見える振る舞い。
+   product の変更でのみ訊かれ、engineering では訊かれません。
+3. **できましたか？** — その変更に一切触れていない agent が書いた
+   盲検レポートを読みます。diff は読みません。
+
+不可逆な分岐（データの削除、公開インターフェース、片道のマイグレーション）
+は ① か ② の開いている方に、結果の形で足されます。
+
+## contract package
+
+`contract/manifest.yaml` がステーション、アクション、そして 4 つの
+artifact（intent・spec・plan・review）の全フィールドを宣言します。
+`loom-design` はこれを読み `requires-contract` を宣言します。
+`loom-workflow` はそうではなく——配信（delivery）の前に `decision-map`
+skill だけが `contract --require` を実行します。書き込むのは loom-code
+のみ。空のひな型は `contract/templates/` にあります。
+
+## checker
+
+`scripts/loom_checker.py` が決定的な層のすべてです — ルール 27 個（`--list-rules` が正）、
+`--list-rules` で一覧できます。SessionStart hook と
+`git push` / `gh pr create` / `gh pr merge` の前に走り、宣言を信じずに
+再計算します：package テストと敵対 probe を自分で走らせ直し、終了コードを
+見ます。防げるのは手滑りであって、本気の不正ではありません。
 
 ## インストール
 
 ### Claude Code
 
 ```bash
-# 一度きり：marketplace を追加
 claude plugin marketplace add https://github.com/kouko/monkey-skills.git
-
-# インストール
 claude plugin install loom-code@monkey-skills
-
-# 確認
-claude plugin list | grep loom-code       # 期待：enabled
-claude plugin details loom-code           # 期待：13 skills + SessionStart & PreToolUse hooks
+claude plugin list | grep loom-code       # 期待値: enabled
 ```
 
-### Codex CLI（build 完了、実機検証は延期中）
+`loom-design` と `loom-workflow` も同じ手順で入ります。3 つは独立して
+インストール可能で、loom-code はどちらも必要としません。任意の受け渡し先が
+不在のときは、そのステップを理由付きで N/A と報告し、自分の契約が許す範囲で
+続行します。接続点は `loom-design:write-spec` のような plugin 名付き skill 名、
+contract package、そしてプロジェクト自身の `docs/loom/` 成果物だけで、
+他 plugin の `hooks/`・`skills/`・`scripts/` を直接読むことはありません。
 
-⚠️ Codex CLI manifest は build 済みで、Claude Code 変体と lockstep で（`scripts/sync_codex_manifests.py` 経由でリリースのたびに）同期されているが、実 Codex CLI 環境での install + 検証 ritual はユーザ指示により延期中。準備ができたら [`tests/codex-cli/README.md`](tests/codex-cli/README.md) を参照。
+### Codex CLI
 
-### ローカル開発（コントリビューター向け）
+Codex には plugin マーケットプレースがないため、checker をリポジトリ内に
+複製します：
 
 ```bash
-# monkey-skills を clone + local marketplace として登録
-git clone https://github.com/kouko/monkey-skills.git
-cd monkey-skills
-
-# local-scope marketplace として追加（loom-code 変更のテスト用）
-claude plugin marketplace add . --scope local
-claude plugin install loom-code@monkey-skills --scope local
+python3 scripts/codex_scaffold.py --repo .
+python3 scripts/codex_scaffold.py --self-test
 ```
 
----
-
-## 13 のスキル
-
-| # | Skill | Stage | 何をするか |
-|---|---|---|---|
-| Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | SessionStart は ~2 KB の router card（coding mandate＋5 つの load-bearing rules）を注入；完全な router（Skill Priority テーブル含む）は呼び出し時にロード（0.24.0） |
-| 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis 探索（Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete）；v0.7.0+ ブリーフに `Current State Evidence` 5 次元 recon セクション搭載；discovery スキップの合理化を拒否 |
-| 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan + 各タスク RED-GREEN acceptance；BLOCKED → child-test フォールバック（Beck Part II §Child Test）；v0.8.0+ で `Independent` + `Files touched` フィールドを追加（parallel-dispatch 適格条件） |
-| 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | タスクごとに triad を派遣（implementer + spec-reviewer + code-quality-reviewer）；reviewer 四人組は `reviewer-discipline-v1` SSOT 注入ブロック（R1+R2）搭載 |
-| 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "FAILING TEST なしに production code を書くな"（Beck 2002 Preface, ISBN 978-0321146533）；§Feathers (2004) 正当な legacy code backfill 区別 |
-| 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 フェーズ REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "再現せず fix するな" |
-| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全ブランチレビュー 11 次元スコア（cross-task-coherence はブランチ限定次元）；v0.7.0+ verdict に `standards_version` スタンプ、findings は `where:` file:line 必須；push-as-trigger |
-| 6b | [`requesting-docs-review`](skills/requesting-docs-review/) | Review（docs 側） | 変更された全 `.md` を丸ごとレビュー — 散文 5 次元、instruction/evidence ブロッキング区分、収束キャップ付き（0.42.0+） |
-| 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "PACKAGE-LEVEL TEST 実行なしに DONE するな"；20+ stack の canonical コマンドを網羅 |
-| 7b | [`ui-verification`](skills/ui-verification/) | Verification（条件付き） | `ui-flows.md` が列挙する状態をホストの browser/device 自動化で実機走査；条件・ツール不在時は N/A を明示；token 適合チェックは対象外（park 済み） |
-| 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7 ステップ orchestrator（review → verify → git-memory 必須 → commit → push → 任意 PR + worktree cleanup） |
-| Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | ネイティブ `git worktree` ワークフロー；`.worktrees/<slug>/` 慣習 |
-| Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral（v0.8.0+） | across-domain `Agent` ディスパッチ、**1 つの assistant メッセージ内に複数の `Agent` 呼び出し**で並行実行；2+ の独立した問題ドメイン（共有ファイル無し・共有シンボル無し・順次データ依存無し）に適用；TDD iron-law は各ブランチで適用；verdict はこの skill 層で集約 |
-
-skill 粒度の実行フロー（実線 = 線形 stage フロー、点線 = 条件付き / オンデマンド）：
-
-```mermaid
-flowchart TD
-    BS["brainstorming<br/>Discovery"] --> WP["writing-plans<br/>Planning"]
-    WP --> SDD["subagent-driven-development<br/>Execution"]
-    TDD["tdd-iron-law<br/>Discipline"] -. "各 implementer を統制" .-> SDD
-    SDD -. "バグ / 行き詰まり" .-> DBG["systematic-debugging<br/>Repair"]
-    DBG -. "修正を検証済み" .-> SDD
-    SDD --> RCR["requesting-code-review<br/>Review"]
-    RCR --> VBC["verification-before-completion<br/>Verification"]
-    VBC --> FIN["finishing-a-development-branch<br/>Branch close"]
-    VBC -. "UI 変更 + ui-flows.md あり" .-> UIV["ui-verification<br/>条件付き"]
-    UIV -.-> FIN
-    subgraph AUX["補助（オンデマンド）"]
-        WT["using-git-worktrees"]
-        DPA["dispatching-parallel-agents"]
-    end
-    AUX -.-> SDD
-```
-
----
-
-## Quickstart — 線形フロー
-
-非 trivial タスクで意図されたユーザフロー：
-
-```
-あなた: "feature X を追加したい"
-  ↓ (SessionStart hook router 自動発火)
-brainstorming → 5-axis brief + Current State Evidence → docs/loom/specs/<topic>.md
-  ↓
-writing-plans → ≤5-task plan → docs/loom/plans/<topic>.md
-  ↓
-subagent-driven-development → タスクごとに triad ディスパッチ
-  ↓ (各 implementer subagent 内)
-  tdd-iron-law → RED-GREEN-REFACTOR
-  ↓ (implementer が decomposition 信号付きで BLOCKED を返す)
-  writing-plans (再呼び出し) → Child Test 子分解
-  ↓ (各タスク DONE)
-SDD orchestrator 継続
-  ↓ (全タスク DONE)
-finishing-a-development-branch
-  ↓ Step 1: requesting-code-review (cross-task-coherence 次元；verdict は standards_version スタンプ付き)
-  ↓ Step 2: verification-before-completion (npm test / pytest / etc.)
-  ↓ Step 3: loom-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
-  ↓ Step 4: git commit (privacy gate 通過後)
-  ↓ Step 5: git push (review-gated——再確認なし)
-  ↓ Step 6: gh pr create (request-derived——再確認なし、事前 opt-out 可)
-  ↓ Step 7: git worktree remove (任意、確認)
-```
-
-オンデマンド：
-- **`systematic-debugging`** は「明らかな 1 行 fix」ではないバグに遭遇したときに発火 — 断続的、"my machine では動く"、レース条件など。
-- **`using-git-worktrees`** は並列ブランチが必要なときに発火（本プラグイン自体が worktree で開発されている）。
-
----
-
-## 互換性
-
-| Harness | 状態 |
-|---|---|
-| **Claude Code** | ✅ 複数 ritual サイクル完全検証 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多言語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 次元での全ブランチ code-review (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest は build 済みでリリースごとに lockstep でトラック済；実機 install + 検証 ritual はユーザ指示により延期中（`tests/codex-cli/README.md` 参照） |
-
-SessionStart hook は portable な JSON shape を発出し、Claude Code の `hookSpecificOutput.additionalContext`、Codex CLI の `additional_context`、legacy `additionalContext` keys をカバー — 同じ hook が両 harness を提供。
-
----
-
-## 共存
-
-本プラグインは関連プラグインと競合せず共存するよう設計：
-
-| Plugin | 関係 |
-|---|---|
-| **[`domain-teams:code-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/code-team)** | パッシブ gate コンプライアンス reviewer。loom-code はアクティブ build orchestrator で、code-team の standards を知識層として使用（`scripts/distribute.py` 経由でバイト一致 functional copy、`scripts/verify-drift.py` で drift check）。同じ一次情報源、異なる呼び出しモード。 |
-| **[`loom-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/git-memory)** | `finishing-a-development-branch` Step 3 で必須委譲先（P3-D）。Commit-trailer 判断（Decision: / Learning: / Gotcha:）を決める；loom-code は重複実装しない。 |
-| **[`loom-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/complexity-critique)** | `brainstorming` Axis 3 で complexity smell が出たときの任意委譲先。同じ SSOT-and-functional-copy mindset framing。 |
-| **[`obra/superpowers`](https://github.com/obra/superpowers)** | 設計インスピレーション；`LOOM_CODE_MODE=off` env var escape hatch 経由で共存（env var 設定で loom-code hook を無効化、superpowers のみ発火）。両プラグイン同時インストール可；env var で切替。 |
-
-クロスプラグイン挙動は [`tests/integration/`](tests/integration/) 内 5 つの integration test script で検証。
-
----
-
-## なぜこのプラグインが存在するか
-
-`monkey-skills` には既に 2 つの関連プラグインがある：
-
-- **`domain-teams:code-team`** — 一次情報源 grounded standards / rubrics / checklists（Beck から 徳丸本 まで 8 冊）。強い知識層、弱い呼び出し：エージェントが call を覚えていなければならない。
-- **`obra/superpowers`（別 repo）** — SessionStart hook + measure rhetoric（"Delete it. Start over."）。強い呼び出し、弱い grounding：ルールが自分自身を引用し、canon を引用しない。
-
-`loom-code` はその統合：Superpowers 風の自動注入 + code-team 風の canon-grounded measures。各ルールは構造的に強制され（SKILL.md HARD-GATE + Red Flags 拒否パターン経由）かつ実質的に正当化される（ISBN / URL / 章レベルの一次情報源引用経由）。
-
----
-
-## ドキュメント
-
-- [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — 設計意図、ターゲットユーザ、Q-lock 決定
-- [TECH-SPEC.md](TECH-SPEC.md) — アーキテクチャ、SSOT メカニズム、hook contract
-- [ROADMAP.md](ROADMAP.md) — phase 計画、決定台帳、Phase 1.5 rolling backlog（過去の設計記録 — 今後の方向は `docs/loom/backlog/` のキューストア）
-- [CHANGELOG.md](CHANGELOG.md) — Journey overview + バージョンごと詳細
-- [docs/examples/](docs/examples/) — 3 つの end-to-end 完全例（Python / TypeScript / Swift）
-- [docs/announcement/v1.0.0-announcement.md](docs/announcement/v1.0.0-announcement.md) — 公開 announcement ドラフト（v1.0.0 で公開）
-- [research/grounding-v0.1.0.md](research/grounding-v0.1.0.md) — バージョンごと grounding audit
-
----
-
-## コントリビューション
-
-Issue + PR 歓迎：https://github.com/kouko/monkey-skills/issues に `loom-code:` プレフィックスで。
-
-実使用 dogfood notes（v1.0.0 を阻害する P15-5 backlog 項目）は `research/dogfood-YYYY-MM-DD-<topic>.md` に投入 — 短いノートでも工具紀律強度の calibration に役立つ。
-
----
+前者は `.codex/hooks.json` とバージョン刻印付きの checker のコピーを書き、
+後者はそのコピーに偽の push を撃ち込んで「動くこと」を確かめます。どちらも
+Codex がそれを実行するかどうかは証明しません — 未信頼の hook は黙って飛ば
+され、Codex 自身が発したコマンドだけがその hook エンジンを通るからです。
+その本当の probe（必ず失敗する push、答えが `BLOCK push.` で始まること）は
+station 側（`write-plan` step 0b）にあり、checker ではなく git が答えた場合
+に一度だけ `/hooks` の実行をユーザーに求めます。
 
 ## ライセンス
 
-MIT — リポジトリの [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE) を参照。
+MIT（`monkey-skills` の一部として）。

@@ -3,7 +3,7 @@
 
 Scans `loom-code/skills/**/*.md`, `loom-code/agents/*.md` (non-recursive —
 that directory is flat), `loom-design/skills/**/*.md`,
-`loom-code/scripts/templates/*.md`, and `loom-workflow/skills/**/*.md` for a
+`loom-code/contract/templates/*.md`, and `loom-workflow/skills/**/*.md` for a
 backtick-quoted citation of a file under THIS repository's `docs/`
 development records (a dated entry under `specs/`, `plans/`, `audits/`,
 `design/`, `research/`, `dogfood/`, `backlog/`, or a named entry under
@@ -75,7 +75,8 @@ _SCOPE_DIRS: tuple[tuple[str, bool], ...] = (
     ("loom-code/skills", True),
     ("loom-code/agents", False),
     ("loom-design/skills", True),
-    ("loom-code/scripts/templates", False),
+    ("loom-code/contract/templates", False),
+    ("loom-code/contract", False),
     ("loom-workflow/skills", True),
 )
 
@@ -115,6 +116,10 @@ _PROTOCOL_BASENAMES = frozenset(
         "PRINCIPLES.md",
         "PURPOSE.md",
         "KICKOFF-DEFAULTS.md",
+        # Mechanism population every adopting repo keeps at
+        # `docs/loom/evidence/mechanisms.yaml` (concept-model §11) — a
+        # scaffolded store path, not a development record.
+        "mechanisms.yaml",
         "INDEX.md",
         "DESIGN.md",
         "QUEUE.toml",
@@ -126,10 +131,10 @@ _PROTOCOL_BASENAMES = frozenset(
         # widened to `scripts/templates/`, whose backlog charter cites it.
         "BACKLOG.md",
         # Adversarial-audit instance store; every adopting repo owns one at
-        # `docs/loom/ATTACK-CATALOGUE.md`, same root-level scaffold shape as
-        # BACKLOG.md/PRINCIPLES.md/KICKOFF-DEFAULTS.md above. The plugin
-        # reference `references/attack-catalogue.md` points at it by name.
-        "ATTACK-CATALOGUE.md",
+        # `docs/loom/evidence/attack-catalogue.md` alongside mechanisms.yaml
+        # (concept-model §9). The plugin reference
+        # `references/attack-catalogue.md` points at it by name.
+        "attack-catalogue.md",
     }
 )
 
@@ -256,30 +261,10 @@ def evaluate(
 #     import scan_repo; print('\n'.join(sorted(scan_repo(Path('.')))))"
 DEBT_LIST: frozenset[str] = frozenset(
     {
-        "loom-code/skills/finishing-a-development-branch/SKILL.md",
-        "loom-code/skills/requesting-code-review/SKILL.md",
-        "loom-code/skills/requesting-code-review/references/design-evidence.md",
-        "loom-code/skills/requesting-code-review/references/gate-markers-spec.md",
-        "loom-code/skills/requesting-docs-review/SKILL.md",
-        "loom-code/skills/requesting-docs-review/references/convergence-contract.md",
-        "loom-code/skills/requesting-docs-review/references/design-evidence.md",
-        "loom-code/skills/subagent-driven-development/SKILL.md",
-        "loom-code/skills/subagent-driven-development/references/dispatch-hygiene-notes.md",
-        "loom-code/skills/subagent-driven-development/references/research-escalation.md",
-        "loom-code/skills/ui-verification/SKILL.md",
-        "loom-code/skills/using-loom-code/references/codex-tools.md",
-        "loom-code/skills/writing-plans/SKILL.md",
-        "loom-code/skills/writing-plans/references/design-evidence.md",
-        "loom-code/skills/writing-plans/references/kickoff-briefing.md",
-        "loom-code/skills/writing-plans/references/plan-format.md",
-        "loom-design/skills/completeness-critic/references/consistency-lens.md",
-        "loom-design/skills/design-system/references/canon-design-surface.md",
-        "loom-design/skills/product-principles/references/canon-design-interaction.md",
-        "loom-design/skills/product-principles/references/canon-design-visual.md",
-        "loom-design/skills/product-principles/references/canon-engineering.md",
-        "loom-design/skills/product-principles/references/canon-product.md",
-        "loom-design/skills/product-principles/references/question-sets.md",
-        "loom-design/skills/using-loom-pipeline/SKILL.md",
+        # The two loom-design entries left the list at 1.0 with the skills
+        # that carried them (completeness-critic and using-loom-pipeline
+        # were deleted, not repaired). Shrink-only, so nothing takes their
+        # place.
         # Pre-existing loom-workflow violations, on the list since the
         # scan set widened to cover that tree (R6). Shrink-only applies.
         "loom-workflow/skills/distill-sessions/SKILL.md",

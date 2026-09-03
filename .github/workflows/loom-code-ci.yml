@@ -3,11 +3,8 @@ name: loom-code CI
 # Runs loom-code's drift gates on every PR that touches the plugin (or
 # the workflow itself), and on every push to main that changes the plugin.
 #
-# Two SSOT drift gates are enforced:
+# One SSOT drift gate is enforced:
 #
-#   - verify-drift.py:        the code-team <-> loom-code knowledge SSOT —
-#                             every routed functional copy must stay
-#                             byte-identical to its canonical payload.
 #   - sync_codex_manifests.py: the Codex plugin manifest SSOT —
 #                             each CODEX_ELIGIBLE plugin's .codex-plugin/plugin.json
 #                             must stay in sync with its .claude-plugin/plugin.json.
@@ -18,6 +15,9 @@ name: loom-code CI
 # The sync_codex_manifests.py pytest suite is also run so the generator logic
 # itself is covered, mirroring legal-toolkit-ci.yml (pytest + drift).
 #
+# The living-spec, attack-catalogue and knowledge-SSOT steps were removed at
+# loom-code 1.0 with the scripts they ran; the remaining shape is W3-04's.
+#
 # Status: intended for `main` branch protection.
 
 on:
@@ -27,9 +27,10 @@ on:
       - 'loom-code/**'
       - '.claude/hooks/**'
       - '.claude/settings.json'
-      # The living-spec gates scan the repo root and check the committed
-      # docs/loom/INDEX.md, so a docs/loom/** change must also trigger CI —
-      # else an index drift or a spec-tree edit could merge ungated.
+      # The mechanism recompute reads docs/loom/evidence/mechanisms.yaml and
+      # the doc-citation gate reads the docs/loom root docs + intent/, so a
+      # docs/loom/** change must also trigger CI — else an unregistered
+      # mechanism or a dangling citation could merge ungated.
       - 'docs/loom/**'
       # The Codex drift gate runs --all (every plugin's manifest pair), so the
       # trigger scope must match: ANY plugin's manifest edit must fire CI, else
@@ -42,24 +43,22 @@ on:
       # 9 tests and never listed, so a PR editing only that gate ran none of
       # them (fail-open on the gate's own maintenance).
       - 'scripts/**'
-      # scripts/test_bucket_vocabulary_consistency.py pins the three-bucket
-      # research-routing vocabulary (craft / domain-convention / project-local)
-      # byte-identical across loom-code and loom-design. Its carrier files now
-      # live under loom-design/ and are covered by the loom-design/** trigger
-      # below (docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md
-      # task 5, extended by task 11).
-      # Repo-root drift guards scan the whole loom-*/ tree (T1
-      # test_state_anchor_carrier_inventory.py's population is EVERYTHING
-      # under loom-*/) and read specific sibling files (T2
-      # test_brief_clause_lockstep.py), but only loom-code/** is otherwise
-      # in this trigger — so any loom-design edit must fire this
-      # workflow, else it would merge ungated (fail-open).
+      # Repo-root drift guards scan the whole loom-*/ tree
+      # (scripts/test_state_anchor_carrier_inventory.py's population is
+      # EVERYTHING under loom-*/), the mechanism recompute counts every
+      # plugin's skills/ directories, and the doc-citation gate reads
+      # loom-design's and loom-workflow's prose — but only loom-code/** is
+      # otherwise in this trigger, so a loom-design edit must fire this
+      # workflow too, else it would merge ungated (fail-open).
       - 'loom-design/**'
+      # Same, for the third plugin: its skills count toward the mechanism
+      # recompute and its prose is in the doc-citation scope.
+      - 'loom-workflow/**'
       # scripts/test_loom_design_ci_unified_root.py guards the single unified
-      # loom-design pytest step in loom-pipeline-ci.yml, but it is collected
+      # loom-design pytest step in loom-design-ci.yml, but it is collected
       # only by THIS workflow's `scripts/` step -- so the whole workflow dir
       # must be a trigger. Naming just this file leaves the guard fail-open:
-      # a PR editing only loom-pipeline-ci.yml (or adding a brand-new
+      # a PR editing only loom-design-ci.yml (or adding a brand-new
       # workflow with a per-station job) would never run it.
       - '.github/workflows/**'
       - '.github/workflows/loom-code-ci.yml'
@@ -75,6 +74,7 @@ on:
       - 'scripts/**'
       # Same repo-root drift-guard rationale as the pull_request trigger above.
       - 'loom-design/**'
+      - 'loom-workflow/**'
       # Same fail-open rationale as the pull_request trigger above.
       - '.github/workflows/**'
 
@@ -89,16 +89,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # scripts/test_stage_specific_complexity_behavior_evidence.py binds the
-          # behaviour report to two historical commits — it reconstructs a
-          # package tree with `git archive <sha>` and diffs the instruction
-          # surface with `git diff <sha>` — so the default depth-1 checkout
-          # makes those shas unresolvable and the tests die on "fatal: not a
-          # tree object" rather than on an assertion. Those tests exist to catch
-          # a re-pin that hides a changed lens; a shallow checkout would have to
-          # skip them, and a guard that skips is the failure mode they were
-          # written against. Depth alone is not sufficient: both shas must also
-          # be ancestors of a pushed ref, which the suite asserts directly.
+          # The mechanism recompute takes `--baseline origin/main` and reads
+          # that ref's tree, so the default depth-1 checkout would make the
+          # baseline unresolvable and the step would die on a git error
+          # rather than on a finding. A gate that dies before it checks is
+          # the failure mode this depth exists against.
           fetch-depth: 0
 
       - name: Set up Python
@@ -108,11 +103,10 @@ jobs:
 
       - name: Install test deps
         # pytest = test runner. The drift + sync scripts are pure stdlib (P1-E).
-        # markdown-it-py = adjudication_render's markdown→HTML converter; it is
-        # the one non-stdlib runtime import under loom-code/scripts/, and three
-        # test modules fail at COLLECTION without it (not at assert time), which
-        # takes the whole suite down rather than one test.
-        run: python3 -m pip install --quiet pytest markdown-it-py
+        # pyyaml = the contract manifest and mechanisms.yaml parser; test
+        # modules fail at COLLECTION without it, which takes the whole suite
+        # down rather than one test. markdown-it-py went with adjudication_render.
+        run: python3 -m pip install --quiet pytest pyyaml
 
       - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
@@ -124,14 +118,6 @@ jobs:
           python3 scripts/check_plugin_boundaries.py loom-code
           python3 scripts/check_plugin_boundaries.py loom-design
 
-      - name: Attack-catalogue store is honest
-        run: python3 loom-code/scripts/check_attack_catalogue.py docs/loom/ATTACK-CATALOGUE.md --repo .
-
-      - name: Verify code-team <-> loom-code knowledge SSOT
-        # canonical/ is the single source of truth; each skill carries routed
-        # functional copies. Any byte-level divergence fails the build.
-        run: python3 loom-code/scripts/verify-drift.py
-
       - name: Codex manifest drift gate (all plugins)
         # Each CODEX_ELIGIBLE plugin's .codex-plugin/plugin.json is generated
         # from its .claude-plugin/plugin.json. --check --all fails (exit 1) on
@@ -139,54 +125,50 @@ jobs:
         # manual edit can't diverge the two.
         run: python3 scripts/sync_codex_manifests.py --check --all
 
+      - name: Recompute mechanism population
+        # Recomputes the five admission-rule classes (concept-model §11,
+        # spec REQ-7) against docs/loom/evidence/mechanisms.yaml: a class
+        # member the recompute finds but the yaml does not register is red,
+        # a registered member the recompute cannot find is red (a residual
+        # entry inflates the baseline), a net-count rise without a
+        # `budget-exception:` CHANGELOG line is red, and a mechanism with no
+        # working `eval:` is red. Blocking since W3-04 — the transitional
+        # continue-on-error came off with the old skill directories.
+        run: python3 loom-code/scripts/check_mechanisms.py --baseline origin/main
+
+      - name: Measure the loom surface
+        # concept-model §11's measurement half: skill count, artifact-type
+        # count, and the session-start injection word count. Only the last
+        # one gates — exceeding the KICKOFF-DEFAULTS `session-start-baseline:`
+        # word count exits 1 (REQ-8's halving is a hard condition, and a
+        # station that quietly grows its session-start text is how it would
+        # be lost). The two counts print for the record.
+        run: python3 loom-code/scripts/check_mechanisms.py --measure
+
+      - name: Check runtime prose contracts cite nothing repo-local
+        # CLAUDE.md §Contract Citations: a runtime prose contract under the
+        # loom skill/agent trees must not cite this repo's own development
+        # records — the dispatched agent reads ITS repo, so such a citation
+        # only resolves here. The script owns the full rule and its
+        # shrinking DEBT_LIST.
+        run: python3 loom-code/scripts/check_contract_citations.py
+
+      - name: Check doc citations resolve
+        # Every backtick `path:line` / `path` "anchor" citation in the
+        # OPERATIVE loom prose (the three plugins' skills/agents/references/
+        # contract trees, the docs/loom root docs, and docs/loom/intent/)
+        # must resolve. Frozen stores are deliberately out of scope:
+        # docs/loom/{plans,specs,backlog,design,archive}/ and
+        # docs/loom/evidence/ are historical records whose line cites went
+        # stale by design when the files they cite moved on.
+        run: |
+          set -euo pipefail
+          git ls-files '*.md' \
+            | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)' \
+            | xargs python3 loom-code/scripts/check_doc_citations.py
+
       - name: Verify skill cross-references resolve
         # Every relative markdown link in a SKILL.md must point at an existing
         # file. Guards the cross-skill reference convention (e.g. the shared
         # references/environment-gotchas.md pointers) against silent breakage.
         run: python3 loom-code/scripts/check-skill-crossrefs.py
-
-      - name: Verify living-spec structural integrity
-        # Hard FAIL on every push: every @req tag in the repo source tree must
-        # resolve to a real requirement id and be well-formed. A dangling or
-        # malformed @req exits 1 and fails the build.
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 loom-code/scripts/check-living-spec-index.py .
-
-      - name: Verify living-spec index is current
-        # Byte-identity gate: regenerate build_index over the repo root and
-        # byte-compare to the committed docs/loom/INDEX.md. Any drift exits 1
-        # so a stale committed index can't slip in. Repair locally with:
-        # python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md .
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md .
-
-      - name: Verify living-spec active reqs are covered
-        # Merge-boundary gate: every `active` requirement must have a passing
-        # test. This runs AFTER the green pytest gate above, so a green suite
-        # means every linked test passed — "0 passing" therefore reduces to
-        # "0 linked", and an uncovered active req exits 1. Unlike --verify-index,
-        # this gate regenerates nothing (no --write-index counterpart); it only
-        # reads the persisted intent + @req links and reports coverage.
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 loom-code/scripts/check-living-spec-index.py --check-coverage .
-
-      # Only the 3 repo-state-only .sh tests run here. The other 5 under
-      # tests/integration/ probe the LOCAL Claude CLI install state
-      # (`claude plugin list`, enabled-plugin checks) and are meaningless
-      # or flaky on a runner with no `claude` binary — they stay local-only.
-      # One step per test with `!cancelled()` so each reports even when a
-      # sibling fails (same visibility pattern as skill-structure.yml).
-      - name: Integration test — command-surface accretion
-        if: ${{ !cancelled() }}
-        run: bash loom-code/tests/integration/test-command-surface-accretion.sh
-
-      - name: Integration test — command-surface resolution
-        if: ${{ !cancelled() }}
-        run: bash loom-code/tests/integration/test-command-surface-resolution.sh
-
-      - name: Integration test — rule-sheet drift
-        if: ${{ !cancelled() }}
-        run: bash loom-code/tests/integration/test-rule-sheet-drift.sh

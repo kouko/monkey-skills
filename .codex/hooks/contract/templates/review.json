@@ -1,0 +1,24 @@
+{
+  "reviewed_sha": "<branch base sha; advances only on PASS / PASS_WITH_NOTES>",
+  "scope": "<what this checkpoint reviewed>",
+  "vendors": ["anthropic"],
+  "verdicts": [
+    {"reviewer": "<agent id>", "vendor": "anthropic", "model": "<model>", "lens": "code|docs|spec|design|principles",
+     "scope": "spec|code|branch-end|wave-end:<n>", "round": 1,
+     "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION", "dimension_scores": {}, "findings": [],
+     "fallback": "<cli> missing at <YYYY-MM-DD>",
+     "spec_sha": "<git hash-object of the spec.md this verdict read; spec rounds only>"}
+  ],
+  "probes": [
+    {"kind": "package-tests|blind-run|adversarial|codex-walk", "scope": "spec|code|skill|gate", "command": "<command that runs the artifact>", "sha": "<sha the probe ran against>", "result": "pass|fail", "artifact": "<committed path the command runs>"}
+  ],
+  "questions": [
+    {"decision_point": 1, "text": "<question as asked>", "type": "what|behaviour|done|consequence"}
+  ],
+  "open_findings": [
+    {"id": "<id>", "anchor": "<file:line>", "origin_sha": "<sha>", "raised_by": "<reviewer>", "resolved": "<evidence>", "dismissed": "<reason> by <agent_id>"}
+  ],
+  "dispatch": [
+    {"task": "<task id>", "role": "implementer|reviewer|blind-runner|adversary", "agent_id": "<id>", "model": "<model>", "started": "<iso timestamp>", "fresh_context": true}
+  ]
+}

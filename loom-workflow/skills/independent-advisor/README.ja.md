@@ -36,8 +36,8 @@
 | 状況 | 使うもの |
 |---|---|
 | **別の実行者**に答えさせたい（より強いモデル・より高い effort・別のベンダー） | `loom-workflow:independent-advisor` |
-| 同じ実行者のまま、提案に**別の批評観点**を当てたい | `loom-workflow:proposal-critique` |
-| 特に過剰設計を疑っている | `loom-workflow:complexity-critique` |
+| 同じ実行者のまま、提案に**別の批評観点**を当てたい | `loom-workflow:critique`（`mode: proposal`） |
+| 特に過剰設計を疑っている | `loom-workflow:critique`（`mode: complexity`） |
 
 姉妹スキルが変えるのは観点、このスキルが変えるのは実行者です。コストがかかり
 材料をこのマシンの外へ送るため、観点を変えたいだけの場合には不適切です。

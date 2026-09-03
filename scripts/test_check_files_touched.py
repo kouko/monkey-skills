@@ -412,7 +412,7 @@ def test_real_annotated_plan_task1_parses_exact_declared_set():
 # (docs/loom/memory/a-test-can-be-correct-and-still-unable-to-fail.md).
 # Each divergence test below constructs an input where the variants MUST
 # split by the frozen key's semantics
-# (docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md,
+# (docs/loom/evidence/audits/2026-08-01-declared-vs-actual-check-measurement.md,
 # §Rule variants + cells 5 and 10).
 
 from check_files_touched import (  # noqa: E402
@@ -564,7 +564,7 @@ def test_double_done_status_is_loud_and_keeps_last():
 # --- Task 4: git layer, CLI, ten-cell corpus end-to-end --------------------
 #
 # WHY these tests exist: cells 1-10 and their expected verdicts were FROZEN
-# in docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md
+# in docs/loom/evidence/audits/2026-08-01-declared-vs-actual-check-measurement.md
 # BEFORE this layer existed. The sandbox repos below are real git producers
 # (git init/add/commit — never hand-typed diffs, per
 # docs/loom/memory/fixtures-mirror-producer-shape.md). On any disagreement

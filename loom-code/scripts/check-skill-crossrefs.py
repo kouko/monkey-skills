@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """CI gate: dead-link validator for loom-code skill cross-references.
 
-Walks every ``loom-code/skills/*/SKILL.md`` and, for each RELATIVE
+Walks every ``loom-code/skills/*/SKILL.md``, every ``agents/*.md``
+(per-skill and plugin-level) and, for each RELATIVE
 markdown link ``](path)``, resolves the target against that SKILL.md's
 directory and asserts the target exists on disk.
 
@@ -64,16 +65,33 @@ def _strip_anchor(target: str) -> str:
     return target.split("#", 1)[0]
 
 
+def _scanned_documents(skills_dir: Path) -> list[Path]:
+    """Every prose file whose relative links have to resolve.
+
+    Agent files carry the same `](path)` links a SKILL.md does, and a
+    station rename leaves them dangling just as easily — the five-station
+    rewrite left a dead reference in `agents/implementer.md` that only an
+    isolated-install test noticed. Both the per-skill `agents/` directory
+    and the plugin-level one beside `skills/` are read.
+    """
+    found = list(skills_dir.glob("*/SKILL.md"))
+    found += skills_dir.glob("*/agents/*.md")
+    found += skills_dir.parent.glob("agents/*.md")
+    return sorted(set(found))
+
+
 def find_broken_crossrefs(skills_dir) -> list[str]:
     """Return one ``<skill-md-path>: <link>`` string per broken cross-ref.
 
-    Scans ``<skills_dir>/*/SKILL.md``. A link is broken when its target
-    (relative, anchor stripped) does not exist on disk relative to the
-    SKILL.md's own directory. Empty list == all links resolve.
+    Scans ``<skills_dir>/*/SKILL.md``, ``<skills_dir>/*/agents/*.md`` and
+    the plugin-level ``agents/*.md`` beside ``skills/``. A link is broken
+    when its target (relative, anchor stripped) does not exist on disk
+    relative to the reading file's own directory. Empty list == all links
+    resolve.
     """
     skills_dir = Path(skills_dir)
     broken: list[str] = []
-    for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
+    for skill_md in _scanned_documents(skills_dir):
         text = skill_md.read_text(encoding="utf-8")
         base = skill_md.parent
         for raw_target in _LINK_RE.findall(text):

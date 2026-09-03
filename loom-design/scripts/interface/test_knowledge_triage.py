@@ -1,35 +1,34 @@
 """Guard for the design-station knowledge-triage doctrine (plan task 9,
-docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md) plus the
-v2.1 cut (b) mechanization (plan task 15).
+docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md) plus the v2.1
+cut (b) mechanization (plan task 15).
 
-Covers three artifacts:
-  1. Two new references/knowledge-triage.md files (interaction-flows,
-     design-system) — each must open with the pin block transcribed
-     VERBATIM from the plan's §Pinned bucket vocabulary fenced block,
-     then carry the station's HIGH-bar two-tier doctrine, the
-     never-WebSearch restatement (closed-world drafting skill), and the
-     cross-severing guard restating design-critic's verdict vocabulary is
-     unchanged.
-  2. One imperative mount line in each drafting SKILL.md, naming its own
-     references/knowledge-triage.md.
-  3. One findings-schema addition in design-critic/SKILL.md: the optional
-     `evidence_needed` tag, flag-never-search, verdict enum untouched.
-  4. (v2.1 cut b) design-critic's mechanical pre-check row, run BEFORE
-     panel dispatch, and the identical one-sentence SHAPING-consequence
-     supplement placed AFTER the pin (never inside it) in both drafting
-     references files.
+Loom 1.0 cut this doctrine's surface from three artifacts to one. It used to
+cover two `references/knowledge-triage.md` files (interaction-flows and
+design-system) plus a findings-schema addition and a mechanical pre-check
+inside `design-critic/SKILL.md`. `interaction-flows` and `design-critic` are
+deleted; `design-system` is the only station that still mounts the doctrine,
+so every twin-file check below collapsed to a single-file check and the
+critic-side checks went with the skill they described.
 
-Per docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md, assertions
-are scoped to the knowledge-triage neighborhood (the new files entirely, or
-an anchor-bounded window in the pre-existing SKILL.md files) rather than
-whole-file substring checks, since generic terms ("state", "flag", "verdict")
-already recur elsewhere in these files.
+What is deliberately NOT weakened by that collapse:
 
-Stdlib only (pathlib + re + subprocess for the git-HEAD pin-diff check).
-`git show <rev>:<path>` subprocess pattern grounded per external-surface-
-grounding source (d) in-repo evidence: scripts/check_version_bump.py:79-80
-already calls `["git", "-C", repo, "show", f"{rev}:{plugin}/{MANIFEST}"]`.
+  1. The pin block is still compared byte-for-byte against the plan's fenced
+     vocabulary AND against its own HEAD copy — the two assertions that keep
+     a transcribed pin from drifting.
+  2. Every wording assertion that had a subject in the surviving file is
+     kept verbatim, only re-aimed from a loop over two files to the one.
+  3. The supplement sentences are still required to appear exactly once,
+     after the pin, in that order. Only the "byte-identical across both
+     files" pair is gone, because there is no second file to differ from.
+
+Section 11 below is inherited, not new. `scripts/test_bucket_vocabulary_
+consistency.py` was the repo-root guard on the bucket vocabulary "across the
+plugins that carry it"; loom 1.0 left exactly one carrier — this file — so a
+cross-file drift guard had nothing left to compare and was deleted. Its one
+assertion that was not already made here (no variant spelling of a bucket
+name inside a tag/value context) moved in with it, scoping helper included.
 """
+from __future__ import annotations
 
 import re
 import subprocess
@@ -42,14 +41,8 @@ PLAN_PATH = (
     REPO_ROOT / "docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md"
 )
 
-IF_SKILL = PLUGIN_ROOT / "skills" / "interaction-flows" / "SKILL.md"
 DS_SKILL = PLUGIN_ROOT / "skills" / "design-system" / "SKILL.md"
-DC_SKILL = PLUGIN_ROOT / "skills" / "design-critic" / "SKILL.md"
-
-IF_TRIAGE = PLUGIN_ROOT / "skills" / "interaction-flows" / "references" / "knowledge-triage.md"
 DS_TRIAGE = PLUGIN_ROOT / "skills" / "design-system" / "references" / "knowledge-triage.md"
-
-TRIAGE_FILES = {"interaction-flows": IF_TRIAGE, "design-system": DS_TRIAGE}
 
 PIN_ANCHOR = "Three buckets"
 
@@ -73,153 +66,133 @@ def _text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-# --- 1. both references/knowledge-triage.md exist, carry the pin verbatim --
+# --- 1. references/knowledge-triage.md exists, carries the pin verbatim -----
 
 
-def test_both_knowledge_triage_files_exist():
-    for label, path in TRIAGE_FILES.items():
-        assert path.is_file(), f"{label} is missing references/knowledge-triage.md"
+def test_knowledge_triage_file_exists():
+    assert DS_TRIAGE.is_file(), f"expected file missing: {DS_TRIAGE}"
 
 
-def test_pin_block_transcribed_verbatim_in_both_files():
-    plan_pin = _plan_pin_block()
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        fence = _fenced_block(text)
-        assert fence is not None, f"{label} knowledge-triage.md has no pin fenced block"
-        assert fence == plan_pin, (
-            f"{label} knowledge-triage.md pin block is not byte-identical to "
-            "the plan's §Pinned bucket vocabulary block"
-        )
+def test_pin_block_transcribed_verbatim():
+    expected = _plan_pin_block()
+    fence = _fenced_block(_text(DS_TRIAGE))
+    assert fence is not None, "design-system knowledge-triage.md missing pin fence"
+    assert fence == expected, (
+        "design-system knowledge-triage.md pin block is not byte-identical to "
+        "the plan's pinned bucket vocabulary"
+    )
 
 
-def test_pin_precedes_station_doctrine_in_both_files():
-    """Pin block VERBATIM first, then design-station doctrine after."""
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        fence_match = re.search(r"```\n.*?\n```", text, re.DOTALL)
-        assert fence_match, f"{label} knowledge-triage.md missing fenced pin block"
-        after = text[fence_match.end():]
-        assert len(after.strip()) > 200, (
-            f"{label} knowledge-triage.md has no station doctrine after the pin"
-        )
+def test_pin_precedes_station_doctrine():
+    text = _text(DS_TRIAGE)
+    fence_match = re.search(r"```\n.*?\n```", text, re.DOTALL)
+    assert fence_match, "design-system knowledge-triage.md missing fenced pin block"
+    doctrine_idx = text.lower().find("## station mount doctrine")
+    assert doctrine_idx > fence_match.end(), (
+        "the station mount doctrine must come AFTER the transcribed pin block"
+    )
 
 
-# --- 2. HIGH-bar two-tier wording in both references files -----------------
+# --- 2. HIGH-bar two-tier wording -------------------------------------------
 
 
-def test_high_bar_shaping_criteria_present_in_both_files():
-    for label, path in TRIAGE_FILES.items():
-        low = _text(path).lower()
-        assert "shaping" in low, f"{label} knowledge-triage.md missing SHAPING tier"
-        assert "deferrable" in low, f"{label} knowledge-triage.md missing DEFERRABLE tier"
-        assert "flow structure" in low, f"{label} missing 'flow structure' shaping criterion"
-        assert "state machine" in low, f"{label} missing 'state machine' shaping criterion"
-        assert "semantic display convention" in low, (
-            f"{label} missing 'semantic display convention' shaping criterion"
-        )
-        # concrete worked examples from the plan's shaping bar
-        assert "color semantic" in low, f"{label} missing color-semantics example"
-        assert "sign convention" in low, f"{label} missing sign-convention example"
-        assert "period definition" in low, f"{label} missing period-definition example"
+def test_high_bar_shaping_criteria_present():
+    low = _text(DS_TRIAGE).lower()
+    assert "shaping" in low, "knowledge-triage.md missing SHAPING tier"
+    assert "deferrable" in low, "knowledge-triage.md missing DEFERRABLE tier"
+    assert "flow structure" in low, "missing 'flow structure' shaping criterion"
+    assert "state machine" in low, "missing 'state machine' shaping criterion"
+    assert "semantic display convention" in low, (
+        "missing 'semantic display convention' shaping criterion"
+    )
+    # concrete worked examples from the plan's shaping bar
+    assert "color semantic" in low, "missing color-semantics example"
+    assert "sign convention" in low, "missing sign-convention example"
+    assert "period definition" in low, "missing period-definition example"
 
 
-def test_rationale_bar_higher_than_spec_present_in_both_files():
-    for label, path in TRIAGE_FILES.items():
-        low = _text(path).lower()
-        assert "spec" in low and "gate" in low, (
-            f"{label} must reference spec's gate in the rationale"
-        )
-        assert "higher" in low or "narrower" in low, (
-            f"{label} must state the bar is higher/narrower than spec's"
-        )
+def test_rationale_bar_higher_than_spec_present():
+    low = _text(DS_TRIAGE).lower()
+    assert "spec" in low and "gate" in low, (
+        "must reference the spec station's gate in the rationale"
+    )
+    assert "higher" in low or "narrower" in low, (
+        "must state the bar is higher/narrower than spec's"
+    )
 
 
-# --- 3. SHAPING route: routed research BEFORE design-critic's verdict ------
+# --- 3. SHAPING route: routed research BEFORE the design-conformance verdict -
 
 
-def test_shaping_route_cites_design_critic_verdict_timing():
-    for label, path in TRIAGE_FILES.items():
-        low = _text(path).lower()
-        assert "design-critic" in low, f"{label} must name design-critic"
-        assert "before" in low and "verdict" in low, (
-            f"{label} must state resolution happens BEFORE design-critic's verdict"
-        )
-        assert "routed research" in low or "routed" in low, (
-            f"{label} must name the research as ROUTED (orchestrator/user), not self-run"
-        )
+def test_shaping_route_cites_the_review_verdict_timing():
+    """Was `design-critic`'s verdict; loom 1.0 moved that verdict into
+    loom-code's review station under the design-conformance lens. The
+    assertion is the same one: resolution happens BEFORE the verdict, and the
+    research is ROUTED, never self-run."""
+    low = _text(DS_TRIAGE).lower()
+    assert "design-conformance" in low, (
+        "must name the design-conformance lens that renders the verdict"
+    )
+    assert "before" in low and "verdict" in low, (
+        "must state resolution happens BEFORE the design-conformance verdict"
+    )
+    assert "routed research" in low or "routed" in low, (
+        "must name the research as ROUTED (orchestrator/user), not self-run"
+    )
 
 
-def test_never_websearch_restated_in_both_files():
+def test_never_websearch_restated():
     """Cross-ref severing guard (extraction-severing-cross-ref-needs-weak-model-test):
     the drafting skill's closed-world constraint must be restated in the
     extracted file, not merely assumed from the SKILL.md body."""
-    for label, path in TRIAGE_FILES.items():
-        low = _text(path).lower()
-        assert "never" in low and "websearch" in low, (
-            f"{label} must restate that the drafting skill itself never runs WebSearch"
-        )
-        assert "closed-world" in low, (
-            f"{label} must restate the closed-world drafting-skill framing"
-        )
+    low = _text(DS_TRIAGE).lower()
+    assert "never" in low and "websearch" in low, (
+        "must restate that the drafting skill itself never runs WebSearch"
+    )
+    assert "closed-world" in low, (
+        "must restate the closed-world drafting-skill framing"
+    )
 
 
 # --- 4. DEFERRABLE route: tagged open question, loom-design named, no path ---
 
 
 def test_deferrable_route_names_loom_design_without_cross_plugin_path():
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        low = text.lower()
-        assert "evidence_needed: domain-convention" in text, (
-            f"{label} must give the tagged-open-question format"
-        )
-        assert "loom-design" in low and "spec-expansion" in low, (
-            f"{label} must name loom-design's spec-expansion by name (prose mention)"
-        )
-        # no cross-plugin filesystem path (the plan forbids this)
-        assert "loom-design/skills" not in text, (
-            f"{label} must NOT embed a cross-plugin file path to loom-design"
-        )
+    text = _text(DS_TRIAGE)
+    low = text.lower()
+    assert "evidence_needed: domain-convention" in text, (
+        "must give the tagged-open-question format"
+    )
+    assert "loom-design" in low and "write-spec" in low, (
+        "must name loom-design's write-spec by name (prose mention)"
+    )
+    # no cross-plugin filesystem path (the plan forbids this)
+    assert "loom-design/skills" not in text, (
+        "must NOT embed a cross-plugin file path to loom-design"
+    )
 
 
 def test_deferrable_target_artifact_matches_station():
-    # interaction-flows defers into ui-flows.md; design-system into DESIGN.md
-    assert "ui-flows.md" in _text(IF_TRIAGE)
+    # design-system defers into DESIGN.md (interaction-flows, which deferred
+    # into ui-flows.md, is deleted).
     assert "DESIGN.md" in _text(DS_TRIAGE)
 
 
-# --- 5. cross-severing guard: critic verdict vocabulary unchanged ----------
+# --- 5. cross-severing guard: review verdict vocabulary unchanged -----------
 
 
-def test_cross_severing_guard_restates_critic_verdict_vocabulary():
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        assert "PASS_WITH_NOTES" in text and "NEEDS_REVISION" in text, (
-            f"{label} must restate design-critic's verdict enum"
-        )
-        low = text.lower()
-        assert "unchanged" in low, (
-            f"{label} must state the verdict vocabulary is unchanged by this addition"
-        )
-
-
-# --- 6. mount lines in the drafting SKILL.md files --------------------------
-
-
-def test_interaction_flows_skill_mounts_its_own_reference():
-    text = _text(IF_SKILL)
-    assert "references/knowledge-triage.md" in text, (
-        "interaction-flows SKILL.md must mount references/knowledge-triage.md"
+def test_cross_severing_guard_restates_review_verdict_vocabulary():
+    text = _text(DS_TRIAGE)
+    assert "PASS_WITH_NOTES" in text and "NEEDS_REVISION" in text, (
+        "must restate the review station's verdict enum"
     )
-    idx = text.index("references/knowledge-triage.md")
-    window = text[max(0, idx - 400): idx + 150]
-    low = window.lower()
-    assert "before" in low, (
-        "the mount must be an imperative anchored to the drafting moment "
-        "('before X -> do Y FIRST' shape)"
+    low = text.lower()
+    assert "unchanged" in low, (
+        "must state the verdict vocabulary is unchanged by this addition"
     )
-    assert "first" in low, "the mount must say to run the reference FIRST"
+
+
+# --- 6. mount line in the drafting SKILL.md ---------------------------------
 
 
 def test_design_system_skill_mounts_its_own_reference():
@@ -227,188 +200,52 @@ def test_design_system_skill_mounts_its_own_reference():
     assert "references/knowledge-triage.md" in text, (
         "design-system SKILL.md must mount references/knowledge-triage.md"
     )
-    idx = text.index("references/knowledge-triage.md")
-    window = text[max(0, idx - 400): idx + 150]
-    low = window.lower()
-    assert "before" in low, (
-        "the mount must be an imperative anchored to the drafting moment "
-        "('before X -> do Y FIRST' shape)"
-    )
-    assert "first" in low, "the mount must say to run the reference FIRST"
 
 
-def test_skill_files_do_not_mount_each_others_reference():
-    # no-shared-files: each skill's mount must point at ITS OWN copy only
-    assert "design-system/references/knowledge-triage.md" not in _text(IF_SKILL)
+def test_skill_does_not_mount_a_deleted_sibling_reference():
     assert "interaction-flows/references/knowledge-triage.md" not in _text(DS_SKILL)
 
 
-# --- 7. design-critic findings schema addition ------------------------------
+# --- 7. flat-skill structure (repo hook enforces) ---------------------------
 
 
-def test_design_critic_findings_schema_carries_evidence_needed_tag():
-    text = _text(DC_SKILL)
-    assert "evidence_needed: craft | domain-convention | project-local" in text, (
-        "design-critic SKILL.md must add the evidence_needed tag to the findings schema"
-    )
-    idx = text.index("evidence_needed: craft | domain-convention | project-local")
-    window = text[idx: idx + 500].lower()
-    assert "flag" in window, (
-        "must state the critic FLAGS the tag"
-    )
-    assert "never" in window and "search" in window, (
-        "must state the critic never searches to resolve the tag"
-    )
+def test_references_dir_stays_flat():
+    for child in DS_TRIAGE.parent.iterdir():
+        assert not child.is_dir(), (
+            "flat-skill violation: nested subdir under design-system's references/"
+        )
 
 
-def test_design_critic_verdict_enum_untouched_by_schema_addition():
-    """The addition must not introduce a third verdict value or otherwise
-    disturb the two-valued PASS_WITH_NOTES / NEEDS_REVISION enum."""
-    text = _text(DC_SKILL)
-    assert text.count("PASS_WITH_NOTES") >= 1
-    assert text.count("NEEDS_REVISION") >= 1
-    # the schema-addition paragraph itself must not mint a bare/new PASS
-    # token (a third verdict state) — only reference the existing enum.
-    idx = text.index("evidence_needed: craft | domain-convention | project-local")
-    paragraph_end = text.index("\n\n", idx)
-    paragraph = text[idx:paragraph_end]
-    bare_pass = re.sub(r"PASS_WITH_NOTES|NEEDS_REVISION", "", paragraph)
-    assert "PASS" not in bare_pass, (
-        "the schema-addition paragraph must not introduce a new verdict token"
-    )
-
-
-# --- 8. flat-skill structure (repo hook enforces) ---------------------------
-
-
-def test_new_references_dirs_stay_flat():
-    for label, path in TRIAGE_FILES.items():
-        refs_dir = path.parent
-        for child in refs_dir.iterdir():
-            assert not child.is_dir(), (
-                f"flat-skill violation: nested subdir under {label}'s references/"
-            )
-
-
-# --- 9. v2.1 cut (b): design-critic mechanical pre-check --------------------
+# --- 8. the SHAPING consequence supplement ----------------------------------
 
 SHAPING_SUPPLEMENT = (
     "SHAPING never ships as non-blocking: it either resolves before this "
     "station's gate or carries `deferred: <reason>`."
 )
 
-PANEL_DISPATCH_ANCHOR = "## The multi-lens critic panel"
-PRECHECK_ANCHOR = "Mechanical pre-check"
 
-
-def _precheck_window(text: str) -> str:
-    """Measured bound for the pre-check section: from PRECHECK_ANCHOR up to
-    (not including) the panel-dispatch heading — replaces a guessed char
-    count with the actual section boundary, so the window never bleeds into
-    the sibling '## The multi-lens critic panel' section's content."""
-    idx = text.find(PRECHECK_ANCHOR)
-    assert idx != -1
-    panel_idx = text.find(PANEL_DISPATCH_ANCHOR, idx)
-    assert panel_idx != -1
-    return text[idx:panel_idx]
-
-
-def test_design_critic_has_mechanical_precheck_section():
-    text = _text(DC_SKILL)
-    assert PRECHECK_ANCHOR in text, (
-        "design-critic SKILL.md must add a mechanical pre-check step"
-    )
-
-
-def test_design_critic_precheck_runs_before_panel_dispatch():
-    text = _text(DC_SKILL)
-    precheck_idx = text.find(PRECHECK_ANCHOR)
-    panel_idx = text.find(PANEL_DISPATCH_ANCHOR)
-    assert precheck_idx != -1 and panel_idx != -1
-    assert precheck_idx < panel_idx, (
-        "the pre-check must be positioned BEFORE panel dispatch, not after"
-    )
-
-
-def test_design_critic_precheck_covers_both_grep_conditions():
-    text = _text(DC_SKILL)
-    window = _precheck_window(text).lower()
-    # (i) out-of-enum evidence_needed values
-    assert "evidence_needed" in window
-    assert "craft" in window and "domain-convention" in window and "project-local" in window
-    # (ii) SHAPING declared non-blocking/deferred WITHOUT `deferred: <reason>`
-    assert "shaping" in window
-    assert "deferred:" in window
-    assert "non-blocking" in window or "non blocking" in window
-
-
-def test_design_critic_precheck_hit_emits_needs_revision_without_panel():
-    text = _text(DC_SKILL)
-    window = _precheck_window(text)
-    assert "NEEDS_REVISION" in window, (
-        "a pre-check hit must emit a NEEDS_REVISION finding directly"
-    )
-    low = window.lower()
-    assert "no panel needed" in low or "without" in low or "panel still runs" in low, (
-        "must state the panel is skipped for THAT finding only"
-    )
-
-
-def test_design_critic_precheck_does_not_disturb_verdict_enum():
-    """Same guard shape as test_design_critic_verdict_enum_untouched_by_schema_addition,
-    scoped to the pre-check paragraph: no new bare PASS token introduced."""
-    text = _text(DC_SKILL)
-    idx = text.find(PRECHECK_ANCHOR)
-    assert idx != -1
-    section_end = text.find("\n## ", idx + 1)
-    if section_end == -1:
-        section_end = len(text)
-    section = text[idx:section_end]
-    bare_pass = re.sub(r"PASS_WITH_NOTES|NEEDS_REVISION", "", section)
-    assert "PASS" not in bare_pass, (
-        "the pre-check section must not introduce a new verdict token"
-    )
-
-
-# --- 10. v2.1 cut (b): identical SHAPING supplement in both references -----
-
-
-def test_shaping_supplement_present_verbatim_in_both_files():
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        assert text.count(SHAPING_SUPPLEMENT) == 1, (
-            f"{label} knowledge-triage.md must carry the SHAPING supplement "
-            "sentence exactly once, verbatim"
-        )
-
-
-def test_shaping_supplement_byte_identical_across_both_files():
-    if_text = _text(IF_TRIAGE)
-    ds_text = _text(DS_TRIAGE)
-    if_sentence = if_text[if_text.index(SHAPING_SUPPLEMENT): if_text.index(SHAPING_SUPPLEMENT) + len(SHAPING_SUPPLEMENT)]
-    ds_sentence = ds_text[ds_text.index(SHAPING_SUPPLEMENT): ds_text.index(SHAPING_SUPPLEMENT) + len(SHAPING_SUPPLEMENT)]
-    assert if_sentence == ds_sentence, (
-        "the SHAPING supplement sentence must be byte-identical between "
-        "interaction-flows and design-system knowledge-triage.md"
+def test_shaping_supplement_present_verbatim():
+    text = _text(DS_TRIAGE)
+    assert text.count(SHAPING_SUPPLEMENT) == 1, (
+        "knowledge-triage.md must carry the SHAPING supplement sentence "
+        "exactly once, verbatim"
     )
 
 
 def test_shaping_supplement_after_pin_never_inside():
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        fence_match = re.search(r"```\n.*?\n```", text, re.DOTALL)
-        assert fence_match, f"{label} knowledge-triage.md missing fenced pin block"
-        supplement_idx = text.index(SHAPING_SUPPLEMENT)
-        assert supplement_idx >= fence_match.end(), (
-            f"{label} SHAPING supplement must come AFTER the pin block closes"
-        )
-        # never inside the pin fence itself
-        assert not (fence_match.start() <= supplement_idx < fence_match.end()), (
-            f"{label} SHAPING supplement must not be inside the pin fence"
-        )
+    text = _text(DS_TRIAGE)
+    fence_match = re.search(r"```\n.*?\n```", text, re.DOTALL)
+    assert fence_match, "knowledge-triage.md missing fenced pin block"
+    supplement_idx = text.index(SHAPING_SUPPLEMENT)
+    assert supplement_idx >= fence_match.end(), (
+        "SHAPING supplement must come AFTER the pin block closes"
+    )
+    assert not (fence_match.start() <= supplement_idx < fence_match.end()), (
+        "SHAPING supplement must not be inside the pin fence"
+    )
 
 
-# --- 11. pin blocks stay byte-untouched vs HEAD -----------------------------
+# --- 9. pin block stays byte-untouched vs HEAD ------------------------------
 
 
 def _git_show_head(path: Path) -> str:
@@ -423,83 +260,87 @@ def _git_show_head(path: Path) -> str:
     return result.stdout
 
 
-def test_pin_blocks_byte_untouched_vs_head():
-    for label, path in TRIAGE_FILES.items():
-        head_text = _git_show_head(path)
-        head_fence = _fenced_block(head_text)
-        assert head_fence is not None, f"{label} HEAD copy missing pin fence"
-        current_fence = _fenced_block(_text(path))
-        assert current_fence is not None, f"{label} current copy missing pin fence"
-        assert current_fence == head_fence, (
-            f"{label} pin block must stay byte-identical to the HEAD version "
-            "— edits belong AFTER the pin, never inside it"
-        )
+def test_pin_block_byte_untouched_vs_head():
+    head_fence = _fenced_block(_git_show_head(DS_TRIAGE))
+    assert head_fence is not None, "HEAD copy missing pin fence"
+    current_fence = _fenced_block(_text(DS_TRIAGE))
+    assert current_fence is not None, "current copy missing pin fence"
+    assert current_fence == head_fence, (
+        "pin block must stay byte-identical to the HEAD version "
+        "— edits belong AFTER the pin, never inside it"
+    )
 
 
-# --- 12. round-2 fix: literal tier-label supplement (mechanizes condition 2) -
-# Code-quality-reviewer finding (round 1): condition 2's grep target
+# --- 10. the literal tier-label supplement ----------------------------------
+# Code-quality-reviewer finding (round 1): the pre-check's grep target
 # ("SHAPING") had no artifact obligation requiring it to literally exist.
-# This supplement makes the tier label a literal artifact obligation,
-# mirroring loom-design's domain-tag-triage.md two-tier doctrine.
+# This supplement makes the tier label a literal artifact obligation. The
+# pre-check it mechanized lived in design-critic and is gone; the obligation
+# it created on the artifact is not, so the supplement stays required.
 
 TIER_LABEL_SUPPLEMENT = (
-    "Every tagged open question written into ui-flows.md / DESIGN.md must "
+    "Every tagged open question written into DESIGN.md must "
     "carry a literal `SHAPING` or `DEFERRABLE` label alongside its "
     "`evidence_needed:` tag."
 )
 
 
-def test_tier_label_supplement_present_verbatim_in_both_files():
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        assert text.count(TIER_LABEL_SUPPLEMENT) == 1, (
-            f"{label} knowledge-triage.md must carry the tier-label "
-            "supplement sentence exactly once, verbatim"
+def test_tier_label_supplement_present_verbatim():
+    text = _text(DS_TRIAGE)
+    assert text.count(TIER_LABEL_SUPPLEMENT) == 1, (
+        "knowledge-triage.md must carry the tier-label supplement sentence "
+        "exactly once, verbatim"
+    )
+
+
+def test_tier_label_supplement_after_first_supplement():
+    """The second supplement lands AFTER the pin AND after the existing
+    SHAPING consequence supplement — never before or inside either."""
+    text = _text(DS_TRIAGE)
+    first_idx = text.index(SHAPING_SUPPLEMENT)
+    second_idx = text.index(TIER_LABEL_SUPPLEMENT)
+    assert second_idx > first_idx + len(SHAPING_SUPPLEMENT), (
+        "tier-label supplement must come AFTER the existing SHAPING-consequence "
+        "supplement sentence"
+    )
+
+
+# --- 11. bucket-name spellings, inherited from the repo-root drift guard ----
+
+BUCKET_NAMES = ("craft", "domain-convention", "project-local")
+
+# Variant spellings that must never appear in a TAG/VALUE context. Prose like
+# "the business domain's rule" is fine — these are only checked inside the
+# scoped tag/value neighbourhood computed by `_scoped_tag_text` (see
+# docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md: whole-file
+# substring checks go false-green when the phrase pre-exists in unrelated
+# prose).
+VARIANT_SPELLINGS = ("domain_convention", "project_local", "domain convention")
+
+
+def _scoped_tag_text(text: str) -> str:
+    """Text narrowed to tag/value contexts: the fenced pin block, and any
+    line naming the `evidence_needed` tag."""
+    parts = []
+    fence = _fenced_block(text)
+    if fence:
+        parts.append(fence)
+    for line in text.splitlines():
+        if "evidence_needed" in line:
+            parts.append(line)
+    return "\n".join(parts)
+
+
+def test_carrier_contains_all_three_bucket_names():
+    text = _text(DS_TRIAGE)
+    for name in BUCKET_NAMES:
+        assert name in text, f"knowledge-triage.md missing bucket name {name!r}"
+
+
+def test_carrier_has_no_variant_spelling_in_tag_context():
+    scoped = _scoped_tag_text(_text(DS_TRIAGE))
+    for variant in VARIANT_SPELLINGS:
+        assert variant not in scoped, (
+            f"knowledge-triage.md uses variant spelling {variant!r} in a "
+            "tag/value context"
         )
-
-
-def test_tier_label_supplement_byte_identical_across_both_files():
-    if_text = _text(IF_TRIAGE)
-    ds_text = _text(DS_TRIAGE)
-    if_i = if_text.index(TIER_LABEL_SUPPLEMENT)
-    ds_i = ds_text.index(TIER_LABEL_SUPPLEMENT)
-    if_sentence = if_text[if_i: if_i + len(TIER_LABEL_SUPPLEMENT)]
-    ds_sentence = ds_text[ds_i: ds_i + len(TIER_LABEL_SUPPLEMENT)]
-    assert if_sentence == ds_sentence, (
-        "the tier-label supplement sentence must be byte-identical between "
-        "interaction-flows and design-system knowledge-triage.md"
-    )
-
-
-def test_tier_label_supplement_after_first_supplement_in_both_files():
-    """Second supplement lands AFTER the pin AND after the existing SHAPING
-    consequence supplement — never before or inside either."""
-    for label, path in TRIAGE_FILES.items():
-        text = _text(path)
-        first_idx = text.index(SHAPING_SUPPLEMENT)
-        second_idx = text.index(TIER_LABEL_SUPPLEMENT)
-        assert second_idx > first_idx + len(SHAPING_SUPPLEMENT), (
-            f"{label} tier-label supplement must come AFTER the existing "
-            "SHAPING-consequence supplement sentence"
-        )
-
-
-# --- 13. round-2 fix: design-critic pre-check condition 2 is fully mechanical
-
-
-def test_design_critic_precheck_condition_2_has_two_literal_subchecks():
-    window = _precheck_window(_text(DC_SKILL)).lower()
-    assert "(2a)" in window, "condition 2 must name its first literal sub-grep (2a)"
-    assert "(2b)" in window, "condition 2 must name its second literal sub-grep (2b)"
-    assert "untiered" in window, (
-        "must name the untiered-tag violation (no literal SHAPING|DEFERRABLE "
-        "label near an evidence_needed: domain-convention tag)"
-    )
-
-
-def test_design_critic_precheck_never_claims_critic_classifies_shaping():
-    window = _precheck_window(_text(DC_SKILL)).lower()
-    assert "panel territory" in window or "panel's judgment" in window, (
-        "must state classifying SHAPING-ness stays the panel's job, not the "
-        "mechanical pre-check's"
-    )

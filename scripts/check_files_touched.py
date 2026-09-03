@@ -12,7 +12,7 @@ SCOPE — three layers:
   * VERDICT: pure set arithmetic over (declared, actual, plan_path) per
     rule variant R1/R2/R3 (`verdict_r1/r2/r3`, `evaluate_task`) — variant
     semantics frozen in
-    docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md;
+    docs/loom/evidence/audits/2026-08-01-declared-vs-actual-check-measurement.md;
   * GIT + CLI: `actual_files(repo, sha)` reads the commit's touched paths
     via `git show --name-only --no-renames --format= <sha>` (`--no-renames`
     is a plan-Kickoff decision: a rename contributes BOTH the old and the
@@ -49,7 +49,7 @@ loom-code/scripts/check_scenario_coverage.py:58-68:
     fixture plans must not embed fenced `## Task` lines).
 
 Token normalization (frozen key cell 10,
-docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md): strip
+docs/loom/evidence/audits/2026-08-01-declared-vs-actual-check-measurement.md): strip
 surrounding whitespace, backticks, and a leading `./`; a `NEW: <path>`
 token (plan-format.md:79) normalizes to the proposed path itself.
 
@@ -284,7 +284,7 @@ def parse_plan(path: Path | str) -> PlanParse:
 # --- Verdict layer (Task 3) — pure set arithmetic, no git calls -------------
 #
 # Variant semantics are the frozen key's §Rule variants table
-# (docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md):
+# (docs/loom/evidence/audits/2026-08-01-declared-vs-actual-check-measurement.md):
 #   R1 strict     — flags any set difference, both directions;
 #   R2 under-only — flags only `actual − declared ≠ ∅` (the dangerous
 #                   direction; OVER may be legitimate drift);

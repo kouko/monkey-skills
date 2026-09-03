@@ -17,8 +17,8 @@ export const meta = {
 // Workflow-provided ambient global (never generated inline).
 
 const ROOT = '/Users/kouko/GitHub/monkey-skills'
-const SEED_CORPUS_DIR = `${ROOT}/docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus`
-const COLD_OPERATOR_SEED = `${ROOT}/docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/seed.md`
+const SEED_CORPUS_DIR = `${ROOT}/docs/loom/evidence/dogfood/2026-07-10-principles-flow-seed-corpus`
+const COLD_OPERATOR_SEED = `${ROOT}/docs/loom/evidence/dogfood/2026-07-10-principles-flow-cold-operator/seed.md`
 const SKILL_MD = `${ROOT}/loom-design/skills/product-principles/SKILL.md`
 
 const DEFAULT_SEEDS = [

@@ -92,6 +92,70 @@ def test_missing_file_zero_suffix_match_is_unchecked(tmp_path: Path) -> None:
     assert report.checked == 0
 
 
+def test_explicit_path_citation_with_no_match_is_a_finding(tmp_path: Path) -> None:
+    # ROUND 5 (W3-04): unlike a bare filename (round 2's dominant
+    # false-positive shape, see the test above), a citation already
+    # written as an explicit path from the repo root (contains `/`) that
+    # ALSO fails the repo-wide suffix search is real drift, not
+    # doc-level-context noise — it must be a finding, not UNCHECKED.
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `docs/loom/does-not-exist.md:1`.\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.checked == 1
+    assert report.unchecked == 0
+    assert len(report.findings) == 1
+    assert report.findings[0] == f"{doc}:1 -> docs/loom/does-not-exist.md:1 file not found"
+
+
+def test_main_exits_1_on_explicit_missing_path_citation(
+    tmp_path: Path, capsys
+) -> None:
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `docs/loom/does-not-exist.md:1`.\n")
+    (tmp_path / ".git").mkdir()
+
+    exit_code = main([str(doc), "--repo-root", str(tmp_path)])
+
+    assert exit_code == 1
+    out = capsys.readouterr().out
+    assert "file not found" in out
+
+
+def test_explicit_path_citation_ambiguous_match_stays_unchecked(
+    tmp_path: Path,
+) -> None:
+    # An explicit-looking path that is ALSO ambiguous (multiple repo-wide
+    # suffix matches) keeps the original UNCHECKED treatment — only a
+    # ZERO-match explicit path becomes a finding.
+    _write(tmp_path / "a" / "sub" / "shared.py", "x = 1\n")
+    _write(tmp_path / "b" / "sub" / "shared.py", "x = 2\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `sub/shared.py:1`.\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.findings == []
+    assert report.unchecked == 1
+    assert report.checked == 0
+
+
+def test_explicit_path_grammar_placeholder_stays_unchecked(tmp_path: Path) -> None:
+    # A `<...>` grammar slot (e.g. `docs/loom/intent/<change-id>.md`) is a
+    # schema placeholder, not a literal path — it must never become a
+    # "file not found" finding even though it contains `/` and matches
+    # nothing repo-wide.
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `docs/loom/intent/<change-id>.md:1`.\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.findings == []
+    assert report.unchecked == 1
+    assert report.checked == 0
+
+
 def test_pathless_shorthand_citation_is_unchecked_not_dropped(
     tmp_path: Path,
 ) -> None:
@@ -503,7 +567,7 @@ def test_section_anchor_target_with_no_numbered_headings_is_unchecked(
     tmp_path: Path,
 ) -> None:
     # ROUND 3 (loom-code plan, round 3): the round-2 dogfood
-    # (docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md, §Round 2)
+    # (docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md, §Round 2)
     # measured 240/244 remaining findings as targets that use named
     # (non-numbered) headings only -- the §N grammar simply does not apply
     # to them. A resolved target with ZERO numbered headings can no longer
@@ -548,7 +612,7 @@ def test_multiple_anchors_bind_to_nearest_preceding_doc(tmp_path: Path) -> None:
 
 # --- repo-wide suffix-match fallback (Task 3 round 2) ---
 #
-# Round-1 dogfood (docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md)
+# Round-1 dogfood (docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md)
 # measured a 79.7% false-positive rate, 95% of it one pattern: docs cite
 # files by bare name or partial path, which the literal repo-root resolver
 # can't follow. When the direct repo-root lookup fails, fall back to a
@@ -666,7 +730,7 @@ def test_main_prints_checked_unchecked_findings_summary(
 # --- --sections flag: default off / opt-in on (Task 4 round 4) ---
 #
 # Split-half shipping decision (per the user, after 3 measured rounds --
-# see docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md's Round 4
+# see docs/loom/evidence/dogfood/2026-07-28-citation-check-corpus-run.md's Round 4
 # disposition): the path:line bounds check measured 0% FP (8/8 confirmed
 # true positives); the §N anchor check produced zero true positives on
 # the whole corpus. Default invocation now runs ONLY the path:line check;

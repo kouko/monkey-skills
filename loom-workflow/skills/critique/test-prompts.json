@@ -1,0 +1,66 @@
+{
+  "skill_name": "critique",
+  "schema_version": 1,
+  "created": "2026-04-29",
+  "last_reviewed": "2026-09-03",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "Triage this 7-item backlog: 1) refactor auth, 2) add OAuth login, 3) cache user sessions in Redis, 4) audit log every API call, 5) move to gRPC, 6) standardize error responses, 7) add rate limiting. The goal is improved security posture before our SOC 2 audit in Q3.",
+      "expected_behavior": "Skill enumerates 7 items, marks each Grounded / Heuristic-OK / Speculative on grounding axis and Essential / Speculative on necessity axis, applies the Triage Matrix, and presents 3 buckets (KEEP / DEFER / DROP). For each item shows one-line reason. Audit-related items (4, 7) likely KEEP; gRPC migration (5) likely DROP or DEFER given the goal is security-focused.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "We should rewrite the order-processing system in Rust because Rust is memory-safe, the team has been wanting to learn it, and our current Python service handles 50K req/sec but we expect 200K next year.",
+      "expected_behavior": "Skill recognizes prose-shape input. Decomposes into recommendation (rewrite to Rust) + 3 supporting claims (memory-safe / team wants to / scale projection). Triages each claim independently — memory-safety is Grounded but maybe not Essential for this domain; team-learning is Speculative; scale projection is Grounded if traffic data cited. Produces verdict per claim with KEEP-WITH-CAVEAT pattern likely on the recommendation.",
+      "edge_case_dimensions": [
+        "prose-shape input",
+        "decompose required",
+        "recommendation-with-supporting-claims"
+      ]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "we should do everything in this list",
+      "expected_behavior": "Skill asks for the actual list (it's not in current context). Once provided, runs the standard 5-step gate. If the user pushes back ('I really mean everything'), the skill explains that the Iron Law is non-negotiable: triage produces a verdict per item, even if every item ends up KEEP.",
+      "edge_case_dimensions": [
+        "missing input",
+        "user resistance to triage",
+        "Iron Law enforcement"
+      ]
+    },
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "I want to add a 'preview' button to our 5-page form wizard that shows the user a draft of their submission before finalizing. Implementation would be a new modal component (~150 LOC), a state-management slice for preview mode (~80 LOC), and changes to each of the 5 wizard pages (~30 LOC × 5 = 150 LOC). Total roughly 380 new LOC. Worth it?",
+      "expected_behavior": "Skill loads at least one mindset (likely 'design-is-taking-apart' as default), then runs Q1 (smallest end state — could it be a single confirm dialog without modal infrastructure? Could the existing review step be augmented?), Q2 (LOC count: +380), Q3 (what becomes obsolete?). Likely verdict: RESHAPE — propose the simpler alternative (augment existing review step or single confirm dialog).",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "Should we add a feature-flag system to the codebase? We don't have one yet. Building it would take ~2 weeks. We've never had a deploy that we wished we could've gated, but the team thinks 'we'll need it eventually'.",
+      "expected_behavior": "Skill loads 'expensive-to-add-later' (PAGNI) mindset. Q1 alternatives: skip entirely (YAGNI) / minimal feature flag (env var + hardcoded list) / full system. Q2 (greenfield handling): substitutes 'what's smallest code to ship; 0 = decline'. Q3: asks the PAGNI three-test (10x retrofit cost? known pattern? cheap now?). Likely RESHAPE to minimal version OR REJECT given no documented incident; not a clear PAGNI case.",
+      "edge_case_dimensions": [
+        "PAGNI evaluation",
+        "greenfield should-we-build",
+        "explicit PAGNI bar test"
+      ]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "make it simpler",
+      "expected_behavior": "Skill asks what 'it' refers to (no concrete change in context). If user clarifies with a specific change, runs full gate. If user remains vague ('just make the codebase simpler'), recommends running proposal-critique first to identify specific candidates, since 'simpler' without a target is not a complexity-critique scope.",
+      "edge_case_dimensions": [
+        "vague target",
+        "delegation to proposal-critique",
+        "intake required"
+      ]
+    }
+  ]
+}

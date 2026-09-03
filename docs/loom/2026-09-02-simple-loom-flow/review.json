@@ -1,0 +1,3167 @@
+{
+ "reviewed_sha": "e0e72361",
+ "scope": "spec PASS (r1–4, r5 adversarial, r9); W0 PWN (6–8); W1 PWN (10–14); W2 PWN (15–19); W3 PWN (20–21); W4 pending",
+ "verdicts": [
+  {
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "NEEDS_REVISION",
+   "dimension_scores": {
+    "omission": "fail",
+    "ambiguity": "fail",
+    "inconsistency": "fail",
+    "incorrect-fact": "fail",
+    "missing-population": "fail",
+    "spec-conformance": "fail",
+    "user-judgment-leak": "pass"
+   },
+   "findings_file": "evidence/spec-review-r1-claude.md"
+  },
+  {
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "NEEDS_REVISION",
+   "dimension_scores": {
+    "omission": "fail",
+    "ambiguity": "fail",
+    "inconsistency": "fail",
+    "incorrect-fact": "fail",
+    "missing-population": "fail",
+    "spec-conformance": "fail",
+    "user-judgment-leak": "fail"
+   },
+   "findings_file": "evidence/spec-review-r1-codex.md"
+  },
+  {
+   "round": 2,
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-review-r2-codex.md",
+   "scope": "spec"
+  },
+  {
+   "round": 2,
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-review-r2-claude.md",
+   "scope": "spec"
+  },
+  {
+   "round": 3,
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-review-r3-codex.md",
+   "scope": "spec"
+  },
+  {
+   "round": 3,
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r3-claude.md",
+   "scope": "spec"
+  },
+  {
+   "round": 4,
+   "reviewer": "codex-exec",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "verdict": "PASS",
+   "findings_file": "evidence/spec-review-r4-codex.md",
+   "scope": "spec"
+  },
+  {
+   "round": 4,
+   "reviewer": "claude-fresh-context",
+   "vendor": "anthropic",
+   "model": "opus",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r4-claude.md",
+   "scope": "spec"
+  },
+  {
+   "round": 5,
+   "reviewer": "opus-spec-redteam-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "spec-adversarial",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/spec-redteam-r5.md",
+   "scope": "spec"
+  },
+  {
+   "round": 6,
+   "scope": "w0-code",
+   "reviewer": "opus-review-code-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#after-task"
+  },
+  {
+   "round": 6,
+   "scope": "w0-code",
+   "reviewer": "sonnet-review-spec-1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "spec-conformance",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#after-task"
+  },
+  {
+   "round": 7,
+   "scope": "w0-code",
+   "reviewer": "opus-review-code-2",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#wave-end"
+  },
+  {
+   "round": 7,
+   "scope": "w0-code",
+   "reviewer": "sonnet-review-consistency-2",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#wave-end"
+  },
+  {
+   "round": 8,
+   "scope": "w0-code",
+   "reviewer": "opus-review-code-3",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#re-review"
+  },
+  {
+   "round": 8,
+   "scope": "w0-code",
+   "reviewer": "sonnet-review-docs-3",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w0-checkpoint-reviews.md#re-review"
+  },
+  {
+   "round": 9,
+   "scope": "spec-r5-read",
+   "reviewer": "opus-spec-r5-read-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "spec",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r5-read.md",
+   "spec_sha": "1ef2e82"
+  },
+  {
+   "round": 9,
+   "scope": "spec-r5-read",
+   "reviewer": "sonnet-spec-r5-read-1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "spec",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/spec-review-r5-read.md",
+   "spec_sha": "1ef2e82"
+  },
+  {
+   "round": 10,
+   "scope": "w1-after-task:W1-01",
+   "reviewer": "sonnet-coldread-writeplan-1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "skill-blind-run",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 10,
+   "scope": "w1-after-task:W1-01",
+   "reviewer": "opus-review-writeplan-1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "sonnet-review-docs-w1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "opus-review-code-w1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "sonnet-blindrun-w1",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "skill-blind-run",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 11,
+   "scope": "w1-wave-end",
+   "reviewer": "opus-adversary-w1",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "adversarial",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 12,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w1b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 12,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "opus-review-code-w1b",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 13,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "opus-review-code-w1c",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 14,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "opus-review-code-w1d",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 14,
+   "scope": "w1-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w1b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS",
+   "findings_file": "evidence/w1-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "sonnet-review-docs-w2",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "opus-review-code-w2",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "sonnet-blindrun-w2",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "skill-blind-run",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 15,
+   "scope": "w2-wave-end",
+   "reviewer": "opus-adversary-w2",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "adversarial",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 16,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w2b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 16,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w2b",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 17,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w2c",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 18,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w2d",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 19,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "opus-review-code-w23",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 19,
+   "scope": "w2-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w2b",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w2-checkpoint-reviews.md"
+  },
+  {
+   "round": 20,
+   "scope": "w3-wave-end",
+   "reviewer": "sonnet-review-docs-w3",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 20,
+   "scope": "w3-wave-end",
+   "reviewer": "opus-review-code-w3",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 20,
+   "scope": "w3-wave-end",
+   "reviewer": "opus-adversary-w3",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "adversarial",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 21,
+   "scope": "w3-wave-end re-review",
+   "reviewer": "opus-review-code-w23",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 21,
+   "scope": "w3-wave-end re-review",
+   "reviewer": "sonnet-review-docs-w3",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES",
+   "findings_file": "evidence/w3-checkpoint-reviews.md"
+  },
+  {
+   "round": 22,
+   "scope": "branch-end",
+   "findings_file": "evidence/branch-end-r22-reviews.md",
+   "reviewer": "opus-review-code-branch-end-r22",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 22,
+   "scope": "branch-end",
+   "findings_file": "evidence/branch-end-r22-reviews.md",
+   "reviewer": "codex-review-docs-branch-end-r22",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 23,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r23-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r23",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 23,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r23-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r23",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 24,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r24-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r24",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 24,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r24-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r24",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 25,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r25-rereview.md",
+   "reviewer": "sonnet-review-docs-branch-end-r25",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS"
+  },
+  {
+   "round": 25,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r25-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r25",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 26,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r26-rereview.md",
+   "reviewer": "sonnet-review-docs-branch-end-r26",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 26,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r26-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r26",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "PASS"
+  },
+  {
+   "round": 27,
+   "scope": "branch-end re-review (CI-1)",
+   "findings_file": "evidence/branch-end-r27-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r27",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 27,
+   "scope": "branch-end re-review (CI-1)",
+   "findings_file": "evidence/branch-end-r27-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r27",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 28,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r28-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r28",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 28,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r28-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r28",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 29,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r29-rereview.md",
+   "reviewer": "sonnet-review-docs-branch-end-r29",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 29,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r29-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r29",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "PASS"
+  },
+  {
+   "round": 30,
+   "scope": "branch-end re-review (CI-2)",
+   "findings_file": "evidence/branch-end-r30-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r30",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS"
+  },
+  {
+   "round": 30,
+   "scope": "branch-end re-review (CI-2)",
+   "findings_file": "evidence/branch-end-r30-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r30",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES"
+  }
+ ],
+ "probes": [
+  {
+   "kind": "cold-read",
+   "command": "fresh sonnet narrates Task A/B from concept-model.md",
+   "result": "v10: both paths correct, 25 min, 2 genuine guesses fixed",
+   "artifact": "concept-model.md §12"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "w0-code",
+   "command": "python3 -m pytest loom-code/scripts/ -q",
+   "sha": "257bdd81",
+   "result": "2285 passed, 1 xfailed in 122.29s (0:02:02)",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "w1-code",
+   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+   "sha": "d6cb7ea0",
+   "result": "896 passed (round 3); 889 passed after W2-04 cleanup",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py",
+   "sha": "d6cb7ea0",
+   "result": "escaped-by-design (§0)",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py",
+   "sha": "d6cb7ea0",
+   "result": "escaped-by-design (§0)",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "w1-code",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py",
+   "sha": "d6cb7ea0",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "w3-code",
+   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+   "sha": "c3c4d478",
+   "result": "985 passed (round 21 reviewer run)",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "branch-end",
+   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+   "sha": "e0e72361",
+   "result": "1007 passed in 147.05s (0:02:27)",
+   "artifact": "loom-code/scripts/"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/fixture.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/fixture.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py",
+   "sha": "e0e72361",
+   "result": "caught",
+   "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
+  }
+ ],
+ "open_findings": [
+  {
+   "id": "SR1-01",
+   "severity": "fatal",
+   "anchor": "spec.md:Requirements",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "Acceptance #4 (replay 三個真實 change 不比今天重) 無任何 REQ",
+   "resolved": "f0b59ce8: REQ-10 逐 change 基線 31/22/2、67/58/2、28/14/2，engineering 路徑"
+  },
+  {
+   "id": "SR1-02",
+   "severity": "fatal",
+   "anchor": "spec.md:REQ-1 / UI flows / concept-model §4",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "單向門與判斷型岔路成為額外停點；engineering 在 write-plan 前問違反 ≤2",
+   "resolved": "f0b59ce8: 岔路併入既有決策點；非決策型限授權／缺件；PRINCIPLES 訪談併入決策點①"
+  },
+  {
+   "id": "SR1-03",
+   "severity": "fatal",
+   "anchor": "concept-model.md:§4 table",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "只裝 loom-code 且 needs-design: yes 時要求使用者手寫 spec ＝ user-judgment leak",
+   "resolved": "24528776: write-plan 自動產最小 spec；f0b59ce8 補 product 限定"
+  },
+  {
+   "id": "SR1-04",
+   "severity": "fatal",
+   "anchor": "spec.md:REQ-7 / concept-model §11",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "准入規則的『機制』無機器可讀母體，CI 無法驗淨數不增",
+   "resolved": "f0b59ce8: 散文閘以 <!-- gate: id --> 為母體；checker --list-rules；budget-exception 文法"
+  },
+  {
+   "id": "SR1-05",
+   "severity": "important",
+   "anchor": "spec.md:UI flows",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "缺 Codex /hooks 授信、PRINCIPLES 拒收、standing docs WARN 的可見流程",
+   "resolved": "f0b59ce8: flow 5 授信、flow 6 併入決策點①"
+  },
+  {
+   "id": "SR1-06",
+   "severity": "important",
+   "anchor": "spec.md:REQ-3/6/8",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "複合 REQ 的箭頭只覆蓋部分義務；名詞≤40 與跨 vendor 必用是 intent Open question 卻寫成硬要求",
+   "resolved": "24528776 + fc5693e2：箭頭縮窄；跨 vendor 改使用者選擇"
+  },
+  {
+   "id": "SR1-07",
+   "severity": "important",
+   "anchor": "spec.md:REQ-2 / concept-model §7a",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "『只多一次授信』為假：hook 定義變即重授信，而 §7a 升版覆寫；command 字串須固定",
+   "resolved": "24528776: hooks.json command 固定；核對 run E"
+  },
+  {
+   "id": "SR1-08",
+   "severity": "important",
+   "anchor": "spec.md:REQ-8 / Current state evidence",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "skill 36→18 應為 ≤18；session-start 減半無 baseline sha；113 名詞未受清單支持",
+   "resolved": "f0b59ce8: session-start 基線釘 SHA＋命令"
+  },
+  {
+   "id": "SR1-09",
+   "severity": "important",
+   "anchor": "spec.md:REQ-9",
+   "raised_by": [
+    "claude",
+    "codex"
+   ],
+   "text": "REQ-9 措辭『走完』≠ Acceptance #6 的四項輸出；且未帶現況 25 分鐘與拆站對策",
+   "resolved": "f0b59ce8: REQ-9 回 Acceptance #6 原句＋固定測例；對象改站文件與否待 intent 裁定"
+  },
+  {
+   "id": "SR1-10",
+   "severity": "nit",
+   "anchor": "spec.md:UI flows 4 / Alternatives 2 / REQ-6,7",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "機制規則混進使用者可讀段；『掃讀』理由無證據；REQ-6/7 列舉不完整",
+   "resolved": "24528776"
+  },
+  {
+   "id": "SR2-01",
+   "severity": "fatal",
+   "anchor": "intent Proposed outcome / spec REQ-3",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "spec 改跨 vendor 為選配後與 intent『至少一個不同 vendor』牴觸",
+   "resolved": "f0b59ce8: intent 該句改為使用者選擇；status 退回 open 待重確認"
+  },
+  {
+   "id": "SR2-02",
+   "severity": "fatal",
+   "anchor": "spec UI flows 6 / concept-model §8",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "『不需要產品原則』選項是額外停點且繞過 product 拒收",
+   "resolved": "f0b59ce8: 訪談併入決策點①；waiver 只靜音 WARN 永不豁免拒收"
+  },
+  {
+   "id": "SR2-03",
+   "severity": "important",
+   "anchor": "spec UI flows 非決策型",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "非決策型類別無上限，6a 是偏好詢問",
+   "resolved": "f0b59ce8: 入場判準＝不做無法繼續的授權／缺件，不得新增；6a 併入首次決策點①"
+  },
+  {
+   "id": "SR2-04",
+   "severity": "important",
+   "anchor": "concept-model §4 table",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "code-only 格漏 product 限定",
+   "resolved": "f0b59ce8"
+  },
+  {
+   "id": "SR2-05",
+   "severity": "nit",
+   "anchor": "concept-model §7a",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "未寫明 checker 副本可被改寫的已知限制",
+   "resolved": "f0b59ce8"
+  },
+  {
+   "id": "SR2-06",
+   "severity": "open-question",
+   "anchor": "intent Acceptance #6 / spec REQ-9",
+   "raised_by": [
+    "codex",
+    "claude"
+   ],
+   "text": "冷讀對象：整份 concept-model.md（現況 25 分）或落地後各站 SKILL.md——intent 裁定",
+   "resolved": "user decided 2026-09-02: 對象改站文件，零猜測優先；concept-model 只記錄（intent Acceptance #6 amended, re-confirmed）"
+  },
+  {
+   "id": "SR3-01",
+   "severity": "fatal",
+   "anchor": "concept-model §0.2",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "§0 仍寫『至少一個不同 vendor』，與重確認 intent 衝突",
+   "resolved": "bb5601cb"
+  },
+  {
+   "id": "SR3-02",
+   "severity": "important",
+   "anchor": "spec REQ-8",
+   "raised_by": [
+    "codex",
+    "claude"
+   ],
+   "text": "REQ-8 基線仍寫『main 當前』",
+   "resolved": "bb5601cb"
+  },
+  {
+   "id": "SR3-03",
+   "severity": "important",
+   "anchor": "concept-model §11 / spec REQ-7",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "contract package 宣告檔無固定路徑",
+   "resolved": "bb5601cb: loom-code/contract/manifest.yaml"
+  },
+  {
+   "id": "SR3-04",
+   "severity": "important",
+   "anchor": "spec UI flows",
+   "raised_by": [
+    "codex"
+   ],
+   "text": "缺 standing docs 三行 WARN 流程",
+   "resolved": "bb5601cb: flow 7"
+  },
+  {
+   "id": "SR3-05",
+   "severity": "important",
+   "anchor": "spec REQ-9",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "測例未指明受測站",
+   "resolved": "34de58f4: 入口站＋摘要表"
+  },
+  {
+   "id": "SR3-06",
+   "severity": "important",
+   "anchor": "spec REQ-10",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "evidence New-model 欄依 v7 算，自證不可通過",
+   "resolved": "34de58f4: 註明過時、以 replay 為準"
+  },
+  {
+   "id": "SR3-07",
+   "severity": "important",
+   "anchor": "concept-model §8",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "code-only product 缺件仍寫『手寫』",
+   "resolved": "34de58f4: write-plan 代做訪談代寫"
+  },
+  {
+   "id": "SR3-08",
+   "severity": "nit",
+   "anchor": "concept-model §12 / §11 / spec 括號",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "§12 歷史列措辭、yaml-extra 檢查、重複性範圍措辭",
+   "resolved": "34de58f4"
+  },
+  {
+   "id": "SR4-01",
+   "severity": "important",
+   "anchor": "spec REQ-7",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "§11 第四條紅線未同步進 REQ-7",
+   "resolved": "0974e7cd"
+  },
+  {
+   "id": "SR4-02",
+   "severity": "important",
+   "anchor": "spec UI flows",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "flow 7 不符非決策型判準；計數錯",
+   "resolved": "0974e7cd: 獨立為非互動提示類"
+  },
+  {
+   "id": "SR4-03",
+   "severity": "nit",
+   "anchor": "spec REQ-9",
+   "raised_by": [
+    "claude"
+   ],
+   "text": "摘要表要含完整站序",
+   "resolved": "0974e7cd"
+  },
+  {
+   "id": "SR5-01",
+   "severity": "fatal",
+   "anchor": "§7 push probes",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-1 probes[] 自填→checker 自跑",
+   "resolved": "6c2cb1d9 §7 + 3c5d14ca checker executes probes — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-02",
+   "severity": "fatal",
+   "anchor": "§4 合併閘",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "C/D 決策點後單向門取保守預設",
+   "resolved": "6c2cb1d9 §4; 82726dcd NF-1 no-reversible-option exit — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-03",
+   "severity": "fatal",
+   "anchor": "§4 類別",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "C-2 類別 (e) 不可逆動作",
+   "resolved": "6c2cb1d9 §4 (e) + UI flow 4 — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-04",
+   "severity": "fatal",
+   "anchor": "§6 對抗",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "A-1 無工具時自寫 abuse 案例",
+   "resolved": "6c2cb1d9 §6; push.probes-adversarial scheduled W1-06 — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-05",
+   "severity": "fatal",
+   "anchor": "§5 狀態機",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "A-2 dismissed 身分",
+   "resolved": "6c2cb1d9 §5/§7 + 3c5d14ca push.dismissed-by-reviewer — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-06",
+   "severity": "fatal",
+   "anchor": "REQ-1／§4",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-2 問題型判準",
+   "resolved": "6c2cb1d9 §4/REQ-1; questions[] field for the record — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-07",
+   "severity": "important",
+   "anchor": "§5 second-vendor",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "B-2 建議句用 5/7",
+   "resolved": "6c2cb1d9 §5 (5/7 verified by r5 reviewer) — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-08",
+   "severity": "important",
+   "anchor": "§5 上限",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "E-1 修正輪不計、after-task 預算",
+   "resolved": "6c2cb1d9 §5; build SKILL + manifest wording synced — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-09",
+   "severity": "nit",
+   "anchor": "§5 門檻",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "E-2 接受風險，replay 量首輪比例",
+   "resolved": "plan W4-03 measurement line — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-10",
+   "severity": "important",
+   "anchor": "§8 拒收",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "F ratified 實質條件",
+   "resolved": "6c2cb1d9 §8 + 3c5d14ca non-negotiables ≥3 — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-11",
+   "severity": "important",
+   "anchor": "§1／§10／REQ-2",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "G 切換日三事實",
+   "resolved": "6c2cb1d9 §1/§10/REQ-2 + contract.requires rule — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-12",
+   "severity": "important",
+   "anchor": "§7 fresh-context",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-3 降為記錄欄位",
+   "resolved": "6c2cb1d9 §7 + dispatch[] fresh_context field — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-13",
+   "severity": "nit",
+   "anchor": "REQ-10",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-4 接受風險，分開呈現",
+   "resolved": "plan W4-03 separate presentation — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "SR5-14",
+   "severity": "nit",
+   "anchor": "§12",
+   "raised_by": [
+    "opus-spec-redteam-1"
+   ],
+   "text": "H-5 猜測定義",
+   "resolved": "6c2cb1d9 §12 — by kouko decision point ② re-confirmation 2026-09-02"
+  },
+  {
+   "id": "W0-01",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "branch_base only main",
+   "resolved": "resolved: af0870e4"
+  },
+  {
+   "id": "W0-02",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "no review.json schema at push",
+   "resolved": "resolved: af0870e4 push.review-schema"
+  },
+  {
+   "id": "W0-03",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "package-tests probe unbound",
+   "resolved": "resolved: af0870e4 (sha) + 3c5d14ca (checker executes)"
+  },
+  {
+   "id": "W0-04",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "push hangs on open stdin",
+   "resolved": "resolved: 3c5d14ca --hook"
+  },
+  {
+   "id": "W0-05",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "push regex misses git -C / eval / shell -c / xargs",
+   "resolved": "resolved: 3c5d14ca + 257bdd81"
+  },
+  {
+   "id": "W0-06",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "Codex scaffold copy lacks deps; probe misreports",
+   "resolved": "resolved: ae1be4bd"
+  },
+  {
+   "id": "W0-07",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "dispatch contract prose vs code",
+   "resolved": "resolved: 3c5d14ca dispatch[] in review.json"
+  },
+  {
+   "id": "W0-08",
+   "severity": "fatal",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "mechanisms registered per artifact not per field",
+   "resolved": "resolved: 4c4aa20f"
+  },
+  {
+   "id": "W0-09",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "dismissed not identity-checked",
+   "resolved": "resolved: 3c5d14ca push.dismissed-by-reviewer"
+  },
+  {
+   "id": "W0-10",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "R3 whole-file fallback; R4 unresolved eval; class unvalidated",
+   "resolved": "resolved: 4c4aa20f + 257bdd81"
+  },
+  {
+   "id": "W0-11",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "docs: backlog wording, session-start ②, KICKOFF globs, §3 JSON keys",
+   "resolved": "resolved: e31c4703, b28d7586"
+  },
+  {
+   "id": "W0-12",
+   "severity": "nit",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "contract --require message direction; plan lists hooks-probe",
+   "resolved": "resolved: 257bdd81, a6f583a8"
+  },
+  {
+   "id": "W0-13",
+   "severity": "important",
+   "anchor": "W0",
+   "origin_sha": "a9eeeea3",
+   "raised_by": [
+    "w0-reviewers"
+   ],
+   "text": "intake.spec-pass picks the latest round across all lenses; a later code round would shadow the spec round",
+   "resolved": "44dbdc24 intake.spec-pass filters by spec-scoped rounds; 5 tests incl. later-code-round shadowing"
+  },
+  {
+   "id": "W1-01",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "write-plan lacked the needs-design criterion and Codex first-contact step",
+   "resolved": "resolved: 19fbb94b, 3b539cc2"
+  },
+  {
+   "id": "W1-02",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "CI pytest step died on a collection error; 46 root guards pinned deleted mechanisms",
+   "resolved": "resolved: 5a21d6a1, 3c1186f7"
+  },
+  {
+   "id": "W1-03",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "ship referenced a sibling plugin path (boundary)",
+   "resolved": "resolved: 5a21d6a1"
+  },
+  {
+   "id": "W1-04",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "adversary.md pointed at a non-existent catalogue",
+   "resolved": "resolved: 60435d64"
+  },
+  {
+   "id": "W1-05",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "no adversary dispatched at the checkpoint; push.probes-adversarial absent from tables",
+   "resolved": "resolved: adversary dispatched (67233188); tables 60435d64"
+  },
+  {
+   "id": "W1-06",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "probe command `true` / comment-substring / `; true` passed the push gate",
+   "resolved": "resolved: 67fe4b84 → 7ca26ddb → 57e72d00 (checker executes artifacts and declared commands, never recorded strings)"
+  },
+  {
+   "id": "W1-07",
+   "severity": "fatal",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "branch-level Task trailer let untagged code commits through",
+   "resolved": "resolved: 57e72d00 per-commit trailer"
+  },
+  {
+   "id": "W1-08",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "dispatch record race; second-vendor silently dropped; after-task budget prose-only; rename hides deletion",
+   "resolved": "resolved: 67fe4b84 push.dispatch-covers-tasks, push.second-vendor-honoured, intake.after-task-budget, --no-renames"
+  },
+  {
+   "id": "W1-09",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "build BLOCKED branch re-opened a stop; questions[] carrier; branch creation; wave-end/branch-end doubling; five tables diverged",
+   "resolved": "resolved: 60435d64 (tables identical, test)"
+  },
+  {
+   "id": "W1-10",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "spec red-team probe accepted without scope; R3/R4/class checks; host-hygiene skipped R4",
+   "resolved": "resolved: 67fe4b84, 4c4aa20f, 257bdd81"
+  },
+  {
+   "id": "W1-11",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "KICKOFF lacked package-tests for this repo; fallback masked",
+   "resolved": "resolved: 7ca26ddb"
+  },
+  {
+   "id": "W1-12",
+   "severity": "nit",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "dead constant, weak `or` assertion, timeout regressions, ROUTINE.md dead pointer, docstrings, codex longDescription",
+   "resolved": "resolved: d6cb7ea0, 7ca26ddb, c34b6434"
+  },
+  {
+   "id": "W1-13",
+   "severity": "important",
+   "anchor": "W1",
+   "origin_sha": "81099ae3",
+   "raised_by": [
+    "w1-reviewers"
+   ],
+   "text": "adversarial artifact content unconstrained (empty attack file passes)",
+   "dismissed": "accepted weakest link under §0; recorded in §7 and intent Open questions by opus-review-code-w1d"
+  },
+  {
+   "id": "W2-01",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "design-system read docs/loom/PRINCIPLES.md; design-md-schema depended on the old ## Anchors",
+   "resolved": "resolved: b435739e"
+  },
+  {
+   "id": "W2-02",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "four loom-design stations' Codex command template composed a non-existent path",
+   "resolved": "resolved: b435739e"
+  },
+  {
+   "id": "W2-03",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "trunk-branch diff empty (P13); kind self-reported (P05)",
+   "resolved": "resolved: 3b5948c2 branch_base fail-closed, intent.kind-recompute"
+  },
+  {
+   "id": "W2-04",
+   "severity": "fatal",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "checker accepted ratified-by: pending; UI flows N/A synonyms; legacy freshness fallback unbounded",
+   "resolved": "resolved: 79efc3a9, a1a4a321, f05a2ec2 (structural ui-flows rule)"
+  },
+  {
+   "id": "W2-05",
+   "severity": "important",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "spec freshness any() one reviewer; deciding-commit reads HEAD; descriptions drift; identifier false positives; principles substance; date validity; REQ grammar; validate_design_output missing",
+   "resolved": "resolved: 3b5948c2, bcb6ce0e, a1a4a321"
+  },
+  {
+   "id": "W2-06",
+   "severity": "important",
+   "anchor": "W2",
+   "origin_sha": "bf370552",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "docs: examples not archived, knowledge-triage seed, bilingual ①, station table paths, spec caller row, questions[] carrier, branch creation, (e) vs check gate",
+   "resolved": "resolved: b435739e, d7d31008, 7bf27b96"
+  },
+  {
+   "id": "W3-01",
+   "severity": "fatal",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "Conventional Commits check rejected ! and ci; four review( commits; one docs+test commit",
+   "resolved": "resolved: 52553a27 regex; four subjects rewritten (docs(loom-review)) by kouko; docs+test rewrite pending kouko"
+  },
+  {
+   "id": "W3-02",
+   "severity": "fatal",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "PRINCIPLES.md untracked/unsigned",
+   "resolved": "resolved: 9a15f1b7 tracked, f593e46d ratified by kouko"
+  },
+  {
+   "id": "W3-03",
+   "severity": "important",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "R4 verified path existence only; --measure fail-open; frozen stores prose-only; two DAs one intent; host-hygiene self-exemption; map: unchecked; counting prose unbound",
+   "resolved": "resolved: f05a2ec2, 98a583eb, c3c4d478"
+  },
+  {
+   "id": "W3-04",
+   "severity": "important",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "9 eval pointers had no trace in the cited evidence; doc citations fail-open; hook and workflow pointed at frozen/moved paths; README requires-contract claim; KICKOFF contradiction",
+   "resolved": "resolved: nine W3-04 docs commits (pending — W4-01 evals now red by design)"
+  },
+  {
+   "id": "W3-05",
+   "severity": "nit",
+   "anchor": "W3",
+   "origin_sha": "bd55c681",
+   "raised_by": [
+    "w2-w3-reviewers"
+   ],
+   "text": "dead FLOW_MARKER, nested ARCHIVED.md exemption, indented code as flow line, ui-flows scope statement",
+   "resolved": "resolved: c3c4d478"
+  },
+  {
+   "id": "R22-O1",
+   "severity": "fatal",
+   "anchor": "scripts/test_codex_git_guard_shim.py:27",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "tests for the deleted git-guard shim left behind; package command red (5 failed)",
+   "resolved": "resolved: c45dcb15"
+  },
+  {
+   "id": "R22-O2",
+   "severity": "fatal",
+   "anchor": "loom-code/scripts/codex_scaffold.py:205",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "scaffold overwrites an adopting repo's hooks.json wholesale (PRINCIPLES non-negotiable 5)",
+   "resolved": "resolved: a8bcbbf9"
+  },
+  {
+   "id": "R22-O3",
+   "severity": "important",
+   "anchor": "loom-code/scripts/loom_checker.py:387",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "HOST_PLUMBING_PREFIX hides real gate scripts under .codex/hooks/ from changed_paths",
+   "resolved": "resolved: 68d8855d"
+  },
+  {
+   "id": "R22-O4",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/review.json:2018",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "orchestrator-inline notes say shas are pre-rewrite after they were remapped",
+   "resolved": "resolved: d0f96886 (review-only commit note rewrite)"
+  },
+  {
+   "id": "R22-O5",
+   "severity": "nit",
+   "anchor": "docs/loom/evidence/mechanisms.yaml:53",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "opus-review-code-branch-end-r22"
+   ],
+   "text": "stale \"# interim; W4-01 replaces\" comments (53, 276, 279)",
+   "resolved": "resolved: 68d8855d"
+  },
+  {
+   "id": "R22-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "blind-run report predates the W4 fix round (sha c43641e6, 63 dispatches)",
+   "resolved": "resolved: f0066ed5 (addendum) + 923ba1c6 (counts as-of statement)"
+  },
+  {
+   "id": "R22-C2",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:211",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "plan risk 1 still instructs a `!` push around the deleted git-guard",
+   "resolved": "resolved: c5fc1346"
+  },
+  {
+   "id": "R22-C3",
+   "severity": "fatal",
+   "anchor": "docs/loom/memory/README.md:255",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "memory entry names git-guard.py / git-guard-shim.sh as the only cross-host enforcement surface",
+   "resolved": "resolved: c5fc1346"
+  },
+  {
+   "id": "R22-C4",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/concept-model.md:165",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "push.dispatch-covers-tasks summary omits trailer duty and spec exemption",
+   "resolved": "resolved: c5fc1346"
+  },
+  {
+   "id": "R22-C5",
+   "severity": "important",
+   "anchor": "loom-code/skills/ship/SKILL.md:213",
+   "origin_sha": "a696a314",
+   "raised_by": [
+    "codex-review-docs-branch-end-r22"
+   ],
+   "text": "ship table describes only one of the rule's two failure modes",
+   "resolved": "resolved: 784606bb"
+  },
+  {
+   "id": "R24-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "codex-review-docs-branch-end-r24"
+   ],
+   "text": "report claimed records-only commits after the tested tree; f600c281 changed checker code",
+   "resolved": "resolved: 501a4ead (claim withdrawn) + second addendum"
+  },
+  {
+   "id": "R24-C2",
+   "severity": "fatal",
+   "anchor": "loom-code/CHANGELOG.md:33",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "codex-review-docs-branch-end-r24"
+   ],
+   "text": "CHANGELOG said 20 rules; --list-rules prints 27",
+   "resolved": "resolved: 501a4ead"
+  },
+  {
+   "id": "R24-O1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/review.json:633",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "opus-review-code-branch-end-r24"
+   ],
+   "text": "four prose adversarial probes are not runnable (change-relative artifact, prose command, scratchpad gone)",
+   "resolved": "resolved: d0f96886 (entries removed from probes[]; findings files stay in evidence/)"
+  },
+  {
+   "id": "R24-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/loom_checker.py:455",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "opus-review-code-branch-end-r24"
+   ],
+   "text": "docstring says the constants are \"below\"; they are above",
+   "resolved": "accepted, not fixed: a code edit after the final blind run would reopen R24-C1; first post-merge change"
+  },
+  {
+   "id": "R24-O3",
+   "severity": "nit",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "e2a8df91",
+   "raised_by": [
+    "opus-review-code-branch-end-r24"
+   ],
+   "text": "HEAD moved during the round-24 review (docs-only commit 501a4ead)",
+   "resolved": "accepted: round 25 ran on a frozen tree"
+  },
+  {
+   "id": "R25-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/evidence/branch-end-r24-rereview.md:60",
+   "origin_sha": "6089e62b",
+   "raised_by": [
+    "codex-review-docs-branch-end-r25"
+   ],
+   "text": "disposition read as already done while the four prose probes were still in probes[]",
+   "resolved": "resolved: 4e0449d5"
+  },
+  {
+   "id": "R23-O1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/review.json:2135",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "opus-review-code-branch-end-r23"
+   ],
+   "text": "push.dispatch-covers-tasks red at HEAD: three untrailered SKILL.md commits; W4-01/W4-04/W4-02/W4-05 unclaimed; W4-06+W4-08 combined",
+   "resolved": "resolved: e2a8df91 (record) + user-run trailer rewrite 2026-09-03"
+  },
+  {
+   "id": "R23-O2",
+   "severity": "important",
+   "anchor": "loom-code/scripts/loom_checker.py:454",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "opus-review-code-branch-end-r23"
+   ],
+   "text": "changed_paths docstring kept the directory-wide .codex/hooks/ exemption",
+   "resolved": "resolved: f600c281"
+  },
+  {
+   "id": "R23-O3",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/loom_checker.py:389",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "opus-review-code-branch-end-r23"
+   ],
+   "text": "HOST_PLUMBING_FILES not pinned to codex_scaffold constants",
+   "resolved": "resolved: f600c281"
+  },
+  {
+   "id": "R23-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "report quoted dispatch counts that drift with every dispatch-record commit",
+   "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "R23-C2",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:193",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "W4-06 risk note still said the scaffold overwrite was deferred",
+   "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "R23-C3",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/concept-model.md:173",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "§7 said the checker ignores all of .codex/",
+   "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "R23-C4",
+   "severity": "fatal",
+   "anchor": "loom-code/README.md:57",
+   "origin_sha": "e8b5a6fe",
+   "raised_by": [
+    "codex-review-docs-branch-end-r23"
+   ],
+   "text": "README said 20 rules; --list-rules prints 27",
+   "resolved": "resolved: 923ba1c6"
+  },
+  {
+   "id": "CI-1",
+   "severity": "fatal",
+   "anchor": "loom-code/scripts/check_mechanisms.py:586",
+   "origin_sha": "2b876055",
+   "raised_by": [
+    "github-ci loom-code pytest (PR #780 run 33667184980)"
+   ],
+   "text": "test_real_repo_measure_is_green red on CI: session-start word count is locale-dependent (`wc -w` counts 5281 under macOS UTF-8 locale, 5278 under LC_ALL=C / GNU on the runner; python str.split agrees with 5278), so the recorded baseline 923fb84a 5281 does not reproduce on CI",
+   "resolved": "resolved: 79a1ca4c"
+  },
+  {
+   "id": "R27-C1",
+   "severity": "fatal",
+   "anchor": "loom-code/hooks/session-start:14",
+   "origin_sha": "8165915c",
+   "raised_by": [
+    "codex-review-docs-branch-end-r27"
+   ],
+   "text": "hook comment still prescribes unpinned wc -w and 5281/2640",
+   "resolved": "resolved: 85bc04ff"
+  },
+  {
+   "id": "R27-C2",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/spec.md:22",
+   "origin_sha": "8165915c",
+   "raised_by": [
+    "codex-review-docs-branch-end-r27"
+   ],
+   "text": "REQ-8 defined the count with locale-dependent wc -w",
+   "resolved": "resolved: 3e33bca9 (spec REQ-8 + confirmed-behavior re-pin)"
+  },
+  {
+   "id": "R27-C3",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:13",
+   "origin_sha": "8165915c",
+   "raised_by": [
+    "codex-review-docs-branch-end-r27"
+   ],
+   "text": "plan still presents 5281 / 2640 / unpinned command as landed",
+   "resolved": "resolved: 3e33bca9"
+  },
+  {
+   "id": "R27-O1",
+   "severity": "important",
+   "anchor": "loom-code/scripts/test_session_start_words.py:2",
+   "origin_sha": "8165915c",
+   "raised_by": [
+    "opus-review-code-branch-end-r27"
+   ],
+   "text": "test docstring/cap carry the retracted 5281/2640",
+   "resolved": "resolved: 85bc04ff"
+  },
+  {
+   "id": "R27-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_session_start_words.py:9",
+   "origin_sha": "8165915c",
+   "raised_by": [
+    "opus-review-code-branch-end-r27"
+   ],
+   "text": "docstring claims the wc command runs; budget test uses str.split",
+   "resolved": "resolved: 85bc04ff"
+  },
+  {
+   "id": "R27-O3",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:659",
+   "origin_sha": "8165915c",
+   "raised_by": [
+    "opus-review-code-branch-end-r27"
+   ],
+   "text": "locale test passes vacuously without a UTF-8 locale",
+   "resolved": "resolved: 85bc04ff"
+  },
+  {
+   "id": "R28-C1",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/spec.md:3",
+   "origin_sha": "eff1d649",
+   "raised_by": [
+    "codex-review-docs-branch-end-r28"
+   ],
+   "text": "confirmed-behavior comment claimed a user re-confirmation not yet given",
+   "resolved": "resolved: 33e83725"
+  },
+  {
+   "id": "R28-C2",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:56",
+   "origin_sha": "eff1d649",
+   "raised_by": [
+    "codex-review-docs-branch-end-r28"
+   ],
+   "text": "plan lines 56/57/179 still ≤2640",
+   "resolved": "resolved: 33e83725"
+  },
+  {
+   "id": "R28-O1",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/plan.md:56",
+   "origin_sha": "eff1d649",
+   "raised_by": [
+    "opus-review-code-branch-end-r28"
+   ],
+   "text": "same as R28-C2",
+   "resolved": "resolved: 33e83725"
+  },
+  {
+   "id": "R28-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:664",
+   "origin_sha": "eff1d649",
+   "raised_by": [
+    "opus-review-code-branch-end-r28"
+   ],
+   "text": "skip-guard probe lacks check=True",
+   "resolved": "accepted, not fixed: carried to the first post-merge change with R24-O2"
+  },
+  {
+   "id": "CI-2",
+   "severity": "fatal",
+   "anchor": "loom-code/scripts/check_mechanisms.py:584",
+   "origin_sha": "1cec8c4f",
+   "raised_by": [
+    "github-ci loom-code pytest (PR #780 run 33702007788)"
+   ],
+   "text": "GNU wc -w under LC_ALL=C does not count tokens made only of non-ASCII bytes as words (5131 for the 923fb84a baseline vs 5278 on BSD wc / Python split), so pinning LC_ALL=C made the two platforms disagree by 147; the count must not use wc at all",
+   "resolved": "resolved: 6a349dcb"
+  },
+  {
+   "id": "R30-C1",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "codex-review-docs-branch-end-r30"
+   ],
+   "text": "line 3 claimed no code changes after 0bb3f9c0; CI-2 changed the counter",
+   "resolved": "resolved: e0e72361 (the round-30 record commit)"
+  },
+  {
+   "id": "R30-O1",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:670",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "opus-review-code-branch-end-r30"
+   ],
+   "text": "RED oracle is the implementation expression; literal 5 not pinned",
+   "resolved": "accepted, not fixed: carried post-merge with R24-O2 / R28-O2"
+  },
+  {
+   "id": "R30-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:672",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "opus-review-code-branch-end-r30"
+   ],
+   "text": "locale-stability test cannot catch a reintroduced pinned wc",
+   "resolved": "accepted, not fixed: carried post-merge"
+  },
+  {
+   "id": "R30-O3",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_session_start_words.py:49",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "opus-review-code-branch-end-r30"
+   ],
+   "text": "_run decodes with the ambient locale",
+   "resolved": "accepted, not fixed: carried post-merge"
+  }
+ ],
+ "vendors": [
+  "anthropic",
+  "openai"
+ ],
+ "dispatch": [
+  {
+   "task": "plan-read-back",
+   "role": "reviewer",
+   "agent_id": "opus-readback-1",
+   "model": "opus",
+   "started": "2026-09-02T05:35:11Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-01",
+   "role": "implementer",
+   "agent_id": "orchestrator",
+   "model": "fable",
+   "started": "2026-09-02T05:35:11Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-02",
+   "role": "implementer",
+   "agent_id": "opus-checker-1",
+   "model": "opus",
+   "started": "2026-09-02T05:35:11Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W0-02..04 (one agent, three tasks) so trailers resolve one-to-one"
+  },
+  {
+   "task": "W0-03",
+   "role": "implementer",
+   "agent_id": "opus-checker-1",
+   "model": "opus",
+   "started": "2026-09-02T05:35:11Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W0-02..04 (one agent, three tasks) so trailers resolve one-to-one"
+  },
+  {
+   "task": "W0-04",
+   "role": "implementer",
+   "agent_id": "opus-checker-1",
+   "model": "opus",
+   "started": "2026-09-02T05:35:11Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W0-02..04 (one agent, three tasks) so trailers resolve one-to-one"
+  },
+  {
+   "task": "W0-05",
+   "role": "implementer",
+   "agent_id": "opus-hooks-1",
+   "model": "opus",
+   "started": "2026-09-02T05:35:11Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-03 after-task",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-1",
+   "model": "opus",
+   "started": "2026-09-02T05:52:58Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-03 after-task",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-spec-1",
+   "model": "sonnet",
+   "started": "2026-09-02T05:52:58Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-06",
+   "role": "implementer",
+   "agent_id": "sonnet-mechanisms-1",
+   "model": "sonnet",
+   "started": "2026-09-02T06:17:55Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec adversarial",
+   "role": "adversary",
+   "agent_id": "opus-spec-redteam-1",
+   "model": "opus",
+   "started": "2026-09-02T06:17:55Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0 wave-end",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-2",
+   "model": "opus",
+   "started": "2026-09-02T06:18:25Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0 wave-end",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-consistency-2",
+   "model": "sonnet",
+   "started": "2026-09-02T06:18:25Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0 wave-end fixes",
+   "role": "implementer",
+   "agent_id": "opus-w0-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T06:51:11Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-06 fixes F7-F10",
+   "role": "implementer",
+   "agent_id": "sonnet-mechanisms-2",
+   "model": "sonnet",
+   "started": "2026-09-02T06:51:11Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0 wave-end re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-3",
+   "model": "opus",
+   "started": "2026-09-02T07:00:55Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0 wave-end re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-3",
+   "model": "sonnet",
+   "started": "2026-09-02T07:00:55Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-01",
+   "role": "implementer",
+   "agent_id": "opus-write-plan-1",
+   "model": "opus",
+   "started": "2026-09-02T07:25:06Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-02",
+   "role": "implementer",
+   "agent_id": "opus-build-1",
+   "model": "opus",
+   "started": "2026-09-02T07:25:06Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-05",
+   "role": "implementer",
+   "agent_id": "sonnet-maintain-1",
+   "model": "sonnet",
+   "started": "2026-09-02T07:25:06Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-01 after-task",
+   "role": "blind-runner",
+   "agent_id": "sonnet-coldread-writeplan-1",
+   "model": "sonnet",
+   "started": "2026-09-02T07:34:39Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-01 after-task",
+   "role": "reviewer",
+   "agent_id": "opus-review-writeplan-1",
+   "model": "opus",
+   "started": "2026-09-02T07:34:39Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-03",
+   "role": "implementer",
+   "agent_id": "opus-review-station-1",
+   "model": "opus",
+   "started": "2026-09-02T07:41:32Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec r5 read",
+   "role": "reviewer",
+   "agent_id": "opus-spec-r5-read-1",
+   "model": "opus",
+   "started": "2026-09-02T07:54:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec r5 read",
+   "role": "reviewer",
+   "agent_id": "sonnet-spec-r5-read-1",
+   "model": "sonnet",
+   "started": "2026-09-02T07:54:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-04",
+   "role": "implementer",
+   "agent_id": "opus-ship-1",
+   "model": "opus",
+   "started": "2026-09-02T08:00:38Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-06",
+   "role": "implementer",
+   "agent_id": "opus-w1-cleanup-1",
+   "model": "opus",
+   "started": "2026-09-02T08:14:29Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w1",
+   "model": "opus",
+   "started": "2026-09-02T09:07:49Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-w1",
+   "model": "sonnet",
+   "started": "2026-09-02T09:07:49Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end",
+   "role": "blind-runner",
+   "agent_id": "sonnet-blindrun-w1",
+   "model": "sonnet",
+   "started": "2026-09-02T09:07:49Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end",
+   "role": "adversary",
+   "agent_id": "opus-adversary-w1",
+   "model": "opus",
+   "started": "2026-09-02T09:21:38Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end fixes",
+   "role": "implementer",
+   "agent_id": "opus-w1-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T09:23:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w1b",
+   "model": "opus",
+   "started": "2026-09-02T10:07:40Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-w1b",
+   "model": "sonnet",
+   "started": "2026-09-02T10:07:40Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2-01",
+   "role": "implementer",
+   "agent_id": "opus-capture-intent-1",
+   "model": "opus",
+   "started": "2026-09-02T10:17:12Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2-02",
+   "role": "implementer",
+   "agent_id": "opus-write-spec-1",
+   "model": "opus",
+   "started": "2026-09-02T10:23:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2-03",
+   "role": "implementer",
+   "agent_id": "sonnet-design-tools-1",
+   "model": "sonnet",
+   "started": "2026-09-02T10:23:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end re-review 3",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w1c",
+   "model": "opus",
+   "started": "2026-09-02T10:26:34Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2-04",
+   "role": "implementer",
+   "agent_id": "opus-w2-cleanup-1",
+   "model": "opus",
+   "started": "2026-09-02T10:37:08Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 wave-end re-review 4",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w1d",
+   "model": "opus",
+   "started": "2026-09-02T10:51:44Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W1 round-4 notes + probe port",
+   "role": "implementer",
+   "agent_id": "sonnet-w1-notes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T11:01:12Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w2",
+   "model": "opus",
+   "started": "2026-09-02T11:04:48Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-w2",
+   "model": "sonnet",
+   "started": "2026-09-02T11:04:48Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end",
+   "role": "blind-runner",
+   "agent_id": "sonnet-blindrun-w2",
+   "model": "sonnet",
+   "started": "2026-09-02T11:04:48Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end",
+   "role": "adversary",
+   "agent_id": "opus-adversary-w2",
+   "model": "opus",
+   "started": "2026-09-02T11:04:48Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end fixes (checker)",
+   "role": "implementer",
+   "agent_id": "opus-w2-fixes-checker",
+   "model": "opus",
+   "started": "2026-09-02T11:15:02Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end fixes (prose)",
+   "role": "implementer",
+   "agent_id": "opus-w2-fixes-prose",
+   "model": "opus",
+   "started": "2026-09-02T11:15:02Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3-01",
+   "role": "implementer",
+   "agent_id": "opus-workflow-1",
+   "model": "opus",
+   "started": "2026-09-02T11:29:51Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W3-01+W3-02"
+  },
+  {
+   "task": "W3-02",
+   "role": "implementer",
+   "agent_id": "opus-workflow-1",
+   "model": "opus",
+   "started": "2026-09-02T11:29:51Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W3-01+W3-02"
+  },
+  {
+   "task": "W2 wave-end re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w2b",
+   "model": "opus",
+   "started": "2026-09-02T11:47:34Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-w2b",
+   "model": "sonnet",
+   "started": "2026-09-02T11:47:34Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3-03",
+   "role": "implementer",
+   "agent_id": "opus-docs-consolidate-1",
+   "model": "opus",
+   "started": "2026-09-02T11:53:46Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3-06",
+   "role": "implementer",
+   "agent_id": "sonnet-concept-align-1",
+   "model": "sonnet",
+   "started": "2026-09-02T11:53:46Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3-04",
+   "role": "implementer",
+   "agent_id": "opus-w3-ci-1",
+   "model": "opus",
+   "started": "2026-09-02T12:05:52Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end re-review 3",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w2c",
+   "model": "opus",
+   "started": "2026-09-02T12:09:13Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w3",
+   "model": "opus",
+   "started": "2026-09-02T12:23:43Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-w3",
+   "model": "sonnet",
+   "started": "2026-09-02T12:23:43Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end",
+   "role": "adversary",
+   "agent_id": "opus-adversary-w3",
+   "model": "opus",
+   "started": "2026-09-02T12:23:43Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 wave-end re-review 4",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w2d",
+   "model": "opus",
+   "started": "2026-09-02T12:27:23Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end fixes",
+   "role": "implementer",
+   "agent_id": "opus-w3-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T12:32:42Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W3 wave-end fixes (docs/hooks)",
+   "role": "implementer",
+   "agent_id": "sonnet-w3-fixes-2",
+   "model": "sonnet",
+   "started": "2026-09-02T12:40:48Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W2 re-review 5 + W3 re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-w23",
+   "model": "opus",
+   "started": "2026-09-02T12:52:41Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-03",
+   "role": "implementer",
+   "agent_id": "opus-replay-1",
+   "model": "opus",
+   "started": "2026-09-02T13:12:48Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-02",
+   "role": "blind-runner",
+   "agent_id": "opus-codex-walk-1",
+   "model": "opus",
+   "started": "2026-09-02T13:42:25Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-02 fixes",
+   "role": "implementer",
+   "agent_id": "opus-codex-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T14:03:48Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-02 round 2",
+   "role": "blind-runner",
+   "agent_id": "opus-codex-walk-2",
+   "model": "opus",
+   "started": "2026-09-02T14:20:54Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-05",
+   "role": "blind-runner",
+   "agent_id": "opus-blind-run-final",
+   "model": "opus",
+   "started": "2026-09-02T14:56:53Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end fixes",
+   "role": "implementer",
+   "agent_id": "opus-branch-end-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T15:07:08Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-2",
+   "model": "opus",
+   "started": "2026-09-02T15:20:39Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-06",
+   "role": "implementer",
+   "agent_id": "sonnet-fix-scaffold-frozen-1",
+   "model": "sonnet",
+   "started": "2026-09-02T16:34:15Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W4-06+W4-08"
+  },
+  {
+   "task": "W4-08",
+   "role": "implementer",
+   "agent_id": "sonnet-fix-scaffold-frozen-1",
+   "model": "sonnet",
+   "started": "2026-09-02T16:34:15Z",
+   "fresh_context": true,
+   "note": "split from the combined entry W4-06+W4-08"
+  },
+  {
+   "task": "W4-07",
+   "role": "implementer",
+   "agent_id": "sonnet-fix-rule-spec-exempt-1",
+   "model": "sonnet",
+   "started": "2026-09-02T16:34:15Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W0-01",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: ba93a984 cc7431ce 80234688 (review.json.dispatch sidecar records) e31c4703 (W0 wave-end docs fixes) eccd7a4d (manifest class e) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
+  },
+  {
+   "task": "W1-06",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 73510303 (drop @req-tag tests) f8d20fe7 59bf5a99 (staged W1-06 deletions swept into docs commits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
+  },
+  {
+   "task": "W1-03",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 58dd98c4 b096f93d (review skill description edits) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
+  },
+  {
+   "task": "W3-06",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 294559ad (spec round 9 + concept-model §4/§7) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
+  },
+  {
+   "task": "W3-01",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: 99bc49fc (requires-contract moves to decision-map, user-decided) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
+  },
+  {
+   "task": "W3-04",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: c0f49194 (W3 docs notes, check_mechanisms measure gates) 52553a27 (CC regex ci type + !) — W4-09: Task trailers added by user-run history rewrite 2026-09-03; the short shas above were remapped to their post-rewrite successors on 2026-09-03 (commit 2ac26023)"
+  },
+  {
+   "task": "branch-end round 22",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r22",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T16:55:35Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 22",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r22",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T16:55:35Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-06 fixes",
+   "role": "implementer",
+   "agent_id": "sonnet-r22-code-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:06:56Z",
+   "fresh_context": true,
+   "note": "R22-O1 R22-O2 (Task: W4-06); R22-O3 R22-O5 (Task: W4-10)"
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r22-code-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:06:56Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r22-docs-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:06:56Z",
+   "fresh_context": true,
+   "note": "R22-C2 R22-C3 R22-C4 R22-C5"
+  },
+  {
+   "task": "W4-10 blind-run addendum",
+   "role": "blind-runner",
+   "agent_id": "sonnet-blind-run-fixround-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:15:04Z",
+   "fresh_context": true,
+   "note": "R22-C1"
+  },
+  {
+   "task": "W3-05",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline, no fresh dispatch: caf7c728 (KICKOFF-DEFAULTS in the 1.0 grammar); recorded 2026-09-03 when push.dispatch-covers-tasks found the trailer unclaimed"
+  },
+  {
+   "task": "branch-end round 23 re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r23",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T17:27:33Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 23 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r23",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T17:27:33Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-01",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline: 19b14977 landed the cold-read evidence (the cold reads themselves ran as fresh sonnet readers, recorded in evidence/cold-read-A.md and cold-read-B.md) and the mechanism eval tests; recorded 2026-09-03 when the trailer was found unclaimed"
+  },
+  {
+   "task": "W4-04",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline: 88b69bce measurements.md; recorded 2026-09-03 when the trailer was found unclaimed"
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r23-docstring-1",
+   "model": "sonnet",
+   "started": "2026-09-02T17:38:18Z",
+   "fresh_context": true,
+   "note": "R23-O1 docstring + R23-O3 pin test"
+  },
+  {
+   "task": "W4-02",
+   "role": "implementer",
+   "agent_id": "opus-codex-fixes-1",
+   "model": "opus",
+   "started": "2026-09-02T14:03:48Z",
+   "fresh_context": true,
+   "note": "per-task entry for the \"W4-02 fixes\" implementer so the W4-02 trailers resolve; the two docs commits under W4-02 were orchestrator inline"
+  },
+  {
+   "task": "W4-05",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "fable",
+   "started": "2026-09-02",
+   "fresh_context": false,
+   "note": "orchestrator inline: 733548d9 landed the blind-runner's report (the blind run itself ran as opus-blind-run-final, fresh); recorded 2026-09-03 when the trailer was found unclaimed"
+  },
+  {
+   "task": "branch-end round 24 re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r24",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T17:41:53Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 24 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r24",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T17:41:53Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-10 blind-run addendum 2",
+   "role": "blind-runner",
+   "agent_id": "sonnet-blind-run-final-2",
+   "model": "sonnet",
+   "started": "2026-09-02T17:52:52Z",
+   "fresh_context": true,
+   "note": "R24-C1"
+  },
+  {
+   "task": "branch-end round 25 re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-branch-end-r25",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-02T18:01:45Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 25 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r25",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T18:01:45Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 26 re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-branch-end-r26",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-02T18:14:31Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 26 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r26",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T18:14:31Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-ci-locale-fix-1",
+   "model": "sonnet",
+   "started": "2026-09-02T18:29:48Z",
+   "fresh_context": true,
+   "note": "CI-1"
+  },
+  {
+   "task": "W4-10 blind-run addendum 3",
+   "role": "blind-runner",
+   "agent_id": "sonnet-blind-run-final-3",
+   "model": "sonnet",
+   "started": "2026-09-02T18:35:10Z",
+   "fresh_context": true,
+   "note": "CI-1"
+  },
+  {
+   "task": "branch-end round 27 re-review (CI-1)",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r27",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T18:49:37Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 27 re-review (CI-1)",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r27",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T18:49:37Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-r27-code-fixes-1",
+   "model": "sonnet",
+   "started": "2026-09-02T19:06:08Z",
+   "fresh_context": true,
+   "note": "R27-C1 R27-O1 R27-O2 R27-O3"
+  },
+  {
+   "task": "branch-end round 28 re-review",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r28",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-02T19:10:31Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 28 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r28",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T19:10:31Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 29 re-review",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-docs-branch-end-r29",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-02T19:18:42Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 29 re-review",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r29",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-02T19:18:42Z",
+   "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-ci2-python-count-1",
+   "model": "sonnet",
+   "started": "2026-09-03T01:06:13Z",
+   "fresh_context": true,
+   "note": "CI-2"
+  },
+  {
+   "task": "branch-end round 30 re-review (CI-2)",
+   "role": "reviewer",
+   "agent_id": "opus-review-code-branch-end-r30",
+   "model": "opus",
+   "vendor": "anthropic",
+   "started": "2026-09-03T01:12:26Z",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end round 30 re-review (CI-2)",
+   "role": "reviewer",
+   "agent_id": "codex-review-docs-branch-end-r30",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-03T01:12:26Z",
+   "fresh_context": true
+  }
+ ],
+ "questions": [
+  {
+   "decision_point": 1,
+   "text": "你要的是簡化 loom：基本知識的使用者只答三處…對嗎？（intent 覆述，三次重確認：跨 vendor 選配、Acceptance #6 對象、Acceptance #2 切換日）",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "要不要用第二家模型（Codex）當 reviewer？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "產品原則覆述（誰用、五條不能妥協、不做、最怕、定死）對嗎？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "goal-create／dbt-model-style 算不算 loom skill 數？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "loom-workflow 的 requires-contract 降到 decision-map？",
+   "type": "consequence"
+  },
+  {
+   "decision_point": 2,
+   "text": "spec 可見行為：人至少確認可見操作與反應；三處重確認（不可逆動作必問、盲跑報告兩固定段、問題三型判準）對嗎？",
+   "type": "behaviour"
+  },
+  {
+   "decision_point": 2,
+   "text": "單向門：重大架構／框架／輸出品質選型要問使用者嗎？加不加語言辨識模型這類？",
+   "type": "consequence"
+  }
+ ]
+}

@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # 2026-06-10 — Command Surface Establishment Capability
 
 > **Type**: Capability spec (proposal / draft)

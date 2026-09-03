@@ -17,11 +17,10 @@ not live carriers).
 Re-derived directly against the working tree at pin time — NOT copied from
 the brief's recon list. The brief's recon figure (10 files / 11 hits) was
 simply miscounted against main; verified against branch base d1e50685 the
-count was already 9 files / 12 hits. The live measurement is 10 files / 13
-hits after this branch adds one intentional carrier in its anchor-primary
-reviewer-contract test. The sibling-neutral family-policy distribution and
-the design-specialized relay add three managed/design-local carriers, making
-the live measurement 13 files / 15 hits.
+count was already 9 files / 12 hits. After the five-station rewrite deleted every loom-code carrier (routers,
+brainstorming, requesting-code-review, subagent-driven-development and the
+ask-triage hook), the live measurement is 4 files / 5 hits, all in
+loom-design and loom-workflow.
 
 Granularity is file -> hit-count, not file:line — per the plan's Kickoff
 decision, line numbers churn on unrelated edits; a count change in any file
@@ -41,28 +40,18 @@ PATTERN = re.compile(r"state anchor|state-anchor")
 EXCLUDED_RELATIVE_PATHS = frozenset(
     {
         "loom-code/CHANGELOG.md",
-        "loom-code/hooks/test-prompts.json",
-        "loom-code/scripts/test_brainstorming_compaction.py",
-        "loom-code/scripts/test_requesting_code_review_compaction.py",
     }
 )
 
 # The pinned carrier inventory (file -> hit count). Any addition, removal, or
 # count change to a "state anchor" / "state-anchor" mention anywhere under
 # loom-*/ must update this map in the same PR.
+# Three of the four carriers were loom-design's entry router, its relay
+# references and the test that guarded them; loom 1.0 deleted all three, so
+# the phrase now lives in one place. The pin is a sweep list, not a budget:
+# one carrier is a legitimate state for it, and the guard below still fails
+# loud if a fifth appears or this one goes quiet.
 EXPECTED_INVENTORY = {
-    "loom-code/hooks/ask-triage.py": 1,
-    "loom-code/hooks/router-card.md": 1,
-    "loom-code/scripts/test_anchor_primary_reviewer_contracts.py": 1,
-    "loom-code/skills/brainstorming/SKILL.md": 1,
-    "loom-code/skills/requesting-code-review/references/relay-phrasing.md": 1,
-    "loom-code/skills/requesting-code-review/SKILL.md": 2,
-    "loom-code/skills/requesting-code-review/test-prompts.json": 1,
-    "loom-code/skills/subagent-driven-development/SKILL.md": 1,
-    "loom-code/hooks/family-relay.md": 1,
-    "loom-design/scripts/discovery/test_using_skill.py": 2,
-    "loom-design/skills/using-loom-design/references/design-relay.md": 1,
-    "loom-design/skills/using-loom-design/references/family-relay.md": 1,
     "loom-workflow/skills/handoff/references/handoff-schema.md": 1,
 }
 
@@ -131,12 +120,15 @@ def test_scan_state_anchor_carriers_catches_a_removed_carrier(tmp_path):
     baseline = scan_state_anchor_carriers(tmp_path)
     assert baseline == EXPECTED_INVENTORY
 
-    mutated_rel = "loom-code/hooks/ask-triage.py"
+    mutated_rel = "loom-workflow/skills/handoff/references/handoff-schema.md"
     mutated_path = tmp_path / mutated_rel
     text = mutated_path.read_text(encoding="utf-8")
-    assert "state anchor" in text
+    assert "state anchor" in text or "state-anchor" in text
     mutated_path.write_text(
-        text.replace("state anchor", "situational context", 1), encoding="utf-8"
+        text.replace("state anchor", "situational context", 1).replace(
+            "state-anchor", "situational-context", 1
+        ),
+        encoding="utf-8",
     )
 
     actual = scan_state_anchor_carriers(tmp_path)

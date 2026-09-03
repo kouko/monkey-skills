@@ -8,10 +8,10 @@
 - Bad: `domain-teams/skills/code-team/checklists/security-checklist.md`
 - 原因：Claude Code 提供 Base Path，bundled files 從 skill 目錄相對解析
 
-### Two-Layer Spec
-- PRODUCT-SPEC.md（planning-team 擁有）— 跨域：商業 + 設計 + 技術方向
-- TECH-SPEC.md（code-team 擁有）— 技術：模組設計 + 資料流 + 介面定義
-- TECH-SPEC.md 應 reference PRODUCT-SPEC.md 的內容
+### 兩份文件：intent.md 與 spec.md（loom 1.0）
+- `docs/loom/intent/<change-id>.md`（capture-intent／write-plan 擁有）— 使用者語言：Problem、Proposed outcome、Acceptance（每條可被盲跑證明）、Constraints、Out of scope、Open questions
+- `docs/loom/<change-id>/spec.md`（write-spec 擁有）— 工程語言：`REQ-<n> — <name>` 每條對回 intent 的 Acceptance 編號、Design decision（標 agent-decided／user-decided）、Current state evidence、UI flows
+- spec.md 只在 `needs-design: yes` 時存在；spec 一律 reference 它的 intent，不重述
 
 ### Skill Structure（CRITICAL — Anthropic 規範，違規會被 hook 擋）
 
@@ -61,14 +61,36 @@ repository's development records under `docs/`.
   不是規則的例外
 
 ### Quality Gates
-- 四級系統：SELF / MUST / SHOULD / MAY
-- Gate 定義明確指定檔案路徑（相對路徑）
-- Verdict 約束內嵌於 PASS_WITH_NOTES 定義，不另開段落
+
+**loom 家族（loom-code／loom-design／loom-workflow）**：品質只有三種驗證動作，
+其餘都是形式（concept-model §6）。
+
+| 動作 | 誰做 | 產出 |
+|---|---|---|
+| **讀** | ≥2 個 fresh-context reviewer，按型別選鏡頭（code 11 維／docs 5 維／spec-conformance／design-conformance／principles-conformance） | verdict → `review.json` |
+| **盲跑** | 乾淨環境照 intent 的 Acceptance 逐條試，寫成使用者看得懂的盲跑報告 | 報告 ＋ `probes[]` |
+| **對抗** | mutation／fuzz，或對抗 agent 自寫 ≥3 個可執行的 abuse／邊界案例並逐筆自跑 | `probes[]`（`kind: adversarial`） |
+
+- 三者跑在 **checkpoint review**（review 站）上，不是逐 task 三臂審查；寫的人不能自己驗
+- 決定性的閘只有一支 **checker**：`python3 loom-code/scripts/loom_checker.py --list-rules`
+  是規則清單的 SSOT（規則全部是「重算」，不是宣稱）；這裡不重列規則 id，重列＝第二個漂移面
+- 散文不當閘：只有 SKILL.md／reference 內以 `<!-- gate: <id> -->` 標記的段落算閘，
+  沒標記的散文不得當閘用
+- 其他 plugin（domain-teams、投資／研究 toolkit 等）仍用四級系統 SELF / MUST / SHOULD / MAY；
+  gate 定義明確指定檔案路徑（相對路徑），verdict 約束內嵌於 PASS_WITH_NOTES 定義
+
+### loom 1.0 flow
+- 七站：capture-intent → write-spec →（write-plan → build → review → ship），maintain 回頭開 intent
+- 三個人類決策點：①覆述並確認 intent（含單向門問法）②product 的可見行為確認（spec）③盲跑報告驗收
+- 入口與完整站序：`docs/loom/README.md`；概念模型：`docs/loom/2026-09-02-simple-loom-flow/concept-model.md`
 
 ### Agent Behavioral Rules
 - worker：produces artifacts, does NOT produce gate verdicts
 - evaluator：produces verdicts, does NOT modify artifacts
-- **明文豁免**：GENERATE 站的 critic（`loom-design:design-critic`、`loom-design:completeness-critic`）是 sanctioned co-writer——可對草稿做 provenance-tagged **增補**（`critic-found` 標記），永不覆寫 writer 內容，且仍必須產出兩值 verdict（`PASS_WITH_NOTES` / `NEEDS_REVISION`，無 bare `PASS`——無條件通過即變相 complete 宣稱）。writer≠judge 由 fresh-context panel 保證，不靠「不改檔案」保證
+- **reviewer ≠ implementer 是重算出來的，不是宣告出來的**：checker 從 `review.json`
+  的 `dispatch[]` 記錄比對，任何 reviewer／blind-runner／adversary 同時是 implementer
+  就擋（規則 `push.reviewer-ne-implementer`）。writer≠judge 靠 fresh-context 派工記錄保證，
+  不靠「不改檔案」保證
 - Knowledge access is open（行為限制，非閱讀限制）
 
 ### Agent Launch Convention

@@ -18,9 +18,9 @@ Apache-2.0-licensed `DESIGN.md` format — the **visual system** for a product.
 > **Scope — visual system only.** `DESIGN.md` documents the product's
 > *visual* design system: brand, color, type, spacing, elevation, shape,
 > and component tokens. It **does NOT** address flows, screens, navigation,
-> or interaction. Those live in **`ui-flows.md`** (the `interaction-flows`
-> skill). Do not put user flows, screen inventories, or render-variant
-> tables in `DESIGN.md`.
+> or interaction. Those live in the spec's **`## UI flows`** section, written
+> by the `write-spec` station. Do not put user flows, screen inventories, or
+> render-variant tables in `DESIGN.md`.
 
 > **Token keys are the Google-spec shape.** The 8 sections below are the
 > canonical, stable structure. The YAML token *keys* listed per section
@@ -30,7 +30,7 @@ Apache-2.0-licensed `DESIGN.md` format — the **visual system** for a product.
 
 > **One per product.** `DESIGN.md` is product-level (the design *system*),
 > not per-feature. There is exactly one `DESIGN.md` per product; per-feature
-> interaction design goes in `ui-flows.md`.
+> interaction design goes in the spec's `## UI flows` section.
 
 ## Lint + accessibility
 
@@ -66,16 +66,18 @@ Carry, in the **prose body** of this section (the YAML keys below stay thin):
   Commit to a specific aesthetic; a non-committal concept yields non-committal
   tokens.
 - **Mood** — the emotional target as a few adjectives (the `brand_voice` token).
-  **Mood is INHERITED, not invented.** `PRINCIPLES.md` pins **3-5 tone & manner
-  adjectives** in its **`## Anchors`** section (the *primary visual anchor*);
-  those adjectives ARE this design system's **governing mood** — **inherit**
-  them verbatim into `brand_voice` and **do not re-derive** a mood of your own.
-  A visual concept that fights the adjectives is a defect, not a style choice.
-  **Fallback — when there is no `## Anchors` tone & manner row** (an older
-  `PRINCIPLES.md`): derive the mood from `docs/loom/PURPOSE.md` + Product Principles,
-  exactly as before — **and say so explicitly** to the user ("no tone & manner
-  anchor found; mood derived here, ungoverned upstream"). **Never silently
-  invent** a mood while presenting it as inherited.
+  **Mood is DERIVED from the constitution, not invented.** The loom 1.0
+  `PRINCIPLES.md` (at the consumer project's root) has no tone & manner
+  section; its two governing sections for this purpose are
+  **`## Non-negotiables`** and **`## Fixed choices`**. Read both and write
+  `brand_voice` as the few adjectives those clauses already commit the
+  product to, naming for each adjective the clause it came from. A visual
+  concept that fights those clauses is a defect, not a style choice.
+  **When the repo has no ratified `PRINCIPLES.md`**: derive the mood from
+  the user's own words in the interview — **and say so explicitly** to the
+  user ("no ratified constitution; mood derived here, ungoverned
+  upstream"). **Never silently invent** a mood while presenting it as
+  inherited.
 - **Generative visual principles** — the small set of *canonical* visual-design
   principles this concept leans on, each with one line on how it shows up here.
   Draw from the established canon — **hierarchy, contrast, balance, rhythm /
@@ -245,7 +247,7 @@ are separate entries, each carrying only the properties that differ from
 the base component, **not** a `states` sub-key nested under `button`. This
 is **presentational** styling (hover/focus/disabled token deltas); the
 behavioral lifecycle (empty / loading / error / success domain states)
-still belongs to `ui-flows.md` + `spec-expansion`, not to `DESIGN.md`.
+still belongs to the spec's `## UI flows` section, not to `DESIGN.md`.
 
 ```yaml
 components:
@@ -311,7 +313,8 @@ When emitting `DESIGN.md`, the `design-system` skill MUST:
    extension: the spec accepts an unrecognized component property with a
    warning rather than rejecting it (see `## Components`), so this step
    does not require resolving that warning away.
-6. Keep flows / screens / navigation **out** — those go in `ui-flows.md`.
+6. Keep flows / screens / navigation **out** — those go in the spec's
+   `## UI flows` section.
 
 ## Anti-patterns — NEVER ship these (the "AI-generated" tells)
 

@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # grounding — v0.1.0
 
 > **Purpose**: trace every authoritative measure shipped in `code-toolkit` v0.1.0 back to its primary source. This is the auditable record that says *"we did not invent these rules; here is the canon."* Audience: future maintainer (or external reviewer) asking *"why does `tdd-iron-law` cite Beck 2002 Preface specifically, and not Ch.4?"*

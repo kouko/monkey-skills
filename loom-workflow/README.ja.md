@@ -4,7 +4,7 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 
 > Claude Code と Codex 用の loom workflow plugin — 意思決定 brief、deletion-first critique gate、git-native な project memory、recap、handoff、session distill。
 
-**Version**: 1.0.0 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
+**Version**: 4.0.0 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
 
 ## Background
 
@@ -13,7 +13,7 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 `loom-workflow` は 2 つのアーキテクチャ的判断から育ちましたが、そのうち 1 つはすでに移転しています：
 
 1. **Two Hats split for skills**（Fowler の refactor-vs-feature を skill authoring に適用）— `skill-refactor`（Phase A：behavior-preserving、auto-evaluable）と `skill-tuning`（Phase B：taste-sensitive、human-judged）の分離。この 2 つの skill は `skill-creator-advance`・`skill-judge` とともに `skill-dev-toolkit` へ移転済み。詳細は下の「Skill-evolution architecture（移転済み）」参照。
-2. **critique-gate のライン** — proposal が commit になる前に介入する：`proposal-critique`（複数項目の triage）→ `complexity-critique`（単一変更の deletion-first gate）→ simplify（実装後の review、Anthropic 純正 toolkit に存在）。こちらは今も `loom-workflow` に残っています。
+2. **critique gate** — proposal が commit になる前に介入する：`critique` 1 つに 2 つのレンズ（`mode: proposal` が複数項目の triage、`mode: complexity` が単一変更の deletion-first gate）→ simplify（実装後の review、Anthropic 純正 toolkit に存在）。こちらは今も `loom-workflow` に残っています。
 
 この plugin はさらに `git-memory`（commit trailer と PR 本文に書き込む可搬な project memory、git を読める任意のツールから復元可能）を保持しています。
 
@@ -27,8 +27,7 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 
 | Skill | 役割 |
 |---|---|
-| [`brief-before-asking`](skills/brief-before-asking/) | user が複雑な engineering の fork を決める前に Mental-Model-first な briefing を届ける — これがデフォルトで、任意ではない。質問・説明・利害について user が迷った時にも反応的に発火する。 |
-| [`complexity-critique`](skills/complexity-critique/) | 1 つの提案変更（refactor / feature / tech-debt）を deletion-first の視点で評価：before/after の LOC、何が obsolete になるか。複数項目の proposal → `proposal-critique`。 |
+| [`critique`](skills/critique/) | 作る前に提案を裁く：`mode: proposal` は list・plan・散文の推奨を evidence grounding と YAGNI で KEEP / DEFER / DROP に振り分け、`mode: complexity` は 1 つの具体的変更を deletion-first で量る（before/after の LOC、何が obsolete になるか）。 |
 | [`cot-explain`](skills/cot-explain/) | すでにある推論——指定されたファイル、あるいは直前の作業——を、CoT 図を中心に据えた自己完結型ページに描き出す。各矢印にはその手順が続く理由がラベル付けされる。 |
 | [`dbt-model-style`](skills/dbt-model-style/) | dbt + Redshift モデルの style & structure contract を強制する — CTE の役割、zero-logic な final CTE、命名、YAML header、comment、syntax。 |
 | [`decision-map`](skills/decision-map/) | `docs/loom/maps/<map-id>/` にある永続的な decision map を作成・推進する — 目的地、育っていく Decisions-so-far ログ、そして複数 session にわたって ticket へ卒業していく Not-yet-specified（fog）list。一発 plan ではない。 |
@@ -37,18 +36,17 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 | [`goal-create`](skills/goal-create/) | goal condition を起草する — SESSION mode は長時間実行 agent run のための 4 フィールド停止条件（Outcome / Constraints / Verification / Stop-when）、ARC mode は repository の purpose artifact（`Why` / `Done when`）。 |
 | [`handoff`](skills/handoff/) | session 状態を構造化された HANDOFF ファイルに保存し、将来の agent がきれいに再開できるようにする。あるいは既存の HANDOFF を読み込み・検証する。 |
 | [`independent-advisor`](skills/independent-advisor/) | 現在の plan や決定について、**別の executor**——より強い model、より高い effort、あるいは別ベンダー——から second opinion を取る。変わるのは executor であって、critique の観点ではない。 |
-| [`proposal-critique`](skills/proposal-critique/) | proposal（list / plan / 散文の推奨）を evidence grounding と YAGNI で KEEP / DEFER / DROP に triage。 |
 | [`recap-state`](skills/recap-state/) | session 内での再オリエンテーション — user が話の筋を見失った時、Synthesis-check で締めくくる構造化 recap を出す。 |
 
-12 個の skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
+10 個の skill はすべて **Active**（loom tool 8 個＋ loom flow の外にある standalone な `goal-create`・`dbt-model-style`）。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique のライン
 
-3 つの skill が deletion-first な review pipeline を構成し、それぞれ異なる proposal の形に合わせて調整されています：
+1 つの skill の 2 つのレンズと Anthropic 純正の実装後 reviewer が deletion-first な pipeline を構成し、それぞれ異なる proposal の形に合わせて調整されています：
 
 ```
-proposal-critique           complexity-critique           Anthropic simplify
-─────────────────           ─────────────────────         ──────────────────
+critique · mode: proposal   critique · mode: complexity   Anthropic simplify
+─────────────────────────   ───────────────────────────   ──────────────────
 複数項目の proposal         1 つの具体的な提案変更       実装後の diff review
 （list / plan / 散文）       （refactor、feature 追加、
                             debt cleanup、または
@@ -65,7 +63,7 @@ evidence + YAGNI で判定     • 最小到達状態
                                    / RESHAPE / REJECT
 ```
 
-backlog や番号付きの plan を渡されたら `proposal-critique`。1 つの具体的変更が table の上にあるなら `complexity-critique`。変更が出荷された後は Anthropic の `simplify`。
+backlog や番号付きの plan を渡されたら `mode: proposal`。1 つの具体的変更が table の上にあるなら `mode: complexity`。変更が出荷された後は Anthropic の `simplify`。
 
 ## Skill-evolution architecture（移転済み）
 
@@ -83,13 +81,13 @@ backlog や番号付きの plan を渡されたら `proposal-critique`。1 つ�
 
 ## Upstream chain
 
-12 個の skill のうち 1 つが MIT-licensed な upstream に由来します。完全な attribution はその skill の `NOTICE` ファイル参照。（`skill-creator-advance` と `skill-judge` の upstream attribution は、移転先の `skill-dev-toolkit` に一緒に移りました。）
+10 個の skill のうち 1 つが MIT-licensed な upstream に由来します。完全な attribution はその skill の `NOTICE` ファイル参照。（`skill-creator-advance` と `skill-judge` の upstream attribution は、移転先の `skill-dev-toolkit` に一緒に移りました。）
 
 | Skill | Upstream chain |
 |---|---|
-| `complexity-critique` | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` → `complexity-critique` にリネーム） |
+| `critique`（`mode: complexity`） | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` → `complexity-critique` にリネーム後、`critique` に統合） |
 
-残り 11 個の skill はオリジナル設計で、外部 upstream への attribution はありません。詳細は各 skill の `NOTICE`（存在する場合）参照。
+残り 9 個の skill はオリジナル設計で、外部 upstream への attribution はありません。詳細は各 skill の `NOTICE`（存在する場合）参照。
 
 ## Repository 構成
 
@@ -103,9 +101,8 @@ loom-workflow/
 │   ├── quarterly-audit-runbook.md
 │   └── telemetry-setup.md
 ├── skills/
-│   ├── brief-before-asking/
-│   ├── complexity-critique/
 │   ├── cot-explain/
+│   ├── critique/
 │   ├── dbt-model-style/
 │   ├── decision-map/
 │   ├── distill-sessions/
@@ -113,7 +110,6 @@ loom-workflow/
 │   ├── goal-create/
 │   ├── handoff/
 │   ├── independent-advisor/
-│   ├── proposal-critique/
 │   └── recap-state/
 ├── CHANGELOG.md
 ├── README.md
@@ -132,13 +128,12 @@ loom-workflow/
 
 ## 使い方
 
-`loom-workflow` は slash command を同梱していません — 12 個の skill はすべて自然言語から auto-trigger します。例：
+`loom-workflow` は slash command を同梱していません — 10 個の skill はすべて自然言語から auto-trigger します。例：
 
 ```
-「この 12 項目の plan を critique して」                  → proposal-critique
-「これは削る価値があるか」/「そもそも作るべきか」          → complexity-critique
+「この 12 項目の plan を critique して」                  → critique（proposal）
+「これは削る価値があるか」/「そもそも作るべきか」          → critique（complexity）
 「これから commit する — trailer 書くの手伝って」         → git-memory
-「看不懂」/「跟不上」/ agent-about-to-ask-complex-fork    → brief-before-asking
 「開一張決策地圖」/「デシジョンマップを開く」              → decision-map
 「wrap up」/「save state」                                → handoff
 「where were we」/「我跟丟了」                             → recap-state
@@ -158,6 +153,6 @@ loom-workflow/
 
 ## License
 
-MIT。plugin 内で唯一 MIT-licensed な upstream を持つ `complexity-critique` は、`LICENSE` と `NOTICE` で完全な copyright chain を保持しています。（`skill-creator-advance` と `skill-judge` は `skill-dev-toolkit` へ移転し、そちらで自身の copyright chain を保持しています。）
+MIT。plugin 内で唯一 MIT-licensed な upstream を持つ `critique`（その `mode: complexity` の側）は、`LICENSE` と `NOTICE` で完全な copyright chain を保持しています。（`skill-creator-advance` と `skill-judge` は `skill-dev-toolkit` へ移転し、そちらで自身の copyright chain を保持しています。）
 
 repo ルートの umbrella license は [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE) 参照。

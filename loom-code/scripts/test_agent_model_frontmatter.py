@@ -1,17 +1,24 @@
-"""Tests for Claude role defaults in loom-code agent frontmatter.
+"""Tests for loom-code agent frontmatter after the 1.0 station redesign.
 
-Pinned arms (spec-reviewer, code-quality-reviewer, docs-reviewer, and —
-since the 2026-08-24 overturn of the 0.75.0 carve-out — code-reviewer)
-default to sonnet: rubric/checklist review is `standard`-tier work per
-dispatch-profile.md, and an explicit dispatch-time `model` param remains
-the upward-override path (frontier branches). All roles inherit the
-dispatching session's effort so the portable profile cannot be overridden
-by a static frontmatter value. The implementer is the remaining judgment
-arm and inherits the dispatching session's model tier.
+The four pre-1.0 verdict contracts (spec-reviewer, code-quality-reviewer,
+docs-reviewer, code-reviewer) each pinned `model: sonnet` because
+dispatch-profile.md called rubric review `standard`-tier work. Both those
+contracts and that profile are deleted: one `reviewer.md` now carries every
+lens, and the review station chooses the model per dispatch and records it
+in `review.json` `dispatch[]`. The model-pin arm is therefore gone with the
+mechanism it described, not weakened.
+
+What survives is the effort rule, which was never per-contract: no agent
+frontmatter may pin `effort:`, so every role inherits the dispatching
+session's effort and the portable profile cannot be overridden by a static
+value. Asserted here over the whole `agents/` directory rather than a hand
+list, so a fifth contract cannot be added outside the rule.
 """
 from pathlib import Path
 
 AGENTS_DIR = Path(__file__).resolve().parent.parent / "agents"
+
+ROLES = ["implementer", "reviewer", "blind-runner", "adversary"]
 
 
 def _frontmatter(agent_name):
@@ -21,28 +28,13 @@ def _frontmatter(agent_name):
     return text[4:end]
 
 
-def test_checklist_arms_pin_model_but_all_roles_inherit_effort():
-    checklist_arms = [
-        "spec-reviewer",
-        "code-quality-reviewer",
-        "docs-reviewer",
-        "code-reviewer",
-    ]
-    judgment_arms = ["implementer"]
+def test_the_agent_population_is_the_four_station_roles():
+    assert sorted(p.stem for p in AGENTS_DIR.glob("*.md")) == sorted(ROLES)
 
-    for agent_name in checklist_arms:
-        frontmatter = _frontmatter(agent_name)
-        assert "model: sonnet" in frontmatter, (
-            f"{agent_name}.md frontmatter must pin model: sonnet"
-        )
-    for agent_name in checklist_arms + judgment_arms:
-        frontmatter = _frontmatter(agent_name)
+
+def test_no_agent_pins_effort():
+    for path in sorted(AGENTS_DIR.glob("*.md")):
+        frontmatter = _frontmatter(path.stem)
         assert "effort:" not in frontmatter, (
-            f"{agent_name}.md frontmatter must inherit session effort"
-        )
-
-    for agent_name in judgment_arms:
-        frontmatter = _frontmatter(agent_name)
-        assert "model:" not in frontmatter, (
-            f"{agent_name}.md frontmatter must not carry a model: key"
+            f"{path.name} frontmatter must inherit session effort"
         )

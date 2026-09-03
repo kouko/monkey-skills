@@ -59,3 +59,4 @@ oauth-*.json
 *.key
 !*.pub.key
 briefing-toolkit/skills/daily-brief-workspace/
+.codex/hooks/.loom-hook-fired

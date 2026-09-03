@@ -56,17 +56,14 @@ creating the store is `loom-init`'s job, not this skill's.
 
 This skill never fires on its own — the description above makes no
 auto-fire claim. It is named as an available
-option at exactly three points where the need for a goal is already
+option at exactly one point where the need for a goal is already
 visible: `loom-workflow:handoff`'s Prepare mode, when a user closes a
-session without capturing an explicit goal; the unanswered-purpose
-message `loom-code`'s purpose-link check (`check_north_star_link.py`)
-prints when `docs/loom/PURPOSE.md` is still template text; and
-`loom-code`'s `finishing-a-development-branch`, which offers it where
-`docs/loom/PURPOSE.md` is absent altogether. All three name this skill
-as an option the user can invoke; none invokes it.
+session without capturing an explicit goal. That surface names this
+skill as an option the user can invoke; it never invokes it. loom 1.0
+deleted the other two offer sites with the skills that carried them.
 
-When `brainstorming` is already running for the same work,
-brainstorming keeps discovery and this skill runs only after its brief
+When `loom-design:capture-intent` is already running for the same work,
+that station keeps discovery and this skill runs only after its intent
 exists, rather than competing for the same turn.
 
 ## See also

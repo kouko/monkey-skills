@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Plan: Command Surface v2 (野心 B — accretion discipline)
 
 **Source brief**: code-toolkit/docs/code-toolkit/specs/2026-06-10-command-surface-v2-accretion-brief.md

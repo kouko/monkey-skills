@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Worked example — Python: add CSV export to existing report endpoint
 
 > **Stack**: Python 3.11 + FastAPI + SQLAlchemy + pytest

@@ -1,10 +1,9 @@
 """Tests for the plugin-shipped attack-class catalogue reference.
 
-`loom-code/skills/requesting-code-review/references/attack-catalogue.md`
-ships six attack classes an adversarial auditor works through; each class
-must pin its evidence rule to a runnable command, never a reading (plan
-`docs/loom/plans/2026-08-31-adversarial-audit-station.md` Task 1
-Acceptance).
+`loom-code/skills/review/references/attack-catalogue.md` ships the six
+attack classes the review station's adversarial action works through on a
+skill or gate artifact; each class must pin its evidence rule to a runnable
+command, never a reading.
 """
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ from pathlib import Path
 
 CATALOGUE = (
     Path(__file__).resolve().parents[1]
-    / "skills/requesting-code-review/references/attack-catalogue.md"
+    / "skills/review/references/attack-catalogue.md"
 )
 
 CLASS_NAMES = [
@@ -71,4 +70,4 @@ def test_attack_catalogue_names_six_classes_with_evidence_rule() -> None:
         assert f"`{token}`" in vocab_block, token
 
     assert "## Repo store" in text
-    assert "docs/loom/ATTACK-CATALOGUE.md" in text
+    assert "docs/loom/evidence/attack-catalogue.md" in text

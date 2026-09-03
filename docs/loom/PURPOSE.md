@@ -2,13 +2,13 @@
 
 **Why:** To build a mechanically self-correcting development process — planning, review, evidence, and memory — that any Claude-Code-driven repository can adopt, so that a lesson learned once cannot be silently re-lost and a claim in a plan, spec, or contract cannot ship unverified.
 
-**Done when:** A repository that is not `monkey-skills` installs `loom-code` and `loom-design` cold, runs a real arc through them end to end, and every gate — citation, purpose-link, review-pass, memory-store integrity, open-questions — fires correctly with no repo-specific patching, and no contract text cites a document that repo cannot open.
+**Done when:** A repository that is not `monkey-skills` installs `loom-code` and `loom-design` cold, runs a real change through them end to end, and every rule `loom_checker.py` declares — intent schema, spec grammar, two fresh reviewers, adversarial probes, package tests, the recompute gates — fires correctly with no repo-specific patching, and no contract text cites a document that repo cannot open.
 
 ---
 
 ## What this commits to, and what it rules out
 
-Chosen 2026-08-22 from three candidates, on the evidence that 48 of the last 60 commits touch loom directly, that loom is now 24 skills, 5 agents, 163 scripts and 126 released versions of `loom-code` alone, and that `loom-code/scripts/templates/PURPOSE.md` already exports this repo's self-governance mechanism to other repos rather than keeping it private.
+Chosen 2026-08-22 from three candidates, on the evidence that 48 of the last 60 commits touch loom directly, that loom is now 24 skills, 5 agents, 163 scripts and 126 released versions of `loom-code` alone, and that `loom-code/contract/templates/PURPOSE.md` already exports this repo's self-governance mechanism to other repos rather than keeping it private.
 
 **Licensed as first-class bets:** hardening loom's gates, closing the portability gaps that stop a foreign repo adopting it, and the work of separating loom from `monkey-skills` into independently managed repositories.
 

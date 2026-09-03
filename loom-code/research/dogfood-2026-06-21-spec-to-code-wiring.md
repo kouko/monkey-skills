@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Dogfood — spec→code seam wiring (2026-06-21)
 
 Behavioral validation (Task 6) of the loom-spec → loom-code wiring. A marker

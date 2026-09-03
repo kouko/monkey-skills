@@ -36,8 +36,8 @@ to the mode. When nothing is quotable, the skill asks you rather than guessing.
 | Situation | Skill |
 |---|---|
 | You want a different **executor** to answer — stronger model, higher effort, another vendor | `loom-workflow:independent-advisor` |
-| You want a different **critique lens** on a proposal, same executor | `loom-workflow:proposal-critique` |
-| You suspect over-engineering specifically | `loom-workflow:complexity-critique` |
+| You want a different **critique lens** on a proposal, same executor | `loom-workflow:critique` (`mode: proposal`) |
+| You suspect over-engineering specifically | `loom-workflow:critique` (`mode: complexity`) |
 
 The distinction is the whole point: the sibling skills change the lens, this
 one changes the executor. Because it spends money and sends material off this

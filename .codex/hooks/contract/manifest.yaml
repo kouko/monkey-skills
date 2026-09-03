@@ -1,0 +1,154 @@
+# loom contract package — machine-readable declaration (concept-model §1, §2, §3, §11).
+# Consumers: loom-design and loom-workflow read this file; only loom-code writes it.
+# Recomputed by check_mechanisms.py: every station / tool / action / artifact
+# field below is a mechanism and must be listed in docs/loom/evidence/mechanisms.yaml.
+version: 1.0.0
+
+stations:            # produce one per-change artifact each (§3)
+  - {name: capture-intent, owner: loom-design, produces: intent,  decision_point: 1}
+  - {name: write-spec,     owner: loom-design, produces: spec,    decision_point: 2}   # product only
+  - {name: write-plan,     owner: loom-code,   produces: plan,    decision_point: 1}   # code-only path runs ① itself
+  - {name: build,          owner: loom-code,   produces: diff}
+  - {name: review,         owner: loom-code,   produces: review}
+  - {name: ship,           owner: loom-code,   produces: diff,    decision_point: 3}   # acceptance = blind-run report
+  - {name: maintain,       owner: loom-code,   produces: intent}
+
+tools:               # user-invoked, or raised by a station on a mechanical condition; standalone ones are not counted
+  - {name: product-principles,  owner: loom-design,   produces: PRINCIPLES.md}
+  - {name: design-system,       owner: loom-design,   produces: DESIGN.md}
+  - {name: decision-map,        owner: loom-workflow}
+  - {name: handoff,             owner: loom-workflow}
+  - {name: recap-state,         owner: loom-workflow}
+  - {name: cot-explain,         owner: loom-workflow}
+  - {name: distill-sessions,    owner: loom-workflow}
+  - {name: git-memory,          owner: loom-workflow}
+  - {name: independent-advisor, owner: loom-workflow}
+  - {name: critique,            owner: loom-workflow}   # mode: proposal | complexity
+  # standalone: outside the loom flow; not counted toward the skill budget (user-decided 2026-09-02)
+  - {name: goal-create,         owner: loom-workflow, standalone: true}
+  - {name: dbt-model-style,     owner: loom-workflow, standalone: true}
+
+actions:             # executable steps inside a station; not skills (§3)
+  - name: restate-and-confirm
+    owner: write-plan          # also executed by capture-intent when loom-design is installed
+    summary: "decision point ① — restate Problem/Acceptance in plain words; merge one-way doors, the once-per-change second-vendor suggestion and a missing-PRINCIPLES interview into the same dialogue; write `status: confirmed <date>`."
+  - name: one-way-door
+    owner: write-plan
+    summary: "classes (a)–(e) — (e) irreversible actions on existing user data, asked even without a fork — and four gates (check / measure / threshold 20% / merge); asked in consequence form inside decision point ① or ②; answers marked user-decided in spec Design decision."
+  - name: minimal-spec
+    owner: write-plan
+    summary: "code-only install with needs-design yes — derive Requirements from Acceptance and UI flows from intent using templates/spec-minimal.md; same spec review gate."
+  - name: principles-interview
+    owner: write-plan
+    summary: "code-only install, kind product, no ratified PRINCIPLES.md — run templates/PRINCIPLES-interview.md inside decision point ①; user confirms, agent writes ratified-by."
+  - name: package-tests
+    owner: build
+    summary: "run the package-level test command; result is recorded as a probe in review.json."
+  - name: parallel-dispatch
+    owner: build
+    summary: "independent tasks of one wave run as parallel implementer dispatches; one dispatch record per task."
+  - name: worktree
+    owner: build
+    summary: "each implementer works in its own git worktree; the wave merges back before the checkpoint."
+  - name: dispatch-record
+    owner: build
+    summary: "append one entry per dispatch to review.json dispatch[] (schema below); the push rules reviewer≠implementer and dismissed-by-reviewer read it."
+  - name: read
+    owner: review
+    summary: "≥2 fresh-context reviewers apply the lens for the artifact type (code 11 dims / docs 5 dims / spec- design- principles-conformance)."
+  - name: blind-run
+    owner: review
+    summary: "an agent that never touched the change builds/runs it in a clean environment and writes the blind-run report against every Acceptance line (plus UI flows for product)."
+  - name: adversarial
+    owner: review
+    summary: "mutation / fuzz / abuse cases for code, red-team for spec, gate-attack catalogue for skills; results land in review.json."
+  - name: checkpoint
+    owner: review
+    summary: "wave end when unreviewed delta > 8 files or 400 lines, branch end always, after-task tasks (budget 2 per plan, more with a reason line); ≤5 checkpoints during build, fix rounds not counted; reviewed_sha advances only on PASS / PASS_WITH_NOTES."
+  - name: memory
+    owner: ship
+    summary: "git-memory trailers on the commit plus docs/loom/memory/ entries (templates/memory-README.md) before push."
+  - name: alert-to-intent
+    owner: maintain
+    summary: "an alert or incident becomes evidence on the matching open intent or a new intent with originator maintenance-loop; every incident becomes an eval in mechanisms.yaml."
+
+artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sections
+  intent:
+    path: docs/loom/intent/<change-id>.md
+    template: intent.md
+    fields:
+      - {name: originator,   kind: frontmatter, required: true}
+      - {name: kind,         kind: frontmatter, required: true, values: [product, engineering]}
+      - {name: needs-design, kind: frontmatter, required: true, grammar: "yes | no — <reason>"}
+      - {name: map,          kind: frontmatter, required: false}
+      - {name: evidence,     kind: frontmatter, required: false}
+      - {name: status,       kind: frontmatter, required: false, grammar: "open | confirmed <date> | withdrawn — <reason>"}
+      - {name: Problem,           kind: section, required: true}
+      - {name: Proposed outcome,  kind: section, required: true}
+      - {name: Acceptance,        kind: section, required: true}
+      - {name: Constraints,       kind: section, required: true}
+      - {name: Value case,        kind: section, required: false}
+      - {name: Out of scope,      kind: section, required: true}
+      - {name: Open questions,    kind: section, required: true}
+  spec:
+    path: docs/loom/<change-id>/spec.md
+    template: spec-minimal.md
+    fields:
+      - {name: intent,             kind: frontmatter, required: true, grammar: "<change-id>@<sha>"}
+      - {name: confirmed-behavior, kind: frontmatter, required: false, grammar: "<date> @<spec-blob-sha7>", note: "required when kind: product; the sha is `git hash-object` over the spec WITHOUT this line, i.e. the file as the user saw it, so a spec rewritten after decision point 2 no longer matches"}
+      - {name: Requirements,           kind: section, required: true, grammar: "REQ-<n> — <name> … → Acceptance #<n>"}
+      - {name: Design decision,        kind: section, required: true}
+      - {name: Alternatives considered, kind: section, required: true}
+      - {name: Current state evidence, kind: section, required: true}
+      - {name: UI flows,               kind: section, required: true, note: "N/A only when the diff touches no declared interface surface; spec.ui-flows-recompute recomputes that"}
+  plan:
+    path: docs/loom/<change-id>/plan.md
+    template: plan.md
+    fields:
+      - {name: intent, kind: frontmatter, required: true}
+      - {name: spec,   kind: frontmatter, required: false}
+      - {name: Task DAG, kind: section, required: true, grammar: "**<id> <title>** after: <ids> review: after-task?"}
+      - {name: Risks,    kind: section, required: true}
+      - {name: Current State Evidence, kind: section, required: false, note: "required when needs-design: no"}
+  review:
+    path: docs/loom/<change-id>/review.json
+    template: review.json
+    fields:
+      - {name: reviewed_sha,  kind: json, required: true}
+      - {name: scope,         kind: json, required: true}
+      - {name: vendors,       kind: json, required: true}
+      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback, spec_sha}]", note: "scope says what the round reviewed; spec_sha (optional) is the blob sha of the spec this verdict read, which intake.spec-pass compares against the spec on disk; fallback records a named second vendor that was unavailable, grammar `<cli> missing at <YYYY-MM-DD>`"}
+      - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact, scope}]", note: "scope says what the probe attacked; the spec gate accepts an adversarial probe only with scope: spec"}
+      - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
+      - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}
+      - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
+
+standing_docs:       # not per-change (§2a, §8)
+  - {name: PRINCIPLES.md,       tool: product-principles, ratified_by: required, reject_when: "kind: product and missing"}
+  - {name: DESIGN.md,           tool: design-system,      ratified_by: required, reject_when: never}
+  - {name: KICKOFF-DEFAULTS.md, tool: null,               path: docs/loom/KICKOFF-DEFAULTS.md}
+
+kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
+  - {name: second-vendor,          grammar: "<cli> | none"}
+  - {name: package-tests,          grammar: "<command> | none", note: "the command push.probes-package-tests compares the recorded run against; absent = recomputed from the repo's build markers"}
+  - {name: standing-docs,          grammar: "waived"}
+  - {name: session-start-baseline, grammar: "<sha> <words>"}
+  - {name: interface-surfaces,     grammar: "<glob>[, <glob>…]", default: "**/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/**"}
+  - {name: artifact-types,         grammar: "<glob>=<type>[, …]", note: "overrides the §6 type mapping"}
+
+artifact_types:      # §6 type mapping; KICKOFF-DEFAULTS artifact-types overrides
+  - {glob: "docs/loom/intent/**",        type: intent}
+  - {glob: "docs/loom/*/spec.md",        type: spec}
+  - {glob: "docs/loom/*/plan.md",        type: plan}
+  - {glob: "PRINCIPLES.md",              type: standing}
+  - {glob: "DESIGN.md",                  type: standing}
+  - {glob: "docs/loom/KICKOFF-DEFAULTS.md", type: standing}
+  - {glob: "docs/loom/memory/**",        type: memory}
+  - {glob: "**/evidence/**",             type: evidence}
+  - {glob: "**/SKILL.md",                type: skill}
+  - {glob: "**/agents/*.md",             type: skill}
+  - {glob: "**/hooks/**",                type: gate}
+  - {glob: "**/scripts/check_*",         type: gate}
+  - {glob: "docs/loom/maps/**",          type: map}
+  - {glob: "**/*.md",                    type: docs}
+  - {glob: "**",                         type: code}

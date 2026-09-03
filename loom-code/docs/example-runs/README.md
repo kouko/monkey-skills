@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # example-runs
 
 > Preserved test evidence from `loom-code` skill ritual runs (per ROADMAP §Cross-cutting concerns / TC-1 hybrid testing cadence).

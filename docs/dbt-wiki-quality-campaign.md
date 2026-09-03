@@ -124,7 +124,7 @@ Low (next-touch, from PR reviews): flatten_links anchored-link backstop;
   twice since) instead of duplicating it, and splits the work by review
   status rather than by clock time: a **planning stage** (interactive,
   unchanged — brainstorm → plan → `Plan-document-reviewer verdict: PASS`)
-  and an **execution stage** (`scripts/phase2-loop/ROUTINE.md`) that only
+  and an **execution stage** (`scripts/phase2-loop/ROUTINE.md`, removed 2026-09-03) that only
   ever dispatches segment 3 against an already-frozen plan. Delivered: the
   kill switch + scope guard (`safety_gates.py`), the campaign-journal
   writer, `queue_entry.py` (entry authoring + the backlog-description

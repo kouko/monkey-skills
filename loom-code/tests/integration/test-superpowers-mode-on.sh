@@ -129,9 +129,9 @@ with BOTH loom-code + obra/superpowers installed):
   4. Test prompt: "what skills do you have?"
      - Expected: both loom-code (11 skills) + superpowers (~13 skills)
        discoverable
-     - Skill-name collisions (brainstorming, writing-plans, etc.) — user
-       must use plugin-scoped form: Skill(loom-code:brainstorming)
-       vs Skill(superpowers:brainstorming)
+     - Skill-name collisions (brainstorming, writing-plans, etc. on the
+       superpowers side) — user must use the plugin-scoped form:
+       Skill(loom-code:write-plan) vs Skill(superpowers:brainstorming)
 
   5. PASS if both plugins inject hook content without error + skill
      lists discoverable. Run test-superpowers-mode-off.sh for the

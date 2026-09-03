@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # Dogfood Note #1 — Self-toolkit architectural shift (v0.5.1 → v0.6.1)
 
 **Date**: 2026-05-16

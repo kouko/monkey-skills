@@ -1,3 +1,5 @@
+> ARCHIVED 2026-09-02 — describes loom-code < 1.0; kept for history.
+
 # How the industry ships one skill/plugin package for both Claude Code and Codex CLI
 
 **Date:** 2026-07-05

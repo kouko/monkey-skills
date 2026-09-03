@@ -4,7 +4,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 
 > Loom workflow plugin for Claude Code and Codex — decision briefs, deletion-first critique gates, git-native project memory, recap, handoff, and session distill.
 
-**Version**: 1.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 4.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## Background
 
@@ -13,7 +13,7 @@ Building skills for Claude Code is iterative. You draft a skill, ship it, find t
 `loom-workflow` grew from two architectural moves, one of which has since relocated:
 
 1. **Two Hats split for skills** (Fowler refactor-vs-feature, applied to skill authoring) — `skill-refactor` (Phase A: behavior-preserving, auto-evaluable) separate from `skill-tuning` (Phase B: taste-sensitive, human-judged). Both skills, plus `skill-creator-advance` and `skill-judge`, have since moved to `skill-dev-toolkit`; see "Skill-evolution architecture (relocated)" below.
-2. **A critique-gate line** that intercepts proposals before they become commits — `proposal-critique` (multi-item triage) → `complexity-critique` (single-change deletion-first gate) → simplify (post-implementation review, lives in Anthropic's own toolkit). This move still lives in `loom-workflow`.
+2. **A critique gate** that intercepts proposals before they become commits — `critique`, one skill with two lenses (`mode: proposal` for multi-item triage, `mode: complexity` for the single-change deletion-first gate) → simplify (post-implementation review, lives in Anthropic's own toolkit). This move still lives in `loom-workflow`.
 
 The plugin also carries `git-memory` (portable project memory written into commit trailers and PR bodies, recoverable by any tool that can read git).
 
@@ -27,8 +27,7 @@ A skill belongs in `loom-workflow` when it does **cross-station, multi-session c
 
 | Skill | Role |
 |---|---|
-| [`brief-before-asking`](skills/brief-before-asking/) | Deliver a Mental-Model-first briefing before asking the user to decide a non-trivial engineering fork — the default, not optional. Also fires reactively when they're lost on the question, the explanation, or the stakes. |
-| [`complexity-critique`](skills/complexity-critique/) | Evaluate one proposed change (refactor / feature / tech-debt) via a deletion-first lens: before/after LOC, what it obsoletes. Multi-item proposal → `proposal-critique`. |
+| [`critique`](skills/critique/) | Judge a proposal before it is built: `mode: proposal` triages a list, plan, or prose recommendation into KEEP / DEFER / DROP by evidence grounding and YAGNI; `mode: complexity` weighs one specific change deletion-first — before/after LOC and what it obsoletes. |
 | [`cot-explain`](skills/cot-explain/) | Explain how something was reasoned — a named file, or the work just done — as a standalone page built around a chain-of-thought diagram, every arrow labeled with why that step follows. |
 | [`dbt-model-style`](skills/dbt-model-style/) | Enforce a dbt + Redshift model style & structure contract — CTE roles, zero-logic final CTE, naming, YAML header, comments, syntax. |
 | [`decision-map`](skills/decision-map/) | Chart and work through a persistent decision map at `docs/loom/maps/<map-id>/` — a destination, a growing Decisions-so-far log, and a Not-yet-specified (fog) list that graduates into tickets over many sessions instead of a one-shot plan. |
@@ -37,18 +36,17 @@ A skill belongs in `loom-workflow` when it does **cross-station, multi-session c
 | [`goal-create`](skills/goal-create/) | Draft a goal condition — SESSION mode's four-field stopping condition (Outcome / Constraints / Verification / Stop-when) for a long-running agent run, or ARC mode's repository purpose artifact (`Why` / `Done when`). |
 | [`handoff`](skills/handoff/) | Save session state to a structured HANDOFF file so a future agent resumes cleanly, or load/verify a prior HANDOFF. |
 | [`independent-advisor`](skills/independent-advisor/) | Get a second opinion on the current plan or decision from a **different executor** — a stronger model, higher effort, or another vendor. The executor changes, not the critique lens. |
-| [`proposal-critique`](skills/proposal-critique/) | Triage a proposal (list, plan, or prose recommendation) into KEEP / DEFER / DROP using evidence grounding and YAGNI. |
 | [`recap-state`](skills/recap-state/) | In-session re-orientation — a structured recap ending with a Synthesis-check when the user loses the thread. |
 
-All twelve skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
+All ten skills are **Active** — eight loom tools plus the two standalone skills (`goal-create`, `dbt-model-style`) that sit outside the loom flow. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
 ## The critique line
 
-Three skills form a deletion-first review pipeline, each tuned to a different proposal shape:
+One skill, two lenses, plus Anthropic's own post-implementation reviewer — a deletion-first pipeline, each stage tuned to a different proposal shape:
 
 ```
-proposal-critique           complexity-critique           Anthropic simplify
-─────────────────           ─────────────────────         ──────────────────
+critique · mode: proposal   critique · mode: complexity   Anthropic simplify
+─────────────────────────   ───────────────────────────   ──────────────────
 Multi-item proposal         One specific proposed         Post-implementation
 (list / plan / prose)       change (refactor, feature     diff review
                             add, debt cleanup, or
@@ -65,7 +63,7 @@ Verdict: KEEP / DEFER       Verdict: PROCEED /            (lives outside this
                                    / RESHAPE / REJECT
 ```
 
-Use `proposal-critique` when handed a backlog or numbered plan. Use `complexity-critique` when one specific change is on the table. Use Anthropic's `simplify` after the change has shipped.
+Use `mode: proposal` when handed a backlog or numbered plan. Use `mode: complexity` when one specific change is on the table. Use Anthropic's `simplify` after the change has shipped.
 
 ## Skill-evolution architecture (relocated)
 
@@ -83,13 +81,13 @@ Use `proposal-critique` when handed a backlog or numbered plan. Use `complexity-
 
 ## Upstream chain
 
-One of the twelve skills derives from an MIT-licensed upstream. Full attribution lives in the skill's `NOTICE` file. (`skill-creator-advance`'s and `skill-judge`'s upstream attributions moved with them to `skill-dev-toolkit`.)
+One of the ten skills derives from an MIT-licensed upstream. Full attribution lives in the skill's `NOTICE` file. (`skill-creator-advance`'s and `skill-judge`'s upstream attributions moved with them to `skill-dev-toolkit`.)
 
 | Skill | Upstream chain |
 |---|---|
-| `complexity-critique` | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills (renamed `reducing-entropy` → `complexity-critique`) |
+| `critique` (`mode: complexity`) | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills (renamed `reducing-entropy` → `complexity-critique`, merged into `critique`) |
 
-The remaining eleven skills are original designs with no external upstream to attribute. Details in each skill's `NOTICE` file where one exists.
+The remaining nine skills are original designs with no external upstream to attribute. Details in each skill's `NOTICE` file where one exists.
 
 ## Repository structure
 
@@ -103,9 +101,8 @@ loom-workflow/
 │   ├── quarterly-audit-runbook.md
 │   └── telemetry-setup.md
 ├── skills/
-│   ├── brief-before-asking/
-│   ├── complexity-critique/
 │   ├── cot-explain/
+│   ├── critique/
 │   ├── dbt-model-style/
 │   ├── decision-map/
 │   ├── distill-sessions/
@@ -113,7 +110,6 @@ loom-workflow/
 │   ├── goal-create/
 │   ├── handoff/
 │   ├── independent-advisor/
-│   ├── proposal-critique/
 │   └── recap-state/
 ├── CHANGELOG.md
 ├── README.md          (this file)
@@ -132,13 +128,12 @@ loom-workflow/
 
 ## Usage
 
-`loom-workflow` ships no slash commands — all twelve skills auto-trigger from natural language. For example:
+`loom-workflow` ships no slash commands — all ten skills auto-trigger from natural language. For example:
 
 ```
-"Critique this 12-item plan"                              → proposal-critique
-"Worth the lines?" / "should we build this?"               → complexity-critique
+"Critique this 12-item plan"                              → critique (proposal)
+"Worth the lines?" / "should we build this?"               → critique (complexity)
 "I'm about to commit — help me write the trailer"          → git-memory
-"看不懂" / "跟不上" / agent-about-to-ask-complex-fork      → brief-before-asking
 "開一張決策地圖" / "chart a decision map"                  → decision-map
 "wrap up" / "save state"                                   → handoff
 "where were we" / "我跟丟了"                                → recap-state
@@ -158,6 +153,6 @@ Contributions follow the repo-wide convention in [`CLAUDE.md`](https://github.co
 
 ## License
 
-MIT. `complexity-critique`, the plugin's one skill with an MIT-licensed upstream, preserves its full copyright chain in its `LICENSE` and `NOTICE` files. (`skill-creator-advance` and `skill-judge` carry their own copyright chains now that they live in `skill-dev-toolkit`.)
+MIT. `critique`, the plugin's one skill with an MIT-licensed upstream (its `mode: complexity` half), preserves the full copyright chain in its `LICENSE` and `NOTICE` files. (`skill-creator-advance` and `skill-judge` carry their own copyright chains now that they live in `skill-dev-toolkit`.)
 
 See [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE) at the repo root for the umbrella license.

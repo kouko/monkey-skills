@@ -1,6 +1,6 @@
-"""Tests for check_open_questions.py — reads a writing-plans plan document,
-scopes the scan to its `## Open Questions` section only (per
-`loom-code/skills/writing-plans/references/plan-format.md` §Plan-level
+"""Tests for check_open_questions.py — reads an intent document, scopes
+the scan to its `## Open questions` section only (per the `intent`
+artifact schema in `loom-code/contract/manifest.yaml`, §Plan-level
 open-questions slot), and exits non-zero while any entry is unresolved or
 the slot is absent or malformed.
 
@@ -43,7 +43,7 @@ def test_unresolved_question_exit_1(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [OPEN] — which retry policy should the client use?\n",
     )
     result = _run(plan)
@@ -55,7 +55,7 @@ def test_all_resolved_exit_0(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — which retry policy? → resolved: exponential backoff\n"
         "- OQ-2 [RESOLVED] — which port? → resolved: 8080\n",
     )
@@ -68,7 +68,7 @@ def test_wellformed_na_line_exit_0(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "N/A — no unresolved question: brief left nothing undecided\n",
     )
     result = _run(plan)
@@ -89,18 +89,18 @@ def test_absent_heading_exit_1(tmp_path):
     )
     result = _run(plan)
     assert result.returncode == 1
-    assert "no '## Open Questions' section found" in result.stderr
+    assert "no '## Open questions' section found" in result.stderr
     assert "present but empty" not in result.stderr
 
 
 def test_present_but_bare_section_exit_1(tmp_path):
-    """A '## Open Questions' heading with no body at all (no entries, no
+    """A '## Open questions' heading with no body at all (no entries, no
     N/A line) is malformed — distinct from the heading being absent
     entirely, and from a well-formed N/A declaration."""
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "## Task 1 — foo\n"
         "- Description: does stuff\n",
     )
@@ -113,7 +113,7 @@ def test_na_line_missing_reason_exit_1(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "N/A — no unresolved question:\n",
     )
     result = _run(plan)
@@ -127,7 +127,7 @@ def test_malformed_entry_wrong_token_exit_1(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [BLOCKED] — which retry policy?\n",
     )
     result = _run(plan)
@@ -147,7 +147,7 @@ def test_open_token_in_decision_log_prose_is_out_of_scope(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "N/A — no unresolved question: nothing outstanding\n\n"
         "## Decision Log\n\n"
         "- chose to spell status tokens [OPEN] and [RESOLVED] against the "
@@ -161,7 +161,7 @@ def test_open_token_in_quoted_example_is_out_of_scope(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "N/A — no unresolved question: nothing outstanding\n\n"
         "## Task 1 — foo\n"
         "- Description: entry form is `- OQ-<n> [OPEN] — <question text>`, "
@@ -175,7 +175,7 @@ def test_open_token_in_fenced_code_block_is_out_of_scope(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "N/A — no unresolved question: nothing outstanding\n\n"
         "## Task 1 — foo\n"
         "```markdown\n"
@@ -187,30 +187,6 @@ def test_open_token_in_fenced_code_block_is_out_of_scope(tmp_path):
 
 
 # --- exercised against a real artifact of this system ---
-
-
-def test_real_plan_document_open_questions_section_passes():
-    """This very plan (the arc that ships this checker) now carries a real
-    '## Open Questions' section: two `[RESOLVED]` entries, each soft-wrapped
-    across several physical lines, followed by an explanatory paragraph. The
-    scanner must accept soft-wrap and prose — the SSOT
-    (plan-format.md §Plan-level open-questions slot) specifies the entry
-    form and the N/A line but never forbids either, unlike '## Decision
-    Log', which pins entries to a single physical line explicitly. A
-    scanner stricter than its own grammar is the defect this test guards
-    against (found by dogfooding against this exact document).
-    """
-    plan_path = (
-        REPO_ROOT / "docs" / "loom" / "plans"
-        / "2026-08-13-open-question-dispatch-gate.md"
-    )
-    assert plan_path.is_file(), f"fixture plan missing at {plan_path}"
-
-    result = _run(plan_path)
-    assert result.returncode == 0, (
-        "the real plan's Open Questions section is well-formed (soft-wrapped "
-        f"[RESOLVED] entries + prose) and must pass\nstderr:\n{result.stderr}"
-    )
 
 
 def test_absent_open_questions_section_still_fails(tmp_path):
@@ -227,7 +203,7 @@ def test_absent_open_questions_section_still_fails(tmp_path):
     )
     result = _run(plan)
     assert result.returncode == 1
-    assert "no '## Open Questions' section found" in result.stderr
+    assert "no '## Open questions' section found" in result.stderr
 
 
 def test_softwrapped_resolved_entry_continuation_line_contains_open_token(tmp_path):
@@ -238,7 +214,7 @@ def test_softwrapped_resolved_entry_continuation_line_contains_open_token(tmp_pa
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — which retry policy should the client use? A prior\n"
         "  draft left this [OPEN] but the team settled on exponential backoff.\n"
         "  → resolved: exponential backoff\n",
@@ -253,7 +229,7 @@ def test_explanatory_prose_in_section_containing_open_token(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — which port? → resolved: 8080\n\n"
         "This section discusses the [OPEN] and [RESOLVED] tokens in general "
         "terms, not as a real entry.\n",
@@ -271,7 +247,7 @@ def test_malformed_entry_still_errors_and_names_it(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [OPNE] — which retry policy should the client use?\n",
     )
     result = _run(plan)
@@ -287,7 +263,7 @@ def test_prose_only_section_with_no_entry_and_no_na_line_fails(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "We discussed several things during planning but never wrote them "
         "up as entries.\n",
     )
@@ -301,7 +277,7 @@ def test_prose_only_section_with_no_entry_and_no_na_line_fails(tmp_path):
 
 
 def test_duplicate_open_questions_sections_exit_1(tmp_path):
-    """Two `## Open Questions` sections in one document — the FIRST a
+    """Two `## Open questions` sections in one document — the FIRST a
     clean N/A, the SECOND holding a real `[OPEN]` entry. A scanner that
     takes the first heading match unconditionally (the pre-fix defect)
     exits 0, silently swallowing the real unresolved question in the
@@ -313,22 +289,22 @@ def test_duplicate_open_questions_sections_exit_1(tmp_path):
         "# Plan: x\n\n"
         "## Task-flow diagram\n\n"
         "N/A — none\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "N/A — no unresolved question: first clean copy\n\n"
         "## Task 1 — foo\n"
         "- Description: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-7 [OPEN] — real unresolved question hidden in duplicate section\n\n"
         "## Task 2 — bar\n",
     )
     result = _run(plan)
     assert result.returncode == 1, result.stdout
-    assert "Open Questions" in result.stderr
+    assert "Open questions" in result.stderr
 
 
 def test_fenced_open_questions_heading_decoy_does_not_mask_real_section(tmp_path):
     """A fenced code block earlier in the document quoting the grammar —
-    a `## Open Questions` heading plus a well-formed entry, as a worked
+    a `## Open questions` heading plus a well-formed entry, as a worked
     example — must not be mistaken for THE section. The real section,
     further down, holding a genuine `[OPEN]` entry, must still be found
     and must still fail. This shape is not hypothetical: plan-format.md
@@ -339,10 +315,10 @@ def test_fenced_open_questions_heading_decoy_does_not_mask_real_section(tmp_path
         "## Task 1 — foo\n\n"
         "Example grammar:\n"
         "```markdown\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — example entry shown for illustration → resolved: n/a\n"
         "```\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-9 [OPEN] — the REAL unresolved question, hidden past the decoy window\n",
     )
     result = _run(plan)
@@ -351,7 +327,7 @@ def test_fenced_open_questions_heading_decoy_does_not_mask_real_section(tmp_path
 
 
 def test_fence_inside_section_body_example_entry_ignored(tmp_path):
-    """A fenced code block INSIDE the real `## Open Questions` section
+    """A fenced code block INSIDE the real `## Open questions` section
     body, quoting an `[OPEN]` example for illustration, must not be read
     as a real entry — the mirror defect of the decoy-heading case above.
     The real entry here is `[RESOLVED]`, so the plan is actually clean
@@ -359,7 +335,7 @@ def test_fence_inside_section_body_example_entry_ignored(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — real entry → resolved: yes\n\n"
         "Grammar reminder:\n"
         "```markdown\n"
@@ -383,7 +359,7 @@ def test_reused_oq_identifier_warns_but_does_not_change_exit_code(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — which port? → resolved: 8080\n"
         "- OQ-1 [RESOLVED] — reused id by mistake → resolved: n/a\n",
     )
@@ -405,7 +381,7 @@ def test_reused_oq_identifier_mixed_open_and_resolved_still_errors(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — which port? → resolved: 8080\n"
         "- OQ-1 [OPEN] — reused id, still unresolved\n",
     )
@@ -441,7 +417,7 @@ def test_orchestrator_fixture_mixed_bullets_all_flagged(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — settled → resolved: yes\n"
         "* OQ-2 [OPEN] — star bullet\n"
         "+ OQ-3 [OPEN] — plus bullet\n"
@@ -473,7 +449,7 @@ def test_non_dash_bullet_entry_is_malformed_regardless_of_token(
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         f"{prefix}OQ-1 [{token}] — bullet variant {bullet!r}\n",
     )
     result = _run(plan)
@@ -492,7 +468,7 @@ def test_prose_mentioning_oq_id_without_bracket_is_not_flagged(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [RESOLVED] — real entry → resolved: yes\n\n"
         "OQ-1 was settled last week after some back-and-forth in review.\n",
     )
@@ -510,7 +486,7 @@ def test_lowercase_token_is_malformed(tmp_path):
     plan = _write_plan(
         tmp_path,
         "# Plan: x\n\n"
-        "## Open Questions\n\n"
+        "## Open questions\n\n"
         "- OQ-1 [open] — which retry policy should the client use?\n",
     )
     result = _run(plan)

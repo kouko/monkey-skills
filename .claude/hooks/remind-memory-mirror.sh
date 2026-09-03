@@ -6,10 +6,9 @@
 # Why: auto-memory notes under */.claude/projects/<slug>/memory/ live
 # per-machine and are NOT committed. Project-scoped knowledge (frontmatter
 # `type: project`) must also land in the repo's committed store —
-# docs/loom/backlog/ (backlog-shaped items, one entry file per its charter,
-# docs/loom/backlog/README.md) or docs/loom/memory/ (durable project notes)
-# — or it silently evaporates on any other machine. This hook reminds at
-# the moment such a note is written.
+# docs/loom/intent/<change-id>.md (new work) or docs/loom/memory/ (durable
+# project notes) — or it silently evaporates on any other machine. This
+# hook reminds at the moment such a note is written.
 #
 # Scope: fires only for a project-type memory-note write. User/feedback
 # notes, the curated MEMORY.md index, non-memory paths, and malformed or
@@ -56,9 +55,8 @@ if echo "$FRONTMATTER" | grep -Eq '^[[:space:]]*type:[[:space:]]*project([[:spac
     $FILE_PATH
 
 Mirror the substance into the repo's committed store:
-    docs/loom/backlog/     — backlog-shaped items (create an entry file per
-                             its charter, docs/loom/backlog/README.md)
-    docs/loom/memory/      — durable project notes
+    docs/loom/intent/<change-id>.md  — new work
+    docs/loom/memory/                — durable project notes
 
 If it is already reflected there, no action needed — then continue.
 EOF
