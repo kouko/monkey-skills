@@ -316,6 +316,9 @@ def test_a_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert f"expected exactly one path ({intent_rel})" in result.stderr
+    assert f"got 2: {intent_rel}, docs/loom/notes.md" in result.stderr
 
 
 def test_a_close_commit_with_an_extra_line_change_is_blocked(tmp_path: Path) -> None:
@@ -326,17 +329,24 @@ def test_a_close_commit_with_an_extra_line_change_is_blocked(tmp_path: Path) -> 
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "expected 1 removed / 1 added `status:` line(s)" in result.stderr
+    assert "got 2 removed / 2 added line(s)" in result.stderr
 
 
 def test_a_close_commit_whose_parent_is_not_a_checkpoint_is_blocked(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     intent_rel = _seed_intent(repo)
     _insert_docs_commit(repo)
+    pre_close_sha = git(repo, "rev-parse", "HEAD")
     close_sha = _close_commit(repo, intent_rel)
     _checkpoint_after(repo, close_sha)
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
+    assert pre_close_sha[:8] in result.stderr
+    assert f"HEAD^^ ({pre_close_sha[:8]}) is not itself a checkpoint" in result.stderr
+    assert f"expected HEAD^^ ({pre_close_sha[:8]}) to touch only review.json" in result.stderr
 
 
 def test_a_merge_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None:
@@ -347,6 +357,9 @@ def test_a_merge_close_commit_touching_another_file_is_blocked(tmp_path: Path) -
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert f"expected exactly one path ({intent_rel})" in result.stderr
+    assert "got 2: b.py" in result.stderr
 
 
 def test_a_two_commit_branch_whose_head_caret_is_the_root_commit_passes(tmp_path: Path) -> None:
@@ -391,6 +404,9 @@ def test_a_close_commit_that_renames_the_intent_path_is_blocked(tmp_path: Path) 
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert f"expected exactly one path ({renamed_rel})" in result.stderr
+    assert f"got 2: {renamed_rel}, {intent_rel}" in result.stderr
 
 
 def test_a_brand_new_already_closed_intent_is_blocked(tmp_path: Path) -> None:
@@ -412,6 +428,58 @@ def test_a_brand_new_already_closed_intent_is_blocked(tmp_path: Path) -> None:
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "expected 1 removed / 1 added `status:` line(s)" in result.stderr
+    assert "got 0 removed" in result.stderr
+
+
+def test_deleting_an_already_closed_intent_is_not_a_close_commit(tmp_path: Path) -> None:
+    """Deleting an intent file that was already `status: closed` is an
+    ordinary commit, not a closing transition -- the old
+    `before_closed and after_text is None` branch wrongly classified the
+    deletion itself as a transition and subjected it to close-commit shape
+    (spec REQ-1, W0-04 round-3 finding)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo, status="closed 2026-08-01 — PR #100")
+    git(repo, "rm", "-q", intent_rel)
+    git(repo, "commit", "-q", "-m", "chore(loom): remove closed intent")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.review-only-head" not in blocked_rules(result)
+
+
+def test_a_root_commit_adding_an_already_closed_intent_is_blocked(tmp_path: Path) -> None:
+    """The repo's ROOT commit itself ADDS an intent already `status: closed
+    ...`, and the second commit is the checkpoint -- so HEAD^^ cannot
+    resolve at all (pre_close_sha is None) and condition (3) must fail
+    closed on the missing checkpoint parent rather than skip.
+    test_a_brand_new_already_closed_intent_is_blocked sits on
+    build_repo's prior history and is instead caught by condition (2), so
+    it never exercises this pre_close_sha-is-None path (spec REQ-1, W0-04
+    round-2/round-3 findings)."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "work")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    new_rel = f"docs/loom/intent/{CHANGE}-root.md"
+    (repo / new_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / new_rel).write_text(
+        f"# {CHANGE}\nstatus: closed 2026-09-03 — PR #999\n\n## Problem\nx\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", new_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")  # ROOT commit
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "is the root commit and adds an already-closed intent" in result.stderr
+    assert "expected a HEAD^^ checkpoint commit to exist" in result.stderr
 
 
 # --- push.reviewed-sha -----------------------------------------------------
