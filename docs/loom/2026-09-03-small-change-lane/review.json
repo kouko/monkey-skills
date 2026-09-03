@@ -347,6 +347,15 @@
       "model": "codex",
       "started": "2026-09-04T01:18:15+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-fix2-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T01:21:08+08:00",
+      "fresh_context": true,
+      "note": "branch-end fix: standing out of the small lane; manifest artifact-types note; review description nit"
     }
   ],
   "second_vendor": "codex"
