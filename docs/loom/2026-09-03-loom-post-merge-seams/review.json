@@ -1466,6 +1466,46 @@
       ],
       "text": "probe 10 docstring stale",
       "resolved": "resolved: docstring updated by the orchestrator (evidence-only edit), same commit as the W0-05 adversary dispatch"
+    },
+    {
+      "id": "after-task:W0-05-01",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:2672",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "stamp version equality checked only when the changed path is loom_checker.py; a commit touching only git_exec.py or contract/<rel> is exempted without validating the committed checker copy's stamp"
+    },
+    {
+      "id": "after-task:W0-05-02",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2753",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "a rejected plumbing path loses the comparison failure reason (version/mode/blob/deletion/symlink/missing canonical/no canonical all collapse)"
+    },
+    {
+      "id": "after-task:W0-05-03",
+      "severity": "important",
+      "anchor": "loom-code/scripts/test_loom_checker_push.py:1816",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "the mixed-commit test is green before the exemption exists; it does not prove per-path removal"
+    },
+    {
+      "id": "after-task:W0-05-04",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2625",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "_plumbing_path_matches_canonical is 63 lines"
     }
   ],
   "dispatch": [
@@ -2029,6 +2069,14 @@
       "agent_id": "codex-review-w0-05",
       "model": "codex",
       "started": "2026-09-03T14:55:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-05",
+      "role": "implementer",
+      "agent_id": "impl-w0-05-fix1-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T14:58:47+08:00",
       "fresh_context": true
     }
   ]
