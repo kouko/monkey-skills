@@ -360,6 +360,28 @@
           "fix": "adopted as spec v12"
         }
       ]
+    },
+    {
+      "round": 13,
+      "scope": "spec",
+      "spec_sha": "e660c1d",
+      "findings_file": "evidence/spec-review-r11.md",
+      "reviewer": "codex-review-spec-11",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS_WITH_NOTES"
+    },
+    {
+      "round": 13,
+      "scope": "spec",
+      "spec_sha": "e660c1d",
+      "findings_file": "evidence/spec-review-r11.md",
+      "reviewer": "sonnet-review-spec-11",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS_WITH_NOTES"
     }
   ],
   "probes": [
@@ -1181,6 +1203,17 @@
       ],
       "text": "parse_document is last-wins on a headingless or malformed-heading document, so a later spurious status: line overrides the real one and defeats both the transition detection and the before-heading boundary",
       "resolved": "resolved: spec v12 — regenerate-and-compare: a second status line makes the blobs differ; the implementation also counts exactly one status: line per version"
+    },
+    {
+      "id": "spec-R30",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "c4a2dbee",
+      "raised_by": [
+        "codex-review-spec-11",
+        "sonnet-review-spec-11"
+      ],
+      "text": "the trigger's intent path template is a live manifest read; a mistyped or drifted template makes no path match and the rule silently disarms (fail-open)"
     }
   ],
   "dispatch": [
