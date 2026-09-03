@@ -2622,69 +2622,196 @@ def _git_ls_tree_entry(repo: Path, sha: str, path: str) -> tuple[str, str] | Non
     return mode, blob_sha
 
 
-def _plumbing_path_matches_canonical(
-    repo: Path, sha: str, path: str, canonical_dir: Path, scaffold_mod
-) -> bool:
-    """True when `path` -- one `_is_host_plumbing()` already said yes to --
-    is byte-and-mode identical, at `sha`, to what THIS running tree's own
-    scaffold would write for it. False for every mismatch: a deleted entry,
-    a mode-only change, a symlink (mode `120000` never matches a canonical
-    `100644`/`100755`), a plumbing-looking path with no canonical
-    counterpart, or a stamped version that names a release other than this
-    checker's own (`codex_scaffold.plugin_version()`) -- checked before any
-    blob content, so a copy stamped with a superseded release fails before
-    a single byte is read."""
+def _plumbing_stamp_reason(repo: Path, sha: str, scaffold_mod) -> str | None:
+    """None when the COMMITTED `.codex/hooks/loom_checker.py`'s stamp line
+    names this running checker's own version (`codex_scaffold.
+    plugin_version()`); else the reason no plumbing path in this commit
+    can be exempt. Gated once per commit -- BEFORE any per-path canonical
+    byte comparison is even attempted, not merely before the blob is
+    fetched -- because a version mismatch on the checker copy invalidates
+    every OTHER plumbing path in the same commit too (Design decision
+    "Content-bound plumbing exemption", REQ-3): the copy absent at this
+    commit, carrying no stamp line at all, or naming a version other than
+    this one."""
+    entry = _git_ls_tree_entry(repo, sha, scaffold_mod.CHECKER_COPY)
+    if entry is None:
+        return "the checker copy is absent at this commit"
+    content = git_raw_text(repo, "show", f"{sha}:{scaffold_mod.CHECKER_COPY}")
+    lines = content.splitlines(keepends=True)
+    stamp_index = next(
+        (i for i, line in enumerate(lines) if line.startswith(scaffold_mod.STAMP_PREFIX)),
+        None,
+    )
+    if stamp_index is None:
+        return "the checker copy carries no version stamp"
+    version = lines[stamp_index][len(scaffold_mod.STAMP_PREFIX):].rstrip("\n")
+    expected = scaffold_mod.plugin_version()
+    if version != expected:
+        return f"version mismatch (got {version!r}, expected {expected!r})"
+    return None
+
+
+def _strip_stamp_line(content: str, stamp_prefix: str) -> str | None:
+    """`content` with its version stamp line removed, or None when it
+    carries no stamp line to strip."""
+    lines = content.splitlines(keepends=True)
+    stamp_index = next(
+        (i for i, line in enumerate(lines) if line.startswith(stamp_prefix)), None
+    )
+    if stamp_index is None:
+        return None
+    del lines[stamp_index]
+    return "".join(lines)
+
+
+def _matches_canonical_file(
+    repo: Path, sha: str, path: str, expected_mode: str, expected_bytes: str,
+    *, transform=None,
+) -> str | None:
+    """Mode-and-blob comparison shared by every canonical-rendering
+    plumbing path (the shim, the checker copy, its sibling modules, each
+    contract file): None when `path`'s tree entry at `sha` has mode
+    `expected_mode` and its committed blob -- passed through `transform`
+    first when the caller supplies one (the checker copy strips its own
+    stamp line before comparing) -- equals `expected_bytes`. Else the
+    reason it does not: deleted, a symlink (mode `120000` never matches a
+    canonical `100644`/`100755`), a mode mismatch, or a blob that
+    differs."""
     entry = _git_ls_tree_entry(repo, sha, path)
     if entry is None:
-        return False
+        return "deleted at this commit"
     mode, _blob = entry
+    if mode == "120000":
+        return "symlink (mode 120000 is never exempt)"
+    if mode != expected_mode:
+        return f"mode mismatch (got {mode}, expected {expected_mode})"
+    actual = git_raw_text(repo, "show", f"{sha}:{path}")
+    if transform is not None:
+        actual = transform(actual)
+        if actual is None:
+            return "checker copy carries no version stamp"
+    return None if actual == expected_bytes else "blob differs"
 
+
+def _plumbing_path_rejection(
+    repo: Path, sha: str, path: str, canonical_dir: Path, scaffold_mod
+) -> str | None:
+    """Which canonical rendering `path` -- one `_is_host_plumbing()`
+    already said yes to, in a commit whose checker-copy stamp
+    `_plumbing_stamp_reason` already gated -- must match, routed to
+    `_matches_canonical_file` for the mode-and-blob comparison every kind
+    shares. None when it matches; else the reason it does not."""
     if path == scaffold_mod.MARKER:
-        return False  # `.loom-hook-fired` is ignored -- no canonical, never exempt
+        return "no canonical (marker file is never exempt)"
 
     if path == scaffold_mod.SHIM_COMMAND:
-        if mode != "100755":
-            return False
         expected = scaffold_mod.SHIM_TEMPLATE.format(
             stamp=scaffold_mod.stamp_line(scaffold_mod.plugin_version()),
             checker=scaffold_mod.CHECKER_COPY,
         )
-        return git_raw_text(repo, "show", f"{sha}:{path}") == expected
+        return _matches_canonical_file(repo, sha, path, "100755", expected)
 
     if path == scaffold_mod.CHECKER_COPY:
         canonical_file = canonical_dir / "loom_checker.py"
-        if not canonical_file.is_file() or mode != _canonical_file_mode(canonical_file):
-            return False
-        content = git_raw_text(repo, "show", f"{sha}:{path}")
-        lines = content.splitlines(keepends=True)
-        stamp_index = next(
-            (i for i, line in enumerate(lines) if line.startswith(scaffold_mod.STAMP_PREFIX)),
-            None,
+        if not canonical_file.is_file():
+            return "no canonical counterpart for this path"
+        return _matches_canonical_file(
+            repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file),
+            transform=lambda content: _strip_stamp_line(content, scaffold_mod.STAMP_PREFIX),
         )
-        if stamp_index is None:
-            return False
-        version = lines[stamp_index][len(scaffold_mod.STAMP_PREFIX):].rstrip("\n")
-        if version != scaffold_mod.plugin_version():
-            return False
-        del lines[stamp_index]
-        return "".join(lines) == read_text(canonical_file)
 
     for name in scaffold_mod.SIBLING_MODULES:
         if path == f"{scaffold_mod.HOOK_DIR}/{name}":
             canonical_file = canonical_dir / name
-            if not canonical_file.is_file() or mode != _canonical_file_mode(canonical_file):
-                return False
-            return git_raw_text(repo, "show", f"{sha}:{path}") == read_text(canonical_file)
+            if not canonical_file.is_file():
+                return "no canonical counterpart for this path"
+            return _matches_canonical_file(
+                repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file)
+            )
 
     contract_prefix = f"{scaffold_mod.CONTRACT_COPY}/"
     if path.startswith(contract_prefix):
         rel = path[len(contract_prefix):]
         canonical_file = canonical_dir.parent / "contract" / rel
-        if not canonical_file.is_file() or mode != _canonical_file_mode(canonical_file):
-            return False
-        return git_raw_text(repo, "show", f"{sha}:{path}") == read_text(canonical_file)
+        if not canonical_file.is_file():
+            return "no canonical counterpart for this path"
+        return _matches_canonical_file(
+            repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file)
+        )
 
-    return False
+    return "no canonical counterpart for this path"
+
+
+_NO_CANONICAL_TREE = (
+    "no canonical (this checker is the .codex/hooks/ copy, or no contract "
+    "package sits beside it)"
+)
+
+
+def _filter_exempt_plumbing_paths(
+    repo: Path, sha: str, paths: set[str], canonical_dir: Path | None, scaffold_mod
+) -> tuple[set[str], dict[str, str]]:
+    """`paths` with every exempt host-plumbing path removed, and a
+    `{path: reason}` map for the host-plumbing paths that stayed because
+    they are NOT exempt -- both fold straight into the caller's
+    diagnostic. `canonical_dir` is None when there is no canonical tree
+    to compare against at all (this checker IS the `.codex/hooks/` copy,
+    or no sibling contract package sits beside it): every host-plumbing
+    path is rejected uniformly, with no per-path comparison attempted.
+    Otherwise the checker-copy stamp is gated once for the WHOLE commit
+    (`_plumbing_stamp_reason`) before any per-path comparison runs, per
+    REQ-3 -- a stamp mismatch invalidates every plumbing path in this
+    commit, not just the checker copy."""
+    stamp_reason = (
+        _plumbing_stamp_reason(repo, sha, scaffold_mod) if canonical_dir is not None else None
+    )
+    kept: set[str] = set()
+    rejected: dict[str, str] = {}
+    for path in paths:
+        if not _is_host_plumbing(path):
+            kept.add(path)
+            continue
+        if canonical_dir is None:
+            reason = _NO_CANONICAL_TREE
+        else:
+            reason = stamp_reason or _plumbing_path_rejection(
+                repo, sha, path, canonical_dir, scaffold_mod
+            )
+        if reason is None:
+            continue
+        kept.add(path)
+        rejected[path] = reason
+    return kept, rejected
+
+
+def _collect_untrailered_commits(
+    repo: Path, manifest, is_review, shas: list[str], canonical_dir: Path | None, scaffold_mod
+) -> tuple[set[str], list[tuple[str, str]]]:
+    """The per-commit half of `push.dispatch-covers-tasks`: every `Task:`
+    id any commit in `shas` claims, and the `(short sha, message)` pairs
+    for commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
+    host-plumbing paths are filtered out (`_filter_exempt_plumbing_paths`)
+    -- with no `Task:` trailer of their own."""
+    claimed: set[str] = set()
+    untrailered: list[tuple[str, str]] = []
+    for sha in shas:
+        paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
+        paths, plumbing_reasons = _filter_exempt_plumbing_paths(
+            repo, sha, paths, canonical_dir, scaffold_mod
+        )
+        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
+        message = git_text(repo, "log", "-1", "--format=%B", sha)
+        ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
+        claimed |= ids
+        if kinds and not ids:
+            kind_list = ", ".join(sorted(kinds))
+            if plumbing_reasons:
+                detail = "; ".join(
+                    f"{path} ({reason})" for path, reason in sorted(plumbing_reasons.items())
+                )
+                kind_list += f"; plumbing not exempt: {detail}"
+            untrailered.append((sha[:8], kind_list))
+    return claimed, untrailered
 
 
 def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
@@ -2728,27 +2855,9 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     canonical_dir = _plumbing_canonical_dir()
     scaffold_mod = _load_codex_scaffold() if canonical_dir is not None else None
 
-    claimed: set[str] = set()
-    untrailered: list[tuple[str, str]] = []
-    for sha in shas:
-        paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
-        if scaffold_mod is not None:
-            paths = {
-                path
-                for path in paths
-                if not (
-                    _is_host_plumbing(path)
-                    and _plumbing_path_matches_canonical(
-                        repo, sha, path, canonical_dir, scaffold_mod
-                    )
-                )
-            }
-        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
-        message = git_text(repo, "log", "-1", "--format=%B", sha)
-        ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
-        claimed |= ids
-        if kinds and not ids:
-            untrailered.append((sha[:8], ", ".join(sorted(kinds))))
+    claimed, untrailered = _collect_untrailered_commits(
+        repo, manifest, is_review, shas, canonical_dir, scaffold_mod
+    )
 
     if untrailered:
         listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)

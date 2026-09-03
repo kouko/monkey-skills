@@ -1795,12 +1795,126 @@ def test_a_restored_deleted_plumbing_path_with_no_trailer_is_exempt(tmp_path: Pa
     assert result.returncode == 0, result.stderr
 
 
+def _decoy_stamp_scaffold(repo: Path) -> None:
+    """Scaffold genuine bytes into `repo`, then corrupt only the checker
+    copy's own version stamp -- every other plumbing path (git_exec.py
+    included) stays byte-identical to this running tree's canonical."""
+    codex_scaffold.scaffold(repo)
+    checker_copy = repo / ".codex" / "hooks" / "loom_checker.py"
+    text = checker_copy.read_text(encoding="utf-8")
+    stamped = text.replace(
+        codex_scaffold.stamp_line(codex_scaffold.plugin_version()),
+        codex_scaffold.stamp_line("0.0.1-decoy"),
+        1,
+    )
+    assert stamped != text, "the stamp line must actually be present to mutate"
+    checker_copy.write_text(stamped, encoding="utf-8")
+
+
+def _canonical_git_exec_source() -> str:
+    """This module's own sibling `git_exec.py` -- the canonical bytes the
+    running checker would scaffold, without going through
+    `codex_scaffold.scaffold()` again (which would also rewrite the
+    checker copy's stamp back to genuine, undoing a decoy fixture)."""
+    return (Path(__file__).parent / "git_exec.py").read_text(encoding="utf-8")
+
+
+def test_a_plumbing_path_is_blocked_when_the_committed_checker_copys_stamp_is_a_decoy(
+    tmp_path: Path,
+) -> None:
+    """REQ-3 (Design decision): the stamp gate reads the COMMITTED checker
+    copy's stamp and compares it with this running checker's own version
+    ONCE per commit, before any per-path blob comparison. A commit that
+    touches only `git_exec.py`, restoring it to genuine canonical bytes,
+    is still not exempt when the checker copy sitting beside it in that
+    same commit's tree carries a decoy stamp -- the per-path blob match
+    on git_exec.py alone must never be enough."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    _decoy_stamp_scaffold(repo)
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        "# tampered\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: bootstrap scaffold with decoy stamp\n\nTask: T1")
+    baseline_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(baseline_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        _canonical_git_exec_source(), encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: refresh git_exec.py only")
+    refreshed_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(refreshed_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, result.stdout
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
+    assert match, result.stderr
+    assert "version" in match.group(1)
+
+
+def test_a_plumbing_path_is_blocked_when_the_checker_copy_is_absent_at_that_commit(
+    tmp_path: Path,
+) -> None:
+    """Same gate, the other trigger: no `.codex/hooks/loom_checker.py` at
+    all in that commit's tree -- nothing to read a stamp from at all, so
+    a `git_exec.py`-only refresh in that same tree is not exempt either."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    codex_scaffold.scaffold(repo)
+    (repo / ".codex" / "hooks" / "loom_checker.py").unlink()
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        "# tampered\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m",
+        "chore: bootstrap scaffold with no checker copy\n\nTask: T1")
+    baseline_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(baseline_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        _canonical_git_exec_source(), encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: refresh git_exec.py only")
+    refreshed_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(refreshed_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, result.stdout
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
+    assert match, result.stderr
+    assert "absent" in match.group(1)
+
+
 def test_a_commit_mixing_exempt_plumbing_and_a_code_file_still_needs_a_trailer(
     tmp_path: Path,
 ) -> None:
     """The exemption is per-path (Design decision), not per-commit: a
     genuine scaffold refresh landing in the SAME commit as an ordinary
-    code file still owes a `Task:` trailer for the code file."""
+    code file still owes a `Task:` trailer for the code file. Asserting
+    only "code" in result.stderr (the original form of this test) stayed
+    green even with no exemption at all -- b.py alone puts "code" there.
+    Assert on the recomputed kind set itself instead: "code" survives,
+    "gate" (the `**/hooks/**` type the scaffold paths carry) does not --
+    that only holds once the exempt plumbing paths are actually removed
+    from the set, which is the one thing this test exists to prove."""
     repo = build_repo(tmp_path)
 
     git(repo, "reset", "-q", "--soft", "HEAD~1")
@@ -1816,9 +1930,8 @@ def test_a_commit_mixing_exempt_plumbing_and_a_code_file_still_needs_a_trailer(
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1, result.stdout
     assert "push.dispatch-covers-tasks" in blocked_rules(result)
-    # the code path (b.py) still counts even though the plumbing path in
-    # the same commit is exempt -- the untrailered message names the kind,
-    # not the path, so "code" surviving in the reasons is the per-path
-    # proof, not "gate" alone (which the plumbing paths would also add
-    # pre-exemption).
-    assert "code" in result.stderr
+    match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
+    assert match, result.stderr
+    message = match.group(1)
+    assert "code" in message
+    assert "gate" not in message
