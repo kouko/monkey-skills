@@ -153,7 +153,8 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.reviewed-sha",
-        "review.json reviewed_sha names the commit HEAD^, so the reviewed tree is the pushed tree.",
+        "review.json reviewed_sha names the commit HEAD^, so the reviewed tree is the pushed tree; "
+        "every verdict of the latest round names reviewed_sha.",
     ),
     (
         "push.second-vendor-honoured",
@@ -1657,7 +1658,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         else None
     )
 
-    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id)
+    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id, review)
     failures += check_open_findings_closed(review)
     failures += check_probes_package_tests(repo, review, reviewed_id, out)
     failures += check_probes_adversarial(repo, review, reviewed_id, out)
@@ -1791,10 +1792,18 @@ def check_questions(review, review_rel: str) -> list[tuple[str, str]]:
     return failures
 
 
-def check_reviewed_sha(repo: Path, head_sha: str, recorded: str, reviewed_id: str | None):
+def check_reviewed_sha(
+    repo: Path, head_sha: str, recorded: str, reviewed_id: str | None, review: dict
+):
     """The reviewed tree must be the tree being pushed. Compared as object
     ids resolved by git, never as strings: a prefix compare accepts a
-    reviewed_sha that names no commit at all."""
+    reviewed_sha that names no commit at all.
+
+    Also ties every verdict of the latest round (`scored_verdicts`, the same
+    round `check_verdicts` scores) to that same commit: each one must carry
+    a `sha` that resolves, as a git object id, to `reviewed_id` -- no scope
+    is exempt, `scope: spec` included. A round with zero usable verdicts
+    reports nothing here; that is `push.verdicts-ge-2`'s job."""
     parent = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^{{commit}}^")
     if not parent:
         return [("push.reviewed-sha", "HEAD has no parent commit to have reviewed.")]
@@ -1813,7 +1822,34 @@ def check_reviewed_sha(repo: Path, head_sha: str, recorded: str, reviewed_id: st
                 "the reviewed commit is not the one being pushed.",
             )
         ]
-    return []
+    failures = []
+    _, verdicts = scored_verdicts(review)
+    for entry in verdicts:
+        reviewer = str(entry.get("reviewer", "")).strip() or "<no reviewer>"
+        verdict_sha = str(entry.get("sha", "")).strip()
+        verdict_id = (
+            git_maybe(repo, "rev-parse", "--verify", f"{verdict_sha}^{{commit}}")
+            if SHA_HEX.fullmatch(verdict_sha)
+            else None
+        )
+        if verdict_id is None:
+            failures.append(
+                (
+                    "push.reviewed-sha",
+                    f"{reviewer}'s verdict names sha {verdict_sha or '(empty)'}, "
+                    f"which does not resolve to a commit; expected reviewed_sha "
+                    f"{reviewed_id[:8]}.",
+                )
+            )
+        elif verdict_id != reviewed_id:
+            failures.append(
+                (
+                    "push.reviewed-sha",
+                    f"{reviewer}'s verdict sha resolves to {verdict_id[:8]}, not "
+                    f"reviewed_sha {reviewed_id[:8]}.",
+                )
+            )
+    return failures
 
 
 def check_open_findings_closed(review) -> list[tuple[str, str]]:

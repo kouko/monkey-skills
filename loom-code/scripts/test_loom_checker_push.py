@@ -91,9 +91,9 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
         "vendors": ["anthropic"],
         "verdicts": [
             {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m", "lens": "code",
-             "verdict": "PASS", "dimension_scores": {}, "findings": []},
+             "verdict": "PASS", "dimension_scores": {}, "findings": [], "sha": reviewed_sha},
             {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m", "lens": "code",
-             "verdict": "PASS_WITH_NOTES", "dimension_scores": {}, "findings": []},
+             "verdict": "PASS_WITH_NOTES", "dimension_scores": {}, "findings": [], "sha": reviewed_sha},
         ],
         "probes": [
             {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
@@ -878,6 +878,92 @@ def test_verdict_entries_missing_reviewer_or_verdict_do_not_count(tmp_path: Path
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+# --- push.reviewed-sha ties every latest-round verdict to reviewed_sha -----
+
+
+def test_a_verdict_missing_sha_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS", "sha": parent},
+                {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS_WITH_NOTES"},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "agent-blind" in result.stderr
+
+
+def test_a_verdict_sha_pointing_to_an_older_commit_blocks(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    stale = git(repo, "rev-parse", "HEAD~2")
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS", "sha": parent},
+                {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS_WITH_NOTES", "sha": stale},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "agent-blind" in result.stderr
+
+
+def test_every_verdict_sha_equal_to_reviewed_sha_passes(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS", "sha": parent},
+                {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS_WITH_NOTES", "sha": parent},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_spec_scoped_verdict_missing_sha_still_blocks(tmp_path: Path) -> None:
+    """No scope is exempt from push.reviewed-sha, `scope: spec` included."""
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
+                 "scope": "spec", "verdict": "PASS", "sha": parent},
+                {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m",
+                 "scope": "spec", "verdict": "PASS_WITH_NOTES"},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 # --- push.probes-package-tests, recomputed against the reviewed commit -----

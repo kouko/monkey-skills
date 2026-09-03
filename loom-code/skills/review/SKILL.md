@@ -333,6 +333,7 @@ A worked record:
   "verdicts": [
     {"round": 1, "scope": "wave-end:1", "reviewer": "rev-w1-a", "vendor": "anthropic",
      "model": "sonnet", "lens": "code", "verdict": "PASS_WITH_NOTES",
+     "sha": "be19b9612b0d4c7a9f0e21c3d8a5b6e7f0123456",
      "fallback": "codex missing at 2026-09-02",
      "dimension_scores": {"security": "PASS", "tests": "PASS_WITH_NOTES"},
      "findings": [{"severity": "important", "anchor": "loom-code/scripts/x.py:41",
