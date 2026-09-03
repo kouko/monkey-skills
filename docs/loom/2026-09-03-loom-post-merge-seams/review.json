@@ -201,6 +201,101 @@
           "fix": "detect closed transitions on added/deleted intent paths; regression test with a real rename"
         }
       ]
+    },
+    {
+      "round": 9,
+      "scope": "after-task:W0-04",
+      "sha": "bab6103ba7842ab9f89574e645a074eb17dccaec",
+      "findings_file": "evidence/review-after-task-w0-04-r2.md",
+      "reviewer": "sonnet-review-w0-04",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1797",
+          "text": "deletion of an already-closed intent classified as a transition",
+          "fix": "drop the deleted-path disjunct"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1811",
+          "text": "diagnostics name HEAD^/HEAD^^ symbolically, never the sha",
+          "fix": "interpolate close_sha/pre_close_sha"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "scope": "after-task:W0-04",
+      "sha": "bab6103ba7842ab9f89574e645a074eb17dccaec",
+      "findings_file": "evidence/review-after-task-w0-04-r2.md",
+      "reviewer": "codex-review-w0-04-r2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1797",
+          "text": "deleting an already-closed intent is subjected to the close-commit shape and blocked",
+          "fix": "trigger only when the after-tree path parses as closed and the before does not"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1806",
+          "text": "failure messages do not name the offending commit hash nor the expected value",
+          "fix": "include close_sha/pre_close_sha and the expected value"
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_loom_checker_push.py:391",
+          "text": "regressions assert only the rule id, not the specific diagnostic",
+          "fix": "assert the diagnostic with hash and expected value"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "scope": "after-task:W0-04",
+      "sha": "bab6103ba7842ab9f89574e645a074eb17dccaec",
+      "findings_file": "evidence/review-after-task-w0-04-r2.md",
+      "reviewer": "sonnet-review-w0-04-r2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1797",
+          "text": "plain deletion of an already-closed intent is blocked; it becomes impossible to ever delete such a file",
+          "fix": "drop the deleted-path disjunct"
+        },
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:1735-1901",
+          "text": "check_close_commit_shape ~166 lines",
+          "fix": "extract condition (3) into a helper"
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py:190",
+          "text": "probe 5 docstring stale",
+          "fix": "say the case is fixed"
+        }
+      ]
     }
   ],
   "probes": [
@@ -339,6 +434,14 @@
       "sha": "3bdc6242",
       "result": "PASS — 0 fatal, 0 important, 1 nit; C13/R23 HOLD",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r8.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "after-task:W0-04",
+      "command": "clean worktree at 58b8f514, branch checker, Acceptance #1 positive flow + four negative cases (sonnet-blindrun-w0-04)",
+      "sha": "58b8f514",
+      "result": "5/5 lines pass; package suite 1024 passed",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/blind-run-after-task-w0-04.md"
     }
   ],
   "questions": [
@@ -884,6 +987,54 @@
       ],
       "text": "rename (delete+add) of an intent path with a closed status bypasses the close-commit recompute",
       "resolved": "resolved: 788a8e1f (fix 2); tests test_a_close_commit_that_renames_the_intent_path_is_blocked, test_a_brand_new_already_closed_intent_is_blocked"
+    },
+    {
+      "id": "after-task:W0-04-03",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1797",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "codex-review-w0-04-r2",
+        "sonnet-review-w0-04",
+        "sonnet-review-w0-04-r2"
+      ],
+      "text": "deleting an already-closed intent treated as a close transition and blocked (orchestrator's fix-2 packet over-specified deletion as a transition)",
+      "resolved": "resolved: adcca47c (fix 3); test_deleting_an_already_closed_intent_is_not_a_close_commit"
+    },
+    {
+      "id": "after-task:W0-04-04",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1806",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "codex-review-w0-04-r2",
+        "sonnet-review-w0-04"
+      ],
+      "text": "close-shape diagnostics name HEAD^/HEAD^^ symbolically without the sha or the expected value",
+      "resolved": "resolved: adcca47c (fix 3); every message carries close_sha/pre_close_sha[:8] and expected/got"
+    },
+    {
+      "id": "after-task:W0-04-05",
+      "severity": "important",
+      "anchor": "loom-code/scripts/test_loom_checker_push.py:391",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "codex-review-w0-04-r2"
+      ],
+      "text": "negative regressions assert only the rule id",
+      "resolved": "resolved: adcca47c (fix 3); six negative tests plus the deletion test assert the specific diagnostic"
+    },
+    {
+      "id": "after-task:W0-04-06",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1735",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "sonnet-review-w0-04-r2",
+        "sonnet-review-w0-04"
+      ],
+      "text": "check_close_commit_shape ~166 lines",
+      "resolved": "resolved: adcca47c (fix 3); condition (3) extracted to _checkpoint_parent_failures"
     }
   ],
   "dispatch": [
@@ -1255,6 +1406,22 @@
       "agent_id": "impl-w0-04-fix3-sonnet",
       "model": "sonnet",
       "started": "2026-09-03T12:53:30+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r3",
+      "model": "sonnet",
+      "started": "2026-09-03T13:06:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r3",
+      "model": "codex",
+      "started": "2026-09-03T13:06:00+08:00",
       "fresh_context": true
     }
   ]
