@@ -1729,6 +1729,9 @@ def _raw_diff_paths(repo: Path, base_sha: str, target_sha: str) -> list[str]:
     )
 
 
+_EMPTY_TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # git's constant empty-tree object
+
+
 def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[str, str]]:
     """When HEAD^ turns an intent file's `status:` line to `closed`, its
     shape must recompute as a legitimate close commit (spec REQ-1, W0-04):
@@ -1739,24 +1742,33 @@ def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[
     HEAD^^ (its first parent), never `git show`, which prints nothing for
     a merge commit and would let a merge at HEAD^ carry the transition
     unseen. An ordinary commit at HEAD^ -- one that never turns an intent
-    file closed -- is untouched by this recompute."""
+    file closed -- is untouched by this recompute.
+
+    The transition search itself must not depend on both a before- and an
+    after-text resolving: a `--no-renames` diff splits a renamed-and-closed
+    intent into a deleted old path (before present, no after) and an added
+    new path (no before, after present), and either half alone must still
+    be seen as introducing `closed` (spec REQ-1, W0-04 round-2 finding) --
+    an added path whose after-text already parses closed counts as a
+    transition (before treated as not-closed), and a deleted path whose
+    before-text parsed closed counts likewise (after treated as not-closed)
+    so the other half of the same rename still surfaces it even if this
+    loop finds it first."""
     rule = "push.review-only-head"
     close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^")
     if close_sha is None:
         return []  # HEAD is root; push.reviewed-sha already reports it.
 
-    # HEAD^^ must resolve before HEAD^'s diff against it can be read at
-    # all. When it doesn't, HEAD^ is itself the repo's root commit -- there
-    # is no "before" state, so no close transition is even possible; that
-    # is decidable, not undecidable, and an ordinary root commit at HEAD^
-    # must stay untouched by this recompute (spec REQ-1, W0-04 fix round).
-    # Only once a closing transition is actually found below does HEAD^^
-    # need to resolve again for the checkpoint-parent check (3).
+    # When HEAD^^ doesn't resolve, HEAD^ is itself the repo's root commit.
+    # Diff against git's empty-tree constant instead of returning early --
+    # a root commit that ADDS an already-closed intent must still be found
+    # as a transition; it then fails condition (3) below on its own merits
+    # (no checkpoint parent exists at all), not because the transition went
+    # undetected (spec REQ-1, W0-04 round-2 finding).
     pre_close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^^")
-    if pre_close_sha is None:
-        return []  # HEAD^ is the root commit; no diff, no transition.
+    diff_base = pre_close_sha if pre_close_sha is not None else _EMPTY_TREE_SHA
 
-    touched = _raw_diff_paths(repo, pre_close_sha, close_sha)
+    touched = _raw_diff_paths(repo, diff_base, close_sha)
     template = manifest["artifacts"]["intent"]["path"]
     is_intent = glob_to_regex(template.replace("<change-id>", "*"))
     intent_paths = [path for path in touched if is_intent.match(path)]
@@ -1765,17 +1777,24 @@ def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[
 
     closing_path = None
     for path in intent_paths:
-        before_text = git_maybe(repo, "show", f"{pre_close_sha}:{path}")
+        before_text = git_maybe(repo, "show", f"{diff_base}:{path}")
         after_text = git_maybe(repo, "show", f"{close_sha}:{path}")
-        if before_text is None or after_text is None:
+        if before_text is None and after_text is None:
             continue
-        before_front, _ = parse_document(before_text)
-        after_front, _ = parse_document(after_text)
-        before_match = STATUS.fullmatch(before_front.get("status", "").strip())
-        after_match = STATUS.fullmatch(after_front.get("status", "").strip())
-        before_closed = bool(before_match and before_match.group(2) is not None)
-        after_closed = bool(after_match and after_match.group(2) is not None)
-        if after_closed and not before_closed:
+
+        before_closed = False
+        if before_text is not None:
+            before_front, _ = parse_document(before_text)
+            before_match = STATUS.fullmatch(before_front.get("status", "").strip())
+            before_closed = bool(before_match and before_match.group(2) is not None)
+
+        after_closed = False
+        if after_text is not None:
+            after_front, _ = parse_document(after_text)
+            after_match = STATUS.fullmatch(after_front.get("status", "").strip())
+            after_closed = bool(after_match and after_match.group(2) is not None)
+
+        if (after_closed and not before_closed) or (before_closed and after_text is None):
             closing_path = path
             break
 
@@ -1796,7 +1815,7 @@ def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[
         )
 
     # (2) the diff on that path is exactly the one status line.
-    path_diff = git_text(repo, "diff", "-U0", pre_close_sha, close_sha, "--", closing_path)
+    path_diff = git_text(repo, "diff", "-U0", diff_base, close_sha, "--", closing_path)
     changed = [
         line
         for line in path_diff.splitlines()
@@ -1823,7 +1842,21 @@ def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[
         )
 
     # (3) HEAD^^ is itself a checkpoint: touches only review.json, and its
-    # review.json's reviewed_sha resolves to HEAD^^^.
+    # review.json's reviewed_sha resolves to HEAD^^^. HEAD^ being the root
+    # commit means there is no HEAD^^ at all -- fail closed rather than
+    # skip, since a transition was already found above (spec REQ-1,
+    # W0-04 round-2 finding).
+    if pre_close_sha is None:
+        failures.append(
+            (
+                rule,
+                "HEAD^ is the root commit and adds an already-closed intent, so "
+                "it has no checkpoint parent at all between the last review and "
+                "the close commit.",
+            )
+        )
+        return failures
+
     checkpoint_rel, _checkpoint_failures = check_review_only_head(manifest, repo, pre_close_sha)
     if checkpoint_rel is None:
         failures.append(

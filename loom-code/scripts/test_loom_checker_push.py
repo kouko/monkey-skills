@@ -370,6 +370,50 @@ def test_a_two_commit_branch_whose_head_caret_is_the_root_commit_passes(tmp_path
     assert "push.review-only-head" not in blocked_rules(result), result.stderr
 
 
+def test_a_close_commit_that_renames_the_intent_path_is_blocked(tmp_path: Path) -> None:
+    """`--no-renames` splits a renamed-and-closed intent into a deleted old
+    path (before confirmed, no after_text) and an added new path (no
+    before_text, after closed). Neither half alone used to trip the
+    non-closed -> closed comparison, so closing_path stayed None and the
+    one-file/one-line/checkpoint-parent conditions never ran at all
+    (after-task W0-04 round-2 finding)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    renamed_rel = f"docs/loom/intent/{CHANGE}-renamed.md"
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    git(repo, "rm", "-q", intent_rel)
+    (repo / renamed_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / renamed_rel).write_text(_close_text(text), encoding="utf-8")
+    git(repo, "add", renamed_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_a_brand_new_already_closed_intent_is_blocked(tmp_path: Path) -> None:
+    """A commit that ADDS an intent file already at `status: closed ...`
+    has no before_text for git to diff against, so it used to fall through
+    the same skip and never register as a close transition either
+    (after-task W0-04 round-2 finding)."""
+    repo = build_repo(tmp_path)
+    new_rel = f"docs/loom/intent/{CHANGE}-new.md"
+    (repo / new_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / new_rel).write_text(
+        f"# {CHANGE}\nstatus: closed 2026-09-03 — PR #999\n\n## Problem\nx\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", new_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+
+
 # --- push.reviewed-sha -----------------------------------------------------
 
 
