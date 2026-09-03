@@ -289,6 +289,23 @@
       "model": "codex",
       "started": "2026-09-04T00:40:07+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:58:43+08:00",
+      "fresh_context": true,
+      "note": "also carries W1-04 (KICKOFF lines) as a second commit — same agent, sequential"
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:58:43+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex"
