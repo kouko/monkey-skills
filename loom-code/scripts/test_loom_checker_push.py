@@ -349,6 +349,27 @@ def test_a_merge_close_commit_touching_another_file_is_blocked(tmp_path: Path) -
     assert "push.review-only-head" in blocked_rules(result)
 
 
+def test_a_two_commit_branch_whose_head_caret_is_the_root_commit_passes(tmp_path: Path) -> None:
+    """HEAD^ (an ordinary code commit) is itself the repo's ROOT commit --
+    HEAD^^ cannot resolve. The close-commit recompute must not fire on an
+    ordinary commit just because it sits at the bottom of a short branch
+    (after-task W0-04 finding, adversary probe
+    test_ordinary_root_commit_branch_wrongly_blocked_by_precondition)."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "work")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "a.py").write_text("value = 1\n", encoding="utf-8")
+    git(repo, "add", "a.py")
+    git(repo, "commit", "-q", "-m", "feat: a\n\nTask: T1")  # the repo's ROOT commit
+    root_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, root_sha)
+
+    result = run_checker("push", cwd=repo)
+    assert "push.review-only-head" not in blocked_rules(result), result.stderr
+
+
 # --- push.reviewed-sha -----------------------------------------------------
 
 

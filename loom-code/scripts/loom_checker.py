@@ -1745,17 +1745,16 @@ def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[
     if close_sha is None:
         return []  # HEAD is root; push.reviewed-sha already reports it.
 
-    # HEAD^^ must resolve to a commit before its diff against HEAD^ can be
-    # read at all -- undecidable is fail-closed, not silently skipped.
+    # HEAD^^ must resolve before HEAD^'s diff against it can be read at
+    # all. When it doesn't, HEAD^ is itself the repo's root commit -- there
+    # is no "before" state, so no close transition is even possible; that
+    # is decidable, not undecidable, and an ordinary root commit at HEAD^
+    # must stay untouched by this recompute (spec REQ-1, W0-04 fix round).
+    # Only once a closing transition is actually found below does HEAD^^
+    # need to resolve again for the checkpoint-parent check (3).
     pre_close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^^")
     if pre_close_sha is None:
-        return [
-            (
-                rule,
-                "HEAD^^ does not resolve to a commit; cannot recompute HEAD^'s "
-                "close-commit shape.",
-            )
-        ]
+        return []  # HEAD^ is the root commit; no diff, no transition.
 
     touched = _raw_diff_paths(repo, pre_close_sha, close_sha)
     template = manifest["artifacts"]["intent"]["path"]
