@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "160658c2764f92605935cac8b8c333fe699dc6e7",
-  "scope": "spec",
+  "reviewed_sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+  "scope": "after-task:W0-04",
   "vendors": [
     "anthropic",
     "openai"
@@ -409,6 +409,38 @@
           "fix": "include the detail"
         }
       ]
+    },
+    {
+      "round": 15,
+      "scope": "after-task:W0-04",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "findings_file": "evidence/review-after-task-w0-04-r5.md",
+      "reviewer": "codex-review-w0-04-r5",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "round": 15,
+      "scope": "after-task:W0-04",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "findings_file": "evidence/review-after-task-w0-04-r5.md",
+      "reviewer": "sonnet-review-w0-04-r5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:1998",
+          "text": "checkpoint-parent diagnostic states 'to touch only review.json' twice",
+          "fix": "let the embedded detail carry the sentence"
+        }
+      ]
     }
   ],
   "probes": [
@@ -571,6 +603,94 @@
       "sha": "8da551c8",
       "result": "NEEDS_REVISION — 1 fatal (headingless doc, last status wins), 2 important, 3 nits",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r10.md"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "1043 passed in 191.59s (0:03:11)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_passes",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
     }
   ],
   "questions": [
@@ -1286,6 +1406,17 @@
       ],
       "text": "the malformed checkpoint-parent diagnostic drops check_review_only_head's detail (actual paths)",
       "resolved": "resolved: d026bc02 — _checkpoint_parent_failures carries check_review_only_head detail; test strengthened"
+    },
+    {
+      "id": "after-task:W0-04-11",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:1998",
+      "origin_sha": "7d055bb8",
+      "raised_by": [
+        "sonnet-review-w0-04-r5"
+      ],
+      "text": "checkpoint-parent diagnostic repeats the expectation clause",
+      "dismissed": "carry-forward: cosmetic, no defect — by sonnet-review-w0-04-r5"
     }
   ],
   "dispatch": [
