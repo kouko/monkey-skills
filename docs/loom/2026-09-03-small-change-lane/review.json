@@ -46,6 +46,14 @@
       "started": "2026-09-04T00:13:06+08:00",
       "fresh_context": true,
       "note": "started in parallel with W0-01/W0-02 (disjoint files; the plan named W0-02 as a dependency only for shared names, which the plan fixes) — agent-decided"
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:20:26+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex"
