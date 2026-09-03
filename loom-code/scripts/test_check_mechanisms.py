@@ -647,30 +647,34 @@ class TestCountingProse:
         assert any(f.rule == "R5" for f in result.findings), result.findings
 
 
-class TestWcWordsLocaleIndependent:
-    """CI-1 — `wc -w` disagrees with itself across locales on some
-    unicode punctuation (e.g. a circled digit immediately followed by a
-    semicolon, as the real session-start hook emits); the recorded
-    baseline must reproduce on any runner regardless of its ambient
-    LANG/LC_ALL, so wc_words must pin its own locale rather than
-    inherit the caller's environment."""
+class TestWcWordsIsPythonSplit:
+    """CI-2 — no `wc` setting agrees between macOS (BSD wc) and the GNU CI
+    runner: GNU `wc -w` in the C locale counts only tokens with a printable
+    ASCII byte, so it drops all-CJK tokens (147 of them in the 923fb84a
+    baseline, producing 5131 instead of the recorded 5278) while BSD wc
+    counts them. wc_words must therefore be Python's str.split() on the
+    decoded bytes, not a `wc` subprocess at all — and that count must not
+    move when the ambient LANG/LC_ALL changes, since no subprocess is
+    involved any more."""
+
+    SAMPLE = "not in ①; 中文詞　more".encode("utf-8")
+
+    def test_matches_python_split_not_bsd_wc(self):
+        # RED against the old wc-subprocess implementation: BSD `wc -w`
+        # pinned to LC_ALL=C does not split on the CJK ideographic space
+        # (U+3000) the way Python's str.split() does, so the two counts
+        # differ on this sample (4 vs 5) even though wc_words is supposed
+        # to report the same number the session-start budget uses.
+        assert cm.wc_words(self.SAMPLE) == len(
+            self.SAMPLE.decode("utf-8", errors="replace").split()
+        )
 
     def test_count_is_stable_across_locales(self, monkeypatch):
-        data = "not in ①;".encode("utf-8")
-        unpinned = []
-        for locale in ("C", "C.UTF-8", "en_US.UTF-8"):
-            monkeypatch.setenv("LC_ALL", locale)
-            result = subprocess.run(["wc", "-w"], input=data,
-                                     capture_output=True)
-            unpinned.append(int(result.stdout.split()[0]))
-        if len(set(unpinned)) == 1:
-            pytest.skip("host has no UTF-8 locale that splits the probe "
-                        "differently — cannot exercise the locale-pin")
-
         counts = set()
         for locale in ("C", "C.UTF-8", "en_US.UTF-8"):
             monkeypatch.setenv("LC_ALL", locale)
-            counts.add(cm.wc_words(data))
+            monkeypatch.setenv("LANG", locale)
+            counts.add(cm.wc_words(self.SAMPLE))
         assert len(counts) == 1, counts
 
 
