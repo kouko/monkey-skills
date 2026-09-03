@@ -1,7 +1,7 @@
 # 舊的 Open questions 檢查腳本與 1.0 intent 模板打架
 originator: kouko
 kind: engineering
-needs-design: no — 刪一支舊腳本與它的命令面條目，或改它的文法對齊模板；沒有使用者讀或輸入的介面
+needs-design: no — 刪一支舊腳本、它的測試與命令面條目；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/review.json]
 status: open
 
