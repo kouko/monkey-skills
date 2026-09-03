@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只新增測試檔；沒有使用者讀或輸入的介面，也沒有多狀態行為
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/, docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/, docs/loom/2026-09-03-small-change-lane/evidence/probes/]
-status: confirmed 2026-09-04
+status: closed 2026-09-04 — PR #785
 
 ## Problem
 對抗者寫的探針（可執行的攻擊案例）住在 `docs/loom/<change-id>/evidence/probes/`，是該 change 的證據，不在 repo 的整包測試命令裡；merge 後沒有東西會再跑它們。PRINCIPLES 第 2 條說每個事故要變永久 eval。2026-09-03-loom-post-merge-seams 的 21 個已在它自己的 W1-04 畢業（12 個搬進 `test_loom_checker_push_probes.py`，9 個與既有測試重疊）；後兩個 change 的 2 個探針檔、33 個案例（package-tests 7 個、change_lane 26 個）還只是歷史。
