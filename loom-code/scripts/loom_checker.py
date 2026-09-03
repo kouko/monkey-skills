@@ -67,7 +67,8 @@ RULES: list[tuple[str, str]] = [
     (
         "intake.confirmed",
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
-        "with a date the calendar has.",
+        "with a date the calendar has; `closed <date> — PR #<N>` is blocked -- that change is "
+        "closed and a new change starts from a new intent.",
     ),
     (
         "intake.confirmed-behavior",
@@ -452,7 +453,7 @@ def changed_paths(repo: Path) -> set[str]:
     diff must be checked against the whole diff, staging area included.
 
     The exception is exactly what the Codex scaffold writes (HOST_PLUMBING_FILES /
-    HOST_PLUMBING_DIR_PREFIX below), never a surface a user reads -- an adopting
+    HOST_PLUMBING_DIR_PREFIX above), never a surface a user reads -- an adopting
     repo's own hooks under `.codex/hooks/` stay visible. Left directory-wide, the
     scaffold's `contract/templates/**` matched the interface glob (W4-02 F3)."""
     merge_base = branch_base(repo)
@@ -788,7 +789,18 @@ def check_kind_recompute(touched: list[str]) -> list[tuple[str, str]]:
 
 
 CHANGE_ID = re.compile(r"[A-Za-z0-9._-]+")
-CONFIRMED = re.compile(r"confirmed (\d{4}-\d{2}-\d{2})(\s+#.*)?")
+# `status:` grammar (contract/manifest.yaml, contract/templates/intent.md):
+# `open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>`,
+# each alternative allowing a trailing ` #...` comment -- shared by
+# intake.confirmed (below) and the closed-commit shape push.review-only-head
+# recomputes (W0-04). Groups: 1=confirmed date, 2=closed date, 3=PR number.
+STATUS = re.compile(
+    r"(?:open"
+    r"|confirmed (\d{4}-\d{2}-\d{2})"
+    r"|closed (\d{4}-\d{2}-\d{2}) — PR #(\d+)"
+    r"|withdrawn — .+)"
+    r"(?:\s+#.*)?"
+)
 
 INTAKE_STATIONS = ("write-spec", "write-plan")  # the two stations that accept an intent
 
@@ -821,8 +833,32 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     front, sections = parse_document(read_text(intent_path))
 
     status = front.get("status", "").strip()
-    confirmed = CONFIRMED.fullmatch(status)
-    if not confirmed:
+    match = STATUS.fullmatch(status)
+    confirmed_date = match.group(1) if match else None
+    closed_date, pr_number = (match.group(2), match.group(3)) if match else (None, None)
+    if closed_date is not None:
+        if not is_real_date(closed_date):
+            return report(
+                [
+                    (
+                        "intake.confirmed",
+                        f"`status: closed {closed_date} — PR #{pr_number}` names "
+                        "something that is not a real date.",
+                    )
+                ],
+                err,
+            )
+        return report(
+            [
+                (
+                    "intake.confirmed",
+                    f"{station} accepts only `status: confirmed <date>`; this change "
+                    f"is closed (PR #{pr_number}); a new change starts from a new intent.",
+                )
+            ],
+            err,
+        )
+    if confirmed_date is None:
         shown = status or "absent (= open)"
         return report(
             [
@@ -833,12 +869,12 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             ],
             err,
         )
-    if not is_real_date(confirmed.group(1)):
+    if not is_real_date(confirmed_date):
         return report(
             [
                 (
                     "intake.confirmed",
-                    f"`status: confirmed {confirmed.group(1)}` names something "
+                    f"`status: confirmed {confirmed_date}` names something "
                     "that is not a real date.",
                 )
             ],

@@ -82,7 +82,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: needs-design, kind: frontmatter, required: true, grammar: "yes | no — <reason>"}
       - {name: map,          kind: frontmatter, required: false}
       - {name: evidence,     kind: frontmatter, required: false}
-      - {name: status,       kind: frontmatter, required: false, grammar: "open | confirmed <date> | withdrawn — <reason>"}
+      - {name: status,       kind: frontmatter, required: false, grammar: "open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>"}
       - {name: Problem,           kind: section, required: true}
       - {name: Proposed outcome,  kind: section, required: true}
       - {name: Acceptance,        kind: section, required: true}

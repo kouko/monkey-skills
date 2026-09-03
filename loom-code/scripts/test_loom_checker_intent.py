@@ -167,6 +167,19 @@ def test_optional_fields_are_not_required(tmp_path: Path) -> None:
     assert "intent.schema" not in blocked_rules(result)
 
 
+def test_a_closed_status_is_accepted_by_the_intent_subcommand(tmp_path: Path) -> None:
+    """schema doesn't reopen the door -- `closed` is only refused by
+    `intake.confirmed` (W0-01); reading the intent (`maintain`, e.g.) still
+    works on a closed change."""
+    repo = make_repo(tmp_path)
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", status="status: closed 2026-09-03 — PR #780"
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
 # --- intent.product-no-identifiers ----------------------------------------
 
 

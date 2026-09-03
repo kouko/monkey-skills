@@ -388,6 +388,24 @@ def test_the_repos_own_change_matches_its_own_review_json() -> None:
     round: two distinct reviewers, all passing, an `adversarial` probe)
     rather than pinned to one round, so landing a new review round changes
     the repo's gate state without silently breaking this test."""
+    # A closed intent short-circuits cmd_intake before any of the spec-pass
+    # or confirmed-behavior recomputes run (W0-01): intake.confirmed is the
+    # whole expected block set, not one more member of it.
+    intent_status = re.search(
+        r"^status:\s*(.*)$",
+        (REPO_ROOT / "docs/loom/intent/2026-09-02-simple-loom-flow.md").read_text(
+            encoding="utf-8"
+        ),
+        re.MULTILINE,
+    )
+    if intent_status and re.match(r"closed\s", intent_status.group(1).strip()):
+        result = run_checker(
+            "intake", "write-plan", "2026-09-02-simple-loom-flow", cwd=REPO_ROOT
+        )
+        assert blocked_rules(result) == {"intake.confirmed"}, result.stderr
+        assert result.returncode == 1, result.stderr
+        return
+
     review = json.loads(
         (REPO_ROOT / "docs/loom/2026-09-02-simple-loom-flow/review.json").read_text(
             encoding="utf-8"
@@ -819,6 +837,27 @@ def test_a_real_confirmed_status_date_is_accepted(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     write_intent(repo, status="status: confirmed 2028-02-29")
     assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
+
+
+# --- intake.confirmed: closed is terminal (W0-01) ---------------------------
+
+
+def test_a_closed_intent_is_blocked_from_intake_with_the_pr_number(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: closed 2026-09-03 — PR #780")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "closed (PR #780)" in result.stderr
+
+
+def test_an_impossible_closed_status_date_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: closed 2026-02-30 — PR #1")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "not a real date" in result.stderr
 
 
 # --- spec.req-grammar (W2 adversary P03) ----------------------------------
