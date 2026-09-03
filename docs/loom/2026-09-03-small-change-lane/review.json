@@ -331,6 +331,22 @@
       "started": "2026-09-04T01:15:31+08:00",
       "fresh_context": true,
       "note": "fix for skill-adversary F1 (ship nit batch cannot reach push) and F2 (artifact-types override claim)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T01:18:15+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T01:18:15+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex"
