@@ -14,8 +14,10 @@ added, `push.verdicts-ge-2`'s floor becomes lane-dependent.
 
 - **Lane recompute.** `change_lane()` reads the changed paths of a review
   scope and returns `small` when every path falls in a pre-authorised
-  class (docs, memory, evidence, intent, plan, standing, tests, CI/config)
-  touching one plugin and no interface surface, else `full`.
+  class (docs, memory, evidence, intent, plan, tests, CI/config) touching
+  one plugin and no interface surface, else `full`. A standing document
+  (PRINCIPLES.md, DESIGN.md, docs/loom/KICKOFF-DEFAULTS.md) always forces
+  the full lane (branch-end fix, 2026-09-04).
 - **Lane-dependent verdict floor.** `push.verdicts-ge-2` requires one
   verdict in the small lane, two or more in the full lane; its message
   names the lane.

@@ -17,6 +17,15 @@ def test_review_skill_md_documents_small_lane() -> None:
     assert "small lane" in text
 
 
+def test_review_skill_md_tests_only_is_name_or_location() -> None:
+    """Branch-end fix: the small-lane 'tests only' class is name/location
+    only (test_*.py, *_test.py, tests/ segment), never content-verified,
+    and distinct from the §6 artifact-type table (which still maps a
+    tests/-relocated production file to `code`)."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    assert "name or location only" in text
+
+
 def test_reviewer_agent_documents_docs_lint() -> None:
     text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
     assert "docs-lint" in text

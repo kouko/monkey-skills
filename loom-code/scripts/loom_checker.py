@@ -2452,8 +2452,11 @@ def _artifact_type_for(manifest, path: str) -> str | None:
 # W0-02 (small-change lane): the §6 types a small-lane change may touch
 # without earning the full lane -- gate and skill are deliberately absent
 # (plan risk: "manifest-typed `code` that is not a test -> full lane, even
-# one line" generalizes to any type not on this list).
-SMALL_LANE_ARTIFACT_TYPES = frozenset({"docs", "memory", "evidence", "intent", "plan", "standing"})
+# one line" generalizes to any type not on this list). `standing` is
+# deliberately excluded: intent point 1 and PRINCIPLES.md non-negotiable 2
+# say the small lane touches no standing document (PRINCIPLES.md, DESIGN.md,
+# docs/loom/KICKOFF-DEFAULTS.md -- KICKOFF lines are gate inputs).
+SMALL_LANE_ARTIFACT_TYPES = frozenset({"docs", "memory", "evidence", "intent", "plan"})
 
 _TEST_NAME_RE = re.compile(r"(?:test_[^/]*|[^/]*_test)\.py\Z")
 _REQUIREMENTS_NAME_RE = re.compile(r"requirements[^/]*\.txt\Z")
@@ -2493,11 +2496,20 @@ def _small_lane_record_patterns(manifest) -> list[re.Pattern[str]]:
     point 1 / plan W0-02 risk). One wildcarded glob per change-id, derived
     from the manifest's own `plan` artifact path, not an enumerated file
     list -- a fix-round finding pinned this after `spec.md` alone was
-    missed by an earlier, file-by-file version."""
+    missed by an earlier, file-by-file version.
+
+    Built as a direct regex, not via `glob_to_regex`'s trailing-`/**`
+    zero-match convenience: that convenience would make the `<change-id>`
+    wildcard swallow a bare docs/loom/<file> (e.g. KICKOFF-DEFAULTS.md) as
+    if it were an empty change folder -- a standing document is never a
+    change's own record (branch-end fix, W0-02)."""
     change_folder = manifest["artifacts"]["plan"]["path"].rsplit("/", 1)[0]
-    change_folder_glob = change_folder.replace("<change-id>", "*") + "/**"
+    change_folder_pattern = re.compile(
+        re.escape(change_folder).replace(re.escape("<change-id>"), "[^/]+")
+        + r"/.+\Z"
+    )
     return [
-        glob_to_regex(change_folder_glob),
+        change_folder_pattern,
         glob_to_regex("docs/loom/intent/**"),
     ]
 
@@ -2548,7 +2560,11 @@ def _small_lane_path_reason(manifest, surface_patterns, path: str) -> str | None
         return None
     if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
         return None
-    return f"{path} is non-test code" if kind == "code" else f"{path} is {kind or 'unclassified'}-typed"
+    if kind == "code":
+        return f"{path} is non-test code"
+    if kind == "standing":
+        return f"{path} is a standing document."
+    return f"{path} is {kind or 'unclassified'}-typed"
 
 
 def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
@@ -2556,11 +2572,12 @@ def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
     verdict floor and the `second-vendor: ask` question (plan W0-02).
 
     Small iff every changed path, minus this change's own store records, is
-    docs/memory/evidence/intent/plan/standing-typed, a test file by name, or
+    docs/memory/evidence/intent/plan-typed, a test file by name, or
     CI/config; AND no path is a declared interface surface; AND every
-    remaining path sits under at most one top-level plugin directory.
-    Anything else is full, with the reason naming the first path (or the
-    plugin-count) that forced it."""
+    remaining path sits under at most one top-level plugin directory. A
+    standing document (PRINCIPLES.md, DESIGN.md, docs/loom/KICKOFF-DEFAULTS.md)
+    always forces the full lane. Anything else is full, with the reason
+    naming the first path (or the plugin-count) that forced it."""
     manifest = load_manifest()
     remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
 
@@ -2583,7 +2600,7 @@ def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
 
     return "small", (
         "every changed path (minus this change's own records) is "
-        "docs/memory/evidence/intent/plan/standing, a test file, or CI/config, "
+        "docs/memory/evidence/intent/plan, a test file, or CI/config, "
         "in at most one plugin directory."
     )
 

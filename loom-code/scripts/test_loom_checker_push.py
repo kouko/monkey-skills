@@ -2098,6 +2098,21 @@ def test_change_lane_full_triggers(tmp_path: Path, files: dict, fragment: str) -
     assert fragment in reason
 
 
+def test_change_lane_kickoff_defaults_is_full(tmp_path: Path) -> None:
+    """W0-02 branch-end fix: a standing document (here KICKOFF-DEFAULTS.md,
+    whose lines are gate inputs) always forces the full lane -- intent
+    point 1 / PRINCIPLES.md non-negotiable 2."""
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo,
+        {"docs/loom/KICKOFF-DEFAULTS.md": "standing-docs: waived -- probe (2026-09-04)\n"},
+        "chore: kickoff-defaults probe",
+    )
+    lane, reason = loom_checker.change_lane_detail(repo, sha)
+    assert lane == "full"
+    assert "standing document" in reason
+
+
 def test_change_lane_two_plugins_is_full_even_test_only(tmp_path: Path) -> None:
     repo = _lane_init_repo(tmp_path)
     sha = _lane_commit(
@@ -2126,15 +2141,27 @@ def _lane_push_repo(
     tmp_path: Path, *, files: dict[str, str], kickoff_lines: list[str],
     verdicts: list[dict], review_overrides: dict | None = None,
 ) -> Path:
-    repo = _lane_init_repo(tmp_path)
-    (repo / "evidence").mkdir(exist_ok=True)
-    for name in ABUSE_CASES:
-        (repo / f"evidence/abuse_{name}.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
-    (repo / "evidence/tests.txt").write_text("1 passed\n", encoding="utf-8")
+    repo = tmp_path / "lane_repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    # KICKOFF-DEFAULTS.md lands on the base branch, not the change branch:
+    # it is a standing document (branch-end fix, W0-02) and would otherwise
+    # force full lane on every one of these small-lane fixtures merely for
+    # carrying the test's package-tests/second-vendor scaffolding.
     kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
     kickoff.parent.mkdir(parents=True, exist_ok=True)
     lines = [f"- package-tests: {PASSING_COMMAND} — the fixture's suite (2026-09-04)", *kickoff_lines]
     kickoff.write_text("# Kickoff Defaults\n\n" + "\n".join(lines) + "\n", encoding="utf-8")
+    git(repo, "add", "seed.txt", "docs/loom/KICKOFF-DEFAULTS.md")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    (repo / "evidence").mkdir(exist_ok=True)
+    for name in ABUSE_CASES:
+        (repo / f"evidence/abuse_{name}.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
+    (repo / "evidence/tests.txt").write_text("1 passed\n", encoding="utf-8")
     for rel, content in files.items():
         path = repo / rel
         path.parent.mkdir(parents=True, exist_ok=True)

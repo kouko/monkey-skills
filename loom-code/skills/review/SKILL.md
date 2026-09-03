@@ -1,7 +1,7 @@
 ---
 name: review
 description: |
-  Runs one checkpoint review of a change: two or more fresh-context reviewers, a blind run and an adversarial pass over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec (or write-plan for a minimal spec) for the spec lens, by build after a task or wave, by ship at branch end, or when asked to review the change in progress.
+  Runs one checkpoint review of a change: two or more fresh-context reviewers (one in the small lane), a blind run and an adversarial pass over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec (or write-plan for a minimal spec) for the spec lens, by build after a task or wave, by ship at branch end, or when asked to review the change in progress.
 version: 1.0.0
 ---
 
@@ -124,7 +124,12 @@ no `gate` or `skill` artifact type, includes no non-test `code`-typed
 path, and every changed path sits under one top-level plugin directory
 (or none). One line of non-test code, one `gate` or `skill` file, or a
 second plugin makes the whole delta `full` — a smaller diff never buys a
-smaller lane.
+smaller lane. "Tests only" is name or location only (`test_*.py`,
+`*_test.py`, or a `tests/` path segment) — never content-verified, and
+not the §6 artifact-type table's classification (a file relocated under
+`tests/` still maps to `code` there); a production file moved into
+`tests/` is therefore a reviewer's job to notice in the diff, not the
+lane recompute's.
 
 | Lane | Checkpoint |
 |---|---|

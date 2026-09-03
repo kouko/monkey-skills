@@ -143,9 +143,9 @@ kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
   - {name: standing-docs,          grammar: "waived"}
   - {name: session-start-baseline, grammar: "<sha> <words>"}
   - {name: interface-surfaces,     grammar: "<glob>[, <glob>…]", default: "**/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/**"}
-  - {name: artifact-types,         grammar: "<glob>=<type>[, …]", note: "overrides the §6 type mapping"}
+  - {name: artifact-types,         grammar: "<glob>=<type>[, …]", note: "reserved — declared, not read by the checker yet; the lane and the adversarial floor use the §6 mapping below"}
 
-artifact_types:      # §6 type mapping; KICKOFF-DEFAULTS artifact-types overrides
+artifact_types:      # §6 type mapping; KICKOFF-DEFAULTS artifact-types is reserved — declared, not read by the checker yet
   - {glob: "docs/loom/intent/**",        type: intent}
   - {glob: "docs/loom/*/spec.md",        type: spec}
   - {glob: "docs/loom/*/plan.md",        type: plan}
