@@ -907,6 +907,15 @@
       "started": "2026-09-04T01:50:19+08:00",
       "fresh_context": false,
       "note": "round 6 fix-round confirmation (resumed / re-run); recorded in the review-only commit"
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-fix-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T07:03:29+08:00",
+      "fresh_context": true,
+      "note": "CI: capture-intent SKILL.md 3566 words > loom-design cap 3500 (suite outside the package-tests line)"
     }
   ],
   "second_vendor": "codex"
