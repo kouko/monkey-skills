@@ -1,5 +1,5 @@
 {
- "reviewed_sha": "d0f96886",
+ "reviewed_sha": "e0e72361",
  "scope": "spec PASS (r1–4, r5 adversarial, r9); W0 PWN (6–8); W1 PWN (10–14); W2 PWN (15–19); W3 PWN (20–21); W4 pending",
  "verdicts": [
   {
@@ -539,6 +539,86 @@
    "model": "gpt-5.6-sol/high",
    "lens": "docs",
    "verdict": "PASS"
+  },
+  {
+   "round": 27,
+   "scope": "branch-end re-review (CI-1)",
+   "findings_file": "evidence/branch-end-r27-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r27",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 27,
+   "scope": "branch-end re-review (CI-1)",
+   "findings_file": "evidence/branch-end-r27-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r27",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 28,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r28-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r28",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 28,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r28-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r28",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 29,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r29-rereview.md",
+   "reviewer": "sonnet-review-docs-branch-end-r29",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES"
+  },
+  {
+   "round": 29,
+   "scope": "branch-end re-review",
+   "findings_file": "evidence/branch-end-r29-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r29",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "PASS"
+  },
+  {
+   "round": 30,
+   "scope": "branch-end re-review (CI-2)",
+   "findings_file": "evidence/branch-end-r30-rereview.md",
+   "reviewer": "opus-review-code-branch-end-r30",
+   "vendor": "anthropic",
+   "model": "opus",
+   "lens": "code",
+   "verdict": "PASS"
+  },
+  {
+   "round": 30,
+   "scope": "branch-end re-review (CI-2)",
+   "findings_file": "evidence/branch-end-r30-rereview.md",
+   "reviewer": "codex-review-docs-branch-end-r30",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "docs",
+   "verdict": "PASS_WITH_NOTES"
   }
  ],
  "probes": [
@@ -712,15 +792,15 @@
    "kind": "package-tests",
    "scope": "branch-end",
    "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
-   "sha": "d0f96886",
-   "result": "1005 passed in 135.62s (0:02:15)",
+   "sha": "e0e72361",
+   "result": "1007 passed in 147.05s (0:02:27)",
    "artifact": "loom-code/scripts/"
   },
   {
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/fixture.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/fixture.py"
   },
@@ -728,7 +808,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p01_no_dispatch_record.py"
   },
@@ -736,7 +816,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p02_after_task_no_reason.py"
   },
@@ -744,7 +824,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p03_review_only_head_rename.py"
   },
@@ -752,7 +832,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p04_probe_command_true.py"
   },
@@ -760,7 +840,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p05_needs_design_untracked.py"
   },
@@ -768,7 +848,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p06_question_type_what.py"
   },
@@ -776,7 +856,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p07_second_vendor_codex_missing.py"
   },
@@ -784,7 +864,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p08_contract_require_minor.py"
   },
@@ -792,7 +872,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p09_replay_stale_review.py"
   },
@@ -800,7 +880,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p10_forged_dispatch_ids.py"
   },
@@ -808,7 +888,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p11_kickoff_narrows_surfaces.py"
   },
@@ -816,7 +896,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p12_push_command_detection.py"
   },
@@ -824,7 +904,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/p13_race_review_json.py"
   },
@@ -832,7 +912,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1a_masked_exit_semicolon_space.py"
   },
@@ -840,7 +920,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1b_masked_exit_semicolon_nospace.py"
   },
@@ -848,7 +928,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x1c_control_bare_failing_probe.py"
   },
@@ -856,7 +936,7 @@
    "kind": "adversarial",
    "scope": "branch-end",
    "command": "python3 docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py",
-   "sha": "d0f96886",
+   "sha": "e0e72361",
    "result": "caught",
    "artifact": "docs/loom/2026-09-02-simple-loom-flow/evidence/probes-w1/x2_trailer_on_docs_commit_not_code.py"
   }
@@ -1948,7 +2028,7 @@
     "github-ci loom-code pytest (PR #780 run 33667184980)"
    ],
    "text": "test_real_repo_measure_is_green red on CI: session-start word count is locale-dependent (`wc -w` counts 5281 under macOS UTF-8 locale, 5278 under LC_ALL=C / GNU on the runner; python str.split agrees with 5278), so the recorded baseline 923fb84a 5281 does not reproduce on CI",
-   "resolved": "open"
+   "resolved": "resolved: 79a1ca4c"
   },
   {
    "id": "R27-C1",
@@ -1959,7 +2039,7 @@
     "codex-review-docs-branch-end-r27"
    ],
    "text": "hook comment still prescribes unpinned wc -w and 5281/2640",
-   "resolved": "open"
+   "resolved": "resolved: 85bc04ff"
   },
   {
    "id": "R27-C2",
@@ -1992,7 +2072,7 @@
     "opus-review-code-branch-end-r27"
    ],
    "text": "test docstring/cap carry the retracted 5281/2640",
-   "resolved": "open"
+   "resolved": "resolved: 85bc04ff"
   },
   {
    "id": "R27-O2",
@@ -2003,7 +2083,7 @@
     "opus-review-code-branch-end-r27"
    ],
    "text": "docstring claims the wc command runs; budget test uses str.split",
-   "resolved": "open"
+   "resolved": "resolved: 85bc04ff"
   },
   {
    "id": "R27-O3",
@@ -2014,7 +2094,7 @@
     "opus-review-code-branch-end-r27"
    ],
    "text": "locale test passes vacuously without a UTF-8 locale",
-   "resolved": "open"
+   "resolved": "resolved: 85bc04ff"
   },
   {
    "id": "R28-C1",
@@ -2069,7 +2149,7 @@
     "github-ci loom-code pytest (PR #780 run 33702007788)"
    ],
    "text": "GNU wc -w under LC_ALL=C does not count tokens made only of non-ASCII bytes as words (5131 for the 923fb84a baseline vs 5278 on BSD wc / Python split), so pinning LC_ALL=C made the two platforms disagree by 147; the count must not use wc at all",
-   "resolved": "open"
+   "resolved": "resolved: 6a349dcb"
   },
   {
    "id": "R30-C1",
@@ -2080,7 +2160,7 @@
     "codex-review-docs-branch-end-r30"
    ],
    "text": "line 3 claimed no code changes after 0bb3f9c0; CI-2 changed the counter",
-   "resolved": "resolved: 35213369"
+   "resolved": "resolved: e0e72361 (the round-30 record commit)"
   },
   {
    "id": "R30-O1",
