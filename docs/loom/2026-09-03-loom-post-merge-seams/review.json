@@ -446,6 +446,42 @@
    "vendor": "anthropic",
    "started": "2026-09-03T02:27:16Z",
    "fresh_context": true
+  },
+  {
+   "task": "spec round 3",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-spec-3",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-03T02:35:10Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec round 3",
+   "role": "reviewer",
+   "agent_id": "codex-review-spec-3",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-03T02:35:10Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec round 3",
+   "role": "blind-runner",
+   "agent_id": "sonnet-coldread-spec-3",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-03T02:35:10Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec round 3",
+   "role": "adversary",
+   "agent_id": "sonnet-redteam-spec-3",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-03T02:35:10Z",
+   "fresh_context": true
   }
  ]
 }
