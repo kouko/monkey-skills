@@ -1142,6 +1142,22 @@
       "model": "sonnet",
       "started": "2026-09-03T12:09:01+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-04",
+      "model": "sonnet",
+      "started": "2026-09-03T12:22:40+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "blind-runner",
+      "agent_id": "sonnet-blindrun-w0-04",
+      "model": "sonnet",
+      "started": "2026-09-03T12:22:40+08:00",
+      "fresh_context": true
     }
   ]
 }
