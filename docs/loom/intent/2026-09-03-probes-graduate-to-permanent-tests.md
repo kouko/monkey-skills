@@ -6,15 +6,15 @@ evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/, docs/loo
 status: confirmed 2026-09-04
 
 ## Problem
-對抗者寫的探針（可執行的攻擊案例）住在 `docs/loom/<change-id>/evidence/probes/`，是該 change 的證據，不在 repo 的整包測試命令裡；merge 後沒有東西會再跑它們。PRINCIPLES 第 2 條說每個事故要變永久 eval，但主幹上三個已 merge 的 change 共 4 個探針檔、54 個案例，全部只是歷史。原本以為 2026-09-03-loom-post-merge-seams 會在 W1-04 順手畢業自己的 21 個，實際沒做。
+對抗者寫的探針（可執行的攻擊案例）住在 `docs/loom/<change-id>/evidence/probes/`，是該 change 的證據，不在 repo 的整包測試命令裡；merge 後沒有東西會再跑它們。PRINCIPLES 第 2 條說每個事故要變永久 eval。2026-09-03-loom-post-merge-seams 的 21 個已在它自己的 W1-04 畢業（12 個搬進 `test_loom_checker_push_probes.py`，9 個與既有測試重疊）；後兩個 change 的 2 個探針檔、33 個案例（package-tests 7 個、change_lane 26 個）還只是歷史。
 
 ## Proposed outcome
-把主幹上 4 個探針檔裡、既有永久測試沒蓋到的案例，搬進本 repo 的永久測試目錄（`loom-code/scripts/test_*.py`），整包命令跑得到；evidence 原檔不刪不改。搬＝複製、改檔名與 import 路徑，不重寫成別的 fixture。這是回溯一次性的搬家；「每個 change 在 ship 時自動畢業」的機制另外做（見 Out of scope）。
+把主幹上尚未畢業的 2 個探針檔裡、既有永久測試沒蓋到的案例，搬進本 repo 的永久測試目錄（`loom-code/scripts/test_*.py`），整包命令跑得到；evidence 原檔不刪不改。搬＝複製、改檔名與 import 路徑，不重寫成別的 fixture。這是回溯一次性的搬家；「每個 change 在 ship 時自動畢業」的機制另外做（見 Out of scope）。
 
 ## Acceptance
-1. 主幹上 4 個探針檔的案例出現在 `loom-code/scripts/` 的測試檔裡，整包命令（KICKOFF 的 package-tests 行）收集並跑過它們，全綠；4 個 evidence 原檔的內容與 main 上一字不差。
+1. 主幹上尚未畢業的 2 個探針檔（package-tests、change_lane）的案例出現在 `loom-code/scripts/` 的測試檔裡，整包命令（KICKOFF 的 package-tests 行）收集並跑過它們，全綠；4 個 evidence 探針原檔的內容與 main 上一字不差。
 2. 搬進來的測試函式名沒有一個與既有 `loom-code/scripts/test_*.py` 裡的函式同名；被略過的案例在 plan 或 commit 訊息裡逐一點名，附一句「既有哪個測試已蓋到」。
-3. 整包命令的 wall-clock 時間增加不超過 4 個探針檔單獨跑的 wall-clock 時間總和（兩邊都用同一台機器、同一個 `-n auto` 量）。
+3. 整包命令的 wall-clock 時間增加不超過這 2 個探針檔單獨跑的 wall-clock 時間總和（兩邊都用同一台機器、同一個 `-n auto` 量）。
 4. 這個 change 從 intent 確認到 push 閘乾跑通過，不超過 20 分鐘（小車道首測；時間以 commit 時間戳為準）。
 
 ## Constraints
