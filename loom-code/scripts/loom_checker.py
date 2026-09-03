@@ -1860,7 +1860,16 @@ def _close_blob_failures(repo: Path, diff_base: str, close_sha: str, closing_pat
             str(len(before_positions)),
         )]
     regenerated = _regenerated_closed_text(before_text, match.group(2), match.group(3))
-    expected_blob = blob_sha(regenerated.encode("utf-8"))
+    # `before_text` (and therefore `regenerated`) came from `git_raw_text`,
+    # which decodes blob bytes with `errors="surrogateescape"` so a
+    # non-UTF-8 byte round-trips as a lone surrogate rather than being
+    # lost or raising on decode. Re-encoding here must use the same
+    # `errors="surrogateescape"` -- a strict `.encode("utf-8")` raises
+    # UnicodeEncodeError on that surrogate, which would BLOCK (or crash) a
+    # legitimate close commit whose UNCHANGED body happens to contain a
+    # non-UTF-8 byte, before the blob comparison even runs (spec REQ-1,
+    # W0-04 round-6 finding).
+    expected_blob = blob_sha(regenerated.encode("utf-8", "surrogateescape"))
     actual_blob = git_text(repo, "rev-parse", f"{close_sha}:{closing_path}").strip()
     if expected_blob != actual_blob:
         return [_not_a_close_commit(
@@ -1976,14 +1985,18 @@ def _checkpoint_parent_failures(
     must itself be a checkpoint -- touching only review.json -- whose
     reviewed_sha resolves to HEAD^^^, so no commit can sit between the last
     review and the close commit unseen (spec REQ-1, W0-04)."""
-    checkpoint_rel, _checkpoint_failures = check_review_only_head(manifest, repo, pre_close_sha)
+    checkpoint_rel, checkpoint_failures = check_review_only_head(manifest, repo, pre_close_sha)
     if checkpoint_rel is None:
+        # `checkpoint_failures` carries `check_review_only_head`'s own
+        # computed detail (the actual touched paths); surface it instead
+        # of discarding it -- the round-6 diagnostic used to say only
+        # "touches something else" with no `got` value at all.
+        detail = checkpoint_failures[0][1] if checkpoint_failures else "it touches something else."
         return [
             (
                 rule,
                 f"HEAD^^ ({pre_close_sha[:8]}) is not itself a checkpoint; expected "
-                f"HEAD^^ ({pre_close_sha[:8]}) to touch only review.json, but it "
-                "touches something else.",
+                f"HEAD^^ ({pre_close_sha[:8]}) to touch only review.json; {detail}",
             )
         ]
 

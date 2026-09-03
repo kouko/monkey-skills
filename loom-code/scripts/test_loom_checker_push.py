@@ -352,6 +352,82 @@ def test_a_crlf_file_wide_close_commit_passes(tmp_path: Path) -> None:
     )
 
 
+def test_a_close_commit_with_a_stray_non_utf8_body_byte_passes(tmp_path: Path) -> None:
+    """A legitimate close commit whose file carries a stray non-UTF-8 byte
+    in the body, UNCHANGED between HEAD^^ and HEAD^, must PASS.
+    Regression for round-6: `git_raw_text` decodes blob bytes with
+    `errors="surrogateescape"`, but `_close_blob_failures` used to
+    re-encode the regenerated text with strict UTF-8
+    (`.encode("utf-8")`), so this legitimate close raised
+    UnicodeEncodeError instead of performing the blob comparison."""
+    repo = build_repo(tmp_path)
+    intent_rel = f"docs/loom/intent/{CHANGE}.md"
+    git(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    before_bytes = b"# x\nstatus: confirmed 2026-09-01\n\n## Problem\nstray byte: \xff\n"
+    (repo / intent_rel).write_bytes(before_bytes)
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    raw = (repo / intent_rel).read_bytes()
+    raw = raw.replace(
+        b"status: confirmed 2026-09-01\n",
+        "status: closed 2026-09-03 — PR #999\n".encode("utf-8"),
+    )
+    (repo / intent_rel).write_bytes(raw)
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (
+        "expected PASS for a close commit with an unchanged stray non-UTF-8 "
+        f"body byte, got BLOCKED/errored: {result.stderr}"
+    )
+
+
+def test_a_close_commit_that_changes_a_non_utf8_body_byte_is_blocked(tmp_path: Path) -> None:
+    """Same fixture as above, but the stray body byte itself CHANGES in
+    the close commit -- condition (c)'s regenerated blob must differ from
+    the actual blob and BLOCK, with no exception along the way."""
+    repo = build_repo(tmp_path)
+    intent_rel = f"docs/loom/intent/{CHANGE}.md"
+    git(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    before_bytes = b"# x\nstatus: confirmed 2026-09-01\n\n## Problem\nstray byte: \xff\n"
+    (repo / intent_rel).write_bytes(before_bytes)
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    raw = (repo / intent_rel).read_bytes()
+    raw = raw.replace(
+        b"status: confirmed 2026-09-01\n",
+        "status: closed 2026-09-03 — PR #999\n".encode("utf-8"),
+    )
+    raw = raw.replace(b"stray byte: \xff\n", b"stray byte: \xfe\n")
+    (repo / intent_rel).write_bytes(raw)
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, (
+        "expected BLOCK for a close commit that also changes the stray "
+        f"non-UTF-8 body byte, got: returncode={result.returncode} "
+        f"stderr={result.stderr}"
+    )
+    assert "push.review-only-head" in blocked_rules(result)
+    assert "HEAD^'s blob to equal the regenerated closed blob" in result.stderr
+
+
 def test_a_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None:
     """Condition (a): the raw listing must be exactly one entry."""
     repo = build_repo(tmp_path)
@@ -396,6 +472,9 @@ def test_a_close_commit_whose_parent_is_not_a_checkpoint_is_blocked(tmp_path: Pa
     assert pre_close_sha[:8] in result.stderr
     assert f"HEAD^^ ({pre_close_sha[:8]}) is not itself a checkpoint" in result.stderr
     assert f"expected HEAD^^ ({pre_close_sha[:8]}) to touch only review.json" in result.stderr
+    # round-6: the diagnostic must carry the underlying `got` value -- the
+    # actual touched path -- not just "touches something else".
+    assert "docs/loom/notes.md" in result.stderr
 
 
 def test_a_merge_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None:
