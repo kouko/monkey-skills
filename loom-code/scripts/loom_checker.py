@@ -68,7 +68,10 @@ RULES: list[tuple[str, str]] = [
         "intake.confirmed",
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
         "with a date the calendar has; `closed <date> — PR #<N>` is blocked -- that change is "
-        "closed and a new change starts from a new intent.",
+        "closed and a new change starts from a new intent. closed is terminal: reopening it -- "
+        "reverting the status line, or branching from a trunk that already carries the close -- "
+        "is blocked the same way, recomputed from the branch's own history and the trunk's copy "
+        "of the file, not from the status line alone.",
     ),
     (
         "intake.confirmed-behavior",
@@ -375,6 +378,13 @@ def glob_to_regex(pattern: str) -> re.Pattern[str]:
 
 
 TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master", "@{upstream}")
+
+# Separate from TRUNK_CANDIDATES on purpose (W0-02): branch_base()'s
+# @{upstream} keeps the change branch's own remote copy, which is exactly
+# what a reopen check must NOT trust as "the trunk" -- an upstream that is
+# the change branch itself would let a reopen check its own history and
+# call that the trunk.
+REOPEN_TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master")
 
 # The branch names loom treats as the trunk; standing on one is the P13 hole.
 TRUNK_BRANCH_NAMES = frozenset({"main", "master"})
@@ -794,15 +804,89 @@ CHANGE_ID = re.compile(r"[A-Za-z0-9._-]+")
 # each alternative allowing a trailing ` #...` comment -- shared by
 # intake.confirmed (below) and the closed-commit shape push.review-only-head
 # recomputes (W0-04). Groups: 1=confirmed date, 2=closed date, 3=PR number.
+_STATUS_CLOSED_ALT = r"closed (\d{4}-\d{2}-\d{2}) — PR #(\d+)"
 STATUS = re.compile(
     r"(?:open"
     r"|confirmed (\d{4}-\d{2}-\d{2})"
-    r"|closed (\d{4}-\d{2}-\d{2}) — PR #(\d+)"
+    rf"|{_STATUS_CLOSED_ALT}"
     r"|withdrawn — .+)"
     r"(?:\s+#.*)?"
 )
 
+# The literal text before the closed alternative's first capture group --
+# "closed " -- derived from _STATUS_CLOSED_ALT rather than hand-copied, so
+# the reopen recompute below and the grammar cannot drift apart (W0-02).
+STATUS_CLOSED_LITERAL = _STATUS_CLOSED_ALT.split("(", 1)[0]
+# `git log -G` uses POSIX ERE; `[[:space:]]*` mirrors the optional
+# whitespace parse_document()'s frontmatter line already strips between
+# `status:` and its value, so the history search and the grammar agree on
+# a hand-edited line too.
+REOPEN_LOG_PATTERN = rf"^status:[[:space:]]*{STATUS_CLOSED_LITERAL}"
+
 INTAKE_STATIONS = ("write-spec", "write-plan")  # the two stations that accept an intent
+
+
+def _status_closed_pr_number(text: str) -> str | None:
+    """The PR number of a `closed` status line in `text`'s frontmatter, or
+    None when the status is anything else (including absent/malformed)."""
+    front, _sections = parse_document(text)
+    match = STATUS.fullmatch(front.get("status", "").strip())
+    if match and match.group(2) is not None:
+        return match.group(3)
+    return None
+
+
+def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str, out) -> tuple[str, str] | None:
+    """`intake.confirmed`'s terminal rule (REQ-2, W0-02): a reopen is caught
+    even when the intent file's OWN current status line has been changed
+    back to `confirmed`, by recomputing two things the file's current
+    content cannot hide:
+
+    (i) the branch's own history of the file -- `git log -G` for a line
+        that ever read `status: closed ...` -- so reverting the status
+        line back to `confirmed` does not un-close the change; and
+    (ii) the trunk's current copy of the file -- so a branch cut before the
+         close, from a trunk that already carries it, is caught too.
+
+    Neither is a flag an agent writes; both are recomputed from the
+    repository. When no trunk ref resolves at all, case (ii) is reported as
+    absent (not as a pass) rather than silently skipped."""
+    intent_rel = intent_path.relative_to(repo)
+    log_output = git_maybe(repo, "log", "--format=%H", f"-G{REOPEN_LOG_PATTERN}", "--", str(intent_rel))
+    for commit in (log_output or "").splitlines():
+        commit = commit.strip()
+        if not commit:
+            continue
+        content = git_maybe(repo, "show", f"{commit}:{intent_rel}")
+        if content is None:
+            continue
+        pr_number = _status_closed_pr_number(content)
+        if pr_number is not None:
+            return (
+                "intake.confirmed",
+                f"{change_id} was closed (PR #{pr_number}) and closed intents "
+                "are not reopened; start a new intent",
+            )
+
+    for candidate in REOPEN_TRUNK_CANDIDATES:
+        if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
+            continue
+        content = git_maybe(repo, "show", f"{candidate}:{intent_rel}")
+        if content is not None:
+            pr_number = _status_closed_pr_number(content)
+            if pr_number is not None:
+                return (
+                    "intake.confirmed",
+                    f"{change_id} was closed (PR #{pr_number}) and closed intents "
+                    "are not reopened; start a new intent",
+                )
+        break
+    else:
+        out.write(
+            "intake.confirmed: no trunk ref resolves among "
+            f"{', '.join(REOPEN_TRUNK_CANDIDATES)}; the trunk copy check is absent.\n"
+        )
+    return None
 
 
 def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
@@ -858,6 +942,10 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             ],
             err,
         )
+    reopen_failure = check_intent_not_reopened(repo, intent_path, change_id, out)
+    if reopen_failure is not None:
+        return report([reopen_failure], err)
+
     if confirmed_date is None:
         shown = status or "absent (= open)"
         return report(
