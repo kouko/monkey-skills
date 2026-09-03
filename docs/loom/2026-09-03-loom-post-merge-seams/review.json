@@ -543,6 +543,53 @@
           "fix": "reword"
         }
       ]
+    },
+    {
+      "round": 17,
+      "scope": "after-task:W0-05",
+      "sha": "a7eca30cca48db4d51bbf65e2e0630b640cc1baf",
+      "findings_file": "evidence/review-after-task-w0-05-r2.md",
+      "reviewer": "codex-review-w0-05-r2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2636",
+          "text": "stamp gate ignores the checker copy's mode",
+          "fix": "require a regular 100644 copy"
+        },
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2817",
+          "text": "check_dispatch_covers_tasks 74 lines",
+          "fix": "extract"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "scope": "after-task:W0-05",
+      "sha": "92a21fe9d8842a7321f9bf44271a67ab30ba3ba8",
+      "findings_file": "evidence/review-after-task-w0-05-r2.md",
+      "reviewer": "sonnet-review-w0-05-r2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2817",
+          "text": "check_dispatch_covers_tasks 74 lines",
+          "fix": "extract two more helpers"
+        }
+      ]
     }
   ],
   "probes": [
@@ -1627,7 +1674,8 @@
       "raised_by": [
         "codex-review-w0-05-r2"
       ],
-      "text": "_plumbing_stamp_reason ignores the committed checker copy's mode: a symlinked copy whose target begins with the stamp (or a wrong-mode regular file) passes the commit-wide stamp gate and other plumbing paths are exempted"
+      "text": "_plumbing_stamp_reason ignores the committed checker copy's mode: a symlinked copy whose target begins with the stamp (or a wrong-mode regular file) passes the commit-wide stamp gate and other plumbing paths are exempted",
+      "resolved": "resolved: df816a3e — stamp gate reads the copy entry mode first (symlink / non-100644 → no exemption); two regression tests"
     },
     {
       "id": "after-task:W0-05-09",
@@ -1637,7 +1685,8 @@
       "raised_by": [
         "codex-review-w0-05-r2"
       ],
-      "text": "check_dispatch_covers_tasks still 74 lines"
+      "text": "check_dispatch_covers_tasks still 74 lines",
+      "resolved": "resolved: df816a3e — _dispatch_coverage_failures extracted; check_dispatch_covers_tasks 48 lines"
     }
   ],
   "dispatch": [
@@ -2233,6 +2282,22 @@
       "agent_id": "impl-w0-05-fix2-sonnet",
       "model": "sonnet",
       "started": "2026-09-03T15:16:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-05-r3",
+      "model": "sonnet",
+      "started": "2026-09-03T15:33:29+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-05-r3",
+      "model": "codex",
+      "started": "2026-09-03T15:33:29+08:00",
       "fresh_context": true
     }
   ]
