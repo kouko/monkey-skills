@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
-  "scope": "after-task:W0-02",
+  "reviewed_sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+  "scope": "branch-end",
   "vendors": [
     "anthropic"
   ],
@@ -136,6 +136,147 @@
       },
       "findings": [],
       "notes": "fix round: resumed reader, read only the two fix commits; important FIXED; nit deferred to the ship nit batch"
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/contract/manifest.yaml:148",
+          "text": "manifest still claims KICKOFF artifact-types overrides the mapping; the checker never reads it",
+          "fix": "mark reserved or implement"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:2456",
+          "text": "standing admitted to the small lane, contradicting PRINCIPLES 2 and the intent",
+          "fix": "remove standing from SMALL_LANE_ARTIFACT_TYPES"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/SKILL.md:4",
+          "text": "description still says every checkpoint uses two reviewers and a blind run",
+          "fix": "lane-aware description"
+        }
+      ],
+      "adjudication": {
+        "F1": "DISMISSED — fixed by ship §3.5 confirmation round + review-only commit",
+        "F2": "UPHELD — manifest still published the override",
+        "F3": "DISMISSED — trust-by-procedure; a question-evidence check would be a new mechanism",
+        "F4": "DISMISSED — path-based pre-authorisation by design; the reviewer sees the file in the diff",
+        "F5": "DISMISSED — reader procedure, not claimed as checker enforcement",
+        "F6": "DISMISSED — predates this delta"
+      },
+      "notes": "all nine station-summary copies identical (sha-256); second-vendor ask wording matches the checker; read-only sandbox, no pytest"
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "N/A"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/SKILL.md:120",
+          "text": "\"tests only\" is a name/location regex with no content check and is not the artifact-type table classification (a tests/ file is still code there); undisclosed (adversary F4)",
+          "fix": "one disclosure clause in the lane paragraph"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md",
+          "text": "no-finding-outside-delta and third-round re-look are reader-trusted, not checker-enforced (F5)",
+          "fix": "one caveat line"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/SKILL.md:138-139",
+          "text": "\"each in its own message so the two run concurrently\" invites dispatch[] write races (F6, pre-existing wording re-touched here)",
+          "fix": "one sentence: append dispatch entries once, before dispatching"
+        }
+      ],
+      "adjudication": {
+        "F1": "confirmed fixed (37fc3f94)",
+        "F2": "confirmed fixed in SKILL.md; manifest text untouched by the branch",
+        "F3": "DISMISSED — consistent with review.json trust model; record as residual (one extra check inside push.second-vendor-honoured would close it)",
+        "F4": "UPHELD important — disclosure clause missing",
+        "F5": "nit — ship nit batch",
+        "F6": "residual — pre-existing; serialise the append"
+      },
+      "notes": "package suite 837 passed (loom-code); versions consistent across carriers"
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/SKILL.md:4",
+          "text": "description still implies every checkpoint includes a blind run",
+          "fix": "ship nit batch"
+        }
+      ],
+      "notes": "fix round: read only 8868394e..4dcaefde; 1 FIXED, 2 FIXED, 3 UNFIXED (nit)"
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs",
+      "verdict": "PASS",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: resumed reader; F4 clause FIXED at review/SKILL.md:127-130; nits F5/F6 carried to the ship nit batch"
     }
   ],
   "probes": [
@@ -186,6 +327,78 @@
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
       "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "1094 passed in 33.53s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "clean worktree at e8d99de4; Acceptance 1-7 walked; cold reads of review/build/write-plan text (sonnet-blindrun-branch-end)",
+      "sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "result": "#1,#2,#3,#5,#6,#7 works; #4 not yet measurable",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "attack-catalogue pass over the lane, fix-round, nit-batch and second-vendor-ask text (sonnet-adversary-branch-end-skill)",
+      "sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "result": "6 findings: F1 F2 fixed, F3 F5 F6 dismissed/residual, F4 disclosed",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/adversarial-branch-end-skill.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -236,6 +449,78 @@
       "severity": "important",
       "text": "RULES catalog text stale",
       "resolved": "closed by 962a1110 — catalog text for verdicts-ge-2 and second-vendor-honoured updated; --list-rules still 27"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/skills/ship/SKILL.md §3.5",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F1: nit batch commit cannot reach push (HEAD not review-only)",
+      "resolved": "closed by 37fc3f94 — §3.5 now: nit-batch commit → confirmation verdicts of the last round's readers at that sha → review-only commit → push; confirmed by both readers"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/skills/review/SKILL.md:100-102",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F2: text claims a KICKOFF artifact-types override the checker never reads",
+      "resolved": "closed by 37fc3f94 (SKILL.md claim removed) and 205486f0 (manifest note: reserved — declared, not read by the checker yet)"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/skills/write-plan/references/second-vendor-ask-and-docs-lint.md",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F3: a forged second_vendor: none with no question asked passes",
+      "dismissed": "trust-by-procedure like every review.json field; a question-evidence check would be a new mechanism the intent forbids; recorded as a residual in the intent Open questions (nit batch) by codex-review-branch-end and sonnet-review-branch-end"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "loom-code/skills/review/SKILL.md:119-128",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F4: a production .py moved under tests/ classifies small",
+      "resolved": "closed by 205486f0 — the lane paragraph now discloses that \"tests only\" is name/location only, not content-verified, and that a moved file is the reviewer's job to notice; the classification itself stays path-based by design (codex: DISMISSED; sonnet: UPHELD as disclosure, FIXED); residual recorded in the intent"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/skills/review/SKILL.md:138-140",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F6: concurrent writers of review.json can drop a dispatch record",
+      "dismissed": "predates this change (wording verbatim at base b4ac0430); the serialisation sentence goes in the ship nit batch and the residual in the intent by codex-review-branch-end and sonnet-review-branch-end"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "loom-code/contract/manifest.yaml:148",
+      "origin_sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "raised_by": "codex-review-branch-end",
+      "severity": "important",
+      "text": "manifest still claims the artifact-types override",
+      "resolved": "closed by 205486f0 — note says reserved, not read by the checker yet"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "loom-code/scripts/loom_checker.py:2456",
+      "origin_sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "raised_by": "codex-review-branch-end",
+      "severity": "important",
+      "text": "standing admitted to the small lane",
+      "resolved": "closed by 205486f0 — standing removed; KICKOFF-only branch → full (unit test + probe 26/26); record-pattern regex fixed on the way"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "loom-code/skills/review/SKILL.md:120",
+      "origin_sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "raised_by": "sonnet-review-branch-end",
+      "severity": "important",
+      "text": "tests-only class undisclosed as name/location-only",
+      "resolved": "closed by 205486f0 — clause added; confirmed by the reader in round 4"
     }
   ],
   "dispatch": [
