@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "8a6a2824355d899248af3d83cf6bb8b5f3ce47ab",
+  "reviewed_sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -247,6 +247,72 @@
         "missing-population": "PASS"
       },
       "findings": []
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "fallback": "codex missing at 2026-09-03",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: reviewed_sha",
+          "text": "at the reviewed sha the push gate still blocks on push.reviewed-sha (pointer not yet moved) and push.probes-adversarial (1 usable record); no open finding discloses it",
+          "fix": "move reviewed_sha and record three usable adversarial probes"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: history_rewrite.why",
+          "text": "the note lists KICKOFF among the three rewritten commits; the three were README/requirements commits, the KICKOFF commit was untouched and needs no trailer",
+          "fix": "name the three by subject"
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: dispatch[] orchestrator-inline note",
+          "text": "same KICKOFF misattribution repeated",
+          "fix": "fix both"
+        }
+      ],
+      "notes": "verified the rewrite changed no tree content (git diff 46c953db..HEAD~1 empty) and every cited sha resolves"
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r5-fallback",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "fallback": "codex missing at 2026-09-03",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "N/A — no template placeholders in this delta"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json:543",
+          "text": "history_rewrite.why lists KICKOFF among the three rewritten commits; the three touch README.md and requirements-dev.txt only, the KICKOFF commit was untouched and needs no trailer",
+          "fix": "name the three commits, drop KICKOFF from the parenthetical"
+        }
+      ],
+      "notes": "independently verified: filter-branch changed no tree content, every remapped sha resolves, probe file 12 passed, package suite 1063 passed in 35.92s, the four carriers agree"
     }
   ],
   "probes": [
@@ -286,6 +352,46 @@
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q",
       "sha": "8a6a2824355d899248af3d83cf6bb8b5f3ce47ab",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "result": "1063 passed in 35.73s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q",
+      "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q -k test_kickoff_mutation_fails_the_parity_test",
+      "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q -k test_requirements_dev_without_xdist_fails_w0_01_test",
+      "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q -k test_checker_rejects_recorded_probe_missing_n_auto_token",
+      "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
       "scope": "branch-end"
@@ -397,6 +503,42 @@
       "severity": "important",
       "text": "KICKOFF comment still claims \"same line as CI\"",
       "resolved": "closed by 18b9cac2 — comment now reads \"CI runs the same test paths and -n auto with -v in place of -q\", and the CPU wording matches requirements-dev.txt"
+    },
+    {
+      "id": "branch-end-12",
+      "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: reviewed_sha",
+      "origin_sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "raised_by": "sonnet-review-branch-end-r5",
+      "severity": "fatal",
+      "text": "gate still blocks at the reviewed sha (pointer, probe floor)",
+      "resolved": "closed in this record — reviewed_sha moved to HEAD^, four adversarial probe records at the reviewed sha (whole file + three per-case), all re-run in a clean worktree"
+    },
+    {
+      "id": "branch-end-13",
+      "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: history_rewrite.why",
+      "origin_sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "raised_by": "sonnet-review-branch-end-r5",
+      "severity": "important",
+      "text": "KICKOFF misattributed among the rewritten commits",
+      "resolved": "closed in this record — note names the three commits by subject and states the KICKOFF commit was untouched"
+    },
+    {
+      "id": "branch-end-14",
+      "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json :: dispatch[] orchestrator-inline note",
+      "origin_sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "raised_by": "sonnet-review-branch-end-r5",
+      "severity": "nit",
+      "text": "same misattribution",
+      "resolved": "closed in this record"
+    },
+    {
+      "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json:543",
+      "severity": "important",
+      "text": "same misattribution as the first leg's second finding",
+      "resolved": "closed in this record — history_rewrite.why rewritten (see the first leg's resolution)",
+      "origin_sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "raised_by": "sonnet-review-branch-end-r5-fallback",
+      "id": "branch-end-15"
     }
   ],
   "dispatch": [
@@ -519,7 +661,7 @@
       "model": "fable",
       "started": "2026-09-03T19:30:00+08:00",
       "fresh_context": false,
-      "note": "README/requirements-dev.txt/KICKOFF wording fixes in rounds 1-3, committed inline by the orchestrator; recorded after the fact (the dispatch was never written) — this entry is the honest reconstruction"
+      "note": "README and requirements-dev.txt wording fixes in rounds 1-3 (three commits), committed inline by the orchestrator; recorded after the fact — the dispatch was never written; this entry is the honest reconstruction"
     },
     {
       "task": "branch-end",
@@ -536,11 +678,20 @@
       "model": "codex",
       "started": "2026-09-03T22:47:53+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r5-fallback",
+      "model": "sonnet",
+      "started": "2026-09-03T23:01:09+08:00",
+      "fresh_context": true,
+      "note": "second leg of round 5 after codex exec returned HTTP 404 from https://chatgpt.com/backend-api/codex/responses three times (codex --version exits 0); recorded in the review-only commit rather than a separate dispatch commit to keep HEAD^ as the reviewed sha"
     }
   ],
   "history_rewrite": {
     "date": "2026-09-03",
-    "why": "push.dispatch-covers-tasks: three orchestrator-inline commits (README/requirements-dev.txt/KICKOFF wording fixes) lacked a Task trailer; kouko ran git filter-branch --msg-filter adding `Task: W0-01` to them; every sha after 05ff96dd changed, so the sha fields above were remapped by commit subject and a fresh round (5) re-reads the tree",
+    "why": "push.dispatch-covers-tasks: three orchestrator-inline commits — \"README gives the clone-to-green path; requirements-dev.txt states each dependency's reason\", \"requirements-dev.txt — per-package reason on its own line\", \"README uv path activates the venv; CI wording says -v replaces -q; xdist comment says detected CPUs\" — lacked a Task trailer because requirements-dev.txt classifies as code; kouko ran git filter-branch --msg-filter adding `Task: W0-01` to exactly those three (the KICKOFF-DEFAULTS comment commit is docs and was not touched); every sha after 05ff96dd changed, so the sha fields were remapped by commit subject and round 5 re-read the tree",
     "old_reviewed_sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4"
   }
 }
