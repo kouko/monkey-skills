@@ -27,6 +27,14 @@
       "model": "sonnet",
       "started": "2026-09-04T07:33:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-pg",
+      "model": "sonnet",
+      "started": "2026-09-04T07:41:00+08:00",
+      "fresh_context": true
     }
   ]
 }
