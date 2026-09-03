@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+  "reviewed_sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
   "scope": "branch-end",
   "vendors": [
     "anthropic"
@@ -399,6 +399,48 @@
       },
       "findings": [],
       "notes": "fix round 7: move verbatim, ask clause restated in full, pointer resolves, 3333 words"
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "delta_is_one_status_line": true,
+      "notes": "close-commit round: one status line, PR #784 OPEN"
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "delta_is_one_status_line": true,
+      "notes": "close-commit round: one status line, PR #784 OPEN"
     }
   ],
   "probes": [
@@ -686,6 +728,62 @@
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
       "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "1096 passed in 35.92s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
       "scope": "branch-end"
@@ -1039,6 +1137,24 @@
       "started": "2026-09-04T07:06:45+08:00",
       "fresh_context": false,
       "note": "round 7 fix-round confirmation; recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T07:10:18+08:00",
+      "fresh_context": false,
+      "note": "close-commit round (ship §6); recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T07:10:18+08:00",
+      "fresh_context": false,
+      "note": "close-commit round (ship §6); recorded in the review-only commit"
     }
   ],
   "second_vendor": "codex"
