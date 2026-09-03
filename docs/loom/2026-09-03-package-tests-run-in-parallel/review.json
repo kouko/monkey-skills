@@ -1,50 +1,161 @@
 {
   "reviewed_sha": "05ff96dd27ff6ce5158b99527e9edbd547f81601",
-  "scope": "<what this checkpoint reviewed>",
+  "scope": "branch-end",
   "vendors": [
-    "anthropic"
+    "anthropic",
+    "openai"
   ],
   "verdicts": [
     {
-      "reviewer": "<agent id>",
-      "vendor": "anthropic",
-      "model": "<model>",
-      "lens": "code|docs|spec|design|principles",
-      "scope": "spec|code|branch-end|wave-end:<n>",
       "round": 1,
-      "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION",
-      "dimension_scores": {},
-      "findings": [],
-      "fallback": "<cli> missing at <YYYY-MM-DD>",
-      "spec_sha": "<git hash-object of the spec.md this verdict read; spec rounds only>",
-      "sha": "<reviewed_sha; the commit this verdict reviewed>"
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs+gate",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5668d542fea83a4bfeff17addee15f421ea4571a",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS_WITH_NOTES",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "README.md:88",
+          "text": "the documented path does not establish a clean environment: it installs into whatever python3 names and gives a newcomer no clone, cd, or virtual-environment steps",
+          "fix": "add clone, repository-entry, venv, install and package-test steps"
+        }
+      ],
+      "notes": "read-only sandbox could not run pytest; intent says 1061 tests, tree has 1063 — disclosed in the blind-run report"
+    },
+    {
+      "round": 1,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5668d542fea83a4bfeff17addee15f421ea4571a",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json:1",
+          "text": "at the reviewed sha verdicts[]/probes[] are still the schema template placeholders while dispatch[] shows four agents ran; the push gate blocks 9 ways on that file",
+          "fix": "write the real verdicts, probes, questions and reviewed_sha before push"
+        },
+        {
+          "severity": "nit",
+          "anchor": "requirements-dev.txt:1-6",
+          "text": "the per-dependency rationale that lived in the CI comment is not in the file that now lists them",
+          "fix": "one comment per package"
+        }
+      ],
+      "notes": "ran the new test (2 passed), the package command 3x (1063 passed, 34-38 s) and the probe file (12 passed)"
     }
   ],
   "probes": [
     {
-      "kind": "package-tests|blind-run|adversarial|codex-walk",
-      "scope": "spec|code|skill|gate",
-      "command": "<command that runs the artifact>",
-      "sha": "<sha the probe ran against>",
-      "result": "pass|fail",
-      "artifact": "<committed path the command runs>"
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "5668d542fea83a4bfeff17addee15f421ea4571a",
+      "result": "1063 passed in 33.94s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q",
+      "sha": "5668d542fea83a4bfeff17addee15f421ea4571a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "clean uv venv worktree at 5632472c; README path; KICKOFF line 3x; serial baseline once (sonnet-blindrun-branch-end)",
+      "sha": "5632472c6e21a4dda15979b26c410312e0d76d82",
+      "result": "#1 works (212.77 s serial -> 38.24 s, 18%); #2 partly (mechanism verified, CI pending PR); #3 works (3x 1063 passed)",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/blind-run-report.md",
+      "scope": "branch-end"
     }
   ],
   "questions": [
     {
       "decision_point": 1,
-      "text": "<question as asked>",
-      "type": "what|behaviour|done|consequence"
+      "text": "你要的是整包測試從 200 秒壓到 60 秒以內（分到多核心跑）；做完後：乾淨環境照 README 裝依賴、跑 KICKOFF 那行 1061 全過且低於原本三分之一；CI 同一行綠、push 閘逐字比對照常；連跑三次一致。不動測試寫法、不動探針去重；平行度由我量了決定。沒有一次性難回頭的選擇。對嗎？（答：對）",
+      "type": "what"
     }
   ],
   "open_findings": [
     {
-      "id": "<id>",
-      "anchor": "<file:line>",
-      "origin_sha": "<sha>",
-      "raised_by": "<reviewer>",
-      "resolved": "<evidence>",
-      "dismissed": "<reason> by <agent_id>"
+      "id": "branch-end-01",
+      "anchor": "README.md:88",
+      "origin_sha": "5668d542fea83a4bfeff17addee15f421ea4571a",
+      "raised_by": "codex-review-branch-end",
+      "severity": "important",
+      "text": "README path does not establish a clean environment",
+      "resolved": "closed by 5e1cc51c — README Contributing now carries clone, cd, venv (python -m venv or uv venv), install and the package-tests line"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json:1",
+      "origin_sha": "5668d542fea83a4bfeff17addee15f421ea4571a",
+      "raised_by": "sonnet-review-branch-end",
+      "severity": "important",
+      "text": "review.json still template placeholders at the reviewed sha",
+      "resolved": "closed in this record — template placeholders replaced by the round-1 verdicts, three probes, questions[] from the plan and this findings list; reviewed_sha moves in the review-only commit that closes round 2"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "requirements-dev.txt:1-6",
+      "origin_sha": "5668d542fea83a4bfeff17addee15f421ea4571a",
+      "raised_by": "sonnet-review-branch-end",
+      "severity": "nit",
+      "text": "no per-dependency rationale in the file",
+      "resolved": "closed by 5e1cc51c — one trailing comment per package"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "loom-code/scripts/test_package_tests_command.py:23",
+      "origin_sha": "a11541ffec9be873b1b8b4b37c2f52f51911ca3f",
+      "raised_by": "sonnet-adversary-branch-end",
+      "severity": "important",
+      "text": "substring match accepted a commented-out pytest-xdist line",
+      "resolved": "closed by 6bcabdf7 (W0-01 fix) — active-line parse; probe test_requirements_dev_without_xdist_fails_w0_01_test now passes"
     }
   ],
   "dispatch": [
@@ -110,6 +221,22 @@
       "agent_id": "codex-review-branch-end",
       "model": "codex",
       "started": "2026-09-03T22:20:38+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r2",
+      "model": "sonnet",
+      "started": "2026-09-03T22:29:29+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r2",
+      "model": "codex",
+      "started": "2026-09-03T22:29:29+08:00",
       "fresh_context": true
     }
   ]
