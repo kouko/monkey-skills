@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "05ff96dd27ff6ce5158b99527e9edbd547f81601",
+  "reviewed_sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -211,6 +211,42 @@
         }
       ],
       "notes": "a second finding (top-level reviewed_sha = 05ff96dd) was withdrawn by the reviewer after checking the station rule: it is the merge-base and moves only on a passing round; verdict corrected from NEEDS_REVISION to PASS_WITH_NOTES by the reviewer. Ran the probe file (12 passed) and the unit test (2 passed) from a git archive of the reviewed sha."
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": []
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": []
     }
   ],
   "probes": [
@@ -236,6 +272,22 @@
       "sha": "5632472c6e21a4dda15979b26c410312e0d76d82",
       "result": "#1 works (212.77 s serial -> 38.24 s, 18%); #2 partly (mechanism verified, CI pending PR); #3 works (3x 1063 passed)",
       "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "result": "1063 passed in 36.19s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q",
+      "sha": "344eb0811b76a712bdebab4c7dba1485cae4cee4",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
       "scope": "branch-end"
     }
   ],
