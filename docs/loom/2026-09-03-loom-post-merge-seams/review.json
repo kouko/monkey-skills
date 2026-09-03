@@ -318,6 +318,28 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "PASS"
+    },
+    {
+      "round": 12,
+      "scope": "spec",
+      "spec_sha": "dbe620d",
+      "findings_file": "evidence/spec-review-r10.md",
+      "reviewer": "codex-review-spec-10",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 12,
+      "scope": "spec",
+      "spec_sha": "dbe620d",
+      "findings_file": "evidence/spec-review-r10.md",
+      "reviewer": "sonnet-review-spec-10",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
     }
   ],
   "probes": [
@@ -472,6 +494,14 @@
       "sha": "bb938f98",
       "result": "NEEDS_REVISION — 1 fatal, 4 important, 2 nits",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r9.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "narrow red-team of REQ-1 v11 (sonnet-redteam-spec-10)",
+      "sha": "8da551c8",
+      "result": "NEEDS_REVISION — 1 fatal (headingless doc, last status wins), 2 important, 3 nits",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r10.md"
     }
   ],
   "questions": [
@@ -1120,6 +1150,16 @@
       ],
       "text": "confirmation / new-intent commits at HEAD^ are refused; consequence only implicit for station flows",
       "resolved": "resolved: spec v11 — stated explicitly and carried into ship SKILL.md by W1-01"
+    },
+    {
+      "id": "spec-R29",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "8da551c8",
+      "raised_by": [
+        "sonnet-redteam-spec-10"
+      ],
+      "text": "parse_document is last-wins on a headingless or malformed-heading document, so a later spurious status: line overrides the real one and defeats both the transition detection and the before-heading boundary"
     }
   ],
   "dispatch": [
@@ -1563,6 +1603,14 @@
       "agent_id": "sonnet-redteam-spec-10",
       "model": "sonnet",
       "started": "2026-09-03T13:22:55+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "opus-design-review-close-shape",
+      "model": "opus",
+      "started": "2026-09-03T13:31:18+08:00",
       "fresh_context": true
     }
   ]
