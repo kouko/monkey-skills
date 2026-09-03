@@ -61,3 +61,10 @@ Recommendation candidates added:
 
 W0-05's two fixes were both omissions in one gate (stamp check not applied to every path; copy mode ignored) found by Codex, not design changes. W0 wave-end skipped as a separate round: the after-task W0-05 review-only commit left an empty unreviewed delta; branch-end re-reads 160658c2..HEAD in full.
 Subagent stalls on the 120 s Bash timeout: 5 so far (packets stating the parameter did not prevent the last two — the fix belongs in the implementer contract or a harness default, not in packet prose).
+
+## Addendum at HEAD dcbb66eb (branch-end PASS_WITH_NOTES, ship blocked at the dry run)
+
+The two push-gate dry runs at the review-only HEAD (branch checker and the installed 1.0.0 plugin) both returned exit 1 on `push.probes-adversarial`: the change touches code, skill and spec, which needs three usable adversarial probes, and two were usable. The 21 per-case probes (`-k <test>`) stayed pinned to the after-task shas (7d055bb8, b7a9136c); only the two whole-file probes were re-pinned to 771a7e65 at the branch-end round. The prose probes (spec red-team rounds, the attack-catalogue pass over two `SKILL.md`) are records of what an agent did, not files the checker can run, so they never count towards the floor.
+
+What this costs: one more narrow branch-end round (two fresh readers on this addendum plus the dispatch record, one adversary re-running the 23 probe commands and the package suite at the new commit), one review-only commit, and one more pair of dry runs — the same shape as the close-commit round that follows the PR. The orchestrator error is the same one the previous change recorded: the push gate was not run before the review-only commit was made. Written into the ship station as a candidate: run `push` at the checkpoint's reviewed commit BEFORE the review-only commit, with the probe records staged, so a short floor is caught while the round is still open.
+
