@@ -11,7 +11,10 @@ status: open
 ## Proposed outcome
 同一個 checkpoint 連續第 2 次 NEEDS_REVISION（或同一函式／需求連續 3 條同類 finding）時，審查站不再派修正，而是把 finding 歷史整包交給一個 fresh、不同 tier 的 agent，只回答「這個判法本身對不對，有沒有更簡單的觸發條件」，輸出是一句改 spec／plan 的建議；orchestrator 依建議改 spec 或 plan 後才回到修正。
 
+事前版本（kouko 2026-09-03 追加）：spec 鏡頭多一個維度 `deliberate-simplification`，固定一題「這條需求的判斷方式，有沒有結構性（不讀內容、不分支）的等價寫法？」——這次 W0-04 的內容觸發設計在 spec 被審六輪都沒人被要求問這題，最後由 kouko 叫 opus 才問出「重算正本比 bytes」。程式碼鏡頭已有同名維度，這是把它前移到 spec。
+
 ## Acceptance
+0. `loom-code/skills/review/references/lenses.md` 的 spec 鏡頭列出 `deliberate-simplification`，一位 fresh reviewer 拿 2026-09-03-loom-post-merge-seams 的 spec v9（內容觸發版）審，會在該維度給出「改為結構觸發或重算比對」的建議。
 1. 在一個乾淨 clone 裡模擬同一 checkpoint 連續兩次 NEEDS_REVISION：審查站的下一步是「重看設計」的派工記錄（role 可辨識），不是第三個 implementer 派工。
 2. 重看設計的輸出若改了 spec 的一句，該 change 的 spec 走一輪窄範圍審查（只審改動句），不重審全篇。
 3. 上限值寫在 KICKOFF-DEFAULTS 可調（預設 2）；不加新 checker 規則、不加 waiver。
