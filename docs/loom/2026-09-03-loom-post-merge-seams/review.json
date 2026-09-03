@@ -798,6 +798,88 @@
           "fix": "none on the artifact; noted as unverified evidence"
         }
       ]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+          "text": "open question lacks the OQ-<n> [OPEN|RESOLVED] grammar of check_open_questions.py",
+          "fix": "rewrite as a resolved agent-decided entry"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+          "text": "same malformed open-question declaration",
+          "fix": "rewrite as a resolved agent-decided entry"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9",
+          "text": "\"22 per-case probes\" is incorrect; evidence records 21 per-case plus two whole-file",
+          "fix": "state 21 per-case plus two whole-file"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:16",
+          "text": "\"2 files, 24 records\" conflates 23 adversarial records with the package-test record",
+          "fix": "say 2 files, 23 adversarial records"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+          "text": "worker count is an implementation decision exposed as a user question",
+          "fix": "resolve agent-side from CI measurements"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+          "text": "whether to parallelize distinct artifacts is an implementation decision exposed as a user question",
+          "fix": "mark deferred and agent-decided"
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9 and :16",
+          "text": "22 (Problem) and 24 (Acceptance #2) both wrong and mutually inconsistent; recomputed 23 adversarial = 21 per-case + 2 whole-file",
+          "fix": "21 per-case plus 2 whole-file in both places"
+        }
+      ]
     }
   ],
   "probes": [
@@ -2323,6 +2405,69 @@
       ],
       "text": "the 66-line function's dismissal is not annotated in code",
       "dismissed": "carry-forward: already disclosed to the user in the blind-run report — by sonnet-review-branch-end"
+    },
+    {
+      "id": "branch-end-r4-01",
+      "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "open question lacks the OQ-<n> [OPEN|RESOLVED] grammar of check_open_questions.py",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses"
+    },
+    {
+      "id": "branch-end-r4-02",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "same malformed open-question declaration",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses"
+    },
+    {
+      "id": "branch-end-r4-03",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "\"22 per-case probes\" is incorrect; evidence records 21 per-case plus two whole-file",
+      "resolved": "closed by fe19ed0e — counts corrected to 21 per-case + 2 whole-file = 23 adversarial"
+    },
+    {
+      "id": "branch-end-r4-04",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:16",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "\"2 files, 24 records\" conflates 23 adversarial records with the package-test record",
+      "resolved": "closed by fe19ed0e — counts corrected to 21 per-case + 2 whole-file = 23 adversarial"
+    },
+    {
+      "id": "branch-end-r4-05",
+      "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "worker count is an implementation decision exposed as a user question",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses"
+    },
+    {
+      "id": "branch-end-r4-06",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "whether to parallelize distinct artifacts is an implementation decision exposed as a user question",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses"
+    },
+    {
+      "id": "branch-end-r4-07",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9 and :16",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "sonnet-review-branch-end-r4",
+      "severity": "important",
+      "text": "22 (Problem) and 24 (Acceptance #2) both wrong and mutually inconsistent; recomputed 23 adversarial = 21 per-case + 2 whole-file",
+      "resolved": "closed by fe19ed0e — counts corrected to 21 per-case + 2 whole-file = 23 adversarial"
     }
   ],
   "dispatch": [
@@ -3070,6 +3215,30 @@
       "agent_id": "codex-review-branch-end-r4",
       "model": "codex",
       "started": "2026-09-03T16:49:48+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T16:56:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T16:56:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r5",
+      "model": "codex",
+      "started": "2026-09-03T16:56:56+08:00",
       "fresh_context": true
     }
   ]
