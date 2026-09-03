@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 改 review 站與 build 站的站文字與一條 checker 規則的計數；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-package-tests-run-in-parallel/review.json]
-status: open
+status: confirmed 2026-09-04
 
 ## Problem
 第二個真實 change（整包測試加 `-n auto`＋一個依賴檔）從決策點①到 PR 花了 85 分鐘：實作 10 分、對抗＋盲跑 13 分、讀者 7 輪約 35 分、orchestrator 失誤與外部故障約 25 分。七輪裡只有第 1 輪抓到有價值的東西（README 缺 clone／venv 步驟）和對抗者抓到的一條真缺陷；其餘輪次都是「改一句話 → 兩位讀者重讀 → 再挑一個字」的迴圈：checkpoint 之後任何 commit 都要整輪重審，而一句話的事實誤差被標成 important，important 就開輪。kouko 的判準：這種 change 該在 20 分鐘內結束；review 的目的是邏輯與事實，不是把敘述修漂亮。
