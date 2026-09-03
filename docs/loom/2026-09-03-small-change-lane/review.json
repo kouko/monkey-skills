@@ -1,0 +1,34 @@
+{
+  "reviewed_sha": "b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0",
+  "scope": "<what this checkpoint reviewed>",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是讓小改動在 20 分鐘內走完 loom（預授權類別自動走小車道；修正輪只讀修正 commit；嚴重度看後果、nit 不開輪；gate 類 task 探針先寫；second-vendor 多 ask；docs-lint 可宣告不阻擋；量測 ≤20 分）。對嗎？（答：對，確認）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次包含哪幾條 intent？（答：只有 small-change-lane，吸收三條）",
+      "type": "what"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-01",
+      "model": "sonnet",
+      "started": "2026-09-04T00:12:24+08:00",
+      "fresh_context": true,
+      "note": "probes-first: dispatched before the W0-02 implementer per intent §4"
+    }
+  ],
+  "second_vendor": "codex"
+}
