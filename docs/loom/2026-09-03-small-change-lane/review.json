@@ -54,6 +54,22 @@
       "model": "sonnet",
       "started": "2026-09-04T00:20:26+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-02",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-02",
+      "model": "sonnet",
+      "started": "2026-09-04T00:40:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-02",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-02",
+      "model": "codex",
+      "started": "2026-09-04T00:40:07+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex"
