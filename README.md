@@ -85,6 +85,23 @@ This is a personal marketplace. Issues and PRs are welcome via the
 skill-development conventions (file paths, two-layer spec, quality
 gates, agent roles, cross-plugin delegation), see [`CLAUDE.md`](CLAUDE.md).
 
+To run the test suite from a clean checkout:
+
+```
+git clone https://github.com/kouko/monkey-skills.git && cd monkey-skills
+python3 -m venv .venv && source .venv/bin/activate
+python3 -m pip install -r requirements-dev.txt
+python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto
+```
+
+With uv instead: `uv venv .venv && source .venv/bin/activate`, then
+`uv pip install -r requirements-dev.txt`, then the same pytest line.
+
+The last line is the `package-tests:` line of
+[`docs/loom/KICKOFF-DEFAULTS.md`](docs/loom/KICKOFF-DEFAULTS.md), the
+single source for that command; CI runs the same test paths and `-n auto`
+with `-v` in place of `-q`.
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).

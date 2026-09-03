@@ -106,12 +106,13 @@ jobs:
         # pyyaml = the contract manifest and mechanisms.yaml parser; test
         # modules fail at COLLECTION without it, which takes the whole suite
         # down rather than one test. markdown-it-py went with adjudication_render.
-        run: python3 -m pip install --quiet pytest pyyaml
+        # Dependency list see requirements-dev.txt.
+        run: python3 -m pip install --quiet -r requirements-dev.txt
 
       - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v
+        run: python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v -n auto
 
       - name: Verify standalone plugin filesystem boundaries
         run: |
