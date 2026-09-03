@@ -19,6 +19,7 @@ Since the W0 wave-end fixes, three things changed shape here:
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -218,6 +219,134 @@ def test_head_ref_can_be_chosen(tmp_path: Path) -> None:
     git(repo, "add", "a.py")
     git(repo, "commit", "-q", "-m", "feat: more")
     assert run_checker("push", "--head", good, cwd=repo).returncode == 0
+
+
+# --- push.review-only-head: close-commit shape (W0-04) ---------------------
+
+INTENT_REL = f"docs/loom/intent/{CHANGE}.md"
+
+
+def _seed_intent(repo: Path, status: str = "confirmed 2026-09-01") -> str:
+    """Amend the code commit so the intent file exists BEFORE any close
+    commit -- a close commit's diff must show it going non-closed -> closed
+    -- then rebuild the checkpoint (R1) on top. Returns the intent path."""
+    git(repo, "reset", "-q", "--hard", "HEAD~1")  # back onto the code commit
+    (repo / INTENT_REL).parent.mkdir(parents=True, exist_ok=True)
+    (repo / INTENT_REL).write_text(
+        f"# {CHANGE}\nstatus: {status}\n\n## Problem\nx\n", encoding="utf-8"
+    )
+    git(repo, "add", INTENT_REL)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return INTENT_REL
+
+
+def _close_text(text: str, *, pr_number: str = "999", date: str = "2026-09-03",
+                extra_line: bool = False) -> str:
+    text = re.sub(r"status: .*\n", f"status: closed {date} — PR #{pr_number}\n", text)
+    if extra_line:
+        text = text.replace("## Problem\nx\n", "## Problem\ny\n")
+    return text
+
+
+def _close_commit(repo: Path, intent_rel: str, *, extra_files: dict[str, str] | None = None,
+                  extra_line: bool = False) -> str:
+    """A commit on the current HEAD (a checkpoint) turning the intent
+    file's status to `closed`, optionally also touching `extra_files` or an
+    extra unrelated line in the same file."""
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    (repo / intent_rel).write_text(_close_text(text, extra_line=extra_line), encoding="utf-8")
+    paths = [intent_rel]
+    for rel, content in (extra_files or {}).items():
+        (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+        (repo / rel).write_text(content, encoding="utf-8")
+        paths.append(rel)
+    git(repo, "add", *paths)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def _merge_close_commit(repo: Path, intent_rel: str) -> str:
+    """A merge commit at HEAD^ whose first-parent diff carries the closed
+    transition together with an unrelated file (test e)."""
+    git(repo, "branch", "topic")
+    git(repo, "checkout", "-q", "topic")
+    (repo / "b.py").write_text("value = 2\n", encoding="utf-8")
+    git(repo, "add", "b.py")
+    git(repo, "commit", "-q", "-m", "feat: b\n\nTask: T1")
+    git(repo, "checkout", "-q", "work")
+    git(repo, "merge", "-q", "--no-ff", "-m", "merge: topic", "topic")
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    (repo / intent_rel).write_text(_close_text(text), encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def _insert_docs_commit(repo: Path, rel: str = "docs/loom/notes.md") -> None:
+    """A plain docs commit that is NOT a checkpoint (touches no review.json)."""
+    (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / rel).write_text("notes\n", encoding="utf-8")
+    git(repo, "add", rel)
+    git(repo, "commit", "-q", "-m", "docs(loom): notes")
+
+
+def _checkpoint_after(repo: Path, reviewed_sha: str) -> None:
+    write_review(repo, review_body(reviewed_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+
+def test_a_close_commit_after_a_checkpoint_passes(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _close_commit(repo, intent_rel)
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _close_commit(repo, intent_rel, extra_files={"docs/loom/notes.md": "x\n"})
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_a_close_commit_with_an_extra_line_change_is_blocked(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _close_commit(repo, intent_rel, extra_line=True)
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_a_close_commit_whose_parent_is_not_a_checkpoint_is_blocked(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _insert_docs_commit(repo)
+    close_sha = _close_commit(repo, intent_rel)
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_a_merge_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _merge_close_commit(repo, intent_rel)
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
 
 
 # --- push.reviewed-sha -----------------------------------------------------

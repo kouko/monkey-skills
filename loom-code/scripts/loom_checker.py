@@ -149,7 +149,10 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.review-only-head",
-        "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json.",
+        "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json. "
+        "When HEAD^ turns an intent's status to closed, its shape is recomputed too: it must touch "
+        "only that intent file, change exactly its status line, and sit on a checkpoint whose own "
+        "review.json vouches for HEAD^^^.",
     ),
     (
         "push.reviewed-sha",
@@ -1641,6 +1644,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     review_rel, failures = check_review_only_head(manifest, repo, head_sha)
     if review_rel is None:
         return report(failures, err)
+    failures += check_close_commit_shape(manifest, repo, head_sha)
 
     raw = git_text(repo, "show", f"{head_sha}:{review_rel}")
     try:
@@ -1709,6 +1713,158 @@ def check_review_only_head(manifest, repo: Path, head_sha: str):
             f"HEAD must touch only {template}; it touches {detail}.",
         )
     ]
+
+
+def _raw_diff_paths(repo: Path, base_sha: str, target_sha: str) -> list[str]:
+    """Paths a first-parent diff touches, `--raw --no-renames` like
+    `check_review_only_head`'s own listing (a merge collapses to the same
+    two-endpoint diff since `base_sha` is already the first parent)."""
+    listing = git_text(repo, "diff", "--raw", "--no-renames", base_sha, target_sha)
+    return sorted(
+        {
+            line.split("\t", 1)[1].strip()
+            for line in listing.splitlines()
+            if "\t" in line and line.startswith(":")
+        }
+    )
+
+
+def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[str, str]]:
+    """When HEAD^ turns an intent file's `status:` line to `closed`, its
+    shape must recompute as a legitimate close commit (spec REQ-1, W0-04):
+    it touches only that one path, its diff on that path is exactly the
+    one status line, and its own parent (HEAD^^) is itself a checkpoint
+    vouching for HEAD^^^ -- so no commit can sit between the last
+    checkpoint and the close commit unseen. The diff is read against
+    HEAD^^ (its first parent), never `git show`, which prints nothing for
+    a merge commit and would let a merge at HEAD^ carry the transition
+    unseen. An ordinary commit at HEAD^ -- one that never turns an intent
+    file closed -- is untouched by this recompute."""
+    rule = "push.review-only-head"
+    close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^")
+    if close_sha is None:
+        return []  # HEAD is root; push.reviewed-sha already reports it.
+
+    # HEAD^^ must resolve to a commit before its diff against HEAD^ can be
+    # read at all -- undecidable is fail-closed, not silently skipped.
+    pre_close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^^")
+    if pre_close_sha is None:
+        return [
+            (
+                rule,
+                "HEAD^^ does not resolve to a commit; cannot recompute HEAD^'s "
+                "close-commit shape.",
+            )
+        ]
+
+    touched = _raw_diff_paths(repo, pre_close_sha, close_sha)
+    template = manifest["artifacts"]["intent"]["path"]
+    is_intent = glob_to_regex(template.replace("<change-id>", "*"))
+    intent_paths = [path for path in touched if is_intent.match(path)]
+    if not intent_paths:
+        return []  # HEAD^ is an ordinary commit; nothing to recompute here.
+
+    closing_path = None
+    for path in intent_paths:
+        before_text = git_maybe(repo, "show", f"{pre_close_sha}:{path}")
+        after_text = git_maybe(repo, "show", f"{close_sha}:{path}")
+        if before_text is None or after_text is None:
+            continue
+        before_front, _ = parse_document(before_text)
+        after_front, _ = parse_document(after_text)
+        before_match = STATUS.fullmatch(before_front.get("status", "").strip())
+        after_match = STATUS.fullmatch(after_front.get("status", "").strip())
+        before_closed = bool(before_match and before_match.group(2) is not None)
+        after_closed = bool(after_match and after_match.group(2) is not None)
+        if after_closed and not before_closed:
+            closing_path = path
+            break
+
+    if closing_path is None:
+        return []  # no intent path there went non-closed -> closed
+
+    failures: list[tuple[str, str]] = []
+
+    # (1) the commit touches only that one path.
+    if touched != [closing_path]:
+        failures.append(
+            (
+                rule,
+                f"HEAD^ turns `status:` closed on {closing_path} but also touches "
+                f"{', '.join(p for p in touched if p != closing_path)}; a close "
+                "commit must touch only the intent file.",
+            )
+        )
+
+    # (2) the diff on that path is exactly the one status line.
+    path_diff = git_text(repo, "diff", "-U0", pre_close_sha, close_sha, "--", closing_path)
+    changed = [
+        line
+        for line in path_diff.splitlines()
+        if (line.startswith("+") or line.startswith("-"))
+        and not line.startswith("+++")
+        and not line.startswith("---")
+    ]
+    removed = [line for line in changed if line.startswith("-")]
+    added = [line for line in changed if line.startswith("+")]
+    if (
+        len(removed) != 1
+        or len(added) != 1
+        or not removed[0][1:].strip().startswith("status:")
+        or not added[0][1:].strip().startswith("status:")
+        or not re.search(_STATUS_CLOSED_ALT, added[0][1:].strip())
+    ):
+        failures.append(
+            (
+                rule,
+                f"HEAD^'s diff on {closing_path} must be exactly one removed and one "
+                "added `status:` line, the added one matching the `closed` grammar; "
+                f"got {len(removed)} removed / {len(added)} added line(s).",
+            )
+        )
+
+    # (3) HEAD^^ is itself a checkpoint: touches only review.json, and its
+    # review.json's reviewed_sha resolves to HEAD^^^.
+    checkpoint_rel, _checkpoint_failures = check_review_only_head(manifest, repo, pre_close_sha)
+    if checkpoint_rel is None:
+        failures.append(
+            (
+                rule,
+                "HEAD^^ is not itself a checkpoint (touches something other than "
+                "review.json), so no checkpoint sits between the last review and "
+                "the close commit.",
+            )
+        )
+    else:
+        pre_pre_sha = git_maybe(repo, "rev-parse", "--verify", f"{pre_close_sha}^")
+        raw = git_maybe(repo, "show", f"{pre_close_sha}:{checkpoint_rel}")
+        checkpoint_review = None
+        if raw is not None:
+            try:
+                checkpoint_review = json.loads(raw)
+            except json.JSONDecodeError:
+                checkpoint_review = None
+        recorded = (
+            str(checkpoint_review.get("reviewed_sha", "")).strip()
+            if isinstance(checkpoint_review, dict)
+            else ""
+        )
+        recorded_id = (
+            git_maybe(repo, "rev-parse", "--verify", f"{recorded}^{{commit}}")
+            if SHA_HEX.fullmatch(recorded)
+            else None
+        )
+        if pre_pre_sha is None or recorded_id is None or recorded_id != pre_pre_sha:
+            failures.append(
+                (
+                    rule,
+                    f"HEAD^^'s {checkpoint_rel} reviewed_sha must resolve to HEAD^^^ "
+                    f"({(pre_pre_sha or '(none)')[:8]}); got "
+                    f"{recorded or '(empty)'}.",
+                )
+            )
+
+    return failures
 
 
 def review_container_types(manifest) -> dict[str, type]:
