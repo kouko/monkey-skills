@@ -1,7 +1,12 @@
 """Adversarial probes against `check_close_commit_shape` (spec REQ-1,
-`push.review-only-head`'s close-commit shape recompute, W0-04, commit
-942ced9e). Each case is a real commit chain in a temp git repo; the
-checker is run as `loom_checker.py push`, never mocked.
+`push.review-only-head`'s close-commit shape recompute, W0-04). Updated at
+fd3d9dbf (round 3): the recompute is now regenerate-and-compare, triggered
+structurally on any intent-template path in HEAD^'s first-parent raw diff,
+not on a before/after content parse -- two round-1 cases below (marked
+"expectation changed at fd3d9dbf") whose old assertions targeted the prior
+design have been corrected in place, not deleted, so the regression they
+guard stays covered. Each case is a real commit chain in a temp git repo;
+the checker is run as `loom_checker.py push`, never mocked.
 
 Reuses the fixtures and helpers of `test_loom_checker_push.py` (same
 directory) rather than re-deriving them -- a second, drifting copy of
@@ -42,15 +47,22 @@ from test_loom_checker_push import (  # noqa: E402
 # --- (1) trailing comment change riding on the same status line -----------
 
 
-def test_close_commit_trailing_comment_change_still_matches_closed_grammar_passes(tmp_path: Path) -> None:
-    """Attack: the close commit's status-line diff ALSO changes a trailing
-    `# comment` annotation -- still exactly one removed and one added line.
-    Spec (REQ-1): the added line must match "the closed alternative of the
-    shared status regex", and STATUS's shared grammar explicitly allows a
-    trailing `\\s+#.*` comment on every alternative (loom_checker.py:812-818).
-    A comment edit riding along on the same physical line is still one
-    logical status-line change, not a second edit.
-    Expected per spec: PASS. Observed: PASS (no defect)."""
+def test_close_commit_trailing_comment_change_is_blocked_by_regeneration(tmp_path: Path) -> None:
+    """expectation changed at fd3d9dbf: under regenerate-and-compare, step
+    (c) always writes the BARE form `status: closed <date> — PR #<N>`, with
+    no comment appended, regardless of what comment either the before or
+    after line carried -- so a close commit that ALSO changes the trailing
+    `# comment` annotation on the same status line is now BLOCKED, even
+    though STATUS's shared grammar still accepts a trailing `\\s+#.*`
+    comment on the closed alternative (condition (b) passes; condition (c)
+    does not, because regeneration never reproduces any comment).
+    Attack: the close commit's status-line diff ALSO changes a trailing
+    `# comment` annotation -- still exactly one removed and one added line,
+    and grammar-valid on its own. Round-1's expectation (PASS, matching the
+    OLD diff-based design) no longer holds.
+    Expected per spec (REQ-1, W0-04 round-3): BLOCKED on
+    push.review-only-head, blob mismatch. Observed: BLOCKED (no defect --
+    this file's own round-1 expectation was stale, not the code)."""
     repo = build_repo(tmp_path)
     intent_rel = _seed_intent(repo, status="confirmed 2026-09-01 #old-note")
     text = (repo / intent_rel).read_text(encoding="utf-8")
@@ -64,7 +76,9 @@ def test_close_commit_trailing_comment_change_still_matches_closed_grammar_passe
     _checkpoint_after(repo, close_sha)
 
     result = run_checker("push", cwd=repo)
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert "HEAD^'s blob to equal the regenerated closed blob" in result.stderr
 
 
 # --- (2) CRLF riding on the status line only -------------------------------
@@ -100,15 +114,20 @@ def test_close_commit_crlf_line_ending_on_status_line_passes(tmp_path: Path) -> 
 
 
 def test_close_commit_inserted_second_status_line_is_blocked(tmp_path: Path) -> None:
-    """Attack: the close commit INSERTS a second `status: closed ...` line
+    """expectation changed at fd3d9dbf: the diagnostic is no longer a
+    removed/added diff-line count (that belonged to the OLD design). Under
+    regenerate-and-compare, condition (b) does its own raw, whole-file scan
+    for every line starting with the literal bytes `status:`
+    (`_status_line_positions`, not scoped to the diff) and requires exactly
+    one; two lines fails the count before any value is even parsed.
+    Attack: the close commit INSERTS a second `status: closed ...` line
     right after the original (unchanged) `status: confirmed ...` line.
-    `parse_document` keeps the LAST `status:` value it sees, so the
-    frontmatter parse reads the file as closed -- but the raw diff is an
-    INSERTION (0 removed / 1 added line), not the one-removed/one-added
-    transition the spec requires ("its diff on that path is exactly one
-    removed and one added `status:` line").
+    `parse_document` keeps the LAST `status:` value it sees, so a
+    content-only reading would call the file closed -- but HEAD^'s file now
+    has TWO raw `status:` lines, not one.
     Expected: BLOCKED on push.review-only-head. Observed: BLOCKED (no
-    defect -- condition (2)'s removed/added count catches it)."""
+    defect -- condition (b)'s raw-line count catches it; round-1's
+    diagnostic substring was stale, not the block itself)."""
     repo = build_repo(tmp_path)
     intent_rel = _seed_intent(repo)
     text = (repo / intent_rel).read_text(encoding="utf-8")
@@ -125,7 +144,8 @@ def test_close_commit_inserted_second_status_line_is_blocked(tmp_path: Path) -> 
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
-    assert "0 removed / 1 added" in result.stderr
+    assert "expected exactly one `status:` line in HEAD^'s file" in result.stderr
+    assert "got 2" in result.stderr
 
 
 # --- (4) merge whose SECOND parent alone carries the transition -----------
@@ -253,6 +273,205 @@ def test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_bl
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
     assert "reviewed_sha must resolve to HEAD" in result.stderr
+
+
+# --- (7) HEAD^^ itself carries two `status:` lines to regenerate from -----
+
+
+def test_close_commit_head_pre_caret_with_two_status_lines_is_blocked(tmp_path: Path) -> None:
+    """Attack: HEAD^^ (the file BEFORE the close, not HEAD^ as in probe 3)
+    already has TWO raw `status:` lines -- the real frontmatter one plus a
+    body decoy carrying the identical text. The close commit changes the
+    frontmatter line to `closed ...` AND deletes the body decoy in the same
+    edit, so HEAD^'s file ends up with exactly ONE raw `status:` line --
+    condition (b)'s HEAD^-side count guard is satisfied, so this is a
+    genuinely different probe from case 3 above (which trips condition
+    (b)). Condition (c) does its OWN independent raw-line count on
+    HEAD^^'s file before it will regenerate anything
+    (`_close_blob_failures`'s own `_status_line_positions(before_text)`
+    check, separate from condition (b)'s), and two lines there means there
+    is no single line to regenerate from.
+    Expected per spec (REQ-1 condition c): BLOCKED on push.review-only-head,
+    named "exactly one `status:` line in HEAD^^'s file to regenerate from".
+    Observed: BLOCKED (no defect -- confirms (c) does not fall back to
+    picking one of several candidate lines, or to trusting the deletion as
+    intentional)."""
+    repo = build_repo(tmp_path)
+    intent_rel = f"docs/loom/intent/{CHANGE}.md"
+    git(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / intent_rel).write_text(
+        "# x\nstatus: confirmed 2026-09-01\n\n## Problem\nx\n"
+        "status: confirmed 2026-09-01\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    (repo / intent_rel).write_text(
+        "# x\nstatus: closed 2026-09-03 — PR #999\n\n## Problem\nx\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert (
+        "exactly one `status:` line in HEAD^^'s file to regenerate from"
+        in result.stderr
+    )
+    assert "got 2" in result.stderr
+
+
+# --- (8) `status:` is not the FIRST frontmatter key ------------------------
+
+
+def test_close_commit_status_key_not_first_in_frontmatter_passes(tmp_path: Path) -> None:
+    """Attack: HEAD^^'s intent file has other frontmatter keys (`owner:`,
+    `kind:`) sitting BEFORE `status:` -- an attempt to see whether the
+    regenerate-and-compare recompute silently assumes `status:` is the
+    first line, e.g. by regenerating with the wrong line index or by
+    letting the extra keys shift `_status_line_positions`'s single raw
+    match. `_status_line_positions` scans the WHOLE file for lines
+    starting with the literal bytes `status:`, unconditioned on position,
+    so an ordinary, well-formed close should be unaffected by where in
+    the frontmatter the key sits.
+    Expected per spec: PASS (frontmatter key order is not part of the
+    close-commit shape). Observed: PASS (no defect)."""
+    repo = build_repo(tmp_path)
+    intent_rel = f"docs/loom/intent/{CHANGE}.md"
+    git(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / intent_rel).write_text(
+        "# x\nowner: kouko\nstatus: confirmed 2026-09-01\nkind: engineering\n"
+        "\n## Problem\nx\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = re.sub(r"status: .*\n", "status: closed 2026-09-03 — PR #999\n", text)
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+# --- (9) manifest intent template mistyped ---------------------------------
+
+
+def test_manifest_intent_template_mistyped_blocks_with_named_diagnostic(tmp_path: Path) -> None:
+    """Attack: the manifest's `artifacts.intent.path` has been hand-edited
+    away from `INTENT_PATH_TEMPLATE`. Rather than trusting a mistyped glob
+    to build a matcher that could match nothing (or something wider) and
+    fail OPEN, `check_close_commit_shape` compares the live manifest to its
+    own constant first and reports the drift by name. Called directly
+    (like `test_manifest_intent_path_drift_fails_closed` in the sibling
+    push suite) since the manifest is a module-level path the CLI always
+    resolves to this repo's real contract/manifest.yaml -- there is no CLI
+    flag to point it at a temp file.
+    Expected per spec (REQ-1): BLOCKED, naming both the expected and the
+    drifted template. Observed: BLOCKED (no defect)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _close_commit_here(repo, intent_rel)
+    _checkpoint_after(repo, close_sha)
+
+    sys.path.insert(0, str(REPO_ROOT / "loom-code" / "scripts"))
+    import loom_checker  # local import: needs the module, not the CLI
+
+    manifest = loom_checker.load_manifest()
+    drifted = json.loads(json.dumps(manifest))
+    drifted["artifacts"]["intent"]["path"] = "docs/loom/renamed-intent/<change-id>.md"
+
+    head_sha = git(repo, "rev-parse", "HEAD")
+    failures = loom_checker.check_close_commit_shape(drifted, repo, head_sha)
+    assert failures
+    assert all(rule == "push.review-only-head" for rule, _ in failures)
+    assert any("docs/loom/renamed-intent/<change-id>.md" in msg for _, msg in failures)
+    assert any("docs/loom/intent/<change-id>.md" in msg for _, msg in failures)
+
+
+# --- (10) CRLF throughout the WHOLE file, both HEAD^^ and HEAD^ -----------
+
+
+def test_close_commit_crlf_file_wide_regeneration_drops_the_cr(tmp_path: Path) -> None:
+    """Attack (per round-4 dispatch): a repo whose intent files are CRLF
+    throughout -- not just the round-1 probe's single CRLF-ending status
+    line riding alone (which every OTHER line in that file kept `\\n`, so
+    the regenerated line's `ending = "\\n"` accidentally matched it). Here
+    EVERY line in both HEAD^^'s and HEAD^'s file ends `\\r\\n`, including
+    the status line before and after -- a plausible, self-consistent
+    close commit on a CRLF-native repo, with `core.autocrlf false` set
+    explicitly so this probe is not neutralized by an ambient global git
+    config silently normalizing CRLF to LF on `git add` (observed on this
+    machine without the explicit config -- a second, environment-dependent
+    hazard this probe controls for).
+
+    `_regenerated_closed_text` derives the replaced line's ending from
+    `lines[index].endswith("\\n")` -- true for BOTH `\\n` and `\\r\\n` --
+    and always reconstructs it as the literal two characters `\\n`, never
+    `\\r\\n`. In a file where the untouched lines around it stay `\\r\\n`,
+    the regenerated status line is the only line missing its `\\r`, so the
+    regenerated blob can never equal the real one.
+
+    Expected per spec (REQ-1, condition c): a legitimate, byte-consistent
+    CRLF close commit should PASS -- nothing in the spec singles out line
+    endings as a reason to reject a close. Observed: BLOCKED on
+    push.review-only-head (blob mismatch) -- a real close commit on a
+    CRLF-native repo is unconditionally rejected.
+    # DEFECT: `_regenerated_closed_text` (loom_checker.py, step c) always
+    # appends bare `\\n` for a replaced line's ending, even when the
+    # original ending -- and every other line's ending in the same file --
+    # is `\\r\\n`. Fix: capture the ORIGINAL ending's exact bytes (e.g.
+    # `stripped = lines[index].rstrip("\\r\\n"); ending = lines[index][len(stripped):]`)
+    # instead of collapsing every non-empty ending to `\\n`.
+    """
+    repo = build_repo(tmp_path)
+    git(repo, "config", "core.autocrlf", "false")
+    git(repo, "config", "core.safecrlf", "false")
+    intent_rel = f"docs/loom/intent/{CHANGE}.md"
+    git(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    before_text = "# x\r\nstatus: confirmed 2026-09-01\r\n\r\n## Problem\r\nx\r\n"
+    (repo / intent_rel).write_bytes(before_text.encode("utf-8"))
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    raw = (repo / intent_rel).read_bytes()
+    raw = raw.replace(
+        b"status: confirmed 2026-09-01\r\n",
+        "status: closed 2026-09-03 — PR #999\r\n".encode("utf-8"),
+    )
+    (repo / intent_rel).write_bytes(raw)
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (  # DEFECT: see docstring; regeneration drops the \r
+        "expected PASS for a byte-consistent CRLF close commit, got "
+        f"BLOCKED: {result.stderr}"
+    )
 
 
 def _close_commit_here(repo: Path, intent_rel: str) -> str:
