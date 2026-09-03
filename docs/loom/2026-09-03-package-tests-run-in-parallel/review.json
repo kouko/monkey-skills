@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+  "reviewed_sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -313,6 +313,46 @@
         }
       ],
       "notes": "independently verified: filter-branch changed no tree content, every remapped sha resolves, probe file 12 passed, package suite 1063 passed in 35.92s, the four carriers agree"
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
+      "fallback": "codex missing at 2026-09-03",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": "re-read of the record fix by the round-5 first leg (resumed)"
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r5-fallback",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
+      "fallback": "codex missing at 2026-09-03",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A — no template placeholders in this delta"
+      },
+      "findings": [],
+      "notes": "PASS_WITH_NOTES only because the gate was still open pending this round; no defect"
     }
   ],
   "probes": [
@@ -392,6 +432,46 @@
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q -k test_checker_rejects_recorded_probe_missing_n_auto_token",
       "sha": "fb156d985a72d159fab8ab2f4dd079353028a30e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
+      "result": "1063 passed in 90.87s (0:01:30) — two reviewers were running the suite concurrently",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q",
+      "sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q -k test_kickoff_mutation_fails_the_parity_test",
+      "sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q -k test_requirements_dev_without_xdist_fails_w0_01_test",
+      "sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py -q -k test_checker_rejects_recorded_probe_missing_n_auto_token",
+      "sha": "020f86f313c1aec9ddf6fdde06ce0903d8cdf235",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-package-tests-run-in-parallel/evidence/probes/test_abuse_package_tests_command.py",
       "scope": "branch-end"
@@ -687,6 +767,24 @@
       "started": "2026-09-03T23:01:09+08:00",
       "fresh_context": true,
       "note": "second leg of round 5 after codex exec returned HTTP 404 from https://chatgpt.com/backend-api/codex/responses three times (codex --version exits 0); recorded in the review-only commit rather than a separate dispatch commit to keep HEAD^ as the reviewed sha"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T23:06:48+08:00",
+      "fresh_context": false,
+      "note": "round 6 re-read by the round-5 reviewer, resumed via message; recorded in the review-only commit to keep HEAD^ as the reviewed sha"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r5-fallback",
+      "model": "sonnet",
+      "started": "2026-09-03T23:06:48+08:00",
+      "fresh_context": false,
+      "note": "round 6 re-read by the round-5 reviewer, resumed via message; recorded in the review-only commit to keep HEAD^ as the reviewed sha"
     }
   ],
   "history_rewrite": {
