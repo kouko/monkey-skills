@@ -729,6 +729,38 @@
       "model": "sonnet",
       "started": "2026-09-03T10:46:28+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-5",
+      "model": "sonnet",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-5",
+      "model": "codex",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-5",
+      "model": "sonnet",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-5",
+      "model": "sonnet",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
     }
   ]
 }
