@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+  "reviewed_sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
   "scope": "branch-end",
   "vendors": [
     "anthropic"
@@ -319,6 +319,46 @@
       "findings": [],
       "notes": "nit-batch confirmation: F5 and F6 landed as raised; description clarified; residuals recorded honestly",
       "nit_batch_confirmation": true
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: KICKOFF compat note honest; dispatch coverage recomputed from committed path types"
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: coverage rule recomputes facts (PRINCIPLES 3), matches intent point 4; 123/123 push tests"
     }
   ],
   "probes": [
@@ -497,6 +537,62 @@
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
       "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "1096 passed in 35.05s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -573,7 +669,7 @@
       "raised_by": "sonnet-adversary-branch-end-skill",
       "severity": "important",
       "text": "F3: a forged second_vendor: none with no question asked passes",
-      "dismissed": "trust-by-procedure like every review.json field; a question-evidence check would be a new mechanism the intent forbids; recorded as a residual in the intent Open questions (nit batch) by codex-review-branch-end and sonnet-review-branch-end"
+      "dismissed": "trust-by-procedure like every review.json field; a question-evidence check would be a new mechanism the intent forbids; recorded as a residual in the intent Open questions (nit batch) (both readers concur; see round-3 adjudication) by codex-review-branch-end"
     },
     {
       "id": "branch-end-04",
@@ -591,7 +687,7 @@
       "raised_by": "sonnet-adversary-branch-end-skill",
       "severity": "important",
       "text": "F6: concurrent writers of review.json can drop a dispatch record",
-      "dismissed": "predates this change (wording verbatim at base b4ac0430); the serialisation sentence goes in the ship nit batch and the residual in the intent by codex-review-branch-end and sonnet-review-branch-end"
+      "dismissed": "predates this change (wording verbatim at base b4ac0430); the serialisation sentence goes in the ship nit batch and the residual in the intent (both readers concur; see round-3 adjudication) by codex-review-branch-end"
     },
     {
       "id": "branch-end-06",
@@ -619,6 +715,24 @@
       "severity": "important",
       "text": "tests-only class undisclosed as name/location-only",
       "resolved": "closed by 205486f0 — clause added; confirmed by the reader in round 4"
+    },
+    {
+      "id": "branch-end-09",
+      "anchor": "loom-code/scripts/loom_checker.py:2998",
+      "origin_sha": "3938bba0",
+      "raised_by": "push-gate dry run (orchestrator)",
+      "severity": "important",
+      "text": "dispatch-covers-tasks required an implementer entry for the adversary-first task W0-01 whose commits are evidence-only probes",
+      "resolved": "closed by 8bf6429e — evidence-only task commits are covered by an adversary dispatch entry; two unit tests; both readers PASS in round 6"
+    },
+    {
+      "id": "branch-end-10",
+      "anchor": "docs/loom/KICKOFF-DEFAULTS.md:10",
+      "origin_sha": "3938bba0",
+      "raised_by": "push-gate dry run (installed 1.0.1 hook)",
+      "severity": "important",
+      "text": "installed hook reads second-vendor: ask as a CLI name and blocks the push (hook version skew)",
+      "resolved": "closed by 496e0211 — KICKOFF stays codex with a dated note to flip to ask after 1.1.0 is installed; residual: hook/branch grammar skew recorded in the intent"
     }
   ],
   "dispatch": [
@@ -775,6 +889,24 @@
       "started": "2026-09-04T01:41:56+08:00",
       "fresh_context": true,
       "note": "push dry run: dispatch-covers-tasks rejects adversary-first tasks whose commits are evidence-only probes"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T01:50:19+08:00",
+      "fresh_context": false,
+      "note": "round 6 fix-round confirmation (resumed / re-run); recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T01:50:19+08:00",
+      "fresh_context": false,
+      "note": "round 6 fix-round confirmation (resumed / re-run); recorded in the review-only commit"
     }
   ],
   "second_vendor": "codex"
