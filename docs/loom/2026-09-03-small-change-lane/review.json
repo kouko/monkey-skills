@@ -641,6 +641,15 @@
       "started": "2026-09-04T01:21:08+08:00",
       "fresh_context": true,
       "note": "branch-end fix: standing out of the small lane; manifest artifact-types note; review description nit"
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-nit-batch-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T01:35:23+08:00",
+      "fresh_context": true,
+      "note": "ship §3.5 nit batch (records/wording only)"
     }
   ],
   "second_vendor": "codex"
