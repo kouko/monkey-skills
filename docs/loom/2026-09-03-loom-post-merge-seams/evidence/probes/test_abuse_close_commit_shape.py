@@ -187,8 +187,9 @@ def test_ordinary_root_commit_branch_wrongly_blocked_by_precondition(tmp_path: P
 
     Expected per spec: PASS -- an ordinary commit at HEAD^ is untouched by
     this recompute, regardless of how short the branch's history is.
-    Observed: BLOCKED on push.review-only-head.
-    # DEFECT: the HEAD^^ existence precondition is evaluated unconditionally,
+    Observed at 58b8f514: BLOCKED on push.review-only-head (the defect below);
+    observed at efbd0198 and later: PASS -- fixed, this case is now a regression guard.
+    # DEFECT (historical, fixed by efbd0198): the HEAD^^ existence precondition is evaluated unconditionally,
     # ahead of the "does HEAD^ even touch an intent file" gate, so it
     # over-fires on any close-commit-shaped position (root commit at HEAD^)
     # regardless of whether HEAD^ is a close commit. Fix: check
@@ -223,7 +224,7 @@ def test_ordinary_root_commit_branch_wrongly_blocked_by_precondition(tmp_path: P
 
     result = run_checker("push", cwd=repo)
     rules = blocked_rules(result)
-    assert "push.review-only-head" not in rules, (  # DEFECT: this fires today
+    assert "push.review-only-head" not in rules, (  # fired before efbd0198; guards the fix
         "check_close_commit_shape blocks an ordinary root commit that never "
         f"touched an intent file. stderr:\n{result.stderr}"
     )
