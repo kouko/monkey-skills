@@ -2,7 +2,7 @@
 originator: kouko
 kind: engineering
 needs-design: yes — (a) 會改 loom-code/contract/templates/**（本 repo 宣告的 interface surface：intent 模板的 status 註解要加 closed）；engineering，決策點②不跑
-status: confirmed 2026-09-03
+status: closed 2026-09-03 — PR #782
 
 ## Problem
 loom 1.0 合併後第一次在真 session 用它，馬上撞到三條它自己的接縫，還有一項當初留到 merge 後量的成本：
