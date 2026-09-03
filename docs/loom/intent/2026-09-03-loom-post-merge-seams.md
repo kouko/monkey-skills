@@ -23,7 +23,7 @@ loom 1.0 合併後第一次在真 session 用它，馬上撞到三條它自己�
 3. 在一個乾淨的 clone 裡（Claude Code 這一側，也就是有 plugin 正本可比的情況）只重跑 `codex_scaffold.py --repo .`（刷新 `.codex/hooks/` 副本）並 commit，不帶 `Task:` trailer：`loom_checker.py push` 不再因 `push.dispatch-covers-tasks` 擋這個 commit；而把副本裡任一檔改一個字、多放一個檔、刪掉一個檔、或只改檔案權限再 commit，同一條規則照樣擋。（反例由 round 2 審查者要求補上、round 3 補刪檔與權限兩種，2026-09-03）
 4. 本 change 的 evidence 裡有一張表：本 change 每個 checkpoint 實際產生的 commit 數、派工數、審查輪數，以及 `git rev-list --count` 的總 commit 數，對照 #771 replay 的 34／31，一行**建議**「係數看起來要不要改、改哪一種」——決定留到第二、三個真實 change 之後（kouko 2026-09-03）。
 5. 三個 plugin 的版本號各 bump 一次（loom-code 1.0.1 起），裝置端 `claude plugin update` 後 `loom_checker.py --list-rules` 是新版。
-6. 上一輪留下的五個測試小瑕疵（R24-O2、R28-O2、R30-O1、R30-O2、R30-O3）各自有一個改過的測試或註解可以指出來，整包測試仍綠。（由 Constraints 升為 Acceptance，round 2 審查者要求，2026-09-03）
+6. 上一輪留下的五個測試小瑕疵（R24-O2、R28-O2、R30-O1、R30-O2、R30-O3）各自有一個改過的測試或註解可以指出來，整包測試仍綠；其中 R28-O2 的目標程式已在上一輪 round 30 改寫時消失，記為「不需修」即可（round 4 冷讀發現，2026-09-03）。（由 Constraints 升為 Acceptance，round 2 審查者要求，2026-09-03）
 
 ## Constraints
 - 不改 27 條規則的語意，只改文法與豁免集合的來源；push 閘不加 waiver 機制（設計原則：閘門重算、不信宣稱）。（2026-09-03 kouko 改設計：closed 在 PR 開出、號碼已知後就在分支上寫，隨 merge 一起落主幹，所以 push 閘不必多認任何形狀。）
