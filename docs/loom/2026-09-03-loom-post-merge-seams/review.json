@@ -1,0 +1,64 @@
+{
+ "reviewed_sha": "4e25360c8b2a072c5082cbf21de03e172eca2d73",
+ "scope": "spec",
+ "vendors": [
+  "anthropic",
+  "openai"
+ ],
+ "verdicts": [],
+ "probes": [],
+ "questions": [
+  {
+   "decision_point": 1,
+   "text": "重述：合併後的三條自卡接縫修掉＋量檢查站成本，對嗎？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "係數要不要改的決定現在下還是留到第二、三個真實 change？（答：留到之後，這次寫建議）",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "PR 的 merge 由 agent 按還是留給你？（答：留給 kouko）",
+   "type": "what"
+  }
+ ],
+ "open_findings": [],
+ "dispatch": [
+  {
+   "task": "spec",
+   "role": "reviewer",
+   "agent_id": "sonnet-review-spec-1",
+   "model": "sonnet",
+   "vendor": "anthropic",
+   "started": "2026-09-03T02:13:34Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec",
+   "role": "reviewer",
+   "agent_id": "codex-review-spec-1",
+   "model": "codex exec (gpt-5.6-sol/high)",
+   "vendor": "openai",
+   "started": "2026-09-03T02:13:34Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec",
+   "role": "blind-runner",
+   "agent_id": "sonnet-coldread-spec-1",
+   "model": "sonnet",
+   "started": "2026-09-03T02:13:34Z",
+   "fresh_context": true
+  },
+  {
+   "task": "spec",
+   "role": "adversary",
+   "agent_id": "sonnet-redteam-spec-1",
+   "model": "sonnet",
+   "started": "2026-09-03T02:13:34Z",
+   "fresh_context": true
+  }
+ ]
+}
