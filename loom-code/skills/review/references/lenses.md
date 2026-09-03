@@ -8,11 +8,26 @@ settles a disagreement, not what to read first.
 
 ## Severity and verdict
 
+Severity is decided by consequence, never by where a finding lands or how
+literally wrong the text is:
+
 - **fatal** — ships a defect: a wrong result, an exploitable hole, a lost
-  guarantee. **important** — should be fixed before merge but nothing is
-  broken today. **nit** — informational.
+  guarantee.
+- **important** — a reader following the text would act wrongly, or a
+  fact the checker or CI relies on is wrong (a path, a command, a number a
+  rule reads back).
+- **nit** — everything else: wording, terminology, units, the same fact
+  stated two ways, readability — a reader following it still does the
+  right thing, and nothing mechanical reads it. A sentence can be
+  literally incorrect and still a nit, if no reader or machine acts on the
+  wrong part of it.
 - Any fatal → `NEEDS_REVISION`. Two or more important → `NEEDS_REVISION`.
   One important → `PASS_WITH_NOTES`. Only nits, or nothing →`PASS`.
+- **Nits never open a round.** They are recorded in `findings` like any
+  other finding, but never become an `open_findings` entry and never block
+  a verdict on their own. `ship` folds every open nit into one commit
+  before push; the reader who raised each one confirms the fix in a single
+  line, and that confirmation is not a new round.
 - A finding with no anchor is opaque and flips the whole verdict to
   `NEEDS_REVISION` however small it is: "naming is off somewhere" cannot be
   fixed by anyone.
