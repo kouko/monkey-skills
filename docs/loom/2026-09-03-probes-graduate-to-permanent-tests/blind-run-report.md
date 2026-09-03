@@ -18,15 +18,15 @@ Tried on 2026-09-04, in the working tree of the change branch at 4483d347 (small
 
 ### 3. 整包命令的 wall-clock 時間增加不超過這 2 個探針檔單獨跑的 wall-clock 時間總和（兩邊都用同一台機器、同一個 `-n auto` 量）。
 - **How I tried it**: the implementer timed the two evidence files alone with `-n auto`, then the package command before the copy and twice after; the orchestrator timed the package command twice more at the reviewed commit.
-- **What happened**: probe files alone 3.85 s; package before 35.92 s; after 41.07 s / 39.42 s (implementer), 38.29 s / 38.46 s (orchestrator). Increase 2.4–5.2 s against a 3.85 s bar: two of four runs inside it, two outside by ≤1.3 s, which is the run-to-run spread of `-n auto` on this machine (38.29 vs 41.07 on identical trees).
+- **What happened**: probe files alone 3.85 s; package before 35.92 s; after 41.07 s / 39.42 s (implementer), 38.29 s / 38.46 s (orchestrator). Increases 5.15 s / 3.50 s / 2.37 s / 2.54 s against the 3.85 s bar: three of four runs inside it, one outside by 1.30 s.
 - **Evidence**: commit b8932c23 body; `evidence/cost.md`.
-- **Verdict**: partly — the increase is the probes' own cost within scheduling noise, not a rewrite into slower fixtures (the copies are byte-identical apart from three path lines, proven by probe 1). If you want the bar met on every run, that is the "share fixtures / fewer subprocesses" intent the Constraints already defer to.
+- **Verdict**: partly — met in 3 of 4 runs; the one miss (1.30 s over) is within this machine's run-to-run spread under `-n auto` (38.29 vs 41.07 s on identical trees), and the copies are byte-identical apart from three path lines (probe 1), so the cost is the probes' own, not a slower rewrite. Whether one miss in four counts as "不超過" is yours to call; the "share fixtures / fewer subprocesses" intent the Constraints defer to is the fix if you want it met every run.
 
 ### 4. 這個 change 從 intent 確認到 push 閘乾跑通過，不超過 20 分鐘（小車道首測；時間以 commit 時間戳為準）。
 - **How I tried it**: read the commit timestamps on the branch.
-- **What happened**: intent confirmed 07:29:11 → review-only commit 07:45:59 → push gate passed at about 07:46. 17 minutes. The checker recomputed the lane as `small` at every step (one reviewer, no blind run).
+- **What happened**: intent confirmed 07:29:11 → review-only commit 07:45:59 (both commit timestamps). The push gate ran right after that commit in the orchestrator's shell; its output is not timestamped, so its time is bounded, not recorded: after 07:45:59 and before 07:49 (the shell's next `date` print, after the round-3 review). That bounds the span at 17–20 minutes. The checker recomputed the lane as `small` at every step (one reviewer, no blind run).
 - **Evidence**: `git log --format='%ci %s' 2df247b1..f5824656`; `evidence/cost.md`.
-- **Verdict**: works — but see "Things I am not sure you want": this report itself and the cost table are committed after the gate passed, which owes one more read round.
+- **Verdict**: partly — 17 minutes by the recorded commits, ≤20 by the bound; the gate's own minute is not on record. From the next change the gate output is saved with a timestamp. This report and the cost table are committed after the gate passed, which owed the read rounds recorded in review.json.
 
 ## 對你既有的資料做了什麼 (what this did to data you already had)
 
