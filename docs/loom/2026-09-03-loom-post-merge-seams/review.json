@@ -1224,7 +1224,8 @@
       "raised_by": [
         "sonnet-adversary-w0-04-r4"
       ],
-      "text": "_regenerated_closed_text collapses \\r\\n to \\n on the regenerated status line, so a legitimate close on a CRLF intent file is blocked"
+      "text": "_regenerated_closed_text collapses \\r\\n to \\n on the regenerated status line, so a legitimate close on a CRLF intent file is blocked",
+      "resolved": "resolved: 6f7a19a5 — original line ending preserved; git_raw_text reads bytes (text=True was translating newlines); probe test_close_commit_crlf_file_wide_regeneration_drops_the_cr and test_a_crlf_file_wide_close_commit_passes green"
     },
     {
       "id": "after-task:W0-04-08",
@@ -1719,6 +1720,22 @@
       "agent_id": "impl-w0-04-fix5-sonnet",
       "model": "sonnet",
       "started": "2026-09-03T13:54:32+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r4",
+      "model": "sonnet",
+      "started": "2026-09-03T14:03:58+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r4",
+      "model": "codex",
+      "started": "2026-09-03T14:03:58+08:00",
       "fresh_context": true
     }
   ]
