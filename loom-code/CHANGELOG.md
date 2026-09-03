@@ -5,6 +5,56 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] — 2026-09-03 — Post-merge seams
+
+Closes the seams the first 1.0 branch hit against its own gate
+(`docs/loom/2026-09-03-loom-post-merge-seams/`). Rule count stays 27 —
+two existing rules tightened, none added, none waived.
+
+### Changed
+
+- **Status grammar gains `closed`.** `open | confirmed <date> |
+  withdrawn — <reason> | closed <YYYY-MM-DD> — PR #<N>`, shared by
+  `intent.schema` and `intake.confirmed` (one regex, both consumers) so
+  they cannot drift. `closed` is a terminal state, not a pass state:
+  `intake.confirmed` blocks on it with a message naming the PR, and a
+  reopen attempt is caught two ways — the branch's own history (a
+  `-G` pattern rendered from the same regex) and the trunk ref's copy of
+  the intent file, so a copy of an already-closed intent block reopening
+  even before the current branch itself ever wrote `closed`.
+- **`push.reviewed-sha` tightened.** Every verdict of the review's last
+  round must now carry a `sha` that resolves to the reviewed commit —
+  closes the pre-existing gap where a verdict could be recorded without
+  tying it to the commit it actually reviewed.
+- **`push.review-only-head` tightened.** A close commit (`status:` moved
+  to `closed` on the intent file) is now recomputed by shape: it may
+  touch only the intent file, exactly one `status:` line changed, and
+  its parent must itself be a checkpoint commit. The ship station
+  (`skills/ship/SKILL.md` §6) moves the close commit before the merge —
+  push, `gh pr create`, close-intent commit, one more `review` round on
+  that one-line delta, then the review-only commit and push — replacing
+  the previous "close after merge, on the trunk" order.
+- **`push.dispatch-covers-tasks` plumbing exemption now content-bound.**
+  A path under `_is_host_plumbing()` is exempt only when it also matches
+  an external canonical the running checker can name without trusting
+  the repo (the invoking checker's own path, unresolved, plus the
+  sibling `contract/` package its layout implies) — blob and mode
+  compared, not just path prefix. A copy, a symlink, or a stray file
+  with no canonical counterpart owes a `Task:` trailer like any other
+  change.
+
+### Fixed
+
+- Five carried test nits: `loom_checker.py:455` docstring said "below"
+  where it meant "above" (R24-O2); `test_check_mechanisms.py`'s RED
+  oracle now pins the literal `5` instead of recomputing from the
+  implementation under test, with a guard that the module calls no
+  `wc` subprocess (R30-O1, R30-O2); `test_session_start_words.py`'s
+  `_run` decodes captured bytes as UTF-8 with `errors="replace"`
+  instead of assuming text mode (R30-O3). R28-O2 (a `check=True` guard
+  on a `wc` skip-guard probe) is recorded moot: the round-30 rewrite of
+  `wc_words` to Python `str.split` already deleted that probe.
+
 ## [1.0.0] — 2026-09-02 — Five stations
 
 **Breaking.** The pre-1.0 surface is deleted, not renamed or aliased. A
