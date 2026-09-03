@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+  "reviewed_sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
   "scope": "branch-end",
   "vendors": [
     "openai"
@@ -117,13 +117,33 @@
       "findings": [],
       "notes": "fix round: delta fbc4dd9b..77e0e7b8 only; findings 1-3 FIXED; no new findings",
       "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd"
+    },
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent checkpoint: delta 77e0e7b8..c1c4152a is the review.json round-4 record plus exactly one intent status line (closed 2026-09-04 — PR #785)",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3"
     }
   ],
   "probes": [
     {
       "kind": "package-tests",
       "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
-      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
       "result": "pass",
       "artifact": "",
       "scope": "branch-end"
@@ -131,7 +151,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k diverges_from_source_only_by_the_three_permitted_edits",
-      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
       "scope": "branch-end"
@@ -139,7 +159,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k repo_root_constant_resolves",
-      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
       "scope": "branch-end"
@@ -147,7 +167,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k import_binds_to_loom_code_scripts",
-      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
       "scope": "branch-end"
@@ -155,7 +175,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k names_do_not_collide",
-      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
       "scope": "branch-end"
@@ -163,7 +183,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k byte_identical_to_origin_main",
-      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
       "scope": "branch-end"
@@ -171,7 +191,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k from_a_cwd_outside_the_repo",
-      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
       "scope": "branch-end"
