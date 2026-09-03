@@ -179,15 +179,29 @@ merge (step 6), because that is when it is true.
 
 Before the push, collect every `nit`-severity finding recorded in
 `review.json` since the last passing round and fix all of them in **one**
-commit, docs/records only — never a behaviour change. Send that commit back
-to the reader who raised the findings (resumed, same agent) for one line
-confirming each is addressed; that is not a new round, and it dispatches no
-one — the reader's own last verdict already covers the rest of the diff. A
-nit never opens a round on its own and never gets its own dispatch record.
+commit, docs/records only — never a behaviour change; a code change is not
+a nit and goes back to `build`. That commit necessarily touches files other
+than `review.json`, so `HEAD` is no longer review-only and the push gate
+would block on `push.review-only-head` if pushed as-is. Three more steps
+close the gap:
 
-The push follows the nit-batch commit as usual. The checker re-runs the
-recorded probes at push regardless of the nit batch — fixing wording never
-substitutes for a passing probe run.
+1. **The nit-batch commit.** Records/docs/wording only, as above.
+2. **A confirmation round.** Resume each reader of the last passing round
+   (same agent) and have each confirm, in one line, that the nit batch
+   fixes its nits and nothing else changed. Record that confirmation as a
+   verdict of a new round with `sha` equal to the nit-batch commit — one
+   verdict in the small lane (the lane's one reader), both readers'
+   verdicts in the full lane. No fresh reader, no blind run, no adversary
+   for this round; the floor from the last passing round still holds
+   because nothing but wording moved.
+3. **A review-only commit.** Touching only `review.json`, moving
+   `reviewed_sha` to the nit-batch commit — the same shape as step 7's
+   commit above, so `HEAD` is review-only again and `reviewed_sha` again
+   equals `HEAD^`.
+4. **Push**, as usual, from this new `HEAD`.
+
+The checker still re-runs the recorded probes at push regardless of the
+nit batch — fixing wording never substitutes for a passing probe run.
 
 ## 4. Push
 

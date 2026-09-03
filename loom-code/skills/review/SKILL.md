@@ -98,8 +98,7 @@ git diff --stat <reviewed_sha>..HEAD
 ```
 
 Classify every changed path by the type mapping in
-`contract/manifest.yaml` (`artifact_types:`) — a `KICKOFF-DEFAULTS.md`
-line `artifact-types: <glob>=<type>` overrides it. Then run the actions the
+`contract/manifest.yaml` (`artifact_types:`). Then run the actions the
 type asks for:
 
 | Artifact type | Lens | Read | Blind run | Adversarial |
