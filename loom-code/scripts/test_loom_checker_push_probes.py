@@ -55,16 +55,23 @@ def _close_commit_here(repo: Path, intent_rel: str) -> str:
     return git(repo, "rev-parse", "HEAD")
 
 
-def test_close_commit_crlf_line_ending_on_status_line_passes(tmp_path: Path) -> None:
-    """graduated | probe: test_close_commit_crlf_line_ending_on_status_line_passes
+def test_close_commit_crlf_line_ending_on_status_line_is_blocked(tmp_path: Path) -> None:
+    """graduated | probe: test_close_commit_crlf_line_ending_on_status_line_is_blocked
     Attack: the added status line ends `\\r\\n` instead of `\\n` (a stray
     CRLF on just that one line), while every other line in the file keeps
-    `\\n`. The raw diff is still exactly one removed / one added line, and
-    the checker's grammar check strips the added line before matching
-    (`added[0][1:].strip()`), so the trailing `\\r` is whitespace it already
-    discards -- same as the frontmatter parser's own `.strip()`.
-    Expected: PASS (the CR is inert, not a shape violation)."""
+    `\\n`. Under regenerate-and-compare (condition (c)), the checker
+    rebuilds the canonical closed blob and compares it byte-for-byte to
+    HEAD^'s actual blob; the trailing `\\r` is one byte more than the
+    regenerated canonical, so the close commit is not shape-conformant.
+    The earlier PASS expectation was a leftover of the first grammar-strip
+    design (`added[0][1:].strip()`, which discarded the `\\r` as
+    whitespace) and only held locally because this machine's global
+    `core.autocrlf=input` stripped the CR at `git add`; pinning
+    `core.autocrlf=false` on the temp repo makes the byte survive to the
+    commit on every machine.
+    Expected: BLOCK push.review-only-head."""
     repo = build_repo(tmp_path)
+    git(repo, "config", "core.autocrlf", "false")
     intent_rel = _seed_intent(repo)
     raw = (repo / intent_rel).read_bytes()
     raw = raw.replace(
@@ -78,7 +85,8 @@ def test_close_commit_crlf_line_ending_on_status_line_passes(tmp_path: Path) -> 
     _checkpoint_after(repo, close_sha)
 
     result = run_checker("push", cwd=repo)
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 1, result.stderr
+    assert "push.review-only-head" in result.stderr
 
 
 def test_close_commit_merge_whose_second_parent_carries_the_transition_passes(tmp_path: Path) -> None:
