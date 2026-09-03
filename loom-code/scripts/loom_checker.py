@@ -125,7 +125,9 @@ RULES: list[tuple[str, str]] = [
         "push.dispatch-covers-tasks",
         "Every commit between the branch base and reviewed_sha that touches code, skill "
         "or gate work carries a `Task:` trailer (spec is exempt, like intent and plan), and "
-        "every id those trailers name is claimed by an implementer dispatch entry.",
+        "every id those trailers name is claimed by an implementer dispatch entry, except an "
+        "id whose trailered commits touch only evidence paths, which an adversary dispatch "
+        "entry for that id covers instead.",
     ),
     (
         "push.open-findings-closed",
@@ -2967,23 +2969,30 @@ def _filter_exempt_plumbing_paths(
 
 def _collect_untrailered_commits(
     repo: Path, manifest, is_review, shas: list[str], canonical_dir: Path | None, scaffold_mod
-) -> tuple[set[str], list[tuple[str, str]]]:
+) -> tuple[set[str], list[tuple[str, str]], dict[str, set[str]]]:
     """The per-commit half of `push.dispatch-covers-tasks`: every `Task:`
-    id any commit in `shas` claims, and the `(short sha, message)` pairs
-    for commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
+    id any commit in `shas` claims, the `(short sha, message)` pairs for
+    commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
     host-plumbing paths are filtered out (`_filter_exempt_plumbing_paths`)
-    -- with no `Task:` trailer of their own."""
+    -- with no `Task:` trailer of their own, and (per claimed id) the full
+    union of §6 kinds its trailered commits touch, used to tell an
+    evidence-only task (adversary-first, e.g. W0-01) apart from one that
+    also did ordinary work."""
     claimed: set[str] = set()
     untrailered: list[tuple[str, str]] = []
+    id_kinds: dict[str, set[str]] = {}
     for sha in shas:
         paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
         paths, plumbing_reasons = _filter_exempt_plumbing_paths(
             repo, sha, paths, canonical_dir, scaffold_mod
         )
-        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
+        all_kinds = artifact_types(manifest, paths)
+        kinds = all_kinds & TRAILER_DUTY_TYPES
         message = git_text(repo, "log", "-1", "--format=%B", sha)
         ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
         claimed |= ids
+        for task_id in ids:
+            id_kinds.setdefault(task_id, set()).update(all_kinds)
         if kinds and not ids:
             kind_list = ", ".join(sorted(kinds))
             if plumbing_reasons:
@@ -2992,7 +3001,7 @@ def _collect_untrailered_commits(
                 )
                 kind_list += f"; plumbing not exempt: {detail}"
             untrailered.append((sha[:8], kind_list))
-    return claimed, untrailered
+    return claimed, untrailered, id_kinds
 
 
 def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
@@ -3036,21 +3045,46 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     canonical_dir = _plumbing_canonical_dir()
     scaffold_mod = _load_codex_scaffold() if canonical_dir is not None else None
 
-    claimed, untrailered = _collect_untrailered_commits(
+    claimed, untrailered, id_kinds = _collect_untrailered_commits(
         repo, manifest, is_review, shas, canonical_dir, scaffold_mod
     )
 
-    return _dispatch_coverage_failures(claimed, untrailered, review)
+    return _dispatch_coverage_failures(claimed, untrailered, id_kinds, review)
+
+
+def _evidence_only_ids_covered_by_adversary(
+    claimed: set[str], id_kinds: dict[str, set[str]], review
+) -> set[str]:
+    """Adversary-first tasks (e.g. W0-01): a claimed id whose trailered
+    commits touch nothing but `evidence`-typed paths is covered by a
+    dispatch entry of role `adversary` for that same id -- an implementer
+    entry still covers it too, but is not required. Any non-evidence path
+    on the id keeps the implementer requirement (Design decision, W0-02
+    push-gate fix)."""
+    adversary_ids = {
+        str(entry.get("task", "")).strip()
+        for entry in review.get("dispatch", [])
+        if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "adversary"
+    }
+    return {
+        task_id
+        for task_id in claimed
+        if id_kinds.get(task_id) and id_kinds[task_id] <= {"evidence"}
+        and task_id in adversary_ids
+    }
 
 
 def _dispatch_coverage_failures(
-    claimed: set[str], untrailered: list[tuple[str, str]], review
+    claimed: set[str], untrailered: list[tuple[str, str]],
+    id_kinds: dict[str, set[str]], review,
 ):
     """The trailer/dispatch-coverage matching half of `push.dispatch-
     covers-tasks`: an untrailered commit that changes dispatched work
     blocks outright; otherwise every `claimed` task id must name an
-    `implementer` entry in `review["dispatch"]`, or the commits that lost
-    a writer are named. `[]` when both hold."""
+    `implementer` entry in `review["dispatch"]` -- or be evidence-only and
+    covered by an `adversary` entry instead
+    (`_evidence_only_ids_covered_by_adversary`) -- or the commits that
+    lost a writer are named. `[]` when both hold."""
     if untrailered:
         listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)
         return [
@@ -3069,6 +3103,7 @@ def _dispatch_coverage_failures(
         for entry in review.get("dispatch", [])
         if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "implementer"
     }
+    dispatched |= _evidence_only_ids_covered_by_adversary(claimed, id_kinds, review)
     missing = sorted(claimed - dispatched)
     if missing:
         return [

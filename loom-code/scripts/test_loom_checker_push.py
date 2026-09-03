@@ -1940,6 +1940,74 @@ def test_a_commit_mixing_exempt_plumbing_and_a_code_file_still_needs_a_trailer(
     assert "gate" not in message
 
 
+# --- push.dispatch-covers-tasks: evidence-only task covered by an
+# adversary dispatch entry (W0-02 fix, adversary-first tasks) -------------
+
+
+def test_an_evidence_only_task_is_covered_by_an_adversary_dispatch_entry(
+    tmp_path: Path,
+) -> None:
+    """An adversary-first task (e.g. W0-01) whose trailered commit touches
+    only `**/evidence/**` paths needs no implementer dispatch entry -- the
+    adversary who wrote the probe covers it. Giving it an implementer
+    entry too would trip push.reviewer-ne-implementer, so the checker
+    must accept the adversary-only shape."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / "evidence/probe_w9.py").write_text(
+        "raise SystemExit(0)\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "test: adversary probe\n\nTask: W9-01")
+    new_sha = git(repo, "rev-parse", "HEAD")
+    dispatch = [dict(entry) for entry in DISPATCH_ENTRIES]
+    dispatch.append(
+        {"task": "W9-01", "role": "adversary", "agent_id": "agent-adv", "model": "m",
+         "started": "2026-09-02T12:00:00Z", "fresh_context": True}
+    )
+    write_review(repo, review_body(new_sha, dispatch=dispatch))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert "push.dispatch-covers-tasks" not in blocked_rules(result)
+
+
+def test_an_evidence_plus_code_task_still_needs_an_implementer_entry(
+    tmp_path: Path,
+) -> None:
+    """The same commit also touches a non-evidence path (`b.py`) under the
+    same `Task:` trailer -- the adversary-only exemption is per-task, not
+    per-path, so a task with ANY non-evidence path still needs an
+    implementer dispatch entry, adversary entry or not."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / "evidence/probe_w9.py").write_text(
+        "raise SystemExit(0)\n", encoding="utf-8"
+    )
+    (repo / "b.py").write_text("value = 2\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "test: adversary probe plus code\n\nTask: W9-01")
+    new_sha = git(repo, "rev-parse", "HEAD")
+    dispatch = [dict(entry) for entry in DISPATCH_ENTRIES]
+    dispatch.append(
+        {"task": "W9-01", "role": "adversary", "agent_id": "agent-adv", "model": "m",
+         "started": "2026-09-02T12:00:00Z", "fresh_context": True}
+    )
+    write_review(repo, review_body(new_sha, dispatch=dispatch))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, result.stdout
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
+    assert match, result.stderr
+    assert "W9-01" in match.group(1)
+
+
 def test_a_plumbing_path_is_blocked_when_the_checker_copy_is_a_symlink(
     tmp_path: Path,
 ) -> None:
