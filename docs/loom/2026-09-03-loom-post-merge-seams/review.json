@@ -1213,7 +1213,8 @@
         "codex-review-spec-11",
         "sonnet-review-spec-11"
       ],
-      "text": "the trigger's intent path template is a live manifest read; a mistyped or drifted template makes no path match and the rule silently disarms (fail-open)"
+      "text": "the trigger's intent path template is a live manifest read; a mistyped or drifted template makes no path match and the rule silently disarms (fail-open)",
+      "resolved": "resolved: fd3d9dbf — INTENT_PATH_TEMPLATE constant asserted against the manifest at function start; mismatch fails closed with a named diagnostic"
     }
   ],
   "dispatch": [
@@ -1681,6 +1682,14 @@
       "agent_id": "codex-review-spec-11",
       "model": "codex",
       "started": "2026-09-03T13:34:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-04-r4",
+      "model": "sonnet",
+      "started": "2026-09-03T13:47:19+08:00",
       "fresh_context": true
     }
   ]
