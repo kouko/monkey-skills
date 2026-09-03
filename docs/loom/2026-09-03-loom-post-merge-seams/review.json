@@ -1618,6 +1618,26 @@
       ],
       "text": "docstring overstates when the version gate runs",
       "resolved": "resolved: 7db8f9c1 — docstring reworded"
+    },
+    {
+      "id": "after-task:W0-05-08",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:2636",
+      "origin_sha": "a7eca30c",
+      "raised_by": [
+        "codex-review-w0-05-r2"
+      ],
+      "text": "_plumbing_stamp_reason ignores the committed checker copy's mode: a symlinked copy whose target begins with the stamp (or a wrong-mode regular file) passes the commit-wide stamp gate and other plumbing paths are exempted"
+    },
+    {
+      "id": "after-task:W0-05-09",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2817",
+      "origin_sha": "a7eca30c",
+      "raised_by": [
+        "codex-review-w0-05-r2"
+      ],
+      "text": "check_dispatch_covers_tasks still 74 lines"
     }
   ],
   "dispatch": [
@@ -2205,6 +2225,14 @@
       "agent_id": "codex-review-w0-05-r2",
       "model": "codex",
       "started": "2026-09-03T15:13:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-05",
+      "role": "implementer",
+      "agent_id": "impl-w0-05-fix2-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T15:16:07+08:00",
       "fresh_context": true
     }
   ]
