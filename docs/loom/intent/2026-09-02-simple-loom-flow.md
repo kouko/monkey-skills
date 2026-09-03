@@ -3,7 +3,7 @@ originator: kouko
 kind: product
 needs-design: yes — 多站、多 artifact、多 plugin 的狀態與互動要重定義，現有 spec 不存在（條件 b）
 evidence: [docs/loom/2026-09-02-simple-loom-flow/evidence/]
-status: confirmed 2026-09-02   # 重確認×3：跨 vendor 改選配、Acceptance #6 對象改站文件、Acceptance #2 切換日重授信除外（kouko 2026-09-02）
+status: closed 2026-09-03 — PR #780   # squash 4e25360c；曾 confirmed 2026-09-02（重確認×3：跨 vendor 改選配、Acceptance #6 對象改站文件、Acceptance #2 切換日重授信除外）
 
 ## Problem
 loom 現在太重：三個 plugin 共 36 個 skill、約 38 種文件形狀、113 個專有名詞，每個 session 開頭要塞進五千多字的說明。重量集中在「治理」——拆計畫、批次審查、閘門標記——而不是在幫使用者把東西做好。每次出事故就長一個新機制，沒有准入規則，砍了也會長回來。
