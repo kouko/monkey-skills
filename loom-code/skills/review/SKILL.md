@@ -119,10 +119,15 @@ definitions live in `references/lenses.md`; hand reviewers that path.
 ## 2. Read — at least two fresh reviewers
 
 <!-- gate: review.two-fresh-reviewers -->
-Dispatch **two fresh-context reviewers** at minimum, in one message so they
-run concurrently and cannot see each other's findings. One reviewer is not
-a review: it is an opinion with nothing to disagree with, and
-`push.verdicts-ge-2` refuses the push.
+Dispatch in two stages. First the adversary (§4) and the blind-runner
+(§3), each in its own message so the two run concurrently; their probes
+and report are committed before either reviewer starts, because a
+verdict's `sha` must name the commit that becomes `reviewed_sha`, and
+dispatching reviewers first would let a later commit move that target out
+from under them. Then dispatch **two fresh-context reviewers** at minimum,
+in one message so they run concurrently and cannot see each other's
+findings. One reviewer is not a review: it is an opinion with nothing to
+disagree with, and `push.verdicts-ge-2` refuses the push.
 <!-- /gate -->
 
 Each gets the contract `agents/reviewer.md` and this input:
@@ -137,10 +142,13 @@ Each gets the contract `agents/reviewer.md` and this input:
 - ground truth: intent docs/loom/intent/<change-id>.md; spec and plan when they exist
 - dimensions: loom-code/skills/review/references/lenses.md
 - reviewed_sha: <sha>
+- HEAD at dispatch, what this verdict reviews and what becomes the next
+  `reviewed_sha`: <sha>
 
 ### Return
 verdict PASS | PASS_WITH_NOTES | NEEDS_REVISION, dimension_scores, findings
-(severity fatal | important | nit; anchor file:line; text; fix)
+(severity fatal | important | nit; anchor file:line; text; fix), sha — the
+HEAD value above, copied onto the verdict
 ```
 
 **Second vendor.** Read `docs/loom/KICKOFF-DEFAULTS.md`. If it carries
