@@ -1,7 +1,13 @@
 # Package-test suite dependencies (docs/loom/KICKOFF-DEFAULTS.md package-tests).
 # Both CI (.github/workflows/loom-code-ci.yml) and local runs install from
 # this one file — see docs/loom/2026-09-03-package-tests-run-in-parallel.
-pytest          # the test runner
-pytest-xdist    # `-n auto` in the package-tests line: one worker per core (200 s -> ~35 s locally)
-pyyaml          # contract manifest / mechanisms.yaml parser; test modules fail at collection without it
-markdown-it-py  # adjudication_render and its tests
+# One package per line, its reason on the line above it.
+
+# the test runner
+pytest
+# `-n auto` in the package-tests line: one worker per core (200 s -> ~35 s locally)
+pytest-xdist
+# contract manifest / mechanisms.yaml parser; test modules fail at collection without it
+pyyaml
+# adjudication_render and its tests
+markdown-it-py
