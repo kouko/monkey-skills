@@ -37,4 +37,12 @@ status: confirmed 2026-09-04
 - 讀者本身的行為調整（例如要求 reviewer 不翻旁邊句子）——靠嚴重度規則處理，不改 reviewer 契約。
 
 ## Open questions
-- none
+- F3：偽造一個沒有對應提問的 `second_vendor` 回答目前會通過；要關掉這個洞只是在
+  `push.second-vendor-honoured` 裡多加一個檢查，不是新規則。
+- F4：一個被搬進 `tests/` 的正式程式檔，用名稱判斷會被算成小改動；讀者從 diff
+  裡看得到這次搬動——這一格靠的是流程信任，不是機械判定。
+- F6：review.json 若同時被兩個寫入者並發修改，可能漏掉一筆 dispatch 紀錄；這個
+  洞在本次改動之前就存在，修法是把 append 序列化。
+- W0 的 sonnet nit：`_resolve_second_vendor_ask`／`check_verdicts` 裡 fail-closed
+  的 except 路徑沒有測試涵蓋；補測試是程式碼變動，不是 nit batch 的項目，留給
+  下一個 change。

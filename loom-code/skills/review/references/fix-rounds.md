@@ -53,3 +53,9 @@ finding history (every round's findings, fixed/unfixed/dismissed) to a
 higher-tier agent for one design question — is the shape of the change
 itself wrong, not just its wording — before dispatching any further fix.
 Do not iterate a fourth round on the same finding without that check.
+
+These two rules — no finding outside the fix delta, and the third-round
+design re-look — are reader-trusted, not checker-enforced; no push rule
+reads a finding's anchor against the delta or counts rounds. They are
+enforced the way `dispatch[].fresh_context` is: by the record and the
+next reader.

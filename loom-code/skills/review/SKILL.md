@@ -1,7 +1,7 @@
 ---
 name: review
 description: |
-  Runs one checkpoint review of a change: two or more fresh-context reviewers (one in the small lane), a blind run and an adversarial pass over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec (or write-plan for a minimal spec) for the spec lens, by build after a task or wave, by ship at branch end, or when asked to review the change in progress.
+  Runs one checkpoint review of a change: fresh-context reviewers (two or more full lane, one small lane), an adversarial pass, and a blind run (skipped when every Acceptance line is mechanical) over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec/write-plan for the spec lens, by build after a task or wave, by ship at branch end, or on request.
 version: 1.0.0
 ---
 
@@ -144,7 +144,10 @@ the blind-runner (§3) — each in its own message so the two run
 concurrently; their probes and report are committed before any reviewer
 starts, because a verdict's `sha` must name the commit that becomes
 `reviewed_sha`, and dispatching reviewers first would let a later commit
-move that target out from under them. Then dispatch fresh-context
+move that target out from under them. The two agents run concurrently;
+their `dispatch[]` entries are appended and committed once, before either
+is dispatched — never by the agents themselves and never in parallel.
+Then dispatch fresh-context
 reviewers: **two or more, in one message so they run concurrently and
 cannot see each other's findings, in the full lane**; **exactly one, in
 the small lane** (§1). One reviewer in the full lane is not a review: it
