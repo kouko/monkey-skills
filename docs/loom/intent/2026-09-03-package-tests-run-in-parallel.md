@@ -19,9 +19,10 @@ status: open
 ## Constraints
 - 命令是契約的一部分：KICKOFF-DEFAULTS、CI workflow、checker 的比對三處同一個 change 一起改，不分批。
 - 不改測試本身的寫法；共用 fixture／少開子程序另立 intent。
+- 平行度（`-n auto` 或固定核心數）由 agent 依 CI runner 與本機的實測決定並記在 KICKOFF-DEFAULTS 那一行的註解裡，不問使用者。
 
 ## Out of scope
 - 探針重跑的去重與平行（另一條 intent：2026-09-03-push-gate-reruns-probes-per-artifact）。
 
 ## Open questions
-- 一定要 `-n auto` 還是固定核心數：CI runner 核心少，先量再定。
+- none
