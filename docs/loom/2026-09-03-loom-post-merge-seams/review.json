@@ -137,6 +137,28 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "PASS"
+    },
+    {
+      "round": 7,
+      "scope": "spec",
+      "spec_sha": "1e02f71",
+      "findings_file": "evidence/spec-review-r7.md",
+      "reviewer": "codex-review-spec-7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 7,
+      "scope": "spec",
+      "spec_sha": "1e02f71",
+      "findings_file": "evidence/spec-review-r7.md",
+      "reviewer": "sonnet-review-spec-7",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
     }
   ],
   "probes": [
@@ -243,6 +265,22 @@
       "sha": "e6f3062c",
       "result": "NEEDS_REVISION — 2 fatal, 0 important; all five round-5 items HOLD",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r6.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v8 alone and writes out the two tightened checks as code (sonnet-coldread-spec-7)",
+      "sha": "d7fd6d44",
+      "result": "3 guesses (checkpoint identity for the cost table; zero-verdict edge; block-message paraphrase), 0 anchor mismatches",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r7.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v8 (sonnet-redteam-spec-7)",
+      "sha": "d7fd6d44",
+      "result": "PASS_WITH_NOTES — 0 fatal, 1 important (merge commit at HEAD^ shows no diff, trigger never fires), 1 nit; R21/R22/C12 HOLD",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r7.md"
     }
   ],
   "questions": [
@@ -719,7 +757,8 @@
       "raised_by": [
         "codex-review-spec-6"
       ],
-      "text": "REQ-1 says unconditionally 'closed reaches the trunk only by the merge' while Design decision 1 conditions it on the trunk receiving only merges (admin direct push not caught) — one sentence contradicts its own stated boundary"
+      "text": "REQ-1 says unconditionally 'closed reaches the trunk only by the merge' while Design decision 1 conditions it on the trunk receiving only merges (admin direct push not caught) — one sentence contradicts its own stated boundary",
+      "resolved": "resolved: 17bb592c (spec v8), confirmed by round 7 (all three legs)"
     },
     {
       "id": "spec-R21",
@@ -729,7 +768,8 @@
       "raised_by": [
         "sonnet-redteam-spec-6"
       ],
-      "text": "the sha tie exempts verdicts whose self-reported scope is `spec`; a round reviewing the close commit (or any code delta) labelled scope: spec, or one mislabelled verdict in a mixed round, owes no sha and check_verdicts never partitions by scope — the exemption is a label, not a recompute"
+      "text": "the sha tie exempts verdicts whose self-reported scope is `spec`; a round reviewing the close commit (or any code delta) labelled scope: spec, or one mislabelled verdict in a mixed round, owes no sha and check_verdicts never partitions by scope — the exemption is a label, not a recompute",
+      "resolved": "resolved in REQ-1 by 17bb592c (spec v8); Design decision 1 still carried the old sentence → reopened as spec-C13 (round 7, codex + sonnet)"
     },
     {
       "id": "spec-R22",
@@ -739,7 +779,29 @@
       "raised_by": [
         "sonnet-redteam-spec-6"
       ],
-      "text": "two-commit dodge: R1 → A (docs-typed, no trailer duty) → C (close, one line vs its own parent A) → R2; the shape recompute reads only HEAD^'s own diff, so A is invisible to every push rule while the close round's prose claims the delta is one line"
+      "text": "two-commit dodge: R1 → A (docs-typed, no trailer duty) → C (close, one line vs its own parent A) → R2; the shape recompute reads only HEAD^'s own diff, so A is invisible to every push rule while the close round's prose claims the delta is one line",
+      "resolved": "resolved: 17bb592c (spec v8), confirmed by round 7 (all three legs)"
+    },
+    {
+      "id": "spec-C13",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "d7fd6d44",
+      "raised_by": [
+        "codex-review-spec-7",
+        "sonnet-review-spec-7"
+      ],
+      "text": "Design decision 1 still says verdicts[].sha is required only on non-spec scopes, contradicting REQ-1's no-exemption rule (stale sentence from v7)"
+    },
+    {
+      "id": "spec-R23",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "d7fd6d44",
+      "raised_by": [
+        "sonnet-redteam-spec-7"
+      ],
+      "text": "git show --raw on a merge commit prints no diff, so a merge commit at HEAD^ never triggers the close-commit shape recompute while it may carry a closed transition and arbitrary other changes"
     }
   ],
   "dispatch": [
