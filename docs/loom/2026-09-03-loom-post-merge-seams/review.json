@@ -181,6 +181,26 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "PASS"
+    },
+    {
+      "round": 9,
+      "scope": "after-task:W0-04",
+      "sha": "e0df97e2c4e5ad6429ba9ab29e84d1b415555a93",
+      "findings_file": "evidence/review-after-task-w0-04-r1.md",
+      "reviewer": "codex-review-w0-04",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1766",
+          "text": "a rename of a confirmed intent to another intent path while changing it to closed yields a deleted path with no after-text and an added path with no before-text; the loop skips both and the recompute never fires",
+          "fix": "detect closed transitions on added/deleted intent paths; regression test with a real rename"
+        }
+      ]
     }
   ],
   "probes": [
@@ -842,6 +862,28 @@
       ],
       "text": "git show --raw on a merge commit prints no diff, so a merge commit at HEAD^ never triggers the close-commit shape recompute while it may carry a closed transition and arbitrary other changes",
       "resolved": "resolved: 84a8cb7e (spec v9), confirmed by round 8 (codex PASS, sonnet PASS, red team HOLDS)"
+    },
+    {
+      "id": "after-task:W0-04-01",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1747",
+      "origin_sha": "58b8f514",
+      "raised_by": [
+        "sonnet-adversary-w0-04"
+      ],
+      "text": "HEAD^^ precondition evaluated unconditionally; an ordinary root-commit branch is blocked",
+      "resolved": "resolved: efbd0198 (fix 1); adversary probe test_ordinary_root_commit_branch_wrongly_blocked_by_precondition now passes"
+    },
+    {
+      "id": "after-task:W0-04-02",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1766",
+      "origin_sha": "e0df97e2",
+      "raised_by": [
+        "codex-review-w0-04"
+      ],
+      "text": "rename (delete+add) of an intent path with a closed status bypasses the close-commit recompute",
+      "resolved": "resolved: 788a8e1f (fix 2); tests test_a_close_commit_that_renames_the_intent_path_is_blocked, test_a_brand_new_already_closed_intent_is_blocked"
     }
   ],
   "dispatch": [
@@ -1189,6 +1231,22 @@
       "agent_id": "impl-w0-04-fix2-sonnet",
       "model": "sonnet",
       "started": "2026-09-03T12:42:02+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r2",
+      "model": "sonnet",
+      "started": "2026-09-03T12:51:25+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r2",
+      "model": "codex",
+      "started": "2026-09-03T12:51:25+08:00",
       "fresh_context": true
     }
   ]
