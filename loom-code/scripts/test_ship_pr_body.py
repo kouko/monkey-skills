@@ -55,6 +55,11 @@ COMMIT_TYPES = {"feat", "fix", "test", "docs", "chore", "refactor"}
 
 # concept-model §10 deleted these outright, plus the machinery this station
 # inherited from `finishing-a-development-branch` and must not carry over.
+# `batch` / `batches` are still forbidden in the old "batch review" sense —
+# except the "nit batch" / "nit-batch" phrase, the small-change-lane
+# mechanism (2026-09-03) that bunches nit-severity findings into one
+# pre-push commit; that is a different, currently-live concept and the
+# negative lookbehind exempts only that exact phrase.
 DELETED_VOCABULARY = (
     r"\bmarker\b",
     r"\bmarkers\b",
@@ -62,8 +67,8 @@ DELETED_VOCABULARY = (
     r"\bwaivers\b",
     r"\bmint\b",
     r"\bminted\b",
-    r"\bbatch\b",
-    r"\bbatches\b",
+    r"(?<!nit )(?<!nit-)\bbatch\b",
+    r"(?<!nit )(?<!nit-)\bbatches\b",
     r"progress card",
     r"\bbacklog\b",
     r"archive_change_folder",
