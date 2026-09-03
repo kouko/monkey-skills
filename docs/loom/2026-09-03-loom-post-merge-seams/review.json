@@ -246,7 +246,7 @@
         "sonnet-redteam-spec-1"
       ],
       "text": "closed date not routed through is_real_date",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-R3",
@@ -268,7 +268,7 @@
         "sonnet-redteam-spec-1"
       ],
       "text": "closed not terminal; silent reopen closed→confirmed unaddressed",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-R7",
@@ -323,7 +323,7 @@
         "codex-review-spec-2"
       ],
       "text": "on Codex the running checker and its siblings are the copies under test; the comparison is self-referential for git_exec/contract too",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-C7",
@@ -334,7 +334,7 @@
         "codex-review-spec-2"
       ],
       "text": "REQ-6 traces to no Acceptance line; five fixes can be omitted while all Acceptance pass",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-C8",
@@ -345,7 +345,7 @@
         "codex-review-spec-2"
       ],
       "text": "Acceptance #3 tests only genuine scaffold output; no negative case",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4) for altered/added; deletion and mode-only reopened as spec-C10 (round 3)"
     },
     {
       "id": "spec-S4",
@@ -356,7 +356,7 @@
         "sonnet-review-spec-2"
       ],
       "text": "closed date not routed through is_real_date (= spec-R2)",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-S5",
@@ -367,7 +367,7 @@
         "sonnet-review-spec-2"
       ],
       "text": "closed not terminal (= spec-R6)",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-S6",
@@ -378,7 +378,7 @@
         "sonnet-review-spec-2"
       ],
       "text": "CI runs pytest with -v, spec says -q",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-R8",
@@ -388,8 +388,7 @@
       "raised_by": [
         "sonnet-redteam-spec-2"
       ],
-      "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches",
-      "resolved": "open"
+      "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches"
     },
     {
       "id": "spec-R9",
@@ -400,7 +399,7 @@
         "sonnet-redteam-spec-2"
       ],
       "text": "CI never runs loom_checker.py push; the push gate is client-side only (pre-existing) — the spec should say so",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-R10",
@@ -411,7 +410,7 @@
         "sonnet-redteam-spec-2"
       ],
       "text": "\"the running checker\" undefined across two cached plugin versions",
-      "resolved": "open"
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
     },
     {
       "id": "spec-C9",
@@ -423,8 +422,7 @@
         "sonnet-review-spec-3",
         "sonnet-redteam-spec-3"
       ],
-      "text": "REQ-1 residual assigns catching a smuggled file in the close commit to the user reading the PR diff — contradicts PRINCIPLES.md Non-negotiables 1-2 and the 'Won't do' line; the close commit needs a machine review, not a user diff read (same substance as spec-R8, which is therefore not closable by disclosure)",
-      "resolved": "open"
+      "text": "REQ-1 residual assigns catching a smuggled file in the close commit to the user reading the PR diff — contradicts PRINCIPLES.md Non-negotiables 1-2 and the 'Won't do' line; the close commit needs a machine review, not a user diff read (same substance as spec-R8, which is therefore not closable by disclosure)"
     },
     {
       "id": "spec-C10",
@@ -434,8 +432,7 @@
       "raised_by": [
         "codex-review-spec-3"
       ],
-      "text": "Acceptance #3 negative case covers altered byte and extra file only; deletion and mode-only plumbing changes promised by REQ-3 are unverified (spec-C8 partly reopened)",
-      "resolved": "open"
+      "text": "Acceptance #3 negative case covers altered byte and extra file only; deletion and mode-only plumbing changes promised by REQ-3 are unverified (spec-C8 partly reopened)"
     },
     {
       "id": "spec-S7",
@@ -446,8 +443,7 @@
         "sonnet-review-spec-3",
         "sonnet-redteam-spec-3"
       ],
-      "text": "'closed is terminal' overstates: a branch that never carries the close commit (forked from trunk before the merge, or rebased around it) has an empty -S history and current status confirmed, so intake passes",
-      "resolved": "open"
+      "text": "'closed is terminal' overstates: a branch that never carries the close commit (forked from trunk before the merge, or rebased around it) has an empty -S history and current status confirmed, so intake passes"
     },
     {
       "id": "spec-R11",
@@ -457,8 +453,7 @@
       "raised_by": [
         "sonnet-redteam-spec-3"
       ],
-      "text": "reopen check uses a literal single-space pickaxe -S'status: closed' while the grammar regex may be whitespace-lenient; a hand-edited double-space closed line parses as closed but never matches the pickaxe",
-      "resolved": "open"
+      "text": "reopen check uses a literal single-space pickaxe -S'status: closed' while the grammar regex may be whitespace-lenient; a hand-edited double-space closed line parses as closed but never matches the pickaxe"
     },
     {
       "id": "spec-R12",
@@ -468,8 +463,7 @@
       "raised_by": [
         "sonnet-redteam-spec-3"
       ],
-      "text": "Path(__file__).resolve() test: a symlink or copy of the checker placed outside .codex/hooks/ flips the exemption on even on Codex, falsifying 'no exemption applies'",
-      "resolved": "open"
+      "text": "Path(__file__).resolve() test: a symlink or copy of the checker placed outside .codex/hooks/ flips the exemption on even on Codex, falsifying 'no exemption applies'"
     },
     {
       "id": "spec-R13",
@@ -479,8 +473,7 @@
       "raised_by": [
         "sonnet-redteam-spec-3"
       ],
-      "text": "'canonical is whichever checkout the hook invoked' lets a deliberately older cached plugin version serve as canonical, so plumbing matching superseded weaker content escapes trailer duty",
-      "resolved": "open"
+      "text": "'canonical is whichever checkout the hook invoked' lets a deliberately older cached plugin version serve as canonical, so plumbing matching superseded weaker content escapes trailer duty"
     }
   ],
   "dispatch": [
