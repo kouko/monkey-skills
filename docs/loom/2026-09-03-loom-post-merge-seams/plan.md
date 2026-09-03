@@ -61,7 +61,7 @@ checkpoint：wave-end 兼 branch-end。
 - 測：先跑 `python -m pytest scripts/ -q` 中的 manifest drift 測試（改前紅、改後綠）；`git diff --stat` 列出三表面都動到。
 - 風：loom-design／loom-workflow 沒有程式碼變更，bump 理由是 Acceptance #5（user-confirmed）與其散文描述 status 值——CHANGELOG 一行寫明（agent-decided）。
 
-**W1-04 關閉上一個 intent、補回兩條 repo memory、刷新 `.codex/hooks/` 副本、探針畢業**　after: W0-05
+**W1-04 關閉上一個 intent、補回兩條 repo memory、刷新 `.codex/hooks/` 副本、探針畢業**　after: W0-05, W1-03（副本印記要用 bump 後的 1.0.1，orchestrator 2026-09-03 修正依賴）
 - 檔：`docs/loom/intent/2026-09-02-simple-loom-flow.md`（`status: closed 2026-09-03 — PR #780`）、`docs/loom/memory/run-the-push-gate-at-every-checkpoint-not-only-the-intake-gates.md`、`docs/loom/memory/a-recorded-word-count-must-be-python-split-never-wc.md`、`docs/loom/memory/README.md`（三者從已關的分支 `close-intent-simple-loom-flow` 的 commit ee5e104e 取回）、`.codex/hooks/{loom_checker.py,git_exec.py,contract/**}`（`codex_scaffold.py --repo .` 刷新，印記 1.0.1；**帶 `Task: W1-04` trailer**——裝置端 1.0.0 的閘沒有豁免）。
 - 檔（追加，kouko 2026-09-03）：把 `evidence/probes/test_abuse_close_commit_shape.py` 與 `test_abuse_plumbing_exemption.py` 裡與 `test_loom_checker_push.py` 既有案例**不重疊**的案例搬進 `loom-code/scripts/test_loom_checker_push.py`（或同目錄新檔），evidence 原檔留著；重疊判定寫在 commit 訊息裡。常設做法另立 intent `2026-09-03-probes-graduate-to-permanent-tests`。
 - 測：`loom_checker.py intent docs/loom/intent/2026-09-02-simple-loom-flow.md` exit 0（W0-01 後 schema 接受 closed）；`intake write-plan 2026-09-02-simple-loom-flow` 被擋；`python3 loom-code/scripts/codex_scaffold.py --self-test` 過；畢業的案例在整包命令下可被收集並綠。
@@ -80,6 +80,7 @@ checkpoint：wave-end 兼 branch-end。
 （第二 vendor 已由 KICKOFF-DEFAULTS 記錄為 codex，未再問。）
 
 ## Risks
+0. （執行中記錄，orchestrator 2026-09-03）W0 wave-end 未另開一輪：after-task W0-05 的 review-only 已把 reviewed_sha 移到 W0 全部程式碼之後，未審 delta 為空；跨 task 一致性由 branch-end 對 `160658c2..HEAD` 整段重讀。after-task W0-04 走了 5 輪 6 修、W0-05 走了 3 輪 2 修，皆記在 evidence/checkpoint-cost-orchestrator-notes.md。
 1. 自指：本分支被裝置端 1.0.0 的 checker 把關，新加嚴對本分支自己不生效；blind-runner 要在乾淨 clone 裡用**分支上的** `loom-code/scripts/loom_checker.py` 走 Acceptance #1 的正反例，不是用 cache 的。
 2. Acceptance #4 的 cost 表由 blind-runner 在 branch-end 寫（spec Design decision）：每個 checkpoint ＝ 一個 review-only commit；本 change 的 spec 階段 8 輪是最大成本項，要如實列入建議。
 3. W0 五個 task 全在 `loom_checker.py`，循序執行、每個 task 跑整包（2–2.5 分）；after-task 兩次 ＋ wave-end 一次，加上 spec 8 輪，派工數會明顯高於 #771 replay——這是 REQ-4 要量的東西，不是要藏的。

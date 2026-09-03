@@ -51,3 +51,13 @@ Recommendation candidates added:
 - **Content-reading rules are a category to avoid**: when a rule must inspect content, specify it as "regenerate the canonical and compare bytes", never as line/regex conditions.
 - **Shared worktree cost**: three reviewers found the tree moving under them and re-ran on `git archive` snapshots; the verdict-sha tie also forces adversary/blind-run commits BEFORE the readers are dispatched (two-phase checkpoints). One worktree per implementer, and the two-phase order written into the review station, would remove both.
 - **Harness trap**: three subagent stalls came from the Bash tool's 120 s default timeout on a 150 s suite; dispatch packets now state `timeout 300000`.
+
+## Addendum at HEAD c87488c3 (W0 closed)
+
+| checkpoint | rounds | fix dispatches | designs | outcome |
+|---|---|---|---|---|
+| after-task W0-04 (content-reading rule, probes after implementation) | 5 | 6 | 3 | PASS_WITH_NOTES |
+| after-task W0-05 (probes BEFORE implementation, 11 probes, 1 xfail as RED) | 3 | 2 | 1 | PASS_WITH_NOTES |
+
+W0-05's two fixes were both omissions in one gate (stamp check not applied to every path; copy mode ignored) found by Codex, not design changes. W0 wave-end skipped as a separate round: the after-task W0-05 review-only commit left an empty unreviewed delta; branch-end re-reads 160658c2..HEAD in full.
+Subagent stalls on the 120 s Bash timeout: 5 so far (packets stating the parameter did not prevent the last two — the fix belongs in the implementer contract or a harness default, not in packet prose).
