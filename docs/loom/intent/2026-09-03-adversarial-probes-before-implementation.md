@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改 build 站派工順序的一句與 review 站對抗段的一句；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/]
-status: open
+status: withdrawn — superseded by 2026-09-03-small-change-lane
 
 ## Problem
 現在對抗者在 checkpoint 時才上場：實作已完成、盲跑已做，對抗者才找洞。首個真實 change 的 W0-04（關閉 commit 形狀規則）走這個順序：實作一輪，之後審 5 輪、修 6 次、換 3 個設計，每輪對抗者都找到一個新的解析邊界。W0-05（副本豁免）改成對抗者先寫 11 個可執行探針（10 個今天就要擋、1 個刻意紅＝實作目標）、實作者再做：實作一輪、審查抓到 1 fatal＋形狀問題、修一輪就過。同一個 change、同一批 agent，順序不同差五輪。

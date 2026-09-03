@@ -125,7 +125,9 @@ RULES: list[tuple[str, str]] = [
         "push.dispatch-covers-tasks",
         "Every commit between the branch base and reviewed_sha that touches code, skill "
         "or gate work carries a `Task:` trailer (spec is exempt, like intent and plan), and "
-        "every id those trailers name is claimed by an implementer dispatch entry.",
+        "every id those trailers name is claimed by an implementer dispatch entry, except an "
+        "id whose trailered commits touch only evidence paths, which an adversary dispatch "
+        "entry for that id covers instead.",
     ),
     (
         "push.open-findings-closed",
@@ -162,7 +164,9 @@ RULES: list[tuple[str, str]] = [
     (
         "push.second-vendor-honoured",
         "A second vendor named in KICKOFF-DEFAULTS either appears in the latest "
-        "round's verdicts or that round records why it could not.",
+        "round's verdicts or that round records why it could not; when KICKOFF names "
+        "`ask`, this defers to review.json's top-level `second_vendor` answer instead "
+        "(never required in the small lane).",
     ),
     (
         "push.reviewer-ne-implementer",
@@ -170,8 +174,9 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.verdicts-ge-2",
-        "The latest review round carries at least two distinct fresh-context reviewers, and "
-        "blocks when any verdict in that round is not passing.",
+        "The latest review round carries at least as many distinct fresh-context reviewers as "
+        "the change's lane requires -- one in the small lane, two distinct in the full lane -- "
+        "and blocks when any verdict in that round is not passing.",
     ),
     (
         "spec.req-grammar",
@@ -1693,8 +1698,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_open_findings_closed(review)
     failures += check_probes_package_tests(repo, review, reviewed_id, out)
     failures += check_probes_adversarial(repo, review, reviewed_id, out)
-    failures += check_verdicts(review)
-    failures += check_second_vendor_honoured(repo, review)
+    failures += check_verdicts(repo, review, reviewed_id)
+    failures += check_second_vendor_honoured(repo, review, reviewed_id)
     failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
     failures += check_frozen_store_untouched(repo, reviewed_id)
 
@@ -2438,6 +2443,176 @@ def artifact_types(manifest, paths) -> set[str]:
     return found
 
 
+def _artifact_type_for(manifest, path: str) -> str | None:
+    """Same first-match-wins order as `artifact_types`, but for one path."""
+    for entry in manifest["artifact_types"]:
+        if glob_to_regex(entry["glob"]).match(path):
+            return entry["type"]
+    return None
+
+
+# W0-02 (small-change lane): the §6 types a small-lane change may touch
+# without earning the full lane -- gate and skill are deliberately absent
+# (plan risk: "manifest-typed `code` that is not a test -> full lane, even
+# one line" generalizes to any type not on this list). `standing` is
+# deliberately excluded: intent point 1 and PRINCIPLES.md non-negotiable 2
+# say the small lane touches no standing document (PRINCIPLES.md, DESIGN.md,
+# docs/loom/KICKOFF-DEFAULTS.md -- KICKOFF lines are gate inputs).
+SMALL_LANE_ARTIFACT_TYPES = frozenset({"docs", "memory", "evidence", "intent", "plan"})
+
+_TEST_NAME_RE = re.compile(r"(?:test_[^/]*|[^/]*_test)\.py\Z")
+_REQUIREMENTS_NAME_RE = re.compile(r"requirements[^/]*\.txt\Z")
+_CI_CONFIG_EXT_RE = re.compile(r"\.(?:toml|ya?ml|json)\Z")
+
+
+def _is_small_lane_test_path(path: str) -> bool:
+    """Name-based only, on purpose (plan risk 1's grammar is name-only, not
+    location-based): `test_*.py`, `*_test.py`, or any `tests/` segment."""
+    name = path.rsplit("/", 1)[-1]
+    if _TEST_NAME_RE.match(name):
+        return True
+    return "tests" in path.split("/")[:-1]
+
+
+def _is_small_lane_ci_config_path(path: str) -> bool:
+    """CI/config: `.github/**`, `requirements*.txt`, `*.toml`/`*.yml`/
+    `*.yaml`/`*.json` -- except under any `contract/` directory (those are
+    interface-shaped, not throwaway config) and never `hooks.json`."""
+    if path.startswith(".github/"):
+        return True
+    name = path.rsplit("/", 1)[-1]
+    if _REQUIREMENTS_NAME_RE.match(name):
+        return True
+    if name == "hooks.json":
+        return False
+    if _CI_CONFIG_EXT_RE.search(name) and "contract" not in path.split("/")[:-1]:
+        return True
+    return False
+
+
+def _small_lane_record_patterns(manifest) -> list[re.Pattern[str]]:
+    """This change's own store folder -- every path under
+    `docs/loom/<change-id>/` (plan.md, spec.md, review.json, evidence/**,
+    blind-run-report.md, and any future record kind) plus
+    `docs/loom/intent/**` -- is never counted against the lane (intent
+    point 1 / plan W0-02 risk). One wildcarded glob per change-id, derived
+    from the manifest's own `plan` artifact path, not an enumerated file
+    list -- a fix-round finding pinned this after `spec.md` alone was
+    missed by an earlier, file-by-file version.
+
+    Built as a direct regex, not via `glob_to_regex`'s trailing-`/**`
+    zero-match convenience: that convenience would make the `<change-id>`
+    wildcard swallow a bare docs/loom/<file> (e.g. KICKOFF-DEFAULTS.md) as
+    if it were an empty change folder -- a standing document is never a
+    change's own record (branch-end fix, W0-02)."""
+    change_folder = manifest["artifacts"]["plan"]["path"].rsplit("/", 1)[0]
+    change_folder_pattern = re.compile(
+        re.escape(change_folder).replace(re.escape("<change-id>"), "[^/]+")
+        + r"/.+\Z"
+    )
+    return [
+        change_folder_pattern,
+        glob_to_regex("docs/loom/intent/**"),
+    ]
+
+
+# Cross-cutting store roots, never one plugin's own tree: `docs/` holds the
+# loom store (records, memory, KICKOFF-DEFAULTS, maps) shared by every
+# plugin, and a repo-root `evidence/` directory is checkpoint scratch, not
+# code. Neither should force a two-plugin verdict alongside a real plugin
+# directory like `loom-code/`.
+NON_PLUGIN_TOP_LEVEL_DIRS = frozenset({"docs", "evidence"})
+
+
+def _top_level_plugin_dir(path: str) -> str | None:
+    """The first path segment, or None for a path with no directory at all
+    (e.g. `README.md`), a cross-cutting store root, or a dot-directory
+    (`.github`, `.claude`, `.codex`, ...) -- all "count as none" per the
+    plan, not as a plugin of its own (fix round: `.github/workflows/x.yml`
+    was wrongly counted as its own plugin alongside a real one)."""
+    head, sep, _rest = path.partition("/")
+    if not sep or head in NON_PLUGIN_TOP_LEVEL_DIRS or head.startswith("."):
+        return None
+    return head
+
+
+def _small_lane_changed_paths(repo: Path, manifest, reviewed_id: str | None) -> list[str]:
+    """This change's diff, minus its own store records -- the population
+    `change_lane_detail` classifies path by path."""
+    base = branch_base(repo)
+    target = reviewed_id or git_maybe(repo, "rev-parse", "HEAD") or "HEAD"
+    changed = {
+        line.strip()
+        for line in git_text(repo, "diff", "--name-only", base, target).splitlines()
+        if line.strip()
+    }
+    record_patterns = _small_lane_record_patterns(manifest)
+    return sorted(
+        path for path in changed
+        if not any(pattern.match(path) for pattern in record_patterns)
+    )
+
+
+def _small_lane_path_reason(manifest, surface_patterns, path: str) -> str | None:
+    """None when `path` is small-lane safe; else the reason it forces full."""
+    if any(pattern.match(path) for pattern in surface_patterns):
+        return f"{path} is a declared interface surface."
+    kind = _artifact_type_for(manifest, path)
+    if kind in SMALL_LANE_ARTIFACT_TYPES:
+        return None
+    if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
+        return None
+    if kind == "code":
+        return f"{path} is non-test code"
+    if kind == "standing":
+        return f"{path} is a standing document."
+    return f"{path} is {kind or 'unclassified'}-typed"
+
+
+def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
+    """`("small"|"full", reason)` -- the mechanical recompute behind the
+    verdict floor and the `second-vendor: ask` question (plan W0-02).
+
+    Small iff every changed path, minus this change's own store records, is
+    docs/memory/evidence/intent/plan-typed, a test file by name, or
+    CI/config; AND no path is a declared interface surface; AND every
+    remaining path sits under at most one top-level plugin directory. A
+    standing document (PRINCIPLES.md, DESIGN.md, docs/loom/KICKOFF-DEFAULTS.md)
+    always forces the full lane. Anything else is full, with the reason
+    naming the first path (or the plugin-count) that forced it."""
+    manifest = load_manifest()
+    remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
+
+    plugin_dirs = {
+        top for path in remaining
+        if (top := _top_level_plugin_dir(path)) is not None
+    }
+    if len(plugin_dirs) > 1:
+        return "full", (
+            f"touches {len(plugin_dirs)} plugin directories "
+            f"({', '.join(sorted(plugin_dirs))}); the small lane allows at most one."
+        )
+
+    surfaces, _origin = interface_surfaces(repo, manifest)
+    surface_patterns = [glob_to_regex(glob) for glob in surfaces]
+    for path in remaining:
+        reason = _small_lane_path_reason(manifest, surface_patterns, path)
+        if reason is not None:
+            return "full", reason
+
+    return "small", (
+        "every changed path (minus this change's own records) is "
+        "docs/memory/evidence/intent/plan, a test file, or CI/config, "
+        "in at most one plugin directory."
+    )
+
+
+def change_lane(repo: Path, reviewed_id: str | None) -> str:
+    """`"small"` or `"full"` -- see `change_lane_detail` for the reason."""
+    lane, _reason = change_lane_detail(repo, reviewed_id)
+    return lane
+
+
 def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                              out=sys.stdout):
     """Same discipline as the package-tests rule: the record says which
@@ -2794,23 +2969,30 @@ def _filter_exempt_plumbing_paths(
 
 def _collect_untrailered_commits(
     repo: Path, manifest, is_review, shas: list[str], canonical_dir: Path | None, scaffold_mod
-) -> tuple[set[str], list[tuple[str, str]]]:
+) -> tuple[set[str], list[tuple[str, str]], dict[str, set[str]]]:
     """The per-commit half of `push.dispatch-covers-tasks`: every `Task:`
-    id any commit in `shas` claims, and the `(short sha, message)` pairs
-    for commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
+    id any commit in `shas` claims, the `(short sha, message)` pairs for
+    commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
     host-plumbing paths are filtered out (`_filter_exempt_plumbing_paths`)
-    -- with no `Task:` trailer of their own."""
+    -- with no `Task:` trailer of their own, and (per claimed id) the full
+    union of §6 kinds its trailered commits touch, used to tell an
+    evidence-only task (adversary-first, e.g. W0-01) apart from one that
+    also did ordinary work."""
     claimed: set[str] = set()
     untrailered: list[tuple[str, str]] = []
+    id_kinds: dict[str, set[str]] = {}
     for sha in shas:
         paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
         paths, plumbing_reasons = _filter_exempt_plumbing_paths(
             repo, sha, paths, canonical_dir, scaffold_mod
         )
-        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
+        all_kinds = artifact_types(manifest, paths)
+        kinds = all_kinds & TRAILER_DUTY_TYPES
         message = git_text(repo, "log", "-1", "--format=%B", sha)
         ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
         claimed |= ids
+        for task_id in ids:
+            id_kinds.setdefault(task_id, set()).update(all_kinds)
         if kinds and not ids:
             kind_list = ", ".join(sorted(kinds))
             if plumbing_reasons:
@@ -2819,7 +3001,7 @@ def _collect_untrailered_commits(
                 )
                 kind_list += f"; plumbing not exempt: {detail}"
             untrailered.append((sha[:8], kind_list))
-    return claimed, untrailered
+    return claimed, untrailered, id_kinds
 
 
 def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
@@ -2863,21 +3045,46 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     canonical_dir = _plumbing_canonical_dir()
     scaffold_mod = _load_codex_scaffold() if canonical_dir is not None else None
 
-    claimed, untrailered = _collect_untrailered_commits(
+    claimed, untrailered, id_kinds = _collect_untrailered_commits(
         repo, manifest, is_review, shas, canonical_dir, scaffold_mod
     )
 
-    return _dispatch_coverage_failures(claimed, untrailered, review)
+    return _dispatch_coverage_failures(claimed, untrailered, id_kinds, review)
+
+
+def _evidence_only_ids_covered_by_adversary(
+    claimed: set[str], id_kinds: dict[str, set[str]], review
+) -> set[str]:
+    """Adversary-first tasks (e.g. W0-01): a claimed id whose trailered
+    commits touch nothing but `evidence`-typed paths is covered by a
+    dispatch entry of role `adversary` for that same id -- an implementer
+    entry still covers it too, but is not required. Any non-evidence path
+    on the id keeps the implementer requirement (Design decision, W0-02
+    push-gate fix)."""
+    adversary_ids = {
+        str(entry.get("task", "")).strip()
+        for entry in review.get("dispatch", [])
+        if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "adversary"
+    }
+    return {
+        task_id
+        for task_id in claimed
+        if id_kinds.get(task_id) and id_kinds[task_id] <= {"evidence"}
+        and task_id in adversary_ids
+    }
 
 
 def _dispatch_coverage_failures(
-    claimed: set[str], untrailered: list[tuple[str, str]], review
+    claimed: set[str], untrailered: list[tuple[str, str]],
+    id_kinds: dict[str, set[str]], review,
 ):
     """The trailer/dispatch-coverage matching half of `push.dispatch-
     covers-tasks`: an untrailered commit that changes dispatched work
     blocks outright; otherwise every `claimed` task id must name an
-    `implementer` entry in `review["dispatch"]`, or the commits that lost
-    a writer are named. `[]` when both hold."""
+    `implementer` entry in `review["dispatch"]` -- or be evidence-only and
+    covered by an `adversary` entry instead
+    (`_evidence_only_ids_covered_by_adversary`) -- or the commits that
+    lost a writer are named. `[]` when both hold."""
     if untrailered:
         listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)
         return [
@@ -2896,6 +3103,7 @@ def _dispatch_coverage_failures(
         for entry in review.get("dispatch", [])
         if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "implementer"
     }
+    dispatched |= _evidence_only_ids_covered_by_adversary(claimed, id_kinds, review)
     missing = sorted(claimed - dispatched)
     if missing:
         return [
@@ -2964,18 +3172,64 @@ def check_frozen_store_untouched(repo: Path, reviewed_id: str | None):
 VENDOR_OF_CLI = {"codex": "openai", "gemini": "google", "claude": "anthropic"}
 
 
-def check_second_vendor_honoured(repo: Path, review):
+def _resolve_second_vendor_ask(repo: Path, review, reviewed_id: str | None):
+    """`second-vendor: ask`'s answer, deferred to review.json (W0-02).
+
+    Returns `(cli_source, None)` when a cli is owed, `(None, [])` when the
+    round owes nothing (small lane, or the answer was `"none"`), or
+    `(None, failures)` when the answer is missing or the lane cannot be
+    recomputed."""
+    try:
+        lane, _reason = change_lane_detail(repo, reviewed_id)
+    except (UsageError, OSError, KeyError) as exc:
+        return None, [
+            (
+                "push.second-vendor-honoured",
+                f"cannot recompute the change lane for `second-vendor: ask`: {exc}",
+            )
+        ]
+    if lane == "small":
+        return None, []
+    answer = review.get("second_vendor")
+    answer = str(answer).strip() if answer is not None else ""
+    if not answer:
+        return None, [
+            (
+                "push.second-vendor-honoured",
+                "second-vendor: ask but review.json records no `second_vendor` "
+                "answer.",
+            )
+        ]
+    if answer.lower() == "none":
+        return None, []
+    return answer, None
+
+
+def check_second_vendor_honoured(repo: Path, review, reviewed_id: str | None = None):
     """A second vendor the repo chose is used, or the round says why not.
 
     Choosing a second vendor is the user's call (concept-model §5) and the
     checker does not require one. What it does require is that a recorded
     choice is not silently dropped: either that vendor reviewed this round,
     or the round carries `fallback: <cli> missing at <date>` and everyone
-    can see the review ran single-vendor."""
+    can see the review ran single-vendor.
+
+    W0-02: `second-vendor: ask` defers the choice to review.json's top-level
+    `second_vendor` field, answered once per change at decision point ①.
+    The small lane never asks (intent point 1), so a missing answer there is
+    not a violation; elsewhere a missing answer blocks, `"none"` means the
+    single-vendor round was the choice, and `"<cli>"` is honoured exactly
+    like a KICKOFF-declared cli."""
     declared = kickoff_defaults(repo).get("second-vendor", "").strip()
     if not declared or declared.lower() == "none":
         return []
-    cli = declared.split()[0].lower()
+    if declared.lower() == "ask":
+        cli_source, failures = _resolve_second_vendor_ask(repo, review, reviewed_id)
+        if cli_source is None:
+            return failures
+    else:
+        cli_source = declared
+    cli = cli_source.split()[0].lower()
     wanted = VENDOR_OF_CLI.get(cli, cli)
     _round, verdicts = latest_round(
         [entry for entry in review.get("verdicts", []) if isinstance(entry, dict)]
@@ -2997,10 +3251,15 @@ def check_second_vendor_honoured(repo: Path, review):
     if any(grammar.fullmatch(value) for value in written):
         return []
     saw = f"; it records fallback {written[0]!r}" if written else ""
+    origin = (
+        f"review.json's `second_vendor: {cli_source}` answer to `second-vendor: ask`"
+        if declared.lower() == "ask"
+        else f"KICKOFF-DEFAULTS `second-vendor: {declared}`"
+    )
     return [
         (
             "push.second-vendor-honoured",
-            f"KICKOFF-DEFAULTS names `second-vendor: {declared}` ({wanted}), but the "
+            f"{origin} names {wanted}, but the "
             f"latest round used {', '.join(sorted(used)) or 'nothing'} and no verdict "
             f"records `fallback: \"{cli} missing at <YYYY-MM-DD>\"`{saw}.",
         )
@@ -3020,16 +3279,26 @@ def scored_verdicts(review) -> tuple[int, list[dict]]:
     return latest_round(usable)
 
 
-def check_verdicts(review) -> list[tuple[str, str]]:
+def check_verdicts(repo: Path, review, reviewed_id: str | None) -> list[tuple[str, str]]:
+    """The reviewer-count floor, lane-dependent since W0-02: a small-lane
+    change (plan risk 3: "its message now names the lane") needs one
+    fresh-context verdict, a full-lane change still needs two."""
     round_number, verdicts = scored_verdicts(review)
     reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
+    try:
+        lane, lane_reason = change_lane_detail(repo, reviewed_id)
+    except (UsageError, OSError, KeyError) as exc:
+        lane, lane_reason = "full", f"cannot recompute the change lane: {exc}"
+    floor = 1 if lane == "small" else 2
     failures = []
-    if len(reviewers) < 2:
+    if len(reviewers) < floor:
+        detail = f" ({lane_reason})" if lane == "full" else ""
         failures.append(
             (
                 "push.verdicts-ge-2",
-                f"review round {round_number} carries {len(reviewers)} distinct "
-                "reviewer(s) with a readable verdict; two fresh contexts are required.",
+                f"{lane} lane: review round {round_number} carries {len(reviewers)} "
+                f"distinct reviewer(s) with a readable verdict; {floor} required"
+                f"{detail}.",
             )
         )
     not_passing = [

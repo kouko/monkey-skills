@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改審查站文字的一個係數與交回動作；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/]
-status: open
+status: withdrawn — superseded by 2026-09-03-small-change-lane
 
 ## Problem
 審查站寫「NEEDS_REVISION 的修正輪不計入 checkpoint 上限」，所以沒有任何東西會說「停」。首個真實 change（2026-09-03-loom-post-merge-seams）裡：W0-04 的 after-task 審查連修四輪（無條件前提、改名、刪檔、BOM），每輪修一個不同的解析邊界，到第三輪之後才有人問「為什麼要讀內容判斷」，改成結構觸發後四類一次全擋；spec 審查跑到第 8 輪，第 5 輪之後多是揭露措辭。兩次都是 kouko 或 orchestrator 手動喊停換方向，機制本身不會。

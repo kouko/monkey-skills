@@ -5,6 +5,30 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-09-04 — Small-change lane
+
+`docs/loom/2026-09-03-small-change-lane/`. Rule count stays 27 — no rule
+added, `push.verdicts-ge-2`'s floor becomes lane-dependent.
+
+### Added
+
+- **Lane recompute.** `change_lane()` reads the changed paths of a review
+  scope and returns `small` when every path falls in a pre-authorised
+  class (docs, memory, evidence, intent, plan, tests, CI/config) touching
+  one plugin and no interface surface, else `full`. A standing document
+  (PRINCIPLES.md, DESIGN.md, docs/loom/KICKOFF-DEFAULTS.md) always forces
+  the full lane (branch-end fix, 2026-09-04).
+- **Lane-dependent verdict floor.** `push.verdicts-ge-2` requires one
+  verdict in the small lane, two or more in the full lane; its message
+  names the lane.
+- **`second-vendor: ask` grammar.** `check_second_vendor_honoured` accepts
+  a per-change answer recorded as review.json's top-level `second_vendor`
+  (`<cli>` or `none`) alongside the existing `<cli> | none` KICKOFF forms.
+- **`docs-lint` grammar.** A new KICKOFF-DEFAULTS line, `<command> | none`.
+- **PRINCIPLES.md non-negotiable 2 amended** — ratified 2026-09-04: the
+  reviewer floor is now two in the full lane, one in the small lane; blind
+  run omitted only when every Acceptance line is mechanical.
+
 ## [1.0.1] — 2026-09-03 — Post-merge seams
 
 Closes the seams the first 1.0 branch hit against its own gate

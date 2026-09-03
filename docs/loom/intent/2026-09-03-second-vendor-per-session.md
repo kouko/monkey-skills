@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改站文字與一條 checker 規則讀哪個記錄；沒有使用者讀或輸入的介面，行為只有用／不用兩態
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/]
-status: open
+status: withdrawn — superseded by 2026-09-03-small-change-lane
 
 ## Problem
 現在要不要用第二家 vendor（Codex）做讀審，是 repo 層級一次決定、寫進 `docs/loom/KICKOFF-DEFAULTS.md` 的 `second-vendor:` 行，之後每個 change、每一輪都照做，沒有「這次先不要」的開關。kouko 在 2026-09-03 的首個真實 change（spec 審查跑到第 7 輪、每輪一臂 Codex）提出：想改成 by session／by change 決定。

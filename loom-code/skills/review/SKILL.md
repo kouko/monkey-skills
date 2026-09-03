@@ -1,7 +1,7 @@
 ---
 name: review
 description: |
-  Runs one checkpoint review of a change: two or more fresh-context reviewers, a blind run and an adversarial pass over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec (or write-plan for a minimal spec) for the spec lens, by build after a task or wave, by ship at branch end, or when asked to review the change in progress.
+  Runs one checkpoint review of a change: fresh-context reviewers (two or more full lane, one small lane), an adversarial pass, and a blind run (skipped when every Acceptance line is mechanical) over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec/write-plan for the spec lens, by build after a task or wave, by ship at branch end, or on request.
 version: 1.0.0
 ---
 
@@ -98,8 +98,7 @@ git diff --stat <reviewed_sha>..HEAD
 ```
 
 Classify every changed path by the type mapping in
-`contract/manifest.yaml` (`artifact_types:`) — a `KICKOFF-DEFAULTS.md`
-line `artifact-types: <glob>=<type>` overrides it. Then run the actions the
+`contract/manifest.yaml` (`artifact_types:`). Then run the actions the
 type asks for:
 
 | Artifact type | Lens | Read | Blind run | Adversarial |
@@ -116,18 +115,44 @@ A delta that spans types runs the union: one reviewer may carry two lenses,
 but every type present must be covered by some lens. The dimension
 definitions live in `references/lenses.md`; hand reviewers that path.
 
-## 2. Read — at least two fresh reviewers
+**Lane.** The checker recomputes `small | full` from the same classified
+delta — never asked for, never chosen by an agent. A change is `small`
+when every changed path falls in a pre-authorised class (tests only;
+docs only; CI/config/dependency declarations; version and manifest sync;
+a clean revert), the delta touches no `interface-surfaces` glob, touches
+no `gate` or `skill` artifact type, includes no non-test `code`-typed
+path, and every changed path sits under one top-level plugin directory
+(or none). One line of non-test code, one `gate` or `skill` file, or a
+second plugin makes the whole delta `full` — a smaller diff never buys a
+smaller lane. "Tests only" is name or location only (`test_*.py`,
+`*_test.py`, or a `tests/` path segment) — never content-verified, and
+not the §6 artifact-type table's classification (a file relocated under
+`tests/` still maps to `code` there); a production file moved into
+`tests/` is therefore a reviewer's job to notice in the diff, not the
+lane recompute's.
+
+| Lane | Checkpoint |
+|---|---|
+| `small` | one fresh-context reviewer, package tests, adversarial probes; the blind run runs only when an Acceptance line of the intent is not mechanical — cannot be settled by "run the command, compare the number" |
+| `full` | unchanged — two or more fresh-context reviewers, blind run, adversarial |
+
+## 2. Read — reviewers, by lane
 
 <!-- gate: review.two-fresh-reviewers -->
-Dispatch in two stages. First the adversary (§4) and the blind-runner
-(§3), each in its own message so the two run concurrently; their probes
-and report are committed before either reviewer starts, because a
-verdict's `sha` must name the commit that becomes `reviewed_sha`, and
-dispatching reviewers first would let a later commit move that target out
-from under them. Then dispatch **two fresh-context reviewers** at minimum,
-in one message so they run concurrently and cannot see each other's
-findings. One reviewer is not a review: it is an opinion with nothing to
-disagree with, and `push.verdicts-ge-2` refuses the push.
+Dispatch in two stages. First the adversary (§4) and, in the full lane,
+the blind-runner (§3) — each in its own message so the two run
+concurrently; their probes and report are committed before any reviewer
+starts, because a verdict's `sha` must name the commit that becomes
+`reviewed_sha`, and dispatching reviewers first would let a later commit
+move that target out from under them. The two agents run concurrently;
+their `dispatch[]` entries are appended and committed once, before either
+is dispatched — never by the agents themselves and never in parallel.
+Then dispatch fresh-context
+reviewers: **two or more, in one message so they run concurrently and
+cannot see each other's findings, in the full lane**; **exactly one, in
+the small lane** (§1). One reviewer in the full lane is not a review: it
+is an opinion with nothing to disagree with, and `push.verdicts-ge-2`
+refuses the push below the lane's floor.
 <!-- /gate -->
 
 Each gets the contract `agents/reviewer.md` and this input:
@@ -280,6 +305,15 @@ Findings already open from an earlier round must each be closed before
 
 `push.open-findings-closed` refuses a push while any entry is neither.
 
+**Severity is by consequence, not by wording.** `important` means a reader
+following the text would act wrongly, or a fact the checker or CI relies
+on is wrong; everything else — wording, terminology, units, the same fact
+stated two ways, readability — is `nit`, even where it is literally
+incorrect (`references/lenses.md` "Severity and verdict" is the full
+rule). `nit`s never open a round: they never become an `open_findings`
+entry, and `ship` folds every open one into a single commit before push,
+confirmed by the reader who raised it in one line — no new round.
+
 ## 7. Write the record
 
 Write `review.json` — verdicts, probes, findings and vendors of this round
@@ -369,13 +403,22 @@ A worked record:
 
 - **`NEEDS_REVISION`** — hand the findings to `loom-code:build` as fix
   work, one commit per finding, then run this station again as the next
-  `round` of the same checkpoint. **Fix rounds do not count** against the
-  five-checkpoint cap; they are one checkpoint finishing.
+  `round` of the same checkpoint (§8a). **Fix rounds do not count** against
+  the five-checkpoint cap; they are one checkpoint finishing.
 - **`PASS` / `PASS_WITH_NOTES`, waves remaining** — back to
   `loom-code:build` for the next wave.
 - **`PASS` / `PASS_WITH_NOTES`, `branch-end`** — to `loom-code:ship`, which
   runs the memory step, the push and decision point ③. The user reads the
   blind-run report there, never the diff.
+
+## 8a. Fix rounds
+
+A `NEEDS_REVISION` round is not a new checkpoint starting over — it is the
+same checkpoint continuing. The full procedure — a fix-commits-only delta,
+resuming the same reader with its own previous findings, no probe re-run,
+rebuttal-to-dismissed, and the third-round design re-look — is
+`references/fix-rounds.md`; hand reviewers that path on every round after
+the first.
 
 ## Lenses at a glance
 
@@ -401,8 +444,8 @@ they want, what they will see, or whether it is done.
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
 | write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | two or more fresh-context reviewers; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read; a `gate`-typed task is adversary-first, the adversary dispatched before the implementer | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | fresh-context reviewers, one in the small lane, two or more in the full lane (§1); no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 

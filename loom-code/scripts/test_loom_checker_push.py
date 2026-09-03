@@ -25,10 +25,13 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 import codex_scaffold  # sibling module, same scripts/ dir (W0-05 plumbing exemption)
+import loom_checker  # W0-02: change_lane unit tests mirror the adversary's probes
 
 CHECKER = Path(__file__).with_name("loom_checker.py")
+MANIFEST_PATH = Path(__file__).resolve().parents[1] / "contract" / "manifest.yaml"
 CHANGE = "2026-09-02-a"
 REVIEW = f"docs/loom/{CHANGE}/review.json"
 
@@ -1937,6 +1940,74 @@ def test_a_commit_mixing_exempt_plumbing_and_a_code_file_still_needs_a_trailer(
     assert "gate" not in message
 
 
+# --- push.dispatch-covers-tasks: evidence-only task covered by an
+# adversary dispatch entry (W0-02 fix, adversary-first tasks) -------------
+
+
+def test_an_evidence_only_task_is_covered_by_an_adversary_dispatch_entry(
+    tmp_path: Path,
+) -> None:
+    """An adversary-first task (e.g. W0-01) whose trailered commit touches
+    only `**/evidence/**` paths needs no implementer dispatch entry -- the
+    adversary who wrote the probe covers it. Giving it an implementer
+    entry too would trip push.reviewer-ne-implementer, so the checker
+    must accept the adversary-only shape."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / "evidence/probe_w9.py").write_text(
+        "raise SystemExit(0)\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "test: adversary probe\n\nTask: W9-01")
+    new_sha = git(repo, "rev-parse", "HEAD")
+    dispatch = [dict(entry) for entry in DISPATCH_ENTRIES]
+    dispatch.append(
+        {"task": "W9-01", "role": "adversary", "agent_id": "agent-adv", "model": "m",
+         "started": "2026-09-02T12:00:00Z", "fresh_context": True}
+    )
+    write_review(repo, review_body(new_sha, dispatch=dispatch))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert "push.dispatch-covers-tasks" not in blocked_rules(result)
+
+
+def test_an_evidence_plus_code_task_still_needs_an_implementer_entry(
+    tmp_path: Path,
+) -> None:
+    """The same commit also touches a non-evidence path (`b.py`) under the
+    same `Task:` trailer -- the adversary-only exemption is per-task, not
+    per-path, so a task with ANY non-evidence path still needs an
+    implementer dispatch entry, adversary entry or not."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / "evidence/probe_w9.py").write_text(
+        "raise SystemExit(0)\n", encoding="utf-8"
+    )
+    (repo / "b.py").write_text("value = 2\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "test: adversary probe plus code\n\nTask: W9-01")
+    new_sha = git(repo, "rev-parse", "HEAD")
+    dispatch = [dict(entry) for entry in DISPATCH_ENTRIES]
+    dispatch.append(
+        {"task": "W9-01", "role": "adversary", "agent_id": "agent-adv", "model": "m",
+         "started": "2026-09-02T12:00:00Z", "fresh_context": True}
+    )
+    write_review(repo, review_body(new_sha, dispatch=dispatch))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, result.stdout
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
+    assert match, result.stderr
+    assert "W9-01" in match.group(1)
+
+
 def test_a_plumbing_path_is_blocked_when_the_checker_copy_is_a_symlink(
     tmp_path: Path,
 ) -> None:
@@ -2029,3 +2100,283 @@ def test_a_plumbing_path_is_blocked_when_the_checker_copy_mode_is_not_100644(
     match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
     assert match, result.stderr
     assert "mode mismatch" in match.group(1)
+
+
+# --- W0-02: change_lane -----------------------------------------------------
+# Unit-test mirrors of docs/loom/2026-09-03-small-change-lane/evidence/probes/
+# test_abuse_change_lane.py -- kept here as the permanent regression lock;
+# the probe file is the adversary's, this file is the implementer's.
+
+
+def _lane_init_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "lane_repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    git(repo, "add", "seed.txt")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    return repo
+
+
+def _lane_commit(repo: Path, files: dict[str, str], message: str) -> str:
+    for rel, content in files.items():
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", message)
+    return git(repo, "rev-parse", "HEAD")
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        {"loom-code/scripts/test_lane_a.py": "def test_x():\n    assert True\n"},
+        {"README.md": "docs change\n"},
+        {".github/workflows/x.yml": "name: x\non: push\n"},
+        {"requirements-dev.txt": "pytest\n"},
+        {"docs/loom/memory/note.md": "a memory note\n"},
+    ],
+    ids=["test-file", "docs", "ci-workflow", "requirements", "memory"],
+)
+def test_change_lane_preauthorised_classes_are_small(tmp_path: Path, files: dict) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(repo, files, "chore: lane class probe")
+    assert loom_checker.change_lane(repo, sha) == "small"
+
+
+@pytest.mark.parametrize(
+    "files,fragment",
+    [
+        ({"loom-code/scripts/lane_helper.py": "x = 1\n"}, "non-test code"),
+        ({"loom-code/hooks/lane.sh": "#!/bin/sh\necho x\n"}, "gate"),
+        ({"loom-code/skills/lane/SKILL.md": "# lane\n"}, "skill"),
+        ({"loom-code/contract/templates/lane.md": "# t\n"}, "interface surface"),
+    ],
+    ids=["nontest-code", "hook", "skill", "template"],
+)
+def test_change_lane_full_triggers(tmp_path: Path, files: dict, fragment: str) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(repo, files, "feat: lane trigger probe")
+    lane, reason = loom_checker.change_lane_detail(repo, sha)
+    assert lane == "full"
+    assert fragment in reason
+
+
+def test_change_lane_kickoff_defaults_is_full(tmp_path: Path) -> None:
+    """W0-02 branch-end fix: a standing document (here KICKOFF-DEFAULTS.md,
+    whose lines are gate inputs) always forces the full lane -- intent
+    point 1 / PRINCIPLES.md non-negotiable 2."""
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo,
+        {"docs/loom/KICKOFF-DEFAULTS.md": "standing-docs: waived -- probe (2026-09-04)\n"},
+        "chore: kickoff-defaults probe",
+    )
+    lane, reason = loom_checker.change_lane_detail(repo, sha)
+    assert lane == "full"
+    assert "standing document" in reason
+
+
+def test_change_lane_two_plugins_is_full_even_test_only(tmp_path: Path) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo,
+        {
+            "loom-code/scripts/test_a.py": "def test_a():\n    assert True\n",
+            "loom-design/scripts/test_b.py": "def test_b():\n    assert True\n",
+        },
+        "test: two-plugin probe",
+    )
+    assert loom_checker.change_lane(repo, sha) == "full"
+
+
+def test_change_lane_ignores_this_changes_own_review_json(tmp_path: Path) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo, {f"docs/loom/{CHANGE}/review.json": '{"reviewed_sha": "x"}\n'}, "chore(loom): review only"
+    )
+    assert loom_checker.change_lane(repo, sha) == "small"
+
+
+# --- W0-02: push.verdicts-ge-2 floor is lane-dependent ----------------------
+
+
+def _lane_push_repo(
+    tmp_path: Path, *, files: dict[str, str], kickoff_lines: list[str],
+    verdicts: list[dict], review_overrides: dict | None = None,
+) -> Path:
+    repo = tmp_path / "lane_repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    # KICKOFF-DEFAULTS.md lands on the base branch, not the change branch:
+    # it is a standing document (branch-end fix, W0-02) and would otherwise
+    # force full lane on every one of these small-lane fixtures merely for
+    # carrying the test's package-tests/second-vendor scaffolding.
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    lines = [f"- package-tests: {PASSING_COMMAND} — the fixture's suite (2026-09-04)", *kickoff_lines]
+    kickoff.write_text("# Kickoff Defaults\n\n" + "\n".join(lines) + "\n", encoding="utf-8")
+    git(repo, "add", "seed.txt", "docs/loom/KICKOFF-DEFAULTS.md")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    (repo / "evidence").mkdir(exist_ok=True)
+    for name in ABUSE_CASES:
+        (repo / f"evidence/abuse_{name}.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
+    (repo / "evidence/tests.txt").write_text("1 passed\n", encoding="utf-8")
+    for rel, content in files.items():
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: lane push probe\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+    overrides = dict(review_overrides or {})
+    overrides["verdicts"] = [dict(entry, sha=reviewed_sha) for entry in verdicts]
+    overrides.setdefault(
+        "probes",
+        [
+            {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
+             "result": "pass", "artifact": "evidence/tests.txt"},
+            *_adversarial_records(reviewed_sha, 3),
+        ],
+    )
+    overrides.setdefault("dispatch", [dict(entry) for entry in DISPATCH_ENTRIES])
+    write_review(repo, review_body(reviewed_sha, **overrides))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return repo
+
+
+_ONE_ANTHROPIC_VERDICT = [
+    {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m", "lens": "code",
+     "verdict": "PASS", "dimension_scores": {}, "findings": []},
+]
+_TWO_ANTHROPIC_VERDICTS = [
+    {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m", "lens": "code",
+     "verdict": "PASS", "dimension_scores": {}, "findings": []},
+    {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m", "lens": "code",
+     "verdict": "PASS_WITH_NOTES", "dimension_scores": {}, "findings": []},
+]
+
+
+def test_small_lane_verdict_floor_is_one(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/test_floor.py": "def test_x():\n    assert True\n"},
+        kickoff_lines=["- docs-lint: none — not adopted (2026-09-04)"],
+        verdicts=_ONE_ANTHROPIC_VERDICT,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_full_lane_verdict_floor_stays_two_and_names_the_lane(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/floor_helper.py": "x = 1\n"},
+        kickoff_lines=["- docs-lint: none — not adopted (2026-09-04)"],
+        verdicts=_ONE_ANTHROPIC_VERDICT,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+    assert "full lane" in result.stderr
+
+
+# --- W0-02: second-vendor: ask ----------------------------------------------
+
+
+def test_second_vendor_ask_answer_none_passes(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/ask_none.py": "x = 1\n"},
+        kickoff_lines=[
+            "- second-vendor: ask — trial (2026-09-04)",
+            "- docs-lint: none — not adopted (2026-09-04)",
+        ],
+        verdicts=_TWO_ANTHROPIC_VERDICTS,
+        review_overrides={"second_vendor": "none"},
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_second_vendor_ask_missing_answer_blocks_in_full_lane(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/ask_missing.py": "x = 1\n"},
+        kickoff_lines=[
+            "- second-vendor: ask — trial (2026-09-04)",
+            "- docs-lint: none — not adopted (2026-09-04)",
+        ],
+        verdicts=_TWO_ANTHROPIC_VERDICTS,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.second-vendor-honoured" in blocked_rules(result)
+
+
+def test_second_vendor_ask_not_asked_in_small_lane(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/test_ask_small.py": "def test_x():\n    assert True\n"},
+        kickoff_lines=[
+            "- second-vendor: ask — trial (2026-09-04)",
+            "- docs-lint: none — not adopted (2026-09-04)",
+        ],
+        verdicts=_ONE_ANTHROPIC_VERDICT,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+# --- W0-02: docs-lint KICKOFF-DEFAULTS grammar ------------------------------
+
+
+def test_docs_lint_is_a_declared_kickoff_defaults_key() -> None:
+    manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
+    names = {entry["name"] for entry in manifest.get("kickoff_defaults", [])}
+    assert "docs-lint" in names
+
+
+def test_second_vendor_grammar_includes_ask() -> None:
+    manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
+    entry = next(e for e in manifest["kickoff_defaults"] if e["name"] == "second-vendor")
+    assert "ask" in entry["grammar"]
+
+
+# --- W0-02 fix round: dot-dirs are not plugins; every change-folder record
+# is excluded (not an enumerated subset) ---------------------------------
+
+
+def test_change_lane_ci_config_plus_one_plugin_test_file_is_small(tmp_path: Path) -> None:
+    """`.github/workflows/x.yml` starts with `.`, so it must not count as a
+    second "plugin directory" alongside `loom-code/`."""
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo,
+        {
+            ".github/workflows/x.yml": "name: x\non: push\n",
+            "loom-code/scripts/test_dotdir_probe.py": "def test_x():\n    assert True\n",
+        },
+        "ci: dot-dir plugin probe",
+    )
+    assert loom_checker.change_lane(repo, sha) == "small"
+
+
+def test_change_lane_spec_md_alone_is_small(tmp_path: Path) -> None:
+    """`docs/loom/<change-id>/spec.md` is a change-folder record, same as
+    plan.md/review.json/evidence -- the exclusion must not enumerate a
+    subset of record file names."""
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo, {"docs/loom/demo/spec.md": "intent: demo@aaaaaaa\n"}, "docs: spec-only probe"
+    )
+    assert loom_checker.change_lane(repo, sha) == "small"

@@ -122,6 +122,14 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
       - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}
       - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
+      # second_vendor (W0-02, optional top-level field, grammar "<cli> | none"):
+      # the per-change answer to KICKOFF's `second-vendor: ask`, recorded once
+      # at decision point ①. Not in `fields:` above -- unlike every field
+      # there, it is deliberately absent from templates/review.json (the
+      # template is an interface surface this change does not touch; the
+      # field is optional and read only when KICKOFF declares `ask`).
+      # push.second-vendor-honoured reads it instead of KICKOFF-DEFAULTS when
+      # the KICKOFF value is `ask`, and never requires it in the small lane.
 
 standing_docs:       # not per-change (§2a, §8)
   - {name: PRINCIPLES.md,       tool: product-principles, ratified_by: required, reject_when: "kind: product and missing"}
@@ -129,14 +137,15 @@ standing_docs:       # not per-change (§2a, §8)
   - {name: KICKOFF-DEFAULTS.md, tool: null,               path: docs/loom/KICKOFF-DEFAULTS.md}
 
 kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
-  - {name: second-vendor,          grammar: "<cli> | none"}
+  - {name: second-vendor,          grammar: "<cli> | none | ask", note: "`ask` defers the choice to review.json's per-change `second_vendor` field (W0-02); the small lane never asks"}
+  - {name: docs-lint,              grammar: "<command> | none", note: "declared, not a blocker (W0-02): a declared command runs in CI for its report only; reviewer contract reads it to decide whether style findings are allowed at all"}
   - {name: package-tests,          grammar: "<command> | none", note: "the command push.probes-package-tests compares the recorded run against; absent = recomputed from the repo's build markers"}
   - {name: standing-docs,          grammar: "waived"}
   - {name: session-start-baseline, grammar: "<sha> <words>"}
   - {name: interface-surfaces,     grammar: "<glob>[, <glob>…]", default: "**/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/**"}
-  - {name: artifact-types,         grammar: "<glob>=<type>[, …]", note: "overrides the §6 type mapping"}
+  - {name: artifact-types,         grammar: "<glob>=<type>[, …]", note: "reserved — declared, not read by the checker yet; the lane and the adversarial floor use the §6 mapping below"}
 
-artifact_types:      # §6 type mapping; KICKOFF-DEFAULTS artifact-types overrides
+artifact_types:      # §6 type mapping; KICKOFF-DEFAULTS artifact-types is reserved — declared, not read by the checker yet
   - {glob: "docs/loom/intent/**",        type: intent}
   - {glob: "docs/loom/*/spec.md",        type: spec}
   - {glob: "docs/loom/*/plan.md",        type: plan}

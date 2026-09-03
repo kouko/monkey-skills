@@ -1,0 +1,1161 @@
+{
+  "reviewed_sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "after-task:W0-02",
+      "reviewer": "codex-review-w0-02",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+gate",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — no external surface",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:2503",
+          "text": ".github counted as a plugin: CI yml + one loom-code test file → full",
+          "fix": "dot-dirs are not plugins"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:2489",
+          "text": "records exclusion missed docs/loom/<id>/spec.md",
+          "fix": "exclude every record under the change folder"
+        },
+        {
+          "severity": "important",
+          "anchor": "PRINCIPLES.md:11",
+          "text": "small lane (one reviewer) contradicts ratified non-negotiable 2 (at least two)",
+          "fix": "ratify the amendment or keep two"
+        }
+      ],
+      "notes": "read-only sandbox could not run pytest; --list-rules 27 confirmed"
+    },
+    {
+      "round": 1,
+      "scope": "after-task:W0-02",
+      "reviewer": "sonnet-review-w0-02",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+gate",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "N/A — engineering change",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "N/A"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:171-174",
+          "text": "RULES catalog text for push.verdicts-ge-2 still says at least two",
+          "fix": "state the lane-dependent floor"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/loom_checker.py:3117-3129",
+          "text": "the new except fallback in _resolve_second_vendor_ask / check_verdicts is never exercised",
+          "fix": "one unit test making change_lane_detail raise; asserts fail-closed"
+        }
+      ],
+      "notes": "probes 25 passed; test_loom_checker_push 118 passed; probe commit precedes implementation commit (adversary-first verified)"
+    },
+    {
+      "round": 2,
+      "scope": "after-task:W0-02",
+      "reviewer": "codex-review-w0-02",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+gate",
+      "verdict": "PASS",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: read only 8cb2fbcb..7f4e19e1; all three round-1 findings FIXED"
+    },
+    {
+      "round": 2,
+      "scope": "after-task:W0-02",
+      "reviewer": "sonnet-review-w0-02",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+gate",
+      "verdict": "PASS",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: resumed reader, read only the two fix commits; important FIXED; nit deferred to the ship nit batch"
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/contract/manifest.yaml:148",
+          "text": "manifest still claims KICKOFF artifact-types overrides the mapping; the checker never reads it",
+          "fix": "mark reserved or implement"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:2456",
+          "text": "standing admitted to the small lane, contradicting PRINCIPLES 2 and the intent",
+          "fix": "remove standing from SMALL_LANE_ARTIFACT_TYPES"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/SKILL.md:4",
+          "text": "description still says every checkpoint uses two reviewers and a blind run",
+          "fix": "lane-aware description"
+        }
+      ],
+      "adjudication": {
+        "F1": "DISMISSED — fixed by ship §3.5 confirmation round + review-only commit",
+        "F2": "UPHELD — manifest still published the override",
+        "F3": "DISMISSED — trust-by-procedure; a question-evidence check would be a new mechanism",
+        "F4": "DISMISSED — path-based pre-authorisation by design; the reviewer sees the file in the diff",
+        "F5": "DISMISSED — reader procedure, not claimed as checker enforcement",
+        "F6": "DISMISSED — predates this delta"
+      },
+      "notes": "all nine station-summary copies identical (sha-256); second-vendor ask wording matches the checker; read-only sandbox, no pytest"
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "N/A"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/SKILL.md:120",
+          "text": "\"tests only\" is a name/location regex with no content check and is not the artifact-type table classification (a tests/ file is still code there); undisclosed (adversary F4)",
+          "fix": "one disclosure clause in the lane paragraph"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md",
+          "text": "no-finding-outside-delta and third-round re-look are reader-trusted, not checker-enforced (F5)",
+          "fix": "one caveat line"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/SKILL.md:138-139",
+          "text": "\"each in its own message so the two run concurrently\" invites dispatch[] write races (F6, pre-existing wording re-touched here)",
+          "fix": "one sentence: append dispatch entries once, before dispatching"
+        }
+      ],
+      "adjudication": {
+        "F1": "confirmed fixed (37fc3f94)",
+        "F2": "confirmed fixed in SKILL.md; manifest text untouched by the branch",
+        "F3": "DISMISSED — consistent with review.json trust model; record as residual (one extra check inside push.second-vendor-honoured would close it)",
+        "F4": "UPHELD important — disclosure clause missing",
+        "F5": "nit — ship nit batch",
+        "F6": "residual — pre-existing; serialise the append"
+      },
+      "notes": "package suite 837 passed (loom-code); versions consistent across carriers"
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/review/SKILL.md:4",
+          "text": "description still implies every checkpoint includes a blind run",
+          "fix": "ship nit batch"
+        }
+      ],
+      "notes": "fix round: read only 8868394e..4dcaefde; 1 FIXED, 2 FIXED, 3 UNFIXED (nit)"
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs",
+      "verdict": "PASS",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: resumed reader; F4 clause FIXED at review/SKILL.md:127-130; nits F5/F6 carried to the ship nit batch"
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "nit-batch confirmation: nits fixed; only other change is the dispatch record; no code/tests/contract",
+      "nit_batch_confirmation": true
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "nit-batch confirmation: F5 and F6 landed as raised; description clarified; residuals recorded honestly",
+      "nit_batch_confirmation": true
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: KICKOFF compat note honest; dispatch coverage recomputed from committed path types"
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: coverage rule recomputes facts (PRINCIPLES 3), matches intent point 4; 123/123 push tests"
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill",
+      "verdict": "PASS",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round 7: capture-intent second-vendor detail moved to references; nothing dropped"
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "verdict": "PASS",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round 7: move verbatim, ask clause restated in full, pointer resolves, 3333 words"
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "delta_is_one_status_line": true,
+      "notes": "close-commit round: one status line, PR #784 OPEN"
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "delta_is_one_status_line": true,
+      "notes": "close-commit round: one status line, PR #784 OPEN"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "1083 passed in 34.27s",
+      "artifact": "",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "1094 passed in 33.53s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "clean worktree at e8d99de4; Acceptance 1-7 walked; cold reads of review/build/write-plan text (sonnet-blindrun-branch-end)",
+      "sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "result": "#1,#2,#3,#5,#6,#7 works; #4 not yet measurable",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "attack-catalogue pass over the lane, fix-round, nit-batch and second-vendor-ask text (sonnet-adversary-branch-end-skill)",
+      "sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "result": "6 findings: F1 F2 fixed, F3 F5 F6 dismissed/residual, F4 disclosed",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/adversarial-branch-end-skill.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "4dcaefdee4ca3a16f086a95b632442be7668d205",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "result": "1094 passed in 33.59s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "43ce6e81429d1c120c29614b81e5316d0ab15c96",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "1096 passed in 35.05s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "1096 passed in 34.23s (loom-design suite 181 passed separately)",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "1096 passed in 35.92s",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "657c21a3e5ee4cba1f996da3406e5de05072f9d1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是讓小改動在 20 分鐘內走完 loom（預授權類別自動走小車道；修正輪只讀修正 commit；嚴重度看後果、nit 不開輪；gate 類 task 探針先寫；second-vendor 多 ask；docs-lint 可宣告不阻擋；量測 ≤20 分）。對嗎？（答：對，確認）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次包含哪幾條 intent？（答：只有 small-change-lane，吸收三條）",
+      "type": "what"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "after-task:W0-02-01",
+      "anchor": "loom-code/scripts/loom_checker.py:2503",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "codex-review-w0-02",
+      "severity": "important",
+      "text": ".github counted as a plugin",
+      "resolved": "closed by 962a1110 — dot-dirs and bare docs/ are not plugins; unit test test_change_lane_ci_config_plus_one_plugin_test_file_is_small"
+    },
+    {
+      "id": "after-task:W0-02-02",
+      "anchor": "loom-code/scripts/loom_checker.py:2489",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "codex-review-w0-02",
+      "severity": "important",
+      "text": "spec.md not excluded from the lane",
+      "resolved": "closed by 962a1110 — docs/loom/*/** glob; unit test test_change_lane_spec_md_alone_is_small"
+    },
+    {
+      "id": "after-task:W0-02-03",
+      "anchor": "PRINCIPLES.md:11",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "codex-review-w0-02",
+      "severity": "important",
+      "text": "small lane contradicts non-negotiable 2",
+      "resolved": "closed by 7f4e19e1 — kouko chose option A at this checkpoint: non-negotiable 2 amended to two reviewers in the full lane, one in the small lane, blind run omitted when every Acceptance line is mechanical; ratified-by kouko 2026-09-04"
+    },
+    {
+      "id": "after-task:W0-02-04",
+      "anchor": "loom-code/scripts/loom_checker.py:171-174",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "sonnet-review-w0-02",
+      "severity": "important",
+      "text": "RULES catalog text stale",
+      "resolved": "closed by 962a1110 — catalog text for verdicts-ge-2 and second-vendor-honoured updated; --list-rules still 27"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/skills/ship/SKILL.md §3.5",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F1: nit batch commit cannot reach push (HEAD not review-only)",
+      "resolved": "closed by 37fc3f94 — §3.5 now: nit-batch commit → confirmation verdicts of the last round's readers at that sha → review-only commit → push; confirmed by both readers"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/skills/review/SKILL.md:100-102",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F2: text claims a KICKOFF artifact-types override the checker never reads",
+      "resolved": "closed by 37fc3f94 (SKILL.md claim removed) and 205486f0 (manifest note: reserved — declared, not read by the checker yet)"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/skills/write-plan/references/second-vendor-ask-and-docs-lint.md",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F3: a forged second_vendor: none with no question asked passes",
+      "dismissed": "trust-by-procedure like every review.json field; a question-evidence check would be a new mechanism the intent forbids; recorded as a residual in the intent Open questions (nit batch) (both readers concur; see round-3 adjudication) by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "loom-code/skills/review/SKILL.md:119-128",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F4: a production .py moved under tests/ classifies small",
+      "resolved": "closed by 205486f0 — the lane paragraph now discloses that \"tests only\" is name/location only, not content-verified, and that a moved file is the reviewer's job to notice; the classification itself stays path-based by design (codex: DISMISSED; sonnet: UPHELD as disclosure, FIXED); residual recorded in the intent"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/skills/review/SKILL.md:138-140",
+      "origin_sha": "e8d99de4776513413d6009d75271c94ca452ebf8",
+      "raised_by": "sonnet-adversary-branch-end-skill",
+      "severity": "important",
+      "text": "F6: concurrent writers of review.json can drop a dispatch record",
+      "dismissed": "predates this change (wording verbatim at base b4ac0430); the serialisation sentence goes in the ship nit batch and the residual in the intent (both readers concur; see round-3 adjudication) by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "loom-code/contract/manifest.yaml:148",
+      "origin_sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "raised_by": "codex-review-branch-end",
+      "severity": "important",
+      "text": "manifest still claims the artifact-types override",
+      "resolved": "closed by 205486f0 — note says reserved, not read by the checker yet"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "loom-code/scripts/loom_checker.py:2456",
+      "origin_sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "raised_by": "codex-review-branch-end",
+      "severity": "important",
+      "text": "standing admitted to the small lane",
+      "resolved": "closed by 205486f0 — standing removed; KICKOFF-only branch → full (unit test + probe 26/26); record-pattern regex fixed on the way"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "loom-code/skills/review/SKILL.md:120",
+      "origin_sha": "8868394ea40335c6d9e9475decf8b26e25eb6308",
+      "raised_by": "sonnet-review-branch-end",
+      "severity": "important",
+      "text": "tests-only class undisclosed as name/location-only",
+      "resolved": "closed by 205486f0 — clause added; confirmed by the reader in round 4"
+    },
+    {
+      "id": "branch-end-09",
+      "anchor": "loom-code/scripts/loom_checker.py:2998",
+      "origin_sha": "3938bba0",
+      "raised_by": "push-gate dry run (orchestrator)",
+      "severity": "important",
+      "text": "dispatch-covers-tasks required an implementer entry for the adversary-first task W0-01 whose commits are evidence-only probes",
+      "resolved": "closed by 8bf6429e — evidence-only task commits are covered by an adversary dispatch entry; two unit tests; both readers PASS in round 6"
+    },
+    {
+      "id": "branch-end-10",
+      "anchor": "docs/loom/KICKOFF-DEFAULTS.md:10",
+      "origin_sha": "3938bba0",
+      "raised_by": "push-gate dry run (installed 1.0.1 hook)",
+      "severity": "important",
+      "text": "installed hook reads second-vendor: ask as a CLI name and blocks the push (hook version skew)",
+      "resolved": "closed by 496e0211 — KICKOFF stays codex with a dated note to flip to ask after 1.1.0 is installed; residual: hook/branch grammar skew recorded in the intent"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "loom-design/skills/capture-intent/SKILL.md",
+      "origin_sha": "8dfea8044c515c7f46ac2be96abdef7f7ee583cb",
+      "raised_by": "PR #784 CI (loom-design pytest, word cap 3500)",
+      "severity": "important",
+      "text": "capture-intent body 3566 words after W1-02; the loom-design suite is outside the package-tests line so local runs did not catch it",
+      "resolved": "closed by c909bdb6 — detail moved to references/second-vendor.md, body 3333; loom-design suite 181 passed; both readers PASS in round 7"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-01",
+      "model": "sonnet",
+      "started": "2026-09-04T00:12:24+08:00",
+      "fresh_context": true,
+      "note": "probes-first: dispatched before the W0-02 implementer per intent §4"
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:13:06+08:00",
+      "fresh_context": true,
+      "note": "started in parallel with W0-01/W0-02 (disjoint files; the plan named W0-02 as a dependency only for shared names, which the plan fixes) — agent-decided"
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:13:06+08:00",
+      "fresh_context": true,
+      "note": "started in parallel with W0-01/W0-02 (disjoint files; the plan named W0-02 as a dependency only for shared names, which the plan fixes) — agent-decided"
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:20:26+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-02",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-02",
+      "model": "sonnet",
+      "started": "2026-09-04T00:40:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-02",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-02",
+      "model": "codex",
+      "started": "2026-09-04T00:40:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:58:43+08:00",
+      "fresh_context": true,
+      "note": "also carries W1-04 (KICKOFF lines) as a second commit — same agent, sequential"
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T00:58:43+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "sonnet-blindrun-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T01:04:57+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-skill",
+      "model": "sonnet",
+      "started": "2026-09-04T01:04:57+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-fix-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T01:15:31+08:00",
+      "fresh_context": true,
+      "note": "fix for skill-adversary F1 (ship nit batch cannot reach push) and F2 (artifact-types override claim)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T01:18:15+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T01:18:15+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-fix2-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T01:21:08+08:00",
+      "fresh_context": true,
+      "note": "branch-end fix: standing out of the small lane; manifest artifact-types note; review description nit"
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-nit-batch-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T01:35:23+08:00",
+      "fresh_context": true,
+      "note": "ship §3.5 nit batch (records/wording only)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T01:39:33+08:00",
+      "fresh_context": false,
+      "note": "ship §3.5 nit-batch confirmation by the last round's readers (sonnet resumed, codex re-run with its own nit); recorded in the review-only commit to keep HEAD^ as the reviewed sha"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T01:39:33+08:00",
+      "fresh_context": false,
+      "note": "ship §3.5 nit-batch confirmation by the last round's readers (sonnet resumed, codex re-run with its own nit); recorded in the review-only commit to keep HEAD^ as the reviewed sha"
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-fix3-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T01:41:56+08:00",
+      "fresh_context": true,
+      "note": "push dry run: dispatch-covers-tasks rejects adversary-first tasks whose commits are evidence-only probes"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T01:50:19+08:00",
+      "fresh_context": false,
+      "note": "round 6 fix-round confirmation (resumed / re-run); recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T01:50:19+08:00",
+      "fresh_context": false,
+      "note": "round 6 fix-round confirmation (resumed / re-run); recorded in the review-only commit"
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-fix-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T07:03:29+08:00",
+      "fresh_context": true,
+      "note": "CI: capture-intent SKILL.md 3566 words > loom-design cap 3500 (suite outside the package-tests line)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T07:06:45+08:00",
+      "fresh_context": false,
+      "note": "round 7 fix-round confirmation; recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T07:06:45+08:00",
+      "fresh_context": false,
+      "note": "round 7 fix-round confirmation; recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T07:10:18+08:00",
+      "fresh_context": false,
+      "note": "close-commit round (ship §6); recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T07:10:18+08:00",
+      "fresh_context": false,
+      "note": "close-commit round (ship §6); recorded in the review-only commit"
+    }
+  ],
+  "second_vendor": "codex"
+}
