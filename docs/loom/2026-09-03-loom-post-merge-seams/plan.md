@@ -61,9 +61,10 @@ checkpoint：wave-end 兼 branch-end。
 - 測：先跑 `python -m pytest scripts/ -q` 中的 manifest drift 測試（改前紅、改後綠）；`git diff --stat` 列出三表面都動到。
 - 風：loom-design／loom-workflow 沒有程式碼變更，bump 理由是 Acceptance #5（user-confirmed）與其散文描述 status 值——CHANGELOG 一行寫明（agent-decided）。
 
-**W1-04 關閉上一個 intent、補回兩條 repo memory、刷新 `.codex/hooks/` 副本**　after: W0-05
+**W1-04 關閉上一個 intent、補回兩條 repo memory、刷新 `.codex/hooks/` 副本、探針畢業**　after: W0-05
 - 檔：`docs/loom/intent/2026-09-02-simple-loom-flow.md`（`status: closed 2026-09-03 — PR #780`）、`docs/loom/memory/run-the-push-gate-at-every-checkpoint-not-only-the-intake-gates.md`、`docs/loom/memory/a-recorded-word-count-must-be-python-split-never-wc.md`、`docs/loom/memory/README.md`（三者從已關的分支 `close-intent-simple-loom-flow` 的 commit ee5e104e 取回）、`.codex/hooks/{loom_checker.py,git_exec.py,contract/**}`（`codex_scaffold.py --repo .` 刷新，印記 1.0.1；**帶 `Task: W1-04` trailer**——裝置端 1.0.0 的閘沒有豁免）。
-- 測：`loom_checker.py intent docs/loom/intent/2026-09-02-simple-loom-flow.md` exit 0（W0-01 後 schema 接受 closed）；`intake write-plan 2026-09-02-simple-loom-flow` 被擋；`python3 loom-code/scripts/codex_scaffold.py --self-test` 過。
+- 檔（追加，kouko 2026-09-03）：把 `evidence/probes/test_abuse_close_commit_shape.py` 與 `test_abuse_plumbing_exemption.py` 裡與 `test_loom_checker_push.py` 既有案例**不重疊**的案例搬進 `loom-code/scripts/test_loom_checker_push.py`（或同目錄新檔），evidence 原檔留著；重疊判定寫在 commit 訊息裡。常設做法另立 intent `2026-09-03-probes-graduate-to-permanent-tests`。
+- 測：`loom_checker.py intent docs/loom/intent/2026-09-02-simple-loom-flow.md` exit 0（W0-01 後 schema 接受 closed）；`intake write-plan 2026-09-02-simple-loom-flow` 被擋；`python3 loom-code/scripts/codex_scaffold.py --self-test` 過；畢業的案例在整包命令下可被收集並綠。
 - 風：關閉舊 intent 的 commit 混在本 change 的 diff 裡，不是本 change 自己的關閉 commit，形狀規則不對它生效（它不是 HEAD^ 的關閉鏈）——這正是 spec Acceptance #1 說的「順手改成 closed」（agent-decided）。
 
 **W1-05 新增 memory：本 change 的兩個坑**　after: W1-04
