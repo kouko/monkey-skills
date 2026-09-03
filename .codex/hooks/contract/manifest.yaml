@@ -82,7 +82,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: needs-design, kind: frontmatter, required: true, grammar: "yes | no — <reason>"}
       - {name: map,          kind: frontmatter, required: false}
       - {name: evidence,     kind: frontmatter, required: false}
-      - {name: status,       kind: frontmatter, required: false, grammar: "open | confirmed <date> | withdrawn — <reason>"}
+      - {name: status,       kind: frontmatter, required: false, grammar: "open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>"}
       - {name: Problem,           kind: section, required: true}
       - {name: Proposed outcome,  kind: section, required: true}
       - {name: Acceptance,        kind: section, required: true}
@@ -117,7 +117,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: reviewed_sha,  kind: json, required: true}
       - {name: scope,         kind: json, required: true}
       - {name: vendors,       kind: json, required: true}
-      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback, spec_sha}]", note: "scope says what the round reviewed; spec_sha (optional) is the blob sha of the spec this verdict read, which intake.spec-pass compares against the spec on disk; fallback records a named second vendor that was unavailable, grammar `<cli> missing at <YYYY-MM-DD>`"}
+      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback, spec_sha, sha}]", note: "scope says what the round reviewed; spec_sha (optional) is the blob sha of the spec this verdict read, which intake.spec-pass compares against the spec on disk; fallback records a named second vendor that was unavailable, grammar `<cli> missing at <YYYY-MM-DD>`; sha is the commit this verdict reviewed and must equal reviewed_sha (push.reviewed-sha), no scope exempt"}
       - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact, scope}]", note: "scope says what the probe attacked; the spec gate accepts an adversarial probe only with scope: spec"}
       - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
       - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}

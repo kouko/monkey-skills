@@ -1,0 +1,8 @@
+# Opus design review — should the close-commit shape recompute exist? (2026-09-03, user-requested)
+
+Verdict: keep the rule, in regenerate-and-compare form; delete v11's five line-level sub-conditions.
+
+1. What it adds over the sha tie + two reviewers: the sha tie proves which commit the round read, not what is in it. HEAD^ is otherwise structurally unconstrained — intent/docs/plan/spec edits owe no trailer — so a "close commit" could also rewrite Acceptance lines, plan or spec, with only two reviewers' prose assertion between it and the trunk: a claim the gate would be trusting (Non-negotiable 3). The rule converts "the delta is one status line" from a reviewer claim into a repository recompute.
+2. Options: keep as regenerate-and-compare (same pattern as REQ-3's canonical blob comparison; byte equality has no second notion of "the status line", ending the parser war; stays inside push.review-only-head). Drop it: reopens the user-decided option A and Acceptance #1's negative case — not the reviewer's call; the rounds were spent on parser edges, not on the rule's rationale. Checker produces the close commit: not a different guarantee (the push side must still recompute), adds a sub-command and a station step under Non-negotiable 4 — reject.
+3. Sentence adopted into spec v12 (REQ-1).
+4. Residual: "the status line" is whatever the frontmatter parser picks and the closed value may be legal but factually wrong (no rule ties #N to a real PR); an intent outside the template or a fabricated checkpoint at HEAD^^ is outside the recompute (forged records are §0's stated boundary); client-side only.

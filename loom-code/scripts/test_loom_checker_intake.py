@@ -388,6 +388,24 @@ def test_the_repos_own_change_matches_its_own_review_json() -> None:
     round: two distinct reviewers, all passing, an `adversarial` probe)
     rather than pinned to one round, so landing a new review round changes
     the repo's gate state without silently breaking this test."""
+    # A closed intent short-circuits cmd_intake before any of the spec-pass
+    # or confirmed-behavior recomputes run (W0-01): intake.confirmed is the
+    # whole expected block set, not one more member of it.
+    intent_status = re.search(
+        r"^status:\s*(.*)$",
+        (REPO_ROOT / "docs/loom/intent/2026-09-02-simple-loom-flow.md").read_text(
+            encoding="utf-8"
+        ),
+        re.MULTILINE,
+    )
+    if intent_status and re.match(r"closed\s", intent_status.group(1).strip()):
+        result = run_checker(
+            "intake", "write-plan", "2026-09-02-simple-loom-flow", cwd=REPO_ROOT
+        )
+        assert blocked_rules(result) == {"intake.confirmed"}, result.stderr
+        assert result.returncode == 1, result.stderr
+        return
+
     review = json.loads(
         (REPO_ROOT / "docs/loom/2026-09-02-simple-loom-flow/review.json").read_text(
             encoding="utf-8"
@@ -819,6 +837,84 @@ def test_a_real_confirmed_status_date_is_accepted(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     write_intent(repo, status="status: confirmed 2028-02-29")
     assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
+
+
+# --- intake.confirmed: closed is terminal (W0-01) ---------------------------
+
+
+def test_a_closed_intent_is_blocked_from_intake_with_the_pr_number(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: closed 2026-09-03 — PR #780")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "closed (PR #780)" in result.stderr
+
+
+def test_an_impossible_closed_status_date_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, status="status: closed 2026-02-30 — PR #1")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "not a real date" in result.stderr
+
+
+# --- intake.confirmed: closed is terminal even off the current status line
+# (W0-02) -- reopen is caught by recomputing branch history and the trunk
+# copy, not by trusting the intent file's own status line, which a reopen
+# has by definition already changed back.
+
+
+def commit_intent(repo: Path, status: str, *, change: str = CHANGE) -> None:
+    write_intent(repo, status=status, change=change)
+    git(repo, "add", f"docs/loom/intent/{change}.md")
+    git(repo, "commit", "-q", "-m", f"intent: {status}")
+
+
+def test_reopen_blocked_when_branch_history_shows_a_closed_status(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: closed 2026-09-03 — PR #7")
+    commit_intent(repo, "status: confirmed 2026-09-03")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "not reopened" in result.stderr
+    assert "PR #7" in result.stderr
+
+
+def test_reopen_blocked_when_the_local_trunk_copy_is_closed(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)  # on "work", branched from main at the seed commit
+    commit_intent(repo, "status: confirmed 2026-09-02")  # work's own history stays clean
+    git(repo, "checkout", "-q", "main")
+    commit_intent(repo, "status: closed 2026-09-03 — PR #42")
+    git(repo, "checkout", "-q", "work")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "not reopened" in result.stderr
+    assert "PR #42" in result.stderr
+
+
+def test_reopen_trunk_check_is_absent_without_any_trunk_ref(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    git(repo, "branch", "-D", "main")
+    # kind=product with needs-design=no keeps cmd_intake off
+    # touched_interface_surfaces/branch_base entirely -- this test is about
+    # the reopen recompute having no trunk ref, not about the unrelated
+    # "no branch base resolves" failure branch_base() raises on its own.
+    write_intent(repo, kind="product", status="status: confirmed 2026-09-02")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "absent" in result.stdout
+
+
+def test_reopen_log_pattern_derives_from_the_status_closed_alternative() -> None:
+    import loom_checker as lc
+
+    assert lc.STATUS_CLOSED_LITERAL
+    assert lc.STATUS_CLOSED_LITERAL in lc.STATUS.pattern
+    assert lc.REOPEN_LOG_PATTERN.endswith(lc.STATUS_CLOSED_LITERAL)
 
 
 # --- spec.req-grammar (W2 adversary P03) ----------------------------------

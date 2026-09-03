@@ -7,7 +7,8 @@
      "scope": "spec|code|branch-end|wave-end:<n>", "round": 1,
      "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION", "dimension_scores": {}, "findings": [],
      "fallback": "<cli> missing at <YYYY-MM-DD>",
-     "spec_sha": "<git hash-object of the spec.md this verdict read; spec rounds only>"}
+     "spec_sha": "<git hash-object of the spec.md this verdict read; spec rounds only>",
+     "sha": "<reviewed_sha; the commit this verdict reviewed>"}
   ],
   "probes": [
     {"kind": "package-tests|blind-run|adversarial|codex-walk", "scope": "spec|code|skill|gate", "command": "<command that runs the artifact>", "sha": "<sha the probe ran against>", "result": "pass|fail", "artifact": "<committed path the command runs>"}

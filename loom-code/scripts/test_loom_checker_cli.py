@@ -68,6 +68,13 @@ def test_list_rules_emits_id_tab_description() -> None:
         assert len(description.split()) >= 3, line
 
 
+def test_list_rules_describes_the_closed_status_alternative() -> None:
+    lines = run_checker("--list-rules").stdout.splitlines()
+    confirmed_line = next(line for line in lines if line.startswith("intake.confirmed\t"))
+    assert "closed" in confirmed_line
+    assert "PR #" in confirmed_line
+
+
 def test_list_rules_covers_exactly_the_planned_population() -> None:
     ids = [line.split("\t")[0] for line in run_checker("--list-rules").stdout.splitlines()]
     assert ids == EXPECTED_RULE_IDS

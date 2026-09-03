@@ -4,7 +4,7 @@ kind: product | engineering
 needs-design: yes | no — <reason>
 map: <map-id>                # 可選
 evidence: [<paths>]          # 可選；write-spec／review 必讀
-status: open                 # open | confirmed <date> | withdrawn — <reason>；缺＝open
+status: open                 # open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>；缺＝open
 
 ## Problem
 <問題與誰受影響，白話。product：禁檔案路徑、函式／類別識別字、腳本檔名>

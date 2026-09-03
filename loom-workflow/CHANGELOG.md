@@ -4,6 +4,12 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.0.1] — 2026-09-03 — Status grammar
+
+No code change. Bumped only because this plugin's prose describes the
+intent `status:` values: it now follows loom-code 1.0.1's grammar,
+which adds a terminal `closed <YYYY-MM-DD> — PR #<N>` state.
+
 ## [4.0.0] — 2026-09-03 — loom 1.0 hard switch
 
 Breaking. loom-workflow keeps eight counted tools plus two standalone

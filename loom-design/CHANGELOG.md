@@ -12,6 +12,12 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [1.0.1] — 2026-09-03 — Status grammar
+
+No code change. Bumped only because this plugin's prose describes the
+intent `status:` values: it now follows loom-code 1.0.1's grammar,
+which adds a terminal `closed <YYYY-MM-DD> — PR #<N>` state.
+
 ## [1.0.0] — 2026-09-02 — Two stations and two tools
 
 **Breaking.** The pre-1.0 surface is deleted, not renamed or aliased.

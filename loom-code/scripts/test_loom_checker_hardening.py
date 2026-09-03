@@ -70,10 +70,10 @@ def review_body(sha: str, **overrides) -> dict:
         "verdicts": [
             {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
              "lens": "code", "verdict": "PASS", "dimension_scores": {},
-             "findings": [], "round": 1},
+             "findings": [], "round": 1, "sha": sha},
             {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m",
              "lens": "code", "verdict": "PASS", "dimension_scores": {},
-             "findings": [], "round": 1},
+             "findings": [], "round": 1, "sha": sha},
         ],
         "probes": [
             {"kind": "package-tests", "command": DECLARED_TESTS, "sha": sha,

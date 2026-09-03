@@ -47,15 +47,17 @@ def empty_repo(tmp_path_factory) -> Path:
 
 
 def _run(cwd: Path) -> str:
+    # R30-O3: capture bytes and decode explicitly (errors="replace") rather
+    # than text=True, so a non-UTF-8 byte in the hook's output cannot raise
+    # a UnicodeDecodeError inside subprocess.run itself.
     proc = subprocess.run(
         ["bash", str(HOOK)],
         cwd=str(cwd),
         stdin=subprocess.DEVNULL,
         capture_output=True,
-        text=True,
     )
-    assert proc.returncode == 0, proc.stderr
-    return proc.stdout
+    assert proc.returncode == 0, proc.stderr.decode("utf-8", errors="replace")
+    return proc.stdout.decode("utf-8", errors="replace")
 
 
 def _context(stdout: str) -> str:

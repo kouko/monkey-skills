@@ -67,7 +67,11 @@ RULES: list[tuple[str, str]] = [
     (
         "intake.confirmed",
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
-        "with a date the calendar has.",
+        "with a date the calendar has; `closed <date> — PR #<N>` is blocked -- that change is "
+        "closed and a new change starts from a new intent. closed is terminal: reopening it -- "
+        "reverting the status line, or branching from a trunk that already carries the close -- "
+        "is blocked the same way, recomputed from the branch's own history and the trunk's copy "
+        "of the file, not from the status line alone.",
     ),
     (
         "intake.confirmed-behavior",
@@ -145,11 +149,15 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.review-only-head",
-        "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json.",
+        "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json. "
+        "When HEAD^ turns an intent's status to closed, its shape is recomputed too: it must touch "
+        "only that intent file, change exactly its status line, and sit on a checkpoint whose own "
+        "review.json vouches for HEAD^^^.",
     ),
     (
         "push.reviewed-sha",
-        "review.json reviewed_sha names the commit HEAD^, so the reviewed tree is the pushed tree.",
+        "review.json reviewed_sha names the commit HEAD^, so the reviewed tree is the pushed tree; "
+        "every verdict of the latest round names reviewed_sha.",
     ),
     (
         "push.second-vendor-honoured",
@@ -243,6 +251,26 @@ def git_text(repo: Path, *args: str) -> str:
     return output
 
 
+def git_raw_text(repo: Path, *args: str) -> str:
+    """Like `git_text`, but UNSTRIPPED -- for reading a blob's exact bytes
+    (e.g. `git show <sha>:<path>`), where `git_text`'s trailing-newline
+    strip would silently drop the file's real trailing newline and make
+    every byte-for-byte blob comparison (`check_close_commit_shape` step
+    c) compare against the wrong content. Reads via `run_git`'s
+    `text=False` (raw bytes) path and decodes here, rather than the
+    default `text=True` path `git_text` uses -- `subprocess.run(text=True)`
+    always applies universal-newline translation (`\\r\\n` -> `\\n`)
+    regardless of the `encoding`/`errors` passed alongside it, with no way
+    to opt out through that path, so a CRLF blob would silently lose its
+    `\\r` before this function ever saw it (spec REQ-1, W0-04 round-5
+    finding). Decoding raw bytes ourselves keeps every byte, `\\r`
+    included."""
+    output = run_git(repo, *args, timeout=GIT_TIMEOUT, text=False)
+    if output is None:
+        raise UsageError(f"`git {' '.join(args)}` failed or timed out in {repo}.")
+    return output.decode("utf-8", "surrogateescape")
+
+
 def git_ok(repo: Path, *args: str) -> bool:
     """True when git exits 0 (used for existence probes like cat-file -e)."""
     return git_maybe(repo, *args) is not None
@@ -265,7 +293,14 @@ def parse_document(text: str) -> tuple[dict[str, str], dict[str, str]]:
     sections: dict[str, str] = {}
     current: str | None = None
     body: list[str] = []
+    if text.startswith("﻿"):
+        text = text[1:]
     for line in text.splitlines():
+        if line.startswith("﻿"):
+            # A BOM must never make a key invisible to frontmatter parsing --
+            # a commit could otherwise smuggle a `status:` change past every
+            # rule that reads it (spec REQ-1, W0-04 round-3 finding).
+            line = line[1:]
         if line.startswith("## "):
             if current is not None:
                 sections[current] = "\n".join(body).strip()
@@ -375,6 +410,13 @@ def glob_to_regex(pattern: str) -> re.Pattern[str]:
 
 TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master", "@{upstream}")
 
+# Separate from TRUNK_CANDIDATES on purpose (W0-02): branch_base()'s
+# @{upstream} keeps the change branch's own remote copy, which is exactly
+# what a reopen check must NOT trust as "the trunk" -- an upstream that is
+# the change branch itself would let a reopen check its own history and
+# call that the trunk.
+REOPEN_TRUNK_CANDIDATES = ("origin/main", "main", "origin/master", "master")
+
 # The branch names loom treats as the trunk; standing on one is the P13 hole.
 TRUNK_BRANCH_NAMES = frozenset({"main", "master"})
 
@@ -452,7 +494,7 @@ def changed_paths(repo: Path) -> set[str]:
     diff must be checked against the whole diff, staging area included.
 
     The exception is exactly what the Codex scaffold writes (HOST_PLUMBING_FILES /
-    HOST_PLUMBING_DIR_PREFIX below), never a surface a user reads -- an adopting
+    HOST_PLUMBING_DIR_PREFIX above), never a surface a user reads -- an adopting
     repo's own hooks under `.codex/hooks/` stay visible. Left directory-wide, the
     scaffold's `contract/templates/**` matched the interface glob (W4-02 F3)."""
     merge_base = branch_base(repo)
@@ -788,9 +830,94 @@ def check_kind_recompute(touched: list[str]) -> list[tuple[str, str]]:
 
 
 CHANGE_ID = re.compile(r"[A-Za-z0-9._-]+")
-CONFIRMED = re.compile(r"confirmed (\d{4}-\d{2}-\d{2})(\s+#.*)?")
+# `status:` grammar (contract/manifest.yaml, contract/templates/intent.md):
+# `open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>`,
+# each alternative allowing a trailing ` #...` comment -- shared by
+# intake.confirmed (below) and the closed-commit shape push.review-only-head
+# recomputes (W0-04). Groups: 1=confirmed date, 2=closed date, 3=PR number.
+_STATUS_CLOSED_ALT = r"closed (\d{4}-\d{2}-\d{2}) — PR #(\d+)"
+STATUS = re.compile(
+    r"(?:open"
+    r"|confirmed (\d{4}-\d{2}-\d{2})"
+    rf"|{_STATUS_CLOSED_ALT}"
+    r"|withdrawn — .+)"
+    r"(?:\s+#.*)?"
+)
+
+# The literal text before the closed alternative's first capture group --
+# "closed " -- derived from _STATUS_CLOSED_ALT rather than hand-copied, so
+# the reopen recompute below and the grammar cannot drift apart (W0-02).
+STATUS_CLOSED_LITERAL = _STATUS_CLOSED_ALT.split("(", 1)[0]
+# `git log -G` uses POSIX ERE; `[[:space:]]*` mirrors the optional
+# whitespace parse_document()'s frontmatter line already strips between
+# `status:` and its value, so the history search and the grammar agree on
+# a hand-edited line too.
+REOPEN_LOG_PATTERN = rf"^status:[[:space:]]*{STATUS_CLOSED_LITERAL}"
 
 INTAKE_STATIONS = ("write-spec", "write-plan")  # the two stations that accept an intent
+
+
+def _status_closed_pr_number(text: str) -> str | None:
+    """The PR number of a `closed` status line in `text`'s frontmatter, or
+    None when the status is anything else (including absent/malformed)."""
+    front, _sections = parse_document(text)
+    match = STATUS.fullmatch(front.get("status", "").strip())
+    if match and match.group(2) is not None:
+        return match.group(3)
+    return None
+
+
+def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str, out) -> tuple[str, str] | None:
+    """`intake.confirmed`'s terminal rule (REQ-2, W0-02): a reopen is caught
+    even when the intent file's OWN current status line has been changed
+    back to `confirmed`, by recomputing two things the file's current
+    content cannot hide:
+
+    (i) the branch's own history of the file -- `git log -G` for a line
+        that ever read `status: closed ...` -- so reverting the status
+        line back to `confirmed` does not un-close the change; and
+    (ii) the trunk's current copy of the file -- so a branch cut before the
+         close, from a trunk that already carries it, is caught too.
+
+    Neither is a flag an agent writes; both are recomputed from the
+    repository. When no trunk ref resolves at all, case (ii) is reported as
+    absent (not as a pass) rather than silently skipped."""
+    intent_rel = intent_path.relative_to(repo)
+    log_output = git_maybe(repo, "log", "--format=%H", f"-G{REOPEN_LOG_PATTERN}", "--", str(intent_rel))
+    for commit in (log_output or "").splitlines():
+        commit = commit.strip()
+        if not commit:
+            continue
+        content = git_maybe(repo, "show", f"{commit}:{intent_rel}")
+        if content is None:
+            continue
+        pr_number = _status_closed_pr_number(content)
+        if pr_number is not None:
+            return (
+                "intake.confirmed",
+                f"{change_id} was closed (PR #{pr_number}) and closed intents "
+                "are not reopened; start a new intent",
+            )
+
+    for candidate in REOPEN_TRUNK_CANDIDATES:
+        if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
+            continue
+        content = git_maybe(repo, "show", f"{candidate}:{intent_rel}")
+        if content is not None:
+            pr_number = _status_closed_pr_number(content)
+            if pr_number is not None:
+                return (
+                    "intake.confirmed",
+                    f"{change_id} was closed (PR #{pr_number}) and closed intents "
+                    "are not reopened; start a new intent",
+                )
+        break
+    else:
+        out.write(
+            "intake.confirmed: no trunk ref resolves among "
+            f"{', '.join(REOPEN_TRUNK_CANDIDATES)}; the trunk copy check is absent.\n"
+        )
+    return None
 
 
 def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
@@ -821,8 +948,36 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     front, sections = parse_document(read_text(intent_path))
 
     status = front.get("status", "").strip()
-    confirmed = CONFIRMED.fullmatch(status)
-    if not confirmed:
+    match = STATUS.fullmatch(status)
+    confirmed_date = match.group(1) if match else None
+    closed_date, pr_number = (match.group(2), match.group(3)) if match else (None, None)
+    if closed_date is not None:
+        if not is_real_date(closed_date):
+            return report(
+                [
+                    (
+                        "intake.confirmed",
+                        f"`status: closed {closed_date} — PR #{pr_number}` names "
+                        "something that is not a real date.",
+                    )
+                ],
+                err,
+            )
+        return report(
+            [
+                (
+                    "intake.confirmed",
+                    f"{station} accepts only `status: confirmed <date>`; this change "
+                    f"is closed (PR #{pr_number}); a new change starts from a new intent.",
+                )
+            ],
+            err,
+        )
+    reopen_failure = check_intent_not_reopened(repo, intent_path, change_id, out)
+    if reopen_failure is not None:
+        return report([reopen_failure], err)
+
+    if confirmed_date is None:
         shown = status or "absent (= open)"
         return report(
             [
@@ -833,12 +988,12 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             ],
             err,
         )
-    if not is_real_date(confirmed.group(1)):
+    if not is_real_date(confirmed_date):
         return report(
             [
                 (
                     "intake.confirmed",
-                    f"`status: confirmed {confirmed.group(1)}` names something "
+                    f"`status: confirmed {confirmed_date}` names something "
                     "that is not a real date.",
                 )
             ],
@@ -1516,6 +1671,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     review_rel, failures = check_review_only_head(manifest, repo, head_sha)
     if review_rel is None:
         return report(failures, err)
+    failures += check_close_commit_shape(manifest, repo, head_sha)
 
     raw = git_text(repo, "show", f"{head_sha}:{review_rel}")
     try:
@@ -1533,7 +1689,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         else None
     )
 
-    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id)
+    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id, review)
     failures += check_open_findings_closed(review)
     failures += check_probes_package_tests(repo, review, reviewed_id, out)
     failures += check_probes_adversarial(repo, review, reviewed_id, out)
@@ -1584,6 +1740,296 @@ def check_review_only_head(manifest, repo: Path, head_sha: str):
             f"HEAD must touch only {template}; it touches {detail}.",
         )
     ]
+
+
+def _raw_diff_entries(repo: Path, base_sha: str, target_sha: str) -> list[tuple[str, str, str, str]]:
+    """`(status, path, old_mode, new_mode)` tuples a first-parent diff
+    touches, `--raw --no-renames` like `check_review_only_head`'s own
+    listing (a merge collapses to the same two-endpoint diff since
+    `base_sha` is already the first parent). `--no-renames` keeps status a
+    single A/M/D/T letter, never a rename percentage; the modes let a
+    typechange (e.g. a symlink swapped in for the regular file, `T`) be
+    caught by its mode rather than trusted by its status letter alone."""
+    listing = git_text(repo, "diff", "--raw", "--no-renames", base_sha, target_sha)
+    entries: list[tuple[str, str, str, str]] = []
+    for line in listing.splitlines():
+        if not line.startswith(":") or "\t" not in line:
+            continue
+        meta, path = line.split("\t", 1)
+        fields = meta.split()
+        entries.append((fields[-1], path.strip(), fields[0][1:], fields[1]))
+    return sorted(entries, key=lambda entry: entry[1])
+
+
+_EMPTY_TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # git's constant empty-tree object
+_REGULAR_FILE_MODE = "100644"
+# The intent artifact's path template as the checker itself expects it
+# (contract/manifest.yaml `artifacts.intent.path`). `check_close_commit_shape`
+# checks the live manifest against this constant before trusting it to build
+# a path matcher -- manifest drift must fail closed, not silently match
+# nothing (or something wider than intended) (spec REQ-1, W0-04 round-3
+# addition).
+INTENT_PATH_TEMPLATE = "docs/loom/intent/<change-id>.md"
+
+
+def _not_a_close_commit(rule: str, close_sha: str, closing_path: str,
+                        expected: str, got: str) -> tuple[str, str]:
+    """The one diagnostic shape for every way a commit touching an intent
+    path fails to be a legitimate close commit (spec REQ-1, W0-04
+    round-3): no content is trusted to tell them apart, only the raw diff
+    shape, so the message is the same regardless of which structural
+    check tripped it."""
+    return (
+        rule,
+        f"the reviewed commit {close_sha[:8]} edits an intent file "
+        f"({closing_path}) but is not a close commit (expected {expected}, "
+        f"got {got}); move other intent edits to an earlier commit.",
+    )
+
+
+def _intent_path_matcher() -> re.Pattern:
+    """`INTENT_PATH_TEMPLATE` as a glob matcher. `check_close_commit_shape`
+    has already required the live manifest to equal that constant before
+    calling this, so there is exactly one copy of the glob to keep in
+    sync (the constant), not two."""
+    return glob_to_regex(INTENT_PATH_TEMPLATE.replace("<change-id>", "*"))
+
+
+def _status_line_positions(text: str) -> list[int]:
+    """0-based indices of every raw line starting with the literal bytes
+    `status:`, anywhere in `text` (not scoped to frontmatter). Guards
+    step (b) and step (c) of `check_close_commit_shape` against
+    `parse_document`'s last-wins behaviour on a duplicated or
+    headingless-and-decoyed `status:` key (spec REQ-1, W0-04 round-3
+    finding)."""
+    return [index for index, line in enumerate(text.splitlines()) if line.startswith("status:")]
+
+
+def _regenerated_closed_text(before_text: str, date: str, pr_number: str) -> str | None:
+    """Step (c): `before_text` with ONLY its sole `status:` line's value
+    replaced by `closed <date> — PR #<pr_number>` -- no trailing comment,
+    everything else byte-identical. None when `before_text` does not have
+    exactly one raw `status:` line to regenerate from."""
+    positions = _status_line_positions(before_text)
+    if len(positions) != 1:
+        return None
+    lines = before_text.splitlines(keepends=True)
+    index = positions[0]
+    stripped = lines[index].rstrip("\r\n")
+    ending = lines[index][len(stripped):]
+    lines[index] = f"status: closed {date} — PR #{pr_number}{ending}"
+    return "".join(lines)
+
+
+def _close_after_status_match(repo: Path, close_sha: str, closing_path: str,
+                              rule: str) -> tuple[re.Match | None, list[tuple[str, str]]]:
+    """Condition (b): HEAD^'s file has exactly one raw `status:` line, and
+    `parse_document`'s frontmatter value for it is the closed
+    alternative. Returns the match (group(2)=date, group(3)=PR number) or
+    the failure explaining why not."""
+    after_text = git_raw_text(repo, "show", f"{close_sha}:{closing_path}")
+    after_positions = _status_line_positions(after_text)
+    if len(after_positions) != 1:
+        return None, [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            "exactly one `status:` line in HEAD^'s file",
+            str(len(after_positions)),
+        )]
+    front, _sections = parse_document(after_text)
+    match = STATUS.fullmatch(front.get("status", "").strip())
+    if not match or match.group(2) is None:
+        return None, [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            "HEAD^'s frontmatter `status:` value to be the closed alternative",
+            repr(front.get("status", "")),
+        )]
+    return match, []
+
+
+def _close_blob_failures(repo: Path, diff_base: str, close_sha: str, closing_path: str,
+                         match: re.Match, rule: str) -> list[tuple[str, str]]:
+    """Condition (c): REGENERATE HEAD^^'s file with only the status
+    line's value replaced by the closed alternative `match` just found,
+    and require it to hash to the exact blob HEAD^ committed."""
+    before_text = git_raw_text(repo, "show", f"{diff_base}:{closing_path}")
+    before_positions = _status_line_positions(before_text)
+    if len(before_positions) != 1:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            "exactly one `status:` line in HEAD^^'s file to regenerate from",
+            str(len(before_positions)),
+        )]
+    regenerated = _regenerated_closed_text(before_text, match.group(2), match.group(3))
+    # `before_text` (and therefore `regenerated`) came from `git_raw_text`,
+    # which decodes blob bytes with `errors="surrogateescape"` so a
+    # non-UTF-8 byte round-trips as a lone surrogate rather than being
+    # lost or raising on decode. Re-encoding here must use the same
+    # `errors="surrogateescape"` -- a strict `.encode("utf-8")` raises
+    # UnicodeEncodeError on that surrogate, which would BLOCK (or crash) a
+    # legitimate close commit whose UNCHANGED body happens to contain a
+    # non-UTF-8 byte, before the blob comparison even runs (spec REQ-1,
+    # W0-04 round-6 finding).
+    expected_blob = blob_sha(regenerated.encode("utf-8", "surrogateescape"))
+    actual_blob = git_text(repo, "rev-parse", f"{close_sha}:{closing_path}").strip()
+    if expected_blob != actual_blob:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            f"HEAD^'s blob to equal the regenerated closed blob {expected_blob[:8]}",
+            f"HEAD^'s actual blob {actual_blob[:8]}",
+        )]
+    return []
+
+
+def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[str, str]]:
+    """When HEAD^'s first-parent diff (`HEAD^^..HEAD^`) touches ANY path
+    matching the intent artifact template, HEAD^ must recompute as a
+    legitimate close commit (spec REQ-1, W0-04): (a) the raw listing is
+    exactly one entry -- this path, status `M`, mode `100644` on both
+    sides; (b) HEAD^'s file has exactly one raw `status:` line, whose
+    `parse_document`-parsed frontmatter value `STATUS.fullmatch`es the
+    closed alternative; (c) REGENERATE -- HEAD^^'s file with ONLY that
+    status line's value replaced by the closed alternative just matched
+    must hash to the exact blob HEAD^ committed, so ANY other byte
+    difference (a BOM, a CRLF, a second `status:` line, a body edit, a
+    stray trailing comment) makes the blobs differ and fails; (d) HEAD^^
+    is itself a checkpoint vouching for HEAD^^^, so no commit can sit
+    between the last checkpoint and the close commit unseen. No step
+    trusts content parsed ahead of the raw-listing and raw-line-count
+    guards -- a before/after "did status become closed" parse used to
+    gate the OLD trigger, and a BOM hidden right before the key made
+    `parse_document` miss it, so the whole recompute silently never ran
+    (spec REQ-1, W0-04 round-3 finding); firing on every touch and
+    requiring an exact regenerated blob closes that off structurally. The
+    diff is read against HEAD^^ (its first parent), never `git show`,
+    which prints nothing for a merge commit and would let a merge at
+    HEAD^ carry the edit unseen. An ordinary commit at HEAD^ -- one that
+    touches no intent path at all -- is untouched by this recompute.
+    Because (a) requires status `M`, a root commit at HEAD^ (which can
+    only ever ADD a path, never modify one, relative to git's empty tree)
+    always fails there -- (d)'s `pre_close_sha is None` case is therefore
+    unreachable and kept only as a defensive guard."""
+    rule = "push.review-only-head"
+    live_template = manifest.get("artifacts", {}).get("intent", {}).get("path")
+    if live_template != INTENT_PATH_TEMPLATE:
+        return [(
+            rule,
+            "the manifest's intent artifact path has drifted from the "
+            f"checker's own expected template; expected {INTENT_PATH_TEMPLATE!r}, "
+            f"got {live_template!r}.",
+        )]
+
+    close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^")
+    if close_sha is None:
+        return []  # HEAD is root; push.reviewed-sha already reports it.
+
+    pre_close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^^")
+    diff_base = pre_close_sha if pre_close_sha is not None else _EMPTY_TREE_SHA
+
+    entries = _raw_diff_entries(repo, diff_base, close_sha)
+    is_intent = _intent_path_matcher()
+    intent_entries = [entry for entry in entries if is_intent.match(entry[1])]
+    if not intent_entries:
+        return []  # HEAD^ touches no intent path; nothing to recompute here.
+
+    closing_path = intent_entries[0][1]
+    touched = [path for _status, path, _old, _new in entries]
+
+    # (a) the raw listing is exactly this one path, modified, mode
+    # 100644 on both sides -- a delete, an add, a second path, a rename
+    # half, or a mode change (a symlink typechange included) all fail.
+    if len(entries) != 1:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            f"exactly one changed path ({closing_path}), status M, mode "
+            f"`{_REGULAR_FILE_MODE}` on both sides",
+            f"{len(touched)}: {', '.join(touched)}",
+        )]
+    status, _path, old_mode, new_mode = entries[0]
+    if status != "M" or old_mode != _REGULAR_FILE_MODE or new_mode != _REGULAR_FILE_MODE:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            f"status M and mode `{_REGULAR_FILE_MODE}` on both sides",
+            f"status {status}, old {old_mode} / new {new_mode}",
+        )]
+
+    # (b) HEAD^'s file has exactly one raw `status:` line, and
+    # `parse_document`'s frontmatter value for it is the closed alternative.
+    match, failures = _close_after_status_match(repo, close_sha, closing_path, rule)
+    if failures:
+        return failures
+
+    # (c) REGENERATE HEAD^^'s file with only the status value replaced,
+    # and require it to hash to the exact blob HEAD^ committed.
+    failures = _close_blob_failures(repo, diff_base, close_sha, closing_path, match, rule)
+    if failures:
+        return failures
+
+    # (d) HEAD^^ is itself a checkpoint: touches only review.json, and its
+    # review.json's reviewed_sha resolves to HEAD^^^ -- unreachable with
+    # pre_close_sha is None (see docstring), kept as a defensive guard.
+    if pre_close_sha is None:
+        return [(
+            rule,
+            f"HEAD^ ({close_sha[:8]}) is the root commit and edits an "
+            "intent file; expected a HEAD^^ checkpoint commit to exist "
+            "between the last review and the close commit, got none.",
+        )]
+
+    return _checkpoint_parent_failures(manifest, repo, pre_close_sha, rule)
+
+
+def _checkpoint_parent_failures(
+    manifest, repo: Path, pre_close_sha: str, rule: str
+) -> list[tuple[str, str]]:
+    """Condition (3) of `check_close_commit_shape`: HEAD^^ (`pre_close_sha`)
+    must itself be a checkpoint -- touching only review.json -- whose
+    reviewed_sha resolves to HEAD^^^, so no commit can sit between the last
+    review and the close commit unseen (spec REQ-1, W0-04)."""
+    checkpoint_rel, checkpoint_failures = check_review_only_head(manifest, repo, pre_close_sha)
+    if checkpoint_rel is None:
+        # `checkpoint_failures` carries `check_review_only_head`'s own
+        # computed detail (the actual touched paths); surface it instead
+        # of discarding it -- the round-6 diagnostic used to say only
+        # "touches something else" with no `got` value at all.
+        detail = checkpoint_failures[0][1] if checkpoint_failures else "it touches something else."
+        return [
+            (
+                rule,
+                f"HEAD^^ ({pre_close_sha[:8]}) is not itself a checkpoint; expected "
+                f"HEAD^^ ({pre_close_sha[:8]}) to touch only review.json; {detail}",
+            )
+        ]
+
+    pre_pre_sha = git_maybe(repo, "rev-parse", "--verify", f"{pre_close_sha}^")
+    raw = git_maybe(repo, "show", f"{pre_close_sha}:{checkpoint_rel}")
+    checkpoint_review = None
+    if raw is not None:
+        try:
+            checkpoint_review = json.loads(raw)
+        except json.JSONDecodeError:
+            checkpoint_review = None
+    recorded = (
+        str(checkpoint_review.get("reviewed_sha", "")).strip()
+        if isinstance(checkpoint_review, dict)
+        else ""
+    )
+    recorded_id = (
+        git_maybe(repo, "rev-parse", "--verify", f"{recorded}^{{commit}}")
+        if SHA_HEX.fullmatch(recorded)
+        else None
+    )
+    if pre_pre_sha is None or recorded_id is None or recorded_id != pre_pre_sha:
+        return [
+            (
+                rule,
+                f"HEAD^^ ({pre_close_sha[:8]})'s {checkpoint_rel} reviewed_sha "
+                f"must resolve to HEAD^^^; expected reviewed_sha of "
+                f"{pre_close_sha[:8]} to resolve to "
+                f"{(pre_pre_sha or '(none)')[:8]}, got {recorded or '(empty)'}.",
+            )
+        ]
+
+    return []
 
 
 def review_container_types(manifest) -> dict[str, type]:
@@ -1667,10 +2113,18 @@ def check_questions(review, review_rel: str) -> list[tuple[str, str]]:
     return failures
 
 
-def check_reviewed_sha(repo: Path, head_sha: str, recorded: str, reviewed_id: str | None):
+def check_reviewed_sha(
+    repo: Path, head_sha: str, recorded: str, reviewed_id: str | None, review: dict
+):
     """The reviewed tree must be the tree being pushed. Compared as object
     ids resolved by git, never as strings: a prefix compare accepts a
-    reviewed_sha that names no commit at all."""
+    reviewed_sha that names no commit at all.
+
+    Also ties every verdict of the latest round (`scored_verdicts`, the same
+    round `check_verdicts` scores) to that same commit: each one must carry
+    a `sha` that resolves, as a git object id, to `reviewed_id` -- no scope
+    is exempt, `scope: spec` included. A round with zero usable verdicts
+    reports nothing here; that is `push.verdicts-ge-2`'s job."""
     parent = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^{{commit}}^")
     if not parent:
         return [("push.reviewed-sha", "HEAD has no parent commit to have reviewed.")]
@@ -1689,7 +2143,34 @@ def check_reviewed_sha(repo: Path, head_sha: str, recorded: str, reviewed_id: st
                 "the reviewed commit is not the one being pushed.",
             )
         ]
-    return []
+    failures = []
+    _, verdicts = scored_verdicts(review)
+    for entry in verdicts:
+        reviewer = str(entry.get("reviewer", "")).strip() or "<no reviewer>"
+        verdict_sha = str(entry.get("sha", "")).strip()
+        verdict_id = (
+            git_maybe(repo, "rev-parse", "--verify", f"{verdict_sha}^{{commit}}")
+            if SHA_HEX.fullmatch(verdict_sha)
+            else None
+        )
+        if verdict_id is None:
+            failures.append(
+                (
+                    "push.reviewed-sha",
+                    f"{reviewer}'s verdict names sha {verdict_sha or '(empty)'}, "
+                    f"which does not resolve to a commit; expected reviewed_sha "
+                    f"{reviewed_id[:8]}.",
+                )
+            )
+        elif verdict_id != reviewed_id:
+            failures.append(
+                (
+                    "push.reviewed-sha",
+                    f"{reviewer}'s verdict sha resolves to {verdict_id[:8]}, not "
+                    f"reviewed_sha {reviewed_id[:8]}.",
+                )
+            )
+    return failures
 
 
 def check_open_findings_closed(review) -> list[tuple[str, str]]:
@@ -2092,6 +2573,255 @@ def commit_paths(repo: Path, sha: str) -> set[str]:
     }
 
 
+def _plumbing_canonical_dir() -> Path | None:
+    """The source tree this RUNNING checker itself lives in, when it may
+    exempt a host-plumbing path from `push.dispatch-covers-tasks` -- else
+    None (Design decision "Content-bound plumbing exemption", REQ-3).
+
+    Identifies itself by the path it was INVOKED as -- `Path(__file__)`,
+    never `.resolve()`'d -- because a symlinked `.codex/hooks/loom_checker.py`
+    pointing at a genuine canonical would otherwise resolve outside
+    `.codex/hooks/` and misclassify itself as canonical (round 5 spec-R20).
+    None when: the invoked path's own directory is `.codex/hooks` (this
+    checker IS the copy Codex runs -- there is no external canonical to
+    compare against, ever); or no sibling `../contract/manifest.yaml` sits
+    beside it (a stray copy or symlink placed anywhere else, or a repo that
+    never shipped one)."""
+    checker_dir = Path(__file__).parent
+    if checker_dir.parts[-2:] == (".codex", "hooks"):
+        return None
+    if not (checker_dir.parent / "contract" / "manifest.yaml").is_file():
+        return None
+    return checker_dir
+
+
+def _load_codex_scaffold():
+    """Sibling import from the running checker's own directory (the same
+    trick `git_exec.py` already uses) -- lazy, because the `.codex/hooks/`
+    copy never ships `codex_scaffold.py` and must import fine without it."""
+    try:
+        import codex_scaffold
+    except ImportError:
+        return None
+    return codex_scaffold
+
+
+def _canonical_file_mode(path: Path) -> str:
+    return "100755" if path.stat().st_mode & 0o111 else "100644"
+
+
+def _git_ls_tree_entry(repo: Path, sha: str, path: str) -> tuple[str, str] | None:
+    """`(mode, blob sha)` for `path` in the TREE at `sha`, or None when it
+    has no entry there -- a deleted path included, since a deletion is in
+    `commit_paths()` with no blob at the commit (spec REQ-3)."""
+    line = (git_maybe(repo, "ls-tree", sha, "--", path) or "").strip()
+    if not line:
+        return None
+    mode, _obj_type, rest = line.split(None, 2)
+    blob_sha, _sep, _entry_path = rest.partition("\t")
+    return mode, blob_sha
+
+
+def _plumbing_stamp_reason(repo: Path, sha: str, scaffold_mod) -> str | None:
+    """None when the COMMITTED `.codex/hooks/loom_checker.py`'s stamp line
+    names this running checker's own version (`codex_scaffold.
+    plugin_version()`); else the reason no plumbing path in this commit
+    can be exempt. Gated once per commit -- BEFORE any per-path canonical
+    byte comparison is even attempted, not merely before the blob is
+    fetched -- because a version mismatch on the checker copy invalidates
+    every OTHER plumbing path in the same commit too (Design decision
+    "Content-bound plumbing exemption", REQ-3): the copy absent at this
+    commit, a symlink or any mode other than a plain `100644` file
+    (round-2 after-task finding -- a symlink whose target's first line
+    happens to spell the right stamp must never satisfy this gate, and
+    neither may an executable-bit copy), carrying no stamp line at all,
+    or naming a version other than this one."""
+    entry = _git_ls_tree_entry(repo, sha, scaffold_mod.CHECKER_COPY)
+    if entry is None:
+        return "the checker copy is absent at this commit"
+    mode, _blob = entry
+    if mode == "120000":
+        return "the checker copy is a symlink"
+    if mode != "100644":
+        return f"the checker copy mode mismatch (got {mode}, expected 100644)"
+    content = git_raw_text(repo, "show", f"{sha}:{scaffold_mod.CHECKER_COPY}")
+    lines = content.splitlines(keepends=True)
+    stamp_index = next(
+        (i for i, line in enumerate(lines) if line.startswith(scaffold_mod.STAMP_PREFIX)),
+        None,
+    )
+    if stamp_index is None:
+        return "the checker copy carries no version stamp"
+    version = lines[stamp_index][len(scaffold_mod.STAMP_PREFIX):].rstrip("\n")
+    expected = scaffold_mod.plugin_version()
+    if version != expected:
+        return f"version mismatch (got {version!r}, expected {expected!r})"
+    return None
+
+
+def _strip_stamp_line(content: str, stamp_prefix: str) -> str | None:
+    """`content` with its version stamp line removed, or None when it
+    carries no stamp line to strip."""
+    lines = content.splitlines(keepends=True)
+    stamp_index = next(
+        (i for i, line in enumerate(lines) if line.startswith(stamp_prefix)), None
+    )
+    if stamp_index is None:
+        return None
+    del lines[stamp_index]
+    return "".join(lines)
+
+
+def _matches_canonical_file(
+    repo: Path, sha: str, path: str, expected_mode: str, expected_bytes: str,
+    *, transform=None,
+) -> str | None:
+    """Mode-and-blob comparison shared by every canonical-rendering
+    plumbing path (the shim, the checker copy, its sibling modules, each
+    contract file): None when `path`'s tree entry at `sha` has mode
+    `expected_mode` and its committed blob -- passed through `transform`
+    first when the caller supplies one (the checker copy strips its own
+    stamp line before comparing) -- equals `expected_bytes`. Else the
+    reason it does not: deleted, a symlink (mode `120000` never matches a
+    canonical `100644`/`100755`), a mode mismatch, or a blob that
+    differs."""
+    entry = _git_ls_tree_entry(repo, sha, path)
+    if entry is None:
+        return "deleted at this commit"
+    mode, _blob = entry
+    if mode == "120000":
+        return "symlink (mode 120000 is never exempt)"
+    if mode != expected_mode:
+        return f"mode mismatch (got {mode}, expected {expected_mode})"
+    actual = git_raw_text(repo, "show", f"{sha}:{path}")
+    if transform is not None:
+        actual = transform(actual)
+        if actual is None:
+            return "checker copy carries no version stamp"
+    return None if actual == expected_bytes else "blob differs"
+
+
+def _plumbing_path_rejection(
+    repo: Path, sha: str, path: str, canonical_dir: Path, scaffold_mod
+) -> str | None:
+    """Which canonical rendering `path` -- one `_is_host_plumbing()`
+    already said yes to, in a commit whose checker-copy stamp
+    `_plumbing_stamp_reason` already gated -- must match, routed to
+    `_matches_canonical_file` for the mode-and-blob comparison every kind
+    shares. None when it matches; else the reason it does not."""
+    if path == scaffold_mod.MARKER:
+        return "no canonical (marker file is never exempt)"
+
+    if path == scaffold_mod.SHIM_COMMAND:
+        expected = scaffold_mod.SHIM_TEMPLATE.format(
+            stamp=scaffold_mod.stamp_line(scaffold_mod.plugin_version()),
+            checker=scaffold_mod.CHECKER_COPY,
+        )
+        return _matches_canonical_file(repo, sha, path, "100755", expected)
+
+    if path == scaffold_mod.CHECKER_COPY:
+        canonical_file = canonical_dir / "loom_checker.py"
+        if not canonical_file.is_file():
+            return "no canonical counterpart for this path"
+        return _matches_canonical_file(
+            repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file),
+            transform=lambda content: _strip_stamp_line(content, scaffold_mod.STAMP_PREFIX),
+        )
+
+    for name in scaffold_mod.SIBLING_MODULES:
+        if path == f"{scaffold_mod.HOOK_DIR}/{name}":
+            canonical_file = canonical_dir / name
+            if not canonical_file.is_file():
+                return "no canonical counterpart for this path"
+            return _matches_canonical_file(
+                repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file)
+            )
+
+    contract_prefix = f"{scaffold_mod.CONTRACT_COPY}/"
+    if path.startswith(contract_prefix):
+        rel = path[len(contract_prefix):]
+        canonical_file = canonical_dir.parent / "contract" / rel
+        if not canonical_file.is_file():
+            return "no canonical counterpart for this path"
+        return _matches_canonical_file(
+            repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file)
+        )
+
+    return "no canonical counterpart for this path"
+
+
+_NO_CANONICAL_TREE = (
+    "no canonical (this checker is the .codex/hooks/ copy, or no contract "
+    "package sits beside it)"
+)
+
+
+def _filter_exempt_plumbing_paths(
+    repo: Path, sha: str, paths: set[str], canonical_dir: Path | None, scaffold_mod
+) -> tuple[set[str], dict[str, str]]:
+    """`paths` with every exempt host-plumbing path removed, and a
+    `{path: reason}` map for the host-plumbing paths that stayed because
+    they are NOT exempt -- both fold straight into the caller's
+    diagnostic. `canonical_dir` is None when there is no canonical tree
+    to compare against at all (this checker IS the `.codex/hooks/` copy,
+    or no sibling contract package sits beside it): every host-plumbing
+    path is rejected uniformly, with no per-path comparison attempted.
+    Otherwise the checker-copy stamp is gated once for the WHOLE commit
+    (`_plumbing_stamp_reason`) before any per-path comparison runs, per
+    REQ-3 -- a stamp mismatch invalidates every plumbing path in this
+    commit, not just the checker copy."""
+    stamp_reason = (
+        _plumbing_stamp_reason(repo, sha, scaffold_mod) if canonical_dir is not None else None
+    )
+    kept: set[str] = set()
+    rejected: dict[str, str] = {}
+    for path in paths:
+        if not _is_host_plumbing(path):
+            kept.add(path)
+            continue
+        if canonical_dir is None:
+            reason = _NO_CANONICAL_TREE
+        else:
+            reason = stamp_reason or _plumbing_path_rejection(
+                repo, sha, path, canonical_dir, scaffold_mod
+            )
+        if reason is None:
+            continue
+        kept.add(path)
+        rejected[path] = reason
+    return kept, rejected
+
+
+def _collect_untrailered_commits(
+    repo: Path, manifest, is_review, shas: list[str], canonical_dir: Path | None, scaffold_mod
+) -> tuple[set[str], list[tuple[str, str]]]:
+    """The per-commit half of `push.dispatch-covers-tasks`: every `Task:`
+    id any commit in `shas` claims, and the `(short sha, message)` pairs
+    for commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
+    host-plumbing paths are filtered out (`_filter_exempt_plumbing_paths`)
+    -- with no `Task:` trailer of their own."""
+    claimed: set[str] = set()
+    untrailered: list[tuple[str, str]] = []
+    for sha in shas:
+        paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
+        paths, plumbing_reasons = _filter_exempt_plumbing_paths(
+            repo, sha, paths, canonical_dir, scaffold_mod
+        )
+        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
+        message = git_text(repo, "log", "-1", "--format=%B", sha)
+        ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
+        claimed |= ids
+        if kinds and not ids:
+            kind_list = ", ".join(sorted(kinds))
+            if plumbing_reasons:
+                detail = "; ".join(
+                    f"{path} ({reason})" for path, reason in sorted(plumbing_reasons.items())
+                )
+                kind_list += f"; plumbing not exempt: {detail}"
+            untrailered.append((sha[:8], kind_list))
+    return claimed, untrailered
+
+
 def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     """Every commit that changes real work names the task it belongs to.
 
@@ -2104,6 +2834,14 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     the plan, the spec or evidence owes no trailer -- none of it is
     dispatched work (the spec is a user re-confirmation owned by the
     write-spec station, not a planned task).
+
+    A host-plumbing path (`_is_host_plumbing()`) is ALSO exempt, but only
+    when it is byte-and-mode identical, at that commit, to what THIS
+    running checker's own tree would scaffold there -- content-bound, not
+    a blanket directory exemption (Design decision "Content-bound plumbing
+    exemption", REQ-3). The exemption is per-path: a commit mixing a
+    genuine plumbing refresh with an ordinary code file still owes a
+    trailer for the code file.
     """
     if reviewed_id is None:
         return []
@@ -2122,17 +2860,24 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
         if line.strip()
     ]
 
-    claimed: set[str] = set()
-    untrailered: list[tuple[str, str]] = []
-    for sha in shas:
-        paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
-        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
-        message = git_text(repo, "log", "-1", "--format=%B", sha)
-        ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
-        claimed |= ids
-        if kinds and not ids:
-            untrailered.append((sha[:8], ", ".join(sorted(kinds))))
+    canonical_dir = _plumbing_canonical_dir()
+    scaffold_mod = _load_codex_scaffold() if canonical_dir is not None else None
 
+    claimed, untrailered = _collect_untrailered_commits(
+        repo, manifest, is_review, shas, canonical_dir, scaffold_mod
+    )
+
+    return _dispatch_coverage_failures(claimed, untrailered, review)
+
+
+def _dispatch_coverage_failures(
+    claimed: set[str], untrailered: list[tuple[str, str]], review
+):
+    """The trailer/dispatch-coverage matching half of `push.dispatch-
+    covers-tasks`: an untrailered commit that changes dispatched work
+    blocks outright; otherwise every `claimed` task id must name an
+    `implementer` entry in `review["dispatch"]`, or the commits that lost
+    a writer are named. `[]` when both hold."""
     if untrailered:
         listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)
         return [

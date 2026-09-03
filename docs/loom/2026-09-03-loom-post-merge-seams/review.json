@@ -1,0 +1,4331 @@
+{
+  "reviewed_sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "spec",
+      "spec_sha": "702f5b7",
+      "findings_file": "evidence/spec-review-r1.md",
+      "reviewer": "codex-review-spec-1",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol/high",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 1,
+      "scope": "spec",
+      "spec_sha": "702f5b7",
+      "findings_file": "evidence/spec-review-r1.md",
+      "reviewer": "sonnet-review-spec-1",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 2,
+      "scope": "spec",
+      "spec_sha": "5e7a104",
+      "findings_file": "evidence/spec-review-r2.md",
+      "reviewer": "codex-review-spec-2",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol/high",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 2,
+      "scope": "spec",
+      "spec_sha": "5e7a104",
+      "findings_file": "evidence/spec-review-r2.md",
+      "reviewer": "sonnet-review-spec-2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 3,
+      "scope": "spec",
+      "spec_sha": "035cf38",
+      "findings_file": "evidence/spec-review-r3.md",
+      "reviewer": "codex-review-spec-3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 3,
+      "scope": "spec",
+      "spec_sha": "035cf38",
+      "findings_file": "evidence/spec-review-r3.md",
+      "reviewer": "sonnet-review-spec-3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 4,
+      "scope": "spec",
+      "spec_sha": "7e12444",
+      "findings_file": "evidence/spec-review-r4.md",
+      "reviewer": "codex-review-spec-4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 4,
+      "scope": "spec",
+      "spec_sha": "7e12444",
+      "findings_file": "evidence/spec-review-r4.md",
+      "reviewer": "sonnet-review-spec-4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS_WITH_NOTES"
+    },
+    {
+      "round": 5,
+      "scope": "spec",
+      "spec_sha": "897f3a9",
+      "findings_file": "evidence/spec-review-r5.md",
+      "reviewer": "codex-review-spec-5",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 5,
+      "scope": "spec",
+      "spec_sha": "897f3a9",
+      "findings_file": "evidence/spec-review-r5.md",
+      "reviewer": "sonnet-review-spec-5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 6,
+      "scope": "spec",
+      "spec_sha": "9a6f71e",
+      "findings_file": "evidence/spec-review-r6.md",
+      "reviewer": "codex-review-spec-6",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 6,
+      "scope": "spec",
+      "spec_sha": "9a6f71e",
+      "findings_file": "evidence/spec-review-r6.md",
+      "reviewer": "sonnet-review-spec-6",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 7,
+      "scope": "spec",
+      "spec_sha": "1e02f71",
+      "findings_file": "evidence/spec-review-r7.md",
+      "reviewer": "codex-review-spec-7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 7,
+      "scope": "spec",
+      "spec_sha": "1e02f71",
+      "findings_file": "evidence/spec-review-r7.md",
+      "reviewer": "sonnet-review-spec-7",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 8,
+      "scope": "spec",
+      "spec_sha": "ddf9e10",
+      "findings_file": "evidence/spec-review-r8.md",
+      "reviewer": "codex-review-spec-8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 8,
+      "scope": "spec",
+      "spec_sha": "ddf9e10",
+      "findings_file": "evidence/spec-review-r8.md",
+      "reviewer": "sonnet-review-spec-8",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 9,
+      "scope": "after-task:W0-04",
+      "sha": "e0df97e2c4e5ad6429ba9ab29e84d1b415555a93",
+      "findings_file": "evidence/review-after-task-w0-04-r1.md",
+      "reviewer": "codex-review-w0-04",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1766",
+          "text": "a rename of a confirmed intent to another intent path while changing it to closed yields a deleted path with no after-text and an added path with no before-text; the loop skips both and the recompute never fires",
+          "fix": "detect closed transitions on added/deleted intent paths; regression test with a real rename"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "scope": "after-task:W0-04",
+      "sha": "bab6103ba7842ab9f89574e645a074eb17dccaec",
+      "findings_file": "evidence/review-after-task-w0-04-r2.md",
+      "reviewer": "sonnet-review-w0-04",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1797",
+          "text": "deletion of an already-closed intent classified as a transition",
+          "fix": "drop the deleted-path disjunct"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1811",
+          "text": "diagnostics name HEAD^/HEAD^^ symbolically, never the sha",
+          "fix": "interpolate close_sha/pre_close_sha"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "scope": "after-task:W0-04",
+      "sha": "bab6103ba7842ab9f89574e645a074eb17dccaec",
+      "findings_file": "evidence/review-after-task-w0-04-r2.md",
+      "reviewer": "codex-review-w0-04-r2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1797",
+          "text": "deleting an already-closed intent is subjected to the close-commit shape and blocked",
+          "fix": "trigger only when the after-tree path parses as closed and the before does not"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1806",
+          "text": "failure messages do not name the offending commit hash nor the expected value",
+          "fix": "include close_sha/pre_close_sha and the expected value"
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_loom_checker_push.py:391",
+          "text": "regressions assert only the rule id, not the specific diagnostic",
+          "fix": "assert the diagnostic with hash and expected value"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "scope": "after-task:W0-04",
+      "sha": "bab6103ba7842ab9f89574e645a074eb17dccaec",
+      "findings_file": "evidence/review-after-task-w0-04-r2.md",
+      "reviewer": "sonnet-review-w0-04-r2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1797",
+          "text": "plain deletion of an already-closed intent is blocked; it becomes impossible to ever delete such a file",
+          "fix": "drop the deleted-path disjunct"
+        },
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:1735-1901",
+          "text": "check_close_commit_shape ~166 lines",
+          "fix": "extract condition (3) into a helper"
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py:190",
+          "text": "probe 5 docstring stale",
+          "fix": "say the case is fixed"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "scope": "spec",
+      "spec_sha": "c52a250",
+      "findings_file": "evidence/spec-review-r9.md",
+      "reviewer": "codex-review-spec-9",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 11,
+      "scope": "spec",
+      "spec_sha": "c52a250",
+      "findings_file": "evidence/spec-review-r9.md",
+      "reviewer": "sonnet-review-spec-9",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 12,
+      "scope": "spec",
+      "spec_sha": "dbe620d",
+      "findings_file": "evidence/spec-review-r10.md",
+      "reviewer": "codex-review-spec-10",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 12,
+      "scope": "spec",
+      "spec_sha": "dbe620d",
+      "findings_file": "evidence/spec-review-r10.md",
+      "reviewer": "sonnet-review-spec-10",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 12,
+      "scope": "spec",
+      "spec_sha": "dbe620d",
+      "findings_file": "evidence/design-review-close-shape-opus.md",
+      "reviewer": "opus-design-review-close-shape",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "design",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "deliberate-simplification",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+          "text": "keep the rule as regenerate-and-compare; delete v11's line-level sub-conditions",
+          "fix": "adopted as spec v12"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "scope": "spec",
+      "spec_sha": "e660c1d",
+      "findings_file": "evidence/spec-review-r11.md",
+      "reviewer": "codex-review-spec-11",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS_WITH_NOTES"
+    },
+    {
+      "round": 13,
+      "scope": "spec",
+      "spec_sha": "e660c1d",
+      "findings_file": "evidence/spec-review-r11.md",
+      "reviewer": "sonnet-review-spec-11",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS_WITH_NOTES"
+    },
+    {
+      "round": 14,
+      "scope": "after-task:W0-04",
+      "sha": "f8da3b184028e3a12649ac6fcaf68dee5f509b76",
+      "findings_file": "evidence/review-after-task-w0-04-r4.md",
+      "reviewer": "codex-review-w0-04-r4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1863",
+          "text": "surrogateescape decode vs strict encode raises on non-UTF-8 bytes",
+          "fix": "round-trip with surrogateescape"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1979",
+          "text": "checkpoint-parent diagnostic drops the touched paths",
+          "fix": "include the detail"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "scope": "after-task:W0-04",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "findings_file": "evidence/review-after-task-w0-04-r5.md",
+      "reviewer": "codex-review-w0-04-r5",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "round": 15,
+      "scope": "after-task:W0-04",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "findings_file": "evidence/review-after-task-w0-04-r5.md",
+      "reviewer": "sonnet-review-w0-04-r5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:1998",
+          "text": "checkpoint-parent diagnostic states 'to touch only review.json' twice",
+          "fix": "let the embedded detail carry the sentence"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "scope": "after-task:W0-04",
+      "sha": "fcd5905ea429e94b97298db26e80be33fc269c1e",
+      "findings_file": "evidence/review-after-task-w0-04-r4.md",
+      "reviewer": "sonnet-review-w0-04-r4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:1883-1980",
+          "text": "check_close_commit_shape body ~66 lines, over the 50-line lens cap",
+          "fix": "extract condition (a) into a helper"
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py:438",
+          "text": "probe 10 docstring describes the fixed CRLF bug as live",
+          "fix": "update like probe 5"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "scope": "after-task:W0-05",
+      "sha": "26185d8ed87b9df7a602600a127ae0a04a071455",
+      "findings_file": "evidence/review-after-task-w0-05-r1.md",
+      "reviewer": "codex-review-w0-05",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2672",
+          "text": "stamp equality checked only for loom_checker.py changes",
+          "fix": "gate every plumbing path on the committed copy's stamp"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2753",
+          "text": "rejected plumbing path loses the failure reason",
+          "fix": "carry the reason"
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_loom_checker_push.py:1816",
+          "text": "mixed-commit test green before the exemption exists",
+          "fix": "assert per-path removal"
+        },
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2625",
+          "text": "_plumbing_path_matches_canonical 63 lines",
+          "fix": "split"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "scope": "after-task:W0-05",
+      "sha": "26185d8ed87b9df7a602600a127ae0a04a071455",
+      "findings_file": "evidence/review-after-task-w0-05-r1.md",
+      "reviewer": "sonnet-review-w0-05",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2690",
+          "text": "check_dispatch_covers_tasks grew to 106 lines",
+          "fix": "extract the plumbing filter"
+        },
+        {
+          "severity": "important",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/loom_checker.py:2625",
+          "text": "four canonical branches repeat is_file+mode+byte-compare",
+          "fix": "one shared helper"
+        },
+        {
+          "severity": "nit",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2634",
+          "text": "docstring says the version gates the blob read; it gates the canonical compare",
+          "fix": "reword"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "scope": "after-task:W0-05",
+      "sha": "a7eca30cca48db4d51bbf65e2e0630b640cc1baf",
+      "findings_file": "evidence/review-after-task-w0-05-r2.md",
+      "reviewer": "codex-review-w0-05-r2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2636",
+          "text": "stamp gate ignores the checker copy's mode",
+          "fix": "require a regular 100644 copy"
+        },
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2817",
+          "text": "check_dispatch_covers_tasks 74 lines",
+          "fix": "extract"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "scope": "after-task:W0-05",
+      "sha": "92a21fe9d8842a7321f9bf44271a67ab30ba3ba8",
+      "findings_file": "evidence/review-after-task-w0-05-r2.md",
+      "reviewer": "sonnet-review-w0-05-r2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2817",
+          "text": "check_dispatch_covers_tasks 74 lines",
+          "fix": "extract two more helpers"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "scope": "after-task:W0-05",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "findings_file": "evidence/review-after-task-w0-05-r3.md",
+      "reviewer": "codex-review-w0-05-r3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "round": 18,
+      "scope": "after-task:W0-05",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "findings_file": "evidence/review-after-task-w0-05-r3.md",
+      "reviewer": "sonnet-review-w0-05-r3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2646",
+          "text": "mode-mismatch reason string lacks a verb",
+          "fix": "reword"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "sha": "cb4353db55950a2b37d464bf3346328fcd39d177",
+      "findings_file": "evidence/review-branch-end-r1.md",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "re-pinning probes not spelled out (new probes[] entries, sha = close commit, every kind)",
+          "fix": "one sentence"
+        },
+        {
+          "severity": "important",
+          "dimension": "principles-conformance",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "docs/user-judgment-leak lenses are prose-only; push accepts any lens label",
+          "fix": "separate mechanism decision"
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/blind-run-report.md:123",
+          "text": "report says six new intents; the delta since 160658c2 adds five",
+          "fix": "qualify the count"
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/skills/ship/SKILL.md:294",
+          "text": "post-PR sequence does not say the agent proceeds without asking",
+          "fix": "one clause"
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:314",
+          "text": "second push does not repeat 'run the checker first'",
+          "fix": "one clause"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json :: questions[3].decision_point",
+          "text": "decision_point is the string ②-spec-round-5; check_review_schema requires an int; push.review-schema blocks at every review-only-shaped HEAD",
+          "fix": "set 2, move provenance into text"
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "re-pinning probes not spelled out",
+          "fix": "one sentence"
+        },
+        {
+          "severity": "important",
+          "dimension": "principles-conformance",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "close-round lenses are prose-only",
+          "fix": "rule or soften"
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/skills/ship/SKILL.md:294",
+          "text": "unattended follow-through not stated",
+          "fix": "one clause"
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:314",
+          "text": "second push does not repeat the explicit checker run",
+          "fix": "one clause"
+        },
+        {
+          "severity": "nit",
+          "dimension": "deliberate-simplification",
+          "anchor": "loom-code/scripts/loom_checker.py:1883",
+          "text": "check_close_commit_shape ~66 lines; dismissal lives only in the blind-run report",
+          "fix": "in-code comment"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "scope": "branch-end",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "reviewer": "codex-review-branch-end-r2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "round": 20,
+      "scope": "branch-end",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "reviewer": "sonnet-review-branch-end-r2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "findings": [],
+      "notes": "round-1 intent-count finding confirmed resolved; cost table recomputed from review.json at 664159a8 (verdicts 37, dispatch 82, probes 44, open_findings 75/4 dismissed) — all match; self-referential push at HEAD fires only push.review-only-head"
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": []
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "reviewer packet (scratch), delta line",
+          "text": "packet cited 771a7e65 as the diff base; dcbb66eb is the base that matches the described delta",
+          "fix": "orchestrator: cite the previous review-only commit as base in narrow rounds"
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/checkpoint-cost-orchestrator-notes.md:last section",
+          "text": "the installed-plugin half of the dual dry-run claim is not verifiable from the repo tree alone; branch-checker half reproduced live",
+          "fix": "none on the artifact; noted as unverified evidence"
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+          "text": "open question lacks the OQ-<n> [OPEN|RESOLVED] grammar of check_open_questions.py",
+          "fix": "rewrite as a resolved agent-decided entry"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+          "text": "same malformed open-question declaration",
+          "fix": "rewrite as a resolved agent-decided entry"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9",
+          "text": "\"22 per-case probes\" is incorrect; evidence records 21 per-case plus two whole-file",
+          "fix": "state 21 per-case plus two whole-file"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:16",
+          "text": "\"2 files, 24 records\" conflates 23 adversarial records with the package-test record",
+          "fix": "say 2 files, 23 adversarial records"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+          "text": "worker count is an implementation decision exposed as a user question",
+          "fix": "resolve agent-side from CI measurements"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+          "text": "whether to parallelize distinct artifacts is an implementation decision exposed as a user question",
+          "fix": "mark deferred and agent-decided"
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9 and :16",
+          "text": "22 (Problem) and 24 (Acceptance #2) both wrong and mutually inconsistent; recomputed 23 adversarial = 21 per-case + 2 whole-file",
+          "fix": "21 per-case plus 2 whole-file in both places"
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r5",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "7479caa298a27480f53458cff4928cf7d26f13fd",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:12",
+          "text": "Proposed outcome commits to -n auto while the new Constraint leaves worker count to the agent — contradictory instructions",
+          "fix": "make line 12 worker-count-neutral"
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "7479caa298a27480f53458cff4928cf7d26f13fd",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:2416",
+          "text": "round-4 resolution claims check_open_questions.py is not wired anywhere; AGENTS.md lists it as an intake self-check and it exits 1 on both intents (`- none` is not in its grammar)",
+          "fix": "rewrite Open questions to the script grammar; correct the resolved notes"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-design/skills/capture-intent/SKILL.md:174-176",
+          "text": "pre-existing drift: capture-intent and the intent template say `- none`, check_open_questions.py rejects it; the record asserted the opposite instead of surfacing the drift",
+          "fix": "flag as a separate item"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r6",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "e66ae814015ce9a9e0f16e37bdca9c6c026f66ce",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:9",
+          "text": "「各多花一輪」attributes two rounds to the stale script alone; both rounds carried other findings",
+          "fix": "state one finding per round, no round attribution"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:12",
+          "text": "Proposed outcome offers two mutually exclusive paths (delete vs keep-and-wire) and Acceptance #1 accepts either",
+          "fix": "agent fixes a single path"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r6",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "e66ae814015ce9a9e0f16e37bdca9c6c026f66ce",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:2474",
+          "text": "AGENTS.md:37 is the command line; the self-check phrase is at :36 — off by one, five occurrences",
+          "fix": "cite AGENTS.md:35-37"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:4",
+          "text": "needs-design reason still describes two implementations (delete or align grammar), contradicting the single delete path at :12-15",
+          "fix": "rewrite the reason to deletion only"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r7",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:2604",
+          "text": "the AGENTS.md:37 citation fix covered four of five occurrences; the r5-02 resolved note still cites :37",
+          "fix": "fix the fifth occurrence"
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:961",
+          "text": "sonnet r6 record carries a lone nit but verdict PASS_WITH_NOTES; lenses rubric says lone nits yield PASS",
+          "fix": "correct or state the policy"
+        }
+      ]
+    },
+    {
+      "round": 26,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": []
+    },
+    {
+      "round": 26,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r8",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": []
+    },
+    {
+      "round": 27,
+      "scope": "branch-end",
+      "reviewer": "codex-review-close-commit",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:5",
+          "text": "delta is exactly the status-line replacement; PR #782 could not be verified from the sandbox (no network)",
+          "fix": "verified by the other leg: gh pr view 782 → OPEN, headRefName loom-post-merge-seams"
+        }
+      ],
+      "delta_is_one_status_line": true
+    },
+    {
+      "round": 27,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-close-commit",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A — mechanical status-line close per user-decided design"
+      },
+      "findings": [],
+      "delta_is_one_status_line": true
+    },
+    {
+      "round": 28,
+      "scope": "branch-end",
+      "reviewer": "codex-review-w1-06",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": "read-only sandbox could not run pytest; static check: CRLF expectation matches condition (c); both CRLF bodies AST-identical; version test ties to CHANGELOG"
+    },
+    {
+      "round": 28,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-w1-06",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "dimension_scores": {
+        "security": "N/A — no surface in a two-file test-assertion fix",
+        "architecture": "N/A — no surface in a two-file test-assertion fix",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — no surface in a two-file test-assertion fix",
+        "principles-conformance": "N/A — no surface in a two-file test-assertion fix",
+        "deliberate-simplification": "N/A — no surface in a two-file test-assertion fix",
+        "deletion-first": "N/A — no surface in a two-file test-assertion fix",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": "ran the three test files: 28 passed on a machine with global core.autocrlf=input"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "spec",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "93b6ea10",
+      "result": "1007 passed in 121.91s (0:02:01)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-5 from the spec alone (sonnet-coldread-spec-1)",
+      "sha": "93b6ea10",
+      "result": "3 guesses, 1 anchor mismatch",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r1.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of REQ-1..6 (sonnet-redteam-spec-1)",
+      "sha": "93b6ea10",
+      "result": "NEEDS_REVISION — 3 fatal, 3 important",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r1.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-5 from spec v3 alone (sonnet-coldread-spec-2)",
+      "sha": "82b33ce5",
+      "result": "0 guesses",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r2.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v3 (sonnet-redteam-spec-2)",
+      "sha": "82b33ce5",
+      "result": "NEEDS_REVISION — 1 fatal, 4 important",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r2.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v4 alone (sonnet-coldread-spec-3)",
+      "sha": "cc5a67a9",
+      "result": "1 guess (PR number of the previous change is a data lookup, not a spec gap); all 17 anchors resolve",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r3.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v4 (sonnet-redteam-spec-3)",
+      "sha": "cc5a67a9",
+      "result": "NEEDS_REVISION — 1 fatal, 4 important; 5 round-2 escapes hold",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r3.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v5 alone (sonnet-coldread-spec-4)",
+      "sha": "bc122370",
+      "result": "4 guesses, 2 anchor mismatches (one a real incorrect fact: R28-O2's target no longer exists)",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r4.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v5 (sonnet-redteam-spec-4)",
+      "sha": "bc122370",
+      "result": "NEEDS_REVISION — 0 fatal, 5 important; round-3 fatal and 2c/2e/2f hold, 2a reopened via new attack (c)",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r4.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v6 alone (sonnet-coldread-spec-5)",
+      "sha": "de4517d3",
+      "result": "1 guess (mode-only comparison not stated), 0 anchor mismatches",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r5.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v6 (sonnet-redteam-spec-5)",
+      "sha": "de4517d3",
+      "result": "NEEDS_REVISION — 0 fatal, 2 important, 1 nit; all six round-4 findings HOLD",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r5.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v7 alone and writes out the two tightened checks as code (sonnet-coldread-spec-6)",
+      "sha": "e6f3062c",
+      "result": "8 guesses (all implementation detail: messages, regex text, -G pattern, version source, round filter, co-firing), 0 anchor mismatches",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r6.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v7's two tightenings (sonnet-redteam-spec-6)",
+      "sha": "e6f3062c",
+      "result": "NEEDS_REVISION — 2 fatal, 0 important; all five round-5 items HOLD",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r6.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v8 alone and writes out the two tightened checks as code (sonnet-coldread-spec-7)",
+      "sha": "d7fd6d44",
+      "result": "3 guesses (checkpoint identity for the cost table; zero-verdict edge; block-message paraphrase), 0 anchor mismatches",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r7.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v8 (sonnet-redteam-spec-7)",
+      "sha": "d7fd6d44",
+      "result": "PASS_WITH_NOTES — 0 fatal, 1 important (merge commit at HEAD^ shows no diff, trigger never fires), 1 nit; R21/R22/C12 HOLD",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r7.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v9 alone and writes out the two tightened checks as code (sonnet-coldread-spec-8)",
+      "sha": "3bdc6242",
+      "result": "2 guesses (dry-run needs a stand-in PR number; table layout), 0 anchor mismatches",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r8.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v9 (sonnet-redteam-spec-8)",
+      "sha": "3bdc6242",
+      "result": "PASS — 0 fatal, 0 important, 1 nit; C13/R23 HOLD",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r8.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "after-task:W0-04",
+      "command": "clean worktree at 58b8f514, branch checker, Acceptance #1 positive flow + four negative cases (sonnet-blindrun-w0-04)",
+      "sha": "58b8f514",
+      "result": "5/5 lines pass; package suite 1024 passed",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/blind-run-after-task-w0-04.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "narrow red-team of the amended REQ-1 sentence (sonnet-redteam-spec-9); cold read omitted, Acceptance unchanged",
+      "sha": "bb938f98",
+      "result": "NEEDS_REVISION — 1 fatal, 4 important, 2 nits",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r9.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "narrow red-team of REQ-1 v11 (sonnet-redteam-spec-10)",
+      "sha": "8da551c8",
+      "result": "NEEDS_REVISION — 1 fatal (headingless doc, last status wins), 2 important, 3 nits",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r10.md"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "1043 passed in 191.59s (0:03:11)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_passes",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-04",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "1049 passed in 204.78s (0:03:24)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "after-task:W0-05",
+      "command": "clean worktree at f9dea518, branch checker, Acceptance #3 positive + five negatives + Codex-copy case (sonnet-blindrun-w0-05)",
+      "sha": "f9dea518",
+      "result": "7/7 scenarios match spec; package 1045 passed; probes 11 passed",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/blind-run-after-task-w0-05.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "result": "1061 passed in 204.16s (0:03:24)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "clean worktree at 664159a8, branch checker, Acceptance 1-6 walked; checkpoint-cost table recomputed (sonnet-blindrun-branch-end)",
+      "sha": "664159a8",
+      "result": "#1 #3 #4 #6 work; #2 local works / CI pending; #5 three surfaces work / device cache pending merge",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "attack-catalogue pass over loom-code/skills/ship/SKILL.md and review/SKILL.md (sonnet-adversary-branch-end)",
+      "sha": "664159a8",
+      "result": "PASS_WITH_NOTES — 0 fatal, 2 important (carry-forward), 2 nits",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/adversarial-branch-end-skill.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_passes",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "0c36cbc9f52f5a684b9fce06ccb6fbc2acf1948f",
+      "result": "1061 passed in 212.37s (0:03:32)",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_passes",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+      "result": "1061 passed in 209.21s (0:03:29)",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_passes",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "1061 passed in 200.26s (0:03:20)",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "1061 passed in 194.51s (0:03:14)",
+      "artifact": "",
+      "scope": "branch-end"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "重述：合併後的三條自卡接縫修掉＋量檢查站成本，對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "係數要不要改的決定現在下還是留到第二、三個真實 change？（答：留到之後，這次寫建議）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "PR 的 merge 由 agent 按還是留給你？（答：留給 kouko）",
+      "type": "what"
+    },
+    {
+      "decision_point": 2,
+      "text": "（spec 審查第 5 輪，決策點②的延伸）Codex 判 fatal（關 intent 後那輪審查只靠站文字、每次 ship 必經）、sonnet 判 PASS：A 這次就把兩條既有規則加嚴（動 Constraint）／B 改成先關再審、狀態行不帶 PR 號碼？（答：A）",
+      "type": "consequence"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "spec-C1",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "close-commit push path incomplete: which push rules apply, where review.json / reviewed_sha come from for a post-merge commit",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C2",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:35",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "test anchor cites only the declaration; the oracle is dynamic (lines 429-447); PR #781 failure not cited as an artifact",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C3",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "\"six\" carried nits; only five are enumerated (intent Constraints too)",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C4",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "exact package-test commands and CI jobs not named",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C5",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "\"exactly one line\" undefined in git terms (mode, rename, duplicate status field, newline)",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-S1",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: second accepted shape",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-review-spec-1"
+      ],
+      "text": "review-only-head extension conflicts with the intent Constraint \"no rule semantics change\"",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-S2",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: REQ-6 → Acceptance #2",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-review-spec-1"
+      ],
+      "text": "REQ-6 traces to no Acceptance line; it is a Constraint",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-R1",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "PR number is grammar-only; nothing recomputes that the change merged",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-R2",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "closed date not routed through is_real_date",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-R3",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "--no-renames not pinned for the new shape",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-R6",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:20",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "closed not terminal; silent reopen closed→confirmed unaddressed",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-R7",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "REQ-3 exemption is a path prefix, not a content check; doubles a blind spot onto a second gate",
+      "resolved": "resolved: 617d9b79 for hosts with an external canonical; the Codex residual is re-opened as spec-C6"
+    },
+    {
+      "id": "spec-B1",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-coldread-spec-1"
+      ],
+      "text": "close-commit message text not restated in the spec",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-B2",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-coldread-spec-1"
+      ],
+      "text": "package command not given literally",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-B3",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:14",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-coldread-spec-1"
+      ],
+      "text": "how the bumped version is observed after update is unstated",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C6",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "codex-review-spec-2"
+      ],
+      "text": "on Codex the running checker and its siblings are the copies under test; the comparison is self-referential for git_exec/contract too",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-C7",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "codex-review-spec-2"
+      ],
+      "text": "REQ-6 traces to no Acceptance line; five fixes can be omitted while all Acceptance pass",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-C8",
+      "severity": "important",
+      "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:23",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "codex-review-spec-2"
+      ],
+      "text": "Acceptance #3 tests only genuine scaffold output; no negative case",
+      "resolved": "resolved: 8286595c (spec v4) for altered/added; deletion and mode-only reopened as spec-C10 (round 3)"
+    },
+    {
+      "id": "spec-S4",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-review-spec-2"
+      ],
+      "text": "closed date not routed through is_real_date (= spec-R2)",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-S5",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-review-spec-2"
+      ],
+      "text": "closed not terminal (= spec-R6)",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-S6",
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-review-spec-2"
+      ],
+      "text": "CI runs pytest with -v, spec says -q",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-R8",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-redteam-spec-2"
+      ],
+      "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
+    },
+    {
+      "id": "spec-R9",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-redteam-spec-2"
+      ],
+      "text": "CI never runs loom_checker.py push; the push gate is client-side only (pre-existing) — the spec should say so",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-R10",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-redteam-spec-2"
+      ],
+      "text": "\"the running checker\" undefined across two cached plugin versions",
+      "resolved": "resolved: 8286595c (spec v4), confirmed by round 3 (codex-review-spec-3, sonnet-review-spec-3, sonnet-redteam-spec-3 all list it closed)"
+    },
+    {
+      "id": "spec-C9",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "codex-review-spec-3",
+        "sonnet-review-spec-3",
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "REQ-1 residual assigns catching a smuggled file in the close commit to the user reading the PR diff — contradicts PRINCIPLES.md Non-negotiables 1-2 and the 'Won't do' line; the close commit needs a machine review, not a user diff read (same substance as spec-R8, which is therefore not closable by disclosure)",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
+    },
+    {
+      "id": "spec-C10",
+      "severity": "important",
+      "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:23",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "codex-review-spec-3"
+      ],
+      "text": "Acceptance #3 negative case covers altered byte and extra file only; deletion and mode-only plumbing changes promised by REQ-3 are unverified (spec-C8 partly reopened)",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
+    },
+    {
+      "id": "spec-S7",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-review-spec-3",
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "'closed is terminal' overstates: a branch that never carries the close commit (forked from trunk before the merge, or rebased around it) has an empty -S history and current status confirmed, so intake passes",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
+    },
+    {
+      "id": "spec-R11",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "reopen check uses a literal single-space pickaxe -S'status: closed' while the grammar regex may be whitespace-lenient; a hand-edited double-space closed line parses as closed but never matches the pickaxe",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
+    },
+    {
+      "id": "spec-R12",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "Path(__file__).resolve() test: a symlink or copy of the checker placed outside .codex/hooks/ flips the exemption on even on Codex, falsifying 'no exemption applies'",
+      "resolved": "resolved: 219a4653 (spec v5), confirmed by round 4 (codex-review-spec-4 PASS lists each closed; sonnet-review-spec-4; sonnet-redteam-spec-4 HOLDS)"
+    },
+    {
+      "id": "spec-R13",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "'canonical is whichever checkout the hook invoked' lets a deliberately older cached plugin version serve as canonical, so plumbing matching superseded weaker content escapes trailer duty",
+      "resolved": "resolved: 219a4653 (spec v5) for the run-by-hand case (round 4 codex/red team); the loaded-plugin-is-old case reopened as spec-S8"
+    },
+    {
+      "id": "spec-S8",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-review-spec-4"
+      ],
+      "text": "a deliberately downgraded loaded plugin is its own (older, weaker) canonical; no freshness check; v5 frames it as 'not ambiguous' instead of a disclosed residual",
+      "resolved": "resolved: 20d5bad0 (spec v6), confirmed by round 5 (sonnet-review-spec-5 PASS, codex-review-spec-5 notes, sonnet-redteam-spec-5 HOLDS)"
+    },
+    {
+      "id": "spec-R14",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "'not widened' undersells: the verdict-sha gap moves from occasional to the critical path of every ship (one close commit per change by design)",
+      "resolved": "resolved: 20d5bad0 (spec v6), confirmed by round 5 (sonnet-review-spec-5 PASS, codex-review-spec-5 notes, sonnet-redteam-spec-5 HOLDS)"
+    },
+    {
+      "id": "spec-R15",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "'a closed on the trunk is itself the proof of the merge — no PR-number verification is needed' assumes nobody pushes to trunk directly; this repo's branch protection has enforce_admins false and zero required approvals (gh api), loom checks neither",
+      "resolved": "resolved: 20d5bad0 (spec v6), confirmed by round 5 (sonnet-review-spec-5 PASS, codex-review-spec-5 notes, sonnet-redteam-spec-5 HOLDS)"
+    },
+    {
+      "id": "spec-R16",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "case (ii) trunk resolution can be absent (no trunk ref: skipped, not stale) or degenerate to the attacker's own branch via @{upstream}; composed with a rebase the reopen has zero defenses",
+      "resolved": "resolved: 20d5bad0 (spec v6), confirmed by round 5 (sonnet-review-spec-5 PASS, codex-review-spec-5 notes, sonnet-redteam-spec-5 HOLDS)"
+    },
+    {
+      "id": "spec-R17",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "self-identification offset ../contract/manifest.yaml is the plugin/repo layout only; the Codex scaffold puts contract/ inside .codex/hooks/ (codex_scaffold.py CONTRACT_COPY) — one formula stated for two layouts",
+      "resolved": "resolved: 20d5bad0 (spec v6), confirmed by round 5 (sonnet-review-spec-5 PASS, codex-review-spec-5 notes, sonnet-redteam-spec-5 HOLDS)"
+    },
+    {
+      "id": "spec-R18",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-redteam-spec-4"
+      ],
+      "text": "the close round's 'delta is one status line' is a reviewer-stated claim, not a recompute; the tension with the Won't-do line on prose-only gates and Non-negotiable 3 is not named among REQ-1's residuals",
+      "resolved": "resolved as disclosure: 20d5bad0 (spec v6), round 5 sonnet/red team accept; Codex escalates the same substance to spec-C11 (disclosure insufficient)"
+    },
+    {
+      "id": "spec-B4",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+      "origin_sha": "bc122370",
+      "raised_by": [
+        "sonnet-coldread-spec-4"
+      ],
+      "text": "REQ-6 lists R28-O2 (check=True on the wc skip-guard probe, test_check_mechanisms.py:664) but that probe was deleted by the round-30 rewrite to Python str.split — the nit's target no longer exists; R30-O1's wording reads as current state rather than the fix",
+      "resolved": "resolved: 20d5bad0 (spec v6), confirmed by round 5 (sonnet-review-spec-5 PASS, codex-review-spec-5 notes, sonnet-redteam-spec-5 HOLDS)"
+    },
+    {
+      "id": "spec-C11",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "de4517d3",
+      "raised_by": [
+        "codex-review-spec-5"
+      ],
+      "text": "disclosure is not conformance: the close-commit review round is enforced by station prose only (verdicts not tied to reviewed_sha) and v6 makes it once per ship; fix = fold a verdict-to-reviewed_sha comparison and the close-commit diff-shape recompute into an existing rule in THIS change (Constraint revision), or a close flow with no commit after the verified checkpoint. Second vendor disagrees (sonnet-review-spec-5 PASS) — recorded whole",
+      "resolved": "resolved: d3d96241 (spec v7, option A user-decided), confirmed by round 6 (sonnet-review-spec-6 PASS, codex-review-spec-6 notes, sonnet-redteam-spec-6 HOLDS); the tie itself reopened in sharper form as spec-R21/R22"
+    },
+    {
+      "id": "spec-R19",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "de4517d3",
+      "raised_by": [
+        "sonnet-redteam-spec-5"
+      ],
+      "text": "case (ii) trusts whatever local ref resolves under the four trunk names; a locally fabricated ref (git branch main <old-sha>, update-ref refs/remotes/origin/main) is indistinguishable from a real fetch — third residual not stated",
+      "resolved": "resolved: d3d96241 (spec v7, option A user-decided), confirmed by round 6 (sonnet-review-spec-6 PASS, codex-review-spec-6 notes, sonnet-redteam-spec-6 HOLDS); the tie itself reopened in sharper form as spec-R21/R22"
+    },
+    {
+      "id": "spec-R20",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "de4517d3",
+      "raised_by": [
+        "sonnet-redteam-spec-5"
+      ],
+      "text": "Path(__file__).resolve() follows a symlink: a symlinked .codex/hooks/loom_checker.py pointing at a genuine canonical resolves outside .codex/hooks/, classifies itself as canonical and grants Codex the exemption REQ-3 says it never has; fix = classify by the invoked path (no resolve) and treat a symlink at a plumbing path as gate work",
+      "resolved": "resolved: d3d96241 (spec v7, option A user-decided), confirmed by round 6 (sonnet-review-spec-6 PASS, codex-review-spec-6 notes, sonnet-redteam-spec-6 HOLDS); the tie itself reopened in sharper form as spec-R21/R22"
+    },
+    {
+      "id": "spec-C12",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "codex-review-spec-6"
+      ],
+      "text": "REQ-1 says unconditionally 'closed reaches the trunk only by the merge' while Design decision 1 conditions it on the trunk receiving only merges (admin direct push not caught) — one sentence contradicts its own stated boundary",
+      "resolved": "resolved: 17bb592c (spec v8), confirmed by round 7 (all three legs)"
+    },
+    {
+      "id": "spec-R21",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "sonnet-redteam-spec-6"
+      ],
+      "text": "the sha tie exempts verdicts whose self-reported scope is `spec`; a round reviewing the close commit (or any code delta) labelled scope: spec, or one mislabelled verdict in a mixed round, owes no sha and check_verdicts never partitions by scope — the exemption is a label, not a recompute",
+      "resolved": "resolved in REQ-1 by 17bb592c (spec v8); Design decision 1 still carried the old sentence → reopened as spec-C13 (round 7, codex + sonnet)"
+    },
+    {
+      "id": "spec-R22",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "sonnet-redteam-spec-6"
+      ],
+      "text": "two-commit dodge: R1 → A (docs-typed, no trailer duty) → C (close, one line vs its own parent A) → R2; the shape recompute reads only HEAD^'s own diff, so A is invisible to every push rule while the close round's prose claims the delta is one line",
+      "resolved": "resolved: 17bb592c (spec v8), confirmed by round 7 (all three legs)"
+    },
+    {
+      "id": "spec-C13",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "d7fd6d44",
+      "raised_by": [
+        "codex-review-spec-7",
+        "sonnet-review-spec-7"
+      ],
+      "text": "Design decision 1 still says verdicts[].sha is required only on non-spec scopes, contradicting REQ-1's no-exemption rule (stale sentence from v7)",
+      "resolved": "resolved: 84a8cb7e (spec v9), confirmed by round 8 (codex PASS, sonnet PASS, red team HOLDS)"
+    },
+    {
+      "id": "spec-R23",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "d7fd6d44",
+      "raised_by": [
+        "sonnet-redteam-spec-7"
+      ],
+      "text": "git show --raw on a merge commit prints no diff, so a merge commit at HEAD^ never triggers the close-commit shape recompute while it may carry a closed transition and arbitrary other changes",
+      "resolved": "resolved: 84a8cb7e (spec v9), confirmed by round 8 (codex PASS, sonnet PASS, red team HOLDS)"
+    },
+    {
+      "id": "after-task:W0-04-01",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1747",
+      "origin_sha": "58b8f514",
+      "raised_by": [
+        "sonnet-adversary-w0-04"
+      ],
+      "text": "HEAD^^ precondition evaluated unconditionally; an ordinary root-commit branch is blocked",
+      "resolved": "resolved: efbd0198 (fix 1); adversary probe test_ordinary_root_commit_branch_wrongly_blocked_by_precondition now passes"
+    },
+    {
+      "id": "after-task:W0-04-02",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1766",
+      "origin_sha": "e0df97e2",
+      "raised_by": [
+        "codex-review-w0-04"
+      ],
+      "text": "rename (delete+add) of an intent path with a closed status bypasses the close-commit recompute",
+      "resolved": "resolved: 788a8e1f (fix 2); tests test_a_close_commit_that_renames_the_intent_path_is_blocked, test_a_brand_new_already_closed_intent_is_blocked"
+    },
+    {
+      "id": "after-task:W0-04-03",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1797",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "codex-review-w0-04-r2",
+        "sonnet-review-w0-04",
+        "sonnet-review-w0-04-r2"
+      ],
+      "text": "deleting an already-closed intent treated as a close transition and blocked (orchestrator's fix-2 packet over-specified deletion as a transition)",
+      "resolved": "resolved: adcca47c (fix 3); test_deleting_an_already_closed_intent_is_not_a_close_commit"
+    },
+    {
+      "id": "after-task:W0-04-04",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1806",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "codex-review-w0-04-r2",
+        "sonnet-review-w0-04"
+      ],
+      "text": "close-shape diagnostics name HEAD^/HEAD^^ symbolically without the sha or the expected value",
+      "resolved": "resolved: adcca47c (fix 3); every message carries close_sha/pre_close_sha[:8] and expected/got"
+    },
+    {
+      "id": "after-task:W0-04-05",
+      "severity": "important",
+      "anchor": "loom-code/scripts/test_loom_checker_push.py:391",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "codex-review-w0-04-r2"
+      ],
+      "text": "negative regressions assert only the rule id",
+      "resolved": "resolved: adcca47c (fix 3); six negative tests plus the deletion test assert the specific diagnostic"
+    },
+    {
+      "id": "after-task:W0-04-06",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1735",
+      "origin_sha": "bab6103b",
+      "raised_by": [
+        "sonnet-review-w0-04-r2",
+        "sonnet-review-w0-04"
+      ],
+      "text": "check_close_commit_shape ~166 lines",
+      "resolved": "resolved: adcca47c (fix 3); condition (3) extracted to _checkpoint_parent_failures"
+    },
+    {
+      "id": "spec-R24",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "symlink typechange at the intent path passes the raw-line shape (target string reads like a status line)",
+      "resolved": "resolved: spec v11 — mode 100644 on both sides"
+    },
+    {
+      "id": "spec-R25",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "intent glob read from a live manifest; the spec presents the match as the whole trigger",
+      "resolved": "resolved: spec v11 — glob from the running checker's own contract package via one named constant; residual that in this repo the two coincide is stated"
+    },
+    {
+      "id": "spec-R26",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "re.search on the closed alternative accepts trailing garbage",
+      "resolved": "resolved: spec v11 — STATUS.fullmatch on the value"
+    },
+    {
+      "id": "spec-R27",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "body-text decoy status lines satisfy the one-pair check",
+      "resolved": "resolved: spec v11 — both lines must sit before the first ## heading by hunk line numbers"
+    },
+    {
+      "id": "spec-R28",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "confirmation / new-intent commits at HEAD^ are refused; consequence only implicit for station flows",
+      "resolved": "resolved: spec v11 — stated explicitly and carried into ship SKILL.md by W1-01"
+    },
+    {
+      "id": "spec-R29",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "8da551c8",
+      "raised_by": [
+        "sonnet-redteam-spec-10"
+      ],
+      "text": "parse_document is last-wins on a headingless or malformed-heading document, so a later spurious status: line overrides the real one and defeats both the transition detection and the before-heading boundary",
+      "resolved": "resolved: spec v12 — regenerate-and-compare: a second status line makes the blobs differ; the implementation also counts exactly one status: line per version"
+    },
+    {
+      "id": "spec-R30",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "c4a2dbee",
+      "raised_by": [
+        "codex-review-spec-11",
+        "sonnet-review-spec-11"
+      ],
+      "text": "the trigger's intent path template is a live manifest read; a mistyped or drifted template makes no path match and the rule silently disarms (fail-open)",
+      "resolved": "resolved: fd3d9dbf — INTENT_PATH_TEMPLATE constant asserted against the manifest at function start; mismatch fails closed with a named diagnostic"
+    },
+    {
+      "id": "after-task:W0-04-07",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1799",
+      "origin_sha": "c7b52c99",
+      "raised_by": [
+        "sonnet-adversary-w0-04-r4"
+      ],
+      "text": "_regenerated_closed_text collapses \\r\\n to \\n on the regenerated status line, so a legitimate close on a CRLF intent file is blocked",
+      "resolved": "resolved: 6f7a19a5 — original line ending preserved; git_raw_text reads bytes (text=True was translating newlines); probe test_close_commit_crlf_file_wide_regeneration_drops_the_cr and test_a_crlf_file_wide_close_commit_passes green"
+    },
+    {
+      "id": "after-task:W0-04-08",
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "origin_sha": "c7b52c99",
+      "raised_by": [
+        "sonnet-adversary-w0-04-r4"
+      ],
+      "text": "a CRLF probe that does not pin core.autocrlf=false proves nothing on a machine that normalises line endings",
+      "resolved": "closed by 6b42ad57 (W1-06) — the dismissal (carry-forward: test-writing hazard, not a code defect; documented in the probe file — by sonnet-adversary-w0-04-r4) was overruled by PR #782 CI on 2026-09-03: the CRLF case failed on Linux; the test now pins core.autocrlf=false and expects BLOCK"
+    },
+    {
+      "id": "after-task:W0-04-09",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1863",
+      "origin_sha": "f8da3b18",
+      "raised_by": [
+        "codex-review-w0-04-r4"
+      ],
+      "text": "git_raw_text decodes with surrogateescape but regeneration re-encodes strict UTF-8: a non-UTF-8 byte outside the status line raises UnicodeEncodeError instead of comparing blobs",
+      "resolved": "resolved: d026bc02 — encode with surrogateescape; tests test_a_close_commit_with_a_stray_non_utf8_body_byte_passes / _that_changes_a_non_utf8_body_byte_is_blocked"
+    },
+    {
+      "id": "after-task:W0-04-10",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1979",
+      "origin_sha": "f8da3b18",
+      "raised_by": [
+        "codex-review-w0-04-r4"
+      ],
+      "text": "the malformed checkpoint-parent diagnostic drops check_review_only_head's detail (actual paths)",
+      "resolved": "resolved: d026bc02 — _checkpoint_parent_failures carries check_review_only_head detail; test strengthened"
+    },
+    {
+      "id": "after-task:W0-04-11",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:1998",
+      "origin_sha": "7d055bb8",
+      "raised_by": [
+        "sonnet-review-w0-04-r5"
+      ],
+      "text": "checkpoint-parent diagnostic repeats the expectation clause",
+      "dismissed": "carry-forward: cosmetic, no defect — by sonnet-review-w0-04-r5"
+    },
+    {
+      "id": "after-task:W0-04-12",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1883",
+      "origin_sha": "fcd5905e",
+      "raised_by": [
+        "sonnet-review-w0-04-r4"
+      ],
+      "text": "check_close_commit_shape body ~66 lines over the 50-line cap",
+      "dismissed": "carry-forward: correctness exhaustively verified over six fix rounds; a further split is a no-behaviour-change refactor; deferring avoids reopening a task the user's stop-loss closed — by sonnet-review-w0-04-r4"
+    },
+    {
+      "id": "after-task:W0-04-13",
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py:438",
+      "origin_sha": "fcd5905e",
+      "raised_by": [
+        "sonnet-review-w0-04-r4"
+      ],
+      "text": "probe 10 docstring stale",
+      "resolved": "resolved: docstring updated by the orchestrator (evidence-only edit), same commit as the W0-05 adversary dispatch"
+    },
+    {
+      "id": "after-task:W0-05-01",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:2672",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "stamp version equality checked only when the changed path is loom_checker.py; a commit touching only git_exec.py or contract/<rel> is exempted without validating the committed checker copy's stamp",
+      "resolved": "resolved: 7db8f9c1 — _plumbing_stamp_reason computed once per commit before any per-path compare; tests for decoy stamp and absent copy"
+    },
+    {
+      "id": "after-task:W0-05-02",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2753",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "a rejected plumbing path loses the comparison failure reason (version/mode/blob/deletion/symlink/missing canonical/no canonical all collapse)",
+      "resolved": "resolved: 7db8f9c1 — every rejection carries a reason (deleted/symlink/mode/blob/no counterpart/no canonical/version)"
+    },
+    {
+      "id": "after-task:W0-05-03",
+      "severity": "important",
+      "anchor": "loom-code/scripts/test_loom_checker_push.py:1816",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "the mixed-commit test is green before the exemption exists; it does not prove per-path removal",
+      "resolved": "resolved: 7db8f9c1 — mixed-commit test asserts the rule message body (code present, gate absent)"
+    },
+    {
+      "id": "after-task:W0-05-04",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2625",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "codex-review-w0-05"
+      ],
+      "text": "_plumbing_path_matches_canonical is 63 lines",
+      "resolved": "resolved: 7db8f9c1 — split into five helpers, all ≤47 lines"
+    },
+    {
+      "id": "after-task:W0-05-05",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2690",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "sonnet-review-w0-05"
+      ],
+      "text": "check_dispatch_covers_tasks 106 lines",
+      "resolved": "resolved: 7db8f9c1 — _collect_untrailered_commits extracted; check_dispatch_covers_tasks ~40 lines"
+    },
+    {
+      "id": "after-task:W0-05-06",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2625",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "sonnet-review-w0-05"
+      ],
+      "text": "four canonical branches duplicate the compare pattern",
+      "resolved": "resolved: 7db8f9c1 — _matches_canonical_file shared by all four branches"
+    },
+    {
+      "id": "after-task:W0-05-07",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:2634",
+      "origin_sha": "26185d8e",
+      "raised_by": [
+        "sonnet-review-w0-05"
+      ],
+      "text": "docstring overstates when the version gate runs",
+      "resolved": "resolved: 7db8f9c1 — docstring reworded"
+    },
+    {
+      "id": "after-task:W0-05-08",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:2636",
+      "origin_sha": "a7eca30c",
+      "raised_by": [
+        "codex-review-w0-05-r2"
+      ],
+      "text": "_plumbing_stamp_reason ignores the committed checker copy's mode: a symlinked copy whose target begins with the stamp (or a wrong-mode regular file) passes the commit-wide stamp gate and other plumbing paths are exempted",
+      "resolved": "resolved: df816a3e — stamp gate reads the copy entry mode first (symlink / non-100644 → no exemption); two regression tests"
+    },
+    {
+      "id": "after-task:W0-05-09",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:2817",
+      "origin_sha": "a7eca30c",
+      "raised_by": [
+        "codex-review-w0-05-r2"
+      ],
+      "text": "check_dispatch_covers_tasks still 74 lines",
+      "resolved": "resolved: df816a3e — _dispatch_coverage_failures extracted; check_dispatch_covers_tasks 48 lines"
+    },
+    {
+      "id": "after-task:W0-05-10",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:2646",
+      "origin_sha": "b7a9136c",
+      "raised_by": [
+        "sonnet-review-w0-05-r3"
+      ],
+      "text": "mode-mismatch reason string lacks a verb",
+      "dismissed": "carry-forward: cosmetic — by sonnet-review-w0-05-r3"
+    },
+    {
+      "id": "branch-end-01",
+      "severity": "important",
+      "anchor": "loom-code/skills/ship/SKILL.md:308",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "ship §6 'probes re-pinned' gives no mechanical instruction",
+      "dismissed": "carry-forward: the checker fails closed (push.probes-* re-run at reviewed_sha), so the cost is a wasted push cycle, not a bad shipment; one-sentence prose fix for the next change — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-02",
+      "severity": "important",
+      "anchor": "loom-code/skills/ship/SKILL.md:308",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "the docs + user-judgment-leak lenses of the close round are prose-only; no push rule checks a verdict's lens",
+      "dismissed": "carry-forward: checker-wide pre-existing limitation (no rule reads lens for any round); needs its own mechanism decision — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-03",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/blind-run-report.md:62",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end"
+      ],
+      "text": "report counted six new intents; five are in the delta since the spec checkpoint, the sixth was opened during spec review",
+      "resolved": "resolved: 50168d54 — count qualified in the report (six on the branch, five since 160658c2); orchestrator wording edit, disclosed"
+    },
+    {
+      "id": "branch-end-04",
+      "severity": "nit",
+      "anchor": "loom-code/skills/ship/SKILL.md:294",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "post-PR sequence does not state the agent proceeds unattended",
+      "dismissed": "carry-forward: cosmetic, the sequence is mechanically guarded — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-05",
+      "severity": "nit",
+      "anchor": "loom-code/skills/ship/SKILL.md:314",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "second push does not repeat the explicit checker run",
+      "dismissed": "carry-forward: the host hook enforces it — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-06",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json :: questions[3]",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "sonnet-review-branch-end"
+      ],
+      "text": "questions[3].decision_point was a string; push.review-schema blocks",
+      "resolved": "resolved: in this review-only commit — decision_point set to 2, provenance moved into text; verified by the branch checker's push dry-run at this HEAD (recorded in the commit message)"
+    },
+    {
+      "id": "branch-end-07",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:1883",
+      "origin_sha": "771a7e65",
+      "raised_by": [
+        "sonnet-review-branch-end"
+      ],
+      "text": "the 66-line function's dismissal is not annotated in code",
+      "dismissed": "carry-forward: already disclosed to the user in the blind-run report — by sonnet-review-branch-end"
+    },
+    {
+      "id": "branch-end-r4-01",
+      "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "open question lacks the OQ-<n> [OPEN|RESOLVED] grammar of check_open_questions.py",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses — CORRECTION (round 5 finding branch-end-r5-02): the \"not wired\" claim was too broad. The script is not called by loom_checker.py, any hook, any 1.0 SKILL.md or CI, but AGENTS.md:35-37 lists it as an intake self-check, and it exits 1 on `- none`. `- none` is kept because loom-code/contract/templates/intent.md:28 (the 1.0 SSOT) prescribes it; the script/template drift is recorded as open intent 2026-09-03-stale-open-questions-script-contradicts-template (c734eb24)."
+    },
+    {
+      "id": "branch-end-r4-02",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "same malformed open-question declaration",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses — CORRECTION (round 5 finding branch-end-r5-02): the \"not wired\" claim was too broad. The script is not called by loom_checker.py, any hook, any 1.0 SKILL.md or CI, but AGENTS.md:35-37 lists it as an intake self-check, and it exits 1 on `- none`. `- none` is kept because loom-code/contract/templates/intent.md:28 (the 1.0 SSOT) prescribes it; the script/template drift is recorded as open intent 2026-09-03-stale-open-questions-script-contradicts-template (c734eb24)."
+    },
+    {
+      "id": "branch-end-r4-03",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "\"22 per-case probes\" is incorrect; evidence records 21 per-case plus two whole-file",
+      "resolved": "closed by fe19ed0e — counts corrected to 21 per-case + 2 whole-file = 23 adversarial"
+    },
+    {
+      "id": "branch-end-r4-04",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:16",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "\"2 files, 24 records\" conflates 23 adversarial records with the package-test record",
+      "resolved": "closed by fe19ed0e — counts corrected to 21 per-case + 2 whole-file = 23 adversarial"
+    },
+    {
+      "id": "branch-end-r4-05",
+      "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "worker count is an implementation decision exposed as a user question",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses — CORRECTION (round 5 finding branch-end-r5-02): the \"not wired\" claim was too broad. The script is not called by loom_checker.py, any hook, any 1.0 SKILL.md or CI, but AGENTS.md:35-37 lists it as an intake self-check, and it exits 1 on `- none`. `- none` is kept because loom-code/contract/templates/intent.md:28 (the 1.0 SSOT) prescribes it; the script/template drift is recorded as open intent 2026-09-03-stale-open-questions-script-contradicts-template (c734eb24)."
+    },
+    {
+      "id": "branch-end-r4-06",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:27",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "codex-review-branch-end-r4",
+      "severity": "important",
+      "text": "whether to parallelize distinct artifacts is an implementation decision exposed as a user question",
+      "resolved": "closed by fe19ed0e — open questions rewritten to `- none`, the decision moved into Constraints as agent-decided; note: check_open_questions.py is not wired into loom_checker, hooks, skills or CI (grep), so the grammar it cites is not a gate — the substantive point (a question that reads as put to the user) is what the fix addresses — CORRECTION (round 5 finding branch-end-r5-02): the \"not wired\" claim was too broad. The script is not called by loom_checker.py, any hook, any 1.0 SKILL.md or CI, but AGENTS.md:35-37 lists it as an intake self-check, and it exits 1 on `- none`. `- none` is kept because loom-code/contract/templates/intent.md:28 (the 1.0 SSOT) prescribes it; the script/template drift is recorded as open intent 2026-09-03-stale-open-questions-script-contradicts-template (c734eb24)."
+    },
+    {
+      "id": "branch-end-r4-07",
+      "anchor": "docs/loom/intent/2026-09-03-push-gate-reruns-probes-per-artifact.md:9 and :16",
+      "origin_sha": "9c9b9aabc01033c97cfd2ed94cbdea43c7a37959",
+      "raised_by": "sonnet-review-branch-end-r4",
+      "severity": "important",
+      "text": "22 (Problem) and 24 (Acceptance #2) both wrong and mutually inconsistent; recomputed 23 adversarial = 21 per-case + 2 whole-file",
+      "resolved": "closed by fe19ed0e — counts corrected to 21 per-case + 2 whole-file = 23 adversarial"
+    },
+    {
+      "id": "branch-end-r5-01",
+      "anchor": "docs/loom/intent/2026-09-03-package-tests-run-in-parallel.md:12",
+      "origin_sha": "7479caa298a27480f53458cff4928cf7d26f13fd",
+      "raised_by": "codex-review-branch-end-r5",
+      "severity": "important",
+      "text": "Proposed outcome commits to -n auto while the new Constraint leaves worker count to the agent — contradictory instructions",
+      "resolved": "closed by 4faf114d — Proposed outcome made worker-count-neutral, points to Constraints"
+    },
+    {
+      "id": "branch-end-r5-02",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:2416",
+      "origin_sha": "7479caa298a27480f53458cff4928cf7d26f13fd",
+      "raised_by": "sonnet-review-branch-end-r5",
+      "severity": "fatal",
+      "text": "round-4 resolution claims check_open_questions.py is not wired anywhere; AGENTS.md lists it as an intake self-check and it exits 1 on both intents (`- none` is not in its grammar)",
+      "resolved": "closed in this record — the four round-4 resolved notes now carry the correction (script listed in AGENTS.md:35-37, exits 1 on `- none`); intents keep `- none` per the 1.0 template SSOT (contract/templates/intent.md:28), drift recorded as open intent c734eb24"
+    },
+    {
+      "id": "branch-end-r5-03",
+      "anchor": "loom-design/skills/capture-intent/SKILL.md:174-176",
+      "origin_sha": "7479caa298a27480f53458cff4928cf7d26f13fd",
+      "raised_by": "sonnet-review-branch-end-r5",
+      "severity": "important",
+      "text": "pre-existing drift: capture-intent and the intent template say `- none`, check_open_questions.py rejects it; the record asserted the opposite instead of surfacing the drift",
+      "resolved": "closed by c734eb24 — open intent 2026-09-03-stale-open-questions-script-contradicts-template (BACKLOG.md is frozen since 1.0, so an intent is the only store)"
+    },
+    {
+      "id": "branch-end-r6-01",
+      "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:9",
+      "origin_sha": "e66ae814015ce9a9e0f16e37bdca9c6c026f66ce",
+      "raised_by": "codex-review-branch-end-r6",
+      "severity": "important",
+      "text": "「各多花一輪」attributes two rounds to the stale script alone; both rounds carried other findings",
+      "resolved": "closed by 5dbadea9 — sentence now says one finding per round, rounds not attributed"
+    },
+    {
+      "id": "branch-end-r6-02",
+      "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:12",
+      "origin_sha": "e66ae814015ce9a9e0f16e37bdca9c6c026f66ce",
+      "raised_by": "codex-review-branch-end-r6",
+      "severity": "important",
+      "text": "Proposed outcome offers two mutually exclusive paths (delete vs keep-and-wire) and Acceptance #1 accepts either",
+      "resolved": "closed by 5dbadea9 — single path: delete script, test and AGENTS.md entry (agent-decided); Acceptance #1 rewritten to that path only"
+    },
+    {
+      "id": "branch-end-r7-01",
+      "anchor": "docs/loom/intent/2026-09-03-stale-open-questions-script-contradicts-template.md:4",
+      "origin_sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "raised_by": "codex-review-branch-end-r7",
+      "severity": "important",
+      "text": "needs-design reason still describes two implementations (delete or align grammar), contradicting the single delete path at :12-15",
+      "resolved": "closed by 27d55261 — needs-design reason now names deletion only; the commit body carries the new line verbatim"
+    },
+    {
+      "id": "branch-end-r7-02",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json:2604",
+      "origin_sha": "5488595f606775180d547ab4c2ae8850e0738029",
+      "raised_by": "sonnet-review-branch-end-r7",
+      "severity": "important",
+      "text": "the AGENTS.md:37 citation fix covered four of five occurrences; the r5-02 resolved note still cites :37",
+      "resolved": "closed in this record — the r5-02 resolved note now reads AGENTS.md:35-37; the only remaining `:37` string is inside the round-6 sonnet finding text itself, which is a verbatim reviewer record and is not edited"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-1",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-1",
+      "model": "codex exec (gpt-5.6-sol/high)",
+      "vendor": "openai",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-1",
+      "model": "sonnet",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-1",
+      "model": "sonnet",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-2",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-2",
+      "model": "codex exec (gpt-5.6-sol/high)",
+      "vendor": "openai",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-2",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-2",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-3",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-3",
+      "model": "codex exec (gpt-5.6-sol/high)",
+      "vendor": "openai",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-3",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-3",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-4",
+      "model": "sonnet",
+      "started": "2026-09-03T10:46:28+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-4",
+      "model": "codex",
+      "started": "2026-09-03T10:46:28+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-4",
+      "model": "sonnet",
+      "started": "2026-09-03T10:46:28+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-4",
+      "model": "sonnet",
+      "started": "2026-09-03T10:46:28+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-5",
+      "model": "sonnet",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-5",
+      "model": "codex",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-5",
+      "model": "sonnet",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-5",
+      "model": "sonnet",
+      "started": "2026-09-03T10:55:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-6",
+      "model": "sonnet",
+      "started": "2026-09-03T11:09:22+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-6",
+      "model": "codex",
+      "started": "2026-09-03T11:09:22+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-6",
+      "model": "sonnet",
+      "started": "2026-09-03T11:09:22+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-6",
+      "model": "sonnet",
+      "started": "2026-09-03T11:09:22+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-7",
+      "model": "sonnet",
+      "started": "2026-09-03T11:17:13+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-7",
+      "model": "codex",
+      "started": "2026-09-03T11:17:13+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-7",
+      "model": "sonnet",
+      "started": "2026-09-03T11:17:13+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-7",
+      "model": "sonnet",
+      "started": "2026-09-03T11:17:13+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-8",
+      "model": "sonnet",
+      "started": "2026-09-03T11:27:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-8",
+      "model": "codex",
+      "started": "2026-09-03T11:27:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-8",
+      "model": "sonnet",
+      "started": "2026-09-03T11:27:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-8",
+      "model": "sonnet",
+      "started": "2026-09-03T11:27:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T11:36:05+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T11:48:28+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-03",
+      "role": "implementer",
+      "agent_id": "impl-w0-03-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T11:56:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T12:09:01+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-04",
+      "model": "sonnet",
+      "started": "2026-09-03T12:22:40+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "blind-runner",
+      "agent_id": "sonnet-blindrun-w0-04",
+      "model": "sonnet",
+      "started": "2026-09-03T12:22:40+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T12:30:37+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04",
+      "model": "sonnet",
+      "started": "2026-09-03T12:39:48+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04",
+      "model": "codex",
+      "started": "2026-09-03T12:39:48+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix2-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T12:42:02+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r2",
+      "model": "sonnet",
+      "started": "2026-09-03T12:51:25+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r2",
+      "model": "codex",
+      "started": "2026-09-03T12:51:25+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix3-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T12:53:30+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r3",
+      "model": "sonnet",
+      "started": "2026-09-03T13:06:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r3",
+      "model": "codex",
+      "started": "2026-09-03T13:06:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix4-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T13:08:52+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-9",
+      "model": "sonnet",
+      "started": "2026-09-03T13:12:12+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-9",
+      "model": "codex",
+      "started": "2026-09-03T13:12:12+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-9",
+      "model": "sonnet",
+      "started": "2026-09-03T13:12:12+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-10",
+      "model": "sonnet",
+      "started": "2026-09-03T13:22:55+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-10",
+      "model": "codex",
+      "started": "2026-09-03T13:22:55+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-10",
+      "model": "sonnet",
+      "started": "2026-09-03T13:22:55+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "opus-design-review-close-shape",
+      "model": "opus",
+      "started": "2026-09-03T13:31:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-11",
+      "model": "sonnet",
+      "started": "2026-09-03T13:34:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-11",
+      "model": "codex",
+      "started": "2026-09-03T13:34:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-04-r4",
+      "model": "sonnet",
+      "started": "2026-09-03T13:47:19+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix5-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T13:54:32+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r4",
+      "model": "sonnet",
+      "started": "2026-09-03T14:03:58+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r4",
+      "model": "codex",
+      "started": "2026-09-03T14:03:58+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix6-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T14:06:35+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T14:14:43+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r5",
+      "model": "codex",
+      "started": "2026-09-03T14:14:43+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-05",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-05-pre",
+      "model": "sonnet",
+      "started": "2026-09-03T14:21:35+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-05",
+      "role": "implementer",
+      "agent_id": "impl-w0-05-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T14:31:25+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "blind-runner",
+      "agent_id": "sonnet-blindrun-w0-05",
+      "model": "sonnet",
+      "started": "2026-09-03T14:49:04+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-05",
+      "model": "sonnet",
+      "started": "2026-09-03T14:55:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-05",
+      "model": "codex",
+      "started": "2026-09-03T14:55:51+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-05",
+      "role": "implementer",
+      "agent_id": "impl-w0-05-fix1-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T14:58:47+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-05-r2",
+      "model": "sonnet",
+      "started": "2026-09-03T15:13:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-05-r2",
+      "model": "codex",
+      "started": "2026-09-03T15:13:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-05",
+      "role": "implementer",
+      "agent_id": "impl-w0-05-fix2-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T15:16:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-05-r3",
+      "model": "sonnet",
+      "started": "2026-09-03T15:33:29+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-05",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-05-r3",
+      "model": "codex",
+      "started": "2026-09-03T15:33:29+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T15:39:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T15:39:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T15:47:25+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T15:53:16+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-05",
+      "role": "implementer",
+      "agent_id": "impl-w1-05-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T16:03:08+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-03T16:05:17+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "sonnet-blindrun-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-03T16:05:17+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-03T16:15:35+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-03T16:15:35+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r2",
+      "model": "sonnet",
+      "started": "2026-09-03T16:26:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r2",
+      "model": "codex",
+      "started": "2026-09-03T16:26:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r3",
+      "model": "sonnet",
+      "started": "2026-09-03T16:38:40+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r3",
+      "model": "sonnet",
+      "started": "2026-09-03T16:38:40+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r3",
+      "model": "codex",
+      "started": "2026-09-03T16:38:40+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r4",
+      "model": "sonnet",
+      "started": "2026-09-03T16:49:48+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r4",
+      "model": "sonnet",
+      "started": "2026-09-03T16:49:48+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r4",
+      "model": "codex",
+      "started": "2026-09-03T16:49:48+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T16:56:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T16:56:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r5",
+      "model": "codex",
+      "started": "2026-09-03T16:56:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r6",
+      "model": "sonnet",
+      "started": "2026-09-03T17:02:02+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r6",
+      "model": "sonnet",
+      "started": "2026-09-03T17:02:02+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r6",
+      "model": "codex",
+      "started": "2026-09-03T17:02:02+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r7",
+      "model": "sonnet",
+      "started": "2026-09-03T17:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r7",
+      "model": "sonnet",
+      "started": "2026-09-03T17:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r7",
+      "model": "codex",
+      "started": "2026-09-03T17:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-branch-end-r8",
+      "model": "sonnet",
+      "started": "2026-09-03T17:08:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r8",
+      "model": "sonnet",
+      "started": "2026-09-03T17:08:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r8",
+      "model": "codex",
+      "started": "2026-09-03T17:08:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-close-commit",
+      "model": "sonnet",
+      "started": "2026-09-03T18:11:20+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-close-commit",
+      "model": "sonnet",
+      "started": "2026-09-03T18:11:20+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-close-commit",
+      "model": "codex",
+      "started": "2026-09-03T18:11:20+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-06",
+      "role": "implementer",
+      "agent_id": "impl-w1-06-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T18:31:38+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w1-06",
+      "model": "sonnet",
+      "started": "2026-09-03T18:38:01+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w1-06",
+      "model": "sonnet",
+      "started": "2026-09-03T18:38:01+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-w1-06",
+      "model": "codex",
+      "started": "2026-09-03T18:38:01+08:00",
+      "fresh_context": true
+    }
+  ]
+}
