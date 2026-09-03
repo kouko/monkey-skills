@@ -251,6 +251,18 @@ def git_text(repo: Path, *args: str) -> str:
     return output
 
 
+def git_raw_text(repo: Path, *args: str) -> str:
+    """Like `git_text`, but UNSTRIPPED -- for reading a blob's exact bytes
+    (e.g. `git show <sha>:<path>`), where `git_text`'s trailing-newline
+    strip would silently drop the file's real trailing newline and make
+    every byte-for-byte blob comparison (`check_close_commit_shape` step
+    c) compare against the wrong content."""
+    output = run_git(repo, *args, timeout=GIT_TIMEOUT, strip=False)
+    if output is None:
+        raise UsageError(f"`git {' '.join(args)}` failed or timed out in {repo}.")
+    return output
+
+
 def git_ok(repo: Path, *args: str) -> bool:
     """True when git exits 0 (used for existence probes like cat-file -e)."""
     return git_maybe(repo, *args) is not None
@@ -273,7 +285,14 @@ def parse_document(text: str) -> tuple[dict[str, str], dict[str, str]]:
     sections: dict[str, str] = {}
     current: str | None = None
     body: list[str] = []
+    if text.startswith("﻿"):
+        text = text[1:]
     for line in text.splitlines():
+        if line.startswith("﻿"):
+            # A BOM must never make a key invisible to frontmatter parsing --
+            # a commit could otherwise smuggle a `status:` change past every
+            # rule that reads it (spec REQ-1, W0-04 round-3 finding).
+            line = line[1:]
         if line.startswith("## "):
             if current is not None:
                 sections[current] = "\n".join(body).strip()
@@ -1715,155 +1734,230 @@ def check_review_only_head(manifest, repo: Path, head_sha: str):
     ]
 
 
-def _raw_diff_paths(repo: Path, base_sha: str, target_sha: str) -> list[str]:
-    """Paths a first-parent diff touches, `--raw --no-renames` like
-    `check_review_only_head`'s own listing (a merge collapses to the same
-    two-endpoint diff since `base_sha` is already the first parent)."""
+def _raw_diff_entries(repo: Path, base_sha: str, target_sha: str) -> list[tuple[str, str, str, str]]:
+    """`(status, path, old_mode, new_mode)` tuples a first-parent diff
+    touches, `--raw --no-renames` like `check_review_only_head`'s own
+    listing (a merge collapses to the same two-endpoint diff since
+    `base_sha` is already the first parent). `--no-renames` keeps status a
+    single A/M/D/T letter, never a rename percentage; the modes let a
+    typechange (e.g. a symlink swapped in for the regular file, `T`) be
+    caught by its mode rather than trusted by its status letter alone."""
     listing = git_text(repo, "diff", "--raw", "--no-renames", base_sha, target_sha)
-    return sorted(
-        {
-            line.split("\t", 1)[1].strip()
-            for line in listing.splitlines()
-            if "\t" in line and line.startswith(":")
-        }
-    )
+    entries: list[tuple[str, str, str, str]] = []
+    for line in listing.splitlines():
+        if not line.startswith(":") or "\t" not in line:
+            continue
+        meta, path = line.split("\t", 1)
+        fields = meta.split()
+        entries.append((fields[-1], path.strip(), fields[0][1:], fields[1]))
+    return sorted(entries, key=lambda entry: entry[1])
 
 
 _EMPTY_TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # git's constant empty-tree object
+_REGULAR_FILE_MODE = "100644"
+# The intent artifact's path template as the checker itself expects it
+# (contract/manifest.yaml `artifacts.intent.path`). `check_close_commit_shape`
+# checks the live manifest against this constant before trusting it to build
+# a path matcher -- manifest drift must fail closed, not silently match
+# nothing (or something wider than intended) (spec REQ-1, W0-04 round-3
+# addition).
+INTENT_PATH_TEMPLATE = "docs/loom/intent/<change-id>.md"
+
+
+def _not_a_close_commit(rule: str, close_sha: str, closing_path: str,
+                        expected: str, got: str) -> tuple[str, str]:
+    """The one diagnostic shape for every way a commit touching an intent
+    path fails to be a legitimate close commit (spec REQ-1, W0-04
+    round-3): no content is trusted to tell them apart, only the raw diff
+    shape, so the message is the same regardless of which structural
+    check tripped it."""
+    return (
+        rule,
+        f"the reviewed commit {close_sha[:8]} edits an intent file "
+        f"({closing_path}) but is not a close commit (expected {expected}, "
+        f"got {got}); move other intent edits to an earlier commit.",
+    )
+
+
+def _intent_path_matcher() -> re.Pattern:
+    """`INTENT_PATH_TEMPLATE` as a glob matcher. `check_close_commit_shape`
+    has already required the live manifest to equal that constant before
+    calling this, so there is exactly one copy of the glob to keep in
+    sync (the constant), not two."""
+    return glob_to_regex(INTENT_PATH_TEMPLATE.replace("<change-id>", "*"))
+
+
+def _status_line_positions(text: str) -> list[int]:
+    """0-based indices of every raw line starting with the literal bytes
+    `status:`, anywhere in `text` (not scoped to frontmatter). Guards
+    step (b) and step (c) of `check_close_commit_shape` against
+    `parse_document`'s last-wins behaviour on a duplicated or
+    headingless-and-decoyed `status:` key (spec REQ-1, W0-04 round-3
+    finding)."""
+    return [index for index, line in enumerate(text.splitlines()) if line.startswith("status:")]
+
+
+def _regenerated_closed_text(before_text: str, date: str, pr_number: str) -> str | None:
+    """Step (c): `before_text` with ONLY its sole `status:` line's value
+    replaced by `closed <date> — PR #<pr_number>` -- no trailing comment,
+    everything else byte-identical. None when `before_text` does not have
+    exactly one raw `status:` line to regenerate from."""
+    positions = _status_line_positions(before_text)
+    if len(positions) != 1:
+        return None
+    lines = before_text.splitlines(keepends=True)
+    index = positions[0]
+    ending = "\n" if lines[index].endswith("\n") else ""
+    lines[index] = f"status: closed {date} — PR #{pr_number}{ending}"
+    return "".join(lines)
+
+
+def _close_after_status_match(repo: Path, close_sha: str, closing_path: str,
+                              rule: str) -> tuple[re.Match | None, list[tuple[str, str]]]:
+    """Condition (b): HEAD^'s file has exactly one raw `status:` line, and
+    `parse_document`'s frontmatter value for it is the closed
+    alternative. Returns the match (group(2)=date, group(3)=PR number) or
+    the failure explaining why not."""
+    after_text = git_raw_text(repo, "show", f"{close_sha}:{closing_path}")
+    after_positions = _status_line_positions(after_text)
+    if len(after_positions) != 1:
+        return None, [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            "exactly one `status:` line in HEAD^'s file",
+            str(len(after_positions)),
+        )]
+    front, _sections = parse_document(after_text)
+    match = STATUS.fullmatch(front.get("status", "").strip())
+    if not match or match.group(2) is None:
+        return None, [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            "HEAD^'s frontmatter `status:` value to be the closed alternative",
+            repr(front.get("status", "")),
+        )]
+    return match, []
+
+
+def _close_blob_failures(repo: Path, diff_base: str, close_sha: str, closing_path: str,
+                         match: re.Match, rule: str) -> list[tuple[str, str]]:
+    """Condition (c): REGENERATE HEAD^^'s file with only the status
+    line's value replaced by the closed alternative `match` just found,
+    and require it to hash to the exact blob HEAD^ committed."""
+    before_text = git_raw_text(repo, "show", f"{diff_base}:{closing_path}")
+    before_positions = _status_line_positions(before_text)
+    if len(before_positions) != 1:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            "exactly one `status:` line in HEAD^^'s file to regenerate from",
+            str(len(before_positions)),
+        )]
+    regenerated = _regenerated_closed_text(before_text, match.group(2), match.group(3))
+    expected_blob = blob_sha(regenerated.encode("utf-8"))
+    actual_blob = git_text(repo, "rev-parse", f"{close_sha}:{closing_path}").strip()
+    if expected_blob != actual_blob:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            f"HEAD^'s blob to equal the regenerated closed blob {expected_blob[:8]}",
+            f"HEAD^'s actual blob {actual_blob[:8]}",
+        )]
+    return []
 
 
 def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[str, str]]:
-    """When HEAD^ turns an intent file's `status:` line to `closed`, its
-    shape must recompute as a legitimate close commit (spec REQ-1, W0-04):
-    it touches only that one path, its diff on that path is exactly the
-    one status line, and its own parent (HEAD^^) is itself a checkpoint
-    vouching for HEAD^^^ -- so no commit can sit between the last
-    checkpoint and the close commit unseen. The diff is read against
-    HEAD^^ (its first parent), never `git show`, which prints nothing for
-    a merge commit and would let a merge at HEAD^ carry the transition
-    unseen. An ordinary commit at HEAD^ -- one that never turns an intent
-    file closed -- is untouched by this recompute.
-
-    A transition is: the after-tree path parses as closed AND the
-    corresponding before-tree path does not (or is absent). A path that is
-    only DELETED never counts as a transition on its own, even when its
-    before-text was already closed -- deleting an already-closed intent is
-    an ordinary commit, not a close commit (spec REQ-1, W0-04 round-3
-    finding: the old `before_closed and after_text is None` branch wrongly
-    classified such a deletion as a closing transition and subjected it to
-    close-commit shape). A `--no-renames` diff splits a renamed-and-closed
-    intent into a deleted old path (before present, no after) and an added
-    new path (no before, after present); the added half alone still counts
-    as a transition (before treated as not-closed), so the rename is still
-    caught -- and it then fails condition (1) below because the deleted
-    path is a second touched path."""
+    """When HEAD^'s first-parent diff (`HEAD^^..HEAD^`) touches ANY path
+    matching the intent artifact template, HEAD^ must recompute as a
+    legitimate close commit (spec REQ-1, W0-04): (a) the raw listing is
+    exactly one entry -- this path, status `M`, mode `100644` on both
+    sides; (b) HEAD^'s file has exactly one raw `status:` line, whose
+    `parse_document`-parsed frontmatter value `STATUS.fullmatch`es the
+    closed alternative; (c) REGENERATE -- HEAD^^'s file with ONLY that
+    status line's value replaced by the closed alternative just matched
+    must hash to the exact blob HEAD^ committed, so ANY other byte
+    difference (a BOM, a CRLF, a second `status:` line, a body edit, a
+    stray trailing comment) makes the blobs differ and fails; (d) HEAD^^
+    is itself a checkpoint vouching for HEAD^^^, so no commit can sit
+    between the last checkpoint and the close commit unseen. No step
+    trusts content parsed ahead of the raw-listing and raw-line-count
+    guards -- a before/after "did status become closed" parse used to
+    gate the OLD trigger, and a BOM hidden right before the key made
+    `parse_document` miss it, so the whole recompute silently never ran
+    (spec REQ-1, W0-04 round-3 finding); firing on every touch and
+    requiring an exact regenerated blob closes that off structurally. The
+    diff is read against HEAD^^ (its first parent), never `git show`,
+    which prints nothing for a merge commit and would let a merge at
+    HEAD^ carry the edit unseen. An ordinary commit at HEAD^ -- one that
+    touches no intent path at all -- is untouched by this recompute.
+    Because (a) requires status `M`, a root commit at HEAD^ (which can
+    only ever ADD a path, never modify one, relative to git's empty tree)
+    always fails there -- (d)'s `pre_close_sha is None` case is therefore
+    unreachable and kept only as a defensive guard."""
     rule = "push.review-only-head"
+    live_template = manifest.get("artifacts", {}).get("intent", {}).get("path")
+    if live_template != INTENT_PATH_TEMPLATE:
+        return [(
+            rule,
+            "the manifest's intent artifact path has drifted from the "
+            f"checker's own expected template; expected {INTENT_PATH_TEMPLATE!r}, "
+            f"got {live_template!r}.",
+        )]
+
     close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^")
     if close_sha is None:
         return []  # HEAD is root; push.reviewed-sha already reports it.
 
-    # When HEAD^^ doesn't resolve, HEAD^ is itself the repo's root commit.
-    # Diff against git's empty-tree constant instead of returning early --
-    # a root commit that ADDS an already-closed intent must still be found
-    # as a transition; it then fails condition (3) below on its own merits
-    # (no checkpoint parent exists at all), not because the transition went
-    # undetected (spec REQ-1, W0-04 round-2 finding).
     pre_close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^^")
     diff_base = pre_close_sha if pre_close_sha is not None else _EMPTY_TREE_SHA
 
-    touched = _raw_diff_paths(repo, diff_base, close_sha)
-    template = manifest["artifacts"]["intent"]["path"]
-    is_intent = glob_to_regex(template.replace("<change-id>", "*"))
-    intent_paths = [path for path in touched if is_intent.match(path)]
-    if not intent_paths:
-        return []  # HEAD^ is an ordinary commit; nothing to recompute here.
+    entries = _raw_diff_entries(repo, diff_base, close_sha)
+    is_intent = _intent_path_matcher()
+    intent_entries = [entry for entry in entries if is_intent.match(entry[1])]
+    if not intent_entries:
+        return []  # HEAD^ touches no intent path; nothing to recompute here.
 
-    closing_path = None
-    for path in intent_paths:
-        before_text = git_maybe(repo, "show", f"{diff_base}:{path}")
-        after_text = git_maybe(repo, "show", f"{close_sha}:{path}")
-        if before_text is None and after_text is None:
-            continue
+    closing_path = intent_entries[0][1]
+    touched = [path for _status, path, _old, _new in entries]
 
-        before_closed = False
-        if before_text is not None:
-            before_front, _ = parse_document(before_text)
-            before_match = STATUS.fullmatch(before_front.get("status", "").strip())
-            before_closed = bool(before_match and before_match.group(2) is not None)
+    # (a) the raw listing is exactly this one path, modified, mode
+    # 100644 on both sides -- a delete, an add, a second path, a rename
+    # half, or a mode change (a symlink typechange included) all fail.
+    if len(entries) != 1:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            f"exactly one changed path ({closing_path}), status M, mode "
+            f"`{_REGULAR_FILE_MODE}` on both sides",
+            f"{len(touched)}: {', '.join(touched)}",
+        )]
+    status, _path, old_mode, new_mode = entries[0]
+    if status != "M" or old_mode != _REGULAR_FILE_MODE or new_mode != _REGULAR_FILE_MODE:
+        return [_not_a_close_commit(
+            rule, close_sha, closing_path,
+            f"status M and mode `{_REGULAR_FILE_MODE}` on both sides",
+            f"status {status}, old {old_mode} / new {new_mode}",
+        )]
 
-        after_closed = False
-        if after_text is not None:
-            after_front, _ = parse_document(after_text)
-            after_match = STATUS.fullmatch(after_front.get("status", "").strip())
-            after_closed = bool(after_match and after_match.group(2) is not None)
-
-        if after_closed and not before_closed:
-            closing_path = path
-            break
-
-    if closing_path is None:
-        return []  # no intent path there went non-closed -> closed
-
-    failures: list[tuple[str, str]] = []
-
-    # (1) the commit touches only that one path.
-    if touched != [closing_path]:
-        failures.append(
-            (
-                rule,
-                f"HEAD^ ({close_sha[:8]}) turns `status:` closed on {closing_path} "
-                f"but a close commit must touch only the intent file; expected "
-                f"exactly one path ({closing_path}), got {len(touched)}: "
-                f"{', '.join(touched)}.",
-            )
-        )
-
-    # (2) the diff on that path is exactly the one status line.
-    path_diff = git_text(repo, "diff", "-U0", diff_base, close_sha, "--", closing_path)
-    changed = [
-        line
-        for line in path_diff.splitlines()
-        if (line.startswith("+") or line.startswith("-"))
-        and not line.startswith("+++")
-        and not line.startswith("---")
-    ]
-    removed = [line for line in changed if line.startswith("-")]
-    added = [line for line in changed if line.startswith("+")]
-    if (
-        len(removed) != 1
-        or len(added) != 1
-        or not removed[0][1:].strip().startswith("status:")
-        or not added[0][1:].strip().startswith("status:")
-        or not re.search(_STATUS_CLOSED_ALT, added[0][1:].strip())
-    ):
-        failures.append(
-            (
-                rule,
-                f"HEAD^ ({close_sha[:8]})'s diff on {closing_path} must be exactly "
-                "one removed and one added `status:` line, the added one matching "
-                "the `closed` grammar; expected 1 removed / 1 added `status:` "
-                f"line(s), got {len(removed)} removed / {len(added)} added line(s).",
-            )
-        )
-
-    # (3) HEAD^^ is itself a checkpoint: touches only review.json, and its
-    # review.json's reviewed_sha resolves to HEAD^^^. HEAD^ being the root
-    # commit means there is no HEAD^^ at all -- fail closed rather than
-    # skip, since a transition was already found above (spec REQ-1,
-    # W0-04 round-2 finding).
-    if pre_close_sha is None:
-        failures.append(
-            (
-                rule,
-                f"HEAD^ ({close_sha[:8]}) is the root commit and adds an "
-                "already-closed intent; expected a HEAD^^ checkpoint commit to "
-                "exist between the last review and the close commit, got none.",
-            )
-        )
+    # (b) HEAD^'s file has exactly one raw `status:` line, and
+    # `parse_document`'s frontmatter value for it is the closed alternative.
+    match, failures = _close_after_status_match(repo, close_sha, closing_path, rule)
+    if failures:
         return failures
 
-    failures.extend(_checkpoint_parent_failures(manifest, repo, pre_close_sha, rule))
-    return failures
+    # (c) REGENERATE HEAD^^'s file with only the status value replaced,
+    # and require it to hash to the exact blob HEAD^ committed.
+    failures = _close_blob_failures(repo, diff_base, close_sha, closing_path, match, rule)
+    if failures:
+        return failures
+
+    # (d) HEAD^^ is itself a checkpoint: touches only review.json, and its
+    # review.json's reviewed_sha resolves to HEAD^^^ -- unreachable with
+    # pre_close_sha is None (see docstring), kept as a defensive guard.
+    if pre_close_sha is None:
+        return [(
+            rule,
+            f"HEAD^ ({close_sha[:8]}) is the root commit and edits an "
+            "intent file; expected a HEAD^^ checkpoint commit to exist "
+            "between the last review and the close commit, got none.",
+        )]
+
+    return _checkpoint_parent_failures(manifest, repo, pre_close_sha, rule)
 
 
 def _checkpoint_parent_failures(

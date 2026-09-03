@@ -309,6 +309,7 @@ def test_a_close_commit_after_a_checkpoint_passes(tmp_path: Path) -> None:
 
 
 def test_a_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None:
+    """Condition (a): the raw listing must be exactly one entry."""
     repo = build_repo(tmp_path)
     intent_rel = _seed_intent(repo)
     close_sha = _close_commit(repo, intent_rel, extra_files={"docs/loom/notes.md": "x\n"})
@@ -317,11 +318,16 @@ def test_a_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
     assert close_sha[:8] in result.stderr
-    assert f"expected exactly one path ({intent_rel})" in result.stderr
+    assert f"expected exactly one changed path ({intent_rel})" in result.stderr
     assert f"got 2: {intent_rel}, docs/loom/notes.md" in result.stderr
 
 
 def test_a_close_commit_with_an_extra_line_change_is_blocked(tmp_path: Path) -> None:
+    """The extra body edit rides in the SAME file as the status change, so
+    condition (a) sees one path, M, mode 100644 -- it only trips up
+    condition (c): the regenerated blob (status line replaced, body
+    untouched) cannot match the actual blob (status line replaced AND
+    body edited)."""
     repo = build_repo(tmp_path)
     intent_rel = _seed_intent(repo)
     close_sha = _close_commit(repo, intent_rel, extra_line=True)
@@ -330,8 +336,7 @@ def test_a_close_commit_with_an_extra_line_change_is_blocked(tmp_path: Path) -> 
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
     assert close_sha[:8] in result.stderr
-    assert "expected 1 removed / 1 added `status:` line(s)" in result.stderr
-    assert "got 2 removed / 2 added line(s)" in result.stderr
+    assert "HEAD^'s blob to equal the regenerated closed blob" in result.stderr
 
 
 def test_a_close_commit_whose_parent_is_not_a_checkpoint_is_blocked(tmp_path: Path) -> None:
@@ -358,7 +363,7 @@ def test_a_merge_close_commit_touching_another_file_is_blocked(tmp_path: Path) -
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
     assert close_sha[:8] in result.stderr
-    assert f"expected exactly one path ({intent_rel})" in result.stderr
+    assert f"expected exactly one changed path ({intent_rel})" in result.stderr
     assert "got 2: b.py" in result.stderr
 
 
@@ -385,11 +390,10 @@ def test_a_two_commit_branch_whose_head_caret_is_the_root_commit_passes(tmp_path
 
 def test_a_close_commit_that_renames_the_intent_path_is_blocked(tmp_path: Path) -> None:
     """`--no-renames` splits a renamed-and-closed intent into a deleted old
-    path (before confirmed, no after_text) and an added new path (no
-    before_text, after closed). Neither half alone used to trip the
-    non-closed -> closed comparison, so closing_path stayed None and the
-    one-file/one-line/checkpoint-parent conditions never ran at all
-    (after-task W0-04 round-2 finding)."""
+    path and an added new path -- both match the intent template, so the
+    trigger fires on either half, but the commit then touches two paths
+    and condition (a) requires exactly one (after-task W0-04
+    round-2/round-3 findings)."""
     repo = build_repo(tmp_path)
     intent_rel = _seed_intent(repo)
     renamed_rel = f"docs/loom/intent/{CHANGE}-renamed.md"
@@ -405,15 +409,41 @@ def test_a_close_commit_that_renames_the_intent_path_is_blocked(tmp_path: Path) 
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
     assert close_sha[:8] in result.stderr
-    assert f"expected exactly one path ({renamed_rel})" in result.stderr
+    assert f"expected exactly one changed path ({renamed_rel})" in result.stderr
     assert f"got 2: {renamed_rel}, {intent_rel}" in result.stderr
+
+
+def test_renaming_an_already_closed_intent_is_blocked(tmp_path: Path) -> None:
+    """Renaming an intent file that is ALREADY `status: closed` still
+    touches an intent path (both halves of the `--no-renames` split
+    match the template), so the trigger fires and the commit is blocked
+    for touching two paths -- by design: the recompute no longer asks
+    whether the content became closed, only whether the commit touching
+    an intent path has close-commit shape, and a rename never does (spec
+    REQ-1, W0-04 round-3 design change)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo, status="closed 2026-08-01 — PR #100")
+    renamed_rel = f"docs/loom/intent/{CHANGE}-renamed.md"
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    git(repo, "rm", "-q", intent_rel)
+    (repo / renamed_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / renamed_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", renamed_rel)
+    git(repo, "commit", "-q", "-m", f"chore(loom): rename closed intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "move other intent edits to an earlier commit" in result.stderr
 
 
 def test_a_brand_new_already_closed_intent_is_blocked(tmp_path: Path) -> None:
     """A commit that ADDS an intent file already at `status: closed ...`
-    has no before_text for git to diff against, so it used to fall through
-    the same skip and never register as a close transition either
-    (after-task W0-04 round-2 finding)."""
+    touches an intent path (a single added path), so the trigger fires,
+    but condition (a) requires status `M`, never `A` (after-task W0-04
+    round-2/round-3 findings)."""
     repo = build_repo(tmp_path)
     new_rel = f"docs/loom/intent/{CHANGE}-new.md"
     (repo / new_rel).parent.mkdir(parents=True, exist_ok=True)
@@ -429,16 +459,16 @@ def test_a_brand_new_already_closed_intent_is_blocked(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
     assert close_sha[:8] in result.stderr
-    assert "expected 1 removed / 1 added `status:` line(s)" in result.stderr
-    assert "got 0 removed" in result.stderr
+    assert "expected status M and mode `100644` on both sides" in result.stderr
+    assert "got status A, old 000000 / new 100644" in result.stderr
 
 
-def test_deleting_an_already_closed_intent_is_not_a_close_commit(tmp_path: Path) -> None:
-    """Deleting an intent file that was already `status: closed` is an
-    ordinary commit, not a closing transition -- the old
-    `before_closed and after_text is None` branch wrongly classified the
-    deletion itself as a transition and subjected it to close-commit shape
-    (spec REQ-1, W0-04 round-3 finding)."""
+def test_deleting_an_already_closed_intent_is_blocked(tmp_path: Path) -> None:
+    """Deleting an intent file touches an intent path, so the trigger
+    fires -- and a delete is never a close commit: condition (a) checks
+    the raw diff status explicitly (`M` only), rather than relying on a
+    content-based transition check that a deletion could dodge either way
+    (spec REQ-1, W0-04 round-3 design change)."""
     repo = build_repo(tmp_path)
     intent_rel = _seed_intent(repo, status="closed 2026-08-01 — PR #100")
     git(repo, "rm", "-q", intent_rel)
@@ -446,19 +476,244 @@ def test_deleting_an_already_closed_intent_is_not_a_close_commit(tmp_path: Path)
     close_sha = git(repo, "rev-parse", "HEAD")
     _checkpoint_after(repo, close_sha)
     result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "expected status M and mode `100644` on both sides" in result.stderr
+    assert "got status D, old 100644 / new 000000" in result.stderr
+
+
+def test_an_intent_edit_that_never_touches_the_status_line_is_blocked(tmp_path: Path) -> None:
+    """HEAD^ edits an intent file's Open Questions line only -- never the
+    `status:` key. The trigger fires purely on the path being touched,
+    with no content pre-check, so condition (a) passes (one path,
+    modified, mode 100644), but condition (b)'s frontmatter value is
+    still `confirmed`, never the closed alternative (spec REQ-1, W0-04
+    round-3 design change)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = text.replace("## Problem\nx\n", "## Problem\nx\n\n## Open questions\ny\n")
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", "docs(loom): note an open question")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert (
+        "expected HEAD^'s frontmatter `status:` value to be the closed alternative"
+        in result.stderr
+    )
+    assert "confirmed 2026-09-01" in result.stderr
+
+
+def test_a_commit_touching_no_intent_path_is_untouched(tmp_path: Path) -> None:
+    """An ordinary commit at HEAD^ that never touches any intent path is
+    left alone by the recompute entirely (spec REQ-1, W0-04)."""
+    repo = build_repo(tmp_path)
+    _seed_intent(repo)
+    _insert_docs_commit(repo)
+    _checkpoint_after(repo, git(repo, "rev-parse", "HEAD"))
+    result = run_checker("push", cwd=repo)
+    assert "push.review-only-head" not in blocked_rules(result), result.stderr
+
+
+def test_a_close_commit_with_a_bom_before_the_status_key_is_blocked(tmp_path: Path) -> None:
+    """A UTF-8 BOM (U+FEFF) immediately before the `status:` key makes
+    that line no longer start with the literal bytes `status:` -- so
+    condition (b)'s raw scan of HEAD^'s file finds ZERO `status:` lines,
+    not one, and blocks on the count rather than trusting
+    `parse_document`, which never runs here at all (spec REQ-1, W0-04
+    round-3 finding)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = re.sub(r"status: .*\n", "﻿status: closed 2026-09-03 — PR #999\n", text)
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "expected exactly one `status:` line in HEAD^'s file" in result.stderr
+    assert "got 0" in result.stderr
+
+
+def test_a_symlink_typechange_on_the_intent_path_is_blocked(tmp_path: Path) -> None:
+    """The intent path is REPLACED by a symlink (a git typechange, status
+    `T`) whose target string reads like a legitimate closed status line --
+    a symlink's diff content IS its target text, indistinguishable from a
+    real line change in text-diff output, so only the raw-listing's
+    status/mode fields (condition a) catch it, never any parsed content
+    (spec REQ-1, W0-04 round-3 addition)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    (repo / intent_rel).unlink()
+    (repo / intent_rel).symlink_to("status: closed 2026-09-03 — PR #999")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "expected status M and mode `100644` on both sides" in result.stderr
+    assert "got status T, old 100644 / new 120000" in result.stderr
+
+
+def test_a_close_commit_with_trailing_garbage_on_the_status_line_is_blocked(tmp_path: Path) -> None:
+    """The `status:` line's value is `closed <date> — PR #<n>` PLUS
+    trailing text the comment group (`(?:\\s+#.*)?`) does not cover --
+    `STATUS.fullmatch` on the whole value fails it, so condition (b)
+    blocks before regeneration is even attempted (spec REQ-1, W0-04
+    round-3 addition)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = re.sub(
+        r"status: .*\n", "status: closed 2026-09-03 — PR #999 extra garbage\n", text
+    )
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert (
+        "expected HEAD^'s frontmatter `status:` value to be the closed alternative"
+        in result.stderr
+    )
+    assert "extra garbage" in result.stderr
+
+
+def test_a_body_decoy_status_line_pair_is_blocked(tmp_path: Path) -> None:
+    """A decoy `status:` line, changed from `confirmed` to a legitimate
+    closed value, sits in the BODY -- the real frontmatter `status:` line
+    is never touched. HEAD^'s file now has TWO raw lines starting with
+    `status:`, so condition (b)'s count guard blocks it before
+    `parse_document` (which would in any case ignore the body line) is
+    even consulted for a value (spec REQ-1, W0-04 round-3 addition)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = text.replace(
+        "## Problem\nx\n", "## Problem\nx\nstatus: confirmed 2026-09-01\n"
+    )
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", "docs(loom): seed a body decoy line")
+    decoy_seed_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, decoy_seed_sha)
+
+    text = text.replace(
+        "status: confirmed 2026-09-01\n",
+        "status: closed 2026-09-03 — PR #999\n",
+    )
+    # Only the BODY decoy line changes -- the real frontmatter status line,
+    # near the top of the file, is untouched.
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "expected exactly one `status:` line in HEAD^'s file" in result.stderr
+    assert "got 2" in result.stderr
+
+
+def test_a_body_decoy_line_alone_is_blocked_by_frontmatter_scope(tmp_path: Path) -> None:
+    """The real frontmatter `status:` line is DELETED outright (not
+    replaced), and a decoy `status: closed ...` line is inserted in the
+    body instead -- HEAD^'s file has exactly ONE raw `status:` line
+    (the count guard alone cannot catch this), but it sits after the
+    file's `## ` heading, so `parse_document` never records it into
+    frontmatter and condition (b)'s value is empty, not the closed
+    alternative (spec REQ-1, W0-04 round-3 addition)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = text.replace("status: confirmed 2026-09-01\n", "")
+    text = text.replace("x\n", "x\nstatus: closed 2026-09-03 — PR #999\n")
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert (
+        "expected HEAD^'s frontmatter `status:` value to be the closed alternative"
+        in result.stderr
+    )
+
+
+def test_a_close_commit_that_adds_a_trailing_comment_is_blocked(tmp_path: Path) -> None:
+    """The ONLY difference from a legitimate close is a trailing `# ...`
+    comment appended to the new `status:` value -- the grammar itself
+    allows a comment (STATUS's shared `(?:\\s+#.*)?`), so condition (b)
+    passes, but step (c) always regenerates the bare `status: closed
+    <date> — PR #<N>` form with NO comment, so the regenerated blob does
+    not match the actual one and (c) blocks it (spec REQ-1, W0-04
+    round-3 addition: regeneration is stricter than the grammar it
+    matches against)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = re.sub(
+        r"status: .*\n", "status: closed 2026-09-03 — PR #999 #shipped\n", text
+    )
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert close_sha[:8] in result.stderr
+    assert "HEAD^'s blob to equal the regenerated closed blob" in result.stderr
+
+
+def test_a_close_commit_that_drops_the_confirmed_lines_own_comment_passes(tmp_path: Path) -> None:
+    """HEAD^^'s `status:` line carries a trailing `# ...` comment
+    (`confirmed 2026-09-01 #old-note`); the close commit's new line drops
+    it entirely (`closed 2026-09-03 — PR #999`, no comment). Step (c)'s
+    regeneration REPLACES the whole value, comment included, so the
+    regenerated blob has no comment either and matches the actual one --
+    this passes (spec REQ-1, W0-04 round-3 addition: regeneration drops
+    whatever comment the BEFORE line carried, since only the value is
+    replaced, not appended to)."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo, status="confirmed 2026-09-01 #old-note")
+    close_sha = _close_commit(repo, intent_rel)
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
     assert result.returncode == 0, result.stderr
-    assert "push.review-only-head" not in blocked_rules(result)
 
 
 def test_a_root_commit_adding_an_already_closed_intent_is_blocked(tmp_path: Path) -> None:
-    """The repo's ROOT commit itself ADDS an intent already `status: closed
-    ...`, and the second commit is the checkpoint -- so HEAD^^ cannot
-    resolve at all (pre_close_sha is None) and condition (3) must fail
-    closed on the missing checkpoint parent rather than skip.
-    test_a_brand_new_already_closed_intent_is_blocked sits on
-    build_repo's prior history and is instead caught by condition (2), so
-    it never exercises this pre_close_sha-is-None path (spec REQ-1, W0-04
-    round-2/round-3 findings)."""
+    """The repo's ROOT commit itself ADDS an intent already `status:
+    closed ...`. Relative to git's empty tree, an added path is ALWAYS
+    status `A`, never `M` -- so condition (a) blocks this before
+    condition (d)'s checkpoint-parent check is ever reached; per
+    `check_close_commit_shape`'s own docstring, (d)'s `pre_close_sha is
+    None` branch is structurally unreachable for exactly this reason
+    (spec REQ-1, W0-04 round-2/round-3 findings)."""
     repo = tmp_path / "repo"
     repo.mkdir()
     git(repo, "init", "-q", "-b", "work")
@@ -478,8 +733,37 @@ def test_a_root_commit_adding_an_already_closed_intent_is_blocked(tmp_path: Path
     assert result.returncode == 1
     assert "push.review-only-head" in blocked_rules(result)
     assert close_sha[:8] in result.stderr
-    assert "is the root commit and adds an already-closed intent" in result.stderr
-    assert "expected a HEAD^^ checkpoint commit to exist" in result.stderr
+    assert "expected status M and mode `100644` on both sides" in result.stderr
+    assert "got status A, old 000000 / new 100644" in result.stderr
+
+
+def test_manifest_intent_path_drift_fails_closed(tmp_path: Path) -> None:
+    """The trigger must not fail open when the manifest's own intent path
+    template has drifted from `INTENT_PATH_TEMPLATE`, the checker's own
+    expected constant -- `check_close_commit_shape` reports
+    push.review-only-head naming the unexpected template rather than
+    silently building a matcher from it (spec REQ-1, W0-04 round-3
+    addition, Codex spec note). Called directly (not via the CLI
+    subprocess), since the manifest is a module-level constant path the
+    real CLI always resolves to this repo's own contract/manifest.yaml."""
+    sys.path.insert(0, str(Path(__file__).parent))
+    import loom_checker  # local import: needs the module, not the CLI
+
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _close_commit(repo, intent_rel)
+    _checkpoint_after(repo, close_sha)
+
+    manifest = loom_checker.load_manifest()
+    drifted = json.loads(json.dumps(manifest))
+    drifted["artifacts"]["intent"]["path"] = "docs/loom/wrong/<change-id>.md"
+
+    head_sha = git(repo, "rev-parse", "HEAD")
+    failures = loom_checker.check_close_commit_shape(drifted, repo, head_sha)
+    assert failures
+    assert all(rule == "push.review-only-head" for rule, _ in failures)
+    assert any("docs/loom/wrong/<change-id>.md" in msg for _, msg in failures)
+    assert any("docs/loom/intent/<change-id>.md" in msg for _, msg in failures)
 
 
 # --- push.reviewed-sha -----------------------------------------------------
@@ -1322,6 +1606,12 @@ def test_the_archived_marker_itself_is_still_writable(tmp_path: Path) -> None:
 
 
 def test_a_live_store_is_untouched_by_the_freeze(tmp_path: Path) -> None:
+    """`docs/loom/intent/` is not a frozen store, so `push.frozen-store-
+    untouched` never fires on a write there -- unlike the plain-text
+    write this fixture makes, though: since W0-04's structural trigger
+    (spec REQ-1, round-3 design change), ANY write to an intent path is
+    now also subject to `push.review-only-head`'s close-commit shape, and
+    this write is not a close commit, so THAT rule blocks it instead."""
     repo = build_repo(tmp_path)
     result = _rewrite_history_with(repo, "docs/loom/intent/2026-09-02-a.md")
-    assert result.returncode == 0, result.stderr
+    assert "push.frozen-store-untouched" not in blocked_rules(result), result.stderr
