@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "4e25360c8b2a072c5082cbf21de03e172eca2d73",
+  "reviewed_sha": "160658c2764f92605935cac8b8c333fe699dc6e7",
   "scope": "spec",
   "vendors": [
     "anthropic",
@@ -159,6 +159,28 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 8,
+      "scope": "spec",
+      "spec_sha": "ddf9e10",
+      "findings_file": "evidence/spec-review-r8.md",
+      "reviewer": "codex-review-spec-8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 8,
+      "scope": "spec",
+      "spec_sha": "ddf9e10",
+      "findings_file": "evidence/spec-review-r8.md",
+      "reviewer": "sonnet-review-spec-8",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
     }
   ],
   "probes": [
@@ -281,6 +303,22 @@
       "sha": "d7fd6d44",
       "result": "PASS_WITH_NOTES — 0 fatal, 1 important (merge commit at HEAD^ shows no diff, trigger never fires), 1 nit; R21/R22/C12 HOLD",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r7.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v9 alone and writes out the two tightened checks as code (sonnet-coldread-spec-8)",
+      "sha": "3bdc6242",
+      "result": "2 guesses (dry-run needs a stand-in PR number; table layout), 0 anchor mismatches",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r8.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v9 (sonnet-redteam-spec-8)",
+      "sha": "3bdc6242",
+      "result": "PASS — 0 fatal, 0 important, 1 nit; C13/R23 HOLD",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r8.md"
     }
   ],
   "questions": [
@@ -791,7 +829,8 @@
         "codex-review-spec-7",
         "sonnet-review-spec-7"
       ],
-      "text": "Design decision 1 still says verdicts[].sha is required only on non-spec scopes, contradicting REQ-1's no-exemption rule (stale sentence from v7)"
+      "text": "Design decision 1 still says verdicts[].sha is required only on non-spec scopes, contradicting REQ-1's no-exemption rule (stale sentence from v7)",
+      "resolved": "resolved: 84a8cb7e (spec v9), confirmed by round 8 (codex PASS, sonnet PASS, red team HOLDS)"
     },
     {
       "id": "spec-R23",
@@ -801,7 +840,8 @@
       "raised_by": [
         "sonnet-redteam-spec-7"
       ],
-      "text": "git show --raw on a merge commit prints no diff, so a merge commit at HEAD^ never triggers the close-commit shape recompute while it may carry a closed transition and arbitrary other changes"
+      "text": "git show --raw on a merge commit prints no diff, so a merge commit at HEAD^ never triggers the close-commit shape recompute while it may carry a closed transition and arbitrary other changes",
+      "resolved": "resolved: 84a8cb7e (spec v9), confirmed by round 8 (codex PASS, sonnet PASS, red team HOLDS)"
     }
   ],
   "dispatch": [
