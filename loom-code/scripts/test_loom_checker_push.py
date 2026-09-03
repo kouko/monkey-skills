@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pytest
 
+import codex_scaffold  # sibling module, same scripts/ dir (W0-05 plumbing exemption)
+
 CHECKER = Path(__file__).with_name("loom_checker.py")
 CHANGE = "2026-09-02-a"
 REVIEW = f"docs/loom/{CHANGE}/review.json"
@@ -1738,3 +1740,85 @@ def test_a_live_store_is_untouched_by_the_freeze(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     result = _rewrite_history_with(repo, "docs/loom/intent/2026-09-02-a.md")
     assert "push.frozen-store-untouched" not in blocked_rules(result), result.stderr
+
+
+# --- push.dispatch-covers-tasks: content-bound plumbing exemption (W0-05) --
+#
+# The exhaustive positive/negative matrix (genuine refresh, altered byte,
+# extra file, deletion, mode-only change, symlink, stamp mismatch, altered
+# shim, run-from-the-copy, unlisted path) lives in the adversary's probe
+# file (docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/
+# test_abuse_plumbing_exemption.py). These two cover combinations that
+# probe file does not: restoring one deleted plumbing path (rather than a
+# whole-tree version bump), and a commit that mixes an exempt plumbing
+# path with an ordinary code file -- the exemption is per-path, not
+# per-commit.
+
+
+def test_a_restored_deleted_plumbing_path_with_no_trailer_is_exempt(tmp_path: Path) -> None:
+    """A genuine scaffold write establishes the canonical baseline (with a
+    trailer); a later commit deletes ONE plumbing path and then a second
+    genuine scaffold call restores exactly that file, byte-and-mode
+    identical to this running tree's canonical -- with no trailer. Unlike
+    the probe's version-bump refresh, only a single sibling module changes
+    here."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    codex_scaffold.scaffold(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore(loom): scaffold hooks\n\nTask: T1")
+    baseline_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(baseline_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / ".codex" / "hooks" / "git_exec.py").unlink()
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: drop a plumbing file\n\nTask: T1")
+    deleted_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(deleted_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    codex_scaffold.scaffold(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore(loom): restore scaffold file")
+    restored_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(restored_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_a_commit_mixing_exempt_plumbing_and_a_code_file_still_needs_a_trailer(
+    tmp_path: Path,
+) -> None:
+    """The exemption is per-path (Design decision), not per-commit: a
+    genuine scaffold refresh landing in the SAME commit as an ordinary
+    code file still owes a `Task:` trailer for the code file."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    codex_scaffold.scaffold(repo)
+    (repo / "b.py").write_text("value = 2\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore(loom): scaffold hooks and add b.py")
+    new_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(new_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, result.stdout
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    # the code path (b.py) still counts even though the plumbing path in
+    # the same commit is exempt -- the untrailered message names the kind,
+    # not the path, so "code" surviving in the reasons is the per-path
+    # proof, not "gate" alone (which the plumbing paths would also add
+    # pre-exemption).
+    assert "code" in result.stderr

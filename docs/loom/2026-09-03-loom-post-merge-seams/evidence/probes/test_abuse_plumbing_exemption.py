@@ -116,15 +116,10 @@ def _run_from_copy(repo: Path) -> subprocess.CompletedProcess:
 # --- case 1: genuine refresh, no trailer -----------------------------------
 
 
-@pytest.mark.xfail(
-    reason="EXPECTED-RED-UNTIL-W0-05: no content-bound plumbing exemption "
-    "exists yet in check_dispatch_covers_tasks/commit_paths/_is_host_plumbing "
-    "(REQ-3); remove this marker once W0-05 lands and the case must pass.",
-    strict=True,
-)
 def test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt(tmp_path: Path) -> None:
-    """Expected per spec: PASS. EXPECTED-RED-UNTIL-W0-05: no exemption
-    exists yet, so this blocks today on push.dispatch-covers-tasks."""
+    """Expected per spec: PASS. W0-05 landed the content-bound plumbing
+    exemption in check_dispatch_covers_tasks/commit_paths/_is_host_plumbing
+    (REQ-3), so this genuine refresh no longer owes a trailer."""
     repo = build_repo(tmp_path)
     _bootstrap_scaffold(repo)
     _plumbing_commit(repo, trailer=False)

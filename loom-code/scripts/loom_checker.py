@@ -2573,6 +2573,120 @@ def commit_paths(repo: Path, sha: str) -> set[str]:
     }
 
 
+def _plumbing_canonical_dir() -> Path | None:
+    """The source tree this RUNNING checker itself lives in, when it may
+    exempt a host-plumbing path from `push.dispatch-covers-tasks` -- else
+    None (Design decision "Content-bound plumbing exemption", REQ-3).
+
+    Identifies itself by the path it was INVOKED as -- `Path(__file__)`,
+    never `.resolve()`'d -- because a symlinked `.codex/hooks/loom_checker.py`
+    pointing at a genuine canonical would otherwise resolve outside
+    `.codex/hooks/` and misclassify itself as canonical (round 5 spec-R20).
+    None when: the invoked path's own directory is `.codex/hooks` (this
+    checker IS the copy Codex runs -- there is no external canonical to
+    compare against, ever); or no sibling `../contract/manifest.yaml` sits
+    beside it (a stray copy or symlink placed anywhere else, or a repo that
+    never shipped one)."""
+    checker_dir = Path(__file__).parent
+    if checker_dir.parts[-2:] == (".codex", "hooks"):
+        return None
+    if not (checker_dir.parent / "contract" / "manifest.yaml").is_file():
+        return None
+    return checker_dir
+
+
+def _load_codex_scaffold():
+    """Sibling import from the running checker's own directory (the same
+    trick `git_exec.py` already uses) -- lazy, because the `.codex/hooks/`
+    copy never ships `codex_scaffold.py` and must import fine without it."""
+    try:
+        import codex_scaffold
+    except ImportError:
+        return None
+    return codex_scaffold
+
+
+def _canonical_file_mode(path: Path) -> str:
+    return "100755" if path.stat().st_mode & 0o111 else "100644"
+
+
+def _git_ls_tree_entry(repo: Path, sha: str, path: str) -> tuple[str, str] | None:
+    """`(mode, blob sha)` for `path` in the TREE at `sha`, or None when it
+    has no entry there -- a deleted path included, since a deletion is in
+    `commit_paths()` with no blob at the commit (spec REQ-3)."""
+    line = (git_maybe(repo, "ls-tree", sha, "--", path) or "").strip()
+    if not line:
+        return None
+    mode, _obj_type, rest = line.split(None, 2)
+    blob_sha, _sep, _entry_path = rest.partition("\t")
+    return mode, blob_sha
+
+
+def _plumbing_path_matches_canonical(
+    repo: Path, sha: str, path: str, canonical_dir: Path, scaffold_mod
+) -> bool:
+    """True when `path` -- one `_is_host_plumbing()` already said yes to --
+    is byte-and-mode identical, at `sha`, to what THIS running tree's own
+    scaffold would write for it. False for every mismatch: a deleted entry,
+    a mode-only change, a symlink (mode `120000` never matches a canonical
+    `100644`/`100755`), a plumbing-looking path with no canonical
+    counterpart, or a stamped version that names a release other than this
+    checker's own (`codex_scaffold.plugin_version()`) -- checked before any
+    blob content, so a copy stamped with a superseded release fails before
+    a single byte is read."""
+    entry = _git_ls_tree_entry(repo, sha, path)
+    if entry is None:
+        return False
+    mode, _blob = entry
+
+    if path == scaffold_mod.MARKER:
+        return False  # `.loom-hook-fired` is ignored -- no canonical, never exempt
+
+    if path == scaffold_mod.SHIM_COMMAND:
+        if mode != "100755":
+            return False
+        expected = scaffold_mod.SHIM_TEMPLATE.format(
+            stamp=scaffold_mod.stamp_line(scaffold_mod.plugin_version()),
+            checker=scaffold_mod.CHECKER_COPY,
+        )
+        return git_raw_text(repo, "show", f"{sha}:{path}") == expected
+
+    if path == scaffold_mod.CHECKER_COPY:
+        canonical_file = canonical_dir / "loom_checker.py"
+        if not canonical_file.is_file() or mode != _canonical_file_mode(canonical_file):
+            return False
+        content = git_raw_text(repo, "show", f"{sha}:{path}")
+        lines = content.splitlines(keepends=True)
+        stamp_index = next(
+            (i for i, line in enumerate(lines) if line.startswith(scaffold_mod.STAMP_PREFIX)),
+            None,
+        )
+        if stamp_index is None:
+            return False
+        version = lines[stamp_index][len(scaffold_mod.STAMP_PREFIX):].rstrip("\n")
+        if version != scaffold_mod.plugin_version():
+            return False
+        del lines[stamp_index]
+        return "".join(lines) == read_text(canonical_file)
+
+    for name in scaffold_mod.SIBLING_MODULES:
+        if path == f"{scaffold_mod.HOOK_DIR}/{name}":
+            canonical_file = canonical_dir / name
+            if not canonical_file.is_file() or mode != _canonical_file_mode(canonical_file):
+                return False
+            return git_raw_text(repo, "show", f"{sha}:{path}") == read_text(canonical_file)
+
+    contract_prefix = f"{scaffold_mod.CONTRACT_COPY}/"
+    if path.startswith(contract_prefix):
+        rel = path[len(contract_prefix):]
+        canonical_file = canonical_dir.parent / "contract" / rel
+        if not canonical_file.is_file() or mode != _canonical_file_mode(canonical_file):
+            return False
+        return git_raw_text(repo, "show", f"{sha}:{path}") == read_text(canonical_file)
+
+    return False
+
+
 def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     """Every commit that changes real work names the task it belongs to.
 
@@ -2585,6 +2699,14 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     the plan, the spec or evidence owes no trailer -- none of it is
     dispatched work (the spec is a user re-confirmation owned by the
     write-spec station, not a planned task).
+
+    A host-plumbing path (`_is_host_plumbing()`) is ALSO exempt, but only
+    when it is byte-and-mode identical, at that commit, to what THIS
+    running checker's own tree would scaffold there -- content-bound, not
+    a blanket directory exemption (Design decision "Content-bound plumbing
+    exemption", REQ-3). The exemption is per-path: a commit mixing a
+    genuine plumbing refresh with an ordinary code file still owes a
+    trailer for the code file.
     """
     if reviewed_id is None:
         return []
@@ -2603,10 +2725,24 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
         if line.strip()
     ]
 
+    canonical_dir = _plumbing_canonical_dir()
+    scaffold_mod = _load_codex_scaffold() if canonical_dir is not None else None
+
     claimed: set[str] = set()
     untrailered: list[tuple[str, str]] = []
     for sha in shas:
         paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
+        if scaffold_mod is not None:
+            paths = {
+                path
+                for path in paths
+                if not (
+                    _is_host_plumbing(path)
+                    and _plumbing_path_matches_canonical(
+                        repo, sha, path, canonical_dir, scaffold_mod
+                    )
+                )
+            }
         kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
         message = git_text(repo, "log", "-1", "--format=%B", sha)
         ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
