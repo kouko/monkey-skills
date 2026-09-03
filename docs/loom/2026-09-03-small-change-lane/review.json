@@ -1,11 +1,193 @@
 {
-  "reviewed_sha": "b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0",
-  "scope": "<what this checkpoint reviewed>",
+  "reviewed_sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+  "scope": "after-task:W0-02",
   "vendors": [
     "anthropic"
   ],
-  "verdicts": [],
-  "probes": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "after-task:W0-02",
+      "reviewer": "codex-review-w0-02",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+gate",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — no external surface",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:2503",
+          "text": ".github counted as a plugin: CI yml + one loom-code test file → full",
+          "fix": "dot-dirs are not plugins"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:2489",
+          "text": "records exclusion missed docs/loom/<id>/spec.md",
+          "fix": "exclude every record under the change folder"
+        },
+        {
+          "severity": "important",
+          "anchor": "PRINCIPLES.md:11",
+          "text": "small lane (one reviewer) contradicts ratified non-negotiable 2 (at least two)",
+          "fix": "ratify the amendment or keep two"
+        }
+      ],
+      "notes": "read-only sandbox could not run pytest; --list-rules 27 confirmed"
+    },
+    {
+      "round": 1,
+      "scope": "after-task:W0-02",
+      "reviewer": "sonnet-review-w0-02",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+gate",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "N/A — engineering change",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "N/A"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:171-174",
+          "text": "RULES catalog text for push.verdicts-ge-2 still says at least two",
+          "fix": "state the lane-dependent floor"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/loom_checker.py:3117-3129",
+          "text": "the new except fallback in _resolve_second_vendor_ask / check_verdicts is never exercised",
+          "fix": "one unit test making change_lane_detail raise; asserts fail-closed"
+        }
+      ],
+      "notes": "probes 25 passed; test_loom_checker_push 118 passed; probe commit precedes implementation commit (adversary-first verified)"
+    },
+    {
+      "round": 2,
+      "scope": "after-task:W0-02",
+      "reviewer": "codex-review-w0-02",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+gate",
+      "verdict": "PASS",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: read only 8cb2fbcb..7f4e19e1; all three round-1 findings FIXED"
+    },
+    {
+      "round": 2,
+      "scope": "after-task:W0-02",
+      "reviewer": "sonnet-review-w0-02",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+gate",
+      "verdict": "PASS",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: resumed reader, read only the two fix commits; important FIXED; nit deferred to the ship nit batch"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "1083 passed in 34.27s",
+      "artifact": "",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "7f4e19e1dcb2e838e20f7b6c75ce5e0fc0673c46",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "after-task:W0-02"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -18,7 +200,44 @@
       "type": "what"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "after-task:W0-02-01",
+      "anchor": "loom-code/scripts/loom_checker.py:2503",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "codex-review-w0-02",
+      "severity": "important",
+      "text": ".github counted as a plugin",
+      "resolved": "closed by 962a1110 — dot-dirs and bare docs/ are not plugins; unit test test_change_lane_ci_config_plus_one_plugin_test_file_is_small"
+    },
+    {
+      "id": "after-task:W0-02-02",
+      "anchor": "loom-code/scripts/loom_checker.py:2489",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "codex-review-w0-02",
+      "severity": "important",
+      "text": "spec.md not excluded from the lane",
+      "resolved": "closed by 962a1110 — docs/loom/*/** glob; unit test test_change_lane_spec_md_alone_is_small"
+    },
+    {
+      "id": "after-task:W0-02-03",
+      "anchor": "PRINCIPLES.md:11",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "codex-review-w0-02",
+      "severity": "important",
+      "text": "small lane contradicts non-negotiable 2",
+      "resolved": "closed by 7f4e19e1 — kouko chose option A at this checkpoint: non-negotiable 2 amended to two reviewers in the full lane, one in the small lane, blind run omitted when every Acceptance line is mechanical; ratified-by kouko 2026-09-04"
+    },
+    {
+      "id": "after-task:W0-02-04",
+      "anchor": "loom-code/scripts/loom_checker.py:171-174",
+      "origin_sha": "8cb2fbcb91071e164a51ec02875c0d34452dcd60",
+      "raised_by": "sonnet-review-w0-02",
+      "severity": "important",
+      "text": "RULES catalog text stale",
+      "resolved": "closed by 962a1110 — catalog text for verdicts-ge-2 and second-vendor-honoured updated; --list-rules still 27"
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
