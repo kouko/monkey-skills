@@ -162,7 +162,9 @@ RULES: list[tuple[str, str]] = [
     (
         "push.second-vendor-honoured",
         "A second vendor named in KICKOFF-DEFAULTS either appears in the latest "
-        "round's verdicts or that round records why it could not.",
+        "round's verdicts or that round records why it could not; when KICKOFF names "
+        "`ask`, this defers to review.json's top-level `second_vendor` answer instead "
+        "(never required in the small lane).",
     ),
     (
         "push.reviewer-ne-implementer",
@@ -170,8 +172,9 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.verdicts-ge-2",
-        "The latest review round carries at least two distinct fresh-context reviewers, and "
-        "blocks when any verdict in that round is not passing.",
+        "The latest review round carries at least as many distinct fresh-context reviewers as "
+        "the change's lane requires -- one in the small lane, two distinct in the full lane -- "
+        "and blocks when any verdict in that round is not passing.",
     ),
     (
         "spec.req-grammar",
@@ -2483,16 +2486,20 @@ def _is_small_lane_ci_config_path(path: str) -> bool:
 
 
 def _small_lane_record_patterns(manifest) -> list[re.Pattern[str]]:
-    """This change's own store paths -- review.json, plan.md, evidence/**
-    under `docs/loom/<change-id>/`, and `docs/loom/intent/**` -- are never
-    counted against the lane (intent point 1 / plan W0-02 risk)."""
-    patterns = [
-        glob_to_regex(manifest["artifacts"]["review"]["path"].replace("<change-id>", "*")),
-        glob_to_regex(manifest["artifacts"]["plan"]["path"].replace("<change-id>", "*")),
-        glob_to_regex("docs/loom/*/evidence/**"),
+    """This change's own store folder -- every path under
+    `docs/loom/<change-id>/` (plan.md, spec.md, review.json, evidence/**,
+    blind-run-report.md, and any future record kind) plus
+    `docs/loom/intent/**` -- is never counted against the lane (intent
+    point 1 / plan W0-02 risk). One wildcarded glob per change-id, derived
+    from the manifest's own `plan` artifact path, not an enumerated file
+    list -- a fix-round finding pinned this after `spec.md` alone was
+    missed by an earlier, file-by-file version."""
+    change_folder = manifest["artifacts"]["plan"]["path"].rsplit("/", 1)[0]
+    change_folder_glob = change_folder.replace("<change-id>", "*") + "/**"
+    return [
+        glob_to_regex(change_folder_glob),
         glob_to_regex("docs/loom/intent/**"),
     ]
-    return patterns
 
 
 # Cross-cutting store roots, never one plugin's own tree: `docs/` holds the
@@ -2505,10 +2512,12 @@ NON_PLUGIN_TOP_LEVEL_DIRS = frozenset({"docs", "evidence"})
 
 def _top_level_plugin_dir(path: str) -> str | None:
     """The first path segment, or None for a path with no directory at all
-    (e.g. `README.md`) or a cross-cutting store root -- both "count as
-    none" per the plan, not as a plugin of its own."""
+    (e.g. `README.md`), a cross-cutting store root, or a dot-directory
+    (`.github`, `.claude`, `.codex`, ...) -- all "count as none" per the
+    plan, not as a plugin of its own (fix round: `.github/workflows/x.yml`
+    was wrongly counted as its own plugin alongside a real one)."""
     head, sep, _rest = path.partition("/")
-    if not sep or head in NON_PLUGIN_TOP_LEVEL_DIRS:
+    if not sep or head in NON_PLUGIN_TOP_LEVEL_DIRS or head.startswith("."):
         return None
     return head
 

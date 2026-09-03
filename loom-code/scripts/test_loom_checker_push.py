@@ -2255,3 +2255,33 @@ def test_second_vendor_grammar_includes_ask() -> None:
     manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
     entry = next(e for e in manifest["kickoff_defaults"] if e["name"] == "second-vendor")
     assert "ask" in entry["grammar"]
+
+
+# --- W0-02 fix round: dot-dirs are not plugins; every change-folder record
+# is excluded (not an enumerated subset) ---------------------------------
+
+
+def test_change_lane_ci_config_plus_one_plugin_test_file_is_small(tmp_path: Path) -> None:
+    """`.github/workflows/x.yml` starts with `.`, so it must not count as a
+    second "plugin directory" alongside `loom-code/`."""
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo,
+        {
+            ".github/workflows/x.yml": "name: x\non: push\n",
+            "loom-code/scripts/test_dotdir_probe.py": "def test_x():\n    assert True\n",
+        },
+        "ci: dot-dir plugin probe",
+    )
+    assert loom_checker.change_lane(repo, sha) == "small"
+
+
+def test_change_lane_spec_md_alone_is_small(tmp_path: Path) -> None:
+    """`docs/loom/<change-id>/spec.md` is a change-folder record, same as
+    plan.md/review.json/evidence -- the exclusion must not enumerate a
+    subset of record file names."""
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo, {"docs/loom/demo/spec.md": "intent: demo@aaaaaaa\n"}, "docs: spec-only probe"
+    )
+    assert loom_checker.change_lane(repo, sha) == "small"
