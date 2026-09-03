@@ -1237,6 +1237,26 @@
       ],
       "text": "a CRLF probe that does not pin core.autocrlf=false proves nothing on a machine that normalises line endings",
       "dismissed": "carry-forward: test-writing hazard, not a code defect; documented in the probe file — by sonnet-adversary-w0-04-r4"
+    },
+    {
+      "id": "after-task:W0-04-09",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1863",
+      "origin_sha": "f8da3b18",
+      "raised_by": [
+        "codex-review-w0-04-r4"
+      ],
+      "text": "git_raw_text decodes with surrogateescape but regeneration re-encodes strict UTF-8: a non-UTF-8 byte outside the status line raises UnicodeEncodeError instead of comparing blobs"
+    },
+    {
+      "id": "after-task:W0-04-10",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1979",
+      "origin_sha": "f8da3b18",
+      "raised_by": [
+        "codex-review-w0-04-r4"
+      ],
+      "text": "the malformed checkpoint-parent diagnostic drops check_review_only_head's detail (actual paths)"
     }
   ],
   "dispatch": [
@@ -1736,6 +1756,14 @@
       "agent_id": "codex-review-w0-04-r4",
       "model": "codex",
       "started": "2026-09-03T14:03:58+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix6-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T14:06:35+08:00",
       "fresh_context": true
     }
   ]
