@@ -441,6 +441,33 @@
           "fix": "let the embedded detail carry the sentence"
         }
       ]
+    },
+    {
+      "round": 14,
+      "scope": "after-task:W0-04",
+      "sha": "fcd5905ea429e94b97298db26e80be33fc269c1e",
+      "findings_file": "evidence/review-after-task-w0-04-r4.md",
+      "reviewer": "sonnet-review-w0-04-r4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:1883-1980",
+          "text": "check_close_commit_shape body ~66 lines, over the 50-line lens cap",
+          "fix": "extract condition (a) into a helper"
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py:438",
+          "text": "probe 10 docstring describes the fixed CRLF bug as live",
+          "fix": "update like probe 5"
+        }
+      ]
     }
   ],
   "probes": [
@@ -1417,6 +1444,28 @@
       ],
       "text": "checkpoint-parent diagnostic repeats the expectation clause",
       "dismissed": "carry-forward: cosmetic, no defect — by sonnet-review-w0-04-r5"
+    },
+    {
+      "id": "after-task:W0-04-12",
+      "severity": "important",
+      "anchor": "loom-code/scripts/loom_checker.py:1883",
+      "origin_sha": "fcd5905e",
+      "raised_by": [
+        "sonnet-review-w0-04-r4"
+      ],
+      "text": "check_close_commit_shape body ~66 lines over the 50-line cap",
+      "dismissed": "carry-forward: correctness exhaustively verified over six fix rounds; a further split is a no-behaviour-change refactor; deferring avoids reopening a task the user's stop-loss closed — by sonnet-review-w0-04-r4"
+    },
+    {
+      "id": "after-task:W0-04-13",
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py:438",
+      "origin_sha": "fcd5905e",
+      "raised_by": [
+        "sonnet-review-w0-04-r4"
+      ],
+      "text": "probe 10 docstring stale",
+      "resolved": "resolved: docstring updated by the orchestrator (evidence-only edit), same commit as the W0-05 adversary dispatch"
     }
   ],
   "dispatch": [
@@ -1940,6 +1989,14 @@
       "agent_id": "codex-review-w0-04-r5",
       "model": "codex",
       "started": "2026-09-03T14:14:43+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-05",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-w0-05-pre",
+      "model": "sonnet",
+      "started": "2026-09-03T14:21:35+08:00",
       "fresh_context": true
     }
   ]

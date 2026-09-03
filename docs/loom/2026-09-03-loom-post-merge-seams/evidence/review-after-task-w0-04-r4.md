@@ -38,4 +38,4 @@ notes:
 
 ## sonnet-adversary-w0-04-r4 — NEEDS_REVISION (fatal: CRLF ending collapsed in regeneration → fixed 6f7a19a5; nit carry-forward: CRLF probes must pin core.autocrlf)
 
-## sonnet-review-w0-04-r4 — (appended when it returns)
+## sonnet-review-w0-04-r4 — PASS_WITH_NOTES (reviewed fcd5905e; independently reproduced and confirmed fixed the surrogateescape crash; carry-forward: check_close_commit_shape body ~66 lines > 50-line lens cap; probe 10 docstring stale)

@@ -468,7 +468,7 @@ def test_close_commit_crlf_file_wide_regeneration_drops_the_cr(tmp_path: Path) -
     _checkpoint_after(repo, close_sha)
 
     result = run_checker("push", cwd=repo)
-    assert result.returncode == 0, (  # DEFECT: see docstring; regeneration drops the \r
+    assert result.returncode == 0, (  # FIXED by 6f7a19a5; kept as a regression guard
         "expected PASS for a byte-consistent CRLF close commit, got "
         f"BLOCKED: {result.stderr}"
     )
