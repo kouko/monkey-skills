@@ -382,6 +382,33 @@
       "model": "sonnet",
       "lens": "spec",
       "verdict": "PASS_WITH_NOTES"
+    },
+    {
+      "round": 14,
+      "scope": "after-task:W0-04",
+      "sha": "f8da3b184028e3a12649ac6fcaf68dee5f509b76",
+      "findings_file": "evidence/review-after-task-w0-04-r4.md",
+      "reviewer": "codex-review-w0-04-r4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1863",
+          "text": "surrogateescape decode vs strict encode raises on non-UTF-8 bytes",
+          "fix": "round-trip with surrogateescape"
+        },
+        {
+          "severity": "important",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:1979",
+          "text": "checkpoint-parent diagnostic drops the touched paths",
+          "fix": "include the detail"
+        }
+      ]
     }
   ],
   "probes": [
@@ -1246,7 +1273,8 @@
       "raised_by": [
         "codex-review-w0-04-r4"
       ],
-      "text": "git_raw_text decodes with surrogateescape but regeneration re-encodes strict UTF-8: a non-UTF-8 byte outside the status line raises UnicodeEncodeError instead of comparing blobs"
+      "text": "git_raw_text decodes with surrogateescape but regeneration re-encodes strict UTF-8: a non-UTF-8 byte outside the status line raises UnicodeEncodeError instead of comparing blobs",
+      "resolved": "resolved: d026bc02 — encode with surrogateescape; tests test_a_close_commit_with_a_stray_non_utf8_body_byte_passes / _that_changes_a_non_utf8_body_byte_is_blocked"
     },
     {
       "id": "after-task:W0-04-10",
@@ -1256,7 +1284,8 @@
       "raised_by": [
         "codex-review-w0-04-r4"
       ],
-      "text": "the malformed checkpoint-parent diagnostic drops check_review_only_head's detail (actual paths)"
+      "text": "the malformed checkpoint-parent diagnostic drops check_review_only_head's detail (actual paths)",
+      "resolved": "resolved: d026bc02 — _checkpoint_parent_failures carries check_review_only_head detail; test strengthened"
     }
   ],
   "dispatch": [
@@ -1764,6 +1793,22 @@
       "agent_id": "impl-w0-04-fix6-sonnet",
       "model": "sonnet",
       "started": "2026-09-03T14:06:35+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04-r5",
+      "model": "sonnet",
+      "started": "2026-09-03T14:14:43+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04-r5",
+      "model": "codex",
+      "started": "2026-09-03T14:14:43+08:00",
       "fresh_context": true
     }
   ]
