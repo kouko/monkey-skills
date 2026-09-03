@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
+  "reviewed_sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -1092,6 +1092,53 @@
         "user-judgment-leak": "PASS"
       },
       "findings": []
+    },
+    {
+      "round": 27,
+      "scope": "branch-end",
+      "reviewer": "codex-review-close-commit",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:5",
+          "text": "delta is exactly the status-line replacement; PR #782 could not be verified from the sandbox (no network)",
+          "fix": "verified by the other leg: gh pr view 782 → OPEN, headRefName loom-post-merge-seams"
+        }
+      ],
+      "delta_is_one_status_line": true
+    },
+    {
+      "round": 27,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-close-commit",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A — mechanical status-line close per user-decided design"
+      },
+      "findings": [],
+      "delta_is_one_status_line": true
     }
   ],
   "probes": [
@@ -1868,6 +1915,198 @@
       "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
       "sha": "39b0666054ee9c170a739cc9301d3f6340984e21",
       "result": "1061 passed in 209.21s (0:03:29)",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_passes",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+      "result": "1061 passed in 200.26s (0:03:20)",
       "artifact": "",
       "scope": "branch-end"
     }
@@ -3778,6 +4017,30 @@
       "agent_id": "codex-review-branch-end-r8",
       "model": "codex",
       "started": "2026-09-03T17:08:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "sonnet-adversary-close-commit",
+      "model": "sonnet",
+      "started": "2026-09-03T18:11:20+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-close-commit",
+      "model": "sonnet",
+      "started": "2026-09-03T18:11:20+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-close-commit",
+      "model": "codex",
+      "started": "2026-09-03T18:11:20+08:00",
       "fresh_context": true
     }
   ]
