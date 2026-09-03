@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "1966f780183845e2c3afc93dca9fa90c1605a985",
+  "reviewed_sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -1139,6 +1139,66 @@
       },
       "findings": [],
       "delta_is_one_status_line": true
+    },
+    {
+      "round": 28,
+      "scope": "branch-end",
+      "reviewer": "codex-review-w1-06",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": "read-only sandbox could not run pytest; static check: CRLF expectation matches condition (c); both CRLF bodies AST-identical; version test ties to CHANGELOG"
+    },
+    {
+      "round": 28,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-w1-06",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "dimension_scores": {
+        "security": "N/A — no surface in a two-file test-assertion fix",
+        "architecture": "N/A — no surface in a two-file test-assertion fix",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — no surface in a two-file test-assertion fix",
+        "principles-conformance": "N/A — no surface in a two-file test-assertion fix",
+        "deliberate-simplification": "N/A — no surface in a two-file test-assertion fix",
+        "deletion-first": "N/A — no surface in a two-file test-assertion fix",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": "ran the three test files: 28 passed on a machine with global core.autocrlf=input"
     }
   ],
   "probes": [
@@ -2109,6 +2169,198 @@
       "result": "1061 passed in 200.26s (0:03:20)",
       "artifact": "",
       "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_trailing_comment_change_is_blocked_by_regeneration",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_line_ending_on_status_line_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_inserted_second_status_line_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_merge_whose_second_parent_carries_the_transition_passes",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_ordinary_root_commit_branch_wrongly_blocked_by_precondition",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_with_checkpoint_parent_carrying_garbage_reviewed_sha_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_head_pre_caret_with_two_status_lines_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_status_key_not_first_in_frontmatter_passes",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_manifest_intent_template_mistyped_blocks_with_named_diagnostic",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q -k test_close_commit_crlf_file_wide_regeneration_drops_the_cr",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "8b6eb4a42e0486845fbcc7d60d96a706d06d44d6",
+      "result": "1061 passed in 194.51s (0:03:14)",
+      "artifact": "",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -2801,7 +3053,7 @@
         "sonnet-adversary-w0-04-r4"
       ],
       "text": "a CRLF probe that does not pin core.autocrlf=false proves nothing on a machine that normalises line endings",
-      "dismissed": "carry-forward: test-writing hazard, not a code defect; documented in the probe file — by sonnet-adversary-w0-04-r4"
+      "resolved": "closed by 6b42ad57 (W1-06) — the dismissal (carry-forward: test-writing hazard, not a code defect; documented in the probe file — by sonnet-adversary-w0-04-r4) was overruled by PR #782 CI on 2026-09-03: the CRLF case failed on Linux; the test now pins core.autocrlf=false and expects BLOCK"
     },
     {
       "id": "after-task:W0-04-09",
