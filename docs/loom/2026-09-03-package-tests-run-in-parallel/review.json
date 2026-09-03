@@ -87,6 +87,14 @@
       "model": "sonnet",
       "started": "2026-09-03T22:07:48+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-fix-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T22:15:13+08:00",
+      "fresh_context": true
     }
   ]
 }
