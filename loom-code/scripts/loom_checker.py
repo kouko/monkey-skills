@@ -2631,11 +2631,19 @@ def _plumbing_stamp_reason(repo: Path, sha: str, scaffold_mod) -> str | None:
     fetched -- because a version mismatch on the checker copy invalidates
     every OTHER plumbing path in the same commit too (Design decision
     "Content-bound plumbing exemption", REQ-3): the copy absent at this
-    commit, carrying no stamp line at all, or naming a version other than
-    this one."""
+    commit, a symlink or any mode other than a plain `100644` file
+    (round-2 after-task finding -- a symlink whose target's first line
+    happens to spell the right stamp must never satisfy this gate, and
+    neither may an executable-bit copy), carrying no stamp line at all,
+    or naming a version other than this one."""
     entry = _git_ls_tree_entry(repo, sha, scaffold_mod.CHECKER_COPY)
     if entry is None:
         return "the checker copy is absent at this commit"
+    mode, _blob = entry
+    if mode == "120000":
+        return "the checker copy is a symlink"
+    if mode != "100644":
+        return f"the checker copy mode mismatch (got {mode}, expected 100644)"
     content = git_raw_text(repo, "show", f"{sha}:{scaffold_mod.CHECKER_COPY}")
     lines = content.splitlines(keepends=True)
     stamp_index = next(
@@ -2859,6 +2867,17 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
         repo, manifest, is_review, shas, canonical_dir, scaffold_mod
     )
 
+    return _dispatch_coverage_failures(claimed, untrailered, review)
+
+
+def _dispatch_coverage_failures(
+    claimed: set[str], untrailered: list[tuple[str, str]], review
+):
+    """The trailer/dispatch-coverage matching half of `push.dispatch-
+    covers-tasks`: an untrailered commit that changes dispatched work
+    blocks outright; otherwise every `claimed` task id must name an
+    `implementer` entry in `review["dispatch"]`, or the commits that lost
+    a writer are named. `[]` when both hold."""
     if untrailered:
         listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)
         return [

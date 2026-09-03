@@ -1935,3 +1935,97 @@ def test_a_commit_mixing_exempt_plumbing_and_a_code_file_still_needs_a_trailer(
     message = match.group(1)
     assert "code" in message
     assert "gate" not in message
+
+
+def test_a_plumbing_path_is_blocked_when_the_checker_copy_is_a_symlink(
+    tmp_path: Path,
+) -> None:
+    """REQ-3 (round-2 after-task finding): the stamp gate reads the
+    committed checker copy's CONTENT but must also require its git mode
+    be a plain `100644` file. A symlink whose blob content -- not a real
+    file's content, the symlink's OWN target string -- happens to spell
+    exactly the expected stamp line satisfies the old content-only check,
+    so a `git_exec.py`-only refresh sitting beside that symlink in the
+    same commit must still not be exempt."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    codex_scaffold.scaffold(repo)
+    checker_copy = repo / ".codex" / "hooks" / "loom_checker.py"
+    checker_copy.unlink()
+    checker_copy.symlink_to(
+        codex_scaffold.stamp_line(codex_scaffold.plugin_version())
+    )
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        "# tampered\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m",
+        "chore: bootstrap scaffold with a symlinked checker copy and a "
+        "tampered git_exec.py\n\nTask: T1")
+    baseline_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(baseline_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        _canonical_git_exec_source(), encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: refresh git_exec.py only")
+    refreshed_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(refreshed_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, result.stdout
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
+    assert match, result.stderr
+    assert "symlink" in match.group(1)
+
+
+def test_a_plumbing_path_is_blocked_when_the_checker_copy_mode_is_not_100644(
+    tmp_path: Path,
+) -> None:
+    """Same gate, the mode-mismatch trigger: a genuine, byte-identical
+    checker copy that is `chmod +x`'d (mode `100755`) still fails the
+    gate -- content alone is never enough, the tracked mode must also be
+    the plain `100644` a scaffold write always produces."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    codex_scaffold.scaffold(repo)
+    checker_copy = repo / ".codex" / "hooks" / "loom_checker.py"
+    checker_copy.chmod(checker_copy.stat().st_mode | 0o111)
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        "# tampered\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m",
+        "chore: bootstrap scaffold with an executable checker copy and a "
+        "tampered git_exec.py\n\nTask: T1")
+    baseline_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(baseline_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    (repo / ".codex" / "hooks" / "git_exec.py").write_text(
+        _canonical_git_exec_source(), encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "chore: refresh git_exec.py only")
+    refreshed_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(refreshed_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1, result.stdout
+    assert "push.dispatch-covers-tasks" in blocked_rules(result)
+    match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
+    assert match, result.stderr
+    assert "mode mismatch" in match.group(1)
