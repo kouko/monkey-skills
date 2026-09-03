@@ -766,6 +766,15 @@
       "started": "2026-09-04T01:39:33+08:00",
       "fresh_context": false,
       "note": "ship §3.5 nit-batch confirmation by the last round's readers (sonnet resumed, codex re-run with its own nit); recorded in the review-only commit to keep HEAD^ as the reviewed sha"
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-fix3-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-04T01:41:56+08:00",
+      "fresh_context": true,
+      "note": "push dry run: dispatch-covers-tasks rejects adversary-first tasks whose commits are evidence-only probes"
     }
   ],
   "second_vendor": "codex"
