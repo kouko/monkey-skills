@@ -1,0 +1,32 @@
+{
+  "reviewed_sha": "2df247b10a90bc1ce892c556bc32cb01b97e1d99",
+  "scope": "",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "甲／乙二選一：甲＝這次只做把主幹上既有探針中不重疊的搬進永久測試（小車道），ship 站那句話併進 C 組；乙＝照 intent 原文只加 ship 站那句話。重述甲：既有測試沒蓋到的攻擊案例變成永久測試，整包命令會跑到、evidence 原檔不動、整包時間不比探針本身多。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "追問「整包時間不比探針本身跑的時間多」是什麼意思",
+      "type": "what"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-pg",
+      "model": "sonnet",
+      "started": "2026-09-04T07:33:00+08:00",
+      "fresh_context": true
+    }
+  ]
+}
