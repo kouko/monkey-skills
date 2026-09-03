@@ -256,11 +256,19 @@ def git_raw_text(repo: Path, *args: str) -> str:
     (e.g. `git show <sha>:<path>`), where `git_text`'s trailing-newline
     strip would silently drop the file's real trailing newline and make
     every byte-for-byte blob comparison (`check_close_commit_shape` step
-    c) compare against the wrong content."""
-    output = run_git(repo, *args, timeout=GIT_TIMEOUT, strip=False)
+    c) compare against the wrong content. Reads via `run_git`'s
+    `text=False` (raw bytes) path and decodes here, rather than the
+    default `text=True` path `git_text` uses -- `subprocess.run(text=True)`
+    always applies universal-newline translation (`\\r\\n` -> `\\n`)
+    regardless of the `encoding`/`errors` passed alongside it, with no way
+    to opt out through that path, so a CRLF blob would silently lose its
+    `\\r` before this function ever saw it (spec REQ-1, W0-04 round-5
+    finding). Decoding raw bytes ourselves keeps every byte, `\\r`
+    included."""
+    output = run_git(repo, *args, timeout=GIT_TIMEOUT, text=False)
     if output is None:
         raise UsageError(f"`git {' '.join(args)}` failed or timed out in {repo}.")
-    return output
+    return output.decode("utf-8", "surrogateescape")
 
 
 def git_ok(repo: Path, *args: str) -> bool:
@@ -1807,7 +1815,8 @@ def _regenerated_closed_text(before_text: str, date: str, pr_number: str) -> str
         return None
     lines = before_text.splitlines(keepends=True)
     index = positions[0]
-    ending = "\n" if lines[index].endswith("\n") else ""
+    stripped = lines[index].rstrip("\r\n")
+    ending = lines[index][len(stripped):]
     lines[index] = f"status: closed {date} — PR #{pr_number}{ending}"
     return "".join(lines)
 

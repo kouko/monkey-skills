@@ -308,6 +308,50 @@ def test_a_close_commit_after_a_checkpoint_passes(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
 
 
+def test_a_crlf_file_wide_close_commit_passes(tmp_path: Path) -> None:
+    """A legitimate close commit on a CRLF-native repo -- every line in
+    both HEAD^^'s and HEAD^'s intent file ends `\\r\\n`, including the
+    status line before and after -- must PASS. `core.autocrlf false` is
+    set explicitly so this test is not neutralized by an ambient global
+    git config silently normalizing CRLF to LF on `git add`. Regression
+    for round-5: the regenerated status line used to always end in bare
+    `\\n`, and separately `git_raw_text` used to read blobs through
+    `subprocess.run(text=True)`, which always translates `\\r\\n` to `\\n`
+    regardless of the encoding passed -- either defect alone made a
+    byte-consistent CRLF close commit's regenerated blob differ from the
+    real one and falsely BLOCK on `push.review-only-head`."""
+    repo = build_repo(tmp_path)
+    git(repo, "config", "core.autocrlf", "false")
+    git(repo, "config", "core.safecrlf", "false")
+    intent_rel = f"docs/loom/intent/{CHANGE}.md"
+    git(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    before_text = "# x\r\nstatus: confirmed 2026-09-01\r\n\r\n## Problem\r\nx\r\n"
+    (repo / intent_rel).write_bytes(before_text.encode("utf-8"))
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    write_review(repo, review_body(git(repo, "rev-parse", "HEAD")))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    raw = (repo / intent_rel).read_bytes()
+    raw = raw.replace(
+        b"status: confirmed 2026-09-01\r\n",
+        "status: closed 2026-09-03 — PR #999\r\n".encode("utf-8"),
+    )
+    (repo / intent_rel).write_bytes(raw)
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    close_sha = git(repo, "rev-parse", "HEAD")
+    _checkpoint_after(repo, close_sha)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (
+        "expected PASS for a byte-consistent CRLF close commit, got "
+        f"BLOCKED: {result.stderr}"
+    )
+
+
 def test_a_close_commit_touching_another_file_is_blocked(tmp_path: Path) -> None:
     """Condition (a): the raw listing must be exactly one entry."""
     repo = build_repo(tmp_path)
