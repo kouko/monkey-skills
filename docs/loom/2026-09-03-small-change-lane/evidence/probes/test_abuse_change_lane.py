@@ -120,8 +120,32 @@ def _lane_repo(
     """A push-ready branch (code commit + checkpoint review commit) whose
     changed-path shape and KICKOFF-DEFAULTS content the caller controls --
     the common scaffold under every push-floor / second-vendor / docs-lint
-    case below."""
-    repo = _init_repo(tmp_path)
+    case below.
+
+    KICKOFF-DEFAULTS.md lands on the base (main) commit, not the change
+    branch: branch-end fix 205486f0 (W0-02) types it `standing`, which is a
+    full-lane trigger, so writing it on the change branch would force full
+    lane on every small-lane fixture merely for carrying the test's
+    package-tests/second-vendor scaffolding. Mirrors
+    `test_loom_checker_push.py`'s `_lane_push_repo`."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    package_tests_line = (
+        f"- package-tests: {PASSING_COMMAND} — the fixture's whole suite (2026-09-04)"
+    )
+    body_lines = "\n".join([package_tests_line, *kickoff_lines])
+    kickoff.write_text(f"# Kickoff Defaults\n\n{body_lines}\n", encoding="utf-8")
+
+    git(repo, "add", "seed.txt", "docs/loom/KICKOFF-DEFAULTS.md")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
 
     for rel, content in files.items():
         path = repo / rel
@@ -134,14 +158,6 @@ def _lane_repo(
             "raise SystemExit(0)\n", encoding="utf-8"
         )
     (repo / "evidence/tests.txt").write_text("1 passed\n", encoding="utf-8")
-
-    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
-    kickoff.parent.mkdir(parents=True, exist_ok=True)
-    package_tests_line = (
-        f"- package-tests: {PASSING_COMMAND} — the fixture's whole suite (2026-09-04)"
-    )
-    body_lines = "\n".join([package_tests_line, *kickoff_lines])
-    kickoff.write_text(f"# Kickoff Defaults\n\n{body_lines}\n", encoding="utf-8")
 
     git(repo, "add", "-A")
     message = "feat: probe" + ("\n\nTask: T1" if task_trailer else "")
@@ -442,6 +458,30 @@ def test_test_named_file_outside_a_conventional_test_dir_is_still_small(
     assert _change_lane(repo, sha) == "small"
 
 
+def test_kickoff_defaults_alone_flips_to_full(tmp_path: Path) -> None:
+    """Attack: change ONLY docs/loom/KICKOFF-DEFAULTS.md -- a standing
+    document (PRINCIPLES.md, DESIGN.md, KICKOFF-DEFAULTS.md), not "docs",
+    per branch-end fix 205486f0 and PRINCIPLES non-negotiable 2. A naive
+    reading of intent point 1's class (b) ("only docs") could easily fold
+    KICKOFF-DEFAULTS.md in as just another `**/*.md` file; this probe pins
+    that it must NOT.
+    Expected (after W0-02): change_lane == "full", and the reason string
+    names "standing document" (not merely "docs").
+    Observed (after W0-02, commit 205486f0): PASS -- change_lane == "full"."""
+    repo = _init_repo(tmp_path)
+    sha = _commit_files(
+        repo,
+        {"docs/loom/KICKOFF-DEFAULTS.md": "# Kickoff Defaults\n\n- second-vendor: none — probe (2026-09-04)\n"},
+        "chore(loom): kickoff probe",
+    )
+    assert _change_lane(repo, sha) == "full"
+    detail_fn = getattr(loom_checker, "change_lane_detail", None)
+    if detail_fn is not None:
+        lane, reason = detail_fn(repo, sha)
+        assert lane == "full"
+        assert "standing document" in reason.lower()
+
+
 # =============================================================================
 # 4. push.verdicts-ge-2 -- lane-dependent floor
 # =============================================================================
@@ -450,8 +490,11 @@ def test_test_named_file_outside_a_conventional_test_dir_is_still_small(
 def test_small_lane_accepts_one_verdict(tmp_path: Path) -> None:
     """Attack: a test-only branch (small lane) with exactly one PASS verdict.
     Expected (after W0-02): `loom_checker.py push` exits 0.
-    Observed (before W0-02): BLOCK push.verdicts-ge-2 -- the floor is
-    hardcoded at 2 regardless of what the branch touches."""
+    Observed (after W0-02, commit 205486f0): PASS -- push exits 0. (Fixture
+    note: KICKOFF-DEFAULTS.md now has to live on the base/seed commit, not
+    the change branch -- branch-end fix 205486f0 types it `standing`, a
+    full-lane trigger, so writing it on the change branch defeated the
+    small-lane scenario this test means to isolate.)"""
     repo = _lane_repo(
         tmp_path,
         files={"loom-code/scripts/test_probe.py": "def test_x():\n    assert True\n"},
@@ -592,10 +635,9 @@ def test_ask_in_small_lane_with_no_answer_passes_because_not_asked(
     (test-only); review.json carries no `second_vendor` field.
     Expected (after W0-02): push exits 0 -- small lane never asks the
     question (intent point 1: "小改動車道只有一位讀者，這題不問").
-    Observed (before W0-02): the small lane does not exist, so this blocks
-    on BOTH push.verdicts-ge-2 (floor still 2, one verdict recorded to
-    isolate the lane-only variable) and push.second-vendor-honoured (same
-    literal-"ask" mechanism)."""
+    Observed (after W0-02, commit 205486f0): PASS -- push exits 0 (same
+    KICKOFF-on-base-commit fixture fix as test_small_lane_accepts_one_verdict
+    above)."""
     repo = _lane_repo(
         tmp_path,
         files={"loom-code/scripts/test_probe_ask_small.py": "def test_x():\n    assert True\n"},
