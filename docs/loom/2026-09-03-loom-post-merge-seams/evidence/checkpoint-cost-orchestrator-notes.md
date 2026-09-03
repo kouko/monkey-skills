@@ -1,0 +1,35 @@
+# Checkpoint cost — orchestrator's observations and recommendation candidates
+
+Written by the orchestrator during build (2026-09-03, at W0-04 in flight), at
+kouko's request. This is **input** to `evidence/checkpoint-cost.md`, which the
+blind-runner writes at branch end from `git log` and `review.json` — the
+numbers below are what the orchestrator saw and must be recomputed there, not
+copied. The recommendations are candidates; the blind-runner keeps, drops or
+reorders them against the recomputed numbers, and the table's one-line
+recommendation stays a recommendation (user-decided 2026-09-03: no coefficient
+changes in this change).
+
+## Observed at HEAD f0b11a1a (spec stage complete, 3 of 8 tasks committed)
+
+| measure | observed | note |
+|---|---|---|
+| commits on branch (`git rev-list --count 4e25360c..HEAD`) | 46 | 2 code commits; the rest are spec versions (7), review-only (9), dispatch records (12), evidence (6), intents (5), plan (1) |
+| dispatches (`review.json` `dispatch[]`) | 36 | reviewer 16, blind-runner 8, adversary 8, implementer 4 |
+| spec review rounds | 8 | design assumed 1–2; rounds 1–4 found design defects, rounds 5–8 were mostly disclosure wording, with two real gate defects (round 6) and one real vendor split (round 5) |
+| findings raised / closed | 45 / 45 | ids spec-C1..C13, S1..S8, R1..R23, B1..B4 |
+| per arm | sonnet reviewer 110–127k tokens, 3–5 min; red team 110–143k, 3–8 min; cold read 93–106k, 2–3 min; Codex ~5 min | from task notifications |
+| per implementer task | 7–12 min, one commit, package suite 2–2.5 min | W0-01 stalled before its commit once (background test run) |
+
+## Where the cost sits
+1. **Every spec round is full-strength** — two reviewers + cold read + red team, regardless of how many findings the previous round left. Round 7 had one stale sentence to check and still ran four arms.
+2. **The red team has no stopping condition on prose** — 7 of 8 rounds NEEDS_REVISION; on a spec, "a behaviour the text fails to forbid" is unbounded, and from round 5 on most findings were "state this residual" rather than "this design is wrong".
+3. **Three record commits per round** (dispatch, evidence, review-only): 24 of the 46 commits exist only to record 8 rounds. This is the #771 coefficient (34 vs 31) multiplied by the spec stage.
+
+## Recommendation candidates (coefficients and stopping conditions, not rule semantics)
+- **Fix rounds re-dispatch only the arm that said NEEDS_REVISION**; the arms that passed re-read only the diff of the fix. (Rounds 6–8 would have been 1–2 arms, not 4.)
+- **Red team on a spec: at most two rounds.** After that, residuals it names are recorded in the spec as stated residuals without a further NEEDS_REVISION — the spec's own "stated residual" pattern already exists for this.
+- **Dispatch record + evidence in one commit**; the review-only commit stays separate (the checker needs it alone). 3 → 2 commits per round.
+- **Codex as second vendor earned its place** (round 5 fatal was Codex-only, round 6 contradiction Codex-only), so keep it on the read arm; do not spend it on cold read or red team.
+- Not recommended: relaxing "three arms PASS" for code deltas — the two real gate defects of round 6 came from the red team on the tightened rules, exactly where it should fire.
+
+The blind-runner appends the final per-checkpoint table (W0-04 after-task, W0-05 after-task, W0 wave-end, W1 branch-end, ship close-commit round) with recomputed totals, and writes the single recommendation line.
