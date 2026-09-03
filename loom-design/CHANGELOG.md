@@ -12,6 +12,13 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [1.0.2] — 2026-09-04 — Small-change lane: second-vendor ask
+
+No code change. Bumped because `capture-intent/SKILL.md` step 4's
+second-vendor question now offers `ask` — recorded per change, asked once
+and never again for that change, skipped entirely in the small lane
+(`docs/loom/2026-09-03-small-change-lane/`).
+
 ## [1.0.1] — 2026-09-03 — Status grammar
 
 No code change. Bumped only because this plugin's prose describes the
