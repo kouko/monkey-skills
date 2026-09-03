@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "8bf6429e9f9a59695d495e76f95cf5fcea181a46",
+  "reviewed_sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
   "scope": "branch-end",
   "vendors": [
     "anthropic"
@@ -359,6 +359,46 @@
       },
       "findings": [],
       "notes": "fix round: coverage rule recomputes facts (PRINCIPLES 3), matches intent point 4; 123/123 push tests"
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill",
+      "verdict": "PASS",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round 7: capture-intent second-vendor detail moved to references; nothing dropped"
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "verdict": "PASS",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round 7: move verbatim, ask clause restated in full, pointer resolves, 3333 words"
     }
   ],
   "probes": [
@@ -593,6 +633,62 @@
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
       "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "1096 passed in 34.23s (loom-design suite 181 passed separately)",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k test_only_change_is_small",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k one_nontest_python_script_flips_to_full",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k small_lane_accepts_one_verdict",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k ask_with_second_vendor_none",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q -k kickoff",
+      "sha": "c909bdb638569be6c4cdeca4ca0ca0cdb7c70c8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -733,6 +829,15 @@
       "severity": "important",
       "text": "installed hook reads second-vendor: ask as a CLI name and blocks the push (hook version skew)",
       "resolved": "closed by 496e0211 — KICKOFF stays codex with a dated note to flip to ask after 1.1.0 is installed; residual: hook/branch grammar skew recorded in the intent"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "loom-design/skills/capture-intent/SKILL.md",
+      "origin_sha": "8dfea8044c515c7f46ac2be96abdef7f7ee583cb",
+      "raised_by": "PR #784 CI (loom-design pytest, word cap 3500)",
+      "severity": "important",
+      "text": "capture-intent body 3566 words after W1-02; the loom-design suite is outside the package-tests line so local runs did not catch it",
+      "resolved": "closed by c909bdb6 — detail moved to references/second-vendor.md, body 3333; loom-design suite 181 passed; both readers PASS in round 7"
     }
   ],
   "dispatch": [
@@ -916,6 +1021,24 @@
       "started": "2026-09-04T07:03:29+08:00",
       "fresh_context": true,
       "note": "CI: capture-intent SKILL.md 3566 words > loom-design cap 3500 (suite outside the package-tests line)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end",
+      "model": "codex",
+      "started": "2026-09-04T07:06:45+08:00",
+      "fresh_context": false,
+      "note": "round 7 fix-round confirmation; recorded in the review-only commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end",
+      "model": "sonnet",
+      "started": "2026-09-04T07:06:45+08:00",
+      "fresh_context": false,
+      "note": "round 7 fix-round confirmation; recorded in the review-only commit"
     }
   ],
   "second_vendor": "codex"
