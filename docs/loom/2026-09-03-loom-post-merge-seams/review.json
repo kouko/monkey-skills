@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
-  "scope": "after-task:W0-04",
+  "reviewed_sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+  "scope": "after-task:W0-05",
   "vendors": [
     "anthropic",
     "openai"
@@ -590,6 +590,38 @@
           "fix": "extract two more helpers"
         }
       ]
+    },
+    {
+      "round": 18,
+      "scope": "after-task:W0-05",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "findings_file": "evidence/review-after-task-w0-05-r3.md",
+      "reviewer": "codex-review-w0-05-r3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "round": 18,
+      "scope": "after-task:W0-05",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "findings_file": "evidence/review-after-task-w0-05-r3.md",
+      "reviewer": "sonnet-review-w0-05-r3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/loom_checker.py:2646",
+          "text": "mode-mismatch reason string lacks a verb",
+          "fix": "reword"
+        }
+      ]
     }
   ],
   "probes": [
@@ -840,6 +872,110 @@
       "sha": "7d055bb878ed604227a4a10a2ce68273f48074c8",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "1049 passed in 204.78s (0:03:24)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "after-task:W0-05",
+      "command": "clean worktree at f9dea518, branch checker, Acceptance #3 positive + five negatives + Codex-copy case (sonnet-blindrun-w0-05)",
+      "sha": "f9dea518",
+      "result": "7/7 scenarios match spec; package 1045 passed; probes 11 passed",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/blind-run-after-task-w0-05.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_genuine_scaffold_refresh_with_no_trailer_is_exempt",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_checker_copy_byte_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_extra_contract_file_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_deleted_sibling_module_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_mode_only_change_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_symlinked_checker_copy_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_changed_stamp_version_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_altered_shim_command_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_running_the_copy_itself_is_never_exempt",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_an_unlisted_plumbing_path_is_never_exempt",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "after-task:W0-05",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q -k test_a_forced_hook_fired_marker_commit_is_blocked",
+      "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
     }
   ],
   "questions": [
@@ -1687,6 +1823,17 @@
       ],
       "text": "check_dispatch_covers_tasks still 74 lines",
       "resolved": "resolved: df816a3e — _dispatch_coverage_failures extracted; check_dispatch_covers_tasks 48 lines"
+    },
+    {
+      "id": "after-task:W0-05-10",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:2646",
+      "origin_sha": "b7a9136c",
+      "raised_by": [
+        "sonnet-review-w0-05-r3"
+      ],
+      "text": "mode-mismatch reason string lacks a verb",
+      "dismissed": "carry-forward: cosmetic — by sonnet-review-w0-05-r3"
     }
   ],
   "dispatch": [
