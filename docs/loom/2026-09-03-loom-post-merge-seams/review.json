@@ -27,6 +27,28 @@
    "model": "sonnet",
    "lens": "spec",
    "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 2,
+   "scope": "spec",
+   "spec_sha": "5e7a104",
+   "findings_file": "evidence/spec-review-r2.md",
+   "reviewer": "codex-review-spec-2",
+   "vendor": "openai",
+   "model": "gpt-5.6-sol/high",
+   "lens": "spec",
+   "verdict": "NEEDS_REVISION"
+  },
+  {
+   "round": 2,
+   "scope": "spec",
+   "spec_sha": "5e7a104",
+   "findings_file": "evidence/spec-review-r2.md",
+   "reviewer": "sonnet-review-spec-2",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "spec",
+   "verdict": "NEEDS_REVISION"
   }
  ],
  "probes": [
@@ -53,6 +75,22 @@
    "sha": "93b6ea10",
    "result": "NEEDS_REVISION — 3 fatal, 3 important",
    "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r1.md"
+  },
+  {
+   "kind": "blind-run",
+   "scope": "spec",
+   "command": "cold reader walks Acceptance 1-5 from spec v3 alone (sonnet-coldread-spec-2)",
+   "sha": "82b33ce5",
+   "result": "0 guesses",
+   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r2.md"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "spec",
+   "command": "red-team of spec v3 (sonnet-redteam-spec-2)",
+   "sha": "82b33ce5",
+   "result": "NEEDS_REVISION — 1 fatal, 4 important",
+   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r2.md"
   }
  ],
  "questions": [
@@ -82,7 +120,7 @@
     "codex-review-spec-1"
    ],
    "text": "close-commit push path incomplete: which push rules apply, where review.json / reviewed_sha come from for a post-merge commit",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-C2",
@@ -93,7 +131,7 @@
     "codex-review-spec-1"
    ],
    "text": "test anchor cites only the declaration; the oracle is dynamic (lines 429-447); PR #781 failure not cited as an artifact",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-C3",
@@ -104,7 +142,7 @@
     "codex-review-spec-1"
    ],
    "text": "\"six\" carried nits; only five are enumerated (intent Constraints too)",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-C4",
@@ -115,7 +153,7 @@
     "codex-review-spec-1"
    ],
    "text": "exact package-test commands and CI jobs not named",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-C5",
@@ -126,7 +164,7 @@
     "codex-review-spec-1"
    ],
    "text": "\"exactly one line\" undefined in git terms (mode, rename, duplicate status field, newline)",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-S1",
@@ -137,7 +175,7 @@
     "sonnet-review-spec-1"
    ],
    "text": "review-only-head extension conflicts with the intent Constraint \"no rule semantics change\"",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-S2",
@@ -148,7 +186,7 @@
     "sonnet-review-spec-1"
    ],
    "text": "REQ-6 traces to no Acceptance line; it is a Constraint",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-R1",
@@ -159,7 +197,7 @@
     "sonnet-redteam-spec-1"
    ],
    "text": "PR number is grammar-only; nothing recomputes that the change merged",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-R2",
@@ -181,7 +219,7 @@
     "sonnet-redteam-spec-1"
    ],
    "text": "--no-renames not pinned for the new shape",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-R6",
@@ -203,7 +241,7 @@
     "sonnet-redteam-spec-1"
    ],
    "text": "REQ-3 exemption is a path prefix, not a content check; doubles a blind spot onto a second gate",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 for hosts with an external canonical; the Codex residual is re-opened as spec-C6"
   },
   {
    "id": "spec-B1",
@@ -214,7 +252,7 @@
     "sonnet-coldread-spec-1"
    ],
    "text": "close-commit message text not restated in the spec",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-B2",
@@ -225,7 +263,7 @@
     "sonnet-coldread-spec-1"
    ],
    "text": "package command not given literally",
-   "resolved": "open"
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
   },
   {
    "id": "spec-B3",
@@ -236,6 +274,105 @@
     "sonnet-coldread-spec-1"
    ],
    "text": "how the bumped version is observed after update is unstated",
+   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+  },
+  {
+   "id": "spec-C6",
+   "severity": "fatal",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "codex-review-spec-2"
+   ],
+   "text": "on Codex the running checker and its siblings are the copies under test; the comparison is self-referential for git_exec/contract too",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-C7",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "codex-review-spec-2"
+   ],
+   "text": "REQ-6 traces to no Acceptance line; five fixes can be omitted while all Acceptance pass",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-C8",
+   "severity": "important",
+   "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:23",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "codex-review-spec-2"
+   ],
+   "text": "Acceptance #3 tests only genuine scaffold output; no negative case",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-S4",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "sonnet-review-spec-2"
+   ],
+   "text": "closed date not routed through is_real_date (= spec-R2)",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-S5",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "sonnet-review-spec-2"
+   ],
+   "text": "closed not terminal (= spec-R6)",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-S6",
+   "severity": "nit",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "sonnet-review-spec-2"
+   ],
+   "text": "CI runs pytest with -v, spec says -q",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R8",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "sonnet-redteam-spec-2"
+   ],
+   "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R9",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "sonnet-redteam-spec-2"
+   ],
+   "text": "CI never runs loom_checker.py push; the push gate is client-side only (pre-existing) — the spec should say so",
+   "resolved": "open"
+  },
+  {
+   "id": "spec-R10",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+   "origin_sha": "82b33ce5",
+   "raised_by": [
+    "sonnet-redteam-spec-2"
+   ],
+   "text": "\"the running checker\" undefined across two cached plugin versions",
    "resolved": "open"
   }
  ],
