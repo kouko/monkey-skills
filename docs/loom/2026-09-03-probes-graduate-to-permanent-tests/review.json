@@ -1,11 +1,125 @@
 {
-  "reviewed_sha": "2df247b10a90bc1ce892c556bc32cb01b97e1d99",
-  "scope": "",
+  "reviewed_sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+  "scope": "branch-end",
   "vendors": [
-    "anthropic"
+    "openai"
   ],
-  "verdicts": [],
-  "probes": [],
+  "verdicts": [
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A — no deliberate shortcut introduced",
+        "deletion-first": "N/A — no new abstraction, flag, config, or extension point"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/plan.md:7",
+          "text": "“33 個案例（7＋26）” counts test functions, but parametrization makes the package collect 38 test items (12＋26), so the stated GREEN expectation of 33 is also wrong",
+          "fix": "distinguish 33 test functions from 38 collected items and change the collection expectation to 38"
+        }
+      ],
+      "sha": "224f93987d5c11c03fc168fa65aa2cdacb784273"
+    },
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A — no deliberate shortcut introduced",
+        "deletion-first": "N/A — no new abstraction, flag, config, or extension point"
+      },
+      "findings": [],
+      "notes": "fix round: delta 224f9398..4483d347 only (plan.md fact fix); finding 1 FIXED; no new findings",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+      "result": "pass",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k diverges_from_source_only_by_the_three_permitted_edits",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k repo_root_constant_resolves",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k import_binds_to_loom_code_scripts",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k names_do_not_collide",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k byte_identical_to_origin_main",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k from_a_cwd_outside_the_repo",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -18,7 +132,15 @@
       "type": "what"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/plan.md:7",
+      "origin_sha": "224f93987d5c11c03fc168fa65aa2cdacb784273",
+      "raised_by": "rev-be-codex-pg",
+      "resolved": "closed by 4483d347 — plan Data/測 lines now say 33 functions collect as 38 items; confirmed FIXED by rev-be-codex-pg in round 2"
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
