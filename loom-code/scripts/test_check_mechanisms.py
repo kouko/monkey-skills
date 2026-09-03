@@ -6,7 +6,9 @@ unresolved/pending eval. Fixtures build a minimal fake repo tree rather than
 touching the real one, so these tests do not depend on W1..W3 landing."""
 from __future__ import annotations
 
+import inspect
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -663,19 +665,25 @@ class TestWcWordsIsPythonSplit:
         # RED against the old wc-subprocess implementation: BSD `wc -w`
         # pinned to LC_ALL=C does not split on the CJK ideographic space
         # (U+3000) the way Python's str.split() does, so the two counts
-        # differ on this sample (4 vs 5) even though wc_words is supposed
-        # to report the same number the session-start budget uses.
-        assert cm.wc_words(self.SAMPLE) == len(
-            self.SAMPLE.decode("utf-8", errors="replace").split()
-        )
+        # differ on this sample -- BSD wc under LC_ALL=C gives 4, Python's
+        # str.split() on the decoded text gives 5. The expected count is
+        # pinned as a literal (not recomputed with the implementation's
+        # own expression) so this oracle cannot pass by construction.
+        assert cm.wc_words(self.SAMPLE) == 5
 
-    def test_count_is_stable_across_locales(self, monkeypatch):
-        counts = set()
-        for locale in ("C", "C.UTF-8", "en_US.UTF-8"):
-            monkeypatch.setenv("LC_ALL", locale)
-            monkeypatch.setenv("LANG", locale)
-            counts.add(cm.wc_words(self.SAMPLE))
-        assert len(counts) == 1, counts
+    def test_no_wc_subprocess_in_module(self):
+        # R30-O2: the old test asserted the count was stable across
+        # LC_ALL/LANG locales -- moot now that wc_words has no subprocess
+        # at all (there is no ambient locale left for it to depend on).
+        # Replaced with a guard on the implementation itself: no
+        # subprocess call anywhere in the module may invoke `wc`.
+        source = inspect.getsource(cm)
+        for line in source.splitlines():
+            if "subprocess." not in line or line.strip().startswith("#"):
+                continue
+            assert not re.search(r"""["']wc["']""", line), (
+                f"found a subprocess call mentioning wc: {line!r}"
+            )
 
 
 def _measure_repo(tmp_path, *, words: int, baseline_line: str | None,
