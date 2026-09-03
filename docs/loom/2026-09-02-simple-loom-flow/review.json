@@ -2070,6 +2070,50 @@
    ],
    "text": "GNU wc -w under LC_ALL=C does not count tokens made only of non-ASCII bytes as words (5131 for the 923fb84a baseline vs 5278 on BSD wc / Python split), so pinning LC_ALL=C made the two platforms disagree by 147; the count must not use wc at all",
    "resolved": "open"
+  },
+  {
+   "id": "R30-C1",
+   "severity": "important",
+   "anchor": "docs/loom/2026-09-02-simple-loom-flow/blind-run-report.md:3",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "codex-review-docs-branch-end-r30"
+   ],
+   "text": "line 3 claimed no code changes after 0bb3f9c0; CI-2 changed the counter",
+   "resolved": "resolved: 35213369"
+  },
+  {
+   "id": "R30-O1",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:670",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "opus-review-code-branch-end-r30"
+   ],
+   "text": "RED oracle is the implementation expression; literal 5 not pinned",
+   "resolved": "accepted, not fixed: carried post-merge with R24-O2 / R28-O2"
+  },
+  {
+   "id": "R30-O2",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_check_mechanisms.py:672",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "opus-review-code-branch-end-r30"
+   ],
+   "text": "locale-stability test cannot catch a reintroduced pinned wc",
+   "resolved": "accepted, not fixed: carried post-merge"
+  },
+  {
+   "id": "R30-O3",
+   "severity": "nit",
+   "anchor": "loom-code/scripts/test_session_start_words.py:49",
+   "origin_sha": "07357215",
+   "raised_by": [
+    "opus-review-code-branch-end-r30"
+   ],
+   "text": "_run decodes with the ambient locale",
+   "resolved": "accepted, not fixed: carried post-merge"
   }
  ],
  "vendors": [
