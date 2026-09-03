@@ -25,10 +25,13 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 import codex_scaffold  # sibling module, same scripts/ dir (W0-05 plumbing exemption)
+import loom_checker  # W0-02: change_lane unit tests mirror the adversary's probes
 
 CHECKER = Path(__file__).with_name("loom_checker.py")
+MANIFEST_PATH = Path(__file__).resolve().parents[1] / "contract" / "manifest.yaml"
 CHANGE = "2026-09-02-a"
 REVIEW = f"docs/loom/{CHANGE}/review.json"
 
@@ -2029,3 +2032,226 @@ def test_a_plumbing_path_is_blocked_when_the_checker_copy_mode_is_not_100644(
     match = re.search(r"BLOCK push\.dispatch-covers-tasks: (.*)", result.stderr)
     assert match, result.stderr
     assert "mode mismatch" in match.group(1)
+
+
+# --- W0-02: change_lane -----------------------------------------------------
+# Unit-test mirrors of docs/loom/2026-09-03-small-change-lane/evidence/probes/
+# test_abuse_change_lane.py -- kept here as the permanent regression lock;
+# the probe file is the adversary's, this file is the implementer's.
+
+
+def _lane_init_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "lane_repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    git(repo, "add", "seed.txt")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    return repo
+
+
+def _lane_commit(repo: Path, files: dict[str, str], message: str) -> str:
+    for rel, content in files.items():
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", message)
+    return git(repo, "rev-parse", "HEAD")
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        {"loom-code/scripts/test_lane_a.py": "def test_x():\n    assert True\n"},
+        {"README.md": "docs change\n"},
+        {".github/workflows/x.yml": "name: x\non: push\n"},
+        {"requirements-dev.txt": "pytest\n"},
+        {"docs/loom/memory/note.md": "a memory note\n"},
+    ],
+    ids=["test-file", "docs", "ci-workflow", "requirements", "memory"],
+)
+def test_change_lane_preauthorised_classes_are_small(tmp_path: Path, files: dict) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(repo, files, "chore: lane class probe")
+    assert loom_checker.change_lane(repo, sha) == "small"
+
+
+@pytest.mark.parametrize(
+    "files,fragment",
+    [
+        ({"loom-code/scripts/lane_helper.py": "x = 1\n"}, "non-test code"),
+        ({"loom-code/hooks/lane.sh": "#!/bin/sh\necho x\n"}, "gate"),
+        ({"loom-code/skills/lane/SKILL.md": "# lane\n"}, "skill"),
+        ({"loom-code/contract/templates/lane.md": "# t\n"}, "interface surface"),
+    ],
+    ids=["nontest-code", "hook", "skill", "template"],
+)
+def test_change_lane_full_triggers(tmp_path: Path, files: dict, fragment: str) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(repo, files, "feat: lane trigger probe")
+    lane, reason = loom_checker.change_lane_detail(repo, sha)
+    assert lane == "full"
+    assert fragment in reason
+
+
+def test_change_lane_two_plugins_is_full_even_test_only(tmp_path: Path) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo,
+        {
+            "loom-code/scripts/test_a.py": "def test_a():\n    assert True\n",
+            "loom-design/scripts/test_b.py": "def test_b():\n    assert True\n",
+        },
+        "test: two-plugin probe",
+    )
+    assert loom_checker.change_lane(repo, sha) == "full"
+
+
+def test_change_lane_ignores_this_changes_own_review_json(tmp_path: Path) -> None:
+    repo = _lane_init_repo(tmp_path)
+    sha = _lane_commit(
+        repo, {f"docs/loom/{CHANGE}/review.json": '{"reviewed_sha": "x"}\n'}, "chore(loom): review only"
+    )
+    assert loom_checker.change_lane(repo, sha) == "small"
+
+
+# --- W0-02: push.verdicts-ge-2 floor is lane-dependent ----------------------
+
+
+def _lane_push_repo(
+    tmp_path: Path, *, files: dict[str, str], kickoff_lines: list[str],
+    verdicts: list[dict], review_overrides: dict | None = None,
+) -> Path:
+    repo = _lane_init_repo(tmp_path)
+    (repo / "evidence").mkdir(exist_ok=True)
+    for name in ABUSE_CASES:
+        (repo / f"evidence/abuse_{name}.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
+    (repo / "evidence/tests.txt").write_text("1 passed\n", encoding="utf-8")
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    lines = [f"- package-tests: {PASSING_COMMAND} — the fixture's suite (2026-09-04)", *kickoff_lines]
+    kickoff.write_text("# Kickoff Defaults\n\n" + "\n".join(lines) + "\n", encoding="utf-8")
+    for rel, content in files.items():
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: lane push probe\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+    overrides = dict(review_overrides or {})
+    overrides["verdicts"] = [dict(entry, sha=reviewed_sha) for entry in verdicts]
+    overrides.setdefault(
+        "probes",
+        [
+            {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
+             "result": "pass", "artifact": "evidence/tests.txt"},
+            *_adversarial_records(reviewed_sha, 3),
+        ],
+    )
+    overrides.setdefault("dispatch", [dict(entry) for entry in DISPATCH_ENTRIES])
+    write_review(repo, review_body(reviewed_sha, **overrides))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return repo
+
+
+_ONE_ANTHROPIC_VERDICT = [
+    {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m", "lens": "code",
+     "verdict": "PASS", "dimension_scores": {}, "findings": []},
+]
+_TWO_ANTHROPIC_VERDICTS = [
+    {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m", "lens": "code",
+     "verdict": "PASS", "dimension_scores": {}, "findings": []},
+    {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m", "lens": "code",
+     "verdict": "PASS_WITH_NOTES", "dimension_scores": {}, "findings": []},
+]
+
+
+def test_small_lane_verdict_floor_is_one(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/test_floor.py": "def test_x():\n    assert True\n"},
+        kickoff_lines=["- docs-lint: none — not adopted (2026-09-04)"],
+        verdicts=_ONE_ANTHROPIC_VERDICT,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_full_lane_verdict_floor_stays_two_and_names_the_lane(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/floor_helper.py": "x = 1\n"},
+        kickoff_lines=["- docs-lint: none — not adopted (2026-09-04)"],
+        verdicts=_ONE_ANTHROPIC_VERDICT,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+    assert "full lane" in result.stderr
+
+
+# --- W0-02: second-vendor: ask ----------------------------------------------
+
+
+def test_second_vendor_ask_answer_none_passes(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/ask_none.py": "x = 1\n"},
+        kickoff_lines=[
+            "- second-vendor: ask — trial (2026-09-04)",
+            "- docs-lint: none — not adopted (2026-09-04)",
+        ],
+        verdicts=_TWO_ANTHROPIC_VERDICTS,
+        review_overrides={"second_vendor": "none"},
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_second_vendor_ask_missing_answer_blocks_in_full_lane(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/ask_missing.py": "x = 1\n"},
+        kickoff_lines=[
+            "- second-vendor: ask — trial (2026-09-04)",
+            "- docs-lint: none — not adopted (2026-09-04)",
+        ],
+        verdicts=_TWO_ANTHROPIC_VERDICTS,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.second-vendor-honoured" in blocked_rules(result)
+
+
+def test_second_vendor_ask_not_asked_in_small_lane(tmp_path: Path) -> None:
+    repo = _lane_push_repo(
+        tmp_path,
+        files={"loom-code/scripts/test_ask_small.py": "def test_x():\n    assert True\n"},
+        kickoff_lines=[
+            "- second-vendor: ask — trial (2026-09-04)",
+            "- docs-lint: none — not adopted (2026-09-04)",
+        ],
+        verdicts=_ONE_ANTHROPIC_VERDICT,
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+# --- W0-02: docs-lint KICKOFF-DEFAULTS grammar ------------------------------
+
+
+def test_docs_lint_is_a_declared_kickoff_defaults_key() -> None:
+    manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
+    names = {entry["name"] for entry in manifest.get("kickoff_defaults", [])}
+    assert "docs-lint" in names
+
+
+def test_second_vendor_grammar_includes_ask() -> None:
+    manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
+    entry = next(e for e in manifest["kickoff_defaults"] if e["name"] == "second-vendor")
+    assert "ask" in entry["grammar"]
