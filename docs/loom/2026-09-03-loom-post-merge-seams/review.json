@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
-  "scope": "after-task:W0-05",
+  "reviewed_sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "openai"
@@ -670,6 +670,83 @@
           "fix": "one clause"
         }
       ]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "reviewer": "sonnet-review-branch-end",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json :: questions[3].decision_point",
+          "text": "decision_point is the string ②-spec-round-5; check_review_schema requires an int; push.review-schema blocks at every review-only-shaped HEAD",
+          "fix": "set 2, move provenance into text"
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "re-pinning probes not spelled out",
+          "fix": "one sentence"
+        },
+        {
+          "severity": "important",
+          "dimension": "principles-conformance",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "close-round lenses are prose-only",
+          "fix": "rule or soften"
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/skills/ship/SKILL.md:294",
+          "text": "unattended follow-through not stated",
+          "fix": "one clause"
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:314",
+          "text": "second push does not repeat the explicit checker run",
+          "fix": "one clause"
+        },
+        {
+          "severity": "nit",
+          "dimension": "deliberate-simplification",
+          "anchor": "loom-code/scripts/loom_checker.py:1883",
+          "text": "check_close_commit_shape ~66 lines; dismissal lives only in the blind-run report",
+          "fix": "in-code comment"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "scope": "branch-end",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "reviewer": "codex-review-branch-end-r2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "round": 20,
+      "scope": "branch-end",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "reviewer": "sonnet-review-branch-end-r2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "findings": [],
+      "notes": "round-1 intent-count finding confirmed resolved; cost table recomputed from review.json at 664159a8 (verdicts 37, dispatch 82, probes 44, open_findings 75/4 dismissed) — all match; self-referential push at HEAD fires only push.review-only-head"
     }
   ],
   "probes": [
@@ -1024,6 +1101,46 @@
       "sha": "b7a9136cb9c34167a697c9034b571c375d3ac16e",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "result": "1061 passed in 204.16s (0:03:24)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "clean worktree at 664159a8, branch checker, Acceptance 1-6 walked; checkpoint-cost table recomputed (sonnet-blindrun-branch-end)",
+      "sha": "664159a8",
+      "result": "#1 #3 #4 #6 work; #2 local works / CI pending; #5 three surfaces work / device cache pending merge",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "attack-catalogue pass over loom-code/skills/ship/SKILL.md and review/SKILL.md (sonnet-adversary-branch-end)",
+      "sha": "664159a8",
+      "result": "PASS_WITH_NOTES — 0 fatal, 2 important (carry-forward), 2 nits",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/adversarial-branch-end-skill.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py -q",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py -q",
+      "sha": "771a7e65e85411d5f052946dcd75696ccd33c2cc",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_plumbing_exemption.py"
     }
   ],
   "questions": [
@@ -1043,8 +1160,8 @@
       "type": "what"
     },
     {
-      "decision_point": "②-spec-round-5",
-      "text": "Codex 判 fatal（關 intent 後那輪審查只靠站文字、每次 ship 必經）、sonnet 判 PASS：A 這次就把兩條既有規則加嚴（動 Constraint）／B 改成先關再審、狀態行不帶 PR 號碼？（答：A）",
+      "decision_point": 2,
+      "text": "（spec 審查第 5 輪，決策點②的延伸）Codex 判 fatal（關 intent 後那輪審查只靠站文字、每次 ship 必經）、sonnet 判 PASS：A 這次就把兩條既有規則加嚴（動 Constraint）／B 改成先關再審、狀態行不帶 PR 號碼？（答：A）",
       "type": "consequence"
     }
   ],
@@ -1941,6 +2058,28 @@
       ],
       "text": "second push does not repeat the explicit checker run",
       "dismissed": "carry-forward: the host hook enforces it — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-06",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/review.json :: questions[3]",
+      "origin_sha": "e6f3062c",
+      "raised_by": [
+        "sonnet-review-branch-end"
+      ],
+      "text": "questions[3].decision_point was a string; push.review-schema blocks",
+      "resolved": "resolved: in this review-only commit — decision_point set to 2, provenance moved into text; verified by the branch checker's push dry-run at this HEAD (recorded in the commit message)"
+    },
+    {
+      "id": "branch-end-07",
+      "severity": "nit",
+      "anchor": "loom-code/scripts/loom_checker.py:1883",
+      "origin_sha": "771a7e65",
+      "raised_by": [
+        "sonnet-review-branch-end"
+      ],
+      "text": "the 66-line function's dismissal is not annotated in code",
+      "dismissed": "carry-forward: already disclosed to the user in the blind-run report — by sonnet-review-branch-end"
     }
   ],
   "dispatch": [
