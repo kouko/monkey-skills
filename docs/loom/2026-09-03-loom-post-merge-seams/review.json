@@ -296,6 +296,28 @@
           "fix": "say the case is fixed"
         }
       ]
+    },
+    {
+      "round": 11,
+      "scope": "spec",
+      "spec_sha": "c52a250",
+      "findings_file": "evidence/spec-review-r9.md",
+      "reviewer": "codex-review-spec-9",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "PASS"
+    },
+    {
+      "round": 11,
+      "scope": "spec",
+      "spec_sha": "c52a250",
+      "findings_file": "evidence/spec-review-r9.md",
+      "reviewer": "sonnet-review-spec-9",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "PASS"
     }
   ],
   "probes": [
@@ -442,6 +464,14 @@
       "sha": "58b8f514",
       "result": "5/5 lines pass; package suite 1024 passed",
       "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/blind-run-after-task-w0-04.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "narrow red-team of the amended REQ-1 sentence (sonnet-redteam-spec-9); cold read omitted, Acceptance unchanged",
+      "sha": "bb938f98",
+      "result": "NEEDS_REVISION — 1 fatal, 4 important, 2 nits",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r9.md"
     }
   ],
   "questions": [
@@ -1035,6 +1065,61 @@
       ],
       "text": "check_close_commit_shape ~166 lines",
       "resolved": "resolved: adcca47c (fix 3); condition (3) extracted to _checkpoint_parent_failures"
+    },
+    {
+      "id": "spec-R24",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "symlink typechange at the intent path passes the raw-line shape (target string reads like a status line)",
+      "resolved": "resolved: spec v11 — mode 100644 on both sides"
+    },
+    {
+      "id": "spec-R25",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "intent glob read from a live manifest; the spec presents the match as the whole trigger",
+      "resolved": "resolved: spec v11 — glob from the running checker's own contract package via one named constant; residual that in this repo the two coincide is stated"
+    },
+    {
+      "id": "spec-R26",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "re.search on the closed alternative accepts trailing garbage",
+      "resolved": "resolved: spec v11 — STATUS.fullmatch on the value"
+    },
+    {
+      "id": "spec-R27",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "body-text decoy status lines satisfy the one-pair check",
+      "resolved": "resolved: spec v11 — both lines must sit before the first ## heading by hunk line numbers"
+    },
+    {
+      "id": "spec-R28",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "bb938f98",
+      "raised_by": [
+        "sonnet-redteam-spec-9"
+      ],
+      "text": "confirmation / new-intent commits at HEAD^ are refused; consequence only implicit for station flows",
+      "resolved": "resolved: spec v11 — stated explicitly and carried into ship SKILL.md by W1-01"
     }
   ],
   "dispatch": [
@@ -1454,6 +1539,30 @@
       "agent_id": "sonnet-redteam-spec-9",
       "model": "sonnet",
       "started": "2026-09-03T13:12:12+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-10",
+      "model": "sonnet",
+      "started": "2026-09-03T13:22:55+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-10",
+      "model": "codex",
+      "started": "2026-09-03T13:22:55+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-10",
+      "model": "sonnet",
+      "started": "2026-09-03T13:22:55+08:00",
       "fresh_context": true
     }
   ]
