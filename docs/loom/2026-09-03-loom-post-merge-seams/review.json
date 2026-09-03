@@ -1166,6 +1166,22 @@
       "model": "sonnet",
       "started": "2026-09-03T12:30:37+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-w0-04",
+      "model": "sonnet",
+      "started": "2026-09-03T12:39:48+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "after-task:W0-04",
+      "role": "reviewer",
+      "agent_id": "codex-review-w0-04",
+      "model": "codex",
+      "started": "2026-09-03T12:39:48+08:00",
+      "fresh_context": true
     }
   ]
 }
