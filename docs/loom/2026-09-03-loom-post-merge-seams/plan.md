@@ -72,6 +72,11 @@ checkpoint：wave-end 兼 branch-end。
 - 測：memory README 的索引測試（若有）綠。
 - 風：無。
 
+**W1-06 CI 抓到的兩個測試缺陷（PR #782 首次 CI）**　after: W1-05
+- 檔：`loom-workflow/skills/decision-map/scripts/test_skill_doc.py`（版本寫死 4.0.0 → 改成 claude／codex 兩個 manifest 互相相等，CHANGELOG 檢查保留）；`loom-code/scripts/test_loom_checker_push_probes.py` 與 `docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py` 的 CRLF 狀態行案例（在暫存 repo 釘 `core.autocrlf=false`，預期改為 BLOCK `push.review-only-head`：重算比對下 CR 是多出來的 byte；docstring 說明開發機 `autocrlf=input` 曾掩蓋它）。
+- 測：`python3 -m pytest loom-workflow/skills/decision-map/scripts/test_skill_doc.py -q` 綠；兩份 CRLF 案例在 `autocrlf=false` 下綠；整包命令綠。
+- 風：after-task:W0-04-08 當時判 nit 的 dismissal 被 CI 推翻——記進 evidence 筆記。
+
 ## Questions asked
 ① — what — 重述：合併後的三條自卡接縫修掉＋量檢查站成本，對嗎？
 ① — what — 係數要不要改的決定現在下還是留到第二、三個真實 change？（答：留到之後，這次寫建議）
