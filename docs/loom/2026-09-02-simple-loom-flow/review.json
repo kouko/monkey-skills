@@ -2059,6 +2059,17 @@
    ],
    "text": "skip-guard probe lacks check=True",
    "resolved": "accepted, not fixed: carried to the first post-merge change with R24-O2"
+  },
+  {
+   "id": "CI-2",
+   "severity": "fatal",
+   "anchor": "loom-code/scripts/check_mechanisms.py:584",
+   "origin_sha": "1cec8c4f",
+   "raised_by": [
+    "github-ci loom-code pytest (PR #780 run 33702007788)"
+   ],
+   "text": "GNU wc -w under LC_ALL=C does not count tokens made only of non-ASCII bytes as words (5131 for the 923fb84a baseline vs 5278 on BSD wc / Python split), so pinning LC_ALL=C made the two platforms disagree by 147; the count must not use wc at all",
+   "resolved": "open"
   }
  ],
  "vendors": [
@@ -2963,6 +2974,15 @@
    "vendor": "openai",
    "started": "2026-09-02T19:18:42Z",
    "fresh_context": true
+  },
+  {
+   "task": "W4-10",
+   "role": "implementer",
+   "agent_id": "sonnet-ci2-python-count-1",
+   "model": "sonnet",
+   "started": "2026-09-03T01:06:13Z",
+   "fresh_context": true,
+   "note": "CI-2"
   }
  ],
  "questions": [
