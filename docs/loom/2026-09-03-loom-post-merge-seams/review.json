@@ -1,487 +1,594 @@
 {
- "reviewed_sha": "4e25360c8b2a072c5082cbf21de03e172eca2d73",
- "scope": "spec",
- "vendors": [
-  "anthropic",
-  "openai"
- ],
- "verdicts": [
-  {
-   "round": 1,
-   "scope": "spec",
-   "spec_sha": "702f5b7",
-   "findings_file": "evidence/spec-review-r1.md",
-   "reviewer": "codex-review-spec-1",
-   "vendor": "openai",
-   "model": "gpt-5.6-sol/high",
-   "lens": "spec",
-   "verdict": "NEEDS_REVISION"
-  },
-  {
-   "round": 1,
-   "scope": "spec",
-   "spec_sha": "702f5b7",
-   "findings_file": "evidence/spec-review-r1.md",
-   "reviewer": "sonnet-review-spec-1",
-   "vendor": "anthropic",
-   "model": "sonnet",
-   "lens": "spec",
-   "verdict": "NEEDS_REVISION"
-  },
-  {
-   "round": 2,
-   "scope": "spec",
-   "spec_sha": "5e7a104",
-   "findings_file": "evidence/spec-review-r2.md",
-   "reviewer": "codex-review-spec-2",
-   "vendor": "openai",
-   "model": "gpt-5.6-sol/high",
-   "lens": "spec",
-   "verdict": "NEEDS_REVISION"
-  },
-  {
-   "round": 2,
-   "scope": "spec",
-   "spec_sha": "5e7a104",
-   "findings_file": "evidence/spec-review-r2.md",
-   "reviewer": "sonnet-review-spec-2",
-   "vendor": "anthropic",
-   "model": "sonnet",
-   "lens": "spec",
-   "verdict": "NEEDS_REVISION"
-  }
- ],
- "probes": [
-  {
-   "kind": "package-tests",
-   "scope": "spec",
-   "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
-   "sha": "93b6ea10",
-   "result": "1007 passed in 121.91s (0:02:01)",
-   "artifact": "loom-code/scripts/"
-  },
-  {
-   "kind": "blind-run",
-   "scope": "spec",
-   "command": "cold reader walks Acceptance 1-5 from the spec alone (sonnet-coldread-spec-1)",
-   "sha": "93b6ea10",
-   "result": "3 guesses, 1 anchor mismatch",
-   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r1.md"
-  },
-  {
-   "kind": "adversarial",
-   "scope": "spec",
-   "command": "red-team of REQ-1..6 (sonnet-redteam-spec-1)",
-   "sha": "93b6ea10",
-   "result": "NEEDS_REVISION — 3 fatal, 3 important",
-   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r1.md"
-  },
-  {
-   "kind": "blind-run",
-   "scope": "spec",
-   "command": "cold reader walks Acceptance 1-5 from spec v3 alone (sonnet-coldread-spec-2)",
-   "sha": "82b33ce5",
-   "result": "0 guesses",
-   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r2.md"
-  },
-  {
-   "kind": "adversarial",
-   "scope": "spec",
-   "command": "red-team of spec v3 (sonnet-redteam-spec-2)",
-   "sha": "82b33ce5",
-   "result": "NEEDS_REVISION — 1 fatal, 4 important",
-   "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r2.md"
-  }
- ],
- "questions": [
-  {
-   "decision_point": 1,
-   "text": "重述：合併後的三條自卡接縫修掉＋量檢查站成本，對嗎？",
-   "type": "what"
-  },
-  {
-   "decision_point": 1,
-   "text": "係數要不要改的決定現在下還是留到第二、三個真實 change？（答：留到之後，這次寫建議）",
-   "type": "what"
-  },
-  {
-   "decision_point": 1,
-   "text": "PR 的 merge 由 agent 按還是留給你？（答：留給 kouko）",
-   "type": "what"
-  }
- ],
- "open_findings": [
-  {
-   "id": "spec-C1",
-   "severity": "fatal",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "codex-review-spec-1"
-   ],
-   "text": "close-commit push path incomplete: which push rules apply, where review.json / reviewed_sha come from for a post-merge commit",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-C2",
-   "severity": "fatal",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:35",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "codex-review-spec-1"
-   ],
-   "text": "test anchor cites only the declaration; the oracle is dynamic (lines 429-447); PR #781 failure not cited as an artifact",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-C3",
-   "severity": "fatal",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "codex-review-spec-1"
-   ],
-   "text": "\"six\" carried nits; only five are enumerated (intent Constraints too)",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-C4",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "codex-review-spec-1"
-   ],
-   "text": "exact package-test commands and CI jobs not named",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-C5",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "codex-review-spec-1"
-   ],
-   "text": "\"exactly one line\" undefined in git terms (mode, rename, duplicate status field, newline)",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-S1",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: second accepted shape",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-review-spec-1"
-   ],
-   "text": "review-only-head extension conflicts with the intent Constraint \"no rule semantics change\"",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-S2",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: REQ-6 → Acceptance #2",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-review-spec-1"
-   ],
-   "text": "REQ-6 traces to no Acceptance line; it is a Constraint",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-R1",
-   "severity": "fatal",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-redteam-spec-1"
-   ],
-   "text": "PR number is grammar-only; nothing recomputes that the change merged",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-R2",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-redteam-spec-1"
-   ],
-   "text": "closed date not routed through is_real_date",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-R3",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-redteam-spec-1"
-   ],
-   "text": "--no-renames not pinned for the new shape",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-R6",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:20",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-redteam-spec-1"
-   ],
-   "text": "closed not terminal; silent reopen closed→confirmed unaddressed",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-R7",
-   "severity": "fatal",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-redteam-spec-1"
-   ],
-   "text": "REQ-3 exemption is a path prefix, not a content check; doubles a blind spot onto a second gate",
-   "resolved": "resolved: 617d9b79 for hosts with an external canonical; the Codex residual is re-opened as spec-C6"
-  },
-  {
-   "id": "spec-B1",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-coldread-spec-1"
-   ],
-   "text": "close-commit message text not restated in the spec",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-B2",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-coldread-spec-1"
-   ],
-   "text": "package command not given literally",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-B3",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:14",
-   "origin_sha": "93b6ea10",
-   "raised_by": [
-    "sonnet-coldread-spec-1"
-   ],
-   "text": "how the bumped version is observed after update is unstated",
-   "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
-  },
-  {
-   "id": "spec-C6",
-   "severity": "fatal",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "codex-review-spec-2"
-   ],
-   "text": "on Codex the running checker and its siblings are the copies under test; the comparison is self-referential for git_exec/contract too",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-C7",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "codex-review-spec-2"
-   ],
-   "text": "REQ-6 traces to no Acceptance line; five fixes can be omitted while all Acceptance pass",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-C8",
-   "severity": "important",
-   "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:23",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "codex-review-spec-2"
-   ],
-   "text": "Acceptance #3 tests only genuine scaffold output; no negative case",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-S4",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "sonnet-review-spec-2"
-   ],
-   "text": "closed date not routed through is_real_date (= spec-R2)",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-S5",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "sonnet-review-spec-2"
-   ],
-   "text": "closed not terminal (= spec-R6)",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-S6",
-   "severity": "nit",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "sonnet-review-spec-2"
-   ],
-   "text": "CI runs pytest with -v, spec says -q",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-R8",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "sonnet-redteam-spec-2"
-   ],
-   "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-R9",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "sonnet-redteam-spec-2"
-   ],
-   "text": "CI never runs loom_checker.py push; the push gate is client-side only (pre-existing) — the spec should say so",
-   "resolved": "open"
-  },
-  {
-   "id": "spec-R10",
-   "severity": "important",
-   "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
-   "origin_sha": "82b33ce5",
-   "raised_by": [
-    "sonnet-redteam-spec-2"
-   ],
-   "text": "\"the running checker\" undefined across two cached plugin versions",
-   "resolved": "open"
-  }
- ],
- "dispatch": [
-  {
-   "task": "spec",
-   "role": "reviewer",
-   "agent_id": "sonnet-review-spec-1",
-   "model": "sonnet",
-   "vendor": "anthropic",
-   "started": "2026-09-03T02:13:34Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec",
-   "role": "reviewer",
-   "agent_id": "codex-review-spec-1",
-   "model": "codex exec (gpt-5.6-sol/high)",
-   "vendor": "openai",
-   "started": "2026-09-03T02:13:34Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec",
-   "role": "blind-runner",
-   "agent_id": "sonnet-coldread-spec-1",
-   "model": "sonnet",
-   "started": "2026-09-03T02:13:34Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec",
-   "role": "adversary",
-   "agent_id": "sonnet-redteam-spec-1",
-   "model": "sonnet",
-   "started": "2026-09-03T02:13:34Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 2",
-   "role": "reviewer",
-   "agent_id": "sonnet-review-spec-2",
-   "model": "sonnet",
-   "vendor": "anthropic",
-   "started": "2026-09-03T02:27:16Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 2",
-   "role": "reviewer",
-   "agent_id": "codex-review-spec-2",
-   "model": "codex exec (gpt-5.6-sol/high)",
-   "vendor": "openai",
-   "started": "2026-09-03T02:27:16Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 2",
-   "role": "blind-runner",
-   "agent_id": "sonnet-coldread-spec-2",
-   "model": "sonnet",
-   "vendor": "anthropic",
-   "started": "2026-09-03T02:27:16Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 2",
-   "role": "adversary",
-   "agent_id": "sonnet-redteam-spec-2",
-   "model": "sonnet",
-   "vendor": "anthropic",
-   "started": "2026-09-03T02:27:16Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 3",
-   "role": "reviewer",
-   "agent_id": "sonnet-review-spec-3",
-   "model": "sonnet",
-   "vendor": "anthropic",
-   "started": "2026-09-03T02:35:10Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 3",
-   "role": "reviewer",
-   "agent_id": "codex-review-spec-3",
-   "model": "codex exec (gpt-5.6-sol/high)",
-   "vendor": "openai",
-   "started": "2026-09-03T02:35:10Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 3",
-   "role": "blind-runner",
-   "agent_id": "sonnet-coldread-spec-3",
-   "model": "sonnet",
-   "vendor": "anthropic",
-   "started": "2026-09-03T02:35:10Z",
-   "fresh_context": true
-  },
-  {
-   "task": "spec round 3",
-   "role": "adversary",
-   "agent_id": "sonnet-redteam-spec-3",
-   "model": "sonnet",
-   "vendor": "anthropic",
-   "started": "2026-09-03T02:35:10Z",
-   "fresh_context": true
-  }
- ]
+  "reviewed_sha": "4e25360c8b2a072c5082cbf21de03e172eca2d73",
+  "scope": "spec",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "spec",
+      "spec_sha": "702f5b7",
+      "findings_file": "evidence/spec-review-r1.md",
+      "reviewer": "codex-review-spec-1",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol/high",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 1,
+      "scope": "spec",
+      "spec_sha": "702f5b7",
+      "findings_file": "evidence/spec-review-r1.md",
+      "reviewer": "sonnet-review-spec-1",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 2,
+      "scope": "spec",
+      "spec_sha": "5e7a104",
+      "findings_file": "evidence/spec-review-r2.md",
+      "reviewer": "codex-review-spec-2",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol/high",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 2,
+      "scope": "spec",
+      "spec_sha": "5e7a104",
+      "findings_file": "evidence/spec-review-r2.md",
+      "reviewer": "sonnet-review-spec-2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 3,
+      "scope": "spec",
+      "spec_sha": "035cf38",
+      "findings_file": "evidence/spec-review-r3.md",
+      "reviewer": "codex-review-spec-3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    },
+    {
+      "round": 3,
+      "scope": "spec",
+      "spec_sha": "035cf38",
+      "findings_file": "evidence/spec-review-r3.md",
+      "reviewer": "sonnet-review-spec-3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "spec",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q",
+      "sha": "93b6ea10",
+      "result": "1007 passed in 121.91s (0:02:01)",
+      "artifact": "loom-code/scripts/"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-5 from the spec alone (sonnet-coldread-spec-1)",
+      "sha": "93b6ea10",
+      "result": "3 guesses, 1 anchor mismatch",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r1.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of REQ-1..6 (sonnet-redteam-spec-1)",
+      "sha": "93b6ea10",
+      "result": "NEEDS_REVISION — 3 fatal, 3 important",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r1.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-5 from spec v3 alone (sonnet-coldread-spec-2)",
+      "sha": "82b33ce5",
+      "result": "0 guesses",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r2.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v3 (sonnet-redteam-spec-2)",
+      "sha": "82b33ce5",
+      "result": "NEEDS_REVISION — 1 fatal, 4 important",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r2.md"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "spec",
+      "command": "cold reader walks Acceptance 1-6 from spec v4 alone (sonnet-coldread-spec-3)",
+      "sha": "cc5a67a9",
+      "result": "1 guess (PR number of the previous change is a data lookup, not a spec gap); all 17 anchors resolve",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-coldread-r3.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "spec",
+      "command": "red-team of spec v4 (sonnet-redteam-spec-3)",
+      "sha": "cc5a67a9",
+      "result": "NEEDS_REVISION — 1 fatal, 4 important; 5 round-2 escapes hold",
+      "artifact": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/spec-redteam-r3.md"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "重述：合併後的三條自卡接縫修掉＋量檢查站成本，對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "係數要不要改的決定現在下還是留到第二、三個真實 change？（答：留到之後，這次寫建議）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "PR 的 merge 由 agent 按還是留給你？（答：留給 kouko）",
+      "type": "what"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "spec-C1",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "close-commit push path incomplete: which push rules apply, where review.json / reviewed_sha come from for a post-merge commit",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C2",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:35",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "test anchor cites only the declaration; the oracle is dynamic (lines 429-447); PR #781 failure not cited as an artifact",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C3",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "\"six\" carried nits; only five are enumerated (intent Constraints too)",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C4",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "exact package-test commands and CI jobs not named",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C5",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "codex-review-spec-1"
+      ],
+      "text": "\"exactly one line\" undefined in git terms (mode, rename, duplicate status field, newline)",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-S1",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: second accepted shape",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-review-spec-1"
+      ],
+      "text": "review-only-head extension conflicts with the intent Constraint \"no rule semantics change\"",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-S2",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md :: REQ-6 → Acceptance #2",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-review-spec-1"
+      ],
+      "text": "REQ-6 traces to no Acceptance line; it is a Constraint",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-R1",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "PR number is grammar-only; nothing recomputes that the change merged",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-R2",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "closed date not routed through is_real_date",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R3",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "--no-renames not pinned for the new shape",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-R6",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:20",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "closed not terminal; silent reopen closed→confirmed unaddressed",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R7",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-redteam-spec-1"
+      ],
+      "text": "REQ-3 exemption is a path prefix, not a content check; doubles a blind spot onto a second gate",
+      "resolved": "resolved: 617d9b79 for hosts with an external canonical; the Codex residual is re-opened as spec-C6"
+    },
+    {
+      "id": "spec-B1",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-coldread-spec-1"
+      ],
+      "text": "close-commit message text not restated in the spec",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-B2",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-coldread-spec-1"
+      ],
+      "text": "package command not given literally",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-B3",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:14",
+      "origin_sha": "93b6ea10",
+      "raised_by": [
+        "sonnet-coldread-spec-1"
+      ],
+      "text": "how the bumped version is observed after update is unstated",
+      "resolved": "resolved: 617d9b79 (spec v3), confirmed by round 2 (both legs)"
+    },
+    {
+      "id": "spec-C6",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "codex-review-spec-2"
+      ],
+      "text": "on Codex the running checker and its siblings are the copies under test; the comparison is self-referential for git_exec/contract too",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-C7",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:16",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "codex-review-spec-2"
+      ],
+      "text": "REQ-6 traces to no Acceptance line; five fixes can be omitted while all Acceptance pass",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-C8",
+      "severity": "important",
+      "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:23",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "codex-review-spec-2"
+      ],
+      "text": "Acceptance #3 tests only genuine scaffold output; no negative case",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-S4",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-review-spec-2"
+      ],
+      "text": "closed date not routed through is_real_date (= spec-R2)",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-S5",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-review-spec-2"
+      ],
+      "text": "closed not terminal (= spec-R6)",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-S6",
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-review-spec-2"
+      ],
+      "text": "CI runs pytest with -v, spec says -q",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R8",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-redteam-spec-2"
+      ],
+      "text": "close commit contents not machine-checked; docs-typed smuggling only the PR diff catches",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R9",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:19",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-redteam-spec-2"
+      ],
+      "text": "CI never runs loom_checker.py push; the push gate is client-side only (pre-existing) — the spec should say so",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R10",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "82b33ce5",
+      "raised_by": [
+        "sonnet-redteam-spec-2"
+      ],
+      "text": "\"the running checker\" undefined across two cached plugin versions",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-C9",
+      "severity": "fatal",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:6",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "codex-review-spec-3",
+        "sonnet-review-spec-3",
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "REQ-1 residual assigns catching a smuggled file in the close commit to the user reading the PR diff — contradicts PRINCIPLES.md Non-negotiables 1-2 and the 'Won't do' line; the close commit needs a machine review, not a user diff read (same substance as spec-R8, which is therefore not closable by disclosure)",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-C10",
+      "severity": "important",
+      "anchor": "docs/loom/intent/2026-09-03-loom-post-merge-seams.md:23",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "codex-review-spec-3"
+      ],
+      "text": "Acceptance #3 negative case covers altered byte and extra file only; deletion and mode-only plumbing changes promised by REQ-3 are unverified (spec-C8 partly reopened)",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-S7",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:7",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-review-spec-3",
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "'closed is terminal' overstates: a branch that never carries the close commit (forked from trunk before the merge, or rebased around it) has an empty -S history and current status confirmed, so intake passes",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R11",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:8",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "reopen check uses a literal single-space pickaxe -S'status: closed' while the grammar regex may be whitespace-lenient; a hand-edited double-space closed line parses as closed but never matches the pickaxe",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R12",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "Path(__file__).resolve() test: a symlink or copy of the checker placed outside .codex/hooks/ flips the exemption on even on Codex, falsifying 'no exemption applies'",
+      "resolved": "open"
+    },
+    {
+      "id": "spec-R13",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/spec.md:21",
+      "origin_sha": "cc5a67a9",
+      "raised_by": [
+        "sonnet-redteam-spec-3"
+      ],
+      "text": "'canonical is whichever checkout the hook invoked' lets a deliberately older cached plugin version serve as canonical, so plumbing matching superseded weaker content escapes trailer duty",
+      "resolved": "open"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-1",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-1",
+      "model": "codex exec (gpt-5.6-sol/high)",
+      "vendor": "openai",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-1",
+      "model": "sonnet",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-1",
+      "model": "sonnet",
+      "started": "2026-09-03T02:13:34Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-2",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-2",
+      "model": "codex exec (gpt-5.6-sol/high)",
+      "vendor": "openai",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-2",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 2",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-2",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:27:16Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-spec-3",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "reviewer",
+      "agent_id": "codex-review-spec-3",
+      "model": "codex exec (gpt-5.6-sol/high)",
+      "vendor": "openai",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "blind-runner",
+      "agent_id": "sonnet-coldread-spec-3",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    },
+    {
+      "task": "spec round 3",
+      "role": "adversary",
+      "agent_id": "sonnet-redteam-spec-3",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-03T02:35:10Z",
+      "fresh_context": true
+    }
+  ]
 }
