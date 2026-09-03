@@ -160,6 +160,57 @@
         }
       ],
       "notes": "package-tests (1063) and the unit test (2) re-run fine; only the adversarial probe file has a stale mutation"
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "codex-review-branch-end-r3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "220992c1e845fc70d782f4715fdf7005bec9b080",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-03-package-tests-run-in-parallel/review.json:269",
+          "text": "the 12-pass probe result could not be re-run in the read-only sandbox; source inspection confirms the whole-line fix, README matches KICKOFF, CI differs only by -v",
+          "fix": "re-run in a writable environment (done by the orchestrator in a clean worktree: 12 passed)"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "sonnet-review-branch-end-r3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "220992c1e845fc70d782f4715fdf7005bec9b080",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/KICKOFF-DEFAULTS.md:8",
+          "text": "KICKOFF still says \"same line as CI\" while README now correctly says CI uses -v in place of -q — the two docs contradict each other on the fact this round touched",
+          "fix": "match README wording in KICKOFF"
+        }
+      ],
+      "notes": "a second finding (top-level reviewed_sha = 05ff96dd) was withdrawn by the reviewer after checking the station rule: it is the merge-base and moves only on a passing round; verdict corrected from NEEDS_REVISION to PASS_WITH_NOTES by the reviewer. Ran the probe file (12 passed) and the unit test (2 passed) from a git archive of the reviewed sha."
     }
   ],
   "probes": [
@@ -285,6 +336,15 @@
       "severity": "important",
       "text": "\"CI runs the same line\" is not literally true (-v vs -q)",
       "resolved": "closed by aceff4e8 — same wording fix as branch-end-06"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "docs/loom/KICKOFF-DEFAULTS.md:8",
+      "origin_sha": "220992c1e845fc70d782f4715fdf7005bec9b080",
+      "raised_by": "sonnet-review-branch-end-r3",
+      "severity": "important",
+      "text": "KICKOFF comment still claims \"same line as CI\"",
+      "resolved": "closed by e26c6ae4 — comment now reads \"CI runs the same test paths and -n auto with -v in place of -q\", and the CPU wording matches requirements-dev.txt"
     }
   ],
   "dispatch": [
@@ -382,6 +442,22 @@
       "agent_id": "codex-review-branch-end-r3",
       "model": "codex",
       "started": "2026-09-03T22:33:40+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r4",
+      "model": "sonnet",
+      "started": "2026-09-03T22:38:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r4",
+      "model": "codex",
+      "started": "2026-09-03T22:38:44+08:00",
       "fresh_context": true
     }
   ]
