@@ -25,10 +25,10 @@ loom 1.0 合併後第一次在真 session 用它，馬上撞到三條它自己�
 5. 三個 plugin 的版本號各 bump 一次（loom-code 1.0.1 起），裝置端 `claude plugin update` 後 `loom_checker.py --list-rules` 是新版。
 
 ## Constraints
-- 不改 27 條規則的語意，只改文法與豁免集合的來源；push 閘不加 waiver 機制（設計原則：閘門重算、不信宣稱）。
+- 27 條規則裡只改 `push.review-only-head` 一條的語意（多認「關 intent」這一種 commit 形狀，且形狀與「真的合併過」都由 checker 從 git 重算）；其餘 26 條語意不動，只改文法與豁免集合的來源；push 閘不加 waiver 機制（設計原則：閘門重算、不信宣稱）。（措辭修正 kouko 2026-09-03：原句「不改 27 條規則的語意」與 Acceptance #1 矛盾）
 - 不動 `.codex/hooks/loom-checker` 的 command 字串（Codex 的 trust 綁 hook 定義）。
 - PR 的 merge 動作留給 kouko 親按（kouko 2026-09-03）；agent 只做到 push 與開 PR。
-- 六個測試 nit（R24-O2、R28-O2、R30-O1..O3）順手一起清；不做別的重構。
+- 五個測試 nit（R24-O2、R28-O2、R30-O1、R30-O2、R30-O3）順手一起清；不做別的重構。（原寫「六個」，數錯）
 
 ## Out of scope
 - checkpoint 係數本身的修改（這次只量，不改）。
