@@ -622,6 +622,54 @@
           "fix": "reword"
         }
       ]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "sha": "cb4353db55950a2b37d464bf3346328fcd39d177",
+      "findings_file": "evidence/review-branch-end-r1.md",
+      "reviewer": "codex-review-branch-end",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "re-pinning probes not spelled out (new probes[] entries, sha = close commit, every kind)",
+          "fix": "one sentence"
+        },
+        {
+          "severity": "important",
+          "dimension": "principles-conformance",
+          "anchor": "loom-code/skills/ship/SKILL.md:308",
+          "text": "docs/user-judgment-leak lenses are prose-only; push accepts any lens label",
+          "fix": "separate mechanism decision"
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/blind-run-report.md:123",
+          "text": "report says six new intents; the delta since 160658c2 adds five",
+          "fix": "qualify the count"
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/skills/ship/SKILL.md:294",
+          "text": "post-PR sequence does not say the agent proceeds without asking",
+          "fix": "one clause"
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/ship/SKILL.md:314",
+          "text": "second push does not repeat 'run the checker first'",
+          "fix": "one clause"
+        }
+      ]
     }
   ],
   "probes": [
@@ -1834,6 +1882,65 @@
       ],
       "text": "mode-mismatch reason string lacks a verb",
       "dismissed": "carry-forward: cosmetic — by sonnet-review-w0-05-r3"
+    },
+    {
+      "id": "branch-end-01",
+      "severity": "important",
+      "anchor": "loom-code/skills/ship/SKILL.md:308",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "ship §6 'probes re-pinned' gives no mechanical instruction",
+      "dismissed": "carry-forward: the checker fails closed (push.probes-* re-run at reviewed_sha), so the cost is a wasted push cycle, not a bad shipment; one-sentence prose fix for the next change — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-02",
+      "severity": "important",
+      "anchor": "loom-code/skills/ship/SKILL.md:308",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "the docs + user-judgment-leak lenses of the close round are prose-only; no push rule checks a verdict's lens",
+      "dismissed": "carry-forward: checker-wide pre-existing limitation (no rule reads lens for any round); needs its own mechanism decision — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-03",
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/blind-run-report.md:62",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end"
+      ],
+      "text": "report counted six new intents; five are in the delta since the spec checkpoint, the sixth was opened during spec review",
+      "resolved": "resolved: 50168d54 — count qualified in the report (six on the branch, five since 160658c2); orchestrator wording edit, disclosed"
+    },
+    {
+      "id": "branch-end-04",
+      "severity": "nit",
+      "anchor": "loom-code/skills/ship/SKILL.md:294",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "post-PR sequence does not state the agent proceeds unattended",
+      "dismissed": "carry-forward: cosmetic, the sequence is mechanically guarded — by codex-review-branch-end"
+    },
+    {
+      "id": "branch-end-05",
+      "severity": "nit",
+      "anchor": "loom-code/skills/ship/SKILL.md:314",
+      "origin_sha": "cb4353db",
+      "raised_by": [
+        "codex-review-branch-end",
+        "sonnet-adversary-branch-end"
+      ],
+      "text": "second push does not repeat the explicit checker run",
+      "dismissed": "carry-forward: the host hook enforces it — by codex-review-branch-end"
     }
   ],
   "dispatch": [
@@ -2517,6 +2624,22 @@
       "agent_id": "codex-review-branch-end",
       "model": "codex",
       "started": "2026-09-03T16:15:35+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "sonnet-review-branch-end-r2",
+      "model": "sonnet",
+      "started": "2026-09-03T16:26:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "codex-review-branch-end-r2",
+      "model": "codex",
+      "started": "2026-09-03T16:26:07+08:00",
       "fresh_context": true
     }
   ]
