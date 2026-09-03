@@ -1,7 +1,7 @@
 # 第二家 vendor 審查改成每次決定，不再 repo 固定
 originator: kouko
 kind: engineering
-needs-design: no — 改的是站文字與一條 checker 規則讀哪個記錄，沒有使用者讀或輸入的介面；行為單一狀態（用／不用）
+needs-design: no — 只改站文字與一條 checker 規則讀哪個記錄；沒有使用者讀或輸入的介面，行為只有用／不用兩態
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/]
 status: open
 
