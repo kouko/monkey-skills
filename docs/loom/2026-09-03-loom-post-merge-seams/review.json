@@ -1215,6 +1215,27 @@
       ],
       "text": "the trigger's intent path template is a live manifest read; a mistyped or drifted template makes no path match and the rule silently disarms (fail-open)",
       "resolved": "resolved: fd3d9dbf — INTENT_PATH_TEMPLATE constant asserted against the manifest at function start; mismatch fails closed with a named diagnostic"
+    },
+    {
+      "id": "after-task:W0-04-07",
+      "severity": "fatal",
+      "anchor": "loom-code/scripts/loom_checker.py:1799",
+      "origin_sha": "c7b52c99",
+      "raised_by": [
+        "sonnet-adversary-w0-04-r4"
+      ],
+      "text": "_regenerated_closed_text collapses \\r\\n to \\n on the regenerated status line, so a legitimate close on a CRLF intent file is blocked"
+    },
+    {
+      "id": "after-task:W0-04-08",
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-03-loom-post-merge-seams/evidence/probes/test_abuse_close_commit_shape.py",
+      "origin_sha": "c7b52c99",
+      "raised_by": [
+        "sonnet-adversary-w0-04-r4"
+      ],
+      "text": "a CRLF probe that does not pin core.autocrlf=false proves nothing on a machine that normalises line endings",
+      "dismissed": "carry-forward: test-writing hazard, not a code defect; documented in the probe file — by sonnet-adversary-w0-04-r4"
     }
   ],
   "dispatch": [
@@ -1690,6 +1711,14 @@
       "agent_id": "sonnet-adversary-w0-04-r4",
       "model": "sonnet",
       "started": "2026-09-03T13:47:19+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-fix5-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-03T13:54:32+08:00",
       "fresh_context": true
     }
   ]
