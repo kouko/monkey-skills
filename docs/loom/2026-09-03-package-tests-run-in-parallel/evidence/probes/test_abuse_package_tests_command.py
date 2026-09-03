@@ -221,7 +221,9 @@ def test_requirements_dev_without_xdist_fails_w0_01_test(tmp_path: Path) -> None
     active requirement line. DEFECT, not a broken probe -- this assertion
     encodes the correct spec and is left red on purpose (see docstring of
     `test_kickoff_and_ci_run_the_same_parallel_command`'s sibling probes
-    above for the same convention)."""
+    above for the same convention).
+    Fixed at W0-01 fix commit: the W0-01 test now fails on the
+    commented-out line as expected."""
     real = REAL_REQUIREMENTS_DEV.read_text(encoding="utf-8")
     mutated = "\n".join(
         f"# {line}" if line.strip() == "pytest-xdist" else line

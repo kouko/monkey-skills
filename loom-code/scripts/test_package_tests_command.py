@@ -11,6 +11,7 @@ from that file rather than a separate hardcoded list.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -20,7 +21,12 @@ CI_WORKFLOW = REPO / ".github" / "workflows" / "loom-code-ci.yml"
 
 def test_dev_requirements_declare_xdist_and_ci_installs_from_them() -> None:
     requirements_text = REQUIREMENTS_DEV.read_text(encoding="utf-8")
-    assert "pytest-xdist" in requirements_text
+    active_requirement_names = {
+        re.split(r"[<>=!~\[; ]", line)[0]
+        for line in (raw_line.strip() for raw_line in requirements_text.splitlines())
+        if line and not line.startswith("#")
+    }
+    assert "pytest-xdist" in active_requirement_names
 
     workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
     install_step_start = workflow_text.index("Install test deps")
