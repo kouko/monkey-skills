@@ -33,3 +33,21 @@ changes in this change).
 - Not recommended: relaxing "three arms PASS" for code deltas — the two real gate defects of round 6 came from the red team on the tightened rules, exactly where it should fire.
 
 The blind-runner appends the final per-checkpoint table (W0-04 after-task, W0-05 after-task, W0 wave-end, W1 branch-end, ship close-commit round) with recomputed totals, and writes the single recommendation line.
+
+## Addendum at HEAD d9da281a (after-task W0-04 closed, W0-05 in flight)
+
+| measure | observed |
+|---|---|
+| commits on branch | 88 (code 10: W0-01..03 one each, W0-04 one + six fixes; probes 3; the rest records) |
+| dispatches | 61: reviewer 30 (incl. one opus design review), blind-runner 9, adversary 11, implementer 11 |
+| after-task W0-04 | 5 review rounds, 6 fix dispatches, 3 designs (content-parsed → structural → regenerate-and-compare), spec amended three times (v10–v12) with three narrow spec rounds |
+| spec rounds total | 11 (8 full + 3 narrow) |
+
+What the W0-04 sequence shows: a rule that reads diff content attracts an unbounded series of parser-edge attacks (rename, deletion, BOM, symlink typechange, body decoy, headingless last-wins, CRLF, non-UTF-8); each fix round found a new one until the design changed to byte equality against a regenerated canonical. Two rounds were lost to the orchestrator's own packet errors (deletion-as-transition; the first "structural" spec had five sub-conditions). The user-requested opus design review (one dispatch, 2 minutes) settled in one pass what six sonnet fix rounds had not.
+
+Recommendation candidates added:
+- **Redesign trigger**: a second NEEDS_REVISION on the same checkpoint sends the finding history to a fresh higher-tier agent for a one-question design review before any further fix dispatch (open intent 2026-09-03-fix-round-cap-triggers-redesign).
+- **Adversarial probes before implementation** for gate rules: W0-05 ran this way (11 probes first, one xfail as the implementer's RED); compare its round count with W0-04's when it closes.
+- **Content-reading rules are a category to avoid**: when a rule must inspect content, specify it as "regenerate the canonical and compare bytes", never as line/regex conditions.
+- **Shared worktree cost**: three reviewers found the tree moving under them and re-ran on `git archive` snapshots; the verdict-sha tie also forces adversary/blind-run commits BEFORE the readers are dispatched (two-phase checkpoints). One worktree per implementer, and the two-phase order written into the review station, would remove both.
+- **Harness trap**: three subagent stalls came from the Bash tool's 120 s default timeout on a 150 s suite; dispatch packets now state `timeout 300000`.
