@@ -99,13 +99,6 @@ def _write_intent_on_branch(repo: Path, change_id: str, *, reason: str, commit_m
 # --- (1) FINDING: stale origin/main short-circuits the trunk candidate loop -
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="finding wave-end:0-01: _squash_note()'s REOPEN_TRUNK_CANDIDATES loop "
-    "returns None as soon as the first EXISTING candidate fails the ancestor "
-    "check, instead of trying the next candidate -- a stale origin/main "
-    "falsely blocks a genuine squash commit that IS on local main.",
-)
 def test_stale_origin_main_falsely_blocks_squash_reachable_via_local_main(
     tmp_path: Path,
 ) -> None:
@@ -232,13 +225,6 @@ def _commit_counting_artifact(repo: Path, rel: str, counter: Path, *, exit_code:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="finding wave-end:0-02: check_probes_adversarial()'s pending dict is "
-    "keyed on the raw un-normalized artifact string, so './probe.py' and "
-    "'probe.py' -- which command_names_artifact() itself treats as the same "
-    "file -- land in two different groups and the file is executed twice.",
-)
 def test_dotslash_vs_bare_artifact_string_bypasses_per_file_dedup(tmp_path: Path) -> None:
     """`command_names_artifact()` deliberately normalizes so `./x/y.py` and
     `x/y.py` both count as naming the same file (its own docstring says so

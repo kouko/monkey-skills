@@ -455,6 +455,26 @@ def test_five_records_over_one_artifact_execute_it_exactly_once(tmp_path: Path) 
     assert counter.read_text(encoding="utf-8").count("1") == 1
 
 
+def test_dotslash_and_bare_spellings_of_one_artifact_dedup_together(tmp_path: Path) -> None:
+    """finding wave-end:0-02: `command_names_artifact()` itself treats
+    `./probe.py` and `probe.py` as the same file, but the dedup dict used
+    to key on the raw un-normalized artifact string -- two records for the
+    identical physical file, one spelled each way, landed in two different
+    groups and ran it twice. Keying on the normalized path collapses them
+    into one execution."""
+    counter = tmp_path / "counter.txt"
+    repo = _dedup_repo(tmp_path, counter)
+    sha = git(repo, "rev-parse", "HEAD")
+
+    review = {
+        "probes": _dedup_records("probe.py", sha, 2) + _dedup_records("./probe.py", sha, 1)
+    }
+    failures = loom_checker.check_probes_adversarial(repo, review, sha)
+
+    assert failures == []
+    assert counter.read_text(encoding="utf-8").count("1") == 1
+
+
 def test_list_rules_states_the_dedup_counting_unit() -> None:
     """The `--list-rules` description for push.probes-adversarial names the
     counting unit (records) and says a file named by several records runs

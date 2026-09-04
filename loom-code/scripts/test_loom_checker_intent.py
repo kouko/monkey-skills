@@ -700,6 +700,27 @@ def test_squash_shaped_commit_on_main_satisfies_the_line(tmp_path: Path) -> None
     assert "squash" in result.stdout.lower()
 
 
+def test_stale_origin_main_falls_through_to_local_main(tmp_path: Path) -> None:
+    """finding wave-end:0-01: a stale `origin/main` (exists but predates the
+    squash) must not short-circuit the REOPEN_TRUNK_CANDIDATES loop -- the
+    squash IS an ancestor of local `main`, the next candidate, and the loop
+    must fall through to it rather than returning None on the first
+    candidate's failed ancestor check."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    git(repo, "checkout", "-q", "main")
+    # origin/main exists but is stale: it still points at the pre-squash tip.
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "merge", "-q", "--squash", "feature")
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent (#12)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "squash" in result.stdout.lower()
+
+
 def test_fake_squash_subject_off_main_is_still_blocked(tmp_path: Path) -> None:
     """A branch commit that hand-writes a `(#1)`-suffixed subject to mimic
     the squash shape, but is not reachable from main, must not be excused --

@@ -762,7 +762,7 @@ def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
         if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
             continue
         if git_maybe(repo, "merge-base", "--is-ancestor", sha, candidate) is None:
-            return None
+            continue
         return (
             f"intent.needs-design-reason: commit {sha[:7]} ({relative}) is a "
             f"GitHub squash on {candidate} (single parent, subject {subject!r}); "
@@ -2771,7 +2771,9 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 "would be attacked is not the reviewed tree"
             )
             continue
-        pending.setdefault(artifact, []).append({"label": label, "result": probe.get("result")})
+        pending.setdefault(os.path.normpath(artifact), []).append(
+            {"label": label, "result": probe.get("result")}
+        )
 
     for artifact, records in pending.items():
         count = len(records)
