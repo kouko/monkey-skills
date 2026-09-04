@@ -809,3 +809,45 @@ def test_host_plumbing_constants_are_pinned_to_the_scaffold(tmp_path: Path) -> N
         cs.MARKER,
     } | {f"{cs.HOOK_DIR}/{m}" for m in cs.SIBLING_MODULES}
     assert lc.HOST_PLUMBING_DIR_PREFIX == cs.CONTRACT_COPY + "/"
+
+
+# --- only `code`-typed paths count as a touched interface surface (W0-02) --
+
+
+def test_templates_md_glob_match_is_not_a_touched_interface_surface(
+    tmp_path: Path,
+) -> None:
+    """`**/templates/**` matches the glob, but a `.md` under it is typed
+    `docs` by the manifest's artifact_types -- no user reads it, so it must
+    not trip either recompute for an engineering-kind intent."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, "loom-code/contract/templates/intent.md")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="engineering",
+        needs_design="no — agent-facing template text only",
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "intent.needs-design-recompute" not in blocked_rules(result)
+    assert "intent.kind-recompute" not in blocked_rules(result)
+
+
+def test_templates_code_paths_and_cli_still_count_as_interface_surface(
+    tmp_path: Path,
+) -> None:
+    """The docs carve-out must not widen into a directory-wide one: a
+    `.tsx`/`.py` under `templates/` is typed `code`, and `src/cli/**` is
+    still `**/cli/**` -- both must keep tripping the recompute."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, "loom-code/contract/templates/x.tsx")
+    commit_file(repo, "src/cli/main.py")
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    blocked = blocked_rules(result)
+    assert "intent.needs-design-recompute" in blocked
+    assert "intent.kind-recompute" in blocked
+    assert "loom-code/contract/templates/x.tsx" in result.stderr
+    assert "src/cli/main.py" in result.stderr

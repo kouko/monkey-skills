@@ -164,15 +164,6 @@ def blocked_rules(result: subprocess.CompletedProcess) -> set[str]:
 # --- (1) docs-typed template path: RED until W0-02 -------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RED until W0-02: touched_interface_surfaces() does not yet filter by "
-        "artifact type, so a .md under templates/ still trips intent.kind-recompute "
-        "and intent.needs-design-recompute for an engineering intent. "
-        "Observed today: BLOCK intent.needs-design-recompute + BLOCK intent.kind-recompute, exit 1."
-    ),
-)
 def test_engineering_intent_touching_templates_md_passes_intent_after_fix(
     tmp_path: Path,
 ) -> None:
@@ -192,15 +183,6 @@ def test_engineering_intent_touching_templates_md_passes_intent_after_fix(
     assert result.returncode == 0, result.stderr
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RED until W0-02: `intake write-plan` runs the same "
-        "touched_interface_surfaces() recompute as `intent`, so it inherits the "
-        "same false block on a docs-typed templates/ path. Observed today: "
-        "BLOCK intent.kind-recompute, exit 1."
-    ),
-)
 def test_engineering_intent_touching_templates_md_passes_intake_write_plan_after_fix(
     tmp_path: Path,
 ) -> None:

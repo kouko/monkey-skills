@@ -782,15 +782,29 @@ def touched_interface_surfaces(repo: Path, manifest, out) -> list[str]:
     """The changed paths that land on a declared interface surface, and a
     printed line saying which globs were used -- the answer to "why did it
     say that" is never a mystery. Both `intent.needs-design-recompute` and
-    `intent.kind-recompute` read this one recomputation."""
+    `intent.kind-recompute` read this one recomputation.
+
+    A glob match alone is not enough: `**/templates/**` also matches an
+    agent-filled `.md` template that no user ever reads. After the glob
+    match, each path is filtered by its §6 artifact type
+    (`_artifact_type_for`) down to `code` -- this does not let an agent
+    narrow the surface, because `artifact-types` in KICKOFF-DEFAULTS is
+    reserved (the checker never reads it, per the manifest note); the type
+    mapping is the contract's own `artifact_types:` table, fixed regardless
+    of what a repo declares."""
     globs, source = interface_surfaces(repo, manifest)
-    out.write(f"interface-surfaces ({source}): {', '.join(globs)}\n")
     matchers = [glob_to_regex(pattern) for pattern in globs]
-    return sorted(
+    touched = sorted(
         path
         for path in changed_paths(repo)
         if any(matcher.match(path) for matcher in matchers)
+        and _artifact_type_for(manifest, path) == "code"
     )
+    out.write(
+        f"interface-surfaces ({source}): {', '.join(globs)} "
+        "(non-code paths excluded)\n"
+    )
+    return touched
 
 
 def check_needs_design_recompute(touched: list[str]) -> list[tuple[str, str]]:
