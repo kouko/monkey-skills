@@ -21,6 +21,7 @@ like a working gate.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -35,12 +36,9 @@ SELF_TEST_FAILED = (
     "BLOCK: the copied loom checker did not block a fake push — the scaffold "
     "is broken; re-run codex_scaffold.py --repo . and commit the result"
 )
-NOT_TRUSTED_MESSAGE = (
-    "BLOCK: loom hooks have never fired in this repo — "
-    "run /hooks in Codex once, then retry"
-)
 SANDBOX_PREFIX = "BLOCK: Codex' sandbox protects .codex/"
 GATE_BROKEN_PREFIX = "BLOCK: the loom hook ran but did not judge the push"
+SHIM_COMMAND = ".codex/hooks/loom-checker"
 
 
 def version() -> str:
@@ -286,7 +284,8 @@ def test_self_test_says_it_does_not_prove_trust(repo):
 def test_the_shim_leaves_a_marker_when_it_actually_runs(repo):
     """Only Codex' own hook engine can prove the hook is trusted, and it
     reports nothing when it skips one. So the shim records its own firing:
-    the marker exists if and only if the hook has really run here."""
+    the ledger carries a line for the loom definition if and only if the
+    hook has really run here."""
     git_repo(repo)
     assert scaffold(repo).returncode == 0
     assert not (repo / MARKER).exists(), "no hook has fired yet"
@@ -304,16 +303,24 @@ def test_the_shim_leaves_a_marker_when_it_actually_runs(repo):
     )
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert (repo / MARKER).is_file(), "the shim must record that it fired"
+    lines = [line for line in (repo / MARKER).read_text(encoding="utf-8").splitlines() if line]
+    assert lines[-1] == "PreToolUse\t.codex/hooks/loom-checker\tBash"
 
 
 def test_trusted_reports_whether_the_hook_ever_fired(repo):
+    """A pre-existing zero-byte marker is the legacy ledger format: it
+    credits only the loom PreToolUse Bash definition. This repo's scaffold
+    defines nothing else, so crediting that one definition is enough to
+    flip the whole repo trusted."""
     scaffold(repo)
     before = run("--repo", str(repo), "--trusted")
     assert before.returncode == 2
-    assert NOT_TRUSTED_MESSAGE in before.stderr
+    assert f"{SHIM_COMMAND}: never" in before.stdout
+    assert "/hooks" in before.stdout + before.stderr
     (repo / MARKER).write_text("", encoding="utf-8")
     after = run("--repo", str(repo), "--trusted")
     assert after.returncode == 0, after.stdout + after.stderr
+    assert "fired (legacy)" in after.stdout
 
 
 def test_the_marker_is_gitignored_idempotently(repo):
@@ -489,3 +496,71 @@ def test_unparseable_hooks_json_stops_the_scaffold_untouched(repo):
     assert "hooks.json" in proc.stderr
     assert "Traceback" not in proc.stderr
     assert (hooks_dir / "hooks.json").read_text(encoding="utf-8") == "{not json"
+
+
+# --- per-definition trust ledger (W1-01) -----------------------------------
+
+
+def test_trusted_reports_one_line_per_hooks_json_definition(repo):
+    scaffold(repo)
+    proc = run("--repo", str(repo), "--trusted")
+    assert f"PreToolUse Bash {SHIM_COMMAND}: never" in proc.stdout
+
+
+def test_trusted_marks_a_command_shared_by_two_matchers_ambiguous(repo):
+    """Two matchers pointing at the same (event, command) pair cannot be
+    told apart by a ledger line, so neither counts as fired — the ledger
+    would have no way to say which matcher's firing it was evidence of."""
+    scaffold(repo)
+    hooks_json = repo / ".codex" / "hooks.json"
+    config = json.loads(hooks_json.read_text(encoding="utf-8"))
+    config["hooks"]["PreToolUse"].append(
+        {"matcher": "Write", "hooks": [{"type": "command", "command": SHIM_COMMAND}]}
+    )
+    hooks_json.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+    proc = run("--repo", str(repo), "--trusted")
+    combined = proc.stdout + proc.stderr
+    assert f"PreToolUse Bash {SHIM_COMMAND}: ambiguous" in combined
+    assert f"PreToolUse Write {SHIM_COMMAND}: ambiguous" in combined
+    assert proc.returncode != 0
+
+
+def test_recorder_ignores_malformed_stdin_without_raising(repo):
+    scaffold(repo)
+    recorder = repo / ".codex" / "hooks" / "loom_record_fire.py"
+    assert recorder.is_file()
+    proc = subprocess.run(
+        [sys.executable, str(recorder), str(repo / SHIM_COMMAND)],
+        cwd=str(repo), input="not json", capture_output=True, text=True, timeout=30,
+    )
+    assert proc.returncode == 0
+    assert "Traceback" not in proc.stderr
+    assert not (repo / MARKER).exists()
+
+
+def test_recorder_ignores_a_missing_hook_path_argument(repo):
+    scaffold(repo)
+    recorder = repo / ".codex" / "hooks" / "loom_record_fire.py"
+    proc = subprocess.run(
+        [sys.executable, str(recorder)],
+        cwd=str(repo),
+        input=json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Bash"}),
+        capture_output=True, text=True, timeout=30,
+    )
+    assert proc.returncode == 0
+    assert "Traceback" not in proc.stderr
+    assert not (repo / MARKER).exists()
+
+
+def test_recorder_writes_nothing_under_loom_self_test(repo):
+    scaffold(repo)
+    recorder = repo / ".codex" / "hooks" / "loom_record_fire.py"
+    payload = json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Bash"})
+    proc = subprocess.run(
+        [sys.executable, str(recorder), str(repo / SHIM_COMMAND)],
+        cwd=str(repo), input=payload, capture_output=True, text=True, timeout=30,
+        env=dict(os.environ, LOOM_SELF_TEST="1"),
+    )
+    assert proc.returncode == 0
+    assert not (repo / MARKER).exists()

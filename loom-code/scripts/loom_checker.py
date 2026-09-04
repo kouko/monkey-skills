@@ -440,6 +440,7 @@ HOST_PLUMBING_FILES = frozenset(
         ".codex/hooks/loom-checker",  # codex_scaffold.SHIM_COMMAND
         ".codex/hooks/loom_checker.py",  # codex_scaffold.CHECKER_COPY
         ".codex/hooks/git_exec.py",  # codex_scaffold.HOOK_DIR/SIBLING_MODULES
+        ".codex/hooks/loom_record_fire.py",  # codex_scaffold.HOOK_DIR/SIBLING_MODULES
         ".codex/hooks/.loom-hook-fired",  # codex_scaffold.MARKER
     }
 )
