@@ -1,0 +1,51 @@
+Method: `claude -p --model sonnet`, fed only the path to
+loom-code/agents/reviewer.md (worktree checked out at reviewed sha
+202e1398), same 8-item mixed findings list as 2026-09-04-reviewer-and-
+adversary-positioning's blind run. No other file given.
+
+Prompt (verbatim):
+---
+Read the file at this exact path and nothing else in the repo: <worktree>/loom-code/agents/reviewer.md
+
+Do not read any other file. Based only on that file's content, answer:
+
+(a) In one sentence, what is the boundary between your role and the other roles in this flow?
+
+(b) Below is a mixed list of 8 findings from a review. For each one, classify it as belonging to YOU, to the OTHER role (the one attacking/probing the change), or to the IMPLEMENTER (the one who built it). Answer with just the number and your classification (yours / other / implementer), one per line, plus a one-line reason for each.
+
+1. "plan says 23 records, review.json has 126"
+2. "stale origin/main short-circuits the candidate loop — probe passes on a fresh clone only"
+3. "./probe.py and probe.py counted as two artifacts"
+4. "report says 'works' but Acceptance 6 requires byte-identical files"
+5. "graduation paragraph never says when to re-run branch-end"
+6. "merge-base --is-ancestor accepts a side-branch commit that first-parent walk rejects"
+7. "CHANGELOG lists 7 items, intent has 8"
+8. "the new function's happy path has no unit test"
+---
+
+TRIAL (2026-09-04, sha 202e1398), raw model output:
+---
+**(a) Boundary:** I (reviewer) judge — reconciling what was delivered against what the intent/spec/plan/text itself promised, and scoring dimensions from evidence I read — but never modify the artifact and never run anything myself; anything that had to be *executed* to surface a defect (a probe, an edge-case run) belongs to the adversary, and anything that's *self-reported build status* belongs to the implementer.
+
+**(b) Classification:**
+
+1. yours — contradiction between two documents (plan vs review.json), found by reading, no execution needed.
+2. other — only surfaces by running the same probe under two different repo states (stale vs fresh clone); that's adversarial boundary-condition probing, not reading.
+3. yours — duplicate/inflated artifact count is caught by cross-reading `probes[]` entries, no execution required — this is the "tests" dimension's job of checking whether a recorded probe is what it claims to be.
+4. yours — overclaim: the blind-run report's claim contradicts the intent's Acceptance line — textbook reconciliation.
+5. yours — omission in prose (doc never states a needed condition) — one of the `docs` dimensions.
+6. other — behavioral discrepancy between two git commands only shows up by actually running them against a constructed side-branch case — adversarial boundary probing.
+7. yours — contradiction/omission between CHANGELOG and intent, found by reading both.
+8. yours — absence of a unit test is directly the `tests` dimension, verified by reading the test file, not by running anything.
+
+Note: none of the 8 lands on IMPLEMENTER — per the file, the implementer only produces code/tests and a status report (DONE / DONE_WITH_CONCERNS / etc.), never a review finding. A gap like #8 is the implementer's *fault*, but the finding itself is authored by the reviewer reading their output, not by the implementer.
+---
+
+Scoring against expected (own = 1,4,5,7; not-own = 2,3,6,8):
+1 yours (correct) / 2 other (correct) / 3 yours (WRONG — expected not-own,
+this is the adversary's own-artifact-path class) / 4 yours (correct) /
+5 yours (correct) / 6 other (correct) / 7 yours (correct) / 8 yours
+(WRONG — expected not-own/implementer's, this is the positive executable
+RED class named in the adversary paragraph).
+
+own/not-own score: 6/8.
