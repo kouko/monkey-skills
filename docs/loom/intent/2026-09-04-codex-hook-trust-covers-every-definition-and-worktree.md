@@ -6,7 +6,7 @@ evidence: [docs/loom/intent/2026-09-04-prefer-harness-native-file-tools.md, docs
 status: confirmed 2026-09-04
 
 ## Problem
-Codex 對專案自帶的 hook 有一道安全閘：每一條 hook **定義**（`hooks.json` 路徑＋事件＋序號）要使用者在那個資料夾按過一次 `/hooks` 才會執行；沒同意的 **靜默跳過**，`codex exec` 不印任何警告（`loom-code/scripts/codex_scaffold.py:20` 已記錄）。信任綁在「定義」上，而且鍵值含 `hooks.json` 的**絕對路徑**（`~/.codex/config.toml` 的 `[hooks.state."<path>:<event>:<i>:<j>"]`），所以每開一個新 worktree 就全部歸零。現有的探針只驗一條：`write-plan` step 0b 用 `git push loom-trust-probe HEAD` 試 PreToolUse 的 `loom-checker`，`codex_scaffold.py --trusted` 也只讀那條 shim 寫的 `.codex/hooks/.loom-hook-fired`。`.codex/hooks.json` 還有第二組定義——PostToolUse `Write|Edit` 上的 `validate-skill-folder-structure.sh` 與 `remind-memory-mirror.sh`（Codex 把 `Write`／`Edit` 當成 `apply_patch` 的 matcher 別名，所以這組在 Codex 上是活的守衛）——**沒有任何探針**。2026-09-04 在 `simple-loom-flow` worktree 實測：`config.toml` 的 `hooks.state` 只有全域 dcg 與 code-toolkit 的 SessionStart，本 repo 的兩組定義都沒有信任紀錄；Codex 在這裡改 skill 資料夾或 memory store，結構檢查與索引檢查一個都不會跑，也沒有人知道。第一組（push 閘）至少有站在問；第二組是完全的盲區。
+Codex 對專案自帶的 hook 有一道安全閘：每一條 hook **定義**（`hooks.json` 路徑＋事件＋序號）要使用者在那個資料夾按過一次 `/hooks` 才會執行；沒同意的 **靜默跳過**，`codex exec` 不印任何警告（`loom-code/scripts/codex_scaffold.py:20` 已記錄）。信任綁在「定義」上，而且鍵值含 `hooks.json` 的**絕對路徑**（使用者家目錄下 Codex 的 config.toml，`[hooks.state."<path>:<event>:<i>:<j>"]` 區段），所以每開一個新 worktree 就全部歸零。現有的探針只驗一條：`write-plan` step 0b 用 `git push loom-trust-probe HEAD` 試 PreToolUse 的 `loom-checker`，`codex_scaffold.py --trusted` 也只讀那條 shim 寫的 `.codex/hooks/.loom-hook-fired`。`.codex/hooks.json` 還有第二組定義——PostToolUse `Write|Edit` 上的 `validate-skill-folder-structure.sh` 與 `remind-memory-mirror.sh`（Codex 把 `Write`／`Edit` 當成 `apply_patch` 的 matcher 別名，所以這組在 Codex 上是活的守衛）——**沒有任何探針**。2026-09-04 在 `simple-loom-flow` worktree 實測：`config.toml` 的 `hooks.state` 只有全域 dcg 與 code-toolkit 的 SessionStart，本 repo 的兩組定義都沒有信任紀錄；Codex 在這裡改 skill 資料夾或 memory store，結構檢查與索引檢查一個都不會跑，也沒有人知道。第一組（push 閘）至少有站在問；第二組是完全的盲區。
 
 ## Proposed outcome
 1. 探針涵蓋 `.codex/hooks.json` 裡**每一條**定義，不只 loom-checker：每個 hook 腳本（或一個共用的記錄 shim）在被執行時記下「哪條定義、哪個事件、哪個工具名」到同一個火痕檔；`codex_scaffold.py --trusted` 逐條回報 fired／never，而不是一個總的 yes/no。
@@ -22,7 +22,7 @@ Codex 對專案自帶的 hook 有一道安全閘：每一條 hook **定義**（`
 
 ## Constraints
 - 不加 checker 規則：信任狀態是機器本機的事實，不能從 git 重算。
-- 火痕檔繼續放 `.codex/hooks/`、繼續 gitignore；探針只讀它，不讀 `~/.codex/config.toml`（那是使用者的私人設定，格式也沒承諾穩定）。
+- 火痕檔繼續放 `.codex/hooks/`、繼續 gitignore；探針只讀它，不讀使用者家目錄下 Codex 的 config.toml（那是使用者的私人設定，格式也沒承諾穩定）。
 - 「按過 `/hooks` 之後守衛真的跑」這一腿需要人按同意，盲跑無法自動化；盲跑報告要明講這一腿由使用者親手驗、附驗法。
 
 ## Out of scope
