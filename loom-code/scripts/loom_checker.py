@@ -748,6 +748,19 @@ def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
        -- the same four names `branch_base()` resolves against, minus
        `@{upstream}` for the reason documented at that constant: a
        branch's own upstream must never stand in as "the trunk" here).
+       This is checked by literal MEMBERSHIP in
+       `git rev-list --first-parent <candidate>`, not by
+       `merge-base --is-ancestor` -- ancestry alone proves `sha` is
+       *reachable* from the candidate, which a hand-written, single-parent
+       `... (#<n>)` commit on a side branch also is once that branch is
+       merged into the candidate with a real (`--no-ff`) merge commit; it
+       is reachable but never walked by a first-parent traversal, since a
+       first-parent walk steps over the merge commit straight to the
+       candidate's OWN previous first parent and never descends into the
+       merged-in branch. The membership walk is O(history) in the worst
+       case (it lists the candidate's entire first-parent chain to check
+       one sha) -- cheap in practice because the trunk's first-parent
+       chain is short relative to full history including side branches.
 
     These three are all this function can verify offline: it has no way to
     ask GitHub whether `sha` really came from a "Squash and merge" click,
@@ -780,7 +793,8 @@ def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
     for candidate in REOPEN_TRUNK_CANDIDATES:
         if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
             continue
-        if git_maybe(repo, "merge-base", "--is-ancestor", sha, candidate) is None:
+        first_parent_chain = git_maybe(repo, "rev-list", "--first-parent", candidate)
+        if first_parent_chain is None or sha not in first_parent_chain.split():
             continue
         return (
             f"intent.needs-design-reason: commit {sha[:7]} ({relative}) has the "

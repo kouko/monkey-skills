@@ -770,6 +770,32 @@ def test_plain_single_parent_commit_on_main_is_still_blocked(tmp_path: Path) -> 
     assert "intent.needs-design-reason" in blocked_rules(result)
 
 
+def test_ancestor_off_first_parent_chain_is_still_blocked(tmp_path: Path) -> None:
+    """W0-03 round 3: `merge-base --is-ancestor` proves reachability, not
+    membership on the trunk's first-parent chain. A hand-written, single-
+    parent `... (#1)` commit on a side branch -- one that changes `status:`,
+    not `needs-design:`, so the deciding commit is this one and its message
+    never carries the line -- later merged into main with a REAL merge
+    commit (`--no-ff`) IS an ancestor of main but is NOT on main's
+    first-parent chain. The exception must not be granted; this must
+    still BLOCK."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    edit_intent(
+        repo, intent,
+        ("status: open", "status: confirmed 2026-09-04"),
+        "docs(loom): confirm the intent (#1)",
+    )
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--no-ff", "-m", "Merge branch 'feature'", "feature")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+
+
 # --- intent.schema: a `map:` names a Map that exists (W3 adversary P13) ----
 
 
