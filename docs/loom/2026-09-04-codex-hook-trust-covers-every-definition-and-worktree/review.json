@@ -77,6 +77,22 @@
       "model": "sonnet",
       "started": "2026-09-05T00:50:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-branch-end-trust-codex-51ae",
+      "model": "codex",
+      "started": "2026-09-05T01:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-branch-end-trust-sonnet-e07b",
+      "model": "sonnet",
+      "started": "2026-09-05T01:05:00+08:00",
+      "fresh_context": true
     }
   ]
 }
