@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改一條 intent 規則讀哪個 commit；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/]
-status: open
+status: withdrawn — superseded by 2026-09-04-checker-seams
 
 ## Problem
 `intent.needs-design-reason` 要求「最後改到 status／needs-design 那行的 commit」訊息逐字帶 `needs-design:` 行。分支上那個 commit 有帶，但 PR 以 squash 合併後，主幹上「最後改到那行的 commit」變成 squash commit（例如 #780 的 4e25360c），它的訊息沒有那一行，於是主幹上每個已合併 intent 跑 `loom_checker.py intent` 都被擋。W1-04 關閉 2026-09-02-simple-loom-flow 時撞到（實作者回報，2026-09-03）。
