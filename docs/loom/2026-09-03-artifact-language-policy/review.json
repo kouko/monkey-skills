@@ -1,13 +1,195 @@
 {
   "reviewed_sha": "4e459ed054a86e6cc830270d547b7729d2b0bd26",
-  "scope": "",
+  "scope": "wave-end:1",
   "vendors": [
-    "anthropic"
+    "anthropic",
+    "openai"
   ],
-  "verdicts": [],
-  "probes": [],
-  "questions": [],
-  "open_findings": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/agents/blind-runner.md:46",
+          "text": "issue (blocking): The new instruction requires the report to identify plan, review.json findings, evidence, probe names, and commit messages per artifact, but the unchanged trap at line 69 forbids file paths, function names, and loom vocabulary in that same report. A blind runner cannot satisfy both instructions reliably.",
+          "fix": "Carve the mandated language/template compliance table out of the line-69 prohibition, or require user-readable artifact labels while explicitly allowing the identifiers needed as evidence."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/contract/templates/PRINCIPLES-interview.md:3",
+          "text": "issue (blocking): The template says its English opening line must be said verbatim and localized at run time, while capture-intent still commands the executor to open with a different hard-coded Chinese sentence plus an English parenthetical. The station therefore does not actually localize the template for an arbitrary user's language.",
+          "fix": "Make the template an explicitly non-verbatim semantic source owned by capture-intent, or update capture-intent so it localizes and uses the template's opening instead of its hard-coded bilingual text."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py:216",
+          "text": "issue (blocking): The RED probe accepts any occurrence of 'three-part', 'three part', or 'UnitOfWork' plus any occurrence of 'English' anywhere in each agent contract. Text that rejects three-part names or mentions English for unrelated content would satisfy the test, so it does not pin the required instruction.",
+          "fix": "Assert the literal `test_<unit>_<state>_<expected>` shape and verify that the same instruction requires English probe docstrings and evidence notes."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py:110",
+          "text": "nitpick: The wave-end probe names contain six to ten underscore-separated fields, contradicting the newly declared three-part `test_<unit>_<state>_<expected>` shape.",
+          "fix": "Rename every test in this probe file so each name has exactly three semantic fields after `test_`, using compact or CamelCase field names where a field contains multiple words."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md:18",
+          "text": "nitpick: The report exempts two commit messages containing Chinese because the text is quoted, but the policy says commit messages are English and declares no quotation exception.",
+          "fix": "Report these two commit messages as language-policy misses, or amend the governing policy explicitly if quoted user-language text is intended to be allowed."
+        }
+      ],
+      "notes": [
+        "Reviewer paragraph outside the docs-lint carve-out; templates preserve keys/headings/markers; re-pins keep semantics. Pytest not executed (read-only sandbox has no writable temp dir)."
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-design/skills/capture-intent/SKILL.md :: \"Open with the sentence that template gives you: > 做產品功能前這個 repo 要先有一份產品原則...\"",
+          "text": "issue (blocking): capture-intent/SKILL.md hardcodes, verbatim, the template's PRE-change Chinese opening line plus a hand-written English gloss, both of which now diverge from PRINCIPLES-interview.md's new canonical English line; the station does not localise at run time here — it quotes a fixed string that the source of truth no longer contains.",
+          "fix": "Quote the template's current English sentence and drop the parenthetical, or replace the fixed quote with an instruction to read the template's current opening line and translate it into the user's language at run time."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/agents/reviewer.md :: \"a finding `text` not opening with a Conventional Comments label ... is a `nit`\" vs loom-code/agents/adversary.md:50 and loom-code/agents/blind-runner.md:57",
+          "text": "issue (blocking): reviewer.md's new clause scores ANY finding text in the delta against the Conventional Comments label and Acceptance 5 requires every review.json finding to comply, but adversary.md:50 and blind-runner.md:57 still show `text: \"<what>\"` unlabeled in their own output schema; their findings will be systematically nit-worthy or Acceptance 5 silently fails for those roles.",
+          "fix": "Add the `<label> (<decoration>): ...` prefix to the text: line in adversary.md's and blind-runner.md's output-contract examples, or narrow reviewer.md's paragraph to the reviewer's own text field and correct Acceptance 5 to match."
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/agents/blind-runner.md :: \"The report also lists, per internal artifact of the change (plan, review.json findings, evidence, probe names, commit messages), whether the English rule and the three template rules ... held.\"",
+          "text": "nitpick: the sentence implies all three template rules are checked against each of the five artifacts, but EARS binds only REQ-<n> lines, the label only review.json finding text, and the name shape only probe files.",
+          "fix": "Reword to name which rule binds which artifact."
+        }
+      ],
+      "notes": [
+        "Re-pins move together (1300→1340→1450), word counts re-verified (1447, gap 3). spec-minimal REQ-1 is a correct EARS event-driven form; the checker's annotation stripper tolerates both bracket styles. Ran pytest loom-code/scripts/ (1058 passed, 1 xfailed) and the probes dir (26 passed, 6 expected wave-2 RED)."
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "1cf2076e",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "see docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md",
+      "sha": "9aa955547f9764f5267ce0b2f58c6520e8f9f8a3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "3b87c6a78f2ac048cef4071182ebe057cf5e1b45",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q -k \"not stations_english\"",
+      "sha": "3b87c6a78f2ac048cef4071182ebe057cf5e1b45",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是——流程裡給機器讀的產物（spec、plan、審查紀錄、evidence、探針註解、commit、站文字、模板註解）一律英文；給你讀的（intent、三個決策點的對話、盲跑報告、PR 內文）維持你的語言；新 change 起硬切換、舊的不翻；違反只記 nit 不擋。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這組用詞規範要不要併進這個 change 的驗收（多一條：「內部文件遵守 RFC 2119 ＋ EARS ＋ 三條通用規則，寫進契約」），還是先只做「一律英文」、用詞規範另開？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？",
+      "type": "what"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/agents/blind-runner.md:46",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-codex"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/contract/templates/PRINCIPLES-interview.md:3 / loom-design/skills/capture-intent/SKILL.md opening line",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-codex, rev-we1-sonnet"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py:216",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-codex"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/agents/adversary.md:50, loom-code/agents/blind-runner.md:57",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-sonnet"
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
@@ -73,5 +255,9 @@
       "started": "2026-09-05T02:12:00+08:00",
       "fresh_context": true
     }
+  ],
+  "second_vendor": "codex",
+  "notes": [
+    "Round 1 outcome NEEDS_REVISION (both readers). Nits (probe file names in wave_end probes; quoted-source-text exception for commit messages; rule-to-artifact wording in blind-runner.md) are fixed inside the fix round because the same agents edit the same sentences; readers confirm them in round 2."
   ]
 }
