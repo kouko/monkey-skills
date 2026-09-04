@@ -271,6 +271,24 @@
       "started": "2026-09-05T02:40:00+08:00",
       "fresh_context": false,
       "note": "resumed W0-01 adversary fixes its own probe (wave-end:1-03) and the wave_end probe names nit"
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T03:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T03:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
     }
   ],
   "second_vendor": "codex",
