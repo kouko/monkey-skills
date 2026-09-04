@@ -37,6 +37,22 @@
       "model": "sonnet",
       "started": "2026-09-05T00:06:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-trust-b6f0",
+      "model": "sonnet",
+      "started": "2026-09-05T00:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-trust-d941",
+      "model": "sonnet",
+      "started": "2026-09-05T00:20:00+08:00",
+      "fresh_context": true
     }
   ]
 }
