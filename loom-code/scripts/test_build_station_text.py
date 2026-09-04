@@ -40,9 +40,10 @@ def test_small_lane_keeps_implementer_first() -> None:
 
 def test_paragraph_states_the_reason() -> None:
     paragraph = _dispatch_order_paragraph()
-    # the measured false-pass rate that justifies independent adversarial
-    # tests over the implementing agent's own tests.
-    assert "one in five" in paragraph or "20%" in paragraph or "19.7%" in paragraph
+    # the named study and measured false-pass rate that justify independent
+    # adversarial tests over the implementing agent's own tests.
+    assert "SWE-ABS" in paragraph
+    assert "19.7%" in paragraph
 
 
 def test_word_cap_within_soft_bound() -> None:

@@ -49,3 +49,18 @@ def test_mirror_is_the_source_with_exactly_one_stamp_line_inserted():
         "byte for byte — the mirror has drifted from loom_checker.py and "
         "needs `python3 loom-code/scripts/codex_scaffold.py --repo .`"
     )
+
+
+def test_mirror_stamp_version_matches_plugin_manifest():
+    import json
+
+    plugin_manifest = REPO_ROOT / "loom-code" / ".claude-plugin" / "plugin.json"
+    manifest_version = json.loads(plugin_manifest.read_text(encoding="utf-8"))["version"]
+
+    mirror_lines = CHECKER_MIRROR.read_text(encoding="utf-8").splitlines()
+    at = 1 if mirror_lines and mirror_lines[0].startswith("#!") else 0
+    stamped_line = mirror_lines[at]
+    assert stamped_line == f"{STAMP_PREFIX}{manifest_version}", (
+        f"mirror stamp is {stamped_line!r}, expected {STAMP_PREFIX}{manifest_version!r} — "
+        "re-run `python3 loom-code/scripts/codex_scaffold.py --repo .`"
+    )

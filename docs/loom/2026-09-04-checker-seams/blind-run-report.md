@@ -66,6 +66,7 @@
 
 - **Acceptance #6「逐位元相同」還沒有字面成立，需要你選一邊** — 鏡射檔多了一行版本戳（`# loom-checker 1.1.0`），這是既有的 `codex_scaffold.py` 設計。留著版本戳、把 Acceptance 的文字改成「除了那一行版本戳之外逐位元相同」是這次改動目前的立場（已用測試釘住）；把版本戳移出檔案讓「逐位元相同」照字面成立，則要動到 scaffold 產生器，不在這次範圍內。兩條路都可行，選哪一條需要你來定。
 - **審查紀錄裡有兩則「important」等級的發現，最終都被修正而不是被駁回**（`loom-code/scripts/loom_checker.py:843` 的型別過濾範圍問題、`loom-code/scripts/loom_checker.py:736` 的 squash 來源可驗證性問題）——這兩則都在後續輪次改了程式碼並經第二位讀者確認修好，`review.json` 裡沒有被駁回、未修的 important 或更嚴重的發現。
+- **這次改動自己違反了它寫的規則，先斬後奏，事後才補上對抗測試**——orchestrator 讓 W1-01（刪除 `loom-code/scripts/check_open_questions.py`，一個 manifest 底下 `**/scripts/check_*` 型別為 `gate` 的路徑）和 W1-03（改 `plugin.json` 這類 `code` 型別的檔）都用實作者先派，沒有照 build 站原本就有、這次又把 `code` 型 task 也納進去的「先派對抗者」規則走；分支收尾時的對抗者才回頭補測了這兩處（`test_abuse_branch_end.py` 對舊腳本殘留的 grep、對版本／CHANGELOG 狀態的檢查）。結果是：這次改動留下的紀錄，沒有示範它自己寫下的那條規則。
 
 ## 你可能會想確認的事
 

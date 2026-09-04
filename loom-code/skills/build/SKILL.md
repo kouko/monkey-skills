@@ -108,8 +108,8 @@ with a dispatch record written before that dispatch too. The
 implementer's own RED is one of those probes, not a test it invents
 itself; its dispatch record still goes in first, same as any other task.
 Independent adversarial tests catch false passes the implementing
-agent's own tests miss (measured: an ICML 2026 adversarial-test-synthesis
-study rejects about one in five previously passing patches), and
+agent's own tests miss (SWE-ABS, ICML 2026: adversarial test synthesis
+rejected 19.7% of previously passing patches), and
 up-front probes also verify the plan's stated current-state facts before
 code is written. The order is process discipline, not a gate: it shows
 in `dispatch[]` (the adversary's `started` precedes the implementer's)
