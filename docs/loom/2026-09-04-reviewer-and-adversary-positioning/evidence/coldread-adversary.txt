@@ -9,3 +9,16 @@
 6. mine — a hostile/boundary input (an accepted commit that should be rejected) is a textbook adversarial abuse case.
 7. reviewer's — count mismatch between two documents (CHANGELOG vs intent), pure reconciliation.
 8. implementer's — missing happy-path unit test is a gap in the task's own test coverage, not a boundary/abuse case I'm tasked to hunt.
+
+===== TRIAL 2 (sha 6351711d, after fix round) =====
+**(a)** The adversary attacks the *executable* change with runnable, re-runnable probes (boundary/hostile input, mutation survival) — it doesn't judge design and doesn't reconcile documents against each other; that reconciliation and design-judgment lens belongs to the reviewer.
+
+**(b)**
+1. **reviewer's** — comparing plan.md vs review.json numbers is document-to-document reconciliation, explicitly excluded from the adversary's remit.
+2. **mine** — a forgotten/stale-state boundary condition that makes a probe pass only under one environment; this is exactly the "forgotten state" class the adversary is told to probe.
+3. **reviewer's** — reconciling how artifacts are counted/recorded is a cross-document bookkeeping check, not an executable attack.
+4. **reviewer's** — checking the report's claim against the Acceptance criteria is document reconciliation (report vs. spec), not an executable probe.
+5. **reviewer's** — a missing-guidance gap in prose is a design/completeness judgment, which the file says explicitly is not the adversary's boundary.
+6. **mine** — a hostile/edge-case input (a specific commit topology) that breaks an assumed invariant; a boundary case an adversary should have written and run.
+7. **reviewer's** — CHANGELOG-vs-intent count mismatch is reconciling two documents against each other.
+8. **implementer's** — the adversary's job is abuse/boundary cases, not the happy path; missing happy-path unit tests falls on whoever wrote the function (TDD/engineering baseline), not on the adversary's negative-testing remit.

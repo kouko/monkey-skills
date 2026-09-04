@@ -10,3 +10,17 @@
 6. adversary's — 這是要刻意構造邊界案例（side-branch commit）驗證機制漏洞，屬於主動攻擊性探針，不是我該自己跑的檢查。
 7. mine — CHANGELOG 與 intent 項目數不一致，是文件間的 contradiction，屬於我的對帳範圍。
 8. implementer's — 缺少單元測試是實作交付物本身的缺口，我可以在 `tests` 維度發現並打分/開 finding，但補測試、寫正面 RED 是 implementer 的責任，不是我動手做的事（不過若要精確講「發 finding 抓到它」這件事仍是 mine 的動作——若題意是問「誰該去補這個洞」，答案是 implementer's）。
+
+===== TRIAL 2 (sha 6351711d, after fix round) =====
+**(a)** I judge by reading and citing evidence (documents, the ground truth, and a probe's already-recorded `command`/`artifact`) and never execute anything myself — anything provable only by running a case, or by writing/executing a probe, belongs to the adversary, not me.
+
+**(b)**
+
+1. **mine** — cross-document contradiction (plan vs review.json) is exactly the reconciliation check I own.
+2. **adversary's** — surfacing this needs actually running the candidate loop under stale vs fresh git state; that's an executable boundary case, not something I verify by reading.
+3. **adversary's** — probe artifact identity/counting is a property of how a probe was recorded and run, which is the adversary's territory, not something I can settle by citation alone.
+4. **mine** — "report says X but Acceptance requires Y" is a textual overclaim/contradiction between two documents, squarely my reconciliation job.
+5. **mine** — an omission in prose (missing "when to re-run") is a docs-dimension finding I score directly.
+6. **adversary's** — this is a discovered runtime/behavioral discrepancy between two commands that only running them exposes.
+7. **mine** — CHANGELOG vs intent count mismatch is a cross-document contradiction I check.
+8. **implementer's** — a missing unit test on a new function's happy path is a gap in what should have been written (test-first), not something I write or execute; I can only flag it via the `tests` dimension, not fix it.

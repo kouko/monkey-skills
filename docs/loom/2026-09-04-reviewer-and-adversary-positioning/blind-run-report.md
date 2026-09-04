@@ -1,6 +1,6 @@
 # reviewer／adversary 契約定位段＋讀者 finding 編探針＋角色觸發圖 — 我試了什麼、發生了什麼
 
-2026-09-04 在乾淨的專案副本上試的（commit `090ecf66`）。
+2026-09-04 在乾淨的專案副本上試的：第一輪 commit `090ecf66`，修正輪落地後第二輪重試 commit `6351711d`。
 
 ## 你要的東西，一條一條核對
 
@@ -19,16 +19,21 @@
   8. the new function's happy path has no unit test
   ```
   預期分法：讀者該認領 1、4、5、7；對抗者該認領 2、3、6；兩邊都該把 8 讓給實作者。
-- **發生了什麼**：
+- **發生了什麼（第一輪，`090ecf66`）**：
   - 讀給讀者契約的那支模型，一句話說出的邊界是「只做對帳判讀……不自己動手修、也不自己寫探針」，分類結果：1→自己、2→對方、3→自己、4→自己、5→自己、6→對方、7→自己、8→實作者。8 條裡 7 條對，只有第 3 條（`./probe.py` 與 `probe.py` 算兩個 artifact）它判給自己，預期是對方的。
   - 讀給對抗者契約的那支模型，一句話說出的邊界是「攻擊可執行行為……從不做設計判斷、從不對帳，那是讀者的事」，分類結果：1→對方、2→自己、3→對方、4→對方、5→對方、6→自己、7→對方、8→實作者。同樣 8 條裡 7 條對，唯一錯的也是第 3 條——這次它判給對方（讀者），而不是自己。
   - 也就是說，兩份契約單獨讀起來都能讓 agent 正確說出邊界並分對 7/8，錯的那一條剛好是同一條，而且兩邊互踢皮球（都覺得那是「對方的事」）。
+- **修正輪做了什麼**：對抗者段補上「empty, hostile or unnormalised input, forgotten state」這幾個具體的邊界類別；讀者段改成「anything provable by running a case belongs to the adversary or the implementer, not you」。這兩句都是針對第一輪冷讀漏接的第 3 條而補的。
+- **第二輪重試（`6351711d`，同一份 8 條清單、同樣的呼叫方式）**：
+  - 讀給讀者契約的模型這次分類：1→自己、2→對方、3→**對方**、4→自己、5→自己、6→對方、7→自己、8→實作者——**8 條全對**。它把第 3 條的理由寫成「探針如何被記錄與跑，是對抗者的地盤，不是我能光靠引用就判定的」。
+  - 讀給對抗者契約的模型這次分類：1→對方、2→自己、3→**對方（讀者）**、4→對方、5→對方、6→自己、7→對方、8→實作者——仍是 7/8，第 3 條依然判給讀者而不是自己，理由是「怎麼算 artifact 是跨文件的帳務問題，不是可執行的攻擊」。
+  - 也就是說：讀者契約補的那句話生效了，冷讀 8/8；對抗者契約補的「forgotten state」類別沒有把第 3 條的判斷拉過去，它仍然把「artifact 重複計算」讀成對帳而不是可執行案例。
 - **證據**：
-  - `docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-reviewer.txt`（讀者契約的原始回答）
-  - `docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-adversary.txt`（對抗者契約的原始回答）
-  - `docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-findings-list.txt`（餵給兩邊的同一份清單）
-  - 分數：讀者契約 7/8，對抗者契約 7/8，同一條（第 3 條）兩邊都分錯且方向相反
-- **結論**：partly（部分做到）——邊界句本身講得清楚、可用，兩次冷讀都只錯同一條；但第 3 條「artifact 重複計算算不算對帳」在兩份契約文字裡都沒有明確答案，兩邊各自往外推給對方，實際運作時這條 finding 可能會被兩邊都漏接。
+  - `docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-reviewer.txt`（兩輪原始回答都在，標了 TRIAL 1 / TRIAL 2）
+  - `docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-adversary.txt`（同上）
+  - `docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-findings-list.txt`（兩輪共用的同一份清單）
+  - 分數：第一輪讀者 7/8、對抗者 7/8；第二輪讀者 **8/8**、對抗者仍 **7/8**（同一條第 3 條）
+- **結論**：partly（部分做到，比第一輪進步）——讀者這邊修正輪已經把邊界講到冷讀滿分；對抗者這邊補的邊界類別清單沒有解決同一個模糊點，第 3 條「artifact 重複計算」兩輪都被對抗者契約推給讀者。如果要讓對抗者也 8/8，還需要再修一次對抗者段。
 
 ### 2. review 站的修正輪文字含那一句；`test_review_station_text.py` 斷言存在
 
@@ -47,14 +52,20 @@
 ### 3. 字數帽內；站摘要表若需同步照 `test_station_summary_table.py`；loom-code 版本 bump
 
 - **我怎麼試的**：用 Python 的 `len(str.split())`（不是 `wc`，兩種計數在不同系統上會不一致）分別數讀者段、對抗者段、修正輪那段的字數；跑 `test_station_summary_table.py`；比對 `plugin.json` 版本跟 `origin/main` 上的舊版本。
-- **發生了什麼**：讀者段 80 字（帽是 ≤80，剛好壓線）、對抗者段 61 字（帽 ≤80）、修正輪新段 58 字（帽 ≤60）——三段都在帽內。站摘要表測試 10 個案例全過（本次改動沒動到摘要表，符合預期）。版本從 `1.2.0` 升到 `1.2.1`。
+- **發生了什麼（第一輪，`090ecf66`）**：讀者段 80 字（帽是 ≤80，剛好壓線）、對抗者段 61 字（帽 ≤80）、修正輪新段 58 字（帽 ≤60）——三段都在帽內。站摘要表測試 10 個案例全過（本次改動沒動到摘要表，符合預期）。版本從 `1.2.0` 升到 `1.2.1`。
+- **修正輪之後重量（`6351711d`）**：修正輪為了補上 Acceptance 1 的邊界句，重寫了讀者段與對抗者段的文字。重新用 `len(str.split())` 數了一次：讀者段 **79 字**、對抗者段 **74 字**，都還在 ≤80 字帽內；修正輪那段文字沒有再改動。
 - **證據**：
   ```
+  # 090ecf66
   reviewer positioning para words: 80
   adversary positioning para words: 61
   fix-rounds new para words: 58
   10 passed in 0.13s
   plugin.json version: 1.2.1 (origin/main: 1.2.0)
+
+  # 6351711d（重量）
+  reviewer positioning para words: 79
+  adversary positioning para words: 74
   ```
 - **驗證**：works
 
@@ -84,6 +95,7 @@
 - **第二位讀者用 codex** — 上一個 change 用它一輪抓到 3 條全部屬實，這次沿用；多花幾分鐘與一點額度換來的是不同模型的獨立判斷。
 - **本次改動的測試檔（`test_review_station_text.py` 的新案例）走「探針先寫」流程** — 先寫紅測試再補實作文字，是本 repo 對 code 型任務的既有規則，這次照做而不是先寫文字再補測試。
 - **冷讀撞到的邊界模糊點（上面 Acceptance 1 的第 3 條）沒有被我修正** ——這是盲跑期間發現的事實，不是我幫你決定的事，但值得你知道：兩份契約文字都沒有明講「同一個檔案用兩種寫法被算成兩筆」這種問題該算誰的。這不是我這次能動的範圍（契約文字已經寫定、我不能修改任何東西），留在下面的「你可能還沒想到的事」。
+- **實作者為了守住 80 字帽，把讀者段裡「your output is a claim the fix round confirms」這句拿掉了** ——這句是 intent 的 Proposed outcome 2 裡明講要放進讀者定位段的內容之一（「產出是主張，靠修正輪確認」）。這不是我這次幫你決定的事，我只是照事實回報：修正輪重寫讀者段來補 Acceptance 1 的邊界句時，這句被拿掉了；我不對這個取捨下判斷，是不是可接受由你判斷。
 
 ## 你可能還沒想到的事
 
