@@ -179,6 +179,10 @@ test in that directory shares a probe's test-function name; commit them
 with a `Task:` trailer. Cold-read reports for docs or skill deltas never
 graduate.
 
+A permanent test that shares a probe's function name but not its body is
+a name collision, not a duplicate — rename the probe copy rather than
+dropping it.
+
 The intent's `status` is **not** touched yet. It becomes `closed` after the
 merge (step 6), because that is when it is true.
 

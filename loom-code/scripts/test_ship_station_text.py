@@ -52,3 +52,12 @@ def test_probe_graduation_paragraph_within_word_cap() -> None:
     para_end = section.index("\n\n", start)
     paragraph = section[para_start:para_end]
     assert len(paragraph.split()) <= 60
+
+
+def test_probe_graduation_paragraph_names_collision_not_duplicate() -> None:
+    section = _section_3_memory()
+    flat = _unwrapped(section)
+    assert (
+        "a name collision, not a duplicate" in flat
+    ), "expected the name-collision-vs-duplicate clause in the graduation paragraph"
+    assert "rename the probe copy rather than dropping it" in flat

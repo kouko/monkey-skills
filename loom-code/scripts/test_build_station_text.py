@@ -49,3 +49,16 @@ def test_word_cap_within_soft_bound() -> None:
     text = BUILD_SKILL.read_text(encoding="utf-8")
     word_count = len(text.split())
     assert word_count <= 3750, f"word count {word_count} exceeds soft cap 3750"
+
+
+def test_order_is_discipline_not_a_gate() -> None:
+    paragraph = _dispatch_order_paragraph()
+    flat = " ".join(paragraph.split())
+    assert "process discipline, not a gate" in flat
+    assert "dispatch[]" in flat
+    assert "no push rule refuses an implementer-first task" in flat
+
+
+def test_paragraph_drops_this_repos_own_change_citation() -> None:
+    paragraph = _dispatch_order_paragraph()
+    assert "this change's own" not in paragraph

@@ -111,12 +111,14 @@ Independent adversarial tests catch false passes the implementing
 agent's own tests miss (measured: an ICML 2026 adversarial-test-synthesis
 study rejects about one in five previously passing patches), and
 up-front probes also verify the plan's stated current-state facts before
-code is written — this change's own W0-01 probes caught two wrong plan
-facts that way. The **small lane** (the checker's `change_lane` recompute
-— a plan whose tasks touch only tests, docs, or CI config) skips this:
-the implementer goes first as usual, and the adversary attacks at the
-checkpoint instead, scoping the up-front cost to the lane that carries
-the risk.
+code is written. The order is process discipline, not a gate: it shows
+in `dispatch[]` (the adversary's `started` precedes the implementer's)
+and a reviewer can read it there; no push rule refuses an
+implementer-first task. The **small lane** (the checker's `change_lane`
+recompute — a plan whose tasks touch only tests, docs, or CI config)
+skips this: the implementer goes first as usual, and the adversary
+attacks at the checkpoint instead, scoping the up-front cost to the lane
+that carries the risk.
 
 Dispatch `loom-code:implementer` (contract: `agents/implementer.md`). Pass
 **paths, never file contents** — the implementer reads them itself:
