@@ -172,6 +172,13 @@ commit it separately **before** the review-only commit, and re-run the
 Trailers cost nothing here; a store entry costs a checkpoint. Decide which
 one the fact deserves.
 
+Before the push, copy this change's pytest probes under `evidence/probes/`
+into the repo's permanent test directory as byte copies, adjusting only
+their path lines and keeping the evidence originals, whenever no existing
+test in that directory shares a probe's test-function name; commit them
+with a `Task:` trailer. Cold-read reports for docs or skill deltas never
+graduate.
+
 The intent's `status` is **not** touched yet. It becomes `closed` after the
 merge (step 6), because that is when it is true.
 
