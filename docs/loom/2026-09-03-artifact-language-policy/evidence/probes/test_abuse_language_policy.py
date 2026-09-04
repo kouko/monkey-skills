@@ -205,28 +205,37 @@ def test_specminimal_ears_absent():
 
 @pytest.mark.parametrize("agent_path", [ADVERSARY_MD, BLIND_RUNNER_MD], ids=lambda p: p.name)
 def test_agents_probename_absent(agent_path: Path):
-    """Attack: both adversary.md and blind-runner.md must state (i) the
-    probe function name shape `test_<unit>_<state>_<expected>` (accepting
-    "three-part" / "UnitOfWork" phrasing) and (ii) that docstrings/evidence
-    are English. RED today — neither file mentions a function-name shape
-    or "English" anywhere (grep confirmed). GREEN target: W1-03."""
+    """Attack: both adversary.md and blind-runner.md must state the probe
+    function name shape as the literal string
+    `test_<unit>_<state>_<expected>`, and the SAME paragraph (split on
+    blank lines) that carries that literal string must also require
+    English for probe docstrings/evidence — a loose "three-part" mention
+    in one place and an unrelated "English" mention elsewhere would not
+    tie the shape to the language rule. RED today — neither file contains
+    the literal shape string (grep confirmed). GREEN target: W1-03."""
     text = agent_path.read_text(encoding="utf-8")
-    lower = text.lower()
-
-    name_shape_hit = (
-        "test_<unit>_<state>_<expected>" in text
-        or "three-part" in lower
-        or "three part" in lower
-        or "unitofwork" in lower
+    assert "test_<unit>_<state>_<expected>" in text, (
+        f"{agent_path.name} does not contain the literal string "
+        "'test_<unit>_<state>_<expected>'"
     )
-    english_hit = "english" in lower
 
-    missing = []
-    if not name_shape_hit:
-        missing.append("probe function name shape (three-part / UnitOfWork)")
-    if not english_hit:
-        missing.append('"English" mention for docstrings/evidence')
-    assert not missing, f"{agent_path.name} is missing: {missing}"
+    blocks = [b for b in text.split("\n\n") if b.strip()]
+    shape_paragraphs = [b for b in blocks if "test_<unit>_<state>_<expected>" in b]
+    assert shape_paragraphs, (
+        f"{agent_path.name} has the literal shape string but it is not "
+        "inside any paragraph (blank-line-delimited block)"
+    )
+
+    qualifying = [
+        b for b in shape_paragraphs
+        if "english" in b.lower()
+        and ("docstring" in b.lower() or "evidence" in b.lower())
+    ]
+    assert qualifying, (
+        f"{agent_path.name}'s paragraph containing "
+        "'test_<unit>_<state>_<expected>' does not also require English for "
+        "docstrings or evidence in the same paragraph"
+    )
 
 
 # --- (f) GREEN pin: --list-rules line count ---------------------------------
