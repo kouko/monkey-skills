@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
+  "reviewed_sha": "c0b9a7dc660987bb6275b055cb431e3253573488",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -232,6 +232,64 @@
         "omission": "PASS — nothing from round 2 regressed; graduation preserved every case"
       },
       "findings": []
+    },
+    {
+      "reviewer": "rev-close-codex-pos",
+      "vendor": "openai",
+      "model": "gpt-5",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "sha": "c0b9a7dc660987bb6275b055cb431e3253573488",
+      "statement": "The reviewed delta contains only the round-3 review.json bookkeeping and the single intent status change from confirmed to closed — PR #787; the review-only correction changes only the disputed question and adds its correction note.",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS — the corrected entry records consent for executor, cost, and cross-vendor data exposure after the user requested the audit"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "user-judgment-leak",
+          "anchor": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/review.json:374",
+          "text": "The original wording misrepresented the consent checkpoint as an agent-initiated question about whether another review should run.",
+          "fix": "Reword the entry as the actual consent question and classify it as `consequence`.",
+          "dismissed": "The rebuttal establishes that the user initiated the independent audit, and the corrected entry accurately records the mandatory executor, cost, and data-egress consent checkpoint rather than delegating review judgment to the user; the dated note preserves the correction history by rev-close-codex-pos"
+        }
+      ]
+    },
+    {
+      "reviewer": "rev-close-sonnet-pos",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "sha": "c0b9a7dc660987bb6275b055cb431e3253573488",
+      "statement": "Delta is exactly the round-3 review.json record and the one intent status line (confirmed -> closed 2026-09-04 — PR #787), matching ship/SKILL.md §6's mandated order.",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS — verified against ship/SKILL.md §6: intent closed before merge by design",
+        "incorrect-fact": "PASS — prior finding dismissed; status means 'closed by PR #N', merge is the next step",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/intent/2026-09-04-reviewer-and-adversary-positioning.md:6",
+          "text": "Status line asserts closed while PR #787 is open and the commit unpushed.",
+          "fix": "n/a",
+          "dismissed": "ship/SKILL.md §6 mandates close-on-branch before merge; the checker recomputes this shape on-branch; unpushed + open PR is the expected state at this dispatch by rev-close-sonnet-pos"
+        }
+      ]
     }
   ],
   "probes": [
@@ -346,6 +404,38 @@
       "sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "c0b9a7dc660987bb6275b055cb431e3253573488",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
+      "sha": "c0b9a7dc660987bb6275b055cb431e3253573488",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py -q",
+      "sha": "c0b9a7dc660987bb6275b055cb431e3253573488",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py -q",
+      "sha": "c0b9a7dc660987bb6275b055cb431e3253573488",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py"
     }
   ],
   "questions": [
@@ -371,8 +461,8 @@
     },
     {
       "decision_point": 3,
-      "text": "要不要跑一次獨立評估（codex, high）再決定？（答：跑；結果 incumbent-preferred，建議報告分開呈現 8/8 與 6/8）",
-      "type": "done"
+      "text": "獨立評估（你在③自己要求的，loom-workflow:independent-advisor audit 模式）派出前的同意：1 腿、codex／high、費用 unknown（訂閱額度）、整個 worktree 對 OpenAI read-only 可讀且專案 hooks 會在本機執行——認可外送嗎？（答：OK；結果 incumbent-preferred）",
+      "type": "consequence"
     },
     {
       "decision_point": 3,
@@ -512,11 +602,30 @@
       "model": "sonnet",
       "started": "2026-09-04T14:43:58+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-codex-pos",
+      "model": "codex",
+      "vendor": "openai",
+      "started": "2026-09-04T14:58:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-sonnet-pos",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-04T14:58:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
   "notes": [
     "2026-09-04 sha remap: history rewritten once (rebase adding `Task: branch-end-fix` trailers to four fix commits; trees unchanged). round-1 sha 94ec2f56 -> 9b27c52d, round-2 sha / reviewed_sha 0dbefe61 -> e2e91ccb, fixes 9c47fb58 -> acb901a7, bb7d3670 -> f1f057f4.",
-    "2026-09-04 second remap: dropped a mis-placed `Task:` line from the blind-run report commit (docs owe no trailer); round-2 sha / reviewed_sha e2e91ccb -> f0cf372d, tree unchanged."
+    "2026-09-04 second remap: dropped a mis-placed `Task:` line from the blind-run report commit (docs owe no trailer); round-2 sha / reviewed_sha e2e91ccb -> f0cf372d, tree unchanged.",
+    "2026-09-04 round 4 correction (rev-close-codex-pos finding): the decision-point-③ entry about the independent audit was re-worded from 'whether to run an evaluation' to the consent question actually asked (executor / cost / data egress) and re-typed `consequence`; the audit itself was user-initiated, not an agent question about review mechanism."
   ]
 }
