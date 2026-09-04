@@ -334,30 +334,31 @@ def test_reviewer_claim_clause_is_contiguous() -> None:
     )
 
 
-def test_shipped_claim_guard_is_satisfied_by_two_unrelated_mentions(
+def test_shipped_claim_guard_rejects_two_unrelated_mentions(
     tmp_path: Path,
 ) -> None:
-    """branch-end-02, the SURVIVING mutant -- a documented coverage hole.
+    """branch-end-02, the surviving mutant from round 2 -- now DEAD.
 
-    9c47fb58's guard is `"claim" in para` and `"fix round" in para`, two
+    9c47fb58's guard was `"claim" in para` and `"fix round" in para`, two
     independent checks. A paragraph that says "you claim nothing" and
-    separately mentions "the fix round" passes it while asserting the exact
-    opposite of the requirement. This case asserts the survival, so the hole
-    is a fact rather than an opinion; `test_reviewer_claim_clause_is_contiguous`
-    is the probe that closes it. Severity nit: the shipped text is correct
-    today, and this pair is what keeps it correct.
+    separately mentions "the fix round" passed it while asserting the exact
+    opposite of the requirement -- recorded here in round 2 as a surviving
+    mutant. Ship nit commit 2ec7f01e closed it by replacing both checks
+    with one assertion pinning the contiguous clause; the same decoy that
+    used to survive must now make the shipped guard raise.
     """
     decoy = (
         "You own reconciliation in this flow: whether what was delivered "
         "matches what the intent promised. You claim nothing about running "
         "code. The fix round is elsewhere. You write no probes."
     )
-    _run_shipped(
-        "test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms",
-        REVIEWER_REL,
-        _with_mutated_paragraph(REVIEWER, decoy),
-        tmp_path,
-    )  # survives -- that is the hole
+    with pytest.raises(AssertionError):
+        _run_shipped(
+            "test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms",
+            REVIEWER_REL,
+            _with_mutated_paragraph(REVIEWER, decoy),
+            tmp_path,
+        )  # dies -- the hole is closed
 
     flat = " ".join(
         _shipped_module()
@@ -384,16 +385,19 @@ def test_reviewer_shipped_guard_dies_when_fix_round_is_cut(tmp_path: Path) -> No
         )
 
 
-def test_shipped_claim_half_of_the_guard_is_vacuous(tmp_path: Path) -> None:
-    """branch-end-02, the SECOND surviving mutant. A vacuous half-assertion.
+def test_shipped_claim_half_of_the_guard_now_dies_on_the_stripped_clause(
+    tmp_path: Path,
+) -> None:
+    """branch-end-02, the second surviving mutant from round 2 -- now DEAD.
 
     9c47fb58's `assert "claim" in para` was ALREADY satisfied before the fix:
     the same paragraph has said "overclaim (said, not done)" since W1-01, and
     `"claim" in "overclaim"` is True. So deleting the whole clause word
-    `claim` leaves that half of the guard green -- it never tested anything.
-    Only the `fix round` half above does real work. This case asserts the
-    survival so the vacuity is a recorded fact; the contiguity probe is what
-    actually covers the requirement. Severity nit (test quality, not text).
+    `claim` left that half of the guard green -- recorded in round 2 as a
+    vacuous half-assertion. Ship nit commit 2ec7f01e closed it by replacing
+    both independent checks with one assertion pinning the contiguous
+    clause; the same clause-stripped text must now make the shipped guard
+    raise.
     """
     text = REVIEWER.read_text(encoding="utf-8")
     para = _paragraph(REVIEWER)
@@ -403,12 +407,13 @@ def test_shipped_claim_half_of_the_guard_is_vacuous(tmp_path: Path) -> None:
     )
     stripped = re.sub(r"\bclaim\b", "", para, count=1)
     assert "claim" in stripped, "word-boundary deletion did not leave overclaim"
-    _run_shipped(
-        "test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms",
-        REVIEWER_REL,
-        text.replace(para, stripped, 1),
-        tmp_path,
-    )  # survives -- the `claim` half asserts nothing
+    with pytest.raises(AssertionError):
+        _run_shipped(
+            "test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms",
+            REVIEWER_REL,
+            text.replace(para, stripped, 1),
+            tmp_path,
+        )  # dies -- the vacuity is closed
 
     flat = " ".join(stripped.split())
     assert not re.search(r"claim[^.]{0,40}fix round[^.]{0,20}confirms?", flat), (
