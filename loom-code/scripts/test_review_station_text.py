@@ -73,6 +73,20 @@ def test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms() -> 
     assert len(para.split()) <= 80
 
 
+def test_adversary_agent_paragraph_owns_probe_artifact_bookkeeping() -> None:
+    """Branch-end fix (branch-end-01): cold-read trial 2 showed the class
+    'same artifact recorded under two spellings/paths counted twice' was
+    claimed by neither role. The adversary paragraph must claim a probe's
+    own artifact path (spelling/count) while explicitly leaving a
+    cross-document count to the reviewer, within the 80-word cap."""
+    text = (REPO / "loom-code/agents/adversary.md").read_text(encoding="utf-8")
+    para = _you_own_paragraph(text)
+    assert "artifact path" in para
+    assert "reviewer's" in para
+    assert "cross-document" in para
+    assert len(para.split()) <= 80
+
+
 def test_fix_rounds_reader_finding_to_probe_sentence_under_60_words() -> None:
     """W1-01: fix-rounds.md gains a block naming `important`, the adversary,
     and a probe, <= 60 words counted with `len(str.split())`."""
