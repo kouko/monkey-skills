@@ -423,6 +423,22 @@
       "started": "2026-09-05T04:40:00+08:00",
       "fresh_context": false,
       "note": "two U+3000 separators removed from plan.md template and its Codex mirror; stale probe docstring corrected (branch-end adversary finding)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T04:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T04:55:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
