@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改兩份 agent 契約檔的一段文字與釘住它的測試常數；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-04-reviewer-and-adversary-positioning/review.json, docs/loom/2026-09-04-reviewer-and-adversary-positioning/blind-run-report.md, docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-adversary.txt]
-status: confirmed 2026-09-04
+status: closed 2026-09-04 — PR #789
 
 ## Problem
 `loom-code/agents/reviewer.md` 與 `agents/adversary.md` 開頭的「You own…」定位段各有一個 ≤80 英文字的硬帽（`loom-code/scripts/test_review_station_text.py` 釘住）。2026-09-04-reviewer-and-adversary-positioning 的實測：帽子設在剛好裝得下內容的位置——讀者段 79/80、對抗者段 80/80——結果第一次修正輪為了守帽把 intent 明講要放的一句（「產出是主張，靠修正輪確認」）整句刪掉，讀者判 important，多跑一輪才放回去。帽子在替「這段該講幾件事」做決定，但它量的只是長度。同一個 80 在兩份檔案裡的份量也差很多：reviewer.md 全檔 1334 字（定位段佔 6%），adversary.md 526 字（佔 15%）。另外冷讀留了一個殘留：只讀對抗者契約的 agent 能 8/8 分出「哪些是我的」，但把不是自己的兩條（報告誇大、文件遺漏）讓給了實作者而不是讀者——對抗者段沒有一句說「不是我的那些，誰的是讀者的、誰的是實作者的」，而現在 0 字餘裕也塞不進去。業界標準查過：只有句長有數字（GOV.UK／ASD-STE100 一句 ≤25 詞），沒有任何標準給「一段幾個詞」；80 對不到任何出處。
