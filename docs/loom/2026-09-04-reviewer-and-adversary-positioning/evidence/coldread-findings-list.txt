@@ -1,0 +1,8 @@
+1. "plan says 23 records, review.json has 126"
+2. "stale origin/main short-circuits the candidate loop — probe passes on a fresh clone only"
+3. "./probe.py and probe.py counted as two artifacts"
+4. "report says 'works' but Acceptance 6 requires byte-identical files"
+5. "graduation paragraph never says when to re-run branch-end"
+6. "merge-base --is-ancestor accepts a side-branch commit that first-parent walk rejects"
+7. "CHANGELOG lists 7 items, intent has 8"
+8. "the new function's happy path has no unit test"

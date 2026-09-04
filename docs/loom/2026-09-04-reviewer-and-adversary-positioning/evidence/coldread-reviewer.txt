@@ -1,0 +1,42 @@
+**(a) 邊界**：reviewer 只做「對帳判讀」——比對已存在的文件/程式碼與意圖是否一致並下判決，不自己動手修、也不自己寫探針（正面 RED 是 implementer 的活，adversary 才負責主動攻擊/製造失敗案例）。
+
+**(b) 8 項歸屬：**
+
+1. mine — 這是文件/JSON 間數字對不上，屬於 reconciliation 的 contradiction 檢查，是我的職責。
+2. adversary's — 這是要主動製造邊界情境（stale clone）才會浮現的攻擊性案例，屬於 adversary 的探針工作，我只能引用已存在的 probe 記錄。
+3. mine — 這是產出物本身內部不一致（重複計算），屬於我讀 artifact 時要抓的 correctness/inconsistency。
+4. mine — 這是 overclaim（說完成但沒達到驗收條件），正是我 reconciliation 定義裡明講的方向之一。
+5. mine — 這是文件的 omission（該講的沒講清楚何時該做），屬於 docs 維度的 omission。
+6. adversary's — 這是要刻意構造邊界案例（side-branch commit）驗證機制漏洞，屬於主動攻擊性探針，不是我該自己跑的檢查。
+7. mine — CHANGELOG 與 intent 項目數不一致，是文件間的 contradiction，屬於我的對帳範圍。
+8. implementer's — 缺少單元測試是實作交付物本身的缺口，我可以在 `tests` 維度發現並打分/開 finding，但補測試、寫正面 RED 是 implementer 的責任，不是我動手做的事（不過若要精確講「發 finding 抓到它」這件事仍是 mine 的動作——若題意是問「誰該去補這個洞」，答案是 implementer's）。
+
+===== TRIAL 2 (sha 6351711d, after fix round) =====
+**(a)** I judge by reading and citing evidence (documents, the ground truth, and a probe's already-recorded `command`/`artifact`) and never execute anything myself — anything provable only by running a case, or by writing/executing a probe, belongs to the adversary, not me.
+
+**(b)**
+
+1. **mine** — cross-document contradiction (plan vs review.json) is exactly the reconciliation check I own.
+2. **adversary's** — surfacing this needs actually running the candidate loop under stale vs fresh git state; that's an executable boundary case, not something I verify by reading.
+3. **adversary's** — probe artifact identity/counting is a property of how a probe was recorded and run, which is the adversary's territory, not something I can settle by citation alone.
+4. **mine** — "report says X but Acceptance requires Y" is a textual overclaim/contradiction between two documents, squarely my reconciliation job.
+5. **mine** — an omission in prose (missing "when to re-run") is a docs-dimension finding I score directly.
+6. **adversary's** — this is a discovered runtime/behavioral discrepancy between two commands that only running them exposes.
+7. **mine** — CHANGELOG vs intent count mismatch is a cross-document contradiction I check.
+8. **implementer's** — a missing unit test on a new function's happy path is a gap in what should have been written (test-first), not something I write or execute; I can only flag it via the `tests` dimension, not fix it.
+
+===== TRIAL 3 (sha 571f24f2, after fix round 2 — commits 9c47fb58, bb7d3670) =====
+**(a) 角色邊界**
+
+我（reviewer）是判官：對已交付的東西打分／找 finding，靠**閱讀**（含比對 intent／spec／plan 與文字本身）來抓 omission／overclaim／contradiction，且不動任何檔案；另一個角色（adversary）是靠**執行**——自己寫並跑 probe（mutation/fuzz/abuse case）來讓 change 失敗，`probes[]` 由它（或 implementer）產生，我只能引用，不能自己寫。
+
+**(b) 逐項分類**
+
+1. "plan says 23 records, review.json has 126" — **mine**：跨文件數字不一致，是我靠讀文件就能抓的 contradiction/omission 類 reconciliation。
+2. "stale origin/main short-circuits the candidate loop — probe passes on a fresh clone only" — **the other role's**：這是對執行環境/probe 本身的可靠性做對抗性驗證（探測 probe 在什麼條件下會假過），屬於執行面 adversarial 工作，不是讀文件能抓到的。
+3. "./probe.py and probe.py counted as two artifacts" — **the other role's**：這是 probe 記帳/artifact 計數的執行細節，屬於寫 probe 的一方（adversary）該管的簿記問題，不是我讀文字能判定的 reconciliation。
+4. "report says 'works' but Acceptance 6 requires byte-identical files" — **mine**：典型 overclaim——文字聲稱達成，但對照 intent 的 Acceptance 條件並未真正滿足，正是我 reconciliation 的核心工作。
+5. "graduation paragraph never says when to re-run branch-end" — **mine**：文件遺漏（omission）—— 散文缺了一個該有的觸發說明，屬於我 docs 類維度該抓的缺口。
+6. "merge-base --is-ancestor accepts a side-branch commit that first-parent walk rejects" — **the other role's**：這是對機制/邏輯做邊界案例攻擊（找出兩種判斷方式的不一致會被繞過），是執行面的 adversarial probe，不是文件核對。
+7. "CHANGELOG lists 7 items, intent has 8" — **mine**：兩份文件數字對不上，是我該抓的 cross-document contradiction。
+8. "the new function's happy path has no unit test" — **the implementer's**：這是「該寫測試但沒寫」的建置缺口——是實作者在寫程式時的疏漏，不是 reviewer 靠讀文件抓，也不是 adversary 主動攻擊出來的（除非它剛好在跑 probe 時發現並記錄，但本質上是測試覆蓋率的實作缺口）。

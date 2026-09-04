@@ -5,6 +5,29 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] — 2026-09-04 — reviewer/adversary positioning
+
+`docs/loom/2026-09-04-reviewer-and-adversary-positioning/`. Prose-only —
+no rule added, no rule changed.
+
+1. `agents/reviewer.md` and `agents/adversary.md` each gain a positioning
+   paragraph: the reviewer owns reconciliation (omission, overclaim,
+   contradiction across the intent, the plan, and the text itself) and
+   may cite an existing `probes[]` record but writes no probes itself;
+   the adversary owns the negative (behaviour that must not happen) via
+   executable, re-runnable evidence, and does not judge design or
+   reconcile documents. `test_reviewer_agent_single_contract.py`'s word
+   cap for `reviewer.md` rises 1200 → 1300 to hold the addition.
+2. `skills/review/references/fix-rounds.md` states that a reader's
+   `important` finding, when it can be written as a runnable case, is
+   encoded by that fix round's adversary into the change's probe file,
+   run once, and recorded as one `probes[]` entry — inside the fix
+   round, no hand-off.
+3. `docs/loom/README.md` gains a section on when the three checkpoint
+   verification roles (blind-runner, reviewer, adversary, plus
+   implementer) are triggered — a sequence diagram and a step-by-step
+   trigger table.
+
 ## [1.2.0] — 2026-09-04 — checker seams
 
 `docs/loom/2026-09-04-checker-seams/`. Rule count stays 27 — no rule added,
