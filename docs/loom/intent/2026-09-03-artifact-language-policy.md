@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — engineering；會改的 loom-code/contract/templates/** 全是 .md 模板，checker 的 interface-surface 重算把 templates/ 下的非程式檔排除，使用者讀或輸入的介面沒有改變
 evidence: [docs/loom/2026-09-03-package-tests-run-in-parallel/review.json]
-status: confirmed 2026-09-05
+status: closed 2026-09-05 — PR #791
 
 ## Problem
 loom 1.0 只規定「盲跑報告用使用者的語言」和「intent 是使用者自己的話」；spec、plan、review.json 的 finding 與 notes、evidence、探針 docstring、commit 訊息、站文字、模板註解都沒有語言規定。結果本 repo 的 1.0 設計文件與模板註解是中文，之後兩個真實 change 的 plan、evidence、cost 筆記也跟著寫成中文，而讀這些的是 reviewer、implementer、adversary——模型在英文開發語料上最強、讀中文規格的誤讀率較高，docs linter（Vale／textlint 的英文規則集）也接不上。kouko 原本的設計邏輯：內部文件與規格用英文，只在要給使用者看的時候才有使用者語言的版本。
