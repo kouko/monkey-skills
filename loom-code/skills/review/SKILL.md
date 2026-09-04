@@ -178,7 +178,9 @@ HEAD value above, copied onto the verdict
 
 **Second vendor.** Read `docs/loom/KICKOFF-DEFAULTS.md`. If it carries
 `second-vendor: <cli>`, one of the two legs runs on that command-line tool,
-non-interactively — for Codex:
+non-interactively — for Codex, first run `--trusted`: any definition
+reading `never` means print the BLOCK lines, ask for `/hooks` in that
+folder, and **stop**.
 
 ```
 codex exec --sandbox read-only -o <out-file> "<the reviewer prompt above>" < /dev/null
