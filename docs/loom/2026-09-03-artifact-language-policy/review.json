@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "6f2f6836f869a1def01984dd755e33a656084981",
+  "reviewed_sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -288,6 +288,237 @@
       "notes": [
         "Verified independently: package suite green (1105 passed in the two-path subset), 27 rules, version-bump and manifest-sync checks exit 0, templates and mirrors byte-identical and CJK/U+3000-free, branch diff scoped, all 9 review.json findings labelled, the two Chinese-bearing commit messages are quoted-source exemptions."
       ]
+    },
+    {
+      "round": 2,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "715ccab6904448a11f02bbcd38e55c6076a37a97",
+      "dimension_scores": {
+        "omission": "PASS_WITH_NOTES",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md:62",
+          "text": "issue: the added disclosure describes two product stations, but W2-01 covered six stations across two plugins.",
+          "fix": "Name the six stations across two plugins."
+        }
+      ],
+      "notes": [
+        "branch-end-01 fixed; branch-end-02 fixed; branch-end-03 unfixed (report bullet said two product stations, W2-01 covered six across two plugins); probe-name nit fixed; report-count nit unfixed (test_matcher_shipPredicate_negatedSentence_rejected has four fields)."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "715ccab6904448a11f02bbcd38e55c6076a37a97",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "loom-code/scripts/test_language_station_text.py:225",
+          "text": "issue: test_matcher_shipPredicate_negatedSentence_rejected has four underscore-separated segments, so the report's all-37-three-part claim is inaccurate by one function.",
+          "fix": "Rename to a three-part form and re-verify the claim."
+        }
+      ],
+      "notes": [
+        "branch-end-04 fixed; branch-end-03 fixed; probe-name nit fixed. New: the fix delta added a four-field test name, so the report's 'all 37 three-part' claim is off by one."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "059939af7dae47a2ab2f475904ef4e77a91846d9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "branch-end-03 fixed (six stations across two plugins named); report-count nit fixed (test_matcher_shipNegatedSentence_rejected)."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "059939af7dae47a2ab2f475904ef4e77a91846d9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Round-2 important fixed: three-part name; 9+8+11+9=37 all three-part."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/memory/README.md:199",
+          "text": "issue (blocking): the index links to a-prose-pin-must-require-an-affirmative-un-negated-sentence.md but the body file is untracked and absent from the reviewed commit.",
+          "fix": "Add and commit the file."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/memory/README.md:356",
+          "text": "issue (blocking): the index links to pre-branch-end-ci-rehearsal-uses-full-history-without-a-local-main.md but the body file is untracked and absent from the reviewed commit.",
+          "fix": "Add and commit the file."
+        }
+      ],
+      "notes": [
+        "Graduated copies match originals after masking path lines; no name collisions; scope widening limited to docs/loom/memory/."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "omission",
+          "anchor": "docs/loom/memory/README.md :: [a-prose-pin-…] and [pre-branch-end-ci-rehearsal-…]",
+          "text": "issue: 5e3b45ca adds two index lines but never git-added the two entry files; the branch would push a memory README with two dangling wikilinks and silently drop both lessons.",
+          "fix": "git add both files and commit."
+        }
+      ],
+      "notes": [
+        "Graduated probes byte-identical apart from path lines; no collisions; scope widening commented. Ran the three graduated files: 41 passed."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "bc4e9948b71483a7503f726369d8cc1243116b5a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Both memory entry bodies exist in the reviewed commit; memory integrity check passes; the delta contains only the two bodies and the dispatch record."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "bc4e9948b71483a7503f726369d8cc1243116b5a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Round-4 fatal fixed by 9e6cb1cf; both paths resolve via git show; content identical to what was verified in round 4; no dangling wikilinks."
+      ]
     }
   ],
   "probes": [
@@ -362,6 +593,62 @@
       "sha": "9e4ca03e9242d6cae6092e3cdcc39ac68d102b2f",
       "result": "pass",
       "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "3227e59be72c34d0cc2050e22a62002d7ae842a8",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
     }
   ],
   "questions": [
@@ -379,6 +666,11 @@
       "decision_point": 1,
       "text": "這次要不要用 Codex 當第二位讀者？",
       "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "你要的五件事都試過、結果如上（第 5 條第一版報告數字曾錯、已更正揭露）；對既有資料沒動；我替你決定的 11 項已列——這是你要的嗎？OK 就推上去開 PR。",
+      "type": "done"
     }
   ],
   "open_findings": [
@@ -414,25 +706,43 @@
       "id": "branch-end-01",
       "anchor": "loom-design/skills/capture-intent/SKILL.md:147",
       "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
-      "raised_by": "rev-be-codex"
+      "raised_by": "rev-be-codex",
+      "resolved": "closed by 8c55ce1a — capture-intent sentence lists the internal artifacts and keeps dialogue, blind-run report and PR body in the user's language; confirmed rev-be-codex round 2"
     },
     {
       "id": "branch-end-02",
       "anchor": "loom-code/scripts/test_language_station_text.py:49",
       "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
-      "raised_by": "rev-be-codex"
+      "raised_by": "rev-be-codex",
+      "resolved": "closed by da682b2e — station pins require an affirmative un-negated sentence, three matcher self-tests; confirmed rev-be-codex round 2"
     },
     {
       "id": "branch-end-03",
       "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md :: 我幫你決定了的事",
       "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
-      "raised_by": "rev-be-codex, rev-be-sonnet"
+      "raised_by": "rev-be-codex, rev-be-sonnet",
+      "resolved": "closed by 9ec37a08 + 7a02311a — decided-for-you bullets added, six stations across two plugins named; confirmed rev-be-sonnet round 2 and rev-be-codex round 3"
     },
     {
       "id": "branch-end-04",
       "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md :: 34 個測試函式",
       "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
-      "raised_by": "rev-be-sonnet"
+      "raised_by": "rev-be-sonnet",
+      "resolved": "closed by 6ec8995e + 9ec37a08 + 7a02311a — probes renamed, count recomputed (37, all three-part), earlier false claim disclosed; confirmed rev-be-sonnet rounds 2–3"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/scripts/test_language_station_text.py:225",
+      "origin_sha": "715ccab6904448a11f02bbcd38e55c6076a37a97",
+      "raised_by": "rev-be-sonnet",
+      "resolved": "closed by 7a02311a — renamed test_matcher_shipNegatedSentence_rejected; confirmed rev-be-sonnet round 3"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/memory/README.md:199,356",
+      "origin_sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "raised_by": "rev-be-codex, rev-be-sonnet",
+      "resolved": "closed by 9e6cb1cf — both entry bodies committed; confirmed both readers round 5"
     }
   ],
   "dispatch": [
@@ -725,12 +1035,32 @@
       "started": "2026-09-05T07:12:00+08:00",
       "fresh_context": false,
       "note": "resumed; confirms the two memory entry files are committed"
+    },
+    {
+      "task": "branch-end round 6",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T07:55:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the trailer-only history rewrite left every tree identical"
+    },
+    {
+      "task": "branch-end round 6",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T07:55:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the trailer-only history rewrite left every tree identical"
     }
   ],
   "second_vendor": "codex",
   "notes": [
     "Round 1 outcome NEEDS_REVISION (both readers). Nits (probe file names in wave_end probes; quoted-source-text exception for commit messages; rule-to-artifact wording in blind-runner.md) are fixed inside the fix round because the same agents edit the same sentences; readers confirm them in round 2.",
     "wave-end:1 outcome after three rounds: PASS_WITH_NOTES (round 2 codex PASS_WITH_NOTES on the one remaining id, round 3 PASS). reviewed_sha advanced to 6f2f6836.",
-    "branch-end round 1: NEEDS_REVISION (both readers). The branch-end adversary's U+3000 finding was fixed before the readers ran (e9561501) and is recorded in dispatch[] as fix:branch-end; the adversarial probe files are recorded at the sha where all three pass."
+    "branch-end round 1: NEEDS_REVISION (both readers). The branch-end adversary's U+3000 finding was fixed before the readers ran (e9561501) and is recorded in dispatch[] as fix:branch-end; the adversarial probe files are recorded at the sha where all three pass.",
+    "branch-end outcome after five rounds: PASS (rounds 3 and 5 PASS from both readers; the round-4 finding was the ship memory step's own untracked files). reviewed_sha advanced to bc4e9948. Cost of this change: ~6h plan→branch-end, 26 dispatch entries (7 reviewer rounds × 2 readers counted), two Codex sessions resumed across rounds.",
+    "2026-09-05 ship: the push checker blocked on push.dispatch-covers-tasks — four fix-round commits (blind-runner rows, PRINCIPLES opening line, label prefix, quoted-source-text exception) carried Closes: lines but no Task: trailer. Commit messages from the branch base to HEAD were rewritten with git filter-branch --msg-filter to add `Task: fix:wave-end:1` to those four; every tree is byte-identical (git diff against the pre-rewrite tip is empty; backup ref backup/artifact-language-policy-pre-trailer-rewrite kept locally), so verdict, probe and open_findings shas recorded before this note name the pre-rewrite commits of the same trees. reviewed_sha moved to the rewritten tip and the package tests and adversarial probes were re-run and re-recorded there."
   ]
 }
