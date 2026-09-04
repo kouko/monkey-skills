@@ -1,6 +1,6 @@
 {
   "name": "loom-code",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Five stations — write-plan, build, review, ship, maintain — carry one change from plan to merged PR, with a checker that recomputes the review before every push. Claude Code + Codex.",
   "author": {
     "name": "kouko",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# loom-checker 1.2.3
+# loom-checker 1.2.4
 """The loom checker -- the single deterministic layer of the loom flow.
 
 Every rule here RECOMPUTES its fact from the repository (the intent file,
