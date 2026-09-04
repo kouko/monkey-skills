@@ -23,10 +23,13 @@ Three families here, none of them present in the W0-01 file:
       grep-checked against build/SKILL.md and review/SKILL.md. A README
       claim the skills do not support is an `incorrect-fact` finding.
 
-Plus one `xfail(strict=True)` case carrying a finding found by cold reading
-and then pinned executably: reviewer.md now contradicts itself about
-`probes[]`'s `result` field. Strict xfail means the day the wording is
-fixed this file goes RED on XPASS, so the marker cannot outlive the bug.
+One case was a strict xfail at 090ecf66: reviewer.md contradicted itself
+about `probes[]`'s `result` field. The fix round (957cec8e..6351711d) closed
+findings 1-4, so the marker is lifted and
+`test_reviewer_result_citation_contradicts_tests_dimension_rule` now asserts
+the fixed state as a regression guard. Every line below is re-read against
+the FIXED paragraphs; the original verdict is kept beside each closure so a
+later reader can see what the wording used to permit.
 
 Word counts use `len(str.split())`, never `wc` (BSD/GNU never agree).
 
@@ -37,11 +40,12 @@ fix-rounds.md. Cold-read attempts that cannot execute are one line each,
 per `docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py`:
 
 * forge an artifact the gate trusts
-  - reviewer.md: PARTLY CLOSED. W0-01 left this LIVE ("a reader can cite
-    `probes[]` it never read"). Shipped wording says "cite an adversary
-    probe record's command and result already in `probes[]`" -- `command`
-    and "already in" are checkable against the file, so a fabricated
-    citation no longer looks identical to a real one. Residue: nothing
+  - reviewer.md: PARTLY CLOSED (unchanged by the fix round; still the one
+    residue this pass leaves open). W0-01 left this LIVE ("a reader can cite
+    `probes[]` it never read"). Shipped wording says "cite a probe's
+    `command` and `artifact` recorded in this round's `probes[]`" -- both
+    fields and the round scope are checkable against the file, so a
+    fabricated citation no longer looks identical to a real one. Residue: nothing
     RECOMPUTES the match (no checker rule; per CLAUDE.md unmarked prose is
     not a gate), so the defence is a reader's diligence. Pinned by
     `test_reviewer_citation_points_at_a_checkable_record`.
@@ -60,10 +64,9 @@ per `docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py
     `test_fix_rounds_once_is_uncovered` reproduces the hole by deleting
     "once" and watching the W0-01 case still pass;
     `test_fix_rounds_block_records_a_single_run` closes it.
-  - reviewer.md: LIVE, nit. "cite ... result already in `probes[]`" has no
-    freshness qualifier: a `probes[]` record from an earlier round, taken
-    at an older `sha`, reads as citable. The round's `scope`/`sha` fields
-    exist, and the paragraph does not point at them.
+  - reviewer.md: CLOSED (was LIVE, nit -- finding 4). The citation had no
+    freshness qualifier, so a record from an earlier round at an older
+    `sha` read as citable; 36193e26 scopes it to "this round's `probes[]`".
   - adversary.md: HELD -- "re-runs on a clean tree" is itself the
     anti-replay clause.
 * cross a trust boundary (repo / worktree / process)
@@ -72,22 +75,20 @@ per `docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py
   - fix-rounds.md: NOT APPLICABLE to the text; live only for the concurrent
     4a/4b writers in one tree, which is a build-station concern.
 * self-exempt via a prose condition
-  - reviewer.md: LIVE, important. "Reconciliation-first, not
-    execution-free" is an unbounded grant with no stated ceiling; the only
-    thing bounding it is the next clause. Worse, reviewer.md's OWN older
-    rule says a dimension resting on evidence you did not run yourself
-    scores `PASS_WITH_NOTES`, and the new permission to cite an adversary
-    probe never points at that downgrade -- so a reader can cite a probe
-    and hand out a clean `PASS`. Pinned as a finding, not a test: the fix
-    is one clause, and asserting its absence would be asserting a bug.
+  - reviewer.md: CLOSED (was LIVE, important -- finding 2). The unbounded
+    "Reconciliation-first, not execution-free" grant is gone, and the
+    citation now carries its own consequence in the same sentence
+    ("scoring that dimension `PASS_WITH_NOTES`"), so citing a probe can no
+    longer buy a clean `PASS`. 6351711d adds the routing that closes the
+    other half: anything provable by running a case belongs to the
+    adversary or the implementer.
   - reviewer.md, softeners: HELD. `test_no_softener_weakens_either_boundary`
     runs -- neither paragraph says "primarily"/"generally"/"usually", so
     "you write no probes yourself" has no "...unless it is quicker" hinge.
-  - adversary.md: HELD, with one over-claim. "Every piece of your evidence
-    is executable" is absolute, while the file's own `Spec` recipe two
-    sections below ("red-team each requirement") and its `findings:` output
-    block produce evidence that is not executable. Nit: the trailing clause
-    ("...is not a probe") scopes it to probes for a careful reader.
+  - adversary.md: HELD; the over-claim is CLOSED (was nit -- finding 3).
+    "Every piece of your evidence is executable" contradicted the file's own
+    `Spec` recipe and `findings:` block; 36193e26 narrows it to "Every probe
+    you record is executable".
   - fix-rounds.md: HELD. "done inside the fix round, no hand-off" leaves no
     condition under which the round may defer the probe to someone else.
 * race a concurrent writer
@@ -97,9 +98,11 @@ per `docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py
 
 ## Contradiction sweep (reviewer lens class, run here as a cold read)
 
-* reviewer.md vs itself: REPRODUCED, important -- see
+* reviewer.md vs itself: was REPRODUCED (important, finding 1); CLOSED by
+  957cec8e -- the citation is now `command` and `artifact` only, matching
+  the `tests` dimension paragraph's "never its `result`". Guarded by
   `test_reviewer_result_citation_contradicts_tests_dimension_rule`.
-* adversary.md vs itself: nit only (the "every piece of your evidence"
+* adversary.md vs itself: CLOSED (the "every piece of your evidence"
   over-claim above).
 * fix-rounds.md vs itself: HELD -- W0-01's
   `test_fix_rounds_still_refuses_to_re_run_existing_probes` is green, and
@@ -398,25 +401,15 @@ def test_reviewer_citation_points_at_a_checkable_record() -> None:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "FINDING (important): reviewer.md contradicts itself about `result`. "
-        "The new paragraph permits citing a probe record's `command and "
-        "result`; the older `tests` dimension paragraph in the same file "
-        "says the reviewer reads each entry's `command` and `artifact`, "
-        "`never its result`. Fix: drop `and result` from the new paragraph "
-        "(or scope it explicitly outside the `tests` dimension). This marker "
-        "is strict: the day the wording is fixed this case XPASSes and the "
-        "suite goes red, forcing the marker's removal."
-    ),
-)
 def test_reviewer_result_citation_contradicts_tests_dimension_rule() -> None:
-    """`contradiction with an older paragraph in the same file`. REPRODUCED.
+    """`contradiction with an older paragraph in the same file`. CLOSED.
 
-    Two clauses of reviewer.md, both about `probes[]`, disagree on whether
-    `result` is readable. A cold reader who reaches the new paragraph first
-    scores a `tests` dimension on a field the file later forbids.
+    Was REPRODUCED at 090ecf66 and carried here as a strict xfail: the
+    positioning paragraph permitted citing a probe record's `command and
+    result` while the `tests` dimension paragraph in the same file said
+    `never its result`. The fix round (957cec8e) cut the citation back to
+    `command` and `artifact`, so the marker is lifted and this case now
+    asserts the fixed state -- a regression guard, not a known bug.
     """
     text = REVIEWER.read_text(encoding="utf-8")
     para = _positioning_paragraph(text)
