@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -39,10 +40,7 @@ CHANGELOG = REPO / "loom-code" / "CHANGELOG.md"
 LOOM_CHECKER = REPO / "loom-code" / "scripts" / "loom_checker.py"
 
 CODEX_HOOKS_JSON = REPO / ".codex" / "hooks.json"
-CODEX_VALIDATE_SH = REPO / ".codex" / "hooks" / "validate-skill-folder-structure.sh"
-CODEX_MIRROR_SH = REPO / ".codex" / "hooks" / "remind-memory-mirror.sh"
-CLAUDE_VALIDATE_SH = REPO / ".claude" / "hooks" / "validate-skill-folder-structure.sh"
-CLAUDE_MIRROR_SH = REPO / ".claude" / "hooks" / "remind-memory-mirror.sh"
+REAL_LEDGER = REPO / ".codex" / "hooks" / ".loom-hook-fired"
 
 WRITE_PLAN_CODEX_FIRST_CONTACT = (
     REPO / "loom-code" / "skills" / "write-plan" / "references" / "codex-first-contact.md"
@@ -79,6 +77,45 @@ def scaffold(repo: Path) -> subprocess.CompletedProcess:
 def repo(tmp_path: Path) -> Path:
     target = tmp_path / "adopting-repo"
     target.mkdir()
+    return target
+
+
+@pytest.fixture(autouse=True)
+def _real_repo_ledger_untouched():
+    """branch-end-01 guard: every case in this file must fire scratch
+    copies, never this repo's own ``.codex/hooks/*.sh``. If any test wrote
+    to the REAL ledger, delete it (so a re-run starts clean) and fail
+    loudly — a silent pass here is exactly how the pollution this guard
+    exists to catch went unnoticed the first time."""
+    pre_existing = REAL_LEDGER.is_file()
+    yield
+    if not pre_existing and REAL_LEDGER.is_file():
+        REAL_LEDGER.unlink()
+        pytest.fail(
+            f"a probe in this file wrote to this repo's REAL ledger at "
+            f"{REAL_LEDGER} — probes must fire scratch copies under "
+            f"tmp_path only, never REPO's own .codex/hooks/*.sh"
+        )
+
+
+def _scratch_shim_repo(tmp_path: Path, names: tuple[str, ...]) -> Path:
+    """A scratch copy of just enough of the repo for one or more
+    ``.codex/hooks/*.sh`` thin shims to run against their ``.claude/hooks/``
+    originals: both trees plus the shared recorder. Keeps this repo's real
+    ``.codex/hooks/.loom-hook-fired`` untouched (mirrors
+    ``.claude/hooks/test_codex_hook_shims.py``'s ``_scratch_repo``)."""
+    target = tmp_path / "scratch"
+    (target / ".codex" / "hooks").mkdir(parents=True)
+    (target / ".claude" / "hooks").mkdir(parents=True)
+    for name in names:
+        shutil.copy(REPO / ".codex" / "hooks" / name, target / ".codex" / "hooks" / name)
+        shutil.copy(REPO / ".claude" / "hooks" / name, target / ".claude" / "hooks" / name)
+        (target / ".codex" / "hooks" / name).chmod(0o755)
+        (target / ".claude" / "hooks" / name).chmod(0o755)
+    shutil.copy(
+        REPO / ".codex" / "hooks" / "loom_record_fire.py",
+        target / ".codex" / "hooks" / "loom_record_fire.py",
+    )
     return target
 
 
@@ -378,16 +415,23 @@ def test_codex_and_claude_skill_validator_agree_on_a_violation_payload(tmp_path)
     the two copies does not change behaviour for this payload. Once W1-02
     turns the .codex copy into a thin shim that also writes a ledger line,
     the extra ledger write is the only allowed difference — this case does
-    not touch the ledger, so it stays a straight equality check."""
-    skill_dir = tmp_path / "skills" / "foo"
+    not touch the ledger, so it stays a straight equality check.
+
+    Fires scratch COPIES of both shims (branch-end-01): the real
+    ``.codex/hooks/validate-skill-folder-structure.sh`` piped through
+    ``loom_record_fire.py`` resolves the ledger via its own ``__file__``,
+    so firing it with cwd=REPO would append to THIS repo's real
+    ``.codex/hooks/.loom-hook-fired`` — evidence Codex never produced."""
+    scratch = _scratch_shim_repo(tmp_path, ("validate-skill-folder-structure.sh",))
+    skill_dir = scratch / "skills" / "foo"
     nested = skill_dir / "assets" / "scripts"
     nested.mkdir(parents=True)
     (skill_dir / "SKILL.md").write_text("---\nname: foo\n---\n", encoding="utf-8")
     (nested / "bad.py").write_text("# nested\n", encoding="utf-8")
-    payload = post_tool_use_write_payload(tmp_path, str(skill_dir / "assets" / "SKILL.md"))
+    payload = post_tool_use_write_payload(scratch, str(skill_dir / "assets" / "SKILL.md"))
 
-    codex_proc = fire(CODEX_VALIDATE_SH, payload, cwd=REPO)
-    claude_proc = fire(CLAUDE_VALIDATE_SH, payload, cwd=REPO)
+    codex_proc = fire(scratch / ".codex" / "hooks" / "validate-skill-folder-structure.sh", payload, cwd=scratch)
+    claude_proc = fire(scratch / ".claude" / "hooks" / "validate-skill-folder-structure.sh", payload, cwd=scratch)
     assert codex_proc.returncode == claude_proc.returncode
     assert codex_proc.stdout == claude_proc.stdout
     assert codex_proc.stderr == claude_proc.stderr
@@ -403,15 +447,20 @@ def test_codex_and_claude_memory_mirror_reminder_agree(tmp_path):
     just in a diff of comments — asserting equality here is what must
     hold once W1-02 turns the .codex copy into a thin shim delegating to
     the .claude original (apart from an extra ledger write, which this
-    payload/env combination does not exercise either copy's stdout on)."""
-    memory_dir = tmp_path / ".claude" / "projects" / "proj" / "memory"
+    payload/env combination does not exercise either copy's stdout on).
+
+    Fires scratch COPIES of both shims (branch-end-01) — see the analogous
+    guard note on ``test_codex_and_claude_skill_validator_agree_on_a_
+    violation_payload``."""
+    scratch = _scratch_shim_repo(tmp_path, ("remind-memory-mirror.sh",))
+    memory_dir = scratch / ".claude" / "projects" / "proj" / "memory"
     memory_dir.mkdir(parents=True)
     note = memory_dir / "project_thing.md"
     note.write_text("---\ntype: project\n---\nsome note\n", encoding="utf-8")
-    payload = post_tool_use_write_payload(tmp_path, str(note))
+    payload = post_tool_use_write_payload(scratch, str(note))
 
-    codex_proc = fire(CODEX_MIRROR_SH, payload, cwd=REPO)
-    claude_proc = fire(CLAUDE_MIRROR_SH, payload, cwd=REPO)
+    codex_proc = fire(scratch / ".codex" / "hooks" / "remind-memory-mirror.sh", payload, cwd=scratch)
+    claude_proc = fire(scratch / ".claude" / "hooks" / "remind-memory-mirror.sh", payload, cwd=scratch)
     assert codex_proc.returncode == claude_proc.returncode == 2
     assert codex_proc.stderr == claude_proc.stderr, (
         "the two copies' reminder text has drifted — this is the RED this "
