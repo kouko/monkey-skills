@@ -1141,6 +1141,33 @@
       "started": "2026-09-05T07:55:00+08:00",
       "fresh_context": false,
       "note": "resumed; confirms the trailer-only history rewrite left every tree identical"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T09:05:00+08:00",
+      "fresh_context": false,
+      "note": "branch-end scope probe accepts the closed-intent intake block (found re-pinning probes at the close commit; the first close attempt was reset)"
+    },
+    {
+      "task": "branch-end round 7",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T09:08:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the probe fix"
+    },
+    {
+      "task": "branch-end round 7",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T09:08:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the probe fix"
     }
   ],
   "second_vendor": "codex",
@@ -1150,6 +1177,7 @@
     "branch-end round 1: NEEDS_REVISION (both readers). The branch-end adversary's U+3000 finding was fixed before the readers ran (e9561501) and is recorded in dispatch[] as fix:branch-end; the adversarial probe files are recorded at the sha where all three pass.",
     "branch-end outcome after five rounds: PASS (rounds 3 and 5 PASS from both readers; the round-4 finding was the ship memory step's own untracked files). reviewed_sha advanced to bc4e9948. Cost of this change: ~6h plan→branch-end, 26 dispatch entries (7 reviewer rounds × 2 readers counted), two Codex sessions resumed across rounds.",
     "2026-09-05 ship: the push checker blocked on push.dispatch-covers-tasks — four fix-round commits (blind-runner rows, PRINCIPLES opening line, label prefix, quoted-source-text exception) carried Closes: lines but no Task: trailer. Commit messages from the branch base to HEAD were rewritten with git filter-branch --msg-filter to add `Task: fix:wave-end:1` to those four; every tree is byte-identical (git diff against the pre-rewrite tip is empty; backup ref backup/artifact-language-policy-pre-trailer-rewrite kept locally), so verdict, probe and open_findings shas recorded before this note name the pre-rewrite commits of the same trees. reviewed_sha moved to the rewritten tip and the package tests and adversarial probes were re-run and re-recorded there.",
-    "branch-end round 6 (both readers PASS at the rewritten tip): the trailer-only rewrite confirmed tree-identical; reviewed_sha = that review.json-only commit, probes re-recorded there."
+    "branch-end round 6 (both readers PASS at the rewritten tip): the trailer-only rewrite confirmed tree-identical; reviewed_sha = that review.json-only commit, probes re-recorded there.",
+    "First close attempt (79016e99, close round PASS from both readers, CI green) was reset: re-pinning the probes at the close commit showed the branch-end scope probe calling `intake write-plan`, which blocks by design once the intent is closed. The probe was fixed before the close commit is re-created so the close-commit shape holds."
   ]
 }
