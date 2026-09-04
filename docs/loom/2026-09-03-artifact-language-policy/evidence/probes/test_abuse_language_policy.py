@@ -30,8 +30,6 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[5]
 
 TEMPLATES_DIR = REPO / "loom-code/contract/templates"
-CJK_RED_FILES = {"intent.md", "plan.md", "spec-minimal.md", "PRINCIPLES-interview.md"}
-CJK_GREEN_FILES = {"KICKOFF-DEFAULTS.md", "memory-README.md", "PURPOSE.md", "review.json"}
 
 STATION_FILES = {
     "write-plan": (REPO / "loom-code/skills/write-plan/SKILL.md", {"plan"}),
@@ -82,19 +80,15 @@ import pytest  # noqa: E402  (after helper defs, matches worked-example order)
 def test_templates_cjk_absent(path: Path):
     """Attack: every file directly under loom-code/contract/templates/ must
     have zero CJK (U+4E00-U+9FFF) characters once the policy lands. RED
-    today for intent.md, plan.md, spec-minimal.md, PRINCIPLES-interview.md
-    (each carries CJK field comments); GREEN today for
-    KICKOFF-DEFAULTS.md, memory-README.md, PURPOSE.md, review.json (already
-    English/JSON-only). Turns fully GREEN at W1-01."""
+    today (at W0-01) on intent.md (76 CJK chars), plan.md (112),
+    spec-minimal.md (141), PRINCIPLES-interview.md (200) — each carries CJK
+    field comments; already GREEN today on KICKOFF-DEFAULTS.md,
+    memory-README.md, PURPOSE.md, review.json (already English/JSON-only).
+    Turns fully GREEN at W1-01, which translates the four RED files — this
+    test asserts only the desired end state, so it turns GREEN on its own
+    once W1-01 lands, with no change needed here."""
     text = path.read_text(encoding="utf-8")
     hits = CJK_RANGE.findall(text)
-    if path.name in CJK_RED_FILES:
-        assert hits, (
-            f"{path.name} unexpectedly has 0 CJK chars already — Current "
-            "State Evidence in plan.md said this file should be RED today"
-        )
-    else:
-        assert path.name in CJK_GREEN_FILES, f"unexpected template file {path.name}"
     assert not hits, (
         f"{path.name} still has {len(hits)} CJK character(s): "
         f"{''.join(hits[:10])!r}"
