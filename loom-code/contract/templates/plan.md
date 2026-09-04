@@ -8,7 +8,7 @@ spec: docs/loom/<change-id>/spec.md@<sha>     # only when needs-design: yes
 ## Task DAG
 <wave segmentation; each task gets a stable ID; tasks with no dependency in the same wave can run in parallel>
 
-**<W0-01> <title>**　after: <ids>　review: after-task
+**<W0-01> <title>**  after: <ids>  review: after-task
 <!-- the first two after-task lines need no reason; the third onward is
      written as `review: after-task — <reason>`, read by checker rule
      intake.after-task-budget -->

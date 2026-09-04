@@ -303,8 +303,9 @@ def test_Templates_FullwidthIdeographicSpace_NotFound():
     to smuggle non-English formatting past a Han-only language check.
     Expected: reported, not failed, if the intent's own ban is scoped to
     Han characters only (docs/loom/intent/2026-09-03-artifact-language-policy.md
-    is the authority on scope) -- but no such characters are present in
-    the four templates at HEAD regardless, so this probe is GREEN either way.
+    is the authority on scope). History: two U+3000 separators survived
+    the translation in plan.md until the branch-end adversary caught them
+    (removed at branch-end); this probe stays report-only and GREEN.
     """
     findings = []
     for name in TEMPLATE_FILES:
