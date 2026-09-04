@@ -1,0 +1,16 @@
+{
+  "reviewed_sha": "4ab5224d32c3f09c0a5a1e9d0246b8f32b1d775c",
+  "scope": "branch base — no checkpoint yet",
+  "vendors": ["anthropic", "openai"],
+  "second_vendor": "codex",
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {"decision_point": 1, "text": "你要的是把兩段定位段的字數帽從「剛好裝得下」改成「防漂移」，限制方式要換、單位在實作前研究後由我決定並附依據；騰出的餘裕在對抗者段補一句「不是我的那些誰是讀者的、誰是實作者的」；冷讀重跑一次記三方歸屬但不當驗收。對嗎？（答：對）", "type": "what"},
+    {"decision_point": 1, "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：用）", "type": "consequence"}
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {"task": "W0-01", "role": "adversary", "agent_id": "adv-w0-01-cap-7c21", "model": "sonnet", "started": "2026-09-04T21:14:00+08:00", "fresh_context": true}
+  ]
+}
