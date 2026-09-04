@@ -23,7 +23,7 @@ Do not read any other file. Based only on that file's content, answer:
 8. "the new function's happy path has no unit test"
 ---
 
-TRIAL (2026-09-04, sha 202e1398), raw model output:
+TRIAL 1 (2026-09-04, sha 202e1398), raw model output:
 ---
 **(a) Boundary:** I (reviewer) judge — reconciling what was delivered against what the intent/spec/plan/text itself promised, and scoring dimensions from evidence I read — but never modify the artifact and never run anything myself; anything that had to be *executed* to surface a defect (a probe, an edge-case run) belongs to the adversary, and anything that's *self-reported build status* belongs to the implementer.
 
@@ -49,3 +49,38 @@ this is the adversary's own-artifact-path class) / 4 yours (correct) /
 RED class named in the adversary paragraph).
 
 own/not-own score: 6/8.
+
+TRIAL 2 (2026-09-04, branch-end fix round, sha 202e1398), raw model
+output — identical command (`claude -p --model sonnet`), identical
+prompt and 8-item list, reviewer.md path only, fresh worktree:
+---
+**(a) 邊界（僅依 reviewer.md）：** reviewer 只讀（整份藝品＋ground truth）並下裁決/findings，做「omission／overclaim／contradiction」的三向比對，但從不執行、不寫探針（"you write no probes — anything run belongs to the adversary or implementer"）——凡是需要**跑**出來才能發現的行為，不是我的產出。
+
+**(b) 分類：**
+
+1. yours — plan 與 review.json 記錄數不符，是文件對文件的 contradiction 比對，正是我開頭定義的三向核對範疇。
+2. other — 要在不同環境（stale vs fresh clone）下**實跑**探針才會發現的邊界狀況，屬主動攻擊/探測，不是我能靜態核對出來的。
+3. yours — 這是在核對 `review.json` 的 `probes[]` 裡每筆的 `artifact` 欄位是否精確（tests 維度明文只讀 `command`/`artifact`，不讀 `result`），屬純閱讀核對。
+4. yours — report 聲稱「works」但不符 Acceptance 6，是典型 overclaim（說了做到、實際沒做到）。
+5. yours — 文件遺漏「何時該重跑 branch-end」，是 docs 維度的 omission。
+6. other — `--is-ancestor` 對 side-branch commit 與 first-parent walk 不一致，是需要主動構造邊界案例並實際跑出來的差異，屬對抗性探測。
+7. yours — CHANGELOG 與 intent 條目數不一致，是文件對文件的 contradiction。
+8. yours — happy path 缺單元測試，是讀測試檔就能核對出的缺口，落在我的 `tests` 維度。
+---
+
+Scoring against expected (own = 1,4,5,7; not-own = 2,3,6,8):
+1 yours (correct) / 2 other (correct) / 3 yours (WRONG — same item as
+trial 1, expected not-own/adversary's) / 4 yours (correct) / 5 yours
+(correct) / 6 other (correct) / 7 yours (correct) / 8 yours (WRONG —
+same item as trial 1, expected not-own/implementer's).
+
+own/not-own score: 6/8.
+
+Cross-trial comparison: both trials scored 6/8, and both got the SAME
+two items wrong — item 3 ("./probe.py and probe.py counted as two
+artifacts") and item 8 ("the new function's happy path has no unit
+test") — with near-identical reasoning both times (item 3: "this is
+mine because I cross-check the probes[] artifact field by reading";
+item 8: "this is mine because it's caught by reading the test file").
+Same items, same reasoning both times — this points to a stable reading
+of reviewer.md's wording, not sample-to-sample noise.
