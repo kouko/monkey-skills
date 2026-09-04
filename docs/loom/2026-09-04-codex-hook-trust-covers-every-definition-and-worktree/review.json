@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "c62ac169def8ed520777c764bacd5683774d3648",
+  "reviewed_sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -184,6 +184,32 @@
         "branch-end-03: closed by 76acd265 — report lines 126 and 141 disclose both defects with fix status"
       ],
       "notes": "Deferring the recorder-docstring nit to the ship fold is acceptable (wording only)."
+    },
+    {
+      "reviewer": "rev-branch-end-trust-codex-51ae",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+      "dimension_scores": {},
+      "findings": [],
+      "notes": "confirmation round after the ship nit batch (403c696c) and probe graduation (e113d25e): Nothing but wording, review records, and byte-copied probes moved; each probe copy differs only in the documented REPO parents[5]→parents[2] adjustment."
+    },
+    {
+      "reviewer": "rev-branch-end-trust-sonnet-e07b",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+      "dimension_scores": {},
+      "findings": [],
+      "notes": "confirmation round after the ship nit batch (403c696c) and probe graduation (e113d25e): 403c696c appended only the requested docstring paragraph (byte-identical source and scaffolded copy) and swapped 'being fixed' for the fix shas; e113d25e copied the two probe files byte-identical except the path line; nit closed."
     }
   ],
   "probes": [
@@ -250,6 +276,38 @@
       "sha": "c62ac169def8ed520777c764bacd5683774d3648",
       "result": "pass",
       "artifact": ".claude/hooks/test_codex_hook_shims.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_hook_trust.py -q",
+      "sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_hook_trust.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_hook_trust_branch_end.py -q",
+      "sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_hook_trust_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest .claude/hooks/test_codex_hook_shims.py -q",
+      "sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+      "result": "pass",
+      "artifact": ".claude/hooks/test_codex_hook_shims.py"
     }
   ],
   "questions": [
@@ -262,6 +320,11 @@
       "decision_point": 1,
       "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：用）",
       "type": "consequence"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告白話呈現（門禁比喻：四條驗收全 works；你親手驗的那一腿＝到暫存資料夾按 /hooks 後三條全 fired；老實交代測試曾寫入本 repo 的 ledger 已修；我替你決定：舊空檔只算第一條、歸屬不靠 Codex 自報名字）。OK 嗎？（答：ok）",
+      "type": "done"
     }
   ],
   "open_findings": [
@@ -374,6 +437,7 @@
   ],
   "notes": [
     "2026-09-05 branch-end round 1: NEEDS_REVISION from both readers (codex: 2 fatal + 1 important; sonnet: 3 important + 1 nit); reviewed_sha unchanged. Nit for the ship fold: loom_record_fire.py docstring — unsynchronised append accepted (lost line = never, never a forged fired). Implementer notes carried: W1-01 touched loom_checker.py HOST_PLUMBING_FILES (pinned test); W1-03 used git stash once (stack count unchanged).",
-    "2026-09-05 branch-end round 2: codex PASS_WITH_NOTES, sonnet PASS → PASS_WITH_NOTES; reviewed_sha → c62ac169. Probes re-run at c62ac169: W0-01 file 15 passed; branch-end file 11 passed; .claude/hooks/test_codex_hook_shims.py (carries the adversary's non-root-cwd case) passed; repo ledger absent after every run. Ship fold nit: loom_record_fire.py docstring on the unsynchronised append."
+    "2026-09-05 branch-end round 2: codex PASS_WITH_NOTES, sonnet PASS → PASS_WITH_NOTES; reviewed_sha → c62ac169. Probes re-run at c62ac169: W0-01 file 15 passed; branch-end file 11 passed; .claude/hooks/test_codex_hook_shims.py (carries the adversary's non-root-cwd case) passed; repo ledger absent after every run. Ship fold nit: loom_record_fire.py docstring on the unsynchronised append.",
+    "2026-09-05 branch-end round 3 (confirmation): nit batch 403c696c + graduation e113d25e; both readers PASS; reviewed_sha → e113d25e; decision point ③ accepted (ok, after a plain-language re-presentation at the user's request)."
   ]
 }
