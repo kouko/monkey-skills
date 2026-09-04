@@ -84,3 +84,40 @@ mine because I cross-check the probes[] artifact field by reading";
 item 8: "this is mine because it's caught by reading the test file").
 Same items, same reasoning both times — this points to a stable reading
 of reviewer.md's wording, not sample-to-sample noise.
+
+TRIAL 3 (2026-09-04, after commit dd562edd — user-decided option A: a
+4th sentence added to reviewer.md's `You own` paragraph naming a probe's
+own artifact as the adversary's to normalise, and a missing test as the
+implementer's RED that the reviewer may only name), identical command
+(`claude -p --model sonnet`), identical prompt and 8-item list,
+reviewer.md path only, working tree at HEAD (no separate worktree
+needed — only reviewer.md and its own tests changed since trial 2):
+---
+(a) 我做的是核對「交付物是否符合承諾」的判定（reconciliation：omission／overclaim／contradiction）並下 verdict，不寫探針、不修東西；跑探針找漏洞是 adversary 的事，寫測試/修 bug 是 implementer 的事。
+
+(b) 分類：
+
+1. yours — 這是「說了但沒做／文件互相矛盾」的 reconciliation 判定（plan vs review.json 對不上），正是我 dimension 內的 tests/reconciliation finding。
+2. other — 這是主動設計出來讓探針失效的邊界案例（fresh clone vs stale origin），屬於 adversary 的攻擊/邊界測試範疇。
+3. other — 探針自己的 artifact（路徑/計數）正規化，文件明寫「不是你的」，屬於 adversary。
+4. yours — overclaim：報告聲稱「works」但驗收條件要求 byte-identical，是文字承諾與事實不符的 reconciliation。
+5. yours — omission：文件缺了該有的內容（何時該重跑），屬於 docs 系 omission dimension。
+6. other — 這是刻意構造的攻擊/邊界案例（找出兩種校驗邏輯不一致的漏洞），屬於 adversary 的探針。
+7. yours — 又一個 reconciliation 不一致（CHANGELOG vs intent 項目數對不上）。
+8. implementer — 缺 unit test 屬於 implementer 該補的 RED，文件明寫「missing test 是 implementer 的 RED」，你只能點名但不擁有它——這裡分類給 implementer。
+---
+
+Scoring against expected (own = 1,4,5,7; other/adversary = 2,3,6;
+implementer = 8):
+1 yours (correct) / 2 other (correct) / 3 other (correct — the item
+that failed in both trial 1 and trial 2, now correctly routed to the
+adversary) / 4 yours (correct) / 5 yours (correct) / 6 other (correct) /
+7 yours (correct) / 8 implementer (correct — the other item that failed
+in both trial 1 and trial 2, now correctly routed to the implementer).
+
+own/not-own score: 8/8. Sub-split of the 4 not-own items (other vs
+implementer) also 4/4 correct, so this trial's three-way attribution
+score is 8/8 too — every one of the two items that were wrong in both
+prior trials landed on its expected owner this time, with reasoning
+that quotes the new 4th sentence directly ("文件明寫「missing test 是
+implementer 的 RED」" / "文件明寫「不是你的」，屬於 adversary").
