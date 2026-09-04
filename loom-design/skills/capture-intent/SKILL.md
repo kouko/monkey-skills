@@ -145,9 +145,11 @@ Constraints and Out of scope can all be filled in without guessing.
 ## Step 2 — Write the intent
 
 The intent file is the user's own words, in the user's language, unlike
-the machine-read artifacts later stations own — nothing in it is
-translated to English, English being the language of the plan, the spec
-and everything that follows.
+the machine-read internal artifacts later stations own, which are English
+— nothing in it is translated to English, English being the language of the plan,
+the spec, the review record, evidence notes, test docstrings and names,
+and commit messages — while the decision-point dialogue, the blind-run
+report and the pull-request body stay in the user's language.
 
 Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 `loom-code`'s `contract/templates/` directory. Fill in:

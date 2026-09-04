@@ -46,13 +46,71 @@ def _sentences(text: str) -> list[str]:
     return [p for p in _SENTENCE_SPLIT.split(flat) if p.strip()]
 
 
-def _matching_sentences(path: Path, required_substrings: list[str]) -> list[str]:
+# Round-2 finding (rev-be-codex, branch-end): co-locating keywords in a
+# sentence is not discriminating — "The plan is not written in English"
+# satisfies a plain substring check on "english" + "plan". A qualifying
+# sentence must instead contain an affirmative English form and carry no
+# negation anywhere in the sentence; mirrors
+# evidence/probes/test_abuse_language_policy.py's `_has_negation` /
+# affirmative-sentence pattern.
+_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+_ENGLISH_AFFIRM_PHRASES = ("in english", "is english", "are english", "written in english")
+_USER_LANGUAGE_AFFIRM_PHRASES = (
+    "stays in the user's language",
+    "stay in the user's language",
+    "in the user's language",
+)
+
+
+def _has_negation(sentence: str) -> bool:
+    """True iff `sentence` contains a word-boundary negation token — 'not',
+    'never' or 'no' as whole words, or an "n't" contraction. Plain
+    substring matching would false-positive on ordinary words ('note',
+    'know'), so the regex requires a word boundary on both sides."""
+    return bool(_NEGATION_RE.search(sentence))
+
+
+def _has_affirmative_english(sentence: str) -> bool:
+    """True iff `sentence` contains one of the affirmative English forms
+    ('in English', 'is English', 'are English', 'written in English') and
+    carries no negation anywhere in the sentence."""
+    lowered = sentence.lower()
+    if not any(phrase in lowered for phrase in _ENGLISH_AFFIRM_PHRASES):
+        return False
+    return not _has_negation(sentence)
+
+
+def _has_affirmative_user_language(sentence: str) -> bool:
+    """True iff `sentence` contains an affirmative user's-language form
+    ('stays/stay in the user's language', or the bare 'in the user's
+    language') and carries no negation anywhere in the sentence."""
+    lowered = sentence.lower()
+    if not any(phrase in lowered for phrase in _USER_LANGUAGE_AFFIRM_PHRASES):
+        return False
+    return not _has_negation(sentence)
+
+
+def _matching_sentences(
+    path: Path,
+    required_substrings: list[str],
+    require_affirmative_user_language: bool = False,
+) -> list[str]:
+    """Sentences that contain every required substring, an affirmative
+    English form, and no negation. When `require_affirmative_user_language`
+    is set, the same sentence must also carry an affirmative user's-language
+    form with no negation."""
     text = path.read_text(encoding="utf-8")
     lowered_required = [s.lower() for s in required_substrings]
-    return [
-        s for s in _sentences(text)
-        if all(req in s.lower() for req in lowered_required)
-    ]
+    hits = []
+    for s in _sentences(text):
+        if not all(req in s.lower() for req in lowered_required):
+            continue
+        if not _has_affirmative_english(s):
+            continue
+        if require_affirmative_user_language and not _has_affirmative_user_language(s):
+            continue
+        hits.append(s)
+    return hits
 
 
 def test_writeplan_languageSentence_present() -> None:
@@ -70,6 +128,7 @@ def test_build_languageSentence_present() -> None:
     hits = [
         s for s in _sentences(text)
         if "english" in s.lower() and any(n in s.lower() for n in nouns)
+        and _has_affirmative_english(s)
     ]
     assert hits, "build/SKILL.md has no sentence naming English + an artifact noun"
 
@@ -85,6 +144,7 @@ def test_review_conventionalCommentsSentence_present() -> None:
         if "english" in s.lower()
         and "conventional comments" in s.lower()
         and any(n in s.lower() for n in nouns)
+        and _has_affirmative_english(s)
     ]
     assert hits, (
         "review/SKILL.md has no sentence naming English + an artifact noun + "
@@ -103,6 +163,8 @@ def test_ship_userLanguageSentence_present() -> None:
         if "english" in s.lower()
         and "user's language" in s.lower()
         and any(n in s.lower() for n in nouns)
+        and _has_affirmative_english(s)
+        and _has_affirmative_user_language(s)
     ]
     assert hits, (
         "ship/SKILL.md has no sentence naming English + an artifact noun + "
@@ -114,7 +176,9 @@ def test_captureintent_userLanguageSentence_present() -> None:
     """The capture-intent SKILL.md must carry a sentence naming English,
     'intent', and the phrase 'user's language'."""
     hits = _matching_sentences(
-        CAPTURE_INTENT_SKILL, ["english", "intent", "user's language"]
+        CAPTURE_INTENT_SKILL,
+        ["english", "intent", "user's language"],
+        require_affirmative_user_language=True,
     )
     assert hits, (
         "capture-intent/SKILL.md has no sentence naming English + intent + "
@@ -129,3 +193,41 @@ def test_writespec_earsSentence_present() -> None:
     assert hits, (
         "write-spec/SKILL.md has no sentence naming English + spec + EARS + REQ-"
     )
+
+
+# --- synthetic self-tests for the negation-aware matcher --------------------
+
+
+def test_matcher_affirmativeSentence_accepted() -> None:
+    """A real station sentence — ship's English + user's-language predicate
+    — must be accepted by both affirmative-form helpers: the discriminating
+    check must not reject real, correctly-written station prose."""
+    text = SHIP_SKILL.read_text(encoding="utf-8")
+    candidates = [
+        s for s in _sentences(text)
+        if "english" in s.lower() and "user's language" in s.lower()
+    ]
+    assert candidates, "expected to find ship's English/user-language sentence"
+    assert any(
+        _has_affirmative_english(s) and _has_affirmative_user_language(s)
+        for s in candidates
+    ), "ship's real sentence was rejected by the affirmative-form helpers"
+
+
+def test_matcher_negatedSentence_rejected() -> None:
+    """'The plan is not written in English' co-locates the affirmative
+    form 'written in English' with 'plan', but the negation token 'not'
+    must reject it — the discriminating case this fix closes."""
+    sentence = "The plan is not written in English."
+    assert not _has_affirmative_english(sentence)
+
+
+def test_matcher_shipPredicate_negatedSentence_rejected() -> None:
+    """'The report is written in English, never in the user's language'
+    satisfies both affirmative-form substring checks in isolation, but
+    carries the negation token 'never' in the same sentence — both
+    helpers must reject it, mirroring the ship predicate's combined
+    check."""
+    sentence = "The report is written in English, never in the user's language."
+    assert not _has_affirmative_english(sentence)
+    assert not _has_affirmative_user_language(sentence)
