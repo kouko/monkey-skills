@@ -21,6 +21,11 @@
       "decision_point": 1,
       "text": "這次要不要用 codex 當第二讀者？（KICKOFF 本 change 改成 ask；答：用）",
       "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "研究回來後：探針先寫擴到完整車道的所有 code／gate task、小車道免，要不要併進這個 change 的 W1？（答：好，併進 W1）",
+      "type": "what"
     }
   ],
   "open_findings": [],
