@@ -371,20 +371,22 @@ def test_BuildSkill_FieldLabels_QuotedVerbatim():
 
 def test_ReviewerCapBump_BodyWordCount_CoversAddedParagraph():
     """Attack: bump the reviewer.md word cap in the test file by a round
-    number without checking it is enough -- a cap raised to 1450 that
+    number without checking it is enough -- a cap raised to 1460 that
     still sits below the real body word count would make the cap-test
     pass today by coincidence and fail on the next unrelated one-line
-    edit, which is not a real fix, just a deferred failure.
-    Expected: the current reviewer.md body word count is <= 1450 (the
-    new cap) and > 1340 (the old cap) -- proving the new paragraph is
-    what pushed the count past the old cap, not slack that was already
+    edit, which is not a real fix, just a deferred failure. (fix:wave-end:1
+    bumped this cap again, 1450 -> 1460, for the quoted-source-text
+    exception clause.)
+    Expected: the current reviewer.md body word count is <= 1460 (the
+    new cap) and > 1340 (the old-old cap) -- proving the new clause is
+    what pushed the count past the prior cap, not slack that was already
     there, and that the new cap actually covers it.
     """
     text = _read(REVIEWER_MD)
     words = len(_body_of(text).split())
-    assert words <= 1450, f"reviewer.md body is {words} words, exceeds the new cap of 1450"
+    assert words <= 1460, f"reviewer.md body is {words} words, exceeds the new cap of 1460"
     assert words > 1340, (
-        f"reviewer.md body is only {words} words -- the cap bump to 1450 "
+        f"reviewer.md body is only {words} words -- the cap bump to 1460 "
         "was not actually needed; a stale/unneeded cap raise is a finding"
     )
 
@@ -406,13 +408,13 @@ def test_CapsTestFile_DeclaredNumbers_MatchProbed():
     (test_reviewer_agent_single_contract.py) could silently disagree on
     the cap numbers -- this file passing would then prove nothing about
     what the real gate enforces.
-    Expected: AGENT_CAPS in the caps test file names reviewer.md: 1450,
+    Expected: AGENT_CAPS in the caps test file names reviewer.md: 1460,
     blind-runner.md: 600, adversary.md: 600 -- exactly what was probed.
     """
     caps_source = _read(CAPS_TEST)
     match = re.search(r"AGENT_CAPS\s*=\s*\{([^}]*)\}", caps_source)
     assert match, "AGENT_CAPS dict not found in the caps test file"
     body = match.group(1)
-    assert '"reviewer.md": 1450' in body
+    assert '"reviewer.md": 1460' in body
     assert '"blind-runner.md": 600' in body
     assert '"adversary.md": 600' in body
