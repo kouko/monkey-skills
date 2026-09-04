@@ -1168,6 +1168,24 @@
       "started": "2026-09-05T09:08:00+08:00",
       "fresh_context": false,
       "note": "resumed; confirms the probe fix"
+    },
+    {
+      "task": "branch-end round 8",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T09:30:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the tightened intake path"
+    },
+    {
+      "task": "branch-end round 8",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T09:30:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the tightened intake path"
     }
   ],
   "second_vendor": "codex",
