@@ -8,7 +8,7 @@ status: confirmed 2026-09-05
 ## Problem
 loom 1.0 只規定「盲跑報告用使用者的語言」和「intent 是使用者自己的話」；spec、plan、review.json 的 finding 與 notes、evidence、探針 docstring、commit 訊息、站文字、模板註解都沒有語言規定。結果本 repo 的 1.0 設計文件與模板註解是中文，之後兩個真實 change 的 plan、evidence、cost 筆記也跟著寫成中文，而讀這些的是 reviewer、implementer、adversary——模型在英文開發語料上最強、讀中文規格的誤讀率較高，docs linter（Vale／textlint 的英文規則集）也接不上。kouko 原本的設計邏輯：內部文件與規格用英文，只在要給使用者看的時候才有使用者語言的版本。
 
-前提（2026-09-05 決策點①補記）：模型的程式開發語料絕大多數是英文；而且軟體工程有既有的標準用詞與技術文件寫作規範（先前研究過），可以拿來統一內部文件的敘述方式——reviewer 讀到的措辭一致，審查結果比較不會飄。
+前提（2026-09-05 決策點①補記）：模型的程式開發語料絕大多數是英文；而且業界有現成、免費可引用的句型模板與語法原則（RFC 2119 關鍵字、EARS 需求句型、Google／Microsoft 風格指南的主動語態／第二人稱／同義同字），內部文件照著持續一致地寫，句型固定就能機械檢查。「措辭一致會讓 review 比較不飄」是待驗證的假設：既有論文只證明審查指令換說法會讓模型判決移動，沒有人量過被審文件的句型受控是否降低判決變異（見 evidence/research-se-vocabulary-standards.md）。
 
 ## Proposed outcome
 把語言政策寫進契約與站文字：
