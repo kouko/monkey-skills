@@ -101,7 +101,7 @@ ambiguity between these two readings; the plan's grouping wins.)
 
 ## 2. The dispatch prompt
 
-**In the full lane, a task whose 檔 paths map to the `code` or `gate`
+**In the full lane, a task whose Files: paths map to the `code` or `gate`
 artifact type is adversary-first.** That covers `hooks/**`,
 `scripts/check_*`, the checker itself, and any other manifest-typed
 `code`: dispatch `loom-code:adversary` before the implementer: it writes
@@ -127,7 +127,7 @@ Dispatch `loom-code:implementer` (contract: `agents/implementer.md`). Pass
 
 ```
 ### Task
-<the plan's task id, its one-line title, and its 檔 / 測 / 風 bullets verbatim>
+<the plan's task id, its one-line title, and its Files: / Test: / Risk: bullets verbatim>
 
 ### Resource paths
 - plan: docs/loom/<change-id>/plan.md   (your task is <task-id>)
