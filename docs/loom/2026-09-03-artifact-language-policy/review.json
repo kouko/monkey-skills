@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "4e459ed054a86e6cc830270d547b7729d2b0bd26",
+  "reviewed_sha": "6f2f6836f869a1def01984dd755e33a656084981",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -111,6 +111,77 @@
       "notes": [
         "Re-pins move together (1300→1340→1450), word counts re-verified (1447, gap 3). spec-minimal REQ-1 is a correct EARS event-driven form; the checker's annotation stripper tolerates both bracket styles. Ran pytest loom-code/scripts/ (1058 passed, 1 xfailed) and the probes dir (26 passed, 6 expected wave-2 RED)."
       ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "1bd2d4970ccf79a0522f017281ce5bbcefd64b6b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py:229",
+          "text": "issue (blocking): wave-end:1-03 unfixed — the tightened probe still accepts a paragraph that forbids `test_<unit>_<state>_<expected>` while requiring English docstrings.",
+          "fix": "Require affirmative naming language in the qualifying paragraph and reject nearby negation of the literal shape."
+        }
+      ],
+      "notes": [
+        "wave-end:1-01 fixed; wave-end:1-02 fixed; nits (wave_end probe names, quoted source text) fixed. Probes not re-run per fix-round contract."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs",
+      "verdict": "PASS",
+      "sha": "1bd2d4970ccf79a0522f017281ce5bbcefd64b6b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-02 fixed (fa33422e); wave-end:1-04 fixed (3717325b); rule-to-artifact nit fixed (e6a1ad5a). No collateral damage from a3756372 (cap 1450→1460, body 1451)."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "6f2f6836f869a1def01984dd755e33a656084981",
+      "dimension_scores": {
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-03 fixed — the probe requires affirmative, non-negated naming and English sentences and its synthetic cases distinguish the forbidden-shape wording (test_abuse_language_policy.py:205)."
+      ]
     }
   ],
   "probes": [
@@ -169,25 +240,29 @@
       "id": "wave-end:1-01",
       "anchor": "loom-code/agents/blind-runner.md:46",
       "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
-      "raised_by": "rev-we1-codex"
+      "raised_by": "rev-we1-codex",
+      "resolved": "closed by e6a1ad5a — blind-runner rows use user-readable labels, identifiers only in the evidence cell; confirmed rev-we1-codex round 2"
     },
     {
       "id": "wave-end:1-02",
       "anchor": "loom-code/contract/templates/PRINCIPLES-interview.md:3 / loom-design/skills/capture-intent/SKILL.md opening line",
       "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
-      "raised_by": "rev-we1-codex, rev-we1-sonnet"
+      "raised_by": "rev-we1-codex, rev-we1-sonnet",
+      "resolved": "closed by fa33422e — PRINCIPLES-interview.md is the semantic source, capture-intent quotes its current English line and translates at run time; confirmed rev-we1-codex and rev-we1-sonnet round 2"
     },
     {
       "id": "wave-end:1-03",
       "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py:216",
       "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
-      "raised_by": "rev-we1-codex"
+      "raised_by": "rev-we1-codex",
+      "resolved": "closed by 8d32dc38 + 0d140550 (probe: affirmative un-negated naming sentence, self-test) and ddadf7e2 + 6f2f6836 (blind-runner sentences reworded); confirmed rev-we1-codex round 3"
     },
     {
       "id": "wave-end:1-04",
       "anchor": "loom-code/agents/adversary.md:50, loom-code/agents/blind-runner.md:57",
       "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
-      "raised_by": "rev-we1-sonnet"
+      "raised_by": "rev-we1-sonnet",
+      "resolved": "closed by 3717325b — adversary.md and blind-runner.md finding text opens with a Conventional Comments label; confirmed rev-we1-sonnet round 2"
     }
   ],
   "dispatch": [
@@ -311,6 +386,7 @@
   ],
   "second_vendor": "codex",
   "notes": [
-    "Round 1 outcome NEEDS_REVISION (both readers). Nits (probe file names in wave_end probes; quoted-source-text exception for commit messages; rule-to-artifact wording in blind-runner.md) are fixed inside the fix round because the same agents edit the same sentences; readers confirm them in round 2."
+    "Round 1 outcome NEEDS_REVISION (both readers). Nits (probe file names in wave_end probes; quoted-source-text exception for commit messages; rule-to-artifact wording in blind-runner.md) are fixed inside the fix round because the same agents edit the same sentences; readers confirm them in round 2.",
+    "wave-end:1 outcome after three rounds: PASS_WITH_NOTES (round 2 codex PASS_WITH_NOTES on the one remaining id, round 3 PASS). reviewed_sha advanced to 6f2f6836."
   ]
 }
