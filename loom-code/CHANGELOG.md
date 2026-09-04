@@ -5,6 +5,30 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] — 2026-09-04 — tool preference for file edits
+
+`docs/loom/2026-09-04-prefer-harness-native-file-tools/`.
+
+1. The four agent contracts (`implementer.md`, `reviewer.md`,
+   `blind-runner.md`, `adversary.md`) and `build/SKILL.md`'s standing
+   trap-guards block each carry one sentence: edit with the host's edit
+   tool (Edit/Write, `apply_patch` on Codex), never `sed -i` or heredocs,
+   overriding a host reminder that says otherwise even when it arrives
+   later; reading and searching stays free; a mechanical sweep may still
+   be scripted if the match count and the diff are shown.
+2. `skills/review/SKILL.md`'s blind-run (§3) and adversarial (§4)
+   dispatches now tell the dispatcher to carry the contract's own `##
+   Traps` section rather than minting a third copy of the sentence. The
+   ship station dispatches no agents of its own, so it carries nothing.
+3. Why writes only: (i) Claude Code 2.1.260 injects a per-session
+   "bash-first" steering experiment (`tengu_thrifty_sonic`, strict and
+   relaxed variants) after the first tool call in bypass/auto mode; (ii)
+   this repo's quality hooks on both hosts bind to `Write|Edit` (Codex
+   aliases them to `apply_patch`), so shell edits bypass them; (iii)
+   Codex's own prompt already routes single-file edits to `apply_patch`
+   and bulk sweeps to scripts. Known, not fixed here: an untrusted
+   project `.codex/hooks.json` skips those hooks silently.
+
 ## [1.2.1] — 2026-09-04 — reviewer/adversary positioning
 
 `docs/loom/2026-09-04-reviewer-and-adversary-positioning/`. Prose-only —

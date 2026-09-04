@@ -181,3 +181,28 @@ def test_build_tool_preference_matches_implementer_verbatim() -> None:
         "the tool-preference passage differs between build/SKILL.md and "
         f"agents/implementer.md:\n  build: {build_norm!r}\n  impl:  {impl_norm!r}"
     )
+
+
+def test_blind_run_and_adversary_sections_point_at_the_contract_trap_section() -> None:
+    """W1-02: §3 (blind run) and §4 (adversarial) each carry one line telling
+    the dispatcher to carry the contract's `## Traps` section (which holds
+    the tool-preference passage) — pointing at it, not re-pasting the
+    sentence a third time (surface 8b)."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    assert "apply_patch" not in text, (
+        "review/SKILL.md pastes the tool-preference sentence itself instead "
+        "of pointing at the contract's trap section"
+    )
+
+    def section(heading: str, next_heading: str) -> str:
+        start = text.index(heading)
+        end = text.index(next_heading, start)
+        return text[start:end]
+
+    blind_run = section("## 3. Blind run", "## 4. Adversarial")
+    adversarial = section("## 4. Adversarial", "## 5. Package tests")
+    for name, sect in (("§3 blind run", blind_run), ("§4 adversarial", adversarial)):
+        assert re.search(r"[Tt]rap", sect), (
+            f"{name} never tells the dispatcher to carry the contract's Traps "
+            "section"
+        )
