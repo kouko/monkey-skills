@@ -734,23 +734,42 @@ SQUASH_SUBJECT = re.compile(r" \(#\d+\)\s*$")
 
 
 def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
-    """Is `sha` a GitHub "Squash and merge" commit sitting on the trunk?
-    Three conditions, all git topology or subject shape -- never message
-    text, so a hand-written subject that merely LOOKS like a squash cannot
-    forge the exception (W0-01 adversary: the fake-`(#1)`-off-main case):
+    """Does `sha` have the SHAPE of a GitHub "Squash and merge" commit on
+    the trunk? Three conditions, all git topology or subject shape -- never
+    message text, so a hand-written subject that merely LOOKS like a squash
+    cannot forge the exception (W0-01 adversary: the fake-`(#1)`-off-main
+    case):
 
     1. single parent -- the squash button makes a plain commit, not a
        2-parent merge (a real `--no-ff` merge already passes today by a
        different path and is untouched by this function);
     2. the subject ends ` (#<n>)` -- exactly what GitHub writes;
-    3. `sha` is an ancestor of the trunk (REOPEN_TRUNK_CANDIDATES -- the
-       same four names `branch_base()` resolves against, minus
+    3. `sha` is on the trunk's first-parent chain (REOPEN_TRUNK_CANDIDATES
+       -- the same four names `branch_base()` resolves against, minus
        `@{upstream}` for the reason documented at that constant: a
        branch's own upstream must never stand in as "the trunk" here).
 
-    Returns the printable note when all three hold, else None -- the note
-    itself is the evidence for "why did it say that" (concept-model
-    §2b), not a bare pass.
+    These three are all this function can verify offline: it has no way to
+    ask GitHub whether `sha` really came from a "Squash and merge" click,
+    or whether the source branch's HEAD really carried the needs-design
+    line -- PR provenance is not fetchable from a local clone. The note
+    says exactly that, and states the shape-match as shape, not as a
+    verified squash. What is actually relied on is that the line was
+    already checked, verbatim, on the branch commit BEFORE it could reach
+    the trunk -- by this same rule running as the push gate on that
+    branch -- so the line is assumed carried forward, not re-derived here.
+
+    Residual: a commit hand-written with this exact shape (single parent,
+    `... (#<n>)` subject) and pushed straight to the trunk without going
+    through a reviewed branch -- bypassing the push gate that would have
+    checked the line -- is accepted by this exception too. That path is
+    governed by branch protection (who may push directly to the trunk),
+    not by this rule; this rule only recognizes the shape, it cannot tell
+    a real squash-merge from a direct push that mimics it.
+
+    Returns the printable note when all three shape conditions hold, else
+    None -- the note itself is the evidence for "why did it say that"
+    (concept-model §2b), not a bare pass.
     """
     parents = git_maybe(repo, "log", "-1", "--format=%P", sha)
     if parents is None or len(parents.split()) != 1:
@@ -764,10 +783,12 @@ def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
         if git_maybe(repo, "merge-base", "--is-ancestor", sha, candidate) is None:
             continue
         return (
-            f"intent.needs-design-reason: commit {sha[:7]} ({relative}) is a "
-            f"GitHub squash on {candidate} (single parent, subject {subject!r}); "
-            "the needs-design line is owed by the branch it squashed, not by "
-            "this commit's own message -- treating the line as carried."
+            f"intent.needs-design-reason: commit {sha[:7]} ({relative}) has the "
+            f"shape of a GitHub squash on {candidate}'s first-parent chain "
+            f"(single parent, subject {subject!r}); PR provenance is not "
+            "verifiable offline, so this is not a confirmed squash -- the "
+            "needs-design line is assumed carried by the branch that the push "
+            "gate checked before this commit reached the trunk."
         )
     return None
 
@@ -834,31 +855,45 @@ def check_needs_design_reason(
     return [], verdict
 
 
+TEMPLATES_GLOB = "**/templates/**"
+
+
 def touched_interface_surfaces(repo: Path, manifest, out) -> list[str]:
     """The changed paths that land on a declared interface surface, and a
     printed line saying which globs were used -- the answer to "why did it
     say that" is never a mystery. Both `intent.needs-design-recompute` and
     `intent.kind-recompute` read this one recomputation.
 
-    A glob match alone is not enough: `**/templates/**` also matches an
-    agent-filled `.md` template that no user ever reads. After the glob
-    match, each path is filtered by its §6 artifact type
-    (`_artifact_type_for`) down to `code` -- this does not let an agent
+    Only the `**/templates/**` glob match is narrowed by artifact type: it
+    also matches an agent-filled `.md` template that no user ever reads, so
+    a match against THIS glob alone counts only when `_artifact_type_for`
+    types the path `code` -- an `.md`/`.jinja` template stays excluded, a
+    `.tsx`/`.py` one still counts. A match against any OTHER glob -- the
+    manifest default (`**/cli/**`, `**/api/**`, `**/commands/**`,
+    `**/*.tsx`) or one a repo added via KICKOFF-DEFAULTS -- counts
+    regardless of type: a CLI help `.md` under `**/cli/**` is a user
+    surface exactly as much as a `.py` one is. This does not let an agent
     narrow the surface, because `artifact-types` in KICKOFF-DEFAULTS is
     reserved (the checker never reads it, per the manifest note); the type
     mapping is the contract's own `artifact_types:` table, fixed regardless
     of what a repo declares."""
     globs, source = interface_surfaces(repo, manifest)
-    matchers = [glob_to_regex(pattern) for pattern in globs]
+    matchers = [(pattern, glob_to_regex(pattern)) for pattern in globs]
     touched = sorted(
         path
         for path in changed_paths(repo)
-        if any(matcher.match(path) for matcher in matchers)
-        and _artifact_type_for(manifest, path) == "code"
+        if any(
+            matcher.match(path)
+            and (
+                pattern != TEMPLATES_GLOB
+                or _artifact_type_for(manifest, path) == "code"
+            )
+            for pattern, matcher in matchers
+        )
     )
     out.write(
         f"interface-surfaces ({source}): {', '.join(globs)} "
-        "(non-code paths excluded)\n"
+        f"(non-code paths under {TEMPLATES_GLOB} excluded)\n"
     )
     return touched
 

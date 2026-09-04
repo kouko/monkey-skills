@@ -700,6 +700,26 @@ def test_squash_shaped_commit_on_main_satisfies_the_line(tmp_path: Path) -> None
     assert "squash" in result.stdout.lower()
 
 
+def test_squash_note_states_only_verified_facts(tmp_path: Path) -> None:
+    """finding wave-end:0-04: the note used to assert it had VERIFIED a
+    squash and that the source branch carried the line -- neither is
+    provable offline (no PR provenance in a local clone). The note must
+    say plainly that this is unverifiable and state only the shape facts
+    this function can actually check."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--squash", "feature")
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent (#12)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "not verifiable offline" in result.stdout
+    assert "is a GitHub squash" not in result.stdout
+
+
 def test_stale_origin_main_falls_through_to_local_main(tmp_path: Path) -> None:
     """finding wave-end:0-01: a stale `origin/main` (exists but predates the
     squash) must not short-circuit the REOPEN_TRUNK_CANDIDATES loop -- the
@@ -922,3 +942,44 @@ def test_templates_code_paths_and_cli_still_count_as_interface_surface(
     assert "intent.kind-recompute" in blocked
     assert "loom-code/contract/templates/x.tsx" in result.stderr
     assert "src/cli/main.py" in result.stderr
+
+
+def test_cli_help_md_still_counts_as_interface_surface(tmp_path: Path) -> None:
+    """finding wave-end:0-03: the type filter narrowed to `code` was applied
+    to EVERY glob match, not just `**/templates/**` -- so a `.md` under
+    `**/cli/**` (CLI help text, a real user surface) silently stopped
+    tripping either recompute. Only `**/templates/**` gets the type
+    narrowing; every other glob match counts whatever its §6 type is."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, "cli/help.md")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="engineering",
+        needs_design="no — internal only",
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    blocked = blocked_rules(result)
+    assert "intent.needs-design-recompute" in blocked
+    assert "intent.kind-recompute" in blocked
+    assert "cli/help.md" in result.stderr
+
+
+def test_kickoff_added_docs_glob_still_counts_regardless_of_type(tmp_path: Path) -> None:
+    """finding wave-end:0-03: a KICKOFF-DEFAULTS-added glob that matches a
+    `docs`-typed path (not `**/templates/**`) must still count -- the type
+    narrowing is scoped to the templates glob alone, not to every glob a
+    repo or the manifest declares."""
+    repo = make_repo(tmp_path)
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text(
+        "# Kickoff Defaults\n\n- interface-surfaces: docs/** — this repo's own (2026-09-04)\n",
+        encoding="utf-8",
+    )
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    commit_file(repo, "docs/guide.md")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.needs-design-recompute" in blocked_rules(result)
+    assert "docs/guide.md" in result.stderr
