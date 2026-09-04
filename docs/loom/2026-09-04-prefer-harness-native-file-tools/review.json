@@ -137,6 +137,11 @@
       "decision_point": 1,
       "text": "字數帽 intent 2026-09-04-positioning-paragraph-cap-redesign 隨這條分支一起進 main，可以嗎？（答：可以）",
       "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告：Acceptance 1–3 皆符合（冷讀兩次用 Edit 並引用那句；對照組也用 Edit、依據不同——證據強度如實記）；三件 agent-decided；接受嗎？",
+      "type": "done"
     }
   ],
   "open_findings": [
@@ -230,6 +235,14 @@
       "model": "sonnet",
       "vendor": "anthropic",
       "started": "2026-09-04T16:54:28+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "ship-graduate",
+      "role": "implementer",
+      "agent_id": "impl-ship-grad-tools",
+      "model": "sonnet",
+      "started": "2026-09-04T18:49:26+08:00",
       "fresh_context": true
     }
   ],
