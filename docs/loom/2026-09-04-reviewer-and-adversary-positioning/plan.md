@@ -2,7 +2,7 @@
 intent: 2026-09-04-reviewer-and-adversary-positioning@20658a36
 
 ## Current State Evidence
-- Forward（契約）：`loom-code/agents/reviewer.md:6-11` 開頭是 `> **Role**: judge…do not modify`（1255 字），`loom-code/agents/adversary.md:6-10` 是 `> **Role**: attacker…`（446 字）；兩檔都沒有一句說「你負責哪一種真相」，邊界只能從 reviewer 的維度表（`:29-60`）與 adversary 的 per-type 配方（`:18-34`）歸納。
+- Forward（契約）：`loom-code/agents/reviewer.md:8-11` 開頭是 `> **Role**: judge…do not modify`（1255 字），`loom-code/agents/adversary.md:8-10` 是 `> **Role**: attacker…`（446 字）；兩檔都沒有一句說「你負責哪一種真相」，邊界只能從 reviewer 的維度表（`:29-60`）與 adversary 的 per-type 配方（`:18-34`）歸納。
 - Forward（修正輪）：review 站 SKILL.md `§8a`（`loom-code/skills/review/SKILL.md:414-421`）只指向 `loom-code/skills/review/references/fix-rounds.md`（434 字）；該檔 `## Probes are not re-run here`（`:33-37`）說修正輪不重跑探針、push 會重跑——沒有一句說讀者的可執行 finding 該由誰、在哪一輪變成探針。2026-09-04-checker-seams 的 wave-end finding 05（`--is-ancestor` ≠ first-parent）是臨時在 branch-end 由對抗者編成 `test_abuse_branch_end.py` case (1) 的，`review.json` 裡沒有規則依據。
 - Reverse：讀 reviewer.md 的是 review 站 §2 派工（`loom-code/skills/review/SKILL.md:150-180`）與 fix-rounds 的 resumed reader；讀 adversary.md 的是 review 站 §4 與 build 站 §2 的探針先寫段（`loom-code/skills/build/SKILL.md:101-118`）。文字測試：`loom-code/scripts/test_review_station_text.py`（`:15-40`，已讀 reviewer.md 一處：docs-lint 段）、`test_station_summary_table.py`（九處站摘要表同步；本 change 不改站摘要行）。
 - Data（研究）：`evidence/research-reviewer-adversary-roles.md`——讀與跑抓不同缺陷類別有量測（Mäntylä & Lassenius 2009：review 找到的缺陷 75% 不影響功能）；finding→回歸測試是既有慣例（Google／SQLite／detection-as-code）。`evidence/research-role-separation-ablations.md`——「讀者與對抗者拆成兩個 agent」沒有任何直接比較；最近的 ablation 是 AgentCoder（寫碼者≠寫測試者：HumanEval 71.3%→79.9%）與 Olausson 2023（自我批判 vs 獨立批判）。所以定位段措辭是「本流程的分工」，不是「業界共識」（intent Proposed outcome 4）。
