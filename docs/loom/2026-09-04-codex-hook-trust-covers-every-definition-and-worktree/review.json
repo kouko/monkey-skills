@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+  "reviewed_sha": "7750a644e8a2717bff843d72a8fbc5c94c30f129",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -210,6 +210,48 @@
       "dimension_scores": {},
       "findings": [],
       "notes": "confirmation round after the ship nit batch (403c696c) and probe graduation (e113d25e): 403c696c appended only the requested docstring paragraph (byte-identical source and scaffolded copy) and swapped 'being fixed' for the fix shas; e113d25e copied the two probe files byte-identical except the path line; nit closed."
+    },
+    {
+      "reviewer": "rev-close-trust-codex-6b04",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+code",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "sha": "7750a644e8a2717bff843d72a8fbc5c94c30f129",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A — no user-facing question in this delta",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": "round 4a (CI fix alone, delta 30836fab..7750a644): the hooks.json guard probe pins the three main command strings and guards the live git comparison; both copies byte-identical except the path line; first verdict on close commit 2feafa15 (PASS) superseded by the reorder."
+    },
+    {
+      "reviewer": "rev-close-trust-sonnet-a9e2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+code",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "sha": "7750a644e8a2717bff843d72a8fbc5c94c30f129",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A — no user-facing question in this delta",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": "round 4a: one CI-portability fix applied identically to the graduated probe and its evidence original; pinned strings equal current and main's commands; guard still fails on a mutated command; first verdict on 2feafa15 (PASS) superseded by the reorder."
     }
   ],
   "probes": [
@@ -306,6 +348,38 @@
       "scope": "branch-end",
       "command": "python3 -m pytest .claude/hooks/test_codex_hook_shims.py -q",
       "sha": "e113d25e69d9ed569984469de61b81889a78f5e5",
+      "result": "pass",
+      "artifact": ".claude/hooks/test_codex_hook_shims.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "7750a644e8a2717bff843d72a8fbc5c94c30f129",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_hook_trust.py -q",
+      "sha": "7750a644e8a2717bff843d72a8fbc5c94c30f129",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_hook_trust.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_hook_trust_branch_end.py -q",
+      "sha": "7750a644e8a2717bff843d72a8fbc5c94c30f129",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_hook_trust_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest .claude/hooks/test_codex_hook_shims.py -q",
+      "sha": "7750a644e8a2717bff843d72a8fbc5c94c30f129",
       "result": "pass",
       "artifact": ".claude/hooks/test_codex_hook_shims.py"
     }
@@ -433,11 +507,28 @@
       "model": "sonnet",
       "started": "2026-09-05T01:25:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-trust-codex-6b04",
+      "model": "codex",
+      "started": "2026-09-05T02:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-trust-sonnet-a9e2",
+      "model": "sonnet",
+      "started": "2026-09-05T02:20:00+08:00",
+      "fresh_context": true
     }
   ],
   "notes": [
     "2026-09-05 branch-end round 1: NEEDS_REVISION from both readers (codex: 2 fatal + 1 important; sonnet: 3 important + 1 nit); reviewed_sha unchanged. Nit for the ship fold: loom_record_fire.py docstring — unsynchronised append accepted (lost line = never, never a forged fired). Implementer notes carried: W1-01 touched loom_checker.py HOST_PLUMBING_FILES (pinned test); W1-03 used git stash once (stack count unchanged).",
     "2026-09-05 branch-end round 2: codex PASS_WITH_NOTES, sonnet PASS → PASS_WITH_NOTES; reviewed_sha → c62ac169. Probes re-run at c62ac169: W0-01 file 15 passed; branch-end file 11 passed; .claude/hooks/test_codex_hook_shims.py (carries the adversary's non-root-cwd case) passed; repo ledger absent after every run. Ship fold nit: loom_record_fire.py docstring on the unsynchronised append.",
-    "2026-09-05 branch-end round 3 (confirmation): nit batch 403c696c + graduation e113d25e; both readers PASS; reviewed_sha → e113d25e; decision point ③ accepted (ok, after a plain-language re-presentation at the user's request)."
+    "2026-09-05 branch-end round 3 (confirmation): nit batch 403c696c + graduation e113d25e; both readers PASS; reviewed_sha → e113d25e; decision point ③ accepted (ok, after a plain-language re-presentation at the user's request).",
+    "2026-09-05 round 4a: PR #790's first CI run failed test_probes_hook_trust.py::test_codex_hooks_json_commands_unchanged_from_main (git show main: — CI has no local main ref); fix 7750a644 inserted after the round-3 checkpoint and reviewed on its own by the two close readers (both PASS); the earlier close commit 2feafa15 (same one status line, both readers PASS) re-created on top; verified in a depth-1 single-branch clone. Close-round dispatch entries were written before dispatch and committed here."
   ]
 }
