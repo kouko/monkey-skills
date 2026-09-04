@@ -1,6 +1,6 @@
 # Product principles interview (runs inside decision point ①; no separate stop)
 
-Opening line (say verbatim, localized at run time): "Before building a product feature, this repo needs a set of product principles first. I'll ask you a few questions to produce it (about ten minutes), then confirm it together with the intent."
+Opening line (translate into the user's language; the meaning is fixed, the words are not): "Before building a product feature, this repo needs a set of product principles first. I'll ask you a few questions to produce it (about ten minutes), then confirm it together with the intent."
 
 Keep asking until it's clear; each question stays in plain language, with no mechanism jargon.
 1. Who is this product for? How do they solve this today?

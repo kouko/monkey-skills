@@ -199,13 +199,12 @@ file carries a `ratified-by: <name> <date>` line and a `## Non-negotiables`
 section with at least three items. When that happens, run the interview in
 `loom-code`'s `contract/templates/PRINCIPLES-interview.md` **now, in this
 same conversation** — not as a separate stop and not as a question about
-whether to do it. Open with the sentence that template gives you:
+whether to do it. Open with the template's opening line, translated into
+the user's language — the template's current English sentence is:
 
-> 做產品功能前這個 repo 要先有一份產品原則，我接著問你幾個問題來產生（約十分鐘），最後跟 intent 一起確認。
->
-> (Before we build product behaviour this repo needs a set of product
-> principles. I will ask you a few questions now to produce them — about
-> ten minutes — and we will confirm them together with the intent.)
+> "Before building a product feature, this repo needs a set of product
+> principles first. I'll ask you a few questions to produce it (about ten
+> minutes), then confirm it together with the intent."
 
 Ask its questions until the answers are clear, write `PRINCIPLES.md` with
 its `ratified-by:` line left pending, and restate it together with the
