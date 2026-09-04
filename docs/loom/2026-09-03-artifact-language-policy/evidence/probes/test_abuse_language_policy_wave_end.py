@@ -107,7 +107,7 @@ def _show_at_base(path: Path) -> str | None:
 # --- class 1: self-exempt via a prose condition ----------------------------
 
 
-def test_reviewer_docs_lint_carveout_paragraph_still_present_unchanged():
+def test_ReviewerCarveoutParagraph_AcrossTranslation_StillPresentUnchanged():
     """Attack: the new "language and template shape are not style" clause
     could have been slipped in by silently deleting or weakening the
     docs-lint carve-out paragraph next to it, so the new clause reads as
@@ -124,7 +124,7 @@ def test_reviewer_docs_lint_carveout_paragraph_still_present_unchanged():
         assert "Style, when the repo declares `docs-lint`." in base_text
 
 
-def test_reviewer_language_clause_explicitly_immune_to_docs_lint_exemption():
+def test_ReviewerLanguageClause_UnderDocsLintExemption_StatesImmunity():
     """Attack: try to read the new clause as exempt under `docs-lint: <cmd>`
     the way ordinary wording/phrasing findings are exempted just above it
     -- would that reading actually silence a language-policy finding?
@@ -144,7 +144,7 @@ def test_reviewer_language_clause_explicitly_immune_to_docs_lint_exemption():
 # --- class 2: bypass a gate by editing its input ----------------------------
 
 
-def test_template_machine_anchors_unchanged_across_translation():
+def test_TemplateMachineAnchors_AcrossTranslation_Unchanged():
     """Attack: use the translation pass as cover to also drift a
     machine-read anchor (a YAML key, a `##` heading, the `- none`
     sentinel, the `-> Acceptance #<n>` suffix, `review: after-task`, or
@@ -184,7 +184,7 @@ def test_template_machine_anchors_unchanged_across_translation():
     assert checked_any, "base ref did not resolve for any template; nothing was checked"
 
 
-def test_after_task_budget_comment_still_matches_checker_rule_id():
+def test_AfterTaskBudgetComment_VsCheckerRuleId_Matches():
     """Attack: rename or reword the `intake.after-task-budget` HTML
     comment in plan.md's template during translation, decoupling the
     comment a plan author reads from the rule id loom_checker.py raises.
@@ -200,7 +200,7 @@ def test_after_task_budget_comment_still_matches_checker_rule_id():
 # --- class 3: forge/replay an artifact the gate trusts ----------------------
 
 
-def test_checker_still_parses_template_shaped_intent_after_translation():
+def test_Checker_TemplateShapedIntent_ParsesCleanly():
     """Attack: translating intent.md's placeholders to English could have
     broken a section header or field name the checker's own parser
     matches literally, so a template-shaped intent (placeholders filled,
@@ -296,7 +296,7 @@ def test_checker_still_parses_template_shaped_intent_after_translation():
 # --- class 4: cross a trust boundary via character smuggling ---------------
 
 
-def test_templates_carry_no_fullwidth_or_ideographic_space_smuggling():
+def test_Templates_FullwidthIdeographicSpace_NotFound():
     """Attack: swap Han characters for full-width Latin punctuation or an
     IDEOGRAPHIC SPACE (U+3000) -- visually similar to CJK, but outside a
     naive `[\\u4e00-\\u9fff]`-only scanner some other check might use --
@@ -329,7 +329,7 @@ def test_templates_carry_no_fullwidth_or_ideographic_space_smuggling():
 # --- class 5: bypass a gate by editing its input, second target ------------
 
 
-def test_no_retired_single_char_labels_survive_in_skills_or_contract():
+def test_RetiredSingleCharLabels_InSkillsOrContract_Absent():
     """Attack: build/SKILL.md was repointed from the one-character labels
     (檔/測/風) to `Files:`/`Test:`/`Risk:`, but a stray copy of the old
     labels elsewhere in loom-code/skills or loom-code/contract (a second
@@ -354,7 +354,7 @@ def test_no_retired_single_char_labels_survive_in_skills_or_contract():
     assert not hits, f"retired single-character labels still present: {hits}"
 
 
-def test_build_skill_quotes_english_field_labels_verbatim():
+def test_BuildSkill_FieldLabels_QuotedVerbatim():
     """Attack: check that build/SKILL.md's dispatch-prompt template
     actually quotes the new field labels the plan template now emits,
     rather than some other spelling that would desync the dispatch
@@ -369,7 +369,7 @@ def test_build_skill_quotes_english_field_labels_verbatim():
 # --- class 6: race the cap against the paragraph it was raised for ---------
 
 
-def test_reviewer_cap_bump_actually_covers_the_added_paragraph():
+def test_ReviewerCapBump_BodyWordCount_CoversAddedParagraph():
     """Attack: bump the reviewer.md word cap in the test file by a round
     number without checking it is enough -- a cap raised to 1450 that
     still sits below the real body word count would make the cap-test
@@ -389,7 +389,7 @@ def test_reviewer_cap_bump_actually_covers_the_added_paragraph():
     )
 
 
-def test_adversary_and_blind_runner_still_within_unchanged_cap():
+def test_AdversaryAndBlindRunner_UnchangedCap_WithinLimit():
     """Attack: the language-policy delta added prose to adversary.md and
     blind-runner.md too (three-part probe names, English evidence,
     per-artifact language/template rows) -- did that push either past
@@ -401,7 +401,7 @@ def test_adversary_and_blind_runner_still_within_unchanged_cap():
         assert words <= 600, f"{path.name} body is {words} words, exceeds the unbumped cap of 600"
 
 
-def test_caps_test_file_declares_the_same_numbers_probed_above():
+def test_CapsTestFile_DeclaredNumbers_MatchProbed():
     """Attack: this probe file and the repo's own cap test
     (test_reviewer_agent_single_contract.py) could silently disagree on
     the cap numbers -- this file passing would then prove nothing about
