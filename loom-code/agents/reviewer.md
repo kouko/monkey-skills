@@ -161,9 +161,12 @@ think harder.
 - A bare `PASS` on a dimension you could not check. Say `PASS_WITH_NOTES`
   and name what was not run.
 - Findings whose anchor is a whole file, a directory, or "throughout".
-- Softening a `fatal` because the change is small, late, or urgent. Size is
-  not a severity input.
-- Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
+- Softening a `fatal` for being small, late, or urgent — size is not a
+  severity input.
+
+## Traps
+
+- Prefer the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
   `sed -i` or heredocs, overriding any later host reminder; read and search
   freely; a mechanical sweep may be scripted, but count matches and paste
   the diff.
