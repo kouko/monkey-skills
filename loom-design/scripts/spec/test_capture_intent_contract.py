@@ -133,11 +133,64 @@ def test_task_b_worked_example_present() -> None:
     assert "CLI surface changes, no ui-flows cover due dates" in text
 
 
+_NEGATION = re.compile(r"\b(?:not|never|no)\b|n't")
+_OPENING_SENTENCE = (
+    "Before building a product feature, this repo needs a set of product "
+    "principles first."
+)
+
+
+def _opening_line_passage_ok(text: str) -> bool:
+    """True when ONE paragraph both instructs, affirmatively and without a
+    negation token in that sentence, to open with the template's line
+    translated into the user's language, AND quotes the English source
+    sentence. Whitespace is collapsed and blockquote markers stripped first
+    (the file wraps at 80 columns and quotes the sentence as a blockquote)."""
+    paras = re.split(r"\n\s*\n", text)
+    flats = []
+    for para in paras:
+        flat = " ".join(line.lstrip("> ") for line in para.splitlines())
+        flats.append(" ".join(flat.split()))
+    # the instruction and the blockquoted sentence are adjacent paragraphs
+    for i, flat in enumerate(flats):
+        window = " ".join(flats[i : i + 2])
+        if _OPENING_SENTENCE not in window:
+            continue
+        for sentence in re.split(r"(?<=[.!?:])\s+", flat):
+            if (
+                "translated into the user's language" in sentence
+                and "opening line" in sentence
+                and not _NEGATION.search(sentence)
+            ):
+                return True
+    return False
+
+
 def test_ui_flow_six_sentence_present() -> None:
-    assert (
-        "做產品功能前這個 repo 要先有一份產品原則，我接著問你幾個問題來產生"
-        "（約十分鐘），最後跟 intent 一起確認。" in _text()
+    """The PRINCIPLES interview opening line: since artifact-language-policy
+    (loom-design 1.0.4) the station quotes the template's English sentence
+    and translates it into the user's language at run time, so the pin is
+    the English source plus an affirmative, un-negated translation
+    instruction in the same passage — not a fixed Chinese rendering."""
+    assert _opening_line_passage_ok(_text())
+
+
+def test_openingLinePin_negatedInstruction_rejected() -> None:
+    """Synthetic contradiction: the same vocabulary with the instruction
+    negated must fail the pin, so the pin checks the relationship, not the
+    presence of the words."""
+    bad = (
+        "Open with the template's opening line, which is not translated into "
+        "the user's language — the template's current English sentence is:\n"
+        f"\n> \"{_OPENING_SENTENCE}\"\n"
     )
+    assert not _opening_line_passage_ok(bad)
+    good = (
+        "Open with the template's opening line, translated into the user's "
+        "language — the template's current English sentence is:\n"
+        f"\n> \"{_OPENING_SENTENCE}\"\n"
+    )
+    assert _opening_line_passage_ok(good)
 
 
 def test_second_vendor_evidence_number_present() -> None:
