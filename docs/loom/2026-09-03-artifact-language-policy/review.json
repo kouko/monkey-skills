@@ -1,0 +1,21 @@
+{
+  "reviewed_sha": "4e459ed054a86e6cc830270d547b7729d2b0bd26",
+  "scope": "",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T01:10:00+08:00",
+      "fresh_context": true
+    }
+  ]
+}
