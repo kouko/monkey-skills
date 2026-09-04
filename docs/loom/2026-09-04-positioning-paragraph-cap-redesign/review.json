@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "4ab5224d32c3f09c0a5a1e9d0246b8f32b1d775c",
+  "reviewed_sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -100,6 +100,78 @@
         }
       ],
       "notes": "Acceptance 3 reader-side 6/8 read as single-sample cold-read noise on unchanged prose (prior change reached 8/8 on two consecutive samples of the same paragraph; intent keeps reader text out of scope) — a ship-gate/user-acceptance question, not a finding against this lens. count=1→count=0 verified as a strengthening. Full suite 1234 passed reproduced."
+    },
+    {
+      "reviewer": "rev-branch-end-cap-codex-7b12",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+code",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "closed": [
+        "branch-end-01: closed by 8a28b1de — quoted terminators and Unicode ellipses split correctly; real paragraphs 4/6 and 5/6",
+        "branch-end-02: closed by dd562edd — the new reviewer sentence resolves both repeated misclassifications without contradicting the adversary boundary; third cold read 8/8",
+        "branch-end-03: closed by 255b69f5 — CHANGELOG bullet 3 matches _mutate_paragraph count=1→count=0"
+      ],
+      "notes": "Reviewer body independently counted at 1338 (slack 2). 'may still name the gap' preserves the duty to report missing-test findings. tests PASS_WITH_NOTES only because fix-round rules skip probe re-runs."
+    },
+    {
+      "reviewer": "rev-branch-end-cap-sonnet-c8d5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+code",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
+      "dimension_scores": {
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — no external surface touched",
+        "principles-conformance": "N/A — no PRINCIPLES.md applies",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "closed": [
+        "branch-end-01: closed by 8a28b1de — both cases reproduced as 2 sentences; reviewer 4 (21/31/27/38), adversary 5 (12/25/14/29/21); oracle updated in step",
+        "branch-end-03: closed by 255b69f5 — bullet matches test_probes_positioning_branch_end.py:216",
+        "branch-end-02 (codex's): nothing found to reopen — sentence, cap bump 1300→1340 (slack 2) and disclosure verified"
+      ],
+      "notes": "Full suite reproduced 1235 passed; evidence probes 39 passed / 1 xfailed (U.S. nit, deferred to ship fold). New reviewer sentence does not contradict adversary.md's parallel sentence."
     }
   ],
   "probes": [
@@ -134,6 +206,46 @@
       "sha": "202e1398862f3f48eb99fd90001f8a01f621ba0c",
       "result": "fail",
       "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/blind-run-report.md"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py -q",
+      "sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py -q",
+      "sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "claude -p --model sonnet (reviewer.md path only, third sample) + python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "dd562edda52c42ad458fb55d2e09094388de050e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_positioning_branch_end_r2.py -q",
+      "sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_positioning_branch_end_r2.py"
     }
   ],
   "questions": [
@@ -159,21 +271,24 @@
       "anchor": "loom-code/scripts/test_review_station_text.py:97",
       "origin_sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
       "raised_by": "rev-branch-end-cap-codex-7b12, rev-branch-end-cap-sonnet-c8d5, adv-branch-end-cap-e3a0",
-      "text": "_sentences() treats neither .\" (terminator then closing quote) nor … as a sentence end; two sentences merge and SENTENCE_CAP undercounts."
+      "text": "_sentences() treats neither .\" (terminator then closing quote) nor … as a sentence end; two sentences merge and SENTENCE_CAP undercounts.",
+      "resolved": "closed by 8a28b1de (splitter) — confirmed by both readers round 2; probes flipped from xfail to assertions in eb7f0a28"
     },
     {
       "id": "branch-end-02",
       "anchor": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/blind-run-report.md:61",
       "origin_sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
       "raised_by": "rev-branch-end-cap-codex-7b12",
-      "text": "Reviewer-side cold read own/not-own 6/8 against Acceptance 3's 8/8 (reviewer.md untouched by this delta; sonnet reader reads it as single-sample noise — disagreement recorded, not averaged)."
+      "text": "Reviewer-side cold read own/not-own 6/8 against Acceptance 3's 8/8 (reviewer.md untouched by this delta; sonnet reader reads it as single-sample noise — disagreement recorded, not averaged).",
+      "resolved": "closed by dd562edd (reviewer sentence, user-decided option A at 764b5474; cap 1300→1340) — third cold read 8/8 in 65359a0c; confirmed by rev-branch-end-cap-codex-7b12 round 2"
     },
     {
       "id": "branch-end-03",
       "anchor": "loom-code/CHANGELOG.md:24",
       "origin_sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
       "raised_by": "rev-branch-end-cap-sonnet-c8d5",
-      "text": "CHANGELOG bullet 3 misdescribes the W1-02 mutation-helper fix (count=1→count=0), not 'count sentences dropped, not words'."
+      "text": "CHANGELOG bullet 3 misdescribes the W1-02 mutation-helper fix (count=1→count=0), not 'count sentences dropped, not words'.",
+      "resolved": "closed by 255b69f5 (CHANGELOG bullet 3) — confirmed by rev-branch-end-cap-sonnet-c8d5 round 2"
     }
   ],
   "dispatch": [
@@ -251,6 +366,8 @@
     }
   ],
   "notes": [
-    "2026-09-04 branch-end round 1: NEEDS_REVISION from both readers; reviewed_sha unchanged. Nits folded at ship: `U.S.`-style abbreviation overcount (codex); semicolon-chain evasion under 40 words demonstrated by adv-branch-end probe, accepted by plan Risks 4."
+    "2026-09-04 branch-end round 1: NEEDS_REVISION from both readers; reviewed_sha unchanged. Nits folded at ship: `U.S.`-style abbreviation overcount (codex); semicolon-chain evasion under 40 words demonstrated by adv-branch-end probe, accepted by plan Risks 4.",
+    "2026-09-04 branch-end round 2: PASS from both readers; reviewed_sha → 65359a0c. Ship fold (nits): U.S.-style abbreviation overcount; semicolon-chain evasion accepted by plan Risks 4.",
+    "2026-09-04 round 2 probes re-run at the reviewed commit 65359a0c: test_abuse_sentence_cap.py 16 passed; test_abuse_sentence_cap_branch_end.py 23 passed 1 xfailed (U.S. nit); graduated test_probes_positioning_branch_end_r2.py 19 passed (sentence-cap boundary probes re-pinned by W1-02)."
   ]
 }
