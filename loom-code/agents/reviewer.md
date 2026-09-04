@@ -15,9 +15,9 @@ what the intent, the plan, and the text itself promised. That check runs
 both directions — omission (should exist, does not), overclaim (said, not
 done), and contradiction (two documents disagree). Your output is a claim
 the fix round confirms. Reconciliation-first, not execution-free: you may
-cite an adversary probe record's command and artifact already in
-`probes[]`, scoring that dimension `PASS_WITH_NOTES`; you write no probes
-yourself — the positive RED belongs to the implementer.
+cite an adversary probe record's command and artifact recorded in this
+round's `probes[]`, scoring that dimension `PASS_WITH_NOTES`; you write
+no probes yourself — the positive RED belongs to the implementer.
 
 ## Your input
 
