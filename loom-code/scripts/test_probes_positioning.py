@@ -9,7 +9,8 @@ implementer.
 Attack surfaces, from plan.md W0-01:
 
   (1) reviewer.md and adversary.md each grow ONE paragraph starting `You own`,
-      <= 80 English words, citing no `docs/` path (portability rule).
+      <= 6 sentences with no sentence over 40 words (sentence cap; see
+      plan.md `## 單位決定`, W1-02), citing no `docs/` path (portability rule).
   (2) the reviewer paragraph names all three reconciliation directions
       (omission / overclaim / contradiction), says it MAY cite the
       adversary's execution evidence, and says it writes no probes itself;
@@ -95,7 +96,16 @@ README = REPO_ROOT / "docs" / "loom" / "README.md"
 PLUGIN_JSON = REPO_ROOT / "loom-code" / ".claude-plugin" / "plugin.json"
 CHANGELOG = REPO_ROOT / "loom-code" / "CHANGELOG.md"
 
-WORD_CAP = 80
+# W1-02: import the shared sentence-split helper and its constants from the
+# shipped module instead of re-implementing the split rule a third time
+# (plan.md W1-02).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from test_review_station_text import (  # noqa: E402
+    SENTENCE_CAP,
+    SENTENCE_WORD_CAP,
+    _sentences,
+)
+
 WIDTH_CAP = 72
 BASELINE_VERSION = (1, 2, 0)
 
@@ -217,19 +227,27 @@ def _version_tuple(raw: str) -> tuple[int, ...]:
 
 @pytest.mark.parametrize("path", [REVIEWER, ADVERSARY], ids=["reviewer", "adversary"])
 def test_positioning_paragraph_starts_capped_and_portable(path: Path) -> None:
-    """Surface (1). RED until W1-01.
+    """Surface (1). RED until W1-01, re-pinned to the sentence cap at W1-02.
 
-    Each contract grows exactly one `You own` paragraph, <= 80 words counted
-    with `len(str.split())`, and containing no `docs/` path -- an agent
-    dispatched into another repo cannot resolve this repo's research files,
-    which is CLAUDE.md's Contract Citations rule, not a style preference.
+    Each contract grows exactly one `You own` paragraph, <= SENTENCE_CAP (6)
+    sentences with no sentence over SENTENCE_WORD_CAP (40) words -- split and
+    counted the shared way (`test_review_station_text._sentences`) -- and
+    containing no `docs/` path -- an agent dispatched into another repo
+    cannot resolve this repo's research files, which is CLAUDE.md's Contract
+    Citations rule, not a style preference.
     """
     para = _positioning_paragraph(path)
-    words = len(para.split())
-    assert words <= WORD_CAP, (
-        f"{path.relative_to(REPO_ROOT)} positioning paragraph is {words} "
-        f"words, cap is {WORD_CAP}"
+    sentences = _sentences(para)
+    assert len(sentences) <= SENTENCE_CAP, (
+        f"{path.relative_to(REPO_ROOT)} positioning paragraph has "
+        f"{len(sentences)} sentences, cap is {SENTENCE_CAP}: {sentences!r}"
     )
+    for s in sentences:
+        words = len(s.split())
+        assert words <= SENTENCE_WORD_CAP, (
+            f"{path.relative_to(REPO_ROOT)} positioning paragraph sentence "
+            f"{s!r} is {words} words, cap is {SENTENCE_WORD_CAP}"
+        )
     assert "docs/" not in para, (
         f"{path.relative_to(REPO_ROOT)} positioning paragraph cites a `docs/` "
         "path; a contract read from another repo cannot resolve it"

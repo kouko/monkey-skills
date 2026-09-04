@@ -4,10 +4,14 @@ Written in the branch-end fix round by the resumed adversary (never an
 implementer of any task in this change), against the two fix commits:
 
   9c47fb58  branch-end-02  reviewer.md positioning restates its output as a
-                           claim the fix round confirms (79 words)
+                           claim the fix round confirms (79 words at the time
+                           -- W1-02 re-pins the shipped paragraph to the
+                           sentence cap: 3 sentences, 21/31/27 words)
   bb7d3670  branch-end-01  adversary.md positioning claims a probe's own
                            artifact path and hands a cross-document count
-                           to the reviewer (80 words, AT the cap)
+                           to the reviewer (80 words, AT the flat cap, at the
+                           time -- W1-02 re-pins it to the sentence cap: 5
+                           sentences, the last one 21 words)
 
 A third file rather than an extension of
 `test_abuse_positioning_branch_end.py`: that file's docstring is the closed
@@ -31,9 +35,10 @@ to make an attack land has proved nothing.
   probe's artifact path", the finding class would be unclaimed again, which
   is the exact cold-read failure bb7d3670 was written to close. Pinned by
   `test_adversary_split_is_an_assignment_not_a_permission`.
-* branch-end-01, the paragraph sits AT 80 words -- the cap now binds with
-  zero slack. Recorded, not a finding:
-  `test_adversary_paragraph_sits_exactly_at_the_cap_so_one_more_word_is_red`.
+* branch-end-01, the paragraph sat AT the old flat 80-word cap -- zero
+  slack. W1-02's sentence cap re-pins this as headroom instead (5 sentences
+  against a cap of 6). Recorded, not a finding:
+  `test_adversary_paragraph_has_headroom_below_the_sentence_cap`.
 * branch-end-02, the claim clause is contiguous -- HOLE FOUND, then closed
   here. The shipped guard asserts `"claim" in para` and `"fix round" in para`
   as two independent substring checks, so a paragraph saying "you claim
@@ -55,8 +60,12 @@ to make an attack land has proved nothing.
   `docs/loom/KICKOFF-DEFAULTS.md`, an exempt protocol filename. Rewritten to
   call the shipped `check_contract_citations.find_banned_citations`, plus a
   poisoned-input assertion so a permissive oracle cannot fake the green.
-* branch-end-02, the 80-word cap at its boundary -- HELD. 80 exactly passes,
-  81 fails, against the shipped assertion itself.
+* branch-end-02, the cap at its boundary -- HELD, re-pinned at W1-02 to the
+  sentence cap's two axes: 6 sentences pass, 7 fail
+  (`test_reviewer_sentence_cap_binds_exactly_at_the_boundary`); 40 words in
+  one sentence pass, 41 fail
+  (`test_reviewer_sentence_word_cap_binds_exactly_at_the_boundary`); both
+  against the shipped assertion itself.
 * branch-end-02, the two properties the fix had to preserve while adding
   words (writes no probes; cites `command`/`artifact`, never a `result`) --
   HELD, each with its own mutation.
@@ -97,7 +106,15 @@ REVIEWER = REPO_ROOT / REVIEWER_REL
 ADVERSARY = REPO_ROOT / ADVERSARY_REL
 SHIPPED = REPO_ROOT / "loom-code" / "scripts" / "test_review_station_text.py"
 
-WORD_CAP = 80
+# W1-02: import the shared sentence-split helper and its constants from the
+# shipped module instead of re-implementing the split rule a third time
+# (plan.md W1-02) -- the old flat 80-word constant is retired.
+sys.path.insert(0, str(HERE))
+from test_review_station_text import (  # noqa: E402
+    SENTENCE_CAP,
+    SENTENCE_WORD_CAP,
+    _sentences,
+)
 
 _COUNTER = itertools.count()
 
@@ -206,10 +223,17 @@ def test_adversary_paragraph_claims_artifact_path_and_hands_cross_document_away(
         "adversary positioning paragraph disclaims the cross-document count "
         "without naming who owns it; an unowned disclaimer is the original bug"
     )
-    assert len(para.split()) <= WORD_CAP, (
-        f"adversary positioning paragraph is {len(para.split())} words, over "
-        f"the {WORD_CAP}-word cap"
+    sentences = _sentences(para)
+    assert len(sentences) <= SENTENCE_CAP, (
+        f"adversary positioning paragraph has {len(sentences)} sentences, "
+        f"over the {SENTENCE_CAP}-sentence cap"
     )
+    for s in sentences:
+        words = len(s.split())
+        assert words <= SENTENCE_WORD_CAP, (
+            f"adversary positioning paragraph sentence {s!r} is {words} "
+            f"words, over the {SENTENCE_WORD_CAP}-word cap"
+        )
 
 
 @pytest.mark.parametrize(
@@ -283,20 +307,25 @@ def test_adversary_split_is_an_assignment_not_a_permission() -> None:
         )
 
 
-def test_adversary_paragraph_sits_exactly_at_the_cap_so_one_more_word_is_red(
+def test_adversary_paragraph_has_headroom_below_the_sentence_cap(
     tmp_path: Path,
 ) -> None:
-    """branch-end-01, boundary. 80 passes; 81 -- one added word -- fails.
+    """branch-end-01, boundary -- re-pinned to the sentence cap (W1-02).
 
-    bb7d3670 landed AT the cap, so the next edit to this paragraph has zero
-    slack. Recorded as a fact rather than a finding: the cap is a real
-    constraint and the guard enforces it at the boundary, both directions.
+    bb7d3670 landed the adversary paragraph AT the old flat 80-word cap,
+    with zero slack. The sentence-cap redesign (plan.md `## 單位決定`)
+    replaces that just-fits budget with a cap held well above current need:
+    the paragraph must sit BELOW SENTENCE_CAP (>= 1 sentence of headroom),
+    not AT it. Recorded as a fact, not a finding: this proves the headroom
+    exists, and that the shipped guard still refuses a paragraph pushed past
+    the cap.
     """
     para = _paragraph(ADVERSARY)
-    assert len(para.split()) == WORD_CAP, (
-        f"adversary positioning paragraph is {len(para.split())} words, not "
-        f"{WORD_CAP}; this boundary case's premise moved (still fine if <= "
-        f"{WORD_CAP}, but re-read the slack claim in the docstring)"
+    sentences = _sentences(para)
+    assert len(sentences) < SENTENCE_CAP, (
+        f"adversary positioning paragraph has {len(sentences)} sentences, "
+        f"cap is {SENTENCE_CAP}; expected headroom (< cap), not AT the cap "
+        "-- re-read the slack claim in the docstring if this moved"
     )
     _run_shipped(
         "test_adversary_agent_paragraph_owns_probe_artifact_bookkeeping",
@@ -304,7 +333,10 @@ def test_adversary_paragraph_sits_exactly_at_the_cap_so_one_more_word_is_red(
         ADVERSARY.read_text(encoding="utf-8"),
         tmp_path,
     )
-    over = _with_mutated_paragraph(ADVERSARY, para + " furthermore")
+    extra = SENTENCE_CAP - len(sentences) + 1
+    over = _with_mutated_paragraph(
+        ADVERSARY, para + " " + " ".join(["Word sentence more."] * extra)
+    )
     with pytest.raises(AssertionError):
         _run_shipped(
             "test_adversary_agent_paragraph_owns_probe_artifact_bookkeeping",
@@ -421,21 +453,26 @@ def test_shipped_claim_half_of_the_guard_now_dies_on_the_stripped_clause(
     )
 
 
-@pytest.mark.parametrize("n_words", [WORD_CAP, WORD_CAP + 1], ids=["at-80", "at-81"])
-def test_reviewer_word_cap_binds_exactly_at_the_boundary(
-    tmp_path: Path, n_words: int
+@pytest.mark.parametrize(
+    "n_sentences",
+    [SENTENCE_CAP, SENTENCE_CAP + 1],
+    ids=["at-6-sentences", "at-7-sentences"],
+)
+def test_reviewer_sentence_cap_binds_exactly_at_the_boundary(
+    tmp_path: Path, n_sentences: int
 ) -> None:
-    """branch-end-02, boundary. 80 exactly passes; 81 fails. Same oracle.
+    """branch-end-02, boundary -- re-pinned to the sentence cap (W1-02).
 
-    9c47fb58 bought its new clause by compressing the citation sentence, so
-    the cap is the constraint the fix had to live inside. A cap asserted only
-    at 79 words is a cap nobody has watched refuse anything: this drives the
-    SHIPPED assertion with a synthetic paragraph of each length, counted the
-    shipped way (`len(str.split())`).
+    6 sentences exactly passes; 7 fails. Same oracle (SHIPPED assertion),
+    driven with a synthetic paragraph of `n_sentences` short sentences (each
+    well under SENTENCE_WORD_CAP) so only the sentence-count axis of the cap
+    is exercised here -- the per-sentence word-length axis has its own case
+    below.
     """
-    head = ["You", "own", "a", "claim", "the", "fix", "round", "confirms"]
-    synthetic = " ".join(head + ["word"] * (n_words - len(head)))
-    assert len(synthetic.split()) == n_words, "synthetic paragraph miscounted"
+    first = "You own a claim the fix round confirms."
+    filler = ["Word sentence here now done."] * (n_sentences - 1)
+    synthetic = " ".join([first] + filler)
+    assert len(_sentences(synthetic)) == n_sentences, "synthetic paragraph miscounted"
 
     def _go() -> None:
         _run_shipped(
@@ -445,7 +482,42 @@ def test_reviewer_word_cap_binds_exactly_at_the_boundary(
             tmp_path,
         )
 
-    if n_words <= WORD_CAP:
+    if n_sentences <= SENTENCE_CAP:
+        _go()
+    else:
+        with pytest.raises(AssertionError):
+            _go()
+
+
+@pytest.mark.parametrize(
+    "n_words",
+    [SENTENCE_WORD_CAP, SENTENCE_WORD_CAP + 1],
+    ids=["at-40-words", "at-41-words"],
+)
+def test_reviewer_sentence_word_cap_binds_exactly_at_the_boundary(
+    tmp_path: Path, n_words: int
+) -> None:
+    """branch-end-02, boundary -- re-pinned to the sentence cap (W1-02).
+
+    40 words in a single sentence exactly passes; 41 fails. Same oracle
+    (SHIPPED assertion), driven with a ONE-sentence synthetic paragraph of
+    `n_words` words so only the per-sentence word-length axis is exercised
+    here -- the sentence-count axis has its own case above.
+    """
+    head = ["You", "own", "a", "claim", "the", "fix", "round", "confirms"]
+    synthetic = " ".join(head + ["word"] * (n_words - len(head))) + "."
+    assert len(synthetic.split()) == n_words, "synthetic paragraph miscounted"
+    assert len(_sentences(synthetic)) == 1, "synthetic paragraph split into >1 sentence"
+
+    def _go() -> None:
+        _run_shipped(
+            "test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms",
+            REVIEWER_REL,
+            _with_mutated_paragraph(REVIEWER, synthetic),
+            tmp_path,
+        )
+
+    if n_words <= SENTENCE_WORD_CAP:
         _go()
     else:
         with pytest.raises(AssertionError):

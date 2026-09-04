@@ -203,7 +203,16 @@ def _mutate_paragraph(path: Path, tmp_path: Path, drop: str) -> Path:
     """Copy `path` to tmp with `drop` deleted from its `You own` paragraph.
 
     Only the paragraph is touched: deleting the token file-wide would also
-    hit unrelated prose and the mutation would no longer be minimal.
+    hit unrelated prose and the mutation would no longer be minimal. All
+    occurrences of `drop` are removed (not just the first): the sentence-cap
+    redesign (W1-01/W1-02) restated adversary.md's disclaimer as two
+    independent negation-plus-`reconcile` clauses ("You do not ... reconcile
+    documents" and "Not yours either: ... go to the reviewer to reconcile"),
+    so `reconcile` now appears twice. A count=1 deletion left the second
+    occurrence standing, and the shipped guard's `reconcil` substring match
+    still matched it -- the mutant survived for a reason unrelated to the
+    word it claims to pin. Every other drop token here still occurs exactly
+    once, so removing all occurrences changes nothing for those cases.
     """
     text = path.read_text(encoding="utf-8")
     para = _positioning_paragraph(text)
@@ -211,7 +220,7 @@ def _mutate_paragraph(path: Path, tmp_path: Path, drop: str) -> Path:
         f"{path.name} positioning paragraph does not contain {drop!r}; "
         "the mutation would be a no-op and the case vacuous"
     )
-    mutated_para = re.sub(re.escape(drop), "", para, count=1, flags=re.IGNORECASE)
+    mutated_para = re.sub(re.escape(drop), "", para, count=0, flags=re.IGNORECASE)
     out = tmp_path / path.name
     out.write_text(text.replace(para, mutated_para, 1), encoding="utf-8")
     return out
