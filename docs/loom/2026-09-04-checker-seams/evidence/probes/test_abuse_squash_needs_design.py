@@ -149,17 +149,6 @@ def _write_intent_on_branch(
 # --- (1) squash-shaped commit on main: RED until W0-03 ---------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RED until W0-03: check_needs_design_reason() does not yet recognise a "
-        "single-parent, subject-ending-`(#n)` commit on main as squash-shaped, "
-        "so it demands the line verbatim in the squash commit's own message. "
-        "Observed today: BLOCK intent.needs-design-reason "
-        "(\"the commit message (commit <sha>, which last changed "
-        "status/needs-design) does not carry the line ...\"), exit 1."
-    ),
-)
 def test_squash_shaped_commit_on_main_passes_after_fix(tmp_path: Path) -> None:
     repo = _init_repo(tmp_path)
     change_id = "2099-03-01-squash"

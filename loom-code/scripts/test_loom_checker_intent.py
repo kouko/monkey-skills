@@ -679,6 +679,56 @@ def test_a_reason_change_needs_the_new_line_on_its_own_commit(tmp_path: Path) ->
     assert sha[:7] in result.stderr
 
 
+# --- intent.needs-design-reason: squash-on-trunk exception (W0-03) --------
+
+
+def test_squash_shaped_commit_on_main_satisfies_the_line(tmp_path: Path) -> None:
+    """GitHub's "Squash and merge" drops the branch's needs-design line into
+    a single-parent commit on main whose subject GitHub itself writes as
+    `... (#<n>)` -- the line the branch commit carried is not lost, just
+    relocated, so this must still pass."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--squash", "feature")
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent (#12)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "squash" in result.stdout.lower()
+
+
+def test_fake_squash_subject_off_main_is_still_blocked(tmp_path: Path) -> None:
+    """A branch commit that hand-writes a `(#1)`-suffixed subject to mimic
+    the squash shape, but is not reachable from main, must not be excused --
+    the topology check, not the subject text, is what decides."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent, message="docs(loom): add an intent (#1)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+
+
+def test_plain_single_parent_commit_on_main_is_still_blocked(tmp_path: Path) -> None:
+    """Single parent, no `(#n)` suffix, no needs-design line: not
+    squash-shaped by either signal, so no exception applies even though the
+    commit sits on main."""
+    repo = make_repo(tmp_path, branch=None)
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    git(repo, "add", str(intent.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+
+
 # --- intent.schema: a `map:` names a Map that exists (W3 adversary P13) ----
 
 

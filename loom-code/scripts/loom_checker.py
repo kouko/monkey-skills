@@ -544,7 +544,7 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_product_no_identifiers(front, sections)
 
     reason_failures, needs_design = check_needs_design_reason(
-        front, commit_msg, repo, path
+        front, commit_msg, repo, path, out
     )
     failures += reason_failures
 
@@ -728,7 +728,51 @@ def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
     return False
 
 
-def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: Path):
+SQUASH_SUBJECT = re.compile(r" \(#\d+\)\s*$")
+
+
+def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
+    """Is `sha` a GitHub "Squash and merge" commit sitting on the trunk?
+    Three conditions, all git topology or subject shape -- never message
+    text, so a hand-written subject that merely LOOKS like a squash cannot
+    forge the exception (W0-01 adversary: the fake-`(#1)`-off-main case):
+
+    1. single parent -- the squash button makes a plain commit, not a
+       2-parent merge (a real `--no-ff` merge already passes today by a
+       different path and is untouched by this function);
+    2. the subject ends ` (#<n>)` -- exactly what GitHub writes;
+    3. `sha` is an ancestor of the trunk (REOPEN_TRUNK_CANDIDATES -- the
+       same four names `branch_base()` resolves against, minus
+       `@{upstream}` for the reason documented at that constant: a
+       branch's own upstream must never stand in as "the trunk" here).
+
+    Returns the printable note when all three hold, else None -- the note
+    itself is the evidence for "why did it say that" (concept-model
+    §2b), not a bare pass.
+    """
+    parents = git_maybe(repo, "log", "-1", "--format=%P", sha)
+    if parents is None or len(parents.split()) != 1:
+        return None
+    subject = git_maybe(repo, "log", "-1", "--format=%s", sha)
+    if subject is None or not SQUASH_SUBJECT.search(subject):
+        return None
+    for candidate in REOPEN_TRUNK_CANDIDATES:
+        if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
+            continue
+        if git_maybe(repo, "merge-base", "--is-ancestor", sha, candidate) is None:
+            return None
+        return (
+            f"intent.needs-design-reason: commit {sha[:7]} ({relative}) is a "
+            f"GitHub squash on {candidate} (single parent, subject {subject!r}); "
+            "the needs-design line is owed by the branch it squashed, not by "
+            "this commit's own message -- treating the line as carried."
+        )
+    return None
+
+
+def check_needs_design_reason(
+    front, commit_msg: Path | None, repo: Path, path: Path, out=sys.stdout
+):
     """`needs-design` carries a reason, and the intent's commit message
     repeats the line verbatim (concept-model §2b). With no `--commit-msg`
     (the post-commit and station calls) the message is that of the last commit
@@ -752,6 +796,7 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
             raw.split()[0] if raw.split() else None,
         )
     verdict = match.group(1)
+    sha, relative = None, None
     if commit_msg is not None:
         if not commit_msg.is_file():
             raise UsageError(f"no commit message file at {commit_msg}")
@@ -766,6 +811,15 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
             source = f"commit {sha[:7]}, which last changed status/needs-design"
     line = f"needs-design: {raw}"
     if _squeeze(line) not in _squeeze(message):
+        # `--commit-msg` names an exact message to check and is never the
+        # station's own recompute (deciding_commit() ran, if at all, only in
+        # the else branch above) -- the squash exception only ever applies
+        # to a commit this function itself found via git topology.
+        if sha is not None and relative is not None:
+            note = _squash_note(repo, relative, sha)
+            if note is not None:
+                out.write(note + "\n")
+                return [], verdict
         return (
             [
                 (
