@@ -16,6 +16,11 @@
       "decision_point": 1,
       "text": "探針先寫要不要擴到所有 code task？（答：先記下來、之後再討論；本 change 不含）",
       "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 codex 當第二讀者？（KICKOFF 本 change 改成 ask；答：用）",
+      "type": "what"
     }
   ],
   "open_findings": [],
@@ -28,5 +33,6 @@
       "started": "2026-09-04T08:20:00+08:00",
       "fresh_context": true
     }
-  ]
+  ],
+  "second_vendor": "codex"
 }
