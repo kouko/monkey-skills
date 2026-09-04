@@ -222,7 +222,7 @@ def test_matcher_negatedSentence_rejected() -> None:
     assert not _has_affirmative_english(sentence)
 
 
-def test_matcher_shipPredicate_negatedSentence_rejected() -> None:
+def test_matcher_shipNegatedSentence_rejected() -> None:
     """'The report is written in English, never in the user's language'
     satisfies both affirmative-form substring checks in isolation, but
     carries the negation token 'never' in the same sentence — both
