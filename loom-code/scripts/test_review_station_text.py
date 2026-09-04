@@ -7,6 +7,7 @@ landed in the files the review station and its reviewer contract read.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -102,3 +103,218 @@ def test_fix_rounds_reader_finding_to_probe_sentence_under_60_words() -> None:
     ]
     assert hits, "no block naming `important` + adversary + probe found"
     assert len(hits[0].split()) <= 60
+
+
+# --- W1-01: tool-preference passage in the four contracts + build ----------
+
+_TOOL_PREFERENCE_ANCHOR = "apply_patch"
+_TOOL_PREFERENCE_CONTRACTS = {
+    "implementer": REPO / "loom-code/agents/implementer.md",
+    "reviewer": REPO / "loom-code/agents/reviewer.md",
+    "blind-runner": REPO / "loom-code/agents/blind-runner.md",
+    "adversary": REPO / "loom-code/agents/adversary.md",
+}
+_BUILD_SKILL = REPO / "loom-code/skills/build/SKILL.md"
+
+
+def _list_items(text: str) -> list[str]:
+    """Every top-level markdown list item in `text`, continuation lines
+    joined into one logical string per item (branch-end fix N3: the old
+    version only recognised an item when its anchor sat on the FIRST
+    physical line; a re-wrap that pushes a word to a continuation line
+    must still be found)."""
+    lines = text.splitlines()
+    items: list[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if re.match(r"^\s*[-*]\s+", line):
+            bullet = [line.strip()]
+            j = i + 1
+            while j < len(lines) and lines[j].strip() and re.match(r"^\s+\S", lines[j]):
+                bullet.append(lines[j].strip())
+                j += 1
+            items.append(" ".join(bullet))
+            i = j
+        else:
+            i += 1
+    return items
+
+
+def _tool_preference_bullet(text: str) -> str:
+    """The single list item naming `apply_patch`, continuation lines joined.
+
+    Searches every item's full joined text, not just its first physical
+    line (N3). Requires there be exactly one such item in the whole file:
+    a second item naming `apply_patch` anywhere (an earlier decoy bullet,
+    say) makes the anchor ambiguous rather than silently picking the first
+    match (branch-end fix, closes the P7 anchor-hijack class)."""
+    hits = [item for item in _list_items(text) if _TOOL_PREFERENCE_ANCHOR in item]
+    if not hits:
+        raise AssertionError(f"no list item names `{_TOOL_PREFERENCE_ANCHOR}`")
+    if len(hits) > 1:
+        raise AssertionError(
+            f"{len(hits)} list items name `{_TOOL_PREFERENCE_ANCHOR}`; the "
+            "tool-preference passage must be stated exactly once per file"
+        )
+    return hits[0]
+
+
+def test_four_contracts_carry_a_capped_tool_preference_passage() -> None:
+    """W1-01: each of the four agent contracts names the host edit tool,
+    `apply_patch`, and `sed -i`/heredoc, in <= 40 words (`len(str.split())`).
+    """
+    for name, path in _TOOL_PREFERENCE_CONTRACTS.items():
+        bullet = _tool_preference_bullet(path.read_text(encoding="utf-8"))
+        assert "sed -i" in bullet or "heredoc" in bullet, (
+            f"{name}.md tool-preference passage never names sed -i/heredoc"
+        )
+        assert re.search(r"\bEdit\b|\bWrite\b", bullet), (
+            f"{name}.md tool-preference passage never names the host edit tool"
+        )
+        words = len(bullet.split())
+        assert words <= 40, f"{name}.md tool-preference passage is {words} words"
+
+
+def test_tool_preference_passage_does_not_forbid_reading() -> None:
+    """W1-01: the passage regulates writing only — no prohibition clause in
+    it names a read/search tool."""
+    prohibition = r"\b(?:never|not|no|don't|do not|avoid|instead of|rather than)\b"
+    read_tools = (
+        r"\bcat\b", r"\bgrep\b", r"\bhead\b", r"\btail\b", r"\bsed -n\b",
+        r"\bripgrep\b", r"\brg\b", r"\bRead\b", r"\bGrep\b", r"\bGlob\b",
+    )
+    for name, path in _TOOL_PREFERENCE_CONTRACTS.items():
+        bullet = _tool_preference_bullet(path.read_text(encoding="utf-8"))
+        for clause in re.split(r"[;.]|--|—", bullet):
+            if not re.search(prohibition, clause, re.IGNORECASE):
+                continue
+            for pattern in read_tools:
+                assert not re.search(pattern, clause, re.IGNORECASE), (
+                    f"{name}.md tool-preference passage forbids reading: "
+                    f"{pattern!r} in clause {clause.strip()!r}"
+                )
+
+
+# Branch-end fix F1: one canonical sentence, pinned by equality rather than
+# by vocabulary alone -- vocabulary-only checks pass an inverted sentence,
+# a sentence missing `never`, or one missing the host-reminder-override
+# clause (findings P1/P2/P3/P4/P7 from the branch-end adversary).
+_CANONICAL_TOOL_PREFERENCE_SENTENCE = (
+    "Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- "
+    "never `sed -i` or heredocs, overriding any later host reminder; read "
+    "and search freely; a mechanical sweep may be scripted, but count "
+    "matches and paste the diff."
+)
+
+
+def _normalise_tool_preference(bullet: str) -> str:
+    """Strip the list marker, collapse whitespace, and treat `--` and `—`
+    as the same character (the build/SKILL.md and implementer.md copies
+    have drifted on the dash before -- P6)."""
+    stripped = re.sub(r"^\s*[-*]\s+", "", bullet)
+    stripped = stripped.replace("—", "--")
+    return " ".join(stripped.split())
+
+
+def test_tool_preference_passage_matches_the_canonical_sentence_everywhere() -> None:
+    """Branch-end fix F1: the normalised tool-preference bullet in all five
+    files (four contracts + build/SKILL.md) equals ONE canonical sentence.
+    Vocabulary/cap/no-read-ban checks alone let a polarity flip, a dropped
+    `never`, a dropped override clause, or a lone-inverted copy through;
+    equality against a single string catches all of them."""
+    for name, path in _TOOL_PREFERENCE_CONTRACTS.items():
+        bullet = _tool_preference_bullet(path.read_text(encoding="utf-8"))
+        got = _normalise_tool_preference(bullet)
+        assert got == _CANONICAL_TOOL_PREFERENCE_SENTENCE, (
+            f"{name}.md tool-preference passage does not match the "
+            f"canonical sentence:\n  got:  {got!r}\n"
+            f"  want: {_CANONICAL_TOOL_PREFERENCE_SENTENCE!r}"
+        )
+    build_bullet = _tool_preference_bullet(_BUILD_SKILL.read_text(encoding="utf-8"))
+    build_got = _normalise_tool_preference(build_bullet)
+    assert build_got == _CANONICAL_TOOL_PREFERENCE_SENTENCE, (
+        "build/SKILL.md tool-preference passage does not match the "
+        f"canonical sentence:\n  got:  {build_got!r}\n"
+        f"  want: {_CANONICAL_TOOL_PREFERENCE_SENTENCE!r}"
+    )
+
+
+def test_build_tool_preference_matches_implementer_verbatim() -> None:
+    """W1-01: build/SKILL.md's standing trap-guard copy of the passage is the
+    same normalised string as agents/implementer.md's — two hand-maintained
+    copies must not gain a third disagreement."""
+    build = _tool_preference_bullet(_BUILD_SKILL.read_text(encoding="utf-8"))
+    impl = _tool_preference_bullet(
+        _TOOL_PREFERENCE_CONTRACTS["implementer"].read_text(encoding="utf-8")
+    )
+    build_norm = " ".join(re.sub(r"^[-*]\s+", "", build).split())
+    impl_norm = " ".join(re.sub(r"^[-*]\s+", "", impl).split())
+    assert build_norm == impl_norm, (
+        "the tool-preference passage differs between build/SKILL.md and "
+        f"agents/implementer.md:\n  build: {build_norm!r}\n  impl:  {impl_norm!r}"
+    )
+
+
+def test_trap_heading_inventory_the_review_pointers_rely_on() -> None:
+    """Branch-end fix N1: the §3/§4 pointer sentence tells the dispatcher to
+    carry "that contract's own `## Traps` section" verbatim. reviewer.md,
+    blind-runner.md, and adversary.md each carry a heading literally named
+    `## Traps`; implementer.md deliberately carries `## Trap-guards`
+    instead (its own pointer line reads differently — build/SKILL.md names
+    it directly rather than through review/SKILL.md's generic pointer).
+    Pinning the inventory here means a rename silently breaking the
+    pointer sentence fails loudly in this file, not only in prose."""
+    headings = {
+        name: re.findall(r"^## .+$", path.read_text(encoding="utf-8"), re.M)
+        for name, path in _TOOL_PREFERENCE_CONTRACTS.items()
+    }
+    for name in ("reviewer", "blind-runner", "adversary"):
+        assert "## Traps" in headings[name], (
+            f"{name}.md lost its `## Traps` heading; the §3/§4 pointer "
+            "sentence in review/SKILL.md no longer resolves for it"
+        )
+    assert "## Traps" not in headings["implementer"], (
+        "implementer.md gained a `## Traps` heading; update this test "
+        "deliberately if that was the intent"
+    )
+    assert "## Trap-guards" in headings["implementer"], (
+        "implementer.md lost its `## Trap-guards` heading"
+    )
+
+
+# Branch-end fix N2: the exact pointer sentence, so a reworded no-op that
+# merely keeps the substring "trap" is caught rather than waved through by
+# a bare `re.search(r"[Tt]rap", ...)`.
+_TRAP_POINTER_SENTENCE = (
+    "The dispatch carries that contract's own `## Traps` section verbatim; "
+    "do not restate it here."
+)
+
+
+def test_blind_run_and_adversary_sections_point_at_the_contract_trap_section() -> None:
+    """W1-02: §3 (blind run) and §4 (adversarial) each carry one line telling
+    the dispatcher to carry the contract's `## Traps` section (which holds
+    the tool-preference passage) — pointing at it, not re-pasting the
+    sentence a third time (surface 8b)."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    assert "apply_patch" not in text, (
+        "review/SKILL.md pastes the tool-preference sentence itself instead "
+        "of pointing at the contract's trap section"
+    )
+
+    def section(heading: str, next_heading: str) -> str:
+        start = text.index(heading)
+        end = text.index(next_heading, start)
+        return text[start:end]
+
+    blind_run = section("## 3. Blind run", "## 4. Adversarial")
+    adversarial = section("## 4. Adversarial", "## 5. Package tests")
+    for name, sect in (("§3 blind run", blind_run), ("§4 adversarial", adversarial)):
+        normalised = " ".join(sect.split())
+        assert _TRAP_POINTER_SENTENCE in normalised, (
+            f"{name} never carries the exact pointer sentence telling the "
+            "dispatcher to carry the contract's Traps section verbatim "
+            "(branch-end fix N2: a `[Tt]rap` substring match let a reworded "
+            "no-op sentence through as long as it kept the word `trap`)"
+        )

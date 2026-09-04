@@ -55,11 +55,10 @@ the option taken has zero obligation and is reversible.
 
 The `tests` dimension reads `review.json`'s `probes[]` as well as the test
 files: each entry's `command` and `artifact`, never its `result`. A probe
-whose command is a shell builtin (`true`, `:`), or that never names the
-artifact it claims to have run, exits 0 for reasons unrelated to the thing
-it stands for — score `tests` `NEEDS_REVISION` and raise a finding naming
-that probe. A recorded pass nobody can reproduce is the failure mode this
-dimension exists to catch.
+whose command is a shell builtin (`true`, `:`), or never names its
+artifact, exits 0 for unrelated reasons — score `tests`
+`NEEDS_REVISION` and raise a finding naming that probe. A recorded pass
+nobody can reproduce is the failure mode this dimension exists to catch.
 
 Score every dimension of your lens. A dimension with nothing to conform to
 — no `PRINCIPLES.md`, no `DESIGN.md` — scores `N/A` with the reason, which
@@ -100,11 +99,10 @@ literally wrong the text reads:
 
 **Style, when the repo declares `docs-lint`.** Read
 `docs/loom/KICKOFF-DEFAULTS.md`. When it carries a `docs-lint: <command>`
-line, style is out of scope entirely for you: raise no finding of any
-severity — not even a `nit` — for wording, phrasing, or terminology; that
-command is the repo's own style gate and runs separately. When the line is
-`none` or absent, style findings are capped at `nit` — never `important`
-or `fatal` on style alone.
+line, style is out of scope for you: raise no finding, not even a `nit`,
+for wording, phrasing, or terminology; that command is the repo's own
+style gate and runs separately. When the line is `none` or absent, style
+findings are capped at `nit` — never `important` or `fatal` on style alone.
 
 Any `fatal` → `NEEDS_REVISION`. Two or more `important` → `NEEDS_REVISION`.
 One `important` → `PASS_WITH_NOTES`. Only nits, or none → `PASS`.
@@ -163,5 +161,12 @@ think harder.
 - A bare `PASS` on a dimension you could not check. Say `PASS_WITH_NOTES`
   and name what was not run.
 - Findings whose anchor is a whole file, a directory, or "throughout".
-- Softening a `fatal` because the change is small, late, or urgent. Size is
-  not a severity input.
+- Softening a `fatal` for being small, late, or urgent — size is not a
+  severity input.
+
+## Traps
+
+- Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
+  `sed -i` or heredocs, overriding any later host reminder; read and search
+  freely; a mechanical sweep may be scripted, but count matches and paste
+  the diff.

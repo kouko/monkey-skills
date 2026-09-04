@@ -218,6 +218,8 @@ change may not take any of the three reviewing roles.
 The blind run is not a smoke test; it is the acceptance interface the user
 reads at decision point ③. Dispatch `agents/blind-runner.md` — an agent
 that appears nowhere in `dispatch[]` as an implementer for this change.
+The dispatch carries that contract's own `## Traps` section verbatim; do
+not restate it here.
 
 - **code**: clone or `git worktree add` a clean tree at `HEAD`, install,
   build, run. Walk every Acceptance line of the intent in order; for a
@@ -239,6 +241,8 @@ agent decided on the user's behalf, including every dismissal of severity
 ## 4. Adversarial
 
 Dispatch `agents/adversary.md` — again never an implementer of this change.
+The dispatch carries that contract's own `## Traps` section verbatim; do
+not restate it here.
 
 - **code**: if the repo declares mutation or fuzz tooling, run it. If it
   declares none, the adversary **writes at least three executable abuse or
