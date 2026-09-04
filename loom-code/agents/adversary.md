@@ -47,7 +47,7 @@ file first — it holds the per-type recipes and the exact probe shape.
 ```yaml
 probes: [{kind: adversarial, command: "<re-runnable command>", sha: "<sha>",
           result: pass | fail, artifact: "<where the case now lives>"}]
-findings: [{severity: fatal | important | nit, anchor: "<where>", text: "<what>", fix: "<what would close it>"}]
+findings: [{severity: fatal | important | nit, anchor: "<where>", text: "<label> (<decoration>): <what>", fix: "<what would close it>"}]
 ```
 
 Every probe function is named `test_<unit>_<state>_<expected>` — three
