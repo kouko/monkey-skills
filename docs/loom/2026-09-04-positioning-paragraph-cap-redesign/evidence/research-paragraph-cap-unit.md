@@ -34,6 +34,15 @@ directly-quoted source; ASD-STE100's "~6" is close but secondary/unverified).
 
 ## Q2 — Paragraph limit in WORDS?
 
+Addendum (2026-09-04, checked after the user asked about Google): the
+**Google developer documentation style guide** [standard] gives no numeric
+sentence or paragraph limit either — `style/tone` says only to avoid
+"choppy or long-winded sentences", `style/sentence-structure` and
+`style/highlights` carry no length guidance, and `style/paragraphs` does
+not exist (404). Qualitative only; adds nothing to the numbers below.
+https://developers.google.com/style/tone ;
+https://developers.google.com/style/sentence-structure
+
 Insufficient data. None of GOV.UK, Microsoft, or ASD-STE100 state a
 paragraph limit in words — all three that give paragraph guidance express it
 in sentences or only qualitatively ("short"). Sentence-length caps in words
