@@ -147,8 +147,8 @@ SINGLE_CONTRACT_TEST = (
     REPO_ROOT / "loom-code" / "scripts" / "test_reviewer_agent_single_contract.py"
 )
 
-REVIEWER_CAP = 1340
-PREVIOUS_REVIEWER_CAP = 1300
+REVIEWER_CAP = 1450
+PREVIOUS_REVIEWER_CAP = 1340
 SOFTENERS = ("primarily", "generally", "usually", "typically", "normally", "mostly")
 
 _COUNTER = itertools.count()
@@ -451,14 +451,14 @@ def test_every_place_the_version_is_stamped_agrees() -> None:
 
 
 def test_reviewer_cap_binds_at_its_new_value_and_the_bump_was_needed() -> None:
-    """(B) Does the bumped cap actually bind? RED at 1341, GREEN at 1340.
+    """(B) Does the bumped cap actually bind? RED at 1451, GREEN at 1450.
 
-    branch-end-02 raised `AGENT_CAPS["reviewer.md"]` 1300 -> 1340 (W1-03 had
-    already raised it 1200 -> 1300 in an earlier round). Two ways the LATEST
-    bump could be wrong: the file could already be over 1340 (cap not
-    binding), or still under 1300 (the bump bought nothing and should be
-    reverted). Counted with `len(str.split())` over the body, the same
-    oracle the shipped test uses -- never `wc`.
+    History: 1200 -> 1300 (W1-03) -> 1340 (branch-end-02) -> 1450 (this
+    change, W1-02, artifact-language-policy). Two ways the LATEST bump
+    could be wrong: the file could already be over 1450 (cap not binding),
+    or still under 1340 (the bump bought nothing and should be reverted).
+    Counted with `len(str.split())` over the body, the same oracle the
+    shipped test uses -- never `wc`.
     """
     source = SINGLE_CONTRACT_TEST.read_text(encoding="utf-8")
     assert f'"reviewer.md": {REVIEWER_CAP}' in source, (
