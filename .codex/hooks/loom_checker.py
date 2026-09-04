@@ -126,7 +126,9 @@ RULES: list[tuple[str, str]] = [
         "push.dispatch-covers-tasks",
         "Every commit between the branch base and reviewed_sha that touches code, skill "
         "or gate work carries a `Task:` trailer (spec is exempt, like intent and plan), and "
-        "every id those trailers name is claimed by an implementer dispatch entry.",
+        "every id those trailers name is claimed by an implementer dispatch entry, except an "
+        "id whose trailered commits touch only evidence paths, which an adversary dispatch "
+        "entry for that id covers instead.",
     ),
     (
         "push.open-findings-closed",
@@ -135,7 +137,9 @@ RULES: list[tuple[str, str]] = [
     (
         "push.probes-adversarial",
         "A change carrying a code / spec / skill / gate artifact records at least three "
-        "adversarial probes against the reviewed commit, and each one still passes.",
+        "adversarial probe records against the reviewed commit; a file referenced by "
+        "several records is executed once, and every record of a failing file is "
+        "unusable.",
     ),
     (
         "push.probes-package-tests",
@@ -543,7 +547,7 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_product_no_identifiers(front, sections)
 
     reason_failures, needs_design = check_needs_design_reason(
-        front, commit_msg, repo, path
+        front, commit_msg, repo, path, out
     )
     failures += reason_failures
 
@@ -727,7 +731,86 @@ def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
     return False
 
 
-def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: Path):
+SQUASH_SUBJECT = re.compile(r" \(#\d+\)\s*$")
+
+
+def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
+    """Does `sha` have the SHAPE of a GitHub "Squash and merge" commit on
+    the trunk? Three conditions, all git topology or subject shape -- never
+    message text, so a hand-written subject that merely LOOKS like a squash
+    cannot forge the exception (W0-01 adversary: the fake-`(#1)`-off-main
+    case):
+
+    1. single parent -- the squash button makes a plain commit, not a
+       2-parent merge (a real `--no-ff` merge already passes today by a
+       different path and is untouched by this function);
+    2. the subject ends ` (#<n>)` -- exactly what GitHub writes;
+    3. `sha` is on the trunk's first-parent chain (REOPEN_TRUNK_CANDIDATES
+       -- the same four names `branch_base()` resolves against, minus
+       `@{upstream}` for the reason documented at that constant: a
+       branch's own upstream must never stand in as "the trunk" here).
+       This is checked by literal MEMBERSHIP in
+       `git rev-list --first-parent <candidate>`, not by
+       `merge-base --is-ancestor` -- ancestry alone proves `sha` is
+       *reachable* from the candidate, which a hand-written, single-parent
+       `... (#<n>)` commit on a side branch also is once that branch is
+       merged into the candidate with a real (`--no-ff`) merge commit; it
+       is reachable but never walked by a first-parent traversal, since a
+       first-parent walk steps over the merge commit straight to the
+       candidate's OWN previous first parent and never descends into the
+       merged-in branch. The membership walk is O(history) in the worst
+       case (it lists the candidate's entire first-parent chain to check
+       one sha) -- cheap in practice because the trunk's first-parent
+       chain is short relative to full history including side branches.
+
+    These three are all this function can verify offline: it has no way to
+    ask GitHub whether `sha` really came from a "Squash and merge" click,
+    or whether the source branch's HEAD really carried the needs-design
+    line -- PR provenance is not fetchable from a local clone. The note
+    says exactly that, and states the shape-match as shape, not as a
+    verified squash. What is actually relied on is that the line was
+    already checked, verbatim, on the branch commit BEFORE it could reach
+    the trunk -- by this same rule running as the push gate on that
+    branch -- so the line is assumed carried forward, not re-derived here.
+
+    Residual: a commit hand-written with this exact shape (single parent,
+    `... (#<n>)` subject) and pushed straight to the trunk without going
+    through a reviewed branch -- bypassing the push gate that would have
+    checked the line -- is accepted by this exception too. That path is
+    governed by branch protection (who may push directly to the trunk),
+    not by this rule; this rule only recognizes the shape, it cannot tell
+    a real squash-merge from a direct push that mimics it.
+
+    Returns the printable note when all three shape conditions hold, else
+    None -- the note itself is the evidence for "why did it say that"
+    (concept-model §2b), not a bare pass.
+    """
+    parents = git_maybe(repo, "log", "-1", "--format=%P", sha)
+    if parents is None or len(parents.split()) != 1:
+        return None
+    subject = git_maybe(repo, "log", "-1", "--format=%s", sha)
+    if subject is None or not SQUASH_SUBJECT.search(subject):
+        return None
+    for candidate in REOPEN_TRUNK_CANDIDATES:
+        if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
+            continue
+        first_parent_chain = git_maybe(repo, "rev-list", "--first-parent", candidate)
+        if first_parent_chain is None or sha not in first_parent_chain.split():
+            continue
+        return (
+            f"intent.needs-design-reason: commit {sha[:7]} ({relative}) has the "
+            f"shape of a GitHub squash on {candidate}'s first-parent chain "
+            f"(single parent, subject {subject!r}); PR provenance is not "
+            "verifiable offline, so this is not a confirmed squash -- the "
+            "needs-design line is assumed carried by the branch that the push "
+            "gate checked before this commit reached the trunk."
+        )
+    return None
+
+
+def check_needs_design_reason(
+    front, commit_msg: Path | None, repo: Path, path: Path, out=sys.stdout
+):
     """`needs-design` carries a reason, and the intent's commit message
     repeats the line verbatim (concept-model §2b). With no `--commit-msg`
     (the post-commit and station calls) the message is that of the last commit
@@ -751,6 +834,7 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
             raw.split()[0] if raw.split() else None,
         )
     verdict = match.group(1)
+    sha, relative = None, None
     if commit_msg is not None:
         if not commit_msg.is_file():
             raise UsageError(f"no commit message file at {commit_msg}")
@@ -765,6 +849,15 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
             source = f"commit {sha[:7]}, which last changed status/needs-design"
     line = f"needs-design: {raw}"
     if _squeeze(line) not in _squeeze(message):
+        # `--commit-msg` names an exact message to check and is never the
+        # station's own recompute (deciding_commit() ran, if at all, only in
+        # the else branch above) -- the squash exception only ever applies
+        # to a commit this function itself found via git topology.
+        if sha is not None and relative is not None:
+            note = _squash_note(repo, relative, sha)
+            if note is not None:
+                out.write(note + "\n")
+                return [], verdict
         return (
             [
                 (
@@ -777,19 +870,47 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
     return [], verdict
 
 
+TEMPLATES_GLOB = "**/templates/**"
+
+
 def touched_interface_surfaces(repo: Path, manifest, out) -> list[str]:
     """The changed paths that land on a declared interface surface, and a
     printed line saying which globs were used -- the answer to "why did it
     say that" is never a mystery. Both `intent.needs-design-recompute` and
-    `intent.kind-recompute` read this one recomputation."""
+    `intent.kind-recompute` read this one recomputation.
+
+    Only the `**/templates/**` glob match is narrowed by artifact type: it
+    also matches an agent-filled `.md` template that no user ever reads, so
+    a match against THIS glob alone counts only when `_artifact_type_for`
+    types the path `code` -- an `.md`/`.jinja` template stays excluded, a
+    `.tsx`/`.py` one still counts. A match against any OTHER glob -- the
+    manifest default (`**/cli/**`, `**/api/**`, `**/commands/**`,
+    `**/*.tsx`) or one a repo added via KICKOFF-DEFAULTS -- counts
+    regardless of type: a CLI help `.md` under `**/cli/**` is a user
+    surface exactly as much as a `.py` one is. This does not let an agent
+    narrow the surface, because `artifact-types` in KICKOFF-DEFAULTS is
+    reserved (the checker never reads it, per the manifest note); the type
+    mapping is the contract's own `artifact_types:` table, fixed regardless
+    of what a repo declares."""
     globs, source = interface_surfaces(repo, manifest)
-    out.write(f"interface-surfaces ({source}): {', '.join(globs)}\n")
-    matchers = [glob_to_regex(pattern) for pattern in globs]
-    return sorted(
+    matchers = [(pattern, glob_to_regex(pattern)) for pattern in globs]
+    touched = sorted(
         path
         for path in changed_paths(repo)
-        if any(matcher.match(path) for matcher in matchers)
+        if any(
+            matcher.match(path)
+            and (
+                pattern != TEMPLATES_GLOB
+                or _artifact_type_for(manifest, path) == "code"
+            )
+            for pattern, matcher in matchers
+        )
     )
+    out.write(
+        f"interface-surfaces ({source}): {', '.join(globs)} "
+        f"(non-code paths under {TEMPLATES_GLOB} excluded)\n"
+    )
+    return touched
 
 
 def check_needs_design_recompute(touched: list[str]) -> list[tuple[str, str]]:
@@ -2453,8 +2574,11 @@ def _artifact_type_for(manifest, path: str) -> str | None:
 # W0-02 (small-change lane): the §6 types a small-lane change may touch
 # without earning the full lane -- gate and skill are deliberately absent
 # (plan risk: "manifest-typed `code` that is not a test -> full lane, even
-# one line" generalizes to any type not on this list).
-SMALL_LANE_ARTIFACT_TYPES = frozenset({"docs", "memory", "evidence", "intent", "plan", "standing"})
+# one line" generalizes to any type not on this list). `standing` is
+# deliberately excluded: intent point 1 and PRINCIPLES.md non-negotiable 2
+# say the small lane touches no standing document (PRINCIPLES.md, DESIGN.md,
+# docs/loom/KICKOFF-DEFAULTS.md -- KICKOFF lines are gate inputs).
+SMALL_LANE_ARTIFACT_TYPES = frozenset({"docs", "memory", "evidence", "intent", "plan"})
 
 _TEST_NAME_RE = re.compile(r"(?:test_[^/]*|[^/]*_test)\.py\Z")
 _REQUIREMENTS_NAME_RE = re.compile(r"requirements[^/]*\.txt\Z")
@@ -2494,11 +2618,20 @@ def _small_lane_record_patterns(manifest) -> list[re.Pattern[str]]:
     point 1 / plan W0-02 risk). One wildcarded glob per change-id, derived
     from the manifest's own `plan` artifact path, not an enumerated file
     list -- a fix-round finding pinned this after `spec.md` alone was
-    missed by an earlier, file-by-file version."""
+    missed by an earlier, file-by-file version.
+
+    Built as a direct regex, not via `glob_to_regex`'s trailing-`/**`
+    zero-match convenience: that convenience would make the `<change-id>`
+    wildcard swallow a bare docs/loom/<file> (e.g. KICKOFF-DEFAULTS.md) as
+    if it were an empty change folder -- a standing document is never a
+    change's own record (branch-end fix, W0-02)."""
     change_folder = manifest["artifacts"]["plan"]["path"].rsplit("/", 1)[0]
-    change_folder_glob = change_folder.replace("<change-id>", "*") + "/**"
+    change_folder_pattern = re.compile(
+        re.escape(change_folder).replace(re.escape("<change-id>"), "[^/]+")
+        + r"/.+\Z"
+    )
     return [
-        glob_to_regex(change_folder_glob),
+        change_folder_pattern,
         glob_to_regex("docs/loom/intent/**"),
     ]
 
@@ -2549,7 +2682,11 @@ def _small_lane_path_reason(manifest, surface_patterns, path: str) -> str | None
         return None
     if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
         return None
-    return f"{path} is non-test code" if kind == "code" else f"{path} is {kind or 'unclassified'}-typed"
+    if kind == "code":
+        return f"{path} is non-test code"
+    if kind == "standing":
+        return f"{path} is a standing document."
+    return f"{path} is {kind or 'unclassified'}-typed"
 
 
 def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
@@ -2557,11 +2694,12 @@ def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
     verdict floor and the `second-vendor: ask` question (plan W0-02).
 
     Small iff every changed path, minus this change's own store records, is
-    docs/memory/evidence/intent/plan/standing-typed, a test file by name, or
+    docs/memory/evidence/intent/plan-typed, a test file by name, or
     CI/config; AND no path is a declared interface surface; AND every
-    remaining path sits under at most one top-level plugin directory.
-    Anything else is full, with the reason naming the first path (or the
-    plugin-count) that forced it."""
+    remaining path sits under at most one top-level plugin directory. A
+    standing document (PRINCIPLES.md, DESIGN.md, docs/loom/KICKOFF-DEFAULTS.md)
+    always forces the full lane. Anything else is full, with the reason
+    naming the first path (or the plugin-count) that forced it."""
     manifest = load_manifest()
     remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
 
@@ -2584,7 +2722,7 @@ def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
 
     return "small", (
         "every changed path (minus this change's own records) is "
-        "docs/memory/evidence/intent/plan/standing, a test file, or CI/config, "
+        "docs/memory/evidence/intent/plan, a test file, or CI/config, "
         "in at most one plugin directory."
     )
 
@@ -2619,6 +2757,13 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
 
     usable = 0
     reasons: list[str] = []
+    # Every format check below (command present, not trivial, artifact
+    # present in the reviewed tree, command names its artifact, sha matches
+    # the reviewed commit, tree clean) still runs once per record -- only
+    # the subprocess execution that follows is deduped by artifact path, so
+    # a file named by many records is attacked once and that one verdict is
+    # applied to every record naming it.
+    pending: dict[str, list[dict]] = {}
     for probe in review.get("probes", []):
         if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
             continue
@@ -2676,6 +2821,14 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 "would be attacked is not the reviewed tree"
             )
             continue
+        pending.setdefault(os.path.normpath(artifact), []).append(
+            {"label": label, "result": probe.get("result")}
+        )
+
+    for artifact, records in pending.items():
+        count = len(records)
+        label = records[0]["label"]
+        result = records[0]["result"]
         try:
             argv = artifact_argv(repo, artifact)
         except ValueError as exc:
@@ -2694,7 +2847,8 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
             continue
         out.write(
             f"adversarial {artifact}: observed exit code {observed} "
-            f"(recorded command: {label!r}, recorded result: {probe.get('result')!r})\n"
+            f"(recorded command: {label!r}, recorded result: {result!r}), "
+            f"referenced by {count} records\n"
         )
         if observed != 0:
             reasons.append(
@@ -2703,7 +2857,7 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 "recorded command wraps it in"
             )
             continue
-        usable += 1
+        usable += count
 
     if usable >= ADVERSARIAL_FLOOR:
         return []
@@ -2951,23 +3105,30 @@ def _filter_exempt_plumbing_paths(
 
 def _collect_untrailered_commits(
     repo: Path, manifest, is_review, shas: list[str], canonical_dir: Path | None, scaffold_mod
-) -> tuple[set[str], list[tuple[str, str]]]:
+) -> tuple[set[str], list[tuple[str, str]], dict[str, set[str]]]:
     """The per-commit half of `push.dispatch-covers-tasks`: every `Task:`
-    id any commit in `shas` claims, and the `(short sha, message)` pairs
-    for commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
+    id any commit in `shas` claims, the `(short sha, message)` pairs for
+    commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
     host-plumbing paths are filtered out (`_filter_exempt_plumbing_paths`)
-    -- with no `Task:` trailer of their own."""
+    -- with no `Task:` trailer of their own, and (per claimed id) the full
+    union of §6 kinds its trailered commits touch, used to tell an
+    evidence-only task (adversary-first, e.g. W0-01) apart from one that
+    also did ordinary work."""
     claimed: set[str] = set()
     untrailered: list[tuple[str, str]] = []
+    id_kinds: dict[str, set[str]] = {}
     for sha in shas:
         paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
         paths, plumbing_reasons = _filter_exempt_plumbing_paths(
             repo, sha, paths, canonical_dir, scaffold_mod
         )
-        kinds = artifact_types(manifest, paths) & TRAILER_DUTY_TYPES
+        all_kinds = artifact_types(manifest, paths)
+        kinds = all_kinds & TRAILER_DUTY_TYPES
         message = git_text(repo, "log", "-1", "--format=%B", sha)
         ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
         claimed |= ids
+        for task_id in ids:
+            id_kinds.setdefault(task_id, set()).update(all_kinds)
         if kinds and not ids:
             kind_list = ", ".join(sorted(kinds))
             if plumbing_reasons:
@@ -2976,7 +3137,7 @@ def _collect_untrailered_commits(
                 )
                 kind_list += f"; plumbing not exempt: {detail}"
             untrailered.append((sha[:8], kind_list))
-    return claimed, untrailered
+    return claimed, untrailered, id_kinds
 
 
 def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
@@ -3020,21 +3181,46 @@ def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
     canonical_dir = _plumbing_canonical_dir()
     scaffold_mod = _load_codex_scaffold() if canonical_dir is not None else None
 
-    claimed, untrailered = _collect_untrailered_commits(
+    claimed, untrailered, id_kinds = _collect_untrailered_commits(
         repo, manifest, is_review, shas, canonical_dir, scaffold_mod
     )
 
-    return _dispatch_coverage_failures(claimed, untrailered, review)
+    return _dispatch_coverage_failures(claimed, untrailered, id_kinds, review)
+
+
+def _evidence_only_ids_covered_by_adversary(
+    claimed: set[str], id_kinds: dict[str, set[str]], review
+) -> set[str]:
+    """Adversary-first tasks (e.g. W0-01): a claimed id whose trailered
+    commits touch nothing but `evidence`-typed paths is covered by a
+    dispatch entry of role `adversary` for that same id -- an implementer
+    entry still covers it too, but is not required. Any non-evidence path
+    on the id keeps the implementer requirement (Design decision, W0-02
+    push-gate fix)."""
+    adversary_ids = {
+        str(entry.get("task", "")).strip()
+        for entry in review.get("dispatch", [])
+        if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "adversary"
+    }
+    return {
+        task_id
+        for task_id in claimed
+        if id_kinds.get(task_id) and id_kinds[task_id] <= {"evidence"}
+        and task_id in adversary_ids
+    }
 
 
 def _dispatch_coverage_failures(
-    claimed: set[str], untrailered: list[tuple[str, str]], review
+    claimed: set[str], untrailered: list[tuple[str, str]],
+    id_kinds: dict[str, set[str]], review,
 ):
     """The trailer/dispatch-coverage matching half of `push.dispatch-
     covers-tasks`: an untrailered commit that changes dispatched work
     blocks outright; otherwise every `claimed` task id must name an
-    `implementer` entry in `review["dispatch"]`, or the commits that lost
-    a writer are named. `[]` when both hold."""
+    `implementer` entry in `review["dispatch"]` -- or be evidence-only and
+    covered by an `adversary` entry instead
+    (`_evidence_only_ids_covered_by_adversary`) -- or the commits that
+    lost a writer are named. `[]` when both hold."""
     if untrailered:
         listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)
         return [
@@ -3053,6 +3239,7 @@ def _dispatch_coverage_failures(
         for entry in review.get("dispatch", [])
         if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "implementer"
     }
+    dispatched |= _evidence_only_ids_covered_by_adversary(claimed, id_kinds, review)
     missing = sorted(claimed - dispatched)
     if missing:
         return [
