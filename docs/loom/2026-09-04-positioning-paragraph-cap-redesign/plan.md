@@ -42,6 +42,7 @@ intent: 2026-09-04-positioning-paragraph-cap-redesign@4ab5224d
 ## Questions asked
 1 — what — 你要的是把兩段定位段的字數帽從「剛好裝得下」改成「防漂移」，限制方式要換、單位在實作前研究後由我決定並附依據；騰出的餘裕在對抗者段補一句「不是我的那些誰是讀者的、誰是實作者的」；冷讀重跑一次記三方歸屬但不當驗收。對嗎？（答：對）
 1 — consequence — 這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：用）
+3 — consequence — branch-end 修正輪：讀者側冷讀兩次都錯同兩條（第 3、8 條），是措辭偏差不是雜訊；intent 說讀者段不動、驗收 3 又要讀者側 8/8，兩者衝突。A＝現在在讀者段補一句對稱的三方歸屬（砍 reviewer.md 別處約 25 詞或調本體帽、重跑冷讀、多一輪）；B＝不改、驗收 3 讀者側記未達、留給下一個 intent。（答：A）
 
 ## Risks
 1. 一個 wave（W1），三 task 串行（W1-02 匯入 W1-01 的 helper、W1-03 最後）；W0-01 一個對抗者、工作樹直接做。checkpoint 只有 branch-end 一次（delta 遠低於 8 檔／400 行）。型別聯集 skill（adversary.md）＋code（測試）＋evidence（探針）→ 全車道：讀者一位 codex＋一位 sonnet，帶 skill＋code 鏡；second_vendor: codex。
@@ -49,3 +50,4 @@ intent: 2026-09-04-positioning-paragraph-cap-redesign@4ab5224d
 3. 切句規則是本 change 的新契約面：兩份獨立實作（探針、helper）對同一組合成案例必須同答案；破折號子句不切句是**刻意的**（句長守衛負責擋它）。
 4. 句長 40 無出處（上節明講）；若對抗者攻出「40 擋不住的塞法」，修法是換設計（例如改 ≤35 或加子句數），不是補 token。
 5. 同樹並行坑：branch-end 對抗者與盲跑者同時 commit——派工包寫「只路徑限定 commit、禁 amend」。
+6. user-decided（branch-end 修正輪）——讀者段也補一句三方歸屬（intent「讀者段不必改」的例外，理由：兩次冷讀同兩條同理由＝系統性偏差，驗收 3 讀者側 8/8 否則不可達）。reviewer.md 本體 1300/1300：優先砍別處冗詞（不改任何義務詞）；砍不出來才把 `AGENT_CAPS["reviewer.md"]` 調到剛好夠、並在 commit 說明。

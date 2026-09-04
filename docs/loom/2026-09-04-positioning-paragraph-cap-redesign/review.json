@@ -146,6 +146,11 @@
       "decision_point": 1,
       "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：用）",
       "type": "consequence"
+    },
+    {
+      "decision_point": 3,
+      "text": "讀者側冷讀兩次都錯同兩條（第 3、8 條），是措辭偏差不是雜訊；intent 說讀者段不動、驗收 3 又要讀者側 8/8，兩者衝突。A＝現在在讀者段補一句對稱的三方歸屬（砍 reviewer.md 別處約 25 詞或調本體帽、重跑冷讀、多一輪）；B＝不改、驗收 3 讀者側記未達、留給下一個 intent。（答：A）",
+      "type": "consequence"
     }
   ],
   "open_findings": [
