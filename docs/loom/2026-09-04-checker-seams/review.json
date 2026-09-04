@@ -1,0 +1,32 @@
+{
+  "reviewed_sha": "7439fb8915120a8bbf4eeb509f84981e7903180c",
+  "scope": "",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是 checker 四條小接縫加三件殘務在一個分支一次修完；做完後七條可見結果逐條；規則數不變、不加 waiver、每條 checker 改動對抗者先寫探針；四條原 intent 併入後標 withdrawn。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "探針先寫要不要擴到所有 code task？（答：先記下來、之後再討論；本 change 不含）",
+      "type": "what"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T08:20:00+08:00",
+      "fresh_context": true
+    }
+  ]
+}
