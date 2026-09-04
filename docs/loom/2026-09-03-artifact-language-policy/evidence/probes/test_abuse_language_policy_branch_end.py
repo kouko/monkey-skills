@@ -70,7 +70,7 @@ def _resolve_base_ref() -> str:
     return ""
 
 
-def test_ship_sentence_names_report_and_pr_body_as_user_language_kept() -> None:
+def test_ShipSentence_bothCarriersCited_userLanguageKept() -> None:
     """Attack: satisfy the ship sentence's letter while dropping one of
     the two carriers it must keep in the user's language — a reader
     under time pressure could quote only 'blind-run report' and silently
@@ -91,7 +91,7 @@ def test_ship_sentence_names_report_and_pr_body_as_user_language_kept() -> None:
     assert "docs/loom/memory/" in window
 
 
-def test_capture_intent_sentence_forbids_translating_the_intent_file() -> None:
+def test_CaptureIntentSentence_translationAttempt_forbidden() -> None:
     """Attack: read the capture-intent sentence as permitting the intent
     to be translated to English later 'because everything downstream is
     English' -- the sentence must explicitly except the intent itself,
@@ -104,7 +104,7 @@ def test_capture_intent_sentence_forbids_translating_the_intent_file() -> None:
     assert "English being the language of the plan" in window
 
 
-def test_write_plan_sentence_exempts_only_quoted_user_words_not_evidence() -> None:
+def test_WritePlanSentence_evidenceSection_staysEnglish() -> None:
     """Attack: exploit the plan.md sentence's carve-out for the Questions
     asked section (quoted verbatim) to also exempt the Current State
     Evidence section from English -- the sentence must scope the
@@ -118,7 +118,7 @@ def test_write_plan_sentence_exempts_only_quoted_user_words_not_evidence() -> No
     assert "Questions asked" in window and "copies the user's own words verbatim" in window
 
 
-def test_codex_template_mirrors_byte_identical_and_cjk_free() -> None:
+def test_CodexMirrors_comparedToSource_identicalAndCjkFree() -> None:
     """Attack: bypass the English-templates gate by editing only the
     loom-code source and leaving the .codex/hooks mirror stale (or
     stale-but-still-CJK) -- Codex agents read the mirror, so a diverging
@@ -131,7 +131,7 @@ def test_codex_template_mirrors_byte_identical_and_cjk_free() -> None:
         assert not CJK_RE.search(mirror.decode("utf-8")), f"{name}: mirror carries CJK"
 
 
-def test_version_stamps_agree_and_sync_script_reports_clean() -> None:
+def test_VersionStamps_acrossAllFiles_agree() -> None:
     """Attack: bump one plugin.json's version without touching the
     README table, the CHANGELOG heading, or the Codex-side mirror --
     any single stamp left behind would silently desync the release."""
@@ -175,7 +175,7 @@ def test_version_stamps_agree_and_sync_script_reports_clean() -> None:
         )
 
 
-def test_kickoff_defaults_still_parses_and_rule_count_unchanged() -> None:
+def test_KickoffDefaults_checkerParse_ruleCountStable() -> None:
     """Attack: rewrite the docs-lint line's prose in a way that still
     reads as English but breaks the checker's frontmatter/marker parse
     of KICKOFF-DEFAULTS.md, or silently changes the rule roster size."""
@@ -208,7 +208,7 @@ def test_kickoff_defaults_still_parses_and_rule_count_unchanged() -> None:
     assert intake_result.returncode == 0, intake_result.stderr
 
 
-def test_branch_diff_touches_only_this_change_id_under_docs_loom() -> None:
+def test_BranchDiff_docsLoomPaths_scopedToChangeId() -> None:
     """Attack: smuggle an edit to another change's docs/loom/<id>/ tree
     (or to a different change's intent file) inside this branch, hoping
     the branch-end review only samples the six SKILL.md files."""
@@ -241,7 +241,7 @@ def test_branch_diff_touches_only_this_change_id_under_docs_loom() -> None:
     assert violations == [], f"branch touches foreign docs/loom paths: {violations}"
 
 
-def test_changed_skill_files_stay_within_word_cap() -> None:
+def test_ChangedSkillFiles_wordCount_withinCap() -> None:
     """Attack: let one of the six edited SKILL.md files creep past the
     4,500-word soft cap under cover of the new language-policy sentence
     being 'just a few lines'."""
