@@ -254,6 +254,23 @@
       "model": "sonnet",
       "started": "2026-09-05T02:12:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T02:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T02:40:00+08:00",
+      "fresh_context": false,
+      "note": "resumed W0-01 adversary fixes its own probe (wave-end:1-03) and the wave_end probe names nit"
     }
   ],
   "second_vendor": "codex",
