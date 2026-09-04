@@ -210,7 +210,8 @@ def test_KickoffDefaults_checkerParse_ruleCountStable() -> None:
     # closed"); that block is the checker parsing KICKOFF and the intent
     # correctly, so it counts as a pass here. Any other non-zero exit fails.
     assert intake_result.returncode == 0 or (
-        "intake.confirmed" in intake_result.stderr
+        intake_result.returncode == 1
+        and "BLOCK intake.confirmed:" in intake_result.stderr
         and "closed" in intake_result.stderr
     ), intake_result.stderr
 
