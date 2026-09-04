@@ -1,0 +1,1 @@
+PostToolUse	.codex/hooks/validate-skill-folder-structure.sh	Write

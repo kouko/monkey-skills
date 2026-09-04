@@ -1,0 +1,33 @@
+=== read-only echo probe ===
+Reading additional input from stdin...
+OpenAI Codex v0.151.0
+--------
+workdir: /private/tmp/claude-501/-Users-kouko--herdr-worktrees-monkey-skills-simple-loom-flow/9394655d-4917-441f-af10-33c73e42aab6/scratchpad/scratch-repo-JWQz
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: low
+reasoning summaries: none
+session id: 01a06d05-e503-7990-9daa-be2d230c47e7
+--------
+user
+run: echo probe
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart Failed
+codex
+指定された読み取り専用コマンドを実行します。
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'echo probe' in /private/tmp/claude-501/-Users-kouko--herdr-worktrees-monkey-skills-simple-loom-flow/9394655d-4917-441f-af10-33c73e42aab6/scratchpad/scratch-repo-JWQz
+ succeeded in 0ms:
+probe
+
+codex
+probe
+tokens used
+18,426
+probe
+exit=0

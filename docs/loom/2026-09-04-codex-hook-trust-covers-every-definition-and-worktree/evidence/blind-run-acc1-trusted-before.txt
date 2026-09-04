@@ -1,0 +1,8 @@
+BLOCK: 3 of 3 Codex hook definitions have never fired in /private/tmp/claude-501/-Users-kouko--herdr-worktrees-monkey-skills-simple-loom-flow/9394655d-4917-441f-af10-33c73e42aab6/scratchpad/scratch-repo-JWQz — run /hooks in Codex in that folder once, then retry
+PreToolUse Bash .codex/hooks/loom-checker
+PostToolUse Write|Edit .codex/hooks/validate-skill-folder-structure.sh
+PostToolUse Write|Edit .codex/hooks/remind-memory-mirror.sh
+PreToolUse Bash .codex/hooks/loom-checker: never
+PostToolUse Write|Edit .codex/hooks/validate-skill-folder-structure.sh: never
+PostToolUse Write|Edit .codex/hooks/remind-memory-mirror.sh: never
+exit=2
