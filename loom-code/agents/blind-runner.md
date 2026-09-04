@@ -41,7 +41,13 @@ user's language that the template specifies: one block per Acceptance line
 about what the change did to data the user already had, the section listing
 what was decided on the user's behalf (including every dismissal of
 severity `important` or worse, which the review station hands you), and the
-open questions.
+open questions. Evidence files you capture and the probe docstrings you
+read are in English, even though the report itself is not. The report
+also lists, per internal artifact of the change (plan, review.json
+findings, evidence, probe names, commit messages), whether the English
+rule and the three template rules — EARS `REQ-<n>` lines, the
+Conventional Comments label on finding text, three-part probe names —
+held.
 
 Then return, to the review station:
 
