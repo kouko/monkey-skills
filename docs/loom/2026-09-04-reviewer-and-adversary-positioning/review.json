@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+  "reviewed_sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -194,6 +194,44 @@
         "branch-end-03 routed to rev-be-codex-pos; not scored by me.",
         "The items 4/5 3-way-attribution slip in TRIAL 3 is worth a light follow-up if a future change wants adversary.md to state the full three-way split; not blocking under Acceptance 1's wording."
       ]
+    },
+    {
+      "reviewer": "rev-be-codex-pos",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
+      "nit_confirmation": "The batch fixes my vacuous claim assertion with a whitespace-normalised contiguous-clause check; apart from the authorised report clarification, memory entry, and byte-copy probe graduation, nothing changed in substance.",
+      "dimension_scores": {
+        "correctness": "PASS — the report now distinguishes the accepted own/not-own 8/8 result from the non-required three-way 6/8 result",
+        "tests": "PASS_WITH_NOTES — the corrected guard passed its focused 9-test file, and the three graduated files match their evidence originals except for the authorised root-depth and sibling-path retargets; the reported 1181-test suite was not independently rerun",
+        "cross-task-coherence": "PASS — the assertion fix, evidence update, permanent probe copies, report clarification, and review bookkeeping agree",
+        "incorrect-fact": "PASS — the revised Acceptance 1 conclusion accurately states both scoring interpretations and their evidence",
+        "omission": "PASS — the permanent suite now carries all three change-specific probe files and the contiguous claim relationship is directly guarded"
+      },
+      "findings": []
+    },
+    {
+      "reviewer": "rev-be-sonnet-pos",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
+      "nit_confirmation": "Round-2 nit fixed by 2ec7f01e (single contiguous whitespace-normalised check); the two r2 probe survivors flipped to pytest.raises rather than deleted; reviewer.md/adversary.md byte-identical to round-2 HEAD; graduation byte-identical except REPO_ROOT parents[5]->[2] and one SIBLING retarget; memory entry and report update are bookkeeping outside the lens.",
+      "dimension_scores": {
+        "correctness": "PASS — shipped guard now rejects both decoy texts, verified against the flipped r2 cases",
+        "tests": "PASS — re-ran package (1181) and evidence/probes (47) independently",
+        "cross-task-coherence": "PASS — fix applied identically to evidence original and graduated copy",
+        "incorrect-fact": "PASS — report rewrite reflects round-2 history without over/understating",
+        "omission": "PASS — nothing from round 2 regressed; graduation preserved every case"
+      },
+      "findings": []
     }
   ],
   "probes": [
@@ -276,6 +314,38 @@
       "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
+      "sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py -q",
+      "sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py -q",
+      "sha": "fb216d2f741fc6964b7398ce1355344f310bb31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py"
     }
   ],
   "questions": [
@@ -293,6 +363,21 @@
       "decision_point": 1,
       "text": "事後追加：把角色觸發序列圖寫進文件，未來 session 可回頭看",
       "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告：Acceptance 1 partly（對抗者側 3-way 6/8、own/not-own 8/8）、2–4 works；一條 important dismissed（寄放的 intent 留在分支）。接受嗎？",
+      "type": "done"
+    },
+    {
+      "decision_point": 3,
+      "text": "要不要跑一次獨立評估（codex, high）再決定？（答：跑；結果 incumbent-preferred，建議報告分開呈現 8/8 與 6/8）",
+      "type": "done"
+    },
+    {
+      "decision_point": 3,
+      "text": "字數帽 80 要這次改還是另開 intent？（答：照 80 ship，之後開 intent）",
+      "type": "done"
     }
   ],
   "open_findings": [
