@@ -50,9 +50,27 @@ issue the command.
 If it reports the shim is not executable, re-run step 1 — the scaffold
 repairs the mode — or `chmod +x .codex/hooks/loom-checker`.
 
-## 3. The trust probe
+## 3. Read `--trusted`, then probe
 
-Issue this yourself, as an ordinary tool call, not through the scaffold:
+`.codex/hooks.json` carries more than one hook definition — loom's own
+`PreToolUse` checker plus whatever `PostToolUse` hooks this repo ships. Each
+is trusted independently, so check all of them, not one:
+
+```
+python3 <loom-code>/scripts/codex_scaffold.py --trusted
+```
+
+This reads the firing ledger the shims leave behind and prints one line per
+definition: `<event> <matcher> <command>: fired|never|ambiguous`. Exit 0
+means every definition has fired at least once — continue to step 1 of the
+station. A non-zero exit prints a `BLOCK: <n> of <m> Codex hook definitions
+have never fired in <absolute repo path>` header followed by the `never`
+lines. A `never` line is only "no evidence of a firing yet", never proof of
+distrust — the ledger cannot tell a never-approved hook from an approved one
+Codex simply hasn't triggered.
+
+To turn a `never` line into a real answer, issue the loom checker's own
+probe yourself, as an ordinary tool call, not through the scaffold:
 
 ```
 git push loom-trust-probe HEAD
@@ -62,22 +80,47 @@ git push loom-trust-probe HEAD
 succeed. Read the first line of the output:
 
 - It starts with `BLOCK push.` — the loom hook answered before git was
-  reached. The hook is trusted and live: continue to step 1 of the station.
+  reached. The hook is trusted and live.
 - Anything else — git answered (`'loom-trust-probe' does not appear to be a
   git repository`, or another git error). The hook did not run: Codex is
-  skipping it because it is not trusted. Print the words below and **stop**.
-  Do not retry and write no artifact: there is no gate.
+  skipping it because it is not trusted. Print the words below, naming this
+  repo's folder, and **stop**. Do not retry and write no artifact: there is
+  no gate.
 
-> 我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 `/hooks` 按一次授
-> 權，我才會繼續。
+> 我已幫 `<absolute repo path>` 這個資料夾裝好 loom 的檢查；請在 Codex 裡
+> 對這個資料夾輸入 `/hooks` 按一次授權，我才會繼續。
 >
-> (I have installed loom's checks for this repo; please type `/hooks` in
-> Codex and approve them once, then I will carry on.)
+> (I have installed loom's checks for `<absolute repo path>`; please type
+> `/hooks` in Codex **for this folder** and approve them once, then I will
+> carry on.)
 
-After the user approves, run the trust probe again; a `BLOCK push.` answer
-means you can continue.
+After the user approves, run `--trusted` again; every definition reading
+`fired` means you can continue.
 
-To report whether the hook has ever fired here without issuing a command,
-`python3 <loom-code>/scripts/codex_scaffold.py --trusted` reads the marker
-the shim leaves behind. The self-test never writes that marker, so it
-answers only for Codex' own firings.
+## 4. What trust is bound to
+
+Codex binds an approval to one `(hooks.json path, event, index)` triple —
+the definition — not to the script file it points at. Editing a hook
+script's contents needs no re-approval; editing the `command` string for a
+definition in `hooks.json` does, because that changes which definition
+Codex is being asked to trust. The approval key also carries the repo's
+absolute path, so it is scoped per clone: a fresh `git clone`, or a second
+worktree of the same repo, is a different key and starts at `never` again —
+this is not a bug to route around, it is the same "one binary, many
+folders" boundary `/hooks` already draws.
+
+## 5. Your own hooks
+
+A repo that ships its own Codex hooks (not loom's) should have each one
+record its own firing rather than staying invisible to `--trusted`. The
+shape is a three-line thin shim in front of the repo's existing hook:
+
+```bash
+INPUT=$(cat)
+printf '%s' "$INPUT" | python3 .codex/hooks/loom_record_fire.py "$0" 2>/dev/null || true
+printf '%s' "$INPUT" | exec .claude/hooks/<same name>
+```
+
+Read stdin once, hand it to the shared recorder (best-effort — a failure
+there must never block the hook it is wrapping), then hand the same stdin
+on to the real hook by `exec`.
