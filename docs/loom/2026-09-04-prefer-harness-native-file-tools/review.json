@@ -95,6 +95,24 @@
       "model": "sonnet",
       "started": "2026-09-04T16:34:31+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-tools",
+      "model": "codex",
+      "vendor": "openai",
+      "started": "2026-09-04T16:54:28+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-tools",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-04T16:54:28+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex"
