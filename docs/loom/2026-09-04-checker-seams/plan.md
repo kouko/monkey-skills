@@ -42,14 +42,20 @@ intent: 2026-09-04-checker-seams@5e5a21ab
 - 測：`loom-code/scripts/test_ship_station_text.py`（新或既有）斷言那段存在且字數帽內（先紅）。
 - 風：ship 站是 `skill` 型，會把 checkpoint 拉成 skill lens＋冷讀；接受。
 
-**W1-03 KICKOFF ask、codex 鏡射、版本**　after: W1-01, W1-02
+**W1-04 探針先寫擴到完整車道的 code／gate task**　after: W0-04
+- 檔：`loom-code/skills/build/SKILL.md` §2 開頭那段「A task whose 檔 paths map to the `gate` artifact type is adversary-first」改為：完整車道中，檔 路徑型別為 `code` 或 `gate` 的 task 先派對抗者；小車道（checker 以 `change_lane` 重算，或 plan 已判定只改測試／文件）維持實作者先、對抗者在 checkpoint。一句理由（獨立對抗測試抓同 agent 自測漏掉的假通過；成本按車道分）。九處站摘要表若有提到照 `test_station_summary_table.py` 同步。
+- 測：`loom-code/scripts/test_station_text_small_lane.py` 或新測 `test_build_station_text.py`：斷言該段含 `code` 與 `gate` 兩型別、含小車道例外、字數帽內（先紅）。
+- 風：build 站是 `skill` 型，checkpoint 已含 skill lens（W1-02）；不動 checker，探針先寫仍是散文規則（`push.probes-adversarial` 只看 branch-end 的探針存在）。
+
+**W1-03 KICKOFF ask、codex 鏡射、版本**　after: W1-01, W1-02, W1-04
 - 檔：`docs/loom/KICKOFF-DEFAULTS.md` `second-vendor: ask — kouko decides per change (2026-09-04)`；`python3 loom-code/scripts/codex_scaffold.py --repo .` 重寫 `.codex/hooks/`；`loom-code/.claude-plugin/plugin.json` 1.1.0→1.2.0、`loom-code/CHANGELOG.md`、marketplace／README 版本同步（照 `test_sync_codex_manifest.py`、`plugin version bump` CI）。
 - 測：`test_codex_scaffold.py` 既有；新測 `test_codex_mirror_matches_checker`：`.codex/hooks/loom_checker.py` 與 `loom-code/scripts/loom_checker.py` 逐位元相同（先紅）。
 - 風：scaffold 重寫後 `.codex/hooks/` 是 host plumbing，不進 changed_paths；版本 bump 是 `code`（json）→ 完整車道本來就是。
 
 ## Questions asked
 1 — what — 你要的是 checker 四條小接縫加三件殘務在一個分支一次修完；做完後（七條可見結果逐條）；規則數不變、不加 waiver、每條 checker 改動對抗者先寫探針；四條原 intent 併入後標 withdrawn。對嗎？（答：對）
-1 — what — 前置討論：探針先寫要不要擴到所有 code task（答：先記下來、之後再討論；本 change 不含）
+1 — what — 前置討論：探針先寫要不要擴到所有 code task（答：先記下來、之後再討論）
+1 — what — 研究回來後：擴到完整車道的所有 code／gate task、小車道免，要不要併進這個 change 的 W1？（答：好，併進 W1 — 08:50）
 
 ## Risks
 1. 三個 W0 task 都改 `loom_checker.py` 同一檔：序列執行、同一工作樹，不開 worktree。W1-01／W1-02 檔案互斥可平行（各自 worktree，`--no-ff` 合回）。
