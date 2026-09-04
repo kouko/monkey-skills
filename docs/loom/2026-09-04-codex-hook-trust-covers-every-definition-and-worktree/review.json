@@ -1,0 +1,34 @@
+{
+  "reviewed_sha": "34683950f9df0c16e170a6a9569592592d00fff6",
+  "scope": "branch base — no checkpoint yet",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "second_vendor": "codex",
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是 Codex 的 hook 信任要每一條定義、每個 worktree 都驗過：探針涵蓋 .codex/hooks.json 裡每一條、逐條回報跑過／沒跑過，站在派 Codex 前看到任何一條沒跑過就列出來、請你在那個資料夾按一次 /hooks 並停；文件寫明信任綁定義與絕對路徑；不改命令字串。對嗎？（答：對）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：用）",
+      "type": "consequence"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-trust-4d19",
+      "model": "sonnet",
+      "started": "2026-09-04T23:58:00+08:00",
+      "fresh_context": true
+    }
+  ]
+}
