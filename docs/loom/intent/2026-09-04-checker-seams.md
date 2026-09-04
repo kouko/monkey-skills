@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 改 checker 規則的重算方式、manifest 預設 glob、刪一支舊腳本、ship 站一句話、KICKOFF 一行；沒有使用者讀或輸入的介面，也沒有多狀態行為
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/, docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/]
-status: confirmed 2026-09-04
+status: closed 2026-09-04 — PR #786
 
 ## Problem
 四條 open intent 各自都是 checker／contract 的小修，各開一個 change 要付四次完整車道的固定成本（兩讀者＋盲跑＋對抗）；它們同屬 loom-code、同是 gate 型 task，合成一個 change 只付一次。四條原文（併入後改 `withdrawn — superseded by 2026-09-04-checker-seams`）：
