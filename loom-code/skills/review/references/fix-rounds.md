@@ -36,6 +36,12 @@ The resumed reader does not re-run `probes[]`; `push` re-runs every probe
 itself in a clean tree and is the check that actually gates the merge.
 Re-running them inside a fix round buys nothing but a slower loop.
 
+When a reader's `important` finding can be written as a runnable case,
+this fix round's adversary encodes it into this change's probe file, runs
+it once here, and records one `probes[]` entry (`kind: adversarial`, this
+round's scope) — done inside the fix round, no hand-off. This adds and
+runs one new probe; it does not re-run existing ones.
+
 ## Rebuttal
 
 The orchestrator may attach evidence disputing a finding instead of

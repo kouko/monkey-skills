@@ -31,7 +31,7 @@ CONTRACT = REPO / "loom-code" / "contract"
 MECHANISMS = REPO / "docs" / "loom" / "evidence" / "mechanisms.yaml"
 
 WORD_CAP = 4500
-AGENT_CAPS = {"reviewer.md": 1200, "blind-runner.md": 600, "adversary.md": 600}
+AGENT_CAPS = {"reviewer.md": 1300, "blind-runner.md": 600, "adversary.md": 600}
 DESCRIPTION_CAP = 400
 
 GATE_RE = re.compile(r"<!--\s*gate:\s*([A-Za-z0-9._-]+)\s*-->")
