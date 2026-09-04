@@ -1337,6 +1337,33 @@
       "started": "2026-09-05T09:30:00+08:00",
       "fresh_context": false,
       "note": "resumed; confirms the tightened intake path"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T10:20:00+08:00",
+      "fresh_context": false,
+      "note": "loom-design capture-intent contract test re-pinned to the English opening line (CI loom-design pytest job red on both pushes; that suite is outside the KICKOFF package-tests command). Second close attempt (6deea171, close round PASS from rev-close2-codex/sonnet) reset."
+    },
+    {
+      "task": "branch-end round 9–10",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T10:22:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the loom-design test re-pin"
+    },
+    {
+      "task": "branch-end round 9–10",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T10:22:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the loom-design test re-pin"
     }
   ],
   "second_vendor": "codex",
@@ -1348,6 +1375,7 @@
     "2026-09-05 ship: the push checker blocked on push.dispatch-covers-tasks — four fix-round commits (blind-runner rows, PRINCIPLES opening line, label prefix, quoted-source-text exception) carried Closes: lines but no Task: trailer. Commit messages from the branch base to HEAD were rewritten with git filter-branch --msg-filter to add `Task: fix:wave-end:1` to those four; every tree is byte-identical (git diff against the pre-rewrite tip is empty; backup ref backup/artifact-language-policy-pre-trailer-rewrite kept locally), so verdict, probe and open_findings shas recorded before this note name the pre-rewrite commits of the same trees. reviewed_sha moved to the rewritten tip and the package tests and adversarial probes were re-run and re-recorded there.",
     "branch-end round 6 (both readers PASS at the rewritten tip): the trailer-only rewrite confirmed tree-identical; reviewed_sha = that review.json-only commit, probes re-recorded there.",
     "First close attempt (79016e99, close round PASS from both readers, CI green) was reset: re-pinning the probes at the close commit showed the branch-end scope probe calling `intake write-plan`, which blocks by design once the intent is closed. The probe was fixed before the close commit is re-created so the close-commit shape holds.",
-    "branch-end rounds 7–8 (probe fix for the closed-intent intake block): PASS from both readers at 37c7df69; reviewed_sha there."
+    "branch-end rounds 7–8 (probe fix for the closed-intent intake block): PASS from both readers at 37c7df69; reviewed_sha there.",
+    "Second close attempt reset: CI's separate loom-design pytest job (loom-design/scripts/, not in the KICKOFF package-tests command) failed on test_capture_intent_contract.py::test_ui_flow_six_sentence_present, which pinned the pre-change Chinese opening line. Re-pinned to the English source sentence; the KICKOFF package-tests gap is a follow-up (maintain)."
   ]
 }
