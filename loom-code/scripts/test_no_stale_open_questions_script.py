@@ -1,32 +1,38 @@
 """RED test: the stale open-questions checker and its references are gone.
 
-Task: W1-01 (change 2026-09-04-checker-seams).
+Task: W1-02 (change 2026-09-04-checker-seams), fix round 2. The removed
+script's name is assembled from parts at runtime so this file itself
+carries no literal occurrence of it — the grep in
+`test_no_stale_references_exist` needs no self-exclusion to pass.
 """
 import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-
-def test_check_open_questions_script_absent():
-    assert not (REPO_ROOT / "loom-code/scripts/check_open_questions.py").exists()
-
-
-def test_check_open_questions_test_absent():
-    assert not (REPO_ROOT / "loom-code/scripts/test_check_open_questions.py").exists()
+_REMOVED_MODULE_NAME = "check_open" + "_questions"
+_REMOVED_SCRIPT = f"loom-code/scripts/{_REMOVED_MODULE_NAME}.py"
+_REMOVED_SCRIPT_TEST = f"loom-code/scripts/test_{_REMOVED_MODULE_NAME}.py"
 
 
-def test_no_stale_references_to_check_open_questions():
+def test_removed_script_absent():
+    assert not (REPO_ROOT / _REMOVED_SCRIPT).exists()
+
+
+def test_removed_script_test_absent():
+    assert not (REPO_ROOT / _REMOVED_SCRIPT_TEST).exists()
+
+
+def test_no_stale_references_exist():
     result = subprocess.run(
         [
             "git",
             "grep",
             "-n",
-            "check_open_questions",
+            _REMOVED_MODULE_NAME,
             "--",
             ":!docs/loom",
             ":!*CHANGELOG*",
-            ":!loom-code/scripts/test_no_stale_open_questions_script.py",
         ],
         cwd=REPO_ROOT,
         capture_output=True,

@@ -61,3 +61,15 @@ def test_probe_graduation_paragraph_names_collision_not_duplicate() -> None:
         "a name collision, not a duplicate" in flat
     ), "expected the name-collision-vs-duplicate clause in the graduation paragraph"
     assert "rename the probe copy rather than dropping it" in flat
+
+
+def test_graduation_commit_reruns_branch_end_before_review_only_commit() -> None:
+    section = _section_3_memory()
+    flat = _unwrapped(section)
+    assert (
+        "before the review-only commit" in flat
+    ), "expected the graduation commit to be placed before the review-only commit"
+    assert (
+        "re-run the `branch-end` checkpoint" in flat
+        or "re-run the branch-end checkpoint" in flat
+    ), "expected the graduation text to require re-running the branch-end checkpoint"

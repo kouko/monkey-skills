@@ -183,6 +183,10 @@ A permanent test that shares a probe's function name but not its body is
 a name collision, not a duplicate — rename the probe copy rather than
 dropping it.
 
+Like a store entry, this graduation commit lands before the review-only
+commit; commit it separately and re-run the `branch-end` checkpoint,
+because step 1's fourth fact is now false.
+
 The intent's `status` is **not** touched yet. It becomes `closed` after the
 merge (step 6), because that is when it is true.
 
