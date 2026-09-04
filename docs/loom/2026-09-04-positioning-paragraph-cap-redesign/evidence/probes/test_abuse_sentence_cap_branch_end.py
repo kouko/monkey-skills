@@ -234,3 +234,127 @@ def test_mutation_helper_count_zero_does_not_over_delete_unrelated_text(
             f"'reconcile' at {start}:{end} is a substring of a longer word "
             f"({para[max(0, start-5):end+5]!r}); count=0 would over-delete"
         )
+
+
+# ---------------------------------------------------------------------------
+# 4. fix round (branch-end-02): reviewer.md's new symmetric three-way
+#    sentence, and the cap bump that made room for it
+# ---------------------------------------------------------------------------
+
+REVIEWER_CAP = 1340
+REVIEWER_CAP_SLACK_LIMIT = 100
+
+
+def test_reviewer_paragraph_has_one_sentence_naming_both_roles_capped_portable() -> None:
+    """Fix round (branch-end-02, reader findings encoded as probes per
+    fix-rounds.md): reviewer.md's `You own` paragraph must carry exactly
+    the shape the two cold-read misses (evidence/coldread-reviewer.txt
+    items 3 and 8) exposed -- ONE sentence naming both `adversary` and
+    `implementer`, alongside `artifact` and `test`/`RED`, so a probe's own
+    artifact and a missing test are never defaulted to the reviewer by a
+    reader working from this paragraph alone. That sentence must fit
+    SENTENCE_WORD_CAP; the whole paragraph must stay within SENTENCE_CAP
+    with at least one sentence of headroom (today 4/6, so a later addition
+    still has room without another cap bump); and it must cite no `docs/`
+    path (CLAUDE.md Contract Citations -- an agent dispatched into another
+    repo cannot resolve this repo's own evidence files)."""
+    text = REVIEWER_MD.read_text(encoding="utf-8")
+    para = helper_mod._you_own_paragraph(text)
+    sentences = helper_mod._sentences(para)
+
+    hits = [
+        s for s in sentences
+        if "adversary" in s.lower()
+        and "implementer" in s.lower()
+        and "artifact" in s.lower()
+        and ("test" in s.lower() or "RED" in s)
+    ]
+    assert hits, (
+        "no sentence in reviewer.md's You-own paragraph names both the "
+        "adversary and the implementer alongside artifact/test-or-RED"
+    )
+    assert len(hits[0].split()) <= helper_mod.SENTENCE_WORD_CAP, (
+        f"the three-way attribution sentence is {len(hits[0].split())} "
+        f"words, cap is {helper_mod.SENTENCE_WORD_CAP}"
+    )
+
+    assert len(sentences) <= helper_mod.SENTENCE_CAP, (
+        f"reviewer.md You-own paragraph has {len(sentences)} sentences, "
+        f"cap is {helper_mod.SENTENCE_CAP}"
+    )
+    assert len(sentences) <= helper_mod.SENTENCE_CAP - 1, (
+        f"reviewer.md You-own paragraph has {len(sentences)} sentences and "
+        f"zero headroom under the {helper_mod.SENTENCE_CAP} cap"
+    )
+
+    assert "docs/" not in para, (
+        "reviewer.md You-own paragraph cites a docs/ path"
+    )
+
+
+def test_reviewer_body_cap_bump_left_at_most_100_words_of_slack() -> None:
+    """Fix round: dd562edd bumped `AGENT_CAPS['reviewer.md']` 1300 -> 1340
+    after finding no trimmable redundancy for the new sentence (plan.md
+    Risks 6, user-decided). A cap bump that leaves a LOT of slack would
+    defeat the cap's own purpose (a just-fits-forever budget becomes a
+    number nobody checks again); assert the bumped cap sits within 100
+    words of the actual body -- today the gap is 2 words (1340 - 1338)."""
+    import sys as _sys
+
+    _sys.path.insert(0, str((REPO / "loom-code/scripts")))
+    contract_mod = __import__("test_reviewer_agent_single_contract")
+
+    body = contract_mod.body_of(REVIEWER_MD.read_text(encoding="utf-8"))
+    words = len(body.split())
+    cap = contract_mod.AGENT_CAPS["reviewer.md"]
+
+    assert cap == REVIEWER_CAP, (
+        f"expected AGENT_CAPS['reviewer.md'] == {REVIEWER_CAP}, got {cap} "
+        "-- this case's slack assertion is pinned to that specific bump"
+    )
+    assert words <= cap, f"reviewer.md body is {words} words, cap is {cap}"
+    slack = cap - words
+    assert 0 <= slack <= REVIEWER_CAP_SLACK_LIMIT, (
+        f"reviewer.md body cap has {slack} words of slack "
+        f"(cap {cap}, body {words}); expected <= {REVIEWER_CAP_SLACK_LIMIT} "
+        "-- a bump that leaves this much room stops guarding against drift"
+    )
+
+
+@pytest.mark.parametrize(
+    "drop", ["adversary", "implementer", "artifact"], ids=["adversary", "implementer", "artifact"]
+)
+def test_shipped_symmetric_attribution_guard_dies_when_a_role_word_is_dropped(
+    tmp_path, drop: str
+) -> None:
+    """Fix round mutation check: run the SHIPPED guard --
+    `test_review_station_text.test_reviewer_agent_paragraph_has_symmetric_
+    three_way_attribution_sentence` -- against a tmp copy of reviewer.md
+    with `adversary` / `implementer` / `artifact` deleted from the You-own
+    paragraph (all occurrences, same `count=0` pattern as the earlier
+    mutation probes). GREEN = the shipped guard raises `AssertionError` for
+    each -- i.e. the three-way sentence is really pinned on all three
+    words, not just whichever one this repo's cold read happened to name."""
+    text = REVIEWER_MD.read_text(encoding="utf-8")
+    para = branch_end_mod._positioning_paragraph(text)
+    assert drop.lower() in para.lower(), (
+        f"reviewer.md You-own paragraph does not contain {drop!r}; "
+        "the mutation would be a no-op"
+    )
+    mutated_para = re.sub(re.escape(drop), "", para, count=0, flags=re.IGNORECASE)
+    mutated_text = text.replace(para, mutated_para, 1)
+
+    # The shipped guard reads `(REPO / "loom-code/agents/reviewer.md")`
+    # inline, so give it a fake tree rooted at tmp_path holding only the
+    # mutated file, and repoint its module-level REPO constant -- the same
+    # pattern test_probes_positioning_branch_end.py's `_load_w0_module` +
+    # `setattr(module, "REVIEWER", mutated)` uses, adapted for a function
+    # that derives its path from REPO rather than from a module constant.
+    fake_agents = tmp_path / "loom-code" / "agents"
+    fake_agents.mkdir(parents=True)
+    (fake_agents / "reviewer.md").write_text(mutated_text, encoding="utf-8")
+
+    guard_mod = _load(STATION_TEXT, f"_adv_be_guard_{drop}")
+    guard_mod.REPO = tmp_path
+    with pytest.raises(AssertionError):
+        guard_mod.test_reviewer_agent_paragraph_has_symmetric_three_way_attribution_sentence()
