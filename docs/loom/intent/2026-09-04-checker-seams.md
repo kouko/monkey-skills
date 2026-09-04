@@ -16,6 +16,7 @@ status: confirmed 2026-09-04
 5. `docs/loom/KICKOFF-DEFAULTS.md` 的 `second-vendor` 從 `codex` 改成 `ask`（1.1.0 已裝，#784 留的）。
 6. `.codex/hooks/loom_checker.py` 鏡射已落後主 checker（仍讓 standing 進小車道、缺 adversary 覆蓋規則；#785 對抗者發現）。
 7. ship 站 memory 步驟加一句：本 change 探針裡與既有測試不重疊的案例畢業成永久測試（從 2026-09-03-probes-graduate-to-permanent-tests 移出）。
+8. 「探針先寫」從 gate 型 task 擴到**完整車道的所有 code／gate 型 task**；小車道不變（kouko 2026-09-04 併入，依據：獨立對抗測試的實測收益（SWE-ABS 19.7% 假通過被抓）＋有成本數據的先例全按風險分級，車道即風險線）。
 
 ## Proposed outcome
 上述七件在一個分支上做完；每條 checker 改動都由對抗者先寫探針、實作者再做（現行 gate 型規則）。`--list-rules` 規則數不變；不加 waiver。
@@ -29,6 +30,7 @@ status: confirmed 2026-09-04
 6. `.codex/hooks/loom_checker.py` 與 `loom-code/scripts/loom_checker.py` 逐位元相同（既有 codex-manifest-drift CI 檢查綠）。
 7. ship 站 SKILL.md memory 步驟有那一句，字數帽內；站摘要表同步測試綠。
 8. `loom_checker.py --list-rules` 規則數與 main 相同（27）；整包測試綠。
+9. build 站 SKILL.md 的派工順序段說：完整車道中 檔 路徑型別為 `code` 或 `gate` 的 task 先派對抗者；小車道不先派；字數帽內；站摘要表同步測試綠。
 
 ## Constraints
 - 不加規則、不加 waiver；規則數不增不減。
@@ -39,7 +41,6 @@ status: confirmed 2026-09-04
 
 ## Out of scope
 - 其他預設 glob 的重新檢討；其他 pre-1.0 殘留腳本盤點。
-- 「探針先寫」擴到非 gate 的 code task（kouko 2026-09-04 決定：等有數據再議）。
 - artifact-language-policy（獨立 change，走 spec 站）。
 
 ## Open questions
