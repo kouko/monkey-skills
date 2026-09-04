@@ -689,6 +689,24 @@
       "started": "2026-09-05T06:50:00+08:00",
       "fresh_context": false,
       "note": "ship memory step: two store entries, three probe files graduated as byte copies (path lines only), branch-scope probe admits docs/loom/memory/"
+    },
+    {
+      "task": "branch-end round 4",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T06:58:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the memory entries and graduated probes delta"
+    },
+    {
+      "task": "branch-end round 4",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T06:58:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the memory entries and graduated probes delta"
     }
   ],
   "second_vendor": "codex",
