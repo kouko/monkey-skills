@@ -5,6 +5,31 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.2.3] — 2026-09-04 — sentence cap on the positioning paragraphs
+
+`docs/loom/2026-09-04-positioning-paragraph-cap-redesign/`.
+
+1. `agents/reviewer.md` and `agents/adversary.md`'s `You own` paragraphs
+   now sit under a sentence-shaped cap — at most 6 sentences, each at
+   most 40 words — replacing the old flat 80-word body cap, which let a
+   paragraph pack an unreadable run-on as long as the word count stayed
+   under the ceiling. `test_review_station_text.py` carries the shared
+   `_sentences` split helper and drops its `<= 80` assertion.
+2. `agents/adversary.md` gains a three-way attribution sentence: reader
+   (reviewer)-owned reconciliation findings (omission, overclaim,
+   contradiction) and implementer-owned executable findings (RED,
+   failing test) are named in the same sentence — closing the cold-read
+   gap from #787, where both classes silently defaulted to the
+   implementer when the paragraph was read alone.
+3. The three graduated positioning probe files import the shared
+   `_sentences` helper instead of re-implementing the split rule, drop
+   the retired `WORD_CAP = 80` constant, and their mutation helper
+   (`_mutate_paragraph`) moves from `re.sub(..., count=1)` to
+   `count=0`, deleting every occurrence of the drop token instead of
+   just the first — `adversary.md`'s restated paragraph now says
+   `reconcile` twice, and a count=1 deletion left the second
+   occurrence standing, letting that mutant survive.
+
 ## [1.2.2] — 2026-09-04 — tool preference for file edits
 
 `docs/loom/2026-09-04-prefer-harness-native-file-tools/`.

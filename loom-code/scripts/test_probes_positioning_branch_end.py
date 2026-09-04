@@ -147,8 +147,8 @@ SINGLE_CONTRACT_TEST = (
     REPO_ROOT / "loom-code" / "scripts" / "test_reviewer_agent_single_contract.py"
 )
 
-REVIEWER_CAP = 1300
-PREVIOUS_REVIEWER_CAP = 1200
+REVIEWER_CAP = 1340
+PREVIOUS_REVIEWER_CAP = 1300
 SOFTENERS = ("primarily", "generally", "usually", "typically", "normally", "mostly")
 
 _COUNTER = itertools.count()
@@ -203,7 +203,16 @@ def _mutate_paragraph(path: Path, tmp_path: Path, drop: str) -> Path:
     """Copy `path` to tmp with `drop` deleted from its `You own` paragraph.
 
     Only the paragraph is touched: deleting the token file-wide would also
-    hit unrelated prose and the mutation would no longer be minimal.
+    hit unrelated prose and the mutation would no longer be minimal. All
+    occurrences of `drop` are removed (not just the first): the sentence-cap
+    redesign (W1-01/W1-02) restated adversary.md's disclaimer as two
+    independent negation-plus-`reconcile` clauses ("You do not ... reconcile
+    documents" and "Not yours either: ... go to the reviewer to reconcile"),
+    so `reconcile` now appears twice. A count=1 deletion left the second
+    occurrence standing, and the shipped guard's `reconcil` substring match
+    still matched it -- the mutant survived for a reason unrelated to the
+    word it claims to pin. Every other drop token here still occurs exactly
+    once, so removing all occurrences changes nothing for those cases.
     """
     text = path.read_text(encoding="utf-8")
     para = _positioning_paragraph(text)
@@ -211,7 +220,7 @@ def _mutate_paragraph(path: Path, tmp_path: Path, drop: str) -> Path:
         f"{path.name} positioning paragraph does not contain {drop!r}; "
         "the mutation would be a no-op and the case vacuous"
     )
-    mutated_para = re.sub(re.escape(drop), "", para, count=1, flags=re.IGNORECASE)
+    mutated_para = re.sub(re.escape(drop), "", para, count=0, flags=re.IGNORECASE)
     out = tmp_path / path.name
     out.write_text(text.replace(para, mutated_para, 1), encoding="utf-8")
     return out
@@ -442,13 +451,14 @@ def test_every_place_the_version_is_stamped_agrees() -> None:
 
 
 def test_reviewer_cap_binds_at_its_new_value_and_the_bump_was_needed() -> None:
-    """(B) Does the bumped cap actually bind? RED at 1301, GREEN at 1300.
+    """(B) Does the bumped cap actually bind? RED at 1341, GREEN at 1340.
 
-    W1-03 raised `AGENT_CAPS["reviewer.md"]` 1200 -> 1300. Two ways that
-    could be wrong: the file could already be over 1300 (cap not binding),
-    or under 1200 (the bump bought nothing and should be reverted). Counted
-    with `len(str.split())` over the body, the same oracle the shipped test
-    uses -- never `wc`.
+    branch-end-02 raised `AGENT_CAPS["reviewer.md"]` 1300 -> 1340 (W1-03 had
+    already raised it 1200 -> 1300 in an earlier round). Two ways the LATEST
+    bump could be wrong: the file could already be over 1340 (cap not
+    binding), or still under 1300 (the bump bought nothing and should be
+    reverted). Counted with `len(str.split())` over the body, the same
+    oracle the shipped test uses -- never `wc`.
     """
     source = SINGLE_CONTRACT_TEST.read_text(encoding="utf-8")
     assert f'"reviewer.md": {REVIEWER_CAP}' in source, (

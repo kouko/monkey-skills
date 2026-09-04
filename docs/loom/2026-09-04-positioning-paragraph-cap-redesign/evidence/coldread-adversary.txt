@@ -1,0 +1,64 @@
+Method: `claude -p --model sonnet`, fed only the path to
+loom-code/agents/adversary.md (worktree checked out at reviewed sha
+202e1398), same 8-item mixed findings list as 2026-09-04-reviewer-and-
+adversary-positioning's blind run. No other file given.
+
+Prompt (verbatim):
+---
+Read the file at this exact path and nothing else in the repo: <worktree>/loom-code/agents/adversary.md
+
+Do not read any other file. Based only on that file's content, answer:
+
+(a) In one sentence, what is the boundary between your role and the other roles in this flow?
+
+(b) Below is a mixed list of 8 findings from a review. For each one, classify it as belonging to YOU, to the OTHER role (the one who reconciles documents against each other), or to the IMPLEMENTER (the one who built it). Answer with just the number and your classification (yours / other / implementer), one per line, plus a one-line reason for each.
+
+1. "plan says 23 records, review.json has 126"
+2. "stale origin/main short-circuits the candidate loop — probe passes on a fresh clone only"
+3. "./probe.py and probe.py counted as two artifacts"
+4. "report says 'works' but Acceptance 6 requires byte-identical files"
+5. "graduation paragraph never says when to re-run branch-end"
+6. "merge-base --is-ancestor accepts a side-branch commit that first-parent walk rejects"
+7. "CHANGELOG lists 7 items, intent has 8"
+8. "the new function's happy path has no unit test"
+---
+
+TRIAL (2026-09-04, sha 202e1398), raw model output:
+---
+我上面的分類有誤，重新核對文件明文規則後更正：
+
+- 探針自身產物路徑(拼寫/計數)＝我(adversary)
+- 跨文件互核（遺漏、誇大、矛盾、計數對不上）＝OTHER（reviewer）
+- 正向可執行的 RED（該有測試卻沒有）＝IMPLEMENTER
+
+**修正後答案：**
+
+1. other — plan 與 review.json 計數不符是跨文件核對，屬 reviewer。
+2. yours — 陳舊分支狀態讓探針失效，是我該抓的邊界／未正規化狀態案例。
+3. yours — 探針自身產物路徑的拼寫/計數，文件明說「a probe's own artifact path (its spelling or count) is yours」。
+4. other — report 宣稱與驗收條件矛盾（overclaim/contradiction），文件明說這歸 reviewer 核對。
+5. other — 段落遺漏說明（omission），文件明說遺漏歸 reviewer。
+6. yours — 兩種一致性判斷函式對同一輸入行為不一致，是邊界/未正規化輸入類攻擊案例。
+7. other — CHANGELOG 與 intent 筆數不符是跨文件核對，屬 reviewer。
+8. implementer — 新函式缺 happy-path 單元測試，是正向可執行的 RED 缺失，屬 implementer。
+---
+
+Scoring against expected (own = 2,3,6; not-own/reviewer = 1,4,5,7;
+implementer = 8):
+1 other (correct) / 2 yours (correct) / 3 yours (correct) / 4 other
+(correct) / 5 other (correct) / 6 yours (correct) / 7 other (correct) /
+8 implementer (correct).
+
+own/not-own score: 8/8.
+three-way attribution score (not-own split into reviewer vs implementer):
+8/8 — every one of the 5 not-own items landed on the correct sub-owner
+(1,4,5,7 -> reviewer; 8 -> implementer), no items misrouted between
+"reviewer" and "implementer" the way trials 1-3 of the prior change did.
+
+Comparison with the three-way attribution history from
+2026-09-04-reviewer-and-adversary-positioning's blind-run-report.md:
+trial 1 = 7/8, trial 2 = 7/8, trial 3 = 6/8. This run = 8/8, the first
+trial to clear the whole list. Per plan.md Risks #2 and the intent's
+Acceptance 3, three-way attribution is a recorded number for comparison,
+not an acceptance condition — a single trial scoring 8/8 does not turn it
+into a guarantee.
