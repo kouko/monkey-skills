@@ -680,6 +680,15 @@
       "started": "2026-09-05T06:30:00+08:00",
       "fresh_context": false,
       "note": "resumed; adjudicates its round-2 finding (four-field test name)"
+    },
+    {
+      "task": "ship-graduate",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T06:50:00+08:00",
+      "fresh_context": false,
+      "note": "ship memory step: two store entries, three probe files graduated as byte copies (path lines only), branch-scope probe admits docs/loom/memory/"
     }
   ],
   "second_vendor": "codex",
