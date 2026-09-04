@@ -68,8 +68,7 @@ def test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms() -> 
     round confirms, without raising the paragraph above the 80-word cap."""
     text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
     para = _you_own_paragraph(text)
-    assert "claim" in para
-    assert "fix round" in para
+    assert "a claim the fix round confirms" in " ".join(para.split())
     assert len(para.split()) <= 80
 
 
