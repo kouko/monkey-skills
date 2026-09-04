@@ -62,6 +62,17 @@ def test_adversary_agent_owns_negative_paragraph_under_80_words() -> None:
     assert len(para.split()) <= 80
 
 
+def test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms() -> None:
+    """Branch-end fix (branch-end-02): intent Proposed outcome 2 requires the
+    reviewer positioning paragraph to say its output is a claim the fix
+    round confirms, without raising the paragraph above the 80-word cap."""
+    text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
+    para = _you_own_paragraph(text)
+    assert "claim" in para
+    assert "fix round" in para
+    assert len(para.split()) <= 80
+
+
 def test_fix_rounds_reader_finding_to_probe_sentence_under_60_words() -> None:
     """W1-01: fix-rounds.md gains a block naming `important`, the adversary,
     and a probe, <= 60 words counted with `len(str.split())`."""
