@@ -109,15 +109,6 @@ def _count(path: Path) -> int:
 # --- (1) same artifact, N records: RED until W0-04 (executes N times today) -
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RED until W0-04: check_probes_adversarial() runs the artifact once per "
-        "record, not once per distinct artifact. Observed today (verified live): "
-        "4 records naming the same file -> 4 real subprocess runs (expected 1 "
-        "after the fix)."
-    ),
-)
 def test_same_artifact_referenced_by_four_records_runs_once_after_fix(
     tmp_path: Path,
 ) -> None:
@@ -137,16 +128,6 @@ def test_same_artifact_referenced_by_four_records_runs_once_after_fix(
 # --- (2) failing artifact, 3 records: message repeats N times today --------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RED until W0-04: a failing artifact named by N records produces N "
-        "copies of the same failure text today (verified live: 3 records -> the "
-        "phrase 'exited 1 when the checker ran it' appears 3 times in one "
-        "message); all N records should be marked unusable from a single "
-        "execution and the message should appear once."
-    ),
-)
 def test_failing_artifact_referenced_by_three_records_reports_message_once_after_fix(
     tmp_path: Path,
 ) -> None:

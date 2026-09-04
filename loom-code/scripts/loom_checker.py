@@ -136,7 +136,9 @@ RULES: list[tuple[str, str]] = [
     (
         "push.probes-adversarial",
         "A change carrying a code / spec / skill / gate artifact records at least three "
-        "adversarial probes against the reviewed commit, and each one still passes.",
+        "adversarial probe records against the reviewed commit; a file referenced by "
+        "several records is executed once, and every record of a failing file is "
+        "unusable.",
     ),
     (
         "push.probes-package-tests",
@@ -2705,6 +2707,13 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
 
     usable = 0
     reasons: list[str] = []
+    # Every format check below (command present, not trivial, artifact
+    # present in the reviewed tree, command names its artifact, sha matches
+    # the reviewed commit, tree clean) still runs once per record -- only
+    # the subprocess execution that follows is deduped by artifact path, so
+    # a file named by many records is attacked once and that one verdict is
+    # applied to every record naming it.
+    pending: dict[str, list[dict]] = {}
     for probe in review.get("probes", []):
         if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
             continue
@@ -2762,6 +2771,12 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 "would be attacked is not the reviewed tree"
             )
             continue
+        pending.setdefault(artifact, []).append({"label": label, "result": probe.get("result")})
+
+    for artifact, records in pending.items():
+        count = len(records)
+        label = records[0]["label"]
+        result = records[0]["result"]
         try:
             argv = artifact_argv(repo, artifact)
         except ValueError as exc:
@@ -2780,7 +2795,8 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
             continue
         out.write(
             f"adversarial {artifact}: observed exit code {observed} "
-            f"(recorded command: {label!r}, recorded result: {probe.get('result')!r})\n"
+            f"(recorded command: {label!r}, recorded result: {result!r}), "
+            f"referenced by {count} records\n"
         )
         if observed != 0:
             reasons.append(
@@ -2789,7 +2805,7 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 "recorded command wraps it in"
             )
             continue
-        usable += 1
+        usable += count
 
     if usable >= ADVERSARIAL_FLOOR:
         return []

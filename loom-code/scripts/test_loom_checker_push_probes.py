@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import codex_scaffold  # noqa: E402  (local import: needs SCRIPTS_DIR on sys.path)
+import loom_checker  # noqa: E402  (W0-04: check_probes_adversarial dedup unit tests)
 from test_loom_checker_push import (  # noqa: E402
     CHANGE,
     REVIEW,
@@ -395,3 +396,79 @@ def test_a_forced_hook_fired_marker_commit_is_blocked(tmp_path: Path) -> None:
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert RULE in blocked_rules(result)
+
+
+# ============================================================================
+# push.probes-adversarial (per-artifact dedup, W0-04)
+# ============================================================================
+
+
+def _dedup_repo(tmp_path: Path, counter: Path, *, rel: str = "probe.py",
+                exit_code: int = 0) -> Path:
+    """A minimal branch (not `build_repo` -- that fixture wires three
+    distinct abuse files, and this rule's dedup is about many records over
+    ONE artifact) whose committed artifact appends a line to `counter`
+    (kept outside the repo, like the sibling probe file's fixture) every
+    time it actually runs."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    git(repo, "add", "seed.txt")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    path = repo / rel
+    path.write_text(
+        "import pathlib\n"
+        f"pathlib.Path({str(counter)!r}).open('a').write('1\\n')\n"
+        f"raise SystemExit({exit_code})\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", rel)
+    git(repo, "commit", "-q", "-m", "feat: probe")
+    return repo
+
+
+def _dedup_records(artifact: str, sha: str, count: int) -> list[dict]:
+    return [
+        {"kind": "adversarial", "command": f"python3 {artifact}", "sha": sha,
+         "result": "pass", "artifact": artifact}
+        for _ in range(count)
+    ]
+
+
+def test_five_records_over_one_artifact_execute_it_exactly_once(tmp_path: Path) -> None:
+    """RED until W0-04: `check_probes_adversarial` used to run the recorded
+    command once per record; five records naming the same artifact used to
+    mean five real subprocess invocations. After W0-04 it runs once per
+    distinct artifact and applies that verdict to every record naming it."""
+    counter = tmp_path / "counter.txt"
+    repo = _dedup_repo(tmp_path, counter)
+    sha = git(repo, "rev-parse", "HEAD")
+
+    review = {"probes": _dedup_records("probe.py", sha, 5)}
+    failures = loom_checker.check_probes_adversarial(repo, review, sha)
+
+    assert failures == []
+    assert counter.read_text(encoding="utf-8").count("1") == 1
+
+
+def test_list_rules_states_the_dedup_counting_unit() -> None:
+    """The `--list-rules` description for push.probes-adversarial names the
+    counting unit (records) and says a file named by several records runs
+    once -- so a cold reader of the rule table, not just of the source,
+    learns the dedup semantics."""
+    from io import StringIO
+
+    out = StringIO()
+    loom_checker.list_rules(out)
+    text = out.getvalue()
+
+    start = text.index("push.probes-adversarial")
+    end = text.index("push.probes-package-tests", start)
+    section = text[start:end]
+
+    assert "records" in section
+    assert "executed once" in section
