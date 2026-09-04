@@ -1,0 +1,266 @@
+{
+  "reviewed_sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+  "scope": "branch-end",
+  "vendors": [
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A — no deliberate shortcut introduced",
+        "deletion-first": "N/A — no new abstraction, flag, config, or extension point"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/plan.md:7",
+          "text": "“33 個案例（7＋26）” counts test functions, but parametrization makes the package collect 38 test items (12＋26), so the stated GREEN expectation of 33 is also wrong",
+          "fix": "distinguish 33 test functions from 38 collected items and change the collection expectation to 38"
+        }
+      ],
+      "sha": "224f93987d5c11c03fc168fa65aa2cdacb784273"
+    },
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A — no deliberate shortcut introduced",
+        "deletion-first": "N/A — no new abstraction, flag, config, or extension point"
+      },
+      "findings": [],
+      "notes": "fix round: delta 224f9398..4483d347 only (plan.md fact fix); finding 1 FIXED; no new findings",
+      "sha": "4483d3473ec68ee7653d61b357a48c2756df4ea5"
+    },
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/blind-run-report.md:21-23",
+          "text": "arithmetic shows three runs inside the 3.85s bar and one outside by 1.30s; the report said two outside",
+          "fix": "state 3/4 inside, 1/4 outside"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/blind-run-report.md:27-29",
+          "text": "commit timestamps prove the review-only commit at 07:45:59, not when the push gate passed; the 17-minute verdict is unsupported",
+          "fix": "cite a timestamped push-gate record or bound it"
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/cost.md:8",
+          "text": "review.json records six adversarial probes, not eight",
+          "fix": "6 cases (8 pytest items)"
+        }
+      ],
+      "notes": "delta 4483d347..fbc4dd9b: blind-run report + cost table (committed after the first gate pass)",
+      "sha": "fbc4dd9b72d3717bf24f1a5a479ce0a53dbd2073"
+    },
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: delta fbc4dd9b..77e0e7b8 only; findings 1-3 FIXED; no new findings",
+      "sha": "77e0e7b83d5c28d42dcfc1a87aa0904917dbbdfd"
+    },
+    {
+      "reviewer": "rev-be-codex-pg",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent checkpoint: delta 77e0e7b8..c1c4152a is the review.json round-4 record plus exactly one intent status line (closed 2026-09-04 — PR #785)",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+      "result": "pass",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k diverges_from_source_only_by_the_three_permitted_edits",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k repo_root_constant_resolves",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k import_binds_to_loom_code_scripts",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k names_do_not_collide",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k byte_identical_to_origin_main",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py -q -k from_a_cwd_outside_the_repo",
+      "sha": "c1c4152abef54858bbdf76ea12c4534c056c4cb3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/evidence/probes/test_abuse_probe_graduation.py",
+      "scope": "branch-end"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "甲／乙二選一：甲＝這次只做把主幹上既有探針中不重疊的搬進永久測試（小車道），ship 站那句話併進 C 組；乙＝照 intent 原文只加 ship 站那句話。重述甲：既有測試沒蓋到的攻擊案例變成永久測試，整包命令會跑到、evidence 原檔不動、整包時間不比探針本身多。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "追問「整包時間不比探針本身跑的時間多」是什麼意思",
+      "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告四條逐條呈現（1、2 做到；3 四次三次在線內；4 17–20 分）；OK 就 push 開 PR？（答：先跑完這次的實作吧＝OK）",
+      "type": "done"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/plan.md:7",
+      "origin_sha": "224f93987d5c11c03fc168fa65aa2cdacb784273",
+      "raised_by": "rev-be-codex-pg",
+      "resolved": "closed by 4483d347 — plan Data/測 lines now say 33 functions collect as 38 items; confirmed FIXED by rev-be-codex-pg in round 2"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/blind-run-report.md:21-23",
+      "origin_sha": "fbc4dd9b72d3717bf24f1a5a479ce0a53dbd2073",
+      "raised_by": "rev-be-codex-pg",
+      "resolved": "closed by 77e0e7b8 — report states 3/4 inside the bar, 1/4 outside by 1.30 s; confirmed FIXED by rev-be-codex-pg in round 4"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-03-probes-graduate-to-permanent-tests/blind-run-report.md:27-29",
+      "origin_sha": "fbc4dd9b72d3717bf24f1a5a479ce0a53dbd2073",
+      "raised_by": "rev-be-codex-pg",
+      "resolved": "closed by 77e0e7b8 — gate time bounded 07:45:59–07:49 (17–20 min), not claimed to the minute; confirmed FIXED by rev-be-codex-pg in round 4"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-pg",
+      "model": "sonnet",
+      "started": "2026-09-04T07:33:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-pg",
+      "model": "sonnet",
+      "started": "2026-09-04T07:41:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-pg",
+      "model": "gpt-5-codex",
+      "started": "2026-09-04T07:46:00+08:00",
+      "fresh_context": true
+    }
+  ]
+}
