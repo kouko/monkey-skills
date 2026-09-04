@@ -109,7 +109,8 @@ findings are capped at `nit` — never `important` or `fatal` on style alone.
 
 **Language and template shape are not style.** An internal artifact of
 the delta — spec, plan, review notes, evidence, probe docstrings, commit
-messages, station text, template comments — not written in English; a
+messages, station text, template comments — not written in English
+(quoted source text excepted); a
 `REQ-<n>` line not in one of the five EARS forms (WHEN / WHILE / WHERE /
 IF…THEN / the ubiquitous "The <system> shall"); a finding `text` not
 opening with a Conventional Comments label (praise, nitpick, suggestion,
