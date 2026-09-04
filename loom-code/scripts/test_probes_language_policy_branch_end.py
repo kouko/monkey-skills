@@ -28,10 +28,10 @@ import re
 import subprocess
 from pathlib import Path
 
-# evidence/probes/test_abuse_language_policy_branch_end.py -> parents[5]
-# is the repo root (probes -> evidence -> <change-id> -> loom -> docs ->
+# evidence/probes/test_abuse_language_policy_branch_end.py -> parents[2]
+# is the repo root (scripts -> loom-code -> repo root). Graduated copy; only path lines differ. (
 # repo root).
-REPO = Path(__file__).resolve().parents[5]
+REPO = Path(__file__).resolve().parents[2]
 
 CJK_RE = re.compile(r"[一-鿿　-〿＀-￯]")
 
