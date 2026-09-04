@@ -256,6 +256,33 @@ def test_build_tool_preference_matches_implementer_verbatim() -> None:
     )
 
 
+def test_trap_heading_inventory_the_review_pointers_rely_on() -> None:
+    """Branch-end fix N1: the §3/§4 pointer sentence tells the dispatcher to
+    carry "that contract's own `## Traps` section" verbatim. reviewer.md,
+    blind-runner.md, and adversary.md each carry a heading literally named
+    `## Traps`; implementer.md deliberately carries `## Trap-guards`
+    instead (its own pointer line reads differently — build/SKILL.md names
+    it directly rather than through review/SKILL.md's generic pointer).
+    Pinning the inventory here means a rename silently breaking the
+    pointer sentence fails loudly in this file, not only in prose."""
+    headings = {
+        name: re.findall(r"^## .+$", path.read_text(encoding="utf-8"), re.M)
+        for name, path in _TOOL_PREFERENCE_CONTRACTS.items()
+    }
+    for name in ("reviewer", "blind-runner", "adversary"):
+        assert "## Traps" in headings[name], (
+            f"{name}.md lost its `## Traps` heading; the §3/§4 pointer "
+            "sentence in review/SKILL.md no longer resolves for it"
+        )
+    assert "## Traps" not in headings["implementer"], (
+        "implementer.md gained a `## Traps` heading; update this test "
+        "deliberately if that was the intent"
+    )
+    assert "## Trap-guards" in headings["implementer"], (
+        "implementer.md lost its `## Trap-guards` heading"
+    )
+
+
 # Branch-end fix N2: the exact pointer sentence, so a reworded no-op that
 # merely keeps the substring "trap" is caught rather than waved through by
 # a bare `re.search(r"[Tt]rap", ...)`.
