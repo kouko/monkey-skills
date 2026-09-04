@@ -1,13 +1,153 @@
 {
   "reviewed_sha": "34683950f9df0c16e170a6a9569592592d00fff6",
-  "scope": "branch base — no checkpoint yet",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "openai"
   ],
   "second_vendor": "codex",
-  "verdicts": [],
-  "probes": [],
+  "verdicts": [
+    {
+      "reviewer": "rev-branch-end-trust-codex-51ae",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "sha": "62b344c9738d89ce9c1b6c2aa8a0fb22c419e1b4",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust.py:389",
+          "text": "Package tests directly fire the real repository shims, contaminating its ledger so --trusted can credit definitions Codex never invoked and violating Acceptance 2, Constraint 4, and the machine-quality principle.",
+          "fix": "Copy both shim trees and the recorder into a tmp_path repository and execute only those copies, as .claude/hooks/test_codex_hook_shims.py already does."
+        },
+        {
+          "severity": "fatal",
+          "anchor": ".codex/hooks/loom-checker:16",
+          "text": "The shim records fired before resolving its cwd-relative checker target, so invocation from a subdirectory records success even though no gate verdict is delivered and the station subsequently permits continuation.",
+          "fix": "Resolve every delegated target from the shim's own repository location and write the ledger only after establishing that the intended target can execute, with a regression test covering non-root cwd."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/blind-run-report.md:127",
+          "text": "The report says every test ran in fresh temporary directories and touched no existing data, contradicting the two real-repository shim executions and hiding the resulting ledger mutation from the user.",
+          "fix": "Correct the report after isolating the probes, or explicitly disclose the repository-ledger write and its cleanup evidence."
+        }
+      ],
+      "notes": "F1 fatal by consequence: the ordinary package gate can manufacture the exact evidence used to continue past the trust stop. F2 independently fatal: fired becomes a false operational-success signal. Did not run the suite (read-only sandbox; identified tests would mutate the repo)."
+    },
+    {
+      "reviewer": "rev-branch-end-trust-sonnet-e07b",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "sha": "62b344c9738d89ce9c1b6c2aa8a0fb22c419e1b4",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS_WITH_NOTES",
+        "principles-conformance": "N/A — no PRINCIPLES.md applies",
+        "deliberate-simplification": "PASS_WITH_NOTES",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A — no user-facing decision in this change"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust.py:389-390,413-414",
+          "text": "Two probes fire this repo's real .codex/hooks/*.sh shims with cwd=REPO; loom_record_fire.py resolves the ledger via __file__, so any pytest run including this file appends real lines to this repo's ledger and --trusted afterwards falsely reports those PostToolUse definitions fired.",
+          "fix": "Run the shims in a tmp_path scratch repo (copy the two .sh files plus loom_record_fire.py into tmp_path/.codex/hooks/), mirroring test_abuse_hook_trust_branch_end.py."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust_branch_end.py:83-129",
+          "text": "Every thin shim writes the ledger line BEFORE the trailing exec, whose target resolves relative to cwd; a hook invoked from a non-root cwd crashes with no verdict yet reads fired forever after.",
+          "fix": "Record only after confirming the exec target exists at the resolved path (or resolve via $0's directory), and add the cwd caveat to codex-first-contact.md."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/write-plan/references/codex-first-contact.md:64-66",
+          "text": "'Exit 0 means every definition has fired at least once — continue' has no caveat that exit 0 can be produced by a crashed, cwd-broken shim that delivered no verdict.",
+          "fix": "Add one sentence: a fired line proves the shim ran, not that its delegate succeeded; a check that should have blocked and did not is evidence the cwd assumption broke."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/loom_record_fire.py:1-33",
+          "text": "Module docstring omits that the ledger append is unsynchronised across concurrent firings and why that is accepted (a lost line is a never false negative, never a forged fired).",
+          "fix": "Add one sentence to the docstring."
+        }
+      ],
+      "notes": "F1/F2 confirm the branch-end adversary's findings from source. external-surface-grounding PASS_WITH_NOTES: Codex' actual PostToolUse tool_name for apply_patch not verified live; the design does not depend on it. Acceptance 4 re-checked and holds."
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "62b344c9738d89ce9c1b6c2aa8a0fb22c419e1b4",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust_branch_end.py -q",
+      "sha": "e6383f8e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust.py -q",
+      "sha": "e6383f8e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "codex_scaffold.py --trusted in a fresh scratch repo before/after codex exec (read-only, workspace-write) and before/after a manual shim fire; test_codex_trust_station_text.py; package command",
+      "sha": "6eafb0852cd36aa31dbd58cc85d1424a24f62d04",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/blind-run-report.md"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -20,7 +160,29 @@
       "type": "consequence"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/evidence/probes/test_abuse_hook_trust.py:389",
+      "origin_sha": "62b344c9738d89ce9c1b6c2aa8a0fb22c419e1b4",
+      "raised_by": "adv-branch-end-trust-2f8c, rev-branch-end-trust-codex-51ae (fatal), rev-branch-end-trust-sonnet-e07b",
+      "text": "Two W0-01 probes fire this repo's real shims (cwd=REPO); the recorder writes the repo's own ledger, so a test run makes --trusted credit definitions Codex never fired."
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": ".codex/hooks/loom-checker:16",
+      "origin_sha": "62b344c9738d89ce9c1b6c2aa8a0fb22c419e1b4",
+      "raised_by": "adv-branch-end-trust-2f8c, rev-branch-end-trust-codex-51ae (fatal), rev-branch-end-trust-sonnet-e07b",
+      "text": "Shims record the firing before exec and resolve the exec target relative to cwd; a non-root cwd crashes without a verdict yet reads fired. Includes the codex-first-contact.md:64-66 'Exit 0 means … continue' caveat (sonnet)."
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/blind-run-report.md:127",
+      "origin_sha": "62b344c9738d89ce9c1b6c2aa8a0fb22c419e1b4",
+      "raised_by": "rev-branch-end-trust-codex-51ae",
+      "text": "Report claims every test ran in temporary directories and touched no existing data; two real-repo shim executions (and their ledger writes) contradict it."
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
@@ -94,5 +256,8 @@
       "started": "2026-09-05T01:05:00+08:00",
       "fresh_context": true
     }
+  ],
+  "notes": [
+    "2026-09-05 branch-end round 1: NEEDS_REVISION from both readers (codex: 2 fatal + 1 important; sonnet: 3 important + 1 nit); reviewed_sha unchanged. Nit for the ship fold: loom_record_fire.py docstring — unsynchronised append accepted (lost line = never, never a forged fired). Implementer notes carried: W1-01 touched loom_checker.py HOST_PLUMBING_FILES (pinned test); W1-03 used git stash once (stack count unchanged)."
   ]
 }
