@@ -33,6 +33,12 @@ the one caller that is NOT Codex' hook engine — codex_scaffold.py
 --self-test spawns the shim (and therefore this recorder) itself, and a
 ledger line written then would let --trusted vouch for a trust decision
 Codex never made.
+
+The append is unsynchronised: two hooks on the same event (PostToolUse
+carries two commands here) may write concurrently and no lock is taken. A
+line lost that way degrades to a ``never`` false negative — one more
+/hooks ask — and can never manufacture a ``fired``, which is why the lock
+was left out (branch-end nit, 2026-09-05).
 """
 from __future__ import annotations
 
