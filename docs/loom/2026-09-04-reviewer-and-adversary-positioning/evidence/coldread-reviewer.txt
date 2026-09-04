@@ -1,0 +1,12 @@
+**(a) 邊界**：reviewer 只做「對帳判讀」——比對已存在的文件/程式碼與意圖是否一致並下判決，不自己動手修、也不自己寫探針（正面 RED 是 implementer 的活，adversary 才負責主動攻擊/製造失敗案例）。
+
+**(b) 8 項歸屬：**
+
+1. mine — 這是文件/JSON 間數字對不上，屬於 reconciliation 的 contradiction 檢查，是我的職責。
+2. adversary's — 這是要主動製造邊界情境（stale clone）才會浮現的攻擊性案例，屬於 adversary 的探針工作，我只能引用已存在的 probe 記錄。
+3. mine — 這是產出物本身內部不一致（重複計算），屬於我讀 artifact 時要抓的 correctness/inconsistency。
+4. mine — 這是 overclaim（說完成但沒達到驗收條件），正是我 reconciliation 定義裡明講的方向之一。
+5. mine — 這是文件的 omission（該講的沒講清楚何時該做），屬於 docs 維度的 omission。
+6. adversary's — 這是要刻意構造邊界案例（side-branch commit）驗證機制漏洞，屬於主動攻擊性探針，不是我該自己跑的檢查。
+7. mine — CHANGELOG 與 intent 項目數不一致，是文件間的 contradiction，屬於我的對帳範圍。
+8. implementer's — 缺少單元測試是實作交付物本身的缺口，我可以在 `tests` 維度發現並打分/開 finding，但補測試、寫正面 RED 是 implementer 的責任，不是我動手做的事（不過若要精確講「發 finding 抓到它」這件事仍是 mine 的動作——若題意是問「誰該去補這個洞」，答案是 implementer's）。

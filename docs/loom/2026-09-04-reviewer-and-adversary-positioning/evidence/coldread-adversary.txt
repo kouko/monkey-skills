@@ -1,0 +1,11 @@
+**(a)** The adversary attacks executable behavior with re-runnable abuse/boundary/mutation cases to break the change; it never judges design and never reconciles documents against each other — that reconciliation and design judgment belongs to the reviewer.
+
+**(b)**
+1. reviewer's — mismatch between two documents (plan vs review.json); reconciliation is explicitly the reviewer's job, not mine.
+2. mine — a boundary/stale-state condition (a "failing dependency"/wrong-state case) that makes a probe falsely pass; that's exactly the adversarial case class I own.
+3. reviewer's — counting/consistency of artifact records across documents, not an executable attack on behavior.
+4. reviewer's — reconciling the report's claim against the Acceptance line is document-vs-document reconciliation, outside my lane.
+5. reviewer's — judging whether prose adequately specifies when to re-run something is a design/completeness judgment, which I don't make.
+6. mine — a hostile/boundary input (an accepted commit that should be rejected) is a textbook adversarial abuse case.
+7. reviewer's — count mismatch between two documents (CHANGELOG vs intent), pure reconciliation.
+8. implementer's — missing happy-path unit test is a gap in the task's own test coverage, not a boundary/abuse case I'm tasked to hunt.
