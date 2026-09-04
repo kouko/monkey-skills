@@ -9,4 +9,4 @@ loom_checker.py reads this file. Absent key = default. -->
 - standing-docs: waived — DESIGN.md never applies to a plugin repo; PRINCIPLES.md exists and is ratified per change kind (2026-09-03)
 - session-start-baseline: 923fb84a 5278 — measured with `bash loom-code/hooks/session-start </dev/null | python3 -c 'import sys;print(len(sys.stdin.read().split()))'` in an empty git repo, merge-base of the loom 1.0 change (Python str.split — wc disagrees between macOS and GNU) (2026-09-03)
 - interface-surfaces: **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** — manifest default; SKILL.md and hooks are the `skill`/`gate` artifact types, not user interfaces, so skill edits stay engineering (2026-09-03)
-- docs-lint: none — loom docs in this repo are Traditional Chinese for now; see intent 2026-09-03-artifact-language-policy (2026-09-04)
+- docs-lint: none — no lint adopted yet; internal loom docs are English from 2026-09-05 — see intent 2026-09-03-artifact-language-policy (2026-09-05)

@@ -12,6 +12,16 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [1.0.4] — 2026-09-05 — Internal artifacts in English
+
+No code change. Bumped because `capture-intent/SKILL.md` gains one
+language sentence: the intent stays in the user's language, but the
+`PRINCIPLES-interview.md` opening line it asks is now quoted from
+loom-code's English template and translated at run time rather than
+read verbatim from a Chinese line. `write-spec/SKILL.md` gains one
+sentence: internal artifacts are English, and `REQ-<n>` lines follow
+one of the five EARS forms (`docs/loom/2026-09-03-artifact-language-policy/`).
+
 ## [1.0.3] — 2026-09-04 — Station summary: adversary-first scope
 
 No code change. Bumped because `capture-intent/SKILL.md`'s station summary

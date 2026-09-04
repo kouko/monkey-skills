@@ -1,28 +1,28 @@
 # <title>
-originator: <who>            # 人名、"maintenance-loop"、或 map:<id>
+originator: <who>            # a person's name, "maintenance-loop", or map:<id>
 kind: product | engineering
 needs-design: yes | no — <reason>
-map: <map-id>                # 可選
-evidence: [<paths>]          # 可選；write-spec／review 必讀
-status: open                 # open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>；缺＝open
+map: <map-id>                # optional
+evidence: [<paths>]          # optional; write-spec/review must read it
+status: open                 # open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>; absent = open
 
 ## Problem
-<問題與誰受影響，白話。product：禁檔案路徑、函式／類別識別字、腳本檔名>
+<the problem and who it affects, in plain language. product: no file paths, function/class identifiers, or script filenames>
 
 ## Proposed outcome
-<方向與解法形狀>
+<direction and shape of the solution>
 
 ## Acceptance
-1. <做完後我可以…；每條可被盲跑證明>
+1. <what I can do once this is done…; each line provable by a blind run>
 
 ## Constraints
 - <…>
 
 ## Value case
-<可選；product 的 GO/NO-GO 與理由>
+<optional; product's GO/NO-GO and its reasoning>
 
 ## Out of scope
 - <…>
 
 ## Open questions
-- <…>                     # 沒有就寫 `- none`：這一段必填，空的會被 intent.schema 擋
+- <…>                     # write `- none` when there are none: this section is required, and an empty one is blocked by intent.schema
