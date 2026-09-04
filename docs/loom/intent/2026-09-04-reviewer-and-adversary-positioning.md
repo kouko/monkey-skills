@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改兩份 agent 契約檔各一段與 review 站一句；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-04-checker-seams/review.json, docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py, docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/research-reviewer-adversary-roles.md, docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/research-role-separation-ablations.md]
-status: confirmed 2026-09-04
+status: closed 2026-09-04 — PR #787
 
 ## Problem
 `loom-code/agents/reviewer.md` 與 `agents/adversary.md` 都有角色開頭句（judge／attacker）與機制（維度表、探針格式），但沒有一句說「你負責哪一種真相」，兩個角色的邊界只能從維度名自己歸納。2026-09-04-checker-seams 的實測：對抗者抓的 4 條全是可執行的邊界（stale trunk、路徑正規化、第一父系鏈），讀者抓的 6 條裡 4 條寫不成測試（文字誇大、流程遺漏、報告與 Acceptance 不一致）——分工明確存在，契約沒寫。另一個缺口是單向流動：讀者抓到的可執行 finding（`--is-ancestor` ≠ 第一父系鏈）只變成修正 commit＋單元測試，直到 branch-end 才由對抗者順手編成探針，那是臨時決定不是站規則。
