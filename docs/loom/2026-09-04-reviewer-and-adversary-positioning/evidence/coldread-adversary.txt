@@ -22,3 +22,24 @@
 6. **mine** — a hostile/edge-case input (a specific commit topology) that breaks an assumed invariant; a boundary case an adversary should have written and run.
 7. **reviewer's** — CHANGELOG-vs-intent count mismatch is reconciling two documents against each other.
 8. **implementer's** — the adversary's job is abuse/boundary cases, not the happy path; missing happy-path unit tests falls on whoever wrote the function (TDD/engineering baseline), not on the adversary's negative-testing remit.
+
+===== TRIAL 3 (sha 571f24f2, after fix round 2 — commits 9c47fb58, bb7d3670) =====
+(a) 我（adversary）擁有「用可重跑的探針主動攻擊、證明變更會壞掉」——邊界／敵意輸入、mutation/fuzz、規格的被允許但不該允許的行為；design 是否合理、跨文件計數是否一致，屬於另一個角色（reviewer）的判斷範圍，不是我的。
+
+(b) 逐條分類：
+
+1. **plan says 23 records, review.json has 126** → **the other role's（reviewer）**——跨文件計數比對，文件明講「a cross-document count is the reviewer's」。
+
+2. **stale origin/main short-circuits the candidate loop — probe passes on a fresh clone only** → **mine（adversary）**——這是邊界/失敗依賴類的攻擊案例（陳舊狀態導致探針失效），屬於「forgotten state」「a failing dependency」的攻擊範疇。
+
+3. **./probe.py and probe.py counted as two artifacts** → **mine（adversary）**——文件明講「a probe's own artifact path (its spelling or count) is yours」。
+
+4. **report says 'works' but Acceptance 6 requires byte-identical files** → **the implementer's**——這是驗收條件沒被滿足/驗證不足的缺口，不是攻擊案例也不是跨文件計數，是被建造出來的東西本身有落差（blind-runner 或 implementer 該抓的驗收缺口）。
+
+5. **graduation paragraph never says when to re-run branch-end** → **the implementer's**——這是文件/規格本身遺漏的說明，屬於被構建物的缺口，不是攻擊也不是設計判斷。
+
+6. **merge-base --is-ancestor accepts a side-branch commit that first-parent walk rejects** → **mine（adversary）**——這是對變更邏輯的邊界/敵意輸入攻擊（找出一個允許但不該允許的行為），屬於紅隊「name a behaviour it permits that the author plainly did not want」。
+
+7. **CHANGELOG lists 7 items, intent has 8** → **the other role's（reviewer）**——跨文件計數比對，同第1條。
+
+8. **the new function's happy path has no unit test** → **the implementer's**——這是缺測試覆蓋的落差，不是 adversary 的攻擊案例（adversary 是寫邊界/敵意案例，不是補 happy-path 測試），也不是設計判斷，是建造缺口。
