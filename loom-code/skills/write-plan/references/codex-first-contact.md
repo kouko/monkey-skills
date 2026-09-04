@@ -69,6 +69,10 @@ lines. A `never` line is only "no evidence of a firing yet", never proof of
 distrust — the ledger cannot tell a never-approved hook from an approved one
 Codex simply hasn't triggered.
 
+A `fired` line proves the shim ran and found its target, not that the check
+it delegates to passed; a check that should have blocked and did not is
+evidence the cwd or the copy is broken, never proof the gate is dead.
+
 To turn a `never` line into a real answer, issue the loom checker's own
 probe yourself, as an ordinary tool call, not through the scaffold:
 
@@ -113,14 +117,24 @@ folders" boundary `/hooks` already draws.
 
 A repo that ships its own Codex hooks (not loom's) should have each one
 record its own firing rather than staying invisible to `--trusted`. The
-shape is a three-line thin shim in front of the repo's existing hook:
+shape is a thin shim in front of the repo's existing hook:
 
 ```bash
+HERE="$(cd "$(dirname "$0")" && pwd)"
+TARGET="$HERE/../../.claude/hooks/<same name>"
 INPUT=$(cat)
-printf '%s' "$INPUT" | python3 .codex/hooks/loom_record_fire.py "$0" 2>/dev/null || true
-printf '%s' "$INPUT" | exec .claude/hooks/<same name>
+if [ ! -x "$TARGET" ]; then
+  echo "BLOCK: <this shim> cannot find its target $TARGET" >&2
+  exit 2
+fi
+printf '%s' "$INPUT" | python3 "$HERE/loom_record_fire.py" "$0" 2>/dev/null || true
+printf '%s' "$INPUT" | exec "$TARGET"
 ```
 
-Read stdin once, hand it to the shared recorder (best-effort — a failure
-there must never block the hook it is wrapping), then hand the same stdin
-on to the real hook by `exec`.
+Resolve the target from `$0`'s own directory, never the caller's cwd — Codex'
+payload `cwd` is not always the repo root, and a cwd-relative `exec` crashes
+there. Read stdin once, confirm the target exists (a missing target `BLOCK`s
+without ever recording — a definition that cannot run must never read as
+`fired`), hand the payload to the shared recorder (best-effort — a failure
+there must never block the hook it is wrapping), then hand the same stdin on
+to the real hook by `exec`.

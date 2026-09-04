@@ -81,23 +81,23 @@ def repo(tmp_path: Path) -> Path:
 
 
 def test_shim_invoked_from_subdirectory_crashes_but_still_records_fired(repo):
-    """xfail(strict=True) -- real hole in the shipped shim, scratch-repo
-    reproduction only (never fires against REPO).
+    """Fixed (branch-end-02) -- was a real hole, scratch-repo reproduction
+    only (never fires against REPO).
 
     Both thin shims (``exec .claude/hooks/<name>`` and
-    ``exec python3 .codex/hooks/loom_checker.py ...``) resolve their target
-    relative to the PROCESS cwd, not to ``$0``'s own directory or the
-    payload's ``cwd`` field. plan.md `## Risks` #4 already names "cwd
-    assumption == repo root; if Codex changes cwd, both break" as a known
-    risk invisible to the static self-test probe -- but it does not name
-    this half: the recorder line is written BEFORE the ``exec``, so a
-    crash from a non-root cwd still leaves a ``fired`` line in the ledger.
-    ``--trusted`` then reports this definition ``fired`` (exit 0) forever
-    after, even though every real invocation from that cwd never once
-    produced a ``BLOCK push.`` verdict. The station's own completion
-    criterion (codex-first-contact.md line 65: "Exit 0 means every
-    definition has fired at least once -- continue to step 1") is met by
-    a definition that has never actually judged a push.
+    ``exec python3 .codex/hooks/loom_checker.py ...``) used to resolve
+    their target relative to the PROCESS cwd, not to ``$0``'s own
+    directory or the payload's ``cwd`` field. plan.md `## Risks` #4 already
+    named "cwd assumption == repo root; if Codex changes cwd, both break"
+    as a known risk invisible to the static self-test probe -- but it did
+    not name this half: the recorder line was written BEFORE the ``exec``,
+    so a crash from a non-root cwd still left a ``fired`` line in the
+    ledger, and ``--trusted`` reported the definition ``fired`` (exit 0)
+    forever after even though no real invocation from that cwd ever
+    produced a ``BLOCK push.`` verdict. Both shims now resolve their
+    target from their own location and record only once the target is
+    known to exist -- a crashed/missing target is never credited as a
+    firing.
     """
     subdir = repo / "sub"
     subdir.mkdir()
@@ -121,15 +121,11 @@ def test_shim_invoked_from_subdirectory_crashes_but_still_records_fired(repo):
             f"PreToolUse Bash {SHIM_COMMAND}: fired" in trusted_proc.stdout + trusted_proc.stderr
         )
 
-    if crashed_not_blocked and reported_fired:
-        pytest.xfail(
-            "cwd != repo root: shim crashed without a BLOCK verdict, yet "
-            "--trusted reports this definition fired -- a false 'safe to "
-            "continue' signal (see finding in review.json for this branch)"
-        )
-    # If this ever fails (no xfail triggered), the bug is fixed -- flip
-    # this to a plain assertion instead of xfail(strict=True) tripping red.
-    assert not (crashed_not_blocked and reported_fired)
+    assert not (crashed_not_blocked and reported_fired), (
+        "cwd != repo root: shim crashed without a BLOCK verdict, yet "
+        "--trusted reports this definition fired -- a false 'safe to "
+        "continue' signal"
+    )
 
 
 # --- (2) forged/malformed ledger lines never grant false trust ---

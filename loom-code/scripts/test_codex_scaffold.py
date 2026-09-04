@@ -122,7 +122,10 @@ def test_version_stamp_lives_inside_the_shim(repo):
     scaffold(repo)
     shim = (repo / ".codex" / "hooks" / "loom-checker").read_text(encoding="utf-8")
     assert f"# loom-checker {version()}" in shim
-    assert "python3 .codex/hooks/loom_checker.py push --hook" in shim
+    # branch-end-02: the checker target is resolved from the shim's own
+    # location ($HERE), not a cwd-relative literal path.
+    assert 'TARGET="$HERE/loom_checker.py"' in shim
+    assert 'exec python3 "$TARGET" push --hook' in shim
 
 
 def test_the_checker_copy_ships_its_dependencies(repo):
@@ -305,6 +308,67 @@ def test_the_shim_leaves_a_marker_when_it_actually_runs(repo):
     assert (repo / MARKER).is_file(), "the shim must record that it fired"
     lines = [line for line in (repo / MARKER).read_text(encoding="utf-8").splitlines() if line]
     assert lines[-1] == "PreToolUse\t.codex/hooks/loom-checker\tBash"
+
+
+def test_shim_fired_from_a_subdirectory_still_blocks_and_records_once(repo):
+    """branch-end-02 regression: both halves of the shim resolve their
+    target relative to cwd. From a subdirectory, `INPUT=$(cat)` still
+    works, but `python3 .codex/hooks/loom_checker.py` cannot find the
+    checker and the shim used to crash there without ever recording -- or
+    (the fatal half) record BEFORE that crash, so `--trusted` reports
+    `fired` for a definition that never delivered a verdict. Firing from a
+    subdirectory of the adopting repo must still deliver `BLOCK push.` and
+    append exactly one genuine ledger line."""
+    git_repo(repo)
+    assert scaffold(repo).returncode == 0
+    subdir = repo / "sub"
+    subdir.mkdir()
+    shim = repo / ".codex" / "hooks" / "loom-checker"
+    payload = {
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "git push origin HEAD"},
+        "cwd": str(repo),
+        "permission_mode": "default",
+    }
+    proc = subprocess.run(
+        [str(shim)], cwd=str(subdir), input=json.dumps(payload),
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.stderr.lstrip().startswith("BLOCK push."), (
+        f"a non-root cwd must still reach a real verdict: {proc.stdout + proc.stderr}"
+    )
+    assert proc.returncode == 2
+    assert (repo / MARKER).is_file(), "a real verdict must record its own firing"
+    lines = [line for line in (repo / MARKER).read_text(encoding="utf-8").splitlines() if line]
+    assert len(lines) == 1, f"expected exactly one ledger line, got {lines!r}"
+    assert lines[0] == "PreToolUse\t.codex/hooks/loom-checker\tBash"
+
+
+def test_shim_records_nothing_and_blocks_when_its_checker_copy_is_missing(repo):
+    """branch-end-02 regression, the other half: when the delegated target
+    genuinely cannot be found (a corrupted clone, a checker copy someone
+    deleted), the shim must exit non-zero WITHOUT writing a ledger line —
+    recording success for a target that does not exist is the exact false
+    'safe to continue' signal the finding named."""
+    git_repo(repo)
+    assert scaffold(repo).returncode == 0
+    (repo / ".codex" / "hooks" / "loom_checker.py").unlink()
+    shim = repo / ".codex" / "hooks" / "loom-checker"
+    payload = {
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "git push origin HEAD"},
+        "cwd": str(repo),
+        "permission_mode": "default",
+    }
+    proc = subprocess.run(
+        [str(shim)], cwd=str(repo), input=json.dumps(payload),
+        capture_output=True, text=True, timeout=60,
+    )
+    assert proc.returncode != 0
+    assert "cannot find its target" in proc.stderr
+    assert not (repo / MARKER).exists(), "a missing target must never be recorded as fired"
 
 
 def test_trusted_reports_whether_the_hook_ever_fired(repo):

@@ -140,17 +140,29 @@ SHIM_TEMPLATE = """#!/usr/bin/env bash
 # The version stamp lives here, never in .codex/hooks.json: Codex binds hook
 # trust to the definition, so the command string must never change.
 set -euo pipefail
+# Resolve the checker relative to THIS SHIM's own location, never the
+# caller's cwd. Codex' payload carries a "cwd" field that is not always the
+# repo root (a worktree, a nested skill folder); a cwd-relative target would
+# crash there while an earlier version of this shim still recorded (below)
+# that the definition fired — a false "safe to continue" signal.
+HERE="$(cd "$(dirname "$0")" && pwd)"
+TARGET="$HERE/{checker_name}"
 # Read stdin once — the checker must see the same payload the recorder saw,
 # and a pipe can only be drained once.
 INPUT=$(cat)
-# Record that Codex' hook engine really invoked this hook. Nothing else can
-# observe that: an untrusted hook is skipped in silence. Never fatal — a
-# broken recorder must never block the checker's own verdict. The recorder
-# itself reads LOOM_SELF_TEST and skips writing under it — the one caller
-# here that is NOT Codex' hook engine is codex_scaffold.py --self-test,
-# which spawns this shim itself.
-printf '%s' "$INPUT" | python3 "$(dirname "$0")/loom_record_fire.py" "$0" >/dev/null 2>&1 || true
-printf '%s' "$INPUT" | exec python3 {checker} push --hook
+if [ ! -f "$TARGET" ]; then
+  echo "BLOCK: {shim_command} cannot find its target $TARGET" >&2
+  exit 2
+fi
+# Record that Codex' hook engine really invoked this hook — only now that
+# the target is known to exist, so a crash never gets recorded as a firing.
+# Nothing else can observe a real firing: an untrusted hook is skipped in
+# silence. Never fatal on its own — a broken recorder must never block the
+# checker's own verdict. The recorder itself reads LOOM_SELF_TEST and skips
+# writing under it — the one caller here that is NOT Codex' hook engine is
+# codex_scaffold.py --self-test, which spawns this shim itself.
+printf '%s' "$INPUT" | python3 "$HERE/loom_record_fire.py" "$0" >/dev/null 2>&1 || true
+printf '%s' "$INPUT" | exec python3 "$TARGET" push --hook
 """
 
 PROBE_PAYLOAD = {
@@ -271,7 +283,11 @@ def scaffold(repo: Path) -> int:
     record(
         _write(
             shim,
-            SHIM_TEMPLATE.format(stamp=stamp_line(version), checker=CHECKER_COPY),
+            SHIM_TEMPLATE.format(
+                stamp=stamp_line(version),
+                checker_name=Path(CHECKER_COPY).name,
+                shim_command=SHIM_COMMAND,
+            ),
             executable=True,
         ),
         SHIM_COMMAND,

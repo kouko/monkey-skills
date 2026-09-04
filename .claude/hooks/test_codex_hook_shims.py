@@ -121,3 +121,38 @@ def test_validate_shim_records_a_firing_the_original_does_not(tmp_path):
     ledger = scratch / ".codex" / "hooks" / ".loom-hook-fired"
     assert ledger.is_file(), "the shim must record its own firing"
     assert "PostToolUse" in ledger.read_text(encoding="utf-8")
+
+
+# --- branch-end-02 regression: a non-root cwd must not crash-but-record ---
+
+
+def test_validate_shim_from_a_non_root_cwd_still_matches_and_records_once(tmp_path):
+    """The shim's ``exec .claude/hooks/<name>`` used to resolve relative to
+    the caller's cwd. Firing it from a subdirectory of the scratch repo
+    must reach the same verdict as the ``.claude/hooks/`` original (fired
+    from the repo root) and append exactly one ledger line — not crash
+    silently while an earlier version still recorded "fired"."""
+    scratch = _scratch_repo(tmp_path)
+    subdir = scratch / "sub"
+    subdir.mkdir()
+    skill_dir = scratch / "skills" / "foo"
+    nested = skill_dir / "assets" / "scripts"
+    nested.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("---\nname: foo\n---\n", encoding="utf-8")
+    (nested / "bad.py").write_text("# nested\n", encoding="utf-8")
+    payload = _post_write_payload(scratch, str(skill_dir / "assets" / "SKILL.md"))
+
+    claude_original = _fire(
+        scratch / ".claude" / "hooks" / "validate-skill-folder-structure.sh", payload, cwd=scratch
+    )
+    codex_from_subdir = _fire(
+        scratch / ".codex" / "hooks" / "validate-skill-folder-structure.sh", payload, cwd=subdir
+    )
+
+    assert codex_from_subdir.returncode == claude_original.returncode
+    assert codex_from_subdir.stdout == claude_original.stdout
+    assert codex_from_subdir.stderr == claude_original.stderr
+
+    ledger = scratch / ".codex" / "hooks" / ".loom-hook-fired"
+    lines = [line for line in ledger.read_text(encoding="utf-8").splitlines() if line]
+    assert len(lines) == 1, f"expected exactly one ledger line, got {lines!r}"
