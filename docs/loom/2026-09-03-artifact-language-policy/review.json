@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+  "reviewed_sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -775,6 +775,50 @@
       "notes": [
         "Helper checks the relationship; self-test discriminates; 182 passed; only the test file and review.json moved."
       ]
+    },
+    {
+      "round": 11,
+      "scope": "branch-end",
+      "reviewer": "rev-close3-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Delta is the status line only (1 insertion, 1 deletion); PR #791 matches."
+      ]
+    },
+    {
+      "round": 11,
+      "scope": "branch-end",
+      "reviewer": "rev-close3-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A — no measured number in the delta",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "One-line status change matching the repo's close convention; PR matches; the close asks the user nothing."
+      ]
     }
   ],
   "probes": [
@@ -1023,6 +1067,46 @@
       "scope": "branch-end",
       "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
       "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
     }
@@ -1515,6 +1599,22 @@
       "started": "2026-09-05T10:22:00+08:00",
       "fresh_context": false,
       "note": "resumed; confirms the loom-design test re-pin"
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close3-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T10:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close3-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T10:55:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
@@ -1528,6 +1628,7 @@
     "First close attempt (79016e99, close round PASS from both readers, CI green) was reset: re-pinning the probes at the close commit showed the branch-end scope probe calling `intake write-plan`, which blocks by design once the intent is closed. The probe was fixed before the close commit is re-created so the close-commit shape holds.",
     "branch-end rounds 7–8 (probe fix for the closed-intent intake block): PASS from both readers at 37c7df69; reviewed_sha there.",
     "Second close attempt reset: CI's separate loom-design pytest job (loom-design/scripts/, not in the KICKOFF package-tests command) failed on test_capture_intent_contract.py::test_ui_flow_six_sentence_present, which pinned the pre-change Chinese opening line. Re-pinned to the English source sentence; the KICKOFF package-tests gap is a follow-up (maintain).",
-    "branch-end rounds 9–10 (loom-design capture-intent contract test re-pinned to the English opening line with an affirmative same-passage matcher): PASS from both readers at cf18a19e."
+    "branch-end rounds 9–10 (loom-design capture-intent contract test re-pinned to the English opening line with an affirmative same-passage matcher): PASS from both readers at cf18a19e.",
+    "close-intent round, third attempt (two fresh readers): status line only, PR #791; every CI job's check was rehearsed locally at the close commit before this round (loom-design suite included). The two earlier close attempts (79016e99, 6deea171) and their readers stay in dispatch[] for the record."
   ]
 }
