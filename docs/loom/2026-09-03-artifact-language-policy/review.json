@@ -439,6 +439,23 @@
       "model": "sonnet",
       "started": "2026-09-05T04:55:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "impl-fix-be-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T05:15:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T05:15:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; renames its own branch-end probes to the three-part shape"
     }
   ],
   "second_vendor": "codex",
