@@ -414,6 +414,15 @@
       "model": "sonnet",
       "started": "2026-09-05T04:20:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T04:40:00+08:00",
+      "fresh_context": false,
+      "note": "two U+3000 separators removed from plan.md template and its Codex mirror; stale probe docstring corrected (branch-end adversary finding)"
     }
   ],
   "second_vendor": "codex",
