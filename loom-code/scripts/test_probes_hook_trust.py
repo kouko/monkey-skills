@@ -349,16 +349,17 @@ def test_legacy_zero_byte_marker_only_credits_the_loom_definition(repo):
 def test_codex_hooks_json_commands_unchanged_from_main():
     """Guard, must stay GREEN: changing any ``command`` string in
     ``.codex/hooks.json`` invalidates every user's existing Codex trust —
-    this whole change is not allowed to touch it."""
-    main_text = subprocess.run(
-        ["git", "show", "main:.codex/hooks.json"], cwd=str(REPO),
-        capture_output=True, text=True, check=True,
-    ).stdout
-    main_commands = [
-        hook["command"]
-        for entry in json.loads(main_text)["hooks"].values()
-        for block in entry
-        for hook in block["hooks"]
+    this whole change is not allowed to touch it.
+
+    The command strings as they stand on main (2026-09-04, before this
+    change) are pinned here, because CI checks out the PR head alone and
+    has no local ``main`` ref (branch-end CI red on PR #790:
+    ``git show main:...`` exit 128). When a ``main`` or ``origin/main``
+    ref does resolve, the live comparison runs as well."""
+    pinned_main_commands = [
+        ".codex/hooks/loom-checker",
+        ".codex/hooks/validate-skill-folder-structure.sh",
+        ".codex/hooks/remind-memory-mirror.sh",
     ]
     current = json.loads(CODEX_HOOKS_JSON.read_text(encoding="utf-8"))
     current_commands = [
@@ -367,7 +368,26 @@ def test_codex_hooks_json_commands_unchanged_from_main():
         for block in entry
         for hook in block["hooks"]
     ]
-    assert current_commands == main_commands
+    assert current_commands == pinned_main_commands
+    for ref in ("main", "origin/main"):
+        probe = subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", ref], cwd=str(REPO),
+            capture_output=True, text=True,
+        )
+        if probe.returncode != 0:
+            continue
+        main_text = subprocess.run(
+            ["git", "show", f"{ref}:.codex/hooks.json"], cwd=str(REPO),
+            capture_output=True, text=True, check=True,
+        ).stdout
+        main_commands = [
+            hook["command"]
+            for entry in json.loads(main_text)["hooks"].values()
+            for block in entry
+            for hook in block["hooks"]
+        ]
+        assert current_commands == main_commands, ref
+        break
 
 
 # --- (7) --list-rules line count unchanged from main (guard) ---
