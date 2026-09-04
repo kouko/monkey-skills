@@ -635,6 +635,24 @@
       "started": "2026-09-05T05:50:00+08:00",
       "fresh_context": false,
       "note": "resumed; updates its own report for branch-end-03 and branch-end-04"
+    },
+    {
+      "task": "branch-end round 2",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T06:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "branch-end round 2",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T06:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
     }
   ],
   "second_vendor": "codex",
