@@ -27,7 +27,7 @@ status: confirmed 2026-09-04
 3. 乾淨 clone 的 main 上對 `docs/loom/intent/2026-09-02-simple-loom-flow.md` 跑 `loom_checker.py intent`：exit 0；分支上把 needs-design 改掉而 commit 訊息沒帶那行：照樣被擋。
 4. review.json 同一探針檔被引用 N 筆時 `push` 只執行它一次（以執行次數證明）；`--list-rules` 對 `push.probes-adversarial` 的說明一句講清計數單位；探針檔失敗時所有引用它的紀錄都不可用、錯誤訊息只出現一次；既有 2026-09-03-loom-post-merge-seams 的紀錄在新規則下結果與現在一致。
 5. `docs/loom/KICKOFF-DEFAULTS.md` 的 `second-vendor` 行是 `ask`；本 change 自己的 review.json 記了 `second_vendor` 的答案並過 `push.second-vendor-honoured`。
-6. `.codex/hooks/loom_checker.py` 與 `loom-code/scripts/loom_checker.py` 逐位元相同（既有 codex-manifest-drift CI 檢查綠）。
+6. `.codex/hooks/loom_checker.py` 與 `loom-code/scripts/loom_checker.py` 除了 scaffold 寫入的那一行版本戳之外逐位元相同，且版本戳等於 loom-code 的 plugin 版本（user-decided 2026-09-04 決策點③選 (a)：留版本戳、改本條文字；原文「逐位元相同」）。
 7. ship 站 SKILL.md memory 步驟有那一句，字數帽內；站摘要表同步測試綠。
 8. `loom_checker.py --list-rules` 規則數與 main 相同（27）；整包測試綠。
 9. build 站 SKILL.md 的派工順序段說：完整車道中 檔 路徑型別為 `code` 或 `gate` 的 task 先派對抗者；小車道不先派；字數帽內；站摘要表同步測試綠。
