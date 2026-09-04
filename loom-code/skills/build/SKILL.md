@@ -99,13 +99,24 @@ ambiguity between these two readings; the plan's grouping wins.)
 
 ## 2. The dispatch prompt
 
-**A task whose 檔 paths map to the `gate` artifact type is adversary-first.**
-When a plan task's files fall under `hooks/**`, `scripts/check_*`, or the
-checker itself, dispatch `loom-code:adversary` before the implementer: it
-writes executable probes against the not-yet-written behaviour and commits
-them, with a dispatch record written before that dispatch too. The
-implementer's own RED is one of those probes, not a test it invents itself;
-its dispatch record still goes in first, same as any other task.
+**In the full lane, a task whose 檔 paths map to the `code` or `gate`
+artifact type is adversary-first.** That covers `hooks/**`,
+`scripts/check_*`, the checker itself, and any other manifest-typed
+`code`: dispatch `loom-code:adversary` before the implementer: it writes
+executable probes against the not-yet-written behaviour and commits them,
+with a dispatch record written before that dispatch too. The
+implementer's own RED is one of those probes, not a test it invents
+itself; its dispatch record still goes in first, same as any other task.
+Independent adversarial tests catch false passes the implementing
+agent's own tests miss (measured: an ICML 2026 adversarial-test-synthesis
+study rejects about one in five previously passing patches), and
+up-front probes also verify the plan's stated current-state facts before
+code is written — this change's own W0-01 probes caught two wrong plan
+facts that way. The **small lane** (the checker's `change_lane` recompute
+— a plan whose tasks touch only tests, docs, or CI config) skips this:
+the implementer goes first as usual, and the adversary attacks at the
+checkpoint instead, scoping the up-front cost to the lane that carries
+the risk.
 
 Dispatch `loom-code:implementer` (contract: `agents/implementer.md`). Pass
 **paths, never file contents** — the implementer reads them itself:
