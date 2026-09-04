@@ -421,6 +421,30 @@
       "model": "sonnet",
       "started": "2026-09-04T09:20:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:40:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex"
