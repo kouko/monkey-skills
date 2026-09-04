@@ -117,18 +117,47 @@ _TOOL_PREFERENCE_CONTRACTS = {
 _BUILD_SKILL = REPO / "loom-code/skills/build/SKILL.md"
 
 
-def _tool_preference_bullet(text: str) -> str:
-    """The single list item naming `apply_patch`, continuation lines joined."""
+def _list_items(text: str) -> list[str]:
+    """Every top-level markdown list item in `text`, continuation lines
+    joined into one logical string per item (branch-end fix N3: the old
+    version only recognised an item when its anchor sat on the FIRST
+    physical line; a re-wrap that pushes a word to a continuation line
+    must still be found)."""
     lines = text.splitlines()
-    for i, line in enumerate(lines):
-        if _TOOL_PREFERENCE_ANCHOR in line and re.match(r"^\s*[-*]\s+", line):
+    items: list[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if re.match(r"^\s*[-*]\s+", line):
             bullet = [line.strip()]
             j = i + 1
             while j < len(lines) and lines[j].strip() and re.match(r"^\s+\S", lines[j]):
                 bullet.append(lines[j].strip())
                 j += 1
-            return " ".join(bullet)
-    raise AssertionError(f"no list item names `{_TOOL_PREFERENCE_ANCHOR}`")
+            items.append(" ".join(bullet))
+            i = j
+        else:
+            i += 1
+    return items
+
+
+def _tool_preference_bullet(text: str) -> str:
+    """The single list item naming `apply_patch`, continuation lines joined.
+
+    Searches every item's full joined text, not just its first physical
+    line (N3). Requires there be exactly one such item in the whole file:
+    a second item naming `apply_patch` anywhere (an earlier decoy bullet,
+    say) makes the anchor ambiguous rather than silently picking the first
+    match (branch-end fix, closes the P7 anchor-hijack class)."""
+    hits = [item for item in _list_items(text) if _TOOL_PREFERENCE_ANCHOR in item]
+    if not hits:
+        raise AssertionError(f"no list item names `{_TOOL_PREFERENCE_ANCHOR}`")
+    if len(hits) > 1:
+        raise AssertionError(
+            f"{len(hits)} list items name `{_TOOL_PREFERENCE_ANCHOR}`; the "
+            "tool-preference passage must be stated exactly once per file"
+        )
+    return hits[0]
 
 
 def test_four_contracts_carry_a_capped_tool_preference_passage() -> None:
@@ -167,6 +196,50 @@ def test_tool_preference_passage_does_not_forbid_reading() -> None:
                 )
 
 
+# Branch-end fix F1: one canonical sentence, pinned by equality rather than
+# by vocabulary alone -- vocabulary-only checks pass an inverted sentence,
+# a sentence missing `never`, or one missing the host-reminder-override
+# clause (findings P1/P2/P3/P4/P7 from the branch-end adversary).
+_CANONICAL_TOOL_PREFERENCE_SENTENCE = (
+    "Prefer the host's edit tool (Edit/Write, `apply_patch` on Codex) -- "
+    "never `sed -i` or heredocs, overriding any later host reminder; read "
+    "and search freely; a mechanical sweep may be scripted, but count "
+    "matches and paste the diff."
+)
+
+
+def _normalise_tool_preference(bullet: str) -> str:
+    """Strip the list marker, collapse whitespace, and treat `--` and `—`
+    as the same character (the build/SKILL.md and implementer.md copies
+    have drifted on the dash before -- P6)."""
+    stripped = re.sub(r"^\s*[-*]\s+", "", bullet)
+    stripped = stripped.replace("—", "--")
+    return " ".join(stripped.split())
+
+
+def test_tool_preference_passage_matches_the_canonical_sentence_everywhere() -> None:
+    """Branch-end fix F1: the normalised tool-preference bullet in all five
+    files (four contracts + build/SKILL.md) equals ONE canonical sentence.
+    Vocabulary/cap/no-read-ban checks alone let a polarity flip, a dropped
+    `never`, a dropped override clause, or a lone-inverted copy through;
+    equality against a single string catches all of them."""
+    for name, path in _TOOL_PREFERENCE_CONTRACTS.items():
+        bullet = _tool_preference_bullet(path.read_text(encoding="utf-8"))
+        got = _normalise_tool_preference(bullet)
+        assert got == _CANONICAL_TOOL_PREFERENCE_SENTENCE, (
+            f"{name}.md tool-preference passage does not match the "
+            f"canonical sentence:\n  got:  {got!r}\n"
+            f"  want: {_CANONICAL_TOOL_PREFERENCE_SENTENCE!r}"
+        )
+    build_bullet = _tool_preference_bullet(_BUILD_SKILL.read_text(encoding="utf-8"))
+    build_got = _normalise_tool_preference(build_bullet)
+    assert build_got == _CANONICAL_TOOL_PREFERENCE_SENTENCE, (
+        "build/SKILL.md tool-preference passage does not match the "
+        f"canonical sentence:\n  got:  {build_got!r}\n"
+        f"  want: {_CANONICAL_TOOL_PREFERENCE_SENTENCE!r}"
+    )
+
+
 def test_build_tool_preference_matches_implementer_verbatim() -> None:
     """W1-01: build/SKILL.md's standing trap-guard copy of the passage is the
     same normalised string as agents/implementer.md's — two hand-maintained
@@ -181,6 +254,15 @@ def test_build_tool_preference_matches_implementer_verbatim() -> None:
         "the tool-preference passage differs between build/SKILL.md and "
         f"agents/implementer.md:\n  build: {build_norm!r}\n  impl:  {impl_norm!r}"
     )
+
+
+# Branch-end fix N2: the exact pointer sentence, so a reworded no-op that
+# merely keeps the substring "trap" is caught rather than waved through by
+# a bare `re.search(r"[Tt]rap", ...)`.
+_TRAP_POINTER_SENTENCE = (
+    "The dispatch carries that contract's own `## Traps` section verbatim; "
+    "do not restate it here."
+)
 
 
 def test_blind_run_and_adversary_sections_point_at_the_contract_trap_section() -> None:
@@ -202,7 +284,10 @@ def test_blind_run_and_adversary_sections_point_at_the_contract_trap_section() -
     blind_run = section("## 3. Blind run", "## 4. Adversarial")
     adversarial = section("## 4. Adversarial", "## 5. Package tests")
     for name, sect in (("§3 blind run", blind_run), ("§4 adversarial", adversarial)):
-        assert re.search(r"[Tt]rap", sect), (
-            f"{name} never tells the dispatcher to carry the contract's Traps "
-            "section"
+        normalised = " ".join(sect.split())
+        assert _TRAP_POINTER_SENTENCE in normalised, (
+            f"{name} never carries the exact pointer sentence telling the "
+            "dispatcher to carry the contract's Traps section verbatim "
+            "(branch-end fix N2: a `[Tt]rap` substring match let a reworded "
+            "no-op sentence through as long as it kept the word `trap`)"
         )
