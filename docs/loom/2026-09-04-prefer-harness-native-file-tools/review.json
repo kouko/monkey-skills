@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "8f38c122b2497ccc4dc41f5fbcf8142f8a56809e",
+  "reviewed_sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -78,6 +78,44 @@
       "notes": [
         "Verified: five copies byte-identical (37 words); reviewer.md body 1300/1300 and implementer.md 900/900, both passing at cap; --list-rules unchanged; 59 targeted tests passed. Cold-read trial read as evidence, not re-run."
       ]
+    },
+    {
+      "reviewer": "rev-be-codex-tools",
+      "vendor": "openai",
+      "model": "gpt-5",
+      "lens": "skill",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
+      "nit_confirmation": "The nit batch fixes my stale 1299/1300 figure by recording 1300/1300 and the intervening fix round; nothing else changed in substance, and both graduated probes are byte copies except for the required REPO parent-depth adjustment.",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS",
+        "incorrect-fact": "PASS",
+        "cross-task-coherence": "PASS",
+        "omission": "PASS"
+      },
+      "findings": []
+    },
+    {
+      "reviewer": "rev-be-sonnet-tools",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
+      "nit_confirmation": "Both round-1 findings fixed, nothing else changed in substance: probes[] carries 5 real entries (re-run: 44 passed); scope/vendors accurate; graduated files byte-identical except parents[5]->[2]; package 1231 passed.",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS — probes re-run green, package 1231, graduated probes 44",
+        "incorrect-fact": "PASS",
+        "cross-task-coherence": "PASS — ship-graduate matches plan Boundary; decision point 3 recorded",
+        "omission": "PASS"
+      },
+      "findings": []
     }
   ],
   "probes": [
@@ -118,6 +156,38 @@
       "scope": "branch-end",
       "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py -q -k 'p1 or p2 or p3 or p4'",
       "sha": "8f38c122b2497ccc4dc41f5fbcf8142f8a56809e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference.py -q",
+      "sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py -q",
+      "sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py -q -k 'p1 or p2 or p3 or p4'",
+      "sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py"
     }
