@@ -108,27 +108,22 @@ def test_abuse_semicolon_chain_evades_the_sentence_count_but_not_the_word_cap() 
     # five independent claims, one counted sentence: the cap does not see them.
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "REPRODUCED: a sentence that ends `...\"` (period immediately followed "
-    "by a closing quote, then whitespace) is not split -- the regex "
-    "`(?<=[.!?])\\s+` lookbehind sees the quote character, not the period, "
-    "so two sentences are silently merged into one. A `You own` paragraph "
-    "editor who happens to end a sentence on a quoted word can add extra "
-    "sentences that the SENTENCE_CAP check never counts."
-))
-def test_abuse_period_before_closing_quote_is_not_recognised_as_terminator() -> None:
+def test_abuse_period_before_closing_quote_is_recognised_as_terminator() -> None:
+    """FIXED (branch-end-01): a sentence that ends `..."` (a terminator
+    immediately followed by a closing quote, then whitespace) now splits
+    -- the split rule allows one optional closing quote/bracket character
+    after the terminator class, so the quote stays attached to the
+    sentence it closes instead of hiding the terminator from the
+    lookbehind."""
     para = 'He said "it is done." Then left the room. Really.'
     sentences = helper_mod._sentences(para)
     assert sentences == ['He said "it is done."', "Then left the room.", "Really."]
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "REPRODUCED: a unicode ellipsis `…` is not in the terminator class "
-    "`[.!?]`, so a sentence ending in `…` is merged with the sentence that "
-    "follows it -- the same undercounting failure mode as the quote case "
-    "above, via a different character."
-))
-def test_abuse_unicode_ellipsis_is_not_recognised_as_terminator() -> None:
+def test_abuse_unicode_ellipsis_is_recognised_as_terminator() -> None:
+    """FIXED (branch-end-01): a unicode ellipsis `…` is now in the
+    terminator class alongside `.!?`, so a sentence ending in `…` splits
+    from the sentence that follows it."""
     para = "This trails off… Then continues here. And ends."
     sentences = helper_mod._sentences(para)
     assert sentences == ["This trails off…", "Then continues here.", "And ends."]

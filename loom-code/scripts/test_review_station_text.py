@@ -85,7 +85,12 @@ def _you_own_paragraph(text: str) -> str:
 #      count as one word, and never introduce a sentence terminator).
 #   2. Periods that close `e.g.`, `i.e.`, `etc.`, `vs.` are not terminators.
 #   3. Normalise whitespace.
-#   4. Split on `(?<=[.!?])\s+`.
+#   4. Split on a terminator (one of `.`, `!`, `?`, or the unicode ellipsis
+#      `…`), optionally followed by one closing quote or bracket character
+#      (straight or curly double quote, straight or curly single quote,
+#      `)`, or `]`), then whitespace. The closing character, when present,
+#      stays attached to the sentence it closes (it is not consumed by the
+#      split).
 #   5. Non-empty pieces are sentences; each piece's `len(piece.split())` is
 #      its word length (the backtick placeholder counts as one word).
 
@@ -94,7 +99,11 @@ SENTENCE_WORD_CAP = 40
 
 _ABBREV = re.compile(r"\b(e\.g|i\.e|etc|vs)\.", re.IGNORECASE)
 _BACKTICK = re.compile(r"`[^`]*`")
-_SPLIT = re.compile(r"(?<=[.!?])\s+")
+_TERMINATOR = r"[.!?…]"
+_CLOSER = "[\"'’”)\\]]"
+_SPLIT = re.compile(
+    rf"(?:(?<={_TERMINATOR})|(?<={_TERMINATOR}{_CLOSER}))\s+"
+)
 _NUL = "\x00"
 
 
