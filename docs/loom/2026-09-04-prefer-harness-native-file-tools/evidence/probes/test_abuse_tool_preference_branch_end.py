@@ -324,21 +324,32 @@ def test_p7_earlier_decoy_bullet_hijacks_the_anchor(mirror: Path) -> None:
 
 def test_p8_every_traps_pointer_resolves_to_a_real_heading() -> None:
     """BOUNDARY the plan forgot: review/SKILL.md tells the dispatcher to
-    carry `that contract's own '## Traps' section'. Two of the four agent
-    contracts have no heading by that name."""
+    carry `that contract's own '## Traps' section'.
+
+    PRE-FIX (at c81e9ad5, when this probe was written): TWO of the four
+    agent contracts had no heading by that name -- implementer.md carried
+    `## Trap-guards` and reviewer.md carried only `## What will get your
+    verdict thrown out`. The two pointer lines that exist aim at
+    blind-runner and adversary, which did resolve, so the hazard was
+    latent: the pointer sentence is generic while the headings are not.
+
+    CLOSED for reviewer.md by 0b07efb8, which gave it its own `## Traps`
+    section (branch-end adversary finding F2). implementer.md is
+    deliberately still `## Trap-guards` -- no pointer aims at it today, so
+    this probe pins the remaining half of the inventory rather than
+    asserting it away.
+    """
     headings = {
         rel: re.findall(r"^## .+$", (REPO / rel).read_text(encoding="utf-8"), re.M)
         for rel in CONTRACTS[:4]
     }
     missing = [rel for rel, hs in headings.items() if "## Traps" not in hs]
-    # The two pointer lines that exist today aim at blind-runner and
-    # adversary, which do carry `## Traps`. Record the other two as the
-    # latent hazard: the sentence is generic, the headings are not.
     assert missing == [
         "loom-code/agents/implementer.md",
-        "loom-code/agents/reviewer.md",
     ], f"heading inventory moved: missing={missing}"
     assert "## Trap-guards" in headings["loom-code/agents/implementer.md"]
+    # The heading 0b07efb8 added, and the one it did NOT remove.
+    assert "## Traps" in headings["loom-code/agents/reviewer.md"]
     assert (
         "## What will get your verdict thrown out"
         in headings["loom-code/agents/reviewer.md"]
@@ -374,19 +385,31 @@ def test_p10_pure_reflow_of_the_shipped_sentence_survives(mirror: Path) -> None:
 
 
 def test_p9_reviewer_trap_bullet_sits_in_a_list_of_prohibitions() -> None:
-    """BOUNDARY: in reviewer.md the sentence was appended to a list whose
-    every other member is a thing that VOIDS the verdict -- including
-    `Editing anything in the repository`. Read as a member of that list, an
-    instruction on how to edit is at best inert and at worst reads as its
-    own inversion."""
+    """BOUNDARY: at c81e9ad5 the sentence was appended to reviewer.md's
+    `## What will get your verdict thrown out` list, whose every other
+    member is a thing that VOIDS the verdict -- including `Editing anything
+    in the repository`. Read as a member of that list, an instruction on
+    how to edit is at best inert and at worst reads as its own inversion.
+
+    CLOSED by 0b07efb8, which moved it into its own `## Traps` section.
+    The assertion is section-bounded and verb-agnostic on purpose: the
+    hazard is MEMBERSHIP of the verdict-voiding list, not the opening word,
+    so re-wording the sentence (`Use` <-> `Prefer`) must not change this
+    result, and moving it back into that list must fail again.
+    """
     text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
-    section = text[text.index("## What will get your verdict thrown out"):]
+    start = text.index("## What will get your verdict thrown out")
+    end = text.index("\n## ", start + 1)  # the section ENDS at the next heading
+    section = text[start:end]
     bullets = [b.strip() for b in re.findall(r"^- .+(?:\n  .+)*", section, re.M)]
     assert bullets[0].startswith("- Editing anything in the repository")
-    tool_bullet = [b for b in bullets if "apply_patch" in b]
-    assert tool_bullet, "tool-preference bullet not found in reviewer.md"
-    assert not tool_bullet[0].startswith("- Use the host's edit tool"), (
-        "REPRODUCED: the only imperative bullet in a list of "
-        "verdict-voiding prohibitions is the tool-preference one, and the "
-        "same list's first item forbids the reviewer from editing at all."
+    assert not [b for b in bullets if "apply_patch" in b], (
+        "REPRODUCED: the tool-preference sentence is a member of the "
+        "`What will get your verdict thrown out` list -- the only imperative "
+        "among prohibitions, in a list whose first item forbids the reviewer "
+        "from editing at all."
     )
+    # It still has to exist somewhere in the file, under its own heading.
+    traps = text[text.index("\n## Traps"):]
+    assert [b for b in re.findall(r"^- .+(?:\n  .+)*", traps, re.M)
+            if "apply_patch" in b], "sentence vanished instead of moving"
