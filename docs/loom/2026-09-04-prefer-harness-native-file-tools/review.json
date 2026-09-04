@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
+  "reviewed_sha": "be81f56fbdc48d0796dd4dff3d1f6a2d16363275",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -116,6 +116,46 @@
         "omission": "PASS"
       },
       "findings": []
+    },
+    {
+      "reviewer": "rev-close-codex-tools",
+      "vendor": "openai",
+      "model": "gpt-5",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "be81f56fbdc48d0796dd4dff3d1f6a2d16363275",
+      "statement": "The delta adds the round-2 branch-end review record, then changes exactly the intent status from confirmed 2026-09-04 to closed 2026-09-04 — PR #788.",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": []
+    },
+    {
+      "reviewer": "rev-close-sonnet-tools",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "be81f56fbdc48d0796dd4dff3d1f6a2d16363275",
+      "statement": "Delta 8961f234..be81f56f is the round-2 review.json record and the intent status line confirmed -> closed 2026-09-04 — PR #788; nothing else moved.",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": []
     }
   ],
   "probes": [
@@ -188,6 +228,38 @@
       "scope": "branch-end",
       "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py -q -k 'p1 or p2 or p3 or p4'",
       "sha": "8961f2345bd224bc886b559196ff4ed81cb1dd2a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "be81f56fbdc48d0796dd4dff3d1f6a2d16363275",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference.py -q",
+      "sha": "be81f56fbdc48d0796dd4dff3d1f6a2d16363275",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py -q",
+      "sha": "be81f56fbdc48d0796dd4dff3d1f6a2d16363275",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py -q -k 'p1 or p2 or p3 or p4'",
+      "sha": "be81f56fbdc48d0796dd4dff3d1f6a2d16363275",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-prefer-harness-native-file-tools/evidence/probes/test_abuse_tool_preference_branch_end.py"
     }
@@ -313,6 +385,24 @@
       "agent_id": "impl-ship-grad-tools",
       "model": "sonnet",
       "started": "2026-09-04T18:49:26+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-codex-tools",
+      "model": "codex",
+      "vendor": "openai",
+      "started": "2026-09-04T19:12:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-sonnet-tools",
+      "model": "sonnet",
+      "vendor": "anthropic",
+      "started": "2026-09-04T19:12:00+08:00",
       "fresh_context": true
     }
   ],
