@@ -47,30 +47,105 @@ def _you_own_paragraph(text: str) -> str:
     return hits[0]
 
 
-def test_reviewer_agent_owns_reconciliation_paragraph_under_80_words() -> None:
-    """W1-01: reviewer.md carries a `You own` positioning paragraph, <= 80
-    words counted with `len(str.split())` (never `wc` — BSD/GNU disagree)."""
+# --- W1-01: word cap -> sentence cap ----------------------------------------
+#
+# The old 80-word cap on the two `You own` positioning paragraphs was a
+# just-fits budget: it capped LENGTH, not the number of distinct claims a
+# paragraph makes, and left no room to add a sentence without either
+# rewriting existing prose or blowing the cap. plan.md `## 單位決定` replaces
+# it with a SENTENCE cap plus a per-sentence word-length guard:
+#
+#   SENTENCE_CAP = 6        -- a paragraph may hold at most 6 sentences.
+#   SENTENCE_WORD_CAP = 40  -- and no single sentence may run past 40 words.
+#
+# Rationale (plan.md `## 單位決定`, citing evidence/research-paragraph-cap-
+# unit.md): GOV.UK's content design guidance gives a documented, sourced
+# rule of thumb -- a paragraph should hold <= 5 sentences, and any sentence
+# over 25 words should be split. This repo's cap is set ABOVE that standard
+# on both axes, deliberately, so the cap guards against drift rather than
+# just barely accommodating today's prose (the same "cap well above current
+# need" principle that motivated moving off the old just-fits 80-word
+# budget in the first place): 6 sentences (not GOV.UK's 5) is ASD-STE100's
+# secondhand-summarized "about 6 sentences" figure, chosen so both
+# paragraphs keep >= 1 sentence of headroom after W1-01 adds a sentence to
+# adversary.md (3/6 and 5/6, not 5/5 or 4/5). 40 words (not GOV.UK's 25) is
+# set from today's longest existing sentence (31 words) plus about 30%
+# headroom, because GOV.UK's 25-word figure would force a rewrite of
+# reader.md's or adversary.md's prose this change does not otherwise touch;
+# the 40-word figure has no external citation of its own (plan.md Risks #4)
+# — it exists only to block the abuse case (a dash-stuffed run-on sentence
+# smuggling several claims past the sentence cap), and is expected to be
+# revisited by a future adversarial pass, not the reason to trust this cap.
+#
+# Sentence-split rule (identical to the independent oracle in
+# evidence/probes/test_abuse_sentence_cap.py -- two separate implementations
+# agreeing on the same synthetic inputs is what makes the rule an oracle
+# rather than one author's regex):
+#   1. Replace every backtick span with a placeholder token (its contents
+#      count as one word, and never introduce a sentence terminator).
+#   2. Periods that close `e.g.`, `i.e.`, `etc.`, `vs.` are not terminators.
+#   3. Normalise whitespace.
+#   4. Split on `(?<=[.!?])\s+`.
+#   5. Non-empty pieces are sentences; each piece's `len(piece.split())` is
+#      its word length (the backtick placeholder counts as one word).
+
+SENTENCE_CAP = 6
+SENTENCE_WORD_CAP = 40
+
+_ABBREV = re.compile(r"\b(e\.g|i\.e|etc|vs)\.", re.IGNORECASE)
+_BACKTICK = re.compile(r"`[^`]*`")
+_SPLIT = re.compile(r"(?<=[.!?])\s+")
+_NUL = "\x00"
+
+
+def _sentences(paragraph: str) -> list[str]:
+    """Split `paragraph` into sentences per the rule documented above."""
+    text = _BACKTICK.sub("BACKTICKSPAN", paragraph)
+    text = _ABBREV.sub(lambda m: m.group(1) + _NUL, text)
+    text = " ".join(text.split())
+    pieces = [p.replace(_NUL, ".") for p in _SPLIT.split(text) if p.strip()]
+    return pieces
+
+
+def _assert_within_sentence_caps(para: str) -> None:
+    sentences = _sentences(para)
+    assert len(sentences) <= SENTENCE_CAP, (
+        f"paragraph has {len(sentences)} sentences, cap is {SENTENCE_CAP}: "
+        f"{sentences!r}"
+    )
+    for s in sentences:
+        words = len(s.split())
+        assert words <= SENTENCE_WORD_CAP, (
+            f"sentence {s!r} is {words} words, cap is {SENTENCE_WORD_CAP}"
+        )
+
+
+def test_reviewer_agent_owns_reconciliation_paragraph_within_sentence_caps() -> None:
+    """W1-01: reviewer.md carries a `You own` positioning paragraph, <= 6
+    sentences and every sentence <= 40 words (see the rationale block above
+    this test; never `wc` — BSD/GNU disagree, use `len(str.split())`)."""
     text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
     para = _you_own_paragraph(text)
-    assert len(para.split()) <= 80
+    _assert_within_sentence_caps(para)
 
 
-def test_adversary_agent_owns_negative_paragraph_under_80_words() -> None:
-    """W1-01: adversary.md carries a `You own` positioning paragraph, <= 80
-    words counted with `len(str.split())` (never `wc`)."""
+def test_adversary_agent_owns_negative_paragraph_within_sentence_caps() -> None:
+    """W1-01: adversary.md carries a `You own` positioning paragraph, <= 6
+    sentences and every sentence <= 40 words (see the rationale block above
+    the reviewer test)."""
     text = (REPO / "loom-code/agents/adversary.md").read_text(encoding="utf-8")
     para = _you_own_paragraph(text)
-    assert len(para.split()) <= 80
+    _assert_within_sentence_caps(para)
 
 
 def test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms() -> None:
     """Branch-end fix (branch-end-02): intent Proposed outcome 2 requires the
     reviewer positioning paragraph to say its output is a claim the fix
-    round confirms, without raising the paragraph above the 80-word cap."""
+    round confirms, without pushing the paragraph past the sentence caps."""
     text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
     para = _you_own_paragraph(text)
     assert "a claim the fix round confirms" in " ".join(para.split())
-    assert len(para.split()) <= 80
+    _assert_within_sentence_caps(para)
 
 
 def test_adversary_agent_paragraph_owns_probe_artifact_bookkeeping() -> None:
@@ -78,13 +153,42 @@ def test_adversary_agent_paragraph_owns_probe_artifact_bookkeeping() -> None:
     'same artifact recorded under two spellings/paths counted twice' was
     claimed by neither role. The adversary paragraph must claim a probe's
     own artifact path (spelling/count) while explicitly leaving a
-    cross-document count to the reviewer, within the 80-word cap."""
+    cross-document count to the reviewer, within the sentence caps."""
     text = (REPO / "loom-code/agents/adversary.md").read_text(encoding="utf-8")
     para = _you_own_paragraph(text)
     assert "artifact path" in para
     assert "reviewer's" in para
     assert "cross-document" in para
-    assert len(para.split()) <= 80
+    _assert_within_sentence_caps(para)
+
+
+_ATTRIBUTION_READER_WORDS = ("omission", "overclaim", "contradiction")
+_ATTRIBUTION_IMPLEMENTER_WORDS = ("RED", "implementer")
+
+
+def test_adversary_agent_paragraph_has_three_way_attribution_sentence() -> None:
+    """W1-01: one sentence in adversary.md's `You own` paragraph must, in
+    the SAME sentence, hand reconciliation-class findings (>= 2 of
+    omission/overclaim/contradiction) to the reader (reviewer) AND positive
+    executable findings (RED or 'implementer') to the implementer -- the
+    cold-read residual from #787 (report exaggeration and doc omission both
+    defaulted to 'implementer' when read alone; see the three-way
+    attribution scores in plan.md's Current State Evidence). Matches the
+    same judgment as evidence/probes/test_abuse_sentence_cap.py case3."""
+    text = (REPO / "loom-code/agents/adversary.md").read_text(encoding="utf-8")
+    para = _you_own_paragraph(text)
+    sentences = _sentences(para)
+    hits = [
+        s for s in sentences
+        if sum(w.lower() in s.lower() for w in _ATTRIBUTION_READER_WORDS) >= 2
+        and any(w in s for w in _ATTRIBUTION_IMPLEMENTER_WORDS)
+    ]
+    assert hits, (
+        "no sentence in adversary.md's You-own paragraph assigns >= 2 of "
+        f"{_ATTRIBUTION_READER_WORDS} to the reader AND names "
+        f"{_ATTRIBUTION_IMPLEMENTER_WORDS} for the implementer in the same "
+        "sentence"
+    )
 
 
 def test_fix_rounds_reader_finding_to_probe_sentence_under_60_words() -> None:
