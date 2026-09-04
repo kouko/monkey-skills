@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "10511018acb4fde7e39f967c54bab89e7126ce73",
+  "reviewed_sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -14,7 +14,7 @@
       "scope": "branch-end",
       "round": 1,
       "verdict": "NEEDS_REVISION",
-      "sha": "94ec2f56",
+      "sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "dimension_scores": {
         "omission": "NEEDS_REVISION — the adversary contract does not make the intended executable-artifact boundary reliably actionable, and the reviewer positioning paragraph omits the promised claim/fix-round relationship",
         "ambiguity": "NEEDS_REVISION — both roles can still assign probe-artifact normalization to the other role",
@@ -63,7 +63,7 @@
       "scope": "branch-end",
       "round": 1,
       "verdict": "NEEDS_REVISION",
-      "sha": "94ec2f56",
+      "sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "dimension_scores": {
         "omission": "PASS",
         "ambiguity": "PASS_WITH_NOTES — item-3 boundary case still unclaimed by both roles after the fix round",
@@ -98,6 +98,102 @@
         "Independently re-ran the full package suite (1132 passed), both probe files (30 passed), and regenerated the README sequence diagram from its embedded payload — exact 25/25 match, max width 68 (cap 72).",
         "Did not re-run the cold-read trials in evidence/coldread-*.txt; read as evidence only."
       ]
+    },
+    {
+      "reviewer": "rev-be-codex-pos",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+      "dimension_scores": {
+        "omission": "PASS — both previously omitted ownership and fix-round-claim clauses are now explicit",
+        "ambiguity": "PASS — the adversary now owns a probe's own artifact-path spelling/count while cross-document counts remain with the reviewer",
+        "inconsistency": "PASS — the fixes are consistent with the intent and the two role contracts",
+        "incorrect-fact": "PASS — no new incorrect operational fact was introduced by the fix delta",
+        "missing-population": "PASS — Trial 3 reports results over the same eight-item population",
+        "user-judgment-leak": "PASS — the branch-scope exception was decided by the user and recorded for decision point ③",
+        "correctness": "PASS_WITH_NOTES — attached Trial 3 evidence confirms both roles correctly identify their own items; the probes were not rerun in this fix round",
+        "tests": "PASS_WITH_NOTES — the new round-2 probe artifact covers both fixes, but per fix-round procedure its recorded run was not rerun by this reviewer",
+        "cross-task-coherence": "PASS — the user explicitly accepted keeping the unrelated open intent on this branch",
+        "deliberate-simplification": "PASS — the compressed positioning clauses preserve their stated boundaries within the word caps",
+        "deletion-first": "PASS — the fix adds no abstraction or extension point"
+      },
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "fixed",
+          "evidence": "Commit f1f057f4 explicitly assigns probe-local artifact spelling/count to the adversary; applying Acceptance 1's own-versus-not-own reading, Trial 3 classifies all eight items correctly on that axis."
+        },
+        {
+          "id": "branch-end-02",
+          "status": "fixed",
+          "evidence": "Commit acb901a7 restores the contiguous clause that reconciliation lands as a claim the fix round confirms, within the 80-word cap."
+        },
+        {
+          "id": "branch-end-03",
+          "status": "dismissed",
+          "evidence": "The user explicitly chose to keep the unrelated, open and unimplemented intent on this branch, and that exception is disclosed in blind-run-report.md:109 by rev-be-codex-pos."
+        }
+      ],
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_review_station_text.py:71",
+          "text": "The shipped guard's standalone `\"claim\" in para` assertion is vacuous because `overclaim` already satisfied it before the fix, and the separate `fix round` assertion does not prove that the two terms form the promised relationship. The round-2 probe pins the current text correctly, so this does not reopen the checkpoint.",
+          "fix": "Replace the two independent substring assertions with one assertion matching a contiguous clause equivalent to `claim the fix round confirms`."
+        }
+      ]
+    },
+    {
+      "reviewer": "rev-be-sonnet-pos",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS — item 3 now consistently claimed by the adversary and ceded by the reviewer in TRIAL 3; see notes for a narrower, non-blocking residual",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES — independently re-ran test_review_station_text.py, test_reviewer_agent_single_contract.py and all three probe files (120 passed); did not re-run the TRIAL 3 claude -p dialogue, read the transcripts",
+        "tests": "PASS — r2 probe file names real committed artifacts, runs against a tmp_path-mirrored copy of the shipped module, and records the two nit-level survivors",
+        "cross-task-coherence": "PASS — fix commits, widened test guard and r2 probe file agree with each other and with open_findings",
+        "deliberate-simplification": "PASS — branch-end-02 closed without a new undisclosed cut; 79 and 80 words",
+        "deletion-first": "N/A — no new abstraction introduced by the fix delta"
+      },
+      "previous_findings": [
+        {
+          "id": "branch-end-02",
+          "status": "fixed",
+          "evidence": "acb901a7 adds '— and it lands as a claim the fix round confirms' (79 words); pinned by test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms and r2 probe test_reviewer_claim_clause_is_contiguous"
+        },
+        {
+          "id": "branch-end-01",
+          "status": "fixed",
+          "evidence": "f1f057f4 adds the probe-artifact-path clause (80 words); TRIAL 3 item 3 claimed 'mine' by adversary-only reader and ceded by reviewer-only reader. Applying Acceptance 1's mine/not-mine reading the adversary-only reader is 8/8; the items 4/5 3-way-attribution slip ('implementer's' vs 'reviewer's') is a note, not a re-open — adversary.md was never asked to state the reviewer/implementer boundary, and the independently dispatched reviewer still claims 4/5 (8/8)"
+        }
+      ],
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_review_station_text.py:71",
+          "text": "`assert \"claim\" in para` was already true before acb901a7 because the paragraph says 'overclaim'; only the `fix round` assertion does real work. Closed at the probe layer by the r2 probe file; a vacuous individual assertion, not a gap.",
+          "fix": "Replace with a check anchored on text absent pre-fix, e.g. `assert \"a claim the fix round confirms\" in para`."
+        }
+      ],
+      "notes": [
+        "branch-end-03 routed to rev-be-codex-pos; not scored by me.",
+        "The items 4/5 3-way-attribution slip in TRIAL 3 is worth a light follow-up if a future change wants adversary.md to state the full three-way split; not blocking under Acceptance 1's wording."
+      ]
     }
   ],
   "probes": [
@@ -105,7 +201,7 @@
       "kind": "package-tests",
       "scope": "branch-end",
       "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
-      "sha": "94ec2f56",
+      "sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "result": "pass",
       "artifact": ""
     },
@@ -113,7 +209,7 @@
       "kind": "blind-run",
       "scope": "skill",
       "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
-      "sha": "94ec2f56",
+      "sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/blind-run-report.md"
     },
@@ -121,7 +217,7 @@
       "kind": "adversarial",
       "scope": "branch-end",
       "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
-      "sha": "94ec2f56",
+      "sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py"
     },
@@ -129,7 +225,7 @@
       "kind": "adversarial",
       "scope": "branch-end",
       "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py -q -k 'mutation or softener or uncovered'",
-      "sha": "94ec2f56",
+      "sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py"
     },
@@ -137,9 +233,49 @@
       "kind": "adversarial",
       "scope": "branch-end",
       "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py -q",
-      "sha": "94ec2f56",
+      "sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "skill",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
+      "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
+      "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py -q",
+      "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py -q",
+      "sha": "f0cf372dab4bbd9ed31ed541f591d66c992d28f2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end_r2.py"
     }
   ],
   "questions": [
@@ -163,23 +299,26 @@
     {
       "id": "branch-end-01",
       "anchor": "loom-code/agents/adversary.md:12-17",
-      "origin_sha": "94ec2f56",
+      "origin_sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "raised_by": "rev-be-sonnet-pos, rev-be-codex-pos",
-      "text": "Acceptance 1 not met: the probe-artifact-spelling finding class is claimed by neither role in the post-fix cold read (adversary trial still 7/8)."
+      "text": "Acceptance 1 not met: the probe-artifact-spelling finding class is claimed by neither role in the post-fix cold read (adversary trial still 7/8).",
+      "resolved": "f1f057f4 (adversary.md clause) + r2 probe test_adversary_paragraph_claims_artifact_path_and_hands_cross_document_away; TRIAL 3 item 3 claimed by adversary, ceded by reviewer; marked fixed by rev-be-sonnet-pos and rev-be-codex-pos"
     },
     {
       "id": "branch-end-02",
       "anchor": "loom-code/agents/reviewer.md:13-20",
-      "origin_sha": "94ec2f56",
+      "origin_sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "raised_by": "rev-be-sonnet-pos",
-      "text": "The reviewer positioning paragraph drops intent Proposed outcome 2's 'output is a claim the fix round confirms'."
+      "text": "The reviewer positioning paragraph drops intent Proposed outcome 2's 'output is a claim the fix round confirms'.",
+      "resolved": "acb901a7 (reviewer.md clause, 79 words) + test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms + r2 probe test_reviewer_claim_clause_is_contiguous; marked fixed by both readers"
     },
     {
       "id": "branch-end-03",
       "anchor": "docs/loom/intent/2026-09-04-prefer-harness-native-file-tools.md:1",
-      "origin_sha": "94ec2f56",
+      "origin_sha": "9b27c52da8301f733faee71c91592cba9d11b5a9",
       "raised_by": "rev-be-codex-pos",
-      "text": "An unrelated open intent (commit aa4847ab) is committed in this branch's delta, making the branch deliver more than its confirmed intent."
+      "text": "An unrelated open intent (commit aa4847ab) is committed in this branch's delta, making the branch deliver more than its confirmed intent.",
+      "dismissed": "user decided at this checkpoint to keep the intent on this branch — deliberately parked for a later change, status open, unimplemented, no effect on this change; disclosed in blind-run-report.md「我幫你決定的事」 by rev-be-codex-pos"
     }
   ],
   "dispatch": [
@@ -282,5 +421,9 @@
       "fresh_context": true
     }
   ],
-  "second_vendor": "codex"
+  "second_vendor": "codex",
+  "notes": [
+    "2026-09-04 sha remap: history rewritten once (rebase adding `Task: branch-end-fix` trailers to four fix commits; trees unchanged). round-1 sha 94ec2f56 -> 9b27c52d, round-2 sha / reviewed_sha 0dbefe61 -> e2e91ccb, fixes 9c47fb58 -> acb901a7, bb7d3670 -> f1f057f4.",
+    "2026-09-04 second remap: dropped a mis-placed `Task:` line from the blind-run report commit (docs owe no trailer); round-2 sha / reviewed_sha e2e91ccb -> f0cf372d, tree unchanged."
+  ]
 }
