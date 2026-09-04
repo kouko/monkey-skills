@@ -40,7 +40,9 @@ writes the procedure out in `codex-first-contact.md`, under its `references/`)
 first. Do not produce any
 artifact without the checker. The file existing is not proof the hook runs:
 an untrusted Codex hook is skipped in silence, and step 0b's trust probe is
-what tells the two apart.
+what tells the two apart. Before dispatching a Codex leg, run `--trusted`
+yourself: any definition reading `never` means print the BLOCK lines, ask
+for `/hooks` in that folder, and **stop**.
 
 Then locate the change:
 

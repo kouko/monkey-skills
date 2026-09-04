@@ -35,13 +35,28 @@ Two live-tested facts shape this script
   other half of the same failure — so it is reported separately, as a broken
   gate rather than a dead one.
 
-  The shim also records its own firing in ``.codex/hooks/.loom-hook-fired``,
-  so ``--trusted`` can answer "has Codex ever run this hook here?" with no
-  tool call at all. The marker is gitignored: it is local evidence about
-  this machine's trust state, not repository content. It records firings by
-  Codex only — ``--self-test`` spawns the same shim with ``LOOM_SELF_TEST``
-  set, which suppresses the write, because a marker this script produced
-  would make ``--trusted`` vouch for a trust decision nobody made.
+  Codex' trust is bound to each hook DEFINITION individually (an
+  ``(event, command)`` pair in ``.codex/hooks.json``), and an adopting repo
+  usually has more than one — its own PostToolUse hooks alongside loom's
+  PreToolUse one. So every hook definition's shim pipes its payload through
+  the shared recorder ``.codex/hooks/loom_record_fire.py`` (shipped as a
+  sibling of the copied checker) before doing its real work, and the
+  recorder appends one line per firing to the ledger
+  ``.codex/hooks/.loom-hook-fired``: ``<event>\\t<command>\\t<tool_name>``.
+  ``--trusted`` parses every definition out of ``hooks.json``, reads the
+  ledger, and reports each definition's own ``fired`` / ``never`` /
+  ``ambiguous`` (the last when two matchers share one ``(event, command)``
+  pair and a firing cannot be attributed between them) — never one global
+  yes/no laundered through a single file's mere existence. A pre-existing
+  zero-byte marker from before the ledger format is read as legacy evidence
+  for loom's own ``PreToolUse Bash`` definition only; every other definition
+  in that repo gets no benefit of the doubt from a marker that predates it.
+  The ledger is gitignored: it is local evidence about this machine's trust
+  state, not repository content. It records firings by Codex only —
+  ``--self-test`` spawns the same shim with ``LOOM_SELF_TEST`` set, which
+  the recorder reads and skips writing under, because a ledger line this
+  script produced would make ``--trusted`` vouch for a trust decision nobody
+  made.
 
 The copy is a package, not a file: the checker imports ``git_exec`` and reads
 its contract manifest, so the scaffold ships both beside it. A copy that
@@ -73,8 +88,8 @@ SELF_TEST_FAILED = (
     "is broken; re-run codex_scaffold.py --repo . and commit the result"
 )
 NOT_TRUSTED_MESSAGE = (
-    "BLOCK: loom hooks have never fired in this repo — "
-    "run /hooks in Codex once, then retry"
+    "BLOCK: {never} of {total} Codex hook definitions have never fired in "
+    "{repo} — run /hooks in Codex in that folder once, then retry"
 )
 SANDBOX_MESSAGE = (
     "BLOCK: Codex' sandbox protects .codex/ — run "
@@ -92,8 +107,13 @@ SHIM_COMMAND = ".codex/hooks/loom-checker"
 HOOK_DIR = ".codex/hooks"
 MARKER = f"{HOOK_DIR}/.loom-hook-fired"
 CHECKER_COPY = f"{HOOK_DIR}/loom_checker.py"
-SIBLING_MODULES = ("git_exec.py",)
+RECORDER_COPY = f"{HOOK_DIR}/loom_record_fire.py"
+SIBLING_MODULES = ("git_exec.py", "loom_record_fire.py")
 CONTRACT_COPY = f"{HOOK_DIR}/contract"
+# The one hook definition loom ships. A pre-existing zero-byte marker (the
+# ledger format that predates per-definition trust) is read as legacy
+# evidence for this definition alone — see trusted().
+LEGACY_CREDITED_DEFINITION = ("PreToolUse", SHIM_COMMAND)
 
 # os.path.abspath rather than Path.resolve(): module scope runs at import,
 # where nothing can catch an OSError, so it must make no filesystem call.
@@ -120,16 +140,29 @@ SHIM_TEMPLATE = """#!/usr/bin/env bash
 # The version stamp lives here, never in .codex/hooks.json: Codex binds hook
 # trust to the definition, so the command string must never change.
 set -euo pipefail
-# Record that Codex' hook engine really invoked this hook. Nothing else can
-# observe that: an untrusted hook is skipped in silence. Never fatal — a
-# read-only checkout must still get its verdict. LOOM_SELF_TEST marks the
-# one caller that is NOT Codex' hook engine — codex_scaffold.py --self-test
-# spawns this shim itself, and a marker written then would let --trusted
-# report a trust decision Codex never made.
-if [ -z "${{LOOM_SELF_TEST:-}}" ]; then
-  {{ : > "$(dirname "$0")/.loom-hook-fired"; }} 2>/dev/null || true
+# Resolve the checker relative to THIS SHIM's own location, never the
+# caller's cwd. Codex' payload carries a "cwd" field that is not always the
+# repo root (a worktree, a nested skill folder); a cwd-relative target would
+# crash there while an earlier version of this shim still recorded (below)
+# that the definition fired — a false "safe to continue" signal.
+HERE="$(cd "$(dirname "$0")" && pwd)"
+TARGET="$HERE/{checker_name}"
+# Read stdin once — the checker must see the same payload the recorder saw,
+# and a pipe can only be drained once.
+INPUT=$(cat)
+if [ ! -f "$TARGET" ]; then
+  echo "BLOCK: {shim_command} cannot find its target $TARGET" >&2
+  exit 2
 fi
-exec python3 {checker} push --hook
+# Record that Codex' hook engine really invoked this hook — only now that
+# the target is known to exist, so a crash never gets recorded as a firing.
+# Nothing else can observe a real firing: an untrusted hook is skipped in
+# silence. Never fatal on its own — a broken recorder must never block the
+# checker's own verdict. The recorder itself reads LOOM_SELF_TEST and skips
+# writing under it — the one caller here that is NOT Codex' hook engine is
+# codex_scaffold.py --self-test, which spawns this shim itself.
+printf '%s' "$INPUT" | python3 "$HERE/loom_record_fire.py" "$0" >/dev/null 2>&1 || true
+printf '%s' "$INPUT" | exec python3 "$TARGET" push --hook
 """
 
 PROBE_PAYLOAD = {
@@ -250,7 +283,11 @@ def scaffold(repo: Path) -> int:
     record(
         _write(
             shim,
-            SHIM_TEMPLATE.format(stamp=stamp_line(version), checker=CHECKER_COPY),
+            SHIM_TEMPLATE.format(
+                stamp=stamp_line(version),
+                checker_name=Path(CHECKER_COPY).name,
+                shim_command=SHIM_COMMAND,
+            ),
             executable=True,
         ),
         SHIM_COMMAND,
@@ -297,17 +334,91 @@ def scaffold(repo: Path) -> int:
     return 0
 
 
-def trusted(repo: Path) -> int:
-    """Has Codex' hook engine ever run this repo's loom hook on this machine?
+def _hook_definitions(hooks_json: dict) -> list[tuple[str, str, str]]:
+    """Every ``(event, matcher, command)`` triple ``hooks_json`` defines, in
+    file order — not just loom's own, whatever else the adopting repo has
+    added under other events or matchers."""
+    definitions: list[tuple[str, str, str]] = []
+    for event, entries in hooks_json.get("hooks", {}).items():
+        for entry in entries:
+            matcher = entry.get("matcher", "")
+            for hook in entry.get("hooks", []):
+                if hook.get("type") == "command" and hook.get("command"):
+                    definitions.append((event, matcher, hook["command"]))
+    return definitions
 
-    The shim writes the marker on every firing, and only a hook Codex chose
-    to run can write it. No marker is not proof of an untrusted hook (a
-    fresh clone has simply run no commands yet), but a marker IS proof of a
-    trusted one — which is the direction the user-facing message needs."""
-    if (repo / MARKER).is_file():
-        print("trusted — the loom hook has fired in this repo at least once")
+
+def _ledger_fired_keys(ledger: Path) -> tuple[set[tuple[str, str]], bool]:
+    """The ``(event, command)`` pairs the ledger proves fired, and whether
+    the ledger is the legacy zero-byte marker (predates the line format)."""
+    if not ledger.is_file():
+        return set(), False
+    raw = ledger.read_bytes()
+    if raw == b"":
+        return set(), True
+    fired: set[tuple[str, str]] = set()
+    for line in raw.decode("utf-8", errors="replace").splitlines():
+        fields = line.split("\t")
+        if len(fields) == 3:
+            fired.add((fields[0], fields[1]))
+    return fired, False
+
+
+def trusted(repo: Path) -> int:
+    """Has Codex' hook engine ever run EACH of this repo's hook definitions
+    on this machine — not just loom's own?
+
+    Trust is bound to the DEFINITION (``event`` + ``command``), and an
+    adopting repo usually has more than one in ``.codex/hooks.json``. The
+    shared recorder appends a ledger line on every real firing, and only a
+    hook Codex chose to run can produce one, so a line IS proof of a trusted
+    definition; no line is not proof of an untrusted one (a fresh clone has
+    simply run no commands yet) — which is the direction the exit code and
+    the BLOCK message need. Two matchers sharing one ``(event, command)``
+    pair cannot be told apart by the ledger and report ``ambiguous`` instead
+    of ``fired``."""
+    hooks_json_path = repo / ".codex" / "hooks.json"
+    if not hooks_json_path.is_file():
+        print(f"BLOCK: no {hooks_json_path} — run the scaffold first", file=sys.stderr)
+        return 2
+    try:
+        hooks_json = json.loads(hooks_json_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"BLOCK: {hooks_json_path} is not valid JSON: {exc}", file=sys.stderr)
+        return 2
+
+    definitions = _hook_definitions(hooks_json)
+    matchers_by_key: dict[tuple[str, str], set[str]] = {}
+    for event, matcher, command in definitions:
+        matchers_by_key.setdefault((event, command), set()).add(matcher)
+
+    fired_keys, legacy = _ledger_fired_keys(repo / MARKER)
+
+    def status(event: str, command: str) -> str:
+        key = (event, command)
+        if len(matchers_by_key[key]) > 1:
+            return "ambiguous"
+        if legacy and key == LEGACY_CREDITED_DEFINITION:
+            return "fired (legacy)"
+        if key in fired_keys:
+            return "fired"
+        return "never"
+
+    rows = [(event, matcher, command, status(event, command)) for event, matcher, command in definitions]
+    for event, matcher, command, state in rows:
+        print(f"{event} {matcher} {command}: {state}")
+
+    not_fired = [(event, matcher, command) for event, matcher, command, state in rows if not state.startswith("fired")]
+    if not not_fired:
         return 0
-    print(NOT_TRUSTED_MESSAGE, file=sys.stderr)
+
+    abs_repo = str(repo.resolve())
+    print(
+        NOT_TRUSTED_MESSAGE.format(never=len(not_fired), total=len(rows), repo=abs_repo),
+        file=sys.stderr,
+    )
+    for event, matcher, command in not_fired:
+        print(f"{event} {matcher} {command}", file=sys.stderr)
     return 2
 
 
@@ -403,7 +514,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--trusted",
         action="store_true",
-        help="report whether Codex' hook engine has ever fired the loom hook here",
+        help=(
+            "report, one line per hooks.json definition, whether Codex' "
+            "hook engine has ever fired it here (fired/never/ambiguous)"
+        ),
     )
     args = parser.parse_args(argv)
 

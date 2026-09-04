@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# loom-checker 1.2.3
+# loom-checker 1.2.4
 """The loom checker -- the single deterministic layer of the loom flow.
 
 Every rule here RECOMPUTES its fact from the repository (the intent file,
@@ -441,6 +441,7 @@ HOST_PLUMBING_FILES = frozenset(
         ".codex/hooks/loom-checker",  # codex_scaffold.SHIM_COMMAND
         ".codex/hooks/loom_checker.py",  # codex_scaffold.CHECKER_COPY
         ".codex/hooks/git_exec.py",  # codex_scaffold.HOOK_DIR/SIBLING_MODULES
+        ".codex/hooks/loom_record_fire.py",  # codex_scaffold.HOOK_DIR/SIBLING_MODULES
         ".codex/hooks/.loom-hook-fired",  # codex_scaffold.MARKER
     }
 )
@@ -3026,7 +3027,8 @@ def _plumbing_path_rejection(
     if path == scaffold_mod.SHIM_COMMAND:
         expected = scaffold_mod.SHIM_TEMPLATE.format(
             stamp=scaffold_mod.stamp_line(scaffold_mod.plugin_version()),
-            checker=scaffold_mod.CHECKER_COPY,
+            checker_name=Path(scaffold_mod.CHECKER_COPY).name,
+            shim_command=scaffold_mod.SHIM_COMMAND,
         )
         return _matches_canonical_file(repo, sha, path, "100755", expected)
 

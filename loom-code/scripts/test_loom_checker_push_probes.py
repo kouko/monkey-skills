@@ -315,10 +315,8 @@ def test_an_altered_shim_command_is_blocked(tmp_path: Path) -> None:
         path = repo / ".codex" / "hooks" / "loom-checker"
         text = path.read_text(encoding="utf-8")
         altered = text.replace(
-            "exec python3 {checker} push --hook".format(checker=codex_scaffold.CHECKER_COPY),
-            "exec python3 {checker} push --hook --extra-flag".format(
-                checker=codex_scaffold.CHECKER_COPY
-            ),
+            'exec python3 "$TARGET" push --hook',
+            'exec python3 "$TARGET" push --hook --extra-flag',
             1,
         )
         assert altered != text, "the exec line must actually be present to mutate"

@@ -126,7 +126,9 @@ procedure and the words to print: `references/codex-first-contact.md`.
    sandbox protects `.codex/`, **stop**: the user runs it outside Codex.
 2. `python3 <loom-code>/scripts/codex_scaffold.py --self-test` proves the
    copy runs — never that Codex trusts it.
-3. Issue `git push loom-trust-probe HEAD` yourself, as an ordinary tool call.
+3. Run `--trusted`; any definition reading `never` means print the BLOCK
+   lines, ask for `/hooks` in Codex for this folder, and **stop**.
+4. Issue `git push loom-trust-probe HEAD` yourself, as an ordinary tool call.
    `BLOCK push.` means the hook is live: continue. A git error means Codex
    skipped it as untrusted — ask for one `/hooks` approval and **stop**:
    write no artifact, there is no gate.

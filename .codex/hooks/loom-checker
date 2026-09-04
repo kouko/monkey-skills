@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
-# loom-checker 1.2.3
+# loom-checker 1.2.4
 # Written by loom-code/scripts/codex_scaffold.py — do not edit by hand.
 # The version stamp lives here, never in .codex/hooks.json: Codex binds hook
 # trust to the definition, so the command string must never change.
 set -euo pipefail
-# Record that Codex' hook engine really invoked this hook. Nothing else can
-# observe that: an untrusted hook is skipped in silence. Never fatal — a
-# read-only checkout must still get its verdict. LOOM_SELF_TEST marks the
-# one caller that is NOT Codex' hook engine — codex_scaffold.py --self-test
-# spawns this shim itself, and a marker written then would let --trusted
-# report a trust decision Codex never made.
-if [ -z "${LOOM_SELF_TEST:-}" ]; then
-  { : > "$(dirname "$0")/.loom-hook-fired"; } 2>/dev/null || true
+# Resolve the checker relative to THIS SHIM's own location, never the
+# caller's cwd. Codex' payload carries a "cwd" field that is not always the
+# repo root (a worktree, a nested skill folder); a cwd-relative target would
+# crash there while an earlier version of this shim still recorded (below)
+# that the definition fired — a false "safe to continue" signal.
+HERE="$(cd "$(dirname "$0")" && pwd)"
+TARGET="$HERE/loom_checker.py"
+# Read stdin once — the checker must see the same payload the recorder saw,
+# and a pipe can only be drained once.
+INPUT=$(cat)
+if [ ! -f "$TARGET" ]; then
+  echo "BLOCK: .codex/hooks/loom-checker cannot find its target $TARGET" >&2
+  exit 2
 fi
-exec python3 .codex/hooks/loom_checker.py push --hook
+# Record that Codex' hook engine really invoked this hook — only now that
+# the target is known to exist, so a crash never gets recorded as a firing.
+# Nothing else can observe a real firing: an untrusted hook is skipped in
+# silence. Never fatal on its own — a broken recorder must never block the
+# checker's own verdict. The recorder itself reads LOOM_SELF_TEST and skips
+# writing under it — the one caller here that is NOT Codex' hook engine is
+# codex_scaffold.py --self-test, which spawns this shim itself.
+printf '%s' "$INPUT" | python3 "$HERE/loom_record_fire.py" "$0" >/dev/null 2>&1 || true
+printf '%s' "$INPUT" | exec python3 "$TARGET" push --hook

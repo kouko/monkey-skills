@@ -5,6 +5,33 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.2.4] — 2026-09-04 — per-definition Codex hook trust
+
+`docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/`.
+
+1. `--trusted` now reports every hook definition in `.codex/hooks.json`
+   individually — one `<event> <matcher> <command>: fired|never` line
+   each — instead of a single global yes/no keyed off whether one marker
+   file merely exists. `.codex/hooks/.loom-hook-fired` becomes a
+   tab-separated ledger (`<hook_event_name>\t<command>\t<tool_name>`),
+   appended to by a new recorder (`loom_record_fire.py`) that every hook
+   invocation calls; `LOOM_SELF_TEST=1` still leaves the ledger
+   untouched, and a pre-existing zero-byte marker reads as
+   "PreToolUse Bash .codex/hooks/loom-checker: fired (legacy)" rather
+   than vouching for definitions that have never once run.
+2. The two `.codex/hooks/*.sh` PostToolUse scripts
+   (`validate-skill-folder-structure.sh`, `remind-memory-mirror.sh`)
+   become thin recording shims delegating to their `.claude/hooks/`
+   originals, closing the drift the `remind-memory-mirror.sh` copy had
+   accumulated since 2026-08 (`docs/loom/backlog/` vs the current
+   `docs/loom/intent/<change-id>.md`).
+3. The three station texts that mention Codex hook trust — write-plan's
+   `codex-first-contact.md` §3–§5, `write-plan/SKILL.md`,
+   `build/SKILL.md` — now describe the per-definition check: read
+   `--trusted`'s per-definition output before touching Codex, what
+   trust is bound to (a specific event/matcher/command triple, not the
+   worktree), and that your own hooks are covered too.
+
 ## [1.2.3] — 2026-09-04 — sentence cap on the positioning paragraphs
 
 `docs/loom/2026-09-04-positioning-paragraph-cap-redesign/`.
