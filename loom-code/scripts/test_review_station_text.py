@@ -157,6 +157,34 @@ def test_reviewer_agent_paragraph_names_output_as_claim_fix_round_confirms() -> 
     _assert_within_sentence_caps(para)
 
 
+def test_reviewer_agent_paragraph_has_symmetric_three_way_attribution_sentence() -> None:
+    """Branch-end fix round 2 (branch-end-02, plan.md Risks #6 / Questions
+    asked #3, option A): two independent cold reads of reviewer.md alone
+    both wrongly claimed item 3 ('./probe.py and probe.py counted as two
+    artifacts', the adversary's own-artifact-path class) and item 8 ('the
+    new function's happy path has no unit test', the implementer's RED
+    class) as the reviewer's -- see evidence/coldread-reviewer.txt. One
+    sentence in the `You own` paragraph must, in the SAME sentence, name
+    BOTH the adversary (a probe's own artifact is not the reviewer's) and
+    the implementer (a missing test is the implementer's RED to write)."""
+    text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
+    para = _you_own_paragraph(text)
+    sentences = _sentences(para)
+    hits = [
+        s
+        for s in sentences
+        if "adversary" in s.lower()
+        and "implementer" in s.lower()
+        and "artifact" in s.lower()
+        and ("test" in s.lower() or "RED" in s)
+    ]
+    assert hits, (
+        "no sentence in reviewer.md's You-own paragraph names both the "
+        "adversary and the implementer alongside artifact/test-or-RED"
+    )
+    _assert_within_sentence_caps(para)
+
+
 def test_adversary_agent_paragraph_owns_probe_artifact_bookkeeping() -> None:
     """Branch-end fix (branch-end-01): cold-read trial 2 showed the class
     'same artifact recorded under two spellings/paths counted twice' was
