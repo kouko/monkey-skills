@@ -32,22 +32,6 @@ Role boundaries enforced by behavior, not reading restrictions:
 ## Commands
 
 <!-- BEGIN command-surface (managed) -->
-- **Check an intent's Open questions gate** (write-spec / write-plan
-  intake self-check):
-  `python3 loom-code/scripts/check_open_questions.py <intent-path>` —
-  scopes the scan to the intent's `## Open questions` section only
-  (a token outside that section — prose, a fenced code-block example —
-  is never inspected; heading detection and the entry scan are both
-  fence-aware); rc=1 on any `[OPEN]` entry (its `OQ-<n>` named on
-  stderr), on an absent or duplicated `## Open questions` heading, on a
-  present-but-bare or prose-only section, on a line that ATTEMPTS an
-  entry — an `OQ-<n>` id followed by an opening `[` — but fails the
-  strict `- OQ-<n> [OPEN|RESOLVED] — <text>` grammar, or on the pinned
-  `N/A — no unresolved question: <reason>` line missing its reason;
-  rc=0 when every well-formed entry is `[RESOLVED]` or the N/A line is
-  well-formed. Grammar SSOT: the `intent` artifact schema in
-  `loom-code/contract/manifest.yaml` + `loom-code/contract/templates/intent.md`
-  — not restated here.
 - **Sync a plugin's Codex manifest from its Claude SSOT**:
   `python3 scripts/sync_codex_manifests.py <plugin>` — copies the 8
   shared fields (name/version/description/author/homepage/repository/
