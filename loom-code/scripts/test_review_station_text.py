@@ -108,7 +108,13 @@ _NUL = "\x00"
 
 
 def _sentences(paragraph: str) -> list[str]:
-    """Split `paragraph` into sentences per the rule documented above."""
+    """Split `paragraph` into sentences per the rule documented above.
+
+    Known, accepted limitation (branch-end nit, 2026-09-04): only the four
+    abbreviations in `_ABBREV` are exempt. A dotted abbreviation outside that
+    list (`U.S.`, `Dr.`) is split as a sentence end and OVERcounts — the
+    safe direction for a cap, so the list is not extended speculatively; add
+    an entry when a contract paragraph actually needs it."""
     text = _BACKTICK.sub("BACKTICKSPAN", paragraph)
     text = _ABBREV.sub(lambda m: m.group(1) + _NUL, text)
     text = " ".join(text.split())
