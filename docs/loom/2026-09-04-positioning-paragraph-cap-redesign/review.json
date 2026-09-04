@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
+  "reviewed_sha": "e8ab5eea55701eebbbede466f9d9df2d406926cb",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -172,6 +172,32 @@
         "branch-end-02 (codex's): nothing found to reopen — sentence, cap bump 1300→1340 (slack 2) and disclosure verified"
       ],
       "notes": "Full suite reproduced 1235 passed; evidence probes 39 passed / 1 xfailed (U.S. nit, deferred to ship fold). New reviewer sentence does not contradict adversary.md's parallel sentence."
+    },
+    {
+      "reviewer": "rev-branch-end-cap-codex-7b12",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+code",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "e8ab5eea55701eebbbede466f9d9df2d406926cb",
+      "dimension_scores": {},
+      "findings": [],
+      "notes": "confirmation round after the ship nit batch (cc719041) and probe graduation (e8ab5eea): The nit batch documents the accepted safe-direction U.S. overcount, and only wording, records, and probe copies moved; the copies differ solely in the required parents[5]→parents[2] path adjustment and its matching comment."
+    },
+    {
+      "reviewer": "rev-branch-end-cap-sonnet-c8d5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+code",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "e8ab5eea55701eebbbede466f9d9df2d406926cb",
+      "dimension_scores": {},
+      "findings": [],
+      "notes": "confirmation round after the ship nit batch (cc719041) and probe graduation (e8ab5eea): Confirmed: nothing but wording (docstring note on the U.S.-abbreviation limitation, two blind-run-report record lines) and byte-copied probe graduation moved — reproduced 1274 passed, 1 xfailed."
     }
   ],
   "probes": [
@@ -246,6 +272,38 @@
       "sha": "65359a0cc27c0e72852273639fe6d7910522f68e",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_positioning_branch_end_r2.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "e8ab5eea55701eebbbede466f9d9df2d406926cb",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py -q",
+      "sha": "e8ab5eea55701eebbbede466f9d9df2d406926cb",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py -q",
+      "sha": "e8ab5eea55701eebbbede466f9d9df2d406926cb",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_sentence_cap_branch_end.py -q",
+      "sha": "e8ab5eea55701eebbbede466f9d9df2d406926cb",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_sentence_cap_branch_end.py"
     }
   ],
   "questions": [
@@ -263,6 +321,11 @@
       "decision_point": 3,
       "text": "讀者側冷讀兩次都錯同兩條（第 3、8 條），是措辭偏差不是雜訊；intent 說讀者段不動、驗收 3 又要讀者側 8/8，兩者衝突。A＝現在在讀者段補一句對稱的三方歸屬（砍 reviewer.md 別處約 25 詞或調本體帽、重跑冷讀、多一輪）；B＝不改、驗收 3 讀者側記未達、留給下一個 intent。（答：A）",
       "type": "consequence"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告逐條呈現（驗收 1–4 皆 works，第 3 條為第三次抽樣；既有資料未動；我幫你決定的事：句數帽單位、40 無出處、畢業探針不再與舊存證逐字相同、本體帽 1300→1340）。OK 嗎？（答：ok）",
+      "type": "done"
     }
   ],
   "open_findings": [
@@ -368,6 +431,7 @@
   "notes": [
     "2026-09-04 branch-end round 1: NEEDS_REVISION from both readers; reviewed_sha unchanged. Nits folded at ship: `U.S.`-style abbreviation overcount (codex); semicolon-chain evasion under 40 words demonstrated by adv-branch-end probe, accepted by plan Risks 4.",
     "2026-09-04 branch-end round 2: PASS from both readers; reviewed_sha → 65359a0c. Ship fold (nits): U.S.-style abbreviation overcount; semicolon-chain evasion accepted by plan Risks 4.",
-    "2026-09-04 round 2 probes re-run at the reviewed commit 65359a0c: test_abuse_sentence_cap.py 16 passed; test_abuse_sentence_cap_branch_end.py 23 passed 1 xfailed (U.S. nit); graduated test_probes_positioning_branch_end_r2.py 19 passed (sentence-cap boundary probes re-pinned by W1-02)."
+    "2026-09-04 round 2 probes re-run at the reviewed commit 65359a0c: test_abuse_sentence_cap.py 16 passed; test_abuse_sentence_cap_branch_end.py 23 passed 1 xfailed (U.S. nit); graduated test_probes_positioning_branch_end_r2.py 19 passed (sentence-cap boundary probes re-pinned by W1-02).",
+    "2026-09-04 branch-end round 3 (confirmation): nit batch cc719041 + graduation e8ab5eea; both readers PASS; reviewed_sha → e8ab5eea; decision point ③ accepted (ok)."
   ]
 }
