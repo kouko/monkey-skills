@@ -1,23 +1,243 @@
 {
   "reviewed_sha": "4ab5224d32c3f09c0a5a1e9d0246b8f32b1d775c",
-  "scope": "branch base — no checkpoint yet",
-  "vendors": ["anthropic", "openai"],
-  "second_vendor": "codex",
-  "verdicts": [],
-  "probes": [],
-  "questions": [
-    {"decision_point": 1, "text": "你要的是把兩段定位段的字數帽從「剛好裝得下」改成「防漂移」，限制方式要換、單位在實作前研究後由我決定並附依據；騰出的餘裕在對抗者段補一句「不是我的那些誰是讀者的、誰是實作者的」；冷讀重跑一次記三方歸屬但不當驗收。對嗎？（答：對）", "type": "what"},
-    {"decision_point": 1, "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：用）", "type": "consequence"}
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic",
+    "openai"
   ],
-  "open_findings": [],
+  "second_vendor": "codex",
+  "verdicts": [
+    {
+      "reviewer": "rev-branch-end-cap-codex-7b12",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+code",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/test_review_station_text.py:97",
+          "text": "The shipped splitter misses sentence endings followed by a closing quote and Unicode ellipses, allowing multiple sentences to merge and the six-sentence cap to undercount.",
+          "fix": "Extend the deterministic split rule to recognize closing punctuation after terminators and `…`, with binding boundary tests for both forms."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/blind-run-report.md:61",
+          "text": "The reviewer cold read scored 6/8, so Acceptance 3's explicit requirement that both role-specific own/not-own runs score 8/8 is unmet regardless of reviewer.md being untouched or the result being a single sample.",
+          "fix": "Disambiguate the reviewer contract for the two missed classes and rerun the prescribed cold read until the recorded reviewer-side result satisfies 8/8."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_review_station_text.py:95",
+          "text": "The abbreviation allow-list excludes forms such as `U.S.`, so the cap can overcount one grammatical sentence as two.",
+          "fix": "Add the supported dotted-abbreviation handling and a regression case for `U.S.`."
+        }
+      ],
+      "notes": "Reproduced both undercounts directly. Semicolon-chain escape is real but plan Risk 4 accepts it. count=0 mutation change verified as not a weakening. Could not run pytest in the read-only sandbox (no writable tmp)."
+    },
+    {
+      "reviewer": "rev-branch-end-cap-sonnet-c8d5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+code",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — no external HTTP/SDK/MCP/CLI surface touched",
+        "principles-conformance": "N/A — no PRINCIPLES.md applies to this delta",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/CHANGELOG.md:24",
+          "text": "\"their mutation-count helper is fixed to count sentences dropped, not words\" misdescribes the W1-02 fix, which changed re.sub(..., count=1) to count=0 in _mutate_paragraph (test_probes_positioning_branch_end.py:216) so every occurrence of a duplicated drop-token is deleted; nothing in that fix counts sentences vs words.",
+          "fix": "Rewrite CHANGELOG bullet 3 to describe the actual fix: the helper now deletes every occurrence of the dropped token, not just the first, so a token that appears twice cannot leave a surviving occurrence that masks the mutant."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py:111",
+          "text": "_sentences() (test_review_station_text.py:97) undercounts: a sentence ending .\" or … is not split by (?<=[.!?])\\s+, silently merging two sentences, so SENTENCE_CAP=6 can be exceeded without the check firing — reproduced by running the strict-xfail probe (32 passed, 3 xfailed).",
+          "fix": "Extend the terminator class to include closing quotes after terminators and …, then flip the two xfail markers to real assertions."
+        }
+      ],
+      "notes": "Acceptance 3 reader-side 6/8 read as single-sample cold-read noise on unchanged prose (prior change reached 8/8 on two consecutive samples of the same paragraph; intent keeps reader text out of scope) — a ship-gate/user-acceptance question, not a finding against this lens. count=1→count=0 verified as a strengthening. Full suite 1234 passed reproduced."
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py -q",
+      "sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py -q",
+      "sha": "cfc719a7bd449018d8eeab064306344d9984e81c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "claude -p --model sonnet (two calls, one contract path each, the 8-item list from the prior change) + python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "202e1398862f3f48eb99fd90001f8a01f621ba0c",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/blind-run-report.md"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是把兩段定位段的字數帽從「剛好裝得下」改成「防漂移」，限制方式要換、單位在實作前研究後由我決定並附依據；騰出的餘裕在對抗者段補一句「不是我的那些誰是讀者的、誰是實作者的」；冷讀重跑一次記三方歸屬但不當驗收。對嗎？（答：對）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：用）",
+      "type": "consequence"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/test_review_station_text.py:97",
+      "origin_sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
+      "raised_by": "rev-branch-end-cap-codex-7b12, rev-branch-end-cap-sonnet-c8d5, adv-branch-end-cap-e3a0",
+      "text": "_sentences() treats neither .\" (terminator then closing quote) nor … as a sentence end; two sentences merge and SENTENCE_CAP undercounts."
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/blind-run-report.md:61",
+      "origin_sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
+      "raised_by": "rev-branch-end-cap-codex-7b12",
+      "text": "Reviewer-side cold read own/not-own 6/8 against Acceptance 3's 8/8 (reviewer.md untouched by this delta; sonnet reader reads it as single-sample noise — disagreement recorded, not averaged)."
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/CHANGELOG.md:24",
+      "origin_sha": "3fed039d7db97980ba99f5830ceaad660000fa5e",
+      "raised_by": "rev-branch-end-cap-sonnet-c8d5",
+      "text": "CHANGELOG bullet 3 misdescribes the W1-02 mutation-helper fix (count=1→count=0), not 'count sentences dropped, not words'."
+    }
+  ],
   "dispatch": [
-    {"task": "W0-01", "role": "adversary", "agent_id": "adv-w0-01-cap-7c21", "model": "sonnet", "started": "2026-09-04T21:14:00+08:00", "fresh_context": true},
-    {"task": "W1-01", "role": "implementer", "agent_id": "impl-w1-01-cap-9e4b", "model": "sonnet", "started": "2026-09-04T21:20:00+08:00", "fresh_context": true},
-    {"task": "W1-02", "role": "implementer", "agent_id": "impl-w1-02-cap-51d8", "model": "sonnet", "started": "2026-09-04T21:27:00+08:00", "fresh_context": true},
-    {"task": "W1-03", "role": "implementer", "agent_id": "impl-w1-03-cap-2b77", "model": "sonnet", "started": "2026-09-04T21:38:00+08:00", "fresh_context": true},
-    {"task": "branch-end", "role": "adversary", "agent_id": "adv-branch-end-cap-e3a0", "model": "sonnet", "started": "2026-09-04T21:48:00+08:00", "fresh_context": true},
-    {"task": "branch-end", "role": "blind-runner", "agent_id": "blind-branch-end-cap-4f9c", "model": "sonnet", "started": "2026-09-04T21:48:00+08:00", "fresh_context": true},
-    {"task": "branch-end", "role": "reviewer", "agent_id": "rev-branch-end-cap-codex-7b12", "model": "codex", "started": "2026-09-04T22:02:00+08:00", "fresh_context": true},
-    {"task": "branch-end", "role": "reviewer", "agent_id": "rev-branch-end-cap-sonnet-c8d5", "model": "sonnet", "started": "2026-09-04T22:02:00+08:00", "fresh_context": true}
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-cap-7c21",
+      "model": "sonnet",
+      "started": "2026-09-04T21:14:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-cap-9e4b",
+      "model": "sonnet",
+      "started": "2026-09-04T21:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-cap-51d8",
+      "model": "sonnet",
+      "started": "2026-09-04T21:27:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-cap-2b77",
+      "model": "sonnet",
+      "started": "2026-09-04T21:38:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-branch-end-cap-e3a0",
+      "model": "sonnet",
+      "started": "2026-09-04T21:48:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-branch-end-cap-4f9c",
+      "model": "sonnet",
+      "started": "2026-09-04T21:48:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-branch-end-cap-codex-7b12",
+      "model": "codex",
+      "started": "2026-09-04T22:02:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-branch-end-cap-sonnet-c8d5",
+      "model": "sonnet",
+      "started": "2026-09-04T22:02:00+08:00",
+      "fresh_context": true
+    }
+  ],
+  "notes": [
+    "2026-09-04 branch-end round 1: NEEDS_REVISION from both readers; reviewed_sha unchanged. Nits folded at ship: `U.S.`-style abbreviation overcount (codex); semicolon-chain evasion under 40 words demonstrated by adv-branch-end probe, accepted by plan Risks 4."
   ]
 }
