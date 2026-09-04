@@ -47,9 +47,9 @@ also lists, in labels the user can read — the plan, spec, review record's
 findings, evidence, test docstrings, test names, commit messages —
 whether the English rule held for each, and where a template rule also
 binds that artifact: EARS `REQ-<n>` lines bind the spec, the Conventional
-Comments label binds the findings text, `test_<unit>_<state>_<expected>`
-binds the test names. Identifiers appear only in each row's evidence
-cell.
+Comments label binds the findings text, and each test is named
+`test_<unit>_<state>_<expected>`. Identifiers appear only in each row's
+evidence cell.
 
 Then return, to the review station:
 
