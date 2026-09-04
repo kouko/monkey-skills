@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+  "reviewed_sha": "ff184a7a",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -340,6 +340,46 @@
       "findings": [],
       "notes": "fix round: findings 1-4 FIXED (graduation ordering; stamp==manifest assertion; W1 dispatch-order gap disclosed; SWE-ABS named)",
       "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7"
+    },
+    {
+      "reviewer": "rev-close-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent checkpoint: delta 43ea1be3..92f21a33 = branch-end record + Acceptance 6 user-decided rewording + status closed PR #786; rewording faithful to option (a) — round 6 record: the Acceptance 6 rewording commit (the same read covered the close commit, recorded as round 7)",
+      "sha": "ff184a7a"
+    },
+    {
+      "reviewer": "rev-close-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent checkpoint: exactly the three expected commits; nothing else — round 6 record: the Acceptance 6 rewording commit (the same read covered the close commit, recorded as round 7)",
+      "sha": "ff184a7a"
     }
   ],
   "probes": [
@@ -450,7 +490,7 @@
     {
       "kind": "package-tests",
       "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "",
       "scope": "branch-end"
@@ -466,7 +506,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k merged_into_main_still_blocked",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
       "scope": "branch-end"
@@ -474,7 +514,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k mirror",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
       "scope": "branch-end"
@@ -482,7 +522,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k missing_answer",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
       "scope": "branch-end"
@@ -490,7 +530,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k whitespace",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
       "scope": "branch-end"
@@ -498,7 +538,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k referenced_nowhere_outside_history",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
       "scope": "branch-end"
@@ -506,7 +546,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py -q -k templates_md_passes_intent",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py",
       "scope": "branch-end"
@@ -514,7 +554,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py -q -k cannot_narrow_away",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py",
       "scope": "branch-end"
@@ -522,7 +562,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py -q -k fake_squash_subject_off_main",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py",
       "scope": "branch-end"
@@ -530,7 +570,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py -q -k four_records_runs_once",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py",
       "scope": "branch-end"
@@ -538,7 +578,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py -q -k dotslash_vs_bare",
-      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7",
+      "sha": "ff184a7a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py",
       "scope": "branch-end"
@@ -836,6 +876,22 @@
       "agent_id": "impl-be-fix3-cs",
       "model": "sonnet",
       "started": "2026-09-04T11:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-codex-cs",
+      "model": "codex",
+      "started": "2026-09-04T11:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-sonnet-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T11:55:00+08:00",
       "fresh_context": true
     }
   ],
