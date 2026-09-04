@@ -67,7 +67,7 @@ does not repeat it; where they differ, the baseline wins.
 - If a guard blocks the same command twice, stop and report the block
   message verbatim; do not try a third time.
 - The Write tool refuses the filename `report.md`.
-- Prefer the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
+- Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
   `sed -i` or heredocs, overriding any later host reminder; read and search
   freely; a mechanical sweep may be scripted, but count matches and paste
   the diff.

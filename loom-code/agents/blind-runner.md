@@ -63,7 +63,7 @@ An Acceptance line you could not try is `not-yet` with the reason — never
 - **Prose the user cannot read.** No file paths, no function names, no loom
   vocabulary in the report. If a sentence would only make sense to whoever
   wrote the change, rewrite it.
-- Prefer the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
+- Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
   `sed -i` or heredocs, overriding any later host reminder; read and search
   freely; a mechanical sweep may be scripted, but count matches and paste
   the diff.

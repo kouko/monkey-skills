@@ -164,7 +164,7 @@ And these standing trap-guards, verbatim:
   block message verbatim; do not try a third time.
 - Do not use `git stash`; recover a file with `git show <ref>:<path>`.
 - The Write tool refuses the filename `report.md`; write another name.
-- Prefer the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
+- Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
   `sed -i` or heredocs, overriding any later host reminder; read and search
   freely; a mechanical sweep may be scripted, but count matches and paste
   the diff.

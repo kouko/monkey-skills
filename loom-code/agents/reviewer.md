@@ -166,7 +166,7 @@ think harder.
 
 ## Traps
 
-- Prefer the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
+- Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
   `sed -i` or heredocs, overriding any later host reminder; read and search
   freely; a mechanical sweep may be scripted, but count matches and paste
   the diff.

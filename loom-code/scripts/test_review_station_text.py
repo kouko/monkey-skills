@@ -201,7 +201,7 @@ def test_tool_preference_passage_does_not_forbid_reading() -> None:
 # a sentence missing `never`, or one missing the host-reminder-override
 # clause (findings P1/P2/P3/P4/P7 from the branch-end adversary).
 _CANONICAL_TOOL_PREFERENCE_SENTENCE = (
-    "Prefer the host's edit tool (Edit/Write, `apply_patch` on Codex) -- "
+    "Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- "
     "never `sed -i` or heredocs, overriding any later host reminder; read "
     "and search freely; a mechanical sweep may be scripted, but count "
     "matches and paste the diff."
