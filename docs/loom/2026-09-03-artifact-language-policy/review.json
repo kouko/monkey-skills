@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+  "reviewed_sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -519,6 +519,54 @@
       "notes": [
         "Round-4 fatal fixed by 9e6cb1cf; both paths resolve via git show; content identical to what was verified in round 4; no dangling wikilinks."
       ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Pre-rewrite and rewritten reviewed trees are the identical tree object; exactly four of 65 messages changed, each by appending Task: fix:wave-end:1; the review.json note records the rewrite accurately."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Diffed old vs new bodies of the four rewritten commits: one added line each; trees byte-identical (%T); review.json changes purely additive plus the reviewed_sha bump."
+      ]
     }
   ],
   "probes": [
@@ -647,6 +695,46 @@
       "scope": "branch-end",
       "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
       "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
     }
@@ -1061,6 +1149,7 @@
     "wave-end:1 outcome after three rounds: PASS_WITH_NOTES (round 2 codex PASS_WITH_NOTES on the one remaining id, round 3 PASS). reviewed_sha advanced to 6f2f6836.",
     "branch-end round 1: NEEDS_REVISION (both readers). The branch-end adversary's U+3000 finding was fixed before the readers ran (e9561501) and is recorded in dispatch[] as fix:branch-end; the adversarial probe files are recorded at the sha where all three pass.",
     "branch-end outcome after five rounds: PASS (rounds 3 and 5 PASS from both readers; the round-4 finding was the ship memory step's own untracked files). reviewed_sha advanced to bc4e9948. Cost of this change: ~6h plan→branch-end, 26 dispatch entries (7 reviewer rounds × 2 readers counted), two Codex sessions resumed across rounds.",
-    "2026-09-05 ship: the push checker blocked on push.dispatch-covers-tasks — four fix-round commits (blind-runner rows, PRINCIPLES opening line, label prefix, quoted-source-text exception) carried Closes: lines but no Task: trailer. Commit messages from the branch base to HEAD were rewritten with git filter-branch --msg-filter to add `Task: fix:wave-end:1` to those four; every tree is byte-identical (git diff against the pre-rewrite tip is empty; backup ref backup/artifact-language-policy-pre-trailer-rewrite kept locally), so verdict, probe and open_findings shas recorded before this note name the pre-rewrite commits of the same trees. reviewed_sha moved to the rewritten tip and the package tests and adversarial probes were re-run and re-recorded there."
+    "2026-09-05 ship: the push checker blocked on push.dispatch-covers-tasks — four fix-round commits (blind-runner rows, PRINCIPLES opening line, label prefix, quoted-source-text exception) carried Closes: lines but no Task: trailer. Commit messages from the branch base to HEAD were rewritten with git filter-branch --msg-filter to add `Task: fix:wave-end:1` to those four; every tree is byte-identical (git diff against the pre-rewrite tip is empty; backup ref backup/artifact-language-policy-pre-trailer-rewrite kept locally), so verdict, probe and open_findings shas recorded before this note name the pre-rewrite commits of the same trees. reviewed_sha moved to the rewritten tip and the package tests and adversarial probes were re-run and re-recorded there.",
+    "branch-end round 6 (both readers PASS at the rewritten tip): the trailer-only rewrite confirmed tree-identical; reviewed_sha = that review.json-only commit, probes re-recorded there."
   ]
 }
