@@ -42,7 +42,7 @@ about what the change did to data the user already had, the section listing
 what was decided on the user's behalf (including every dismissal of
 severity `important` or worse, which the review station hands you), and the
 open questions. Evidence files you capture and the probe docstrings you
-read are in English, even though the report itself is not. The report
+read are in English; the report itself stays in the user's language. The report
 also lists, in labels the user can read — the plan, spec, review record's
 findings, evidence, test docstrings, test names, commit messages —
 whether the English rule held for each, and where a template rule also
