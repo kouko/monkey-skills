@@ -23,8 +23,12 @@ Versioning: [Semantic Versioning](https://semver.org/).
    implementer when the paragraph was read alone.
 3. The three graduated positioning probe files import the shared
    `_sentences` helper instead of re-implementing the split rule, drop
-   the retired `WORD_CAP = 80` constant, and their mutation-count
-   helper is fixed to count sentences dropped, not words.
+   the retired `WORD_CAP = 80` constant, and their mutation helper
+   (`_mutate_paragraph`) moves from `re.sub(..., count=1)` to
+   `count=0`, deleting every occurrence of the drop token instead of
+   just the first — `adversary.md`'s restated paragraph now says
+   `reconcile` twice, and a count=1 deletion left the second
+   occurrence standing, letting that mutant survive.
 
 ## [1.2.2] — 2026-09-04 — tool preference for file edits
 
