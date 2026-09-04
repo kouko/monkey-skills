@@ -264,6 +264,22 @@
       "model": "sonnet",
       "started": "2026-09-04T12:43:04+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-r2",
+      "role": "adversary",
+      "agent_id": "adv-be-r2-pos",
+      "model": "opus",
+      "started": "2026-09-04T12:52:54+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-r2",
+      "role": "blind-runner",
+      "agent_id": "blind-be-r2-pos",
+      "model": "sonnet",
+      "started": "2026-09-04T12:52:54+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex"
