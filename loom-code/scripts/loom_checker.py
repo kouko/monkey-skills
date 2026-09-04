@@ -136,7 +136,9 @@ RULES: list[tuple[str, str]] = [
     (
         "push.probes-adversarial",
         "A change carrying a code / spec / skill / gate artifact records at least three "
-        "adversarial probes against the reviewed commit, and each one still passes.",
+        "adversarial probe records against the reviewed commit; a file referenced by "
+        "several records is executed once, and every record of a failing file is "
+        "unusable.",
     ),
     (
         "push.probes-package-tests",
@@ -544,7 +546,7 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_product_no_identifiers(front, sections)
 
     reason_failures, needs_design = check_needs_design_reason(
-        front, commit_msg, repo, path
+        front, commit_msg, repo, path, out
     )
     failures += reason_failures
 
@@ -728,7 +730,86 @@ def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
     return False
 
 
-def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: Path):
+SQUASH_SUBJECT = re.compile(r" \(#\d+\)\s*$")
+
+
+def _squash_note(repo: Path, relative: str, sha: str) -> str | None:
+    """Does `sha` have the SHAPE of a GitHub "Squash and merge" commit on
+    the trunk? Three conditions, all git topology or subject shape -- never
+    message text, so a hand-written subject that merely LOOKS like a squash
+    cannot forge the exception (W0-01 adversary: the fake-`(#1)`-off-main
+    case):
+
+    1. single parent -- the squash button makes a plain commit, not a
+       2-parent merge (a real `--no-ff` merge already passes today by a
+       different path and is untouched by this function);
+    2. the subject ends ` (#<n>)` -- exactly what GitHub writes;
+    3. `sha` is on the trunk's first-parent chain (REOPEN_TRUNK_CANDIDATES
+       -- the same four names `branch_base()` resolves against, minus
+       `@{upstream}` for the reason documented at that constant: a
+       branch's own upstream must never stand in as "the trunk" here).
+       This is checked by literal MEMBERSHIP in
+       `git rev-list --first-parent <candidate>`, not by
+       `merge-base --is-ancestor` -- ancestry alone proves `sha` is
+       *reachable* from the candidate, which a hand-written, single-parent
+       `... (#<n>)` commit on a side branch also is once that branch is
+       merged into the candidate with a real (`--no-ff`) merge commit; it
+       is reachable but never walked by a first-parent traversal, since a
+       first-parent walk steps over the merge commit straight to the
+       candidate's OWN previous first parent and never descends into the
+       merged-in branch. The membership walk is O(history) in the worst
+       case (it lists the candidate's entire first-parent chain to check
+       one sha) -- cheap in practice because the trunk's first-parent
+       chain is short relative to full history including side branches.
+
+    These three are all this function can verify offline: it has no way to
+    ask GitHub whether `sha` really came from a "Squash and merge" click,
+    or whether the source branch's HEAD really carried the needs-design
+    line -- PR provenance is not fetchable from a local clone. The note
+    says exactly that, and states the shape-match as shape, not as a
+    verified squash. What is actually relied on is that the line was
+    already checked, verbatim, on the branch commit BEFORE it could reach
+    the trunk -- by this same rule running as the push gate on that
+    branch -- so the line is assumed carried forward, not re-derived here.
+
+    Residual: a commit hand-written with this exact shape (single parent,
+    `... (#<n>)` subject) and pushed straight to the trunk without going
+    through a reviewed branch -- bypassing the push gate that would have
+    checked the line -- is accepted by this exception too. That path is
+    governed by branch protection (who may push directly to the trunk),
+    not by this rule; this rule only recognizes the shape, it cannot tell
+    a real squash-merge from a direct push that mimics it.
+
+    Returns the printable note when all three shape conditions hold, else
+    None -- the note itself is the evidence for "why did it say that"
+    (concept-model §2b), not a bare pass.
+    """
+    parents = git_maybe(repo, "log", "-1", "--format=%P", sha)
+    if parents is None or len(parents.split()) != 1:
+        return None
+    subject = git_maybe(repo, "log", "-1", "--format=%s", sha)
+    if subject is None or not SQUASH_SUBJECT.search(subject):
+        return None
+    for candidate in REOPEN_TRUNK_CANDIDATES:
+        if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
+            continue
+        first_parent_chain = git_maybe(repo, "rev-list", "--first-parent", candidate)
+        if first_parent_chain is None or sha not in first_parent_chain.split():
+            continue
+        return (
+            f"intent.needs-design-reason: commit {sha[:7]} ({relative}) has the "
+            f"shape of a GitHub squash on {candidate}'s first-parent chain "
+            f"(single parent, subject {subject!r}); PR provenance is not "
+            "verifiable offline, so this is not a confirmed squash -- the "
+            "needs-design line is assumed carried by the branch that the push "
+            "gate checked before this commit reached the trunk."
+        )
+    return None
+
+
+def check_needs_design_reason(
+    front, commit_msg: Path | None, repo: Path, path: Path, out=sys.stdout
+):
     """`needs-design` carries a reason, and the intent's commit message
     repeats the line verbatim (concept-model §2b). With no `--commit-msg`
     (the post-commit and station calls) the message is that of the last commit
@@ -752,6 +833,7 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
             raw.split()[0] if raw.split() else None,
         )
     verdict = match.group(1)
+    sha, relative = None, None
     if commit_msg is not None:
         if not commit_msg.is_file():
             raise UsageError(f"no commit message file at {commit_msg}")
@@ -766,6 +848,15 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
             source = f"commit {sha[:7]}, which last changed status/needs-design"
     line = f"needs-design: {raw}"
     if _squeeze(line) not in _squeeze(message):
+        # `--commit-msg` names an exact message to check and is never the
+        # station's own recompute (deciding_commit() ran, if at all, only in
+        # the else branch above) -- the squash exception only ever applies
+        # to a commit this function itself found via git topology.
+        if sha is not None and relative is not None:
+            note = _squash_note(repo, relative, sha)
+            if note is not None:
+                out.write(note + "\n")
+                return [], verdict
         return (
             [
                 (
@@ -778,19 +869,47 @@ def check_needs_design_reason(front, commit_msg: Path | None, repo: Path, path: 
     return [], verdict
 
 
+TEMPLATES_GLOB = "**/templates/**"
+
+
 def touched_interface_surfaces(repo: Path, manifest, out) -> list[str]:
     """The changed paths that land on a declared interface surface, and a
     printed line saying which globs were used -- the answer to "why did it
     say that" is never a mystery. Both `intent.needs-design-recompute` and
-    `intent.kind-recompute` read this one recomputation."""
+    `intent.kind-recompute` read this one recomputation.
+
+    Only the `**/templates/**` glob match is narrowed by artifact type: it
+    also matches an agent-filled `.md` template that no user ever reads, so
+    a match against THIS glob alone counts only when `_artifact_type_for`
+    types the path `code` -- an `.md`/`.jinja` template stays excluded, a
+    `.tsx`/`.py` one still counts. A match against any OTHER glob -- the
+    manifest default (`**/cli/**`, `**/api/**`, `**/commands/**`,
+    `**/*.tsx`) or one a repo added via KICKOFF-DEFAULTS -- counts
+    regardless of type: a CLI help `.md` under `**/cli/**` is a user
+    surface exactly as much as a `.py` one is. This does not let an agent
+    narrow the surface, because `artifact-types` in KICKOFF-DEFAULTS is
+    reserved (the checker never reads it, per the manifest note); the type
+    mapping is the contract's own `artifact_types:` table, fixed regardless
+    of what a repo declares."""
     globs, source = interface_surfaces(repo, manifest)
-    out.write(f"interface-surfaces ({source}): {', '.join(globs)}\n")
-    matchers = [glob_to_regex(pattern) for pattern in globs]
-    return sorted(
+    matchers = [(pattern, glob_to_regex(pattern)) for pattern in globs]
+    touched = sorted(
         path
         for path in changed_paths(repo)
-        if any(matcher.match(path) for matcher in matchers)
+        if any(
+            matcher.match(path)
+            and (
+                pattern != TEMPLATES_GLOB
+                or _artifact_type_for(manifest, path) == "code"
+            )
+            for pattern, matcher in matchers
+        )
     )
+    out.write(
+        f"interface-surfaces ({source}): {', '.join(globs)} "
+        f"(non-code paths under {TEMPLATES_GLOB} excluded)\n"
+    )
+    return touched
 
 
 def check_needs_design_recompute(touched: list[str]) -> list[tuple[str, str]]:
@@ -2637,6 +2756,13 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
 
     usable = 0
     reasons: list[str] = []
+    # Every format check below (command present, not trivial, artifact
+    # present in the reviewed tree, command names its artifact, sha matches
+    # the reviewed commit, tree clean) still runs once per record -- only
+    # the subprocess execution that follows is deduped by artifact path, so
+    # a file named by many records is attacked once and that one verdict is
+    # applied to every record naming it.
+    pending: dict[str, list[dict]] = {}
     for probe in review.get("probes", []):
         if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
             continue
@@ -2694,6 +2820,14 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 "would be attacked is not the reviewed tree"
             )
             continue
+        pending.setdefault(os.path.normpath(artifact), []).append(
+            {"label": label, "result": probe.get("result")}
+        )
+
+    for artifact, records in pending.items():
+        count = len(records)
+        label = records[0]["label"]
+        result = records[0]["result"]
         try:
             argv = artifact_argv(repo, artifact)
         except ValueError as exc:
@@ -2712,7 +2846,8 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
             continue
         out.write(
             f"adversarial {artifact}: observed exit code {observed} "
-            f"(recorded command: {label!r}, recorded result: {probe.get('result')!r})\n"
+            f"(recorded command: {label!r}, recorded result: {result!r}), "
+            f"referenced by {count} records\n"
         )
         if observed != 0:
             reasons.append(
@@ -2721,7 +2856,7 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
                 "recorded command wraps it in"
             )
             continue
-        usable += 1
+        usable += count
 
     if usable >= ADVERSARIAL_FLOOR:
         return []

@@ -1,6 +1,6 @@
 {
   "name": "loom-design",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "requires-contract": ">=1.0",
   "description": "Two stations — capture-intent, write-spec — turn a rough idea into a confirmed intent and a spec the user reads back in their own words, plus two tools: product-principles and design-system. Reads loom-code's contract package. Claude Code + Codex.",
   "author": {

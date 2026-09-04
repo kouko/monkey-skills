@@ -12,6 +12,15 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [1.0.3] — 2026-09-04 — Station summary: adversary-first scope
+
+No code change. Bumped because `capture-intent/SKILL.md`'s station summary
+table's build row now says "a full-lane `code`- or `gate`-typed task is
+adversary-first" (adversary-first dispatch extends from `gate`-typed tasks
+to every full-lane `code`- or `gate`-typed task; small lane unaffected) —
+kept in sync with loom-code's own copy of the same table
+(`docs/loom/2026-09-04-checker-seams/`).
+
 ## [1.0.2] — 2026-09-04 — Small-change lane: second-vendor ask
 
 No code change. Bumped because `capture-intent/SKILL.md` step 4's

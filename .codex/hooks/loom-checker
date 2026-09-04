@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# loom-checker 1.1.0
+# loom-checker 1.2.0
 # Written by loom-code/scripts/codex_scaffold.py — do not edit by hand.
 # The version stamp lives here, never in .codex/hooks.json: Codex binds hook
 # trust to the definition, so the command string must never change.

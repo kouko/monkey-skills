@@ -99,13 +99,26 @@ ambiguity between these two readings; the plan's grouping wins.)
 
 ## 2. The dispatch prompt
 
-**A task whose 檔 paths map to the `gate` artifact type is adversary-first.**
-When a plan task's files fall under `hooks/**`, `scripts/check_*`, or the
-checker itself, dispatch `loom-code:adversary` before the implementer: it
-writes executable probes against the not-yet-written behaviour and commits
-them, with a dispatch record written before that dispatch too. The
-implementer's own RED is one of those probes, not a test it invents itself;
-its dispatch record still goes in first, same as any other task.
+**In the full lane, a task whose 檔 paths map to the `code` or `gate`
+artifact type is adversary-first.** That covers `hooks/**`,
+`scripts/check_*`, the checker itself, and any other manifest-typed
+`code`: dispatch `loom-code:adversary` before the implementer: it writes
+executable probes against the not-yet-written behaviour and commits them,
+with a dispatch record written before that dispatch too. The
+implementer's own RED is one of those probes, not a test it invents
+itself; its dispatch record still goes in first, same as any other task.
+Independent adversarial tests catch false passes the implementing
+agent's own tests miss (SWE-ABS, ICML 2026: adversarial test synthesis
+rejected 19.7% of previously passing patches), and
+up-front probes also verify the plan's stated current-state facts before
+code is written. The order is process discipline, not a gate: it shows
+in `dispatch[]` (the adversary's `started` precedes the implementer's)
+and a reviewer can read it there; no push rule refuses an
+implementer-first task. The **small lane** (the checker's `change_lane`
+recompute — a plan whose tasks touch only tests, docs, or CI config)
+skips this: the implementer goes first as usual, and the adversary
+attacks at the checkpoint instead, scoping the up-front cost to the lane
+that carries the risk.
 
 Dispatch `loom-code:implementer` (contract: `agents/implementer.md`). Pass
 **paths, never file contents** — the implementer reads them itself:
@@ -294,7 +307,7 @@ finding.
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
 | write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read; a `gate`-typed task is adversary-first, the adversary dispatched before the implementer | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read; a full-lane `code`- or `gate`-typed task is adversary-first, the adversary dispatched before the implementer | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
 | review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | fresh-context reviewers, one in the small lane, two or more in the full lane (§1); no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |

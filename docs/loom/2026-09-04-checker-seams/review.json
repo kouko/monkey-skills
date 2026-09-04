@@ -1,0 +1,939 @@
+{
+  "reviewed_sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "reviewer": "rev-we0-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:0",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS_WITH_NOTES",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES — package suite and probes were orchestrator-recorded, not independently run",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:843",
+          "text": "Filtering every glob match to `code` drops genuinely user-facing Markdown such as CLI help under `cli/`, so an engineering intent can bypass both interface recomputes despite changing text users read",
+          "fix": "exempt only proven internal artifact classes/paths (including the contract template) while retaining docs that match explicit interface globs"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:736",
+          "text": "A hand-written single-parent `(#n)` commit on trunk satisfies the exception, yet the note claims it verified a GitHub squash and that the omitted line existed on its source branch; ancestry and subject shape prove neither",
+          "fix": "require repository-verifiable squash provenance or emit only the weaker verified facts and retain the block when provenance cannot be established"
+        }
+      ],
+      "sha": "b9cd7def7167c5efd05a93508ffc7c034f749dbc"
+    },
+    {
+      "reviewer": "rev-we0-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "scope": "wave-end:0",
+      "round": 1,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "N/A — no security-relevant surface touched",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES — did not execute the probe files or the package suite; relied on the orchestrator's recorded 1143/20 passed",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A — reviewer stated no PRINCIPLES.md in repo (incorrect: PRINCIPLES.md exists at the repo root; recorded as the reviewer said it)",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "N/A — additive fixes, no deletion opportunity in scope"
+      },
+      "findings": [],
+      "notes": "noted W0-02's type filter applies to KICKOFF-added globs too (deliberate per the intent's Constraint, flagged for awareness); W0-03 trusts topology alone by design; the two readers disagree on both points — the disagreement is the finding",
+      "sha": "b9cd7def7167c5efd05a93508ffc7c034f749dbc"
+    },
+    {
+      "reviewer": "rev-we0-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:0",
+      "round": 2,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:783",
+          "text": "`merge-base --is-ancestor` proves reachability, not membership on the trunk first-parent chain, so the emitted note can still state a false verified fact and admit side-branch commits",
+          "fix": "verify membership with a first-parent traversal before granting the exception"
+        }
+      ],
+      "notes": "fix round: delta b9cd7def..bdd8491d only; findings 03 and 04 FIXED",
+      "sha": "bdd8491d383a00a35125e3521662979db34aaba5"
+    },
+    {
+      "reviewer": "rev-we0-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "scope": "wave-end:0",
+      "round": 2,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: delta b9cd7def..bdd8491d matches the description; nothing broken",
+      "sha": "bdd8491d383a00a35125e3521662979db34aaba5"
+    },
+    {
+      "reviewer": "rev-we0-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:0",
+      "round": 3,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: delta bdd8491d..6b900d46 only; finding 05 FIXED — exact first-parent membership rejects reachable side-branch commits, candidate fall-through preserved",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d"
+    },
+    {
+      "reviewer": "rev-we0-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "scope": "wave-end:0",
+      "round": 3,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: rev-list --first-parent membership excludes --no-ff side-branch commits; None chain falls through; new test verified",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d"
+    },
+    {
+      "reviewer": "rev-be-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION — Acceptance 2 and 6 not literally satisfied",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES — recorded results inspected, not rerun",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION — graduation creates an unreviewed commit",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md:175",
+          "text": "Probe graduation requires a code commit after the accepted branch-end review, but the paragraph never sends the agent back through a branch-end checkpoint before push",
+          "fix": "state that graduation is committed before the review-only commit and requires rerunning branch-end, matching the store-entry rule"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-checker-seams/blind-run-report.md:17",
+          "text": "Acceptance 2 requires grep results only in CHANGELOG/history, but the report admits an additional test reference and still says works",
+          "fix": "satisfy the literal condition or mark Acceptance 2 not met"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-checker-seams/blind-run-report.md:41",
+          "text": "Acceptance 6 requires byte-identical files, while the mirror contains an extra stamp line, yet the report says works after redefining consistency",
+          "fix": "make the files byte-identical or amend Acceptance 6 through the user decision flow and report the actual result"
+        }
+      ],
+      "sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e"
+    },
+    {
+      "reviewer": "rev-be-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "N/A — no security-relevant surface in this delta",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES — relies on the orchestrator's recorded runs",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS_WITH_NOTES",
+        "principles-conformance": "PASS_WITH_NOTES",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md:175",
+          "text": "graduation paragraph never says the commit lands before the review-only commit nor that branch-end is re-run; following it literally trips push.review-only-head",
+          "fix": "sentence parallel to the store-entries paragraph"
+        },
+        {
+          "severity": "important",
+          "anchor": ".codex/hooks/loom_checker.py:2",
+          "text": "mirror stamp reads 1.1.0 while plugin.json is 1.2.0 — scaffold ran before the bump; the drift test checks shape only, never the stamp value",
+          "fix": "re-run the scaffold after the bump; assert stamp == plugin version"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-checker-seams/review.json dispatch[] W1-01/W1-03",
+          "text": "W1-01 deletes a gate-typed path and W1-03 edits code-typed json with implementer-only dispatches — this branch does not follow the adversary-first rule it writes",
+          "fix": "disclose in the blind-run report's I-decided-for-you section (the branch-end adversary covered both afterwards)"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/build/SKILL.md:111",
+          "text": "citation 'an ICML 2026 adversarial-test-synthesis study' has no name; the intent grounds the same fact as SWE-ABS 19.7%",
+          "fix": "name SWE-ABS or drop the citation"
+        }
+      ],
+      "sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e"
+    },
+    {
+      "reviewer": "rev-be-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: delta bd21f178..43ea1be3 only; findings 1-3 FIXED (graduation before review-only + re-run branch-end; grep empty; Acceptance 6 partly with options; mirror 1.2.0)",
+      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7"
+    },
+    {
+      "reviewer": "rev-be-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "fix round: findings 1-4 FIXED (graduation ordering; stamp==manifest assertion; W1 dispatch-order gap disclosed; SWE-ABS named)",
+      "sha": "43ea1be32833d1d8f7f49add0630033ad79897d7"
+    },
+    {
+      "reviewer": "rev-close-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent checkpoint: delta 43ea1be3..92f21a33 = branch-end record + Acceptance 6 user-decided rewording + status closed PR #786; rewording faithful to option (a) — round 6 record: the Acceptance 6 rewording commit (the same read covered the close commit, recorded as round 7)",
+      "sha": "ff184a7a"
+    },
+    {
+      "reviewer": "rev-close-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent checkpoint: exactly the three expected commits; nothing else — round 6 record: the Acceptance 6 rewording commit (the same read covered the close commit, recorded as round 7)",
+      "sha": "ff184a7a"
+    },
+    {
+      "reviewer": "rev-close-codex-cs",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 7,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent: status line confirmed → closed 2026-09-04 — PR #786; the same read (delta 43ea1be3..close) covered this commit; nothing else changed",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08"
+    },
+    {
+      "reviewer": "rev-close-sonnet-cs",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "scope": "branch-end",
+      "round": 7,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "close-intent: exactly the status line; PR #786 exists and is open",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py -q -k templates_md_passes_intent",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py -q -k templates_py_and_tsx_and_cli",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py -q -k cannot_narrow_away",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py -q -k squash_shaped_commit_on_main",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py -q -k fake_squash_subject_off_main",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py -q -k plain_non_squash",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py -q -k four_records_runs_once",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py -q -k reports_message_once",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py -q -k not_naming_its_artifact",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py -q -k stale_origin_main",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py -q -k dotslash_vs_bare",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py -q -k timeout_reported_once",
+      "sha": "6b900d46a37ba83531be945d71dd45549b0f831d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see docs/loom/2026-09-04-checker-seams/blind-run-report.md",
+      "sha": "a8a135240f753d25105e661416e7fd86d58d0d8e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k merged_into_main_still_blocked",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k mirror",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k missing_answer",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k whitespace",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py -q -k referenced_nowhere_outside_history",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py -q -k templates_md_passes_intent",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py -q -k cannot_narrow_away",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_templates_glob.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py -q -k fake_squash_subject_off_main",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_squash_needs_design.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py -q -k four_records_runs_once",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_probe_rerun_dedup.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py -q -k dotslash_vs_bare",
+      "sha": "7ff9e86fd9e323f02ce1ad322191696e69c78b08",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-checker-seams/evidence/probes/test_abuse_wave_end_topup.py",
+      "scope": "branch-end"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是 checker 四條小接縫加三件殘務在一個分支一次修完；做完後七條可見結果逐條；規則數不變、不加 waiver、每條 checker 改動對抗者先寫探針；四條原 intent 併入後標 withdrawn。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "探針先寫要不要擴到所有 code task？（答：先記下來、之後再討論；本 change 不含）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 codex 當第二讀者？（KICKOFF 本 change 改成 ask；答：用）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "研究回來後：探針先寫擴到完整車道的所有 code／gate task、小車道免，要不要併進這個 change 的 W1？（答：好，併進 W1）",
+      "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告九條逐條呈現（1–5、7–9 works；6 partly）；OK？（答：OK）",
+      "type": "done"
+    },
+    {
+      "decision_point": 3,
+      "text": "Acceptance #6「逐位元相同」：(a) 留版本戳、改 Acceptance 文字為「除版本戳那一行外相同」；(b) 把版本戳搬出檔案（另開 change）？（答：a；並確認戳＝plugin 版本）",
+      "type": "done"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:0-01",
+      "anchor": "loom-code/scripts/loom_checker.py:764",
+      "origin_sha": "66a29657",
+      "raised_by": "adv-we0-cs",
+      "resolved": "closed by eb3ed99f — _squash_note continues to the next trunk candidate; test_stale_origin_main_falls_through_to_local_main"
+    },
+    {
+      "id": "wave-end:0-02",
+      "anchor": "loom-code/scripts/loom_checker.py:2712",
+      "origin_sha": "66a29657",
+      "raised_by": "adv-we0-cs",
+      "resolved": "closed by eb3ed99f — dedup keyed on os.path.normpath(artifact); test_dotslash_and_bare_spellings_of_one_artifact_dedup_together"
+    },
+    {
+      "id": "wave-end:0-03",
+      "anchor": "loom-code/scripts/loom_checker.py:843",
+      "origin_sha": "b9cd7def7167c5efd05a93508ffc7c034f749dbc",
+      "raised_by": "rev-we0-codex-cs",
+      "resolved": "closed by bdd8491d — type filter scoped to **/templates/** matches; test_cli_help_md_still_counts_as_interface_surface, test_kickoff_added_docs_glob_still_counts_regardless_of_type; confirmed FIXED by rev-we0-codex-cs round 2"
+    },
+    {
+      "id": "wave-end:0-04",
+      "anchor": "loom-code/scripts/loom_checker.py:736",
+      "origin_sha": "b9cd7def7167c5efd05a93508ffc7c034f749dbc",
+      "raised_by": "rev-we0-codex-cs",
+      "resolved": "closed by bdd8491d — note states only verified facts + documented residual; test_squash_note_states_only_verified_facts; confirmed FIXED by rev-we0-codex-cs round 2 (the 'retain the block' half not adopted: it would re-create the problem Acceptance #3 removes; codex accepted the weaker-facts note)"
+    },
+    {
+      "id": "wave-end:0-05",
+      "anchor": "loom-code/scripts/loom_checker.py:783",
+      "origin_sha": "bdd8491d383a00a35125e3521662979db34aaba5",
+      "raised_by": "rev-we0-codex-cs",
+      "resolved": "closed by 6b900d46 — first-parent membership via rev-list --first-parent; test_ancestor_off_first_parent_chain_is_still_blocked; confirmed FIXED by rev-we0-codex-cs round 3"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/skills/build/SKILL.md:101",
+      "origin_sha": "f914f727",
+      "raised_by": "adv-be-cs",
+      "resolved": "closed by f44b98b0 — paragraph states the order is discipline recorded in dispatch[], not a gate"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/skills/ship/SKILL.md:176",
+      "origin_sha": "f914f727",
+      "raised_by": "adv-be-cs",
+      "resolved": "closed by f44b98b0 — name collision clause added (nit, folded in)"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/skills/ship/SKILL.md:175",
+      "origin_sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e",
+      "raised_by": "rev-be-codex-cs",
+      "resolved": "closed by a949328c — graduation lands before the review-only commit and re-runs branch-end; confirmed FIXED by both readers round 2"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-04-checker-seams/blind-run-report.md:17",
+      "origin_sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e",
+      "raised_by": "rev-be-codex-cs",
+      "resolved": "closed by a949328c — stale-script test carries no literal name; grep empty; report says works truthfully; confirmed FIXED by rev-be-codex-cs round 2"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "docs/loom/2026-09-04-checker-seams/blind-run-report.md:41",
+      "origin_sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e",
+      "raised_by": "rev-be-codex-cs",
+      "resolved": "closed by a949328c — report verdict partly with the user's two options; decision deferred to decision point ③; confirmed FIXED by rev-be-codex-cs round 2"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": ".codex/hooks/loom_checker.py:2",
+      "origin_sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e",
+      "raised_by": "rev-be-sonnet-cs",
+      "resolved": "closed by 10b5c427 — scaffold re-run, stamp 1.2.0, test_mirror_stamp_version_matches_plugin_manifest; confirmed FIXED by rev-be-sonnet-cs round 2"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-04-checker-seams/review.json dispatch[] W1-01/W1-03",
+      "origin_sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e",
+      "raised_by": "rev-be-sonnet-cs",
+      "resolved": "closed by 10b5c427 — disclosed in the blind-run report's I-decided-for-you section; branch-end adversary covered both paths; confirmed FIXED by rev-be-sonnet-cs round 2"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "loom-code/skills/build/SKILL.md:111",
+      "origin_sha": "bd21f1789a286c9a86c883033ef1abc7d6c4aa7e",
+      "raised_by": "rev-be-sonnet-cs",
+      "resolved": "closed by 10b5c427 — citation names SWE-ABS (ICML 2026) 19.7%; confirmed FIXED by rev-be-sonnet-cs round 2"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T08:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T08:33:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-03",
+      "role": "implementer",
+      "agent_id": "impl-w0-03-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T08:31:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-04",
+      "role": "implementer",
+      "agent_id": "impl-w0-04-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T08:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:0",
+      "role": "adversary",
+      "agent_id": "adv-we0-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T08:50:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:0-fix",
+      "role": "implementer",
+      "agent_id": "impl-we0-fix-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T08:57:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:0",
+      "role": "reviewer",
+      "agent_id": "rev-we0-codex-cs",
+      "model": "codex",
+      "started": "2026-09-04T09:02:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:0",
+      "role": "reviewer",
+      "agent_id": "rev-we0-sonnet-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:02:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:0-fix2",
+      "role": "implementer",
+      "agent_id": "impl-we0-fix2-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:0-fix3",
+      "role": "implementer",
+      "agent_id": "impl-we0-fix3-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T09:50:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-be-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T10:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T10:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix",
+      "role": "implementer",
+      "agent_id": "impl-be-fix-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T10:35:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-cs",
+      "model": "codex",
+      "started": "2026-09-04T10:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T10:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix2",
+      "role": "implementer",
+      "agent_id": "impl-be-fix2-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T10:48:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix3",
+      "role": "implementer",
+      "agent_id": "impl-be-fix3-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T11:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-codex-cs",
+      "model": "codex",
+      "started": "2026-09-04T11:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-close",
+      "role": "reviewer",
+      "agent_id": "rev-close-sonnet-cs",
+      "model": "sonnet",
+      "started": "2026-09-04T11:55:00+08:00",
+      "fresh_context": true
+    }
+  ],
+  "second_vendor": "codex"
+}

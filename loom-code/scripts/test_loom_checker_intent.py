@@ -679,6 +679,123 @@ def test_a_reason_change_needs_the_new_line_on_its_own_commit(tmp_path: Path) ->
     assert sha[:7] in result.stderr
 
 
+# --- intent.needs-design-reason: squash-on-trunk exception (W0-03) --------
+
+
+def test_squash_shaped_commit_on_main_satisfies_the_line(tmp_path: Path) -> None:
+    """GitHub's "Squash and merge" drops the branch's needs-design line into
+    a single-parent commit on main whose subject GitHub itself writes as
+    `... (#<n>)` -- the line the branch commit carried is not lost, just
+    relocated, so this must still pass."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--squash", "feature")
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent (#12)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "squash" in result.stdout.lower()
+
+
+def test_squash_note_states_only_verified_facts(tmp_path: Path) -> None:
+    """finding wave-end:0-04: the note used to assert it had VERIFIED a
+    squash and that the source branch carried the line -- neither is
+    provable offline (no PR provenance in a local clone). The note must
+    say plainly that this is unverifiable and state only the shape facts
+    this function can actually check."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--squash", "feature")
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent (#12)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "not verifiable offline" in result.stdout
+    assert "is a GitHub squash" not in result.stdout
+
+
+def test_stale_origin_main_falls_through_to_local_main(tmp_path: Path) -> None:
+    """finding wave-end:0-01: a stale `origin/main` (exists but predates the
+    squash) must not short-circuit the REOPEN_TRUNK_CANDIDATES loop -- the
+    squash IS an ancestor of local `main`, the next candidate, and the loop
+    must fall through to it rather than returning None on the first
+    candidate's failed ancestor check."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    git(repo, "checkout", "-q", "main")
+    # origin/main exists but is stale: it still points at the pre-squash tip.
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "merge", "-q", "--squash", "feature")
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent (#12)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "squash" in result.stdout.lower()
+
+
+def test_fake_squash_subject_off_main_is_still_blocked(tmp_path: Path) -> None:
+    """A branch commit that hand-writes a `(#1)`-suffixed subject to mimic
+    the squash shape, but is not reachable from main, must not be excused --
+    the topology check, not the subject text, is what decides."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent, message="docs(loom): add an intent (#1)")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+
+
+def test_plain_single_parent_commit_on_main_is_still_blocked(tmp_path: Path) -> None:
+    """Single parent, no `(#n)` suffix, no needs-design line: not
+    squash-shaped by either signal, so no exception applies even though the
+    commit sits on main."""
+    repo = make_repo(tmp_path, branch=None)
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    git(repo, "add", str(intent.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", "docs(loom): add an intent")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+
+
+def test_ancestor_off_first_parent_chain_is_still_blocked(tmp_path: Path) -> None:
+    """W0-03 round 3: `merge-base --is-ancestor` proves reachability, not
+    membership on the trunk's first-parent chain. A hand-written, single-
+    parent `... (#1)` commit on a side branch -- one that changes `status:`,
+    not `needs-design:`, so the deciding commit is this one and its message
+    never carries the line -- later merged into main with a REAL merge
+    commit (`--no-ff`) IS an ancestor of main but is NOT on main's
+    first-parent chain. The exception must not be granted; this must
+    still BLOCK."""
+    repo = make_repo(tmp_path, branch="feature")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md", kind="product", needs_design="yes — many states"
+    )
+    seal(repo, intent)
+    edit_intent(
+        repo, intent,
+        ("status: open", "status: confirmed 2026-09-04"),
+        "docs(loom): confirm the intent (#1)",
+    )
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "--no-ff", "-m", "Merge branch 'feature'", "feature")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    assert "intent.needs-design-reason" in blocked_rules(result)
+
+
 # --- intent.schema: a `map:` names a Map that exists (W3 adversary P13) ----
 
 
@@ -809,3 +926,86 @@ def test_host_plumbing_constants_are_pinned_to_the_scaffold(tmp_path: Path) -> N
         cs.MARKER,
     } | {f"{cs.HOOK_DIR}/{m}" for m in cs.SIBLING_MODULES}
     assert lc.HOST_PLUMBING_DIR_PREFIX == cs.CONTRACT_COPY + "/"
+
+
+# --- only `code`-typed paths count as a touched interface surface (W0-02) --
+
+
+def test_templates_md_glob_match_is_not_a_touched_interface_surface(
+    tmp_path: Path,
+) -> None:
+    """`**/templates/**` matches the glob, but a `.md` under it is typed
+    `docs` by the manifest's artifact_types -- no user reads it, so it must
+    not trip either recompute for an engineering-kind intent."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, "loom-code/contract/templates/intent.md")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="engineering",
+        needs_design="no — agent-facing template text only",
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "intent.needs-design-recompute" not in blocked_rules(result)
+    assert "intent.kind-recompute" not in blocked_rules(result)
+
+
+def test_templates_code_paths_and_cli_still_count_as_interface_surface(
+    tmp_path: Path,
+) -> None:
+    """The docs carve-out must not widen into a directory-wide one: a
+    `.tsx`/`.py` under `templates/` is typed `code`, and `src/cli/**` is
+    still `**/cli/**` -- both must keep tripping the recompute."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, "loom-code/contract/templates/x.tsx")
+    commit_file(repo, "src/cli/main.py")
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    blocked = blocked_rules(result)
+    assert "intent.needs-design-recompute" in blocked
+    assert "intent.kind-recompute" in blocked
+    assert "loom-code/contract/templates/x.tsx" in result.stderr
+    assert "src/cli/main.py" in result.stderr
+
+
+def test_cli_help_md_still_counts_as_interface_surface(tmp_path: Path) -> None:
+    """finding wave-end:0-03: the type filter narrowed to `code` was applied
+    to EVERY glob match, not just `**/templates/**` -- so a `.md` under
+    `**/cli/**` (CLI help text, a real user surface) silently stopped
+    tripping either recompute. Only `**/templates/**` gets the type
+    narrowing; every other glob match counts whatever its §6 type is."""
+    repo = make_repo(tmp_path)
+    commit_file(repo, "cli/help.md")
+    intent = write_intent(
+        repo / "docs/loom/intent/a.md",
+        kind="engineering",
+        needs_design="no — internal only",
+    )
+    seal(repo, intent)
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert result.returncode == 1
+    blocked = blocked_rules(result)
+    assert "intent.needs-design-recompute" in blocked
+    assert "intent.kind-recompute" in blocked
+    assert "cli/help.md" in result.stderr
+
+
+def test_kickoff_added_docs_glob_still_counts_regardless_of_type(tmp_path: Path) -> None:
+    """finding wave-end:0-03: a KICKOFF-DEFAULTS-added glob that matches a
+    `docs`-typed path (not `**/templates/**`) must still count -- the type
+    narrowing is scoped to the templates glob alone, not to every glob a
+    repo or the manifest declares."""
+    repo = make_repo(tmp_path)
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text(
+        "# Kickoff Defaults\n\n- interface-surfaces: docs/** — this repo's own (2026-09-04)\n",
+        encoding="utf-8",
+    )
+    intent = write_intent(repo / "docs/loom/intent/a.md", needs_design="no — internal only")
+    commit_file(repo, "docs/guide.md")
+    result = run_checker("intent", str(intent), cwd=repo)
+    assert "intent.needs-design-recompute" in blocked_rules(result)
+    assert "docs/guide.md" in result.stderr

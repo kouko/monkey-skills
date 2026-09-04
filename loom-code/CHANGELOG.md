@@ -5,6 +5,34 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-09-04 — checker seams
+
+`docs/loom/2026-09-04-checker-seams/`. Rule count stays 27 — no rule added,
+no waiver added. Four checker/contract seams plus four housekeeping items,
+folded into one change because all four seams are `loom-code`, `gate`-typed
+tasks (docs/loom/intent/2026-09-04-checker-seams.md Problem):
+
+1. `**/templates/**` no longer counts an agent-template path as a user
+   interface by default — only paths whose artifact type is `code` do.
+2. The stale `check_open_questions.py` script and its test are removed;
+   `AGENTS.md`'s command surface no longer lists it.
+3. `check_needs_design_reason()` now recognises a GitHub squash-merge
+   commit on trunk (by git topology, not commit-message text) as carrying
+   its branch's own needs-design decision, so a squashed intent no longer
+   fails on main.
+4. `push.probes-adversarial` executes a referenced artifact's adversarial
+   probe once per file instead of once per record; `--list-rules` spells
+   out the counting unit.
+5. `docs/loom/KICKOFF-DEFAULTS.md`'s `second-vendor` default flips to
+   `ask`, now that this version is installed.
+6. `.codex/hooks/loom_checker.py` re-mirrored from
+   `loom-code/scripts/loom_checker.py` (`codex_scaffold.py --repo .`).
+7. The ship station's memory step now graduates non-overlapping probes
+   from a change's `evidence/probes/` into the permanent test suite.
+8. "Adversary-first" task dispatch extends from `gate`-typed tasks to
+   every `code`- or `gate`-typed task in the full lane; the small lane is
+   unaffected.
+
 ## [1.1.0] — 2026-09-04 — Small-change lane
 
 `docs/loom/2026-09-03-small-change-lane/`. Rule count stays 27 — no rule

@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 改 checker 一條規則的重算方式與計數說明；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-loom-post-merge-seams/evidence/checkpoint-cost-orchestrator-notes.md]
-status: open
+status: withdrawn — superseded by 2026-09-04-checker-seams
 
 ## Problem
 `push.probes-adversarial` 對每一筆對抗探針紀錄，都執行該筆的 artifact 檔案本身（不是紀錄裡的命令），逐筆串行。紀錄的粒度是「每個案例一筆」（同一個檔案 `-k` 不同案例），重跑的粒度卻是「整檔」，所以首個真實 change 的 21 筆單案探針（加 2 筆整檔探針）讓 checker 把同兩個檔案各整檔重跑十幾次，每次約十秒。門檻「至少 3 支可用探針」也因此曖昧：3 個檔案還是 3 筆紀錄？一輪 ship 因此多一輪窄審（記錄在 evidence）。
