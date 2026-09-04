@@ -107,6 +107,17 @@ for wording, phrasing, or terminology; that command is the repo's own
 style gate and runs separately. When the line is `none` or absent, style
 findings are capped at `nit` — never `important` or `fatal` on style alone.
 
+**Language and template shape are not style.** An internal artifact of
+the delta — spec, plan, review notes, evidence, probe docstrings, commit
+messages, station text, template comments — not written in English; a
+`REQ-<n>` line not in one of the five EARS forms (WHEN / WHILE / WHERE /
+IF…THEN / the ubiquitous "The <system> shall"); a finding `text` not
+opening with a Conventional Comments label (praise, nitpick, suggestion,
+issue, todo, question, thought, chore, note; optional decoration such as
+blocking / non-blocking / if-minor); or a probe function name not in the
+`test_<unit>_<state>_<expected>` shape — is a `nit` regardless of
+`docs-lint`, and never more than a `nit`.
+
 Any `fatal` → `NEEDS_REVISION`. Two or more `important` → `NEEDS_REVISION`.
 One `important` → `PASS_WITH_NOTES`. Only nits, or none → `PASS`.
 
@@ -144,7 +155,7 @@ findings:
   - severity: fatal | important | nit
     dimension: <one of your lens's dimensions>
     anchor: "<path>:<line>"      # or "<path> :: <verbatim quote>" for prose
-    text: "<what is wrong, in one or two sentences>"
+    text: "<label> (<decoration>): <what is wrong, in one or two sentences>"
     fix: "<the concrete change that would close it>"
 notes: []                        # optional, at most three bullets
 ```

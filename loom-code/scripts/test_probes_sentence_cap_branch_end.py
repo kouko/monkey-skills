@@ -241,7 +241,7 @@ def test_mutation_helper_count_zero_does_not_over_delete_unrelated_text(
 #    sentence, and the cap bump that made room for it
 # ---------------------------------------------------------------------------
 
-REVIEWER_CAP = 1340
+REVIEWER_CAP = 1450
 REVIEWER_CAP_SLACK_LIMIT = 100
 
 
@@ -293,12 +293,14 @@ def test_reviewer_paragraph_has_one_sentence_naming_both_roles_capped_portable()
 
 
 def test_reviewer_body_cap_bump_left_at_most_100_words_of_slack() -> None:
-    """Fix round: dd562edd bumped `AGENT_CAPS['reviewer.md']` 1300 -> 1340
+    """History: dd562edd bumped `AGENT_CAPS['reviewer.md']` 1300 -> 1340
     after finding no trimmable redundancy for the new sentence (plan.md
-    Risks 6, user-decided). A cap bump that leaves a LOT of slack would
-    defeat the cap's own purpose (a just-fits-forever budget becomes a
-    number nobody checks again); assert the bumped cap sits within 100
-    words of the actual body -- today the gap is 2 words (1340 - 1338)."""
+    Risks 6, user-decided); 2026-09-03-artifact-language-policy (W1-02)
+    bumped it again 1340 -> 1450 for the language/template-shape nit
+    clause. A cap bump that leaves a LOT of slack would defeat the cap's
+    own purpose (a just-fits-forever budget becomes a number nobody checks
+    again); assert the bumped cap sits within 100 words of the actual body
+    -- today the gap is 3 words (1450 - 1447)."""
     import sys as _sys
 
     _sys.path.insert(0, str((REPO / "loom-code/scripts")))
