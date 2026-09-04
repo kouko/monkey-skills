@@ -3,8 +3,8 @@ intent: 2026-09-04-checker-seams@5e5a21ab
 
 ## Current State Evidence
 - Forward（templates glob）：`loom-code/scripts/loom_checker.py:365-388` `interface_surfaces()` 讀 manifest 預設（`loom-code/contract/manifest.yaml:145`，含 `**/templates/**`）並只允許 KICKOFF 加 glob；`:781-793` `touched_interface_surfaces()` 把 `changed_paths()` 逐一比對 glob，`intent.kind-recompute`（`:809`）與 `intent.needs-design-recompute`（`:796`）都讀它。`artifact_types()` 對 `loom-code/contract/templates/intent.md` 回 `docs`（manifest `:162` `**/*.md`），對 `src/cli/x.py` 回 `code`；`.codex/hooks/**` 早已被 `_is_host_plumbing` 排除（`:499-505`）。
-- Forward（squash）：`:731-780` `check_needs_design_reason()` 無 `--commit-msg` 時讀 `deciding_commit()`（`:672-685`：最新一個改到 frontmatter `status:`／`needs-design:` 的 commit）的訊息；主幹上該 commit 是 squash（例如 `4e25360c`，subject 尾 `(#780)`），訊息無該行。分支上的 commit 由 push 閘與 CI 的 `intent` 子命令已逐字驗過。
-- Forward（探針去重）：`:2616-2733` `check_probes_adversarial()` 對每筆 `kind: adversarial` 紀錄執行 `artifact_argv(repo, artifact)`（整檔，非紀錄命令），`usable` 逐筆累計，`ADVERSARIAL_FLOOR = 3`（`:2421`）以紀錄計；`--list-rules` 文字在 `:170-176` 附近的 RULES 表。2026-09-03-loom-post-merge-seams 的 review.json 有 23 筆對抗紀錄指向 2 個檔案。
+- Forward（squash）：`:731-780` `check_needs_design_reason()` 無 `--commit-msg` 時讀 `deciding_commit()`（`:672-685`：最新一個改到 frontmatter `status:`／`needs-design:` 的 commit）的訊息；主幹上該 commit 是 squash（例如 `4e25360c`，subject 尾 `(#780)`），訊息無該行。真正的 merge commit（兩個 parent）今天就已經過：`git show` 對 merge 不印 diff，`_decides_in_frontmatter()` 回 False，`deciding_commit()` 落到分支上帶那行的原 commit（W0-01 對抗者實測）。分支上的 commit 由 push 閘與 CI 的 `intent` 子命令已逐字驗過。
+- Forward（探針去重）：`:2616-2733` `check_probes_adversarial()` 對每筆 `kind: adversarial` 紀錄執行 `artifact_argv(repo, artifact)`（整檔，非紀錄命令），`usable` 逐筆累計，`ADVERSARIAL_FLOOR = 3`（`:2421`）以紀錄計；`--list-rules` 文字在 `:170-176` 附近的 RULES 表。2026-09-03-loom-post-merge-seams 的 review.json 有 126 筆 `kind: adversarial` 紀錄指向 13 個不同 artifact（其中 3 個 code／docs 檔各被 60／55／1 筆引用；W0-01 對抗者實數，plan 初稿寫的 23／2 是錯的）。
 - Reverse：`AGENTS.md:37` 仍把 `check_open_questions.py` 列為命令面；`loom-code/scripts/test_check_open_questions.py:21` 是它唯一的測試；沒有 SKILL、hook、CI、`loom_checker.py` 引用它（`grep -rn check_open_questions` 其餘全在 `docs/loom/` 歷史與 CHANGELOG）。
 - Error：`.codex/hooks/loom_checker.py` 與 `loom-code/scripts/loom_checker.py` `cmp` 第 2 行即不同（版本戳），內容落後 #784 的 W0-02 修正；`loom-code/scripts/codex_scaffold.py --repo .` 是唯一合法寫入方式（檔頭「do not edit by hand」）。CI job `pytest + knowledge-drift + codex-manifest-drift`（`.github/workflows/loom-code-ci.yml:86`）只比 manifest，不比 checker 本體。
 - Data：`docs/loom/KICKOFF-DEFAULTS.md` `second-vendor: codex — …flip to ask…`；review.json 的 `second_vendor` 頂層鍵由 `_resolve_second_vendor_ask()`（`:3176-3230`）讀，小車道免、完整車道必填。ship SKILL.md 3242 字（帽 4500，軟 3750）；站摘要表由 `loom-code/scripts/test_station_summary_table.py` 對九處同步。規則數 27。
@@ -23,12 +23,12 @@ intent: 2026-09-04-checker-seams@5e5a21ab
 - 風：`**/templates/**` 下的 `.html`／`.jinja` 型別是 `code`，照樣被抓——這是要的。
 
 **W0-03 squash 之後的 needs-design 行**　after: W0-02
-- 檔：`loom_checker.py` `check_needs_design_reason()`：deciding commit 訊息無該行時，若該 commit 是 merge（≥2 parent）或 GitHub squash（subject 以 ` (#<n>)` 結尾且 `git log` 中它是主幹的第一父系鏈上的 commit，即 `git merge-base --is-ancestor <sha> <trunk>` 且它不在任何本地分支獨有段），則視為「決定在被閘過的分支上做過」，pass 並印一行 note 說明來源；否則照擋。`test_loom_checker_intent.py` 加測：squash 形狀 pass、分支上普通 commit 手寫 `(#1)` 但不在主幹上仍擋、無該行普通 commit 仍擋。
+- 檔：`loom_checker.py` `check_needs_design_reason()`：deciding commit 訊息無該行時，若該 commit 是 GitHub squash（單 parent、subject 以 ` (#<n>)` 結尾、且在主幹第一父系鏈上：`git merge-base --is-ancestor <sha> <trunk>`），則視為「決定在被閘過的分支上做過」，pass 並印一行 note 說明來源；否則照擋。`test_loom_checker_intent.py` 加測：squash 形狀 pass、分支上普通 commit 手寫 `(#1)` 但不在主幹上仍擋、無該行普通 commit 仍擋；真正 merge commit 今天已過，只需守住（W0-01 探針 `test_real_merge_commit_on_main_already_passes_today`）。
 - 測：`test_abuse_squash_needs_design.py` 全綠；Acceptance #3 兩半。
 - 風：agent-decided——不改 PR body 模板（那是 ship 站文字，另一個 task 面），主幹判定以 git 拓撲為準而非訊息文字，冒充 `(#n)` 的分支 commit 不在主幹第一父系鏈上所以不會過。
 
 **W0-04 探針按檔案去重執行**　after: W0-03
-- 檔：`loom_checker.py` `check_probes_adversarial()`：先把通過格式檢查的紀錄按 `artifact` 分組，每個檔案只 `subprocess.run` 一次，結果套回該檔所有紀錄；失敗訊息每檔一則（列出引用它的紀錄數）；`out` 的 observed 行每檔一行加「referenced by N records」。`--list-rules` 文字改為「…records at least three adversarial probe records against the reviewed commit; a file referenced by several records is executed once, and every record of a failing file is unusable」。計數單位維持**紀錄**（agent-decided：改成檔案會讓 #785 這種一檔六筆的既有紀錄失格，intent Acceptance #4 要求既有紀錄結果不變）。去重後不平行（agent-decided：量 loom-post-merge-seams 的 23 筆→2 次執行後已從約 230 秒降到約 20 秒，平行的邊際收益不值多一個 thread pool）。`test_loom_checker_push_probes.py` 或 `test_loom_checker_push.py` 加測。
+- 檔：`loom_checker.py` `check_probes_adversarial()`：先把通過格式檢查的紀錄按 `artifact` 分組，每個檔案只 `subprocess.run` 一次，結果套回該檔所有紀錄；失敗訊息每檔一則（列出引用它的紀錄數）；`out` 的 observed 行每檔一行加「referenced by N records」。`--list-rules` 文字改為「…records at least three adversarial probe records against the reviewed commit; a file referenced by several records is executed once, and every record of a failing file is unusable」。計數單位維持**紀錄**（agent-decided：改成檔案會讓 #785 這種一檔六筆的既有紀錄失格，intent Acceptance #4 要求既有紀錄結果不變）。去重後要不要平行：實作者量一次（同檔 N 筆去重前後的 `push` 秒數）寫進回報再決定，預設不平行。既有紀錄的「結果不變」以單元測試的紀錄形狀（多筆同檔、floor 以紀錄計）證明——歷史 review.json 的 sha 在乾淨樹本來就重跑不了。`test_loom_checker_push_probes.py` 或 `test_loom_checker_push.py` 加測。
 - 測：`test_abuse_probe_rerun_dedup.py` 全綠；記錄執行次數的測試先紅。
 - 風：紀錄的 `sha`／artifact 存在等逐筆檢查仍逐筆做（只有執行去重），失格紀錄不影響同檔其他紀錄的可用性判定順序。
 
@@ -54,5 +54,5 @@ intent: 2026-09-04-checker-seams@5e5a21ab
 ## Risks
 1. 三個 W0 task 都改 `loom_checker.py` 同一檔：序列執行、同一工作樹，不開 worktree。W1-01／W1-02 檔案互斥可平行（各自 worktree，`--no-ff` 合回）。
 2. checkpoint：W0 wave 結束（delta 必超 400 行）一次 wave-end；W1 結束 branch-end。build 期 1／5。
-3. W0-03 的「squash 判定」是這個 change 最容易被冒充的點；W0-01 探針要先寫「分支 commit 手寫 `(#1)`」的攻擊。
+3. W0-03 的「squash 判定」是這個 change 最容易被冒充的點；W0-01 探針已寫「分支 commit 手寫 `(#1)`」的攻擊。
 4. W1-03 改 KICKOFF 為 `ask` 後，本 change 的 branch-end 讀者就要 review.json 的 `second_vendor` 答案：在 wave-end 前問 kouko 一次並記下。
