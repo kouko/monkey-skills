@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+  "reviewed_sha": "37c7df69bf7e150703fd61f891abbf903340998a",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -567,6 +567,110 @@
       "notes": [
         "Diffed old vs new bodies of the four rewritten commits: one added line each; trees byte-identical (%T); review.json changes purely additive plus the reviewed_sha bump."
       ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "1656ddd0e675a5fd10dee5970806527ff1f96568",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy_branch_end.py:212",
+          "text": "issue: the widened assertion accepts any non-zero exit whose stderr contains both tokens, including a usage or internal error.",
+          "fix": "Require returncode == 1 and the `BLOCK intake.confirmed:` marker with the closed-intent text; keep exit 0."
+        }
+      ],
+      "notes": [
+        "Original and graduated copy identical apart from path lines."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1656ddd0e675a5fd10dee5970806527ff1f96568",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Identical edit in both files; widening scoped to the closed-intent block; 16 passed."
+      ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Round-7 finding fixed: exit 1 + `BLOCK intake.confirmed:` + closed; all other non-zero outcomes fail."
+      ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Verified the literal against loom_checker.py's BLOCK format; both files match; 16 passed."
+      ]
     }
   ],
   "probes": [
@@ -737,6 +841,46 @@
       "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
     }
   ],
   "questions": [
@@ -831,6 +975,13 @@
       "origin_sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
       "raised_by": "rev-be-codex, rev-be-sonnet",
       "resolved": "closed by 9e6cb1cf — both entry bodies committed; confirmed both readers round 5"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "loom-code/scripts/test_probes_language_policy_branch_end.py:212",
+      "origin_sha": "1656ddd0e675a5fd10dee5970806527ff1f96568",
+      "raised_by": "rev-be-codex",
+      "resolved": "closed by 592d45d5 — exit-1 + BLOCK intake.confirmed: marker required; confirmed rev-be-codex round 8"
     }
   ],
   "dispatch": [
@@ -1196,6 +1347,7 @@
     "branch-end outcome after five rounds: PASS (rounds 3 and 5 PASS from both readers; the round-4 finding was the ship memory step's own untracked files). reviewed_sha advanced to bc4e9948. Cost of this change: ~6h plan→branch-end, 26 dispatch entries (7 reviewer rounds × 2 readers counted), two Codex sessions resumed across rounds.",
     "2026-09-05 ship: the push checker blocked on push.dispatch-covers-tasks — four fix-round commits (blind-runner rows, PRINCIPLES opening line, label prefix, quoted-source-text exception) carried Closes: lines but no Task: trailer. Commit messages from the branch base to HEAD were rewritten with git filter-branch --msg-filter to add `Task: fix:wave-end:1` to those four; every tree is byte-identical (git diff against the pre-rewrite tip is empty; backup ref backup/artifact-language-policy-pre-trailer-rewrite kept locally), so verdict, probe and open_findings shas recorded before this note name the pre-rewrite commits of the same trees. reviewed_sha moved to the rewritten tip and the package tests and adversarial probes were re-run and re-recorded there.",
     "branch-end round 6 (both readers PASS at the rewritten tip): the trailer-only rewrite confirmed tree-identical; reviewed_sha = that review.json-only commit, probes re-recorded there.",
-    "First close attempt (79016e99, close round PASS from both readers, CI green) was reset: re-pinning the probes at the close commit showed the branch-end scope probe calling `intake write-plan`, which blocks by design once the intent is closed. The probe was fixed before the close commit is re-created so the close-commit shape holds."
+    "First close attempt (79016e99, close round PASS from both readers, CI green) was reset: re-pinning the probes at the close commit showed the branch-end scope probe calling `intake write-plan`, which blocks by design once the intent is closed. The probe was fixed before the close commit is re-created so the close-commit shape holds.",
+    "branch-end rounds 7–8 (probe fix for the closed-intent intake block): PASS from both readers at 37c7df69; reviewed_sha there."
   ]
 }
