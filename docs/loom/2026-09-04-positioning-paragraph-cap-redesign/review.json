@@ -14,6 +14,8 @@
     {"task": "W0-01", "role": "adversary", "agent_id": "adv-w0-01-cap-7c21", "model": "sonnet", "started": "2026-09-04T21:14:00+08:00", "fresh_context": true},
     {"task": "W1-01", "role": "implementer", "agent_id": "impl-w1-01-cap-9e4b", "model": "sonnet", "started": "2026-09-04T21:20:00+08:00", "fresh_context": true},
     {"task": "W1-02", "role": "implementer", "agent_id": "impl-w1-02-cap-51d8", "model": "sonnet", "started": "2026-09-04T21:27:00+08:00", "fresh_context": true},
-    {"task": "W1-03", "role": "implementer", "agent_id": "impl-w1-03-cap-2b77", "model": "sonnet", "started": "2026-09-04T21:38:00+08:00", "fresh_context": true}
+    {"task": "W1-03", "role": "implementer", "agent_id": "impl-w1-03-cap-2b77", "model": "sonnet", "started": "2026-09-04T21:38:00+08:00", "fresh_context": true},
+    {"task": "branch-end", "role": "adversary", "agent_id": "adv-branch-end-cap-e3a0", "model": "sonnet", "started": "2026-09-04T21:48:00+08:00", "fresh_context": true},
+    {"task": "branch-end", "role": "blind-runner", "agent_id": "blind-branch-end-cap-4f9c", "model": "sonnet", "started": "2026-09-04T21:48:00+08:00", "fresh_context": true}
   ]
 }
