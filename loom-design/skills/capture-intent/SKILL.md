@@ -144,6 +144,11 @@ Constraints and Out of scope can all be filled in without guessing.
 
 ## Step 2 — Write the intent
 
+The intent file is the user's own words, in the user's language, unlike
+the machine-read artifacts later stations own — nothing in it is
+translated to English, English being the language of the plan, the spec
+and everything that follows.
+
 Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 `loom-code`'s `contract/templates/` directory. Fill in:
 

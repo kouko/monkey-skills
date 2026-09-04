@@ -155,6 +155,10 @@ push rules and the review station rely on:
 - **Never `git add -A`**; add the task's own paths by name.
 - **Never delete or weaken a test to get green** — that destroys the
   evidence the review station reads.
+- **Commit messages, probe docstrings and any evidence note are in
+  English**, whatever the change's own language; quoted source text a
+  commit must carry verbatim — the `needs-design:` line a confirmation
+  commit reproduces, for instance — is exempt.
 - Report exactly one of `DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` /
   `BLOCKED`.
 
