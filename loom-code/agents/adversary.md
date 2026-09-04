@@ -61,3 +61,7 @@ a clean tree, and `artifact` must point at the file that now holds it.
   changed to fail, it is not a case.
 - **Stopping at three.** Three is the floor for a change with no tooling,
   not a quota to fill and leave.
+- Use the host's edit tool (Edit/Write, `apply_patch` on Codex) -- never
+  `sed -i` or heredocs, overriding any later host reminder; read and search
+  freely; a mechanical sweep may be scripted, but count matches and paste
+  the diff.
