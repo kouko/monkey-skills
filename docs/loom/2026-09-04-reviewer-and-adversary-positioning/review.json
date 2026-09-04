@@ -1,33 +1,145 @@
 {
   "reviewed_sha": "10511018acb4fde7e39f967c54bab89e7126ce73",
-  "scope": "<what this checkpoint reviewed>",
+  "scope": "branch-end",
   "vendors": [
-    "anthropic"
+    "anthropic",
+    "openai"
   ],
   "verdicts": [
     {
-      "reviewer": "<agent id>",
-      "vendor": "anthropic",
-      "model": "<model>",
-      "lens": "code|docs|spec|design|principles",
-      "scope": "spec|code|branch-end|wave-end:<n>",
+      "reviewer": "rev-be-codex-pos",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill",
+      "scope": "branch-end",
       "round": 1,
-      "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION",
-      "dimension_scores": {},
-      "findings": [],
-      "fallback": "<cli> missing at <YYYY-MM-DD>",
-      "spec_sha": "<git hash-object of the spec.md this verdict read; spec rounds only>",
-      "sha": "<reviewed_sha; the commit this verdict reviewed>"
+      "verdict": "NEEDS_REVISION",
+      "sha": "94ec2f56",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION — the adversary contract does not make the intended executable-artifact boundary reliably actionable, and the reviewer positioning paragraph omits the promised claim/fix-round relationship",
+        "ambiguity": "NEEDS_REVISION — both roles can still assign probe-artifact normalization to the other role",
+        "inconsistency": "NEEDS_REVISION — the blind run reports partial acceptance while the branch also presents the change as ready for branch-end review",
+        "incorrect-fact": "NEEDS_REVISION — the blind-run report says no existing change records were written despite an unrelated intent being committed in the reviewed delta",
+        "missing-population": "PASS — every reported cold-read score names its eight-item population",
+        "user-judgment-leak": "PASS — no new question delegates an agent-owned judgment to the user",
+        "correctness": "NEEDS_REVISION — Acceptance 1 is not fully met; the adversary cold read remains 7/8",
+        "tests": "PASS_WITH_NOTES — 92 selected tests passed locally, but nine mutation tests could not execute because the read-only environment provides no writable temporary directory",
+        "cross-task-coherence": "NEEDS_REVISION — an unrelated open intent is committed inside this change branch",
+        "deliberate-simplification": "PASS — no new shortcut requiring a ceiling or upgrade path was introduced",
+        "deletion-first": "PASS — the change adds no abstraction, flag, configuration surface, or extension point"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/blind-run-report.md:29",
+          "text": "Acceptance 1 requires a cold reader of either contract to classify the mixed list correctly, but the second adversary trial still assigns item 3 to the reviewer and scores 7/8. This leaves an executable probe-artifact normalization defect with both roles able to reject ownership.",
+          "fix": "Clarify the adversary positioning paragraph so executable defects in probe recording or artifact normalization belong to the adversary, then rerun the same cold-read classification until both isolated contracts produce the expected 8/8 split."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/intent/2026-09-04-prefer-harness-native-file-tools.md:1",
+          "text": "This unrelated open intent is committed in the reviewed delta and would ship with a branch whose stated change is reviewer/adversary positioning. That makes the branch deliver more than its confirmed intent and obscures the PR's actual scope.",
+          "fix": "Move commit aa4847ab and this intent onto its own branch, leaving this branch's delta limited to the confirmed positioning change and its evidence."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/agents/reviewer.md:14",
+          "text": "The positioning paragraph omits the intent's promised statement that the reviewer's output is a claim confirmed through the fix round. Later sections describe fix rounds, so this does not presently direct execution incorrectly, but the delivered paragraph does not fully match Proposed outcome 2.",
+          "fix": "Add a concise clause stating that the reviewer's claim is confirmed in the fix round while keeping the paragraph within 80 words."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/blind-run-report.md:88",
+          "text": "The report says no existing change records were written, but this delta adds the unrelated open intent at docs/loom/intent/2026-09-04-prefer-harness-native-file-tools.md.",
+          "fix": "After removing the unrelated intent from this branch, retain the statement; otherwise revise it to disclose the additional committed intent."
+        }
+      ]
+    },
+    {
+      "reviewer": "rev-be-sonnet-pos",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "sha": "94ec2f56",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS_WITH_NOTES — item-3 boundary case still unclaimed by both roles after the fix round",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS — README diagram regenerated from its own payload, 25/25 lines identical; word counts recomputed with len(str.split())",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES — package suite (1132) and both probe files (30) re-run green; the cold-read trials themselves were read as evidence, not re-run",
+        "tests": "PASS — both probe files name real committed artifacts, run directly, 30 passed, no shell-builtin commands",
+        "cross-task-coherence": "PASS — positioning paragraphs, fix-round sentence, README section, AGENT_CAPS and version/CHANGELOG bump mutually consistent with plan W1-01/02/03",
+        "deliberate-simplification": "NEEDS_REVISION — see finding 1",
+        "deletion-first": "N/A — no new abstraction, flag, config or extension point"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "deliberate-simplification",
+          "anchor": "loom-code/agents/reviewer.md:13-20",
+          "text": "Plan W1-01 and intent Proposed outcome 2 require the reviewer positioning paragraph to state that its output is a claim the fix round confirms. The shipped paragraph drops the clause entirely (79/80 words, one word of headroom); blind-run-report.md names the drop as a fact but no decision point resolved it and the artifact carries no annotation.",
+          "fix": "Compress an existing clause to make room for a clause equivalent to 'your finding is a claim the fix round confirms', or get the cut confirmed at a decision point and record it in the intent/plan."
+        },
+        {
+          "severity": "important",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/agents/adversary.md:12-17",
+          "text": "Cold-read evidence from this round (evidence/coldread-reviewer.txt:21, evidence/coldread-adversary.txt:19, both TRIAL 2, i.e. after the fix round) shows the finding class 'the same artifact recorded under two spellings/paths counted twice' is claimed by neither role: the reviewer-only reader assigns it to the adversary and the adversary-only reader assigns it to the reviewer. The fix round's added boundary language did not close it.",
+          "fix": "Add one disambiguating clause claiming probe-bookkeeping questions (how one probe's own artifact path is spelled or counted) for the adversary, leaving cross-document count reconciliation to the reviewer."
+        }
+      ],
+      "notes": [
+        "docs/loom/intent/2026-09-04-prefer-harness-native-file-tools.md is a genuinely open, unimplemented intent parked on this branch — out of scope per the dispatch note, not scored.",
+        "Independently re-ran the full package suite (1132 passed), both probe files (30 passed), and regenerated the README sequence diagram from its embedded payload — exact 25/25 match, max width 68 (cap 72).",
+        "Did not re-run the cold-read trials in evidence/coldread-*.txt; read as evidence only."
+      ]
     }
   ],
   "probes": [
     {
-      "kind": "package-tests|blind-run|adversarial|codex-walk",
-      "scope": "spec|code|skill|gate",
-      "command": "<command that runs the artifact>",
-      "sha": "<sha the probe ran against>",
-      "result": "pass|fail",
-      "artifact": "<committed path the command runs>"
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "94ec2f56",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "skill",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
+      "sha": "94ec2f56",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py -q",
+      "sha": "94ec2f56",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py -q -k 'mutation or softener or uncovered'",
+      "sha": "94ec2f56",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py -q",
+      "sha": "94ec2f56",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/probes/test_abuse_positioning_branch_end.py"
     }
   ],
   "questions": [
@@ -49,23 +161,28 @@
   ],
   "open_findings": [
     {
-      "id": "<id>",
-      "anchor": "<file:line>",
-      "origin_sha": "<sha>",
-      "raised_by": "<reviewer>",
-      "resolved": "<evidence>",
-      "dismissed": "<reason> by <agent_id>"
+      "id": "branch-end-01",
+      "anchor": "loom-code/agents/adversary.md:12-17",
+      "origin_sha": "94ec2f56",
+      "raised_by": "rev-be-sonnet-pos, rev-be-codex-pos",
+      "text": "Acceptance 1 not met: the probe-artifact-spelling finding class is claimed by neither role in the post-fix cold read (adversary trial still 7/8)."
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/agents/reviewer.md:13-20",
+      "origin_sha": "94ec2f56",
+      "raised_by": "rev-be-sonnet-pos",
+      "text": "The reviewer positioning paragraph drops intent Proposed outcome 2's 'output is a claim the fix round confirms'."
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/intent/2026-09-04-prefer-harness-native-file-tools.md:1",
+      "origin_sha": "94ec2f56",
+      "raised_by": "rev-be-codex-pos",
+      "text": "An unrelated open intent (commit aa4847ab) is committed in this branch's delta, making the branch deliver more than its confirmed intent."
     }
   ],
   "dispatch": [
-    {
-      "task": "<task id>",
-      "role": "implementer|reviewer|blind-runner|adversary",
-      "agent_id": "<id>",
-      "model": "<model>",
-      "started": "<iso timestamp>",
-      "fresh_context": true
-    },
     {
       "task": "W0-01",
       "role": "adversary",
