@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "e59c0c9e762d75ebb56df28ce679ef0a96113dc4",
+  "reviewed_sha": "c6e98c4a386f51d6b62ba0493f3553b2ffffc193",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -238,6 +238,46 @@
       },
       "findings": [],
       "notes": "round 4a: exactly the citation-format fix (lines 9 and 25 of the codex-hook-trust intent), no change in meaning, no inconsistency against the file's other Codex-path mentions."
+    },
+    {
+      "reviewer": "rev-close-cap-codex-0a3d",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+user-judgment-leak",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "sha": "c6e98c4a386f51d6b62ba0493f3553b2ffffc193",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "round 4b (close commit re-created on top of round 4a): a1275a43 touches only review.json; c6e98c4a changes exactly the one status line to closed 2026-09-04 — PR #789."
+    },
+    {
+      "reviewer": "rev-close-cap-sonnet-5e91",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+user-judgment-leak",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "sha": "c6e98c4a386f51d6b62ba0493f3553b2ffffc193",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "round 4b: a1275a43 review-only; c6e98c4a the identical single-line status change, byte-identical to the content verified in earlier close rounds."
     }
   ],
   "probes": [
@@ -374,6 +414,38 @@
       "scope": "branch-end",
       "command": "python3 -m pytest loom-code/scripts/test_probes_sentence_cap_branch_end.py -q",
       "sha": "e59c0c9e762d75ebb56df28ce679ef0a96113dc4",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_sentence_cap_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "c6e98c4a386f51d6b62ba0493f3553b2ffffc193",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py -q",
+      "sha": "c6e98c4a386f51d6b62ba0493f3553b2ffffc193",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py -q",
+      "sha": "c6e98c4a386f51d6b62ba0493f3553b2ffffc193",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-positioning-paragraph-cap-redesign/evidence/probes/test_abuse_sentence_cap_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_sentence_cap_branch_end.py -q",
+      "sha": "c6e98c4a386f51d6b62ba0493f3553b2ffffc193",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_sentence_cap_branch_end.py"
     }
@@ -521,6 +593,7 @@
     "2026-09-04 branch-end round 2: PASS from both readers; reviewed_sha → 65359a0c. Ship fold (nits): U.S.-style abbreviation overcount; semicolon-chain evasion accepted by plan Risks 4.",
     "2026-09-04 round 2 probes re-run at the reviewed commit 65359a0c: test_abuse_sentence_cap.py 16 passed; test_abuse_sentence_cap_branch_end.py 23 passed 1 xfailed (U.S. nit); graduated test_probes_positioning_branch_end_r2.py 19 passed (sentence-cap boundary probes re-pinned by W1-02).",
     "2026-09-04 branch-end round 3 (confirmation): nit batch cc719041 + graduation e8ab5eea; both readers PASS; reviewed_sha → e8ab5eea; decision point ③ accepted (ok).",
-    "2026-09-04 round 4a: PR #789's first CI run failed the doc-citation check (intent codex-hook-trust cited ~/.codex/config.toml in backticks); fix e59c0c9e reviewed on its own by the two close readers (both PASS) because the push gate needs every non-review commit directly under a checkpoint; earlier close commits 63db0cda / b2888489 (same one line) were re-created after the reorder, their verdicts superseded by round 4b. The close-round dispatch entries were written before dispatch and committed here."
+    "2026-09-04 round 4a: PR #789's first CI run failed the doc-citation check (intent codex-hook-trust cited ~/.codex/config.toml in backticks); fix e59c0c9e reviewed on its own by the two close readers (both PASS) because the push gate needs every non-review commit directly under a checkpoint; earlier close commits 63db0cda / b2888489 (same one line) were re-created after the reorder, their verdicts superseded by round 4b. The close-round dispatch entries were written before dispatch and committed here.",
+    "2026-09-04 round 4b (recorded as round 5): close commit c6e98c4a reviewed by both close readers, PASS; reviewed_sha → c6e98c4a. Final shape: HEAD review-only, HEAD^ = close commit, HEAD^^ = round-4a checkpoint."
   ]
 }
