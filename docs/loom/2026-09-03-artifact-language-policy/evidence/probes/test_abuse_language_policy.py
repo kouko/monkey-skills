@@ -202,39 +202,126 @@ def test_specminimal_ears_absent():
 
 # --- (e) adversary.md / blind-runner.md name the probe-name shape ----------
 
+_SHAPE_LITERAL = "test_<unit>_<state>_<expected>"
+
+# Round-2 finding (rev-we1-codex, wave-end:1-03): a paragraph that merely
+# co-locates the literal shape string with the word "English" is not
+# discriminating — it would also accept a paragraph that FORBIDS the shape
+# ("probes are never named `test_<unit>_<state>_<expected>`") as long as
+# "English" appears somewhere else in it. The fix moves the check from
+# paragraph-level substring co-location to sentence-level semantics: the
+# sentence naming the shape must affirmatively name it (a naming verb
+# BEFORE the literal, no negation anywhere in that sentence), and some
+# sentence in the same paragraph must affirmatively require English (an
+# "in English" form, no negation anywhere in that sentence) — the two
+# checks may land on the same sentence (adversary.md) or different
+# sentences of the same paragraph.
+_NAMING_VERB_PHRASES = ("must be named", "is named", "name is", "named")
+_ENGLISH_AFFIRM_PHRASES = ("is in english", "are in english", "in english")
+# Word-boundary regex, not naive substring: "not"/"no" as plain substrings
+# false-positive inside ordinary words (e.g. "note" contains "not",
+# "know" contains "no") — verified against adversary.md's real sentence,
+# which says "evidence note" and must NOT be flagged as negated.
+_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+
+
+def _has_negation(sentence: str) -> bool:
+    return bool(_NEGATION_RE.search(sentence))
+
+
+def _sentence_affirmatively_names_shape(sentence: str) -> bool:
+    """True iff `sentence` contains the literal shape string, a naming-verb
+    phrase strictly BEFORE that literal, and no negation token anywhere in
+    the sentence."""
+    idx = sentence.find(_SHAPE_LITERAL)
+    if idx == -1:
+        return False
+    prefix = sentence[:idx].lower()
+    if not any(phrase in prefix for phrase in _NAMING_VERB_PHRASES):
+        return False
+    return not _has_negation(sentence)
+
+
+def _sentence_affirmatively_requires_english(sentence: str) -> bool:
+    lowered = sentence.lower()
+    if not any(phrase in lowered for phrase in _ENGLISH_AFFIRM_PHRASES):
+        return False
+    return not _has_negation(sentence)
+
+
+def _paragraph_names_shape_and_requires_english(paragraph: str) -> bool:
+    sentences = _sentences(paragraph)
+    if not any(_sentence_affirmatively_names_shape(s) for s in sentences):
+        return False
+    return any(_sentence_affirmatively_requires_english(s) for s in sentences)
+
 
 @pytest.mark.parametrize("agent_path", [ADVERSARY_MD, BLIND_RUNNER_MD], ids=lambda p: p.name)
 def test_agents_probename_absent(agent_path: Path):
-    """Attack: both adversary.md and blind-runner.md must state the probe
-    function name shape as the literal string
-    `test_<unit>_<state>_<expected>`, and the SAME paragraph (split on
-    blank lines) that carries that literal string must also require
-    English for probe docstrings/evidence — a loose "three-part" mention
-    in one place and an unrelated "English" mention elsewhere would not
-    tie the shape to the language rule. RED today — neither file contains
-    the literal shape string (grep confirmed). GREEN target: W1-03."""
+    """Attack: both adversary.md and blind-runner.md must carry a paragraph
+    in which one sentence affirmatively NAMES the probe shape (a naming
+    verb — named/is named/must be named/name is — before the literal
+    `test_<unit>_<state>_<expected>`, with no negation anywhere in that
+    sentence), and some sentence in the same paragraph affirmatively
+    requires English for docstrings/evidence (an "in English" form, no
+    negation). This rejects a paragraph that merely co-locates the literal
+    with the word "English" regardless of polarity (round-2 finding,
+    rev-we1-codex: such a paragraph could say the shape is FORBIDDEN and
+    still pass the looser check). RED today unless both files already
+    satisfy the affirmative, un-negated form. GREEN target: W1-03."""
     text = agent_path.read_text(encoding="utf-8")
-    assert "test_<unit>_<state>_<expected>" in text, (
-        f"{agent_path.name} does not contain the literal string "
-        "'test_<unit>_<state>_<expected>'"
+    assert _SHAPE_LITERAL in text, (
+        f"{agent_path.name} does not contain the literal string {_SHAPE_LITERAL!r}"
     )
 
     blocks = [b for b in text.split("\n\n") if b.strip()]
-    shape_paragraphs = [b for b in blocks if "test_<unit>_<state>_<expected>" in b]
+    shape_paragraphs = [b for b in blocks if _SHAPE_LITERAL in b]
     assert shape_paragraphs, (
         f"{agent_path.name} has the literal shape string but it is not "
         "inside any paragraph (blank-line-delimited block)"
     )
 
-    qualifying = [
-        b for b in shape_paragraphs
-        if "english" in b.lower()
-        and ("docstring" in b.lower() or "evidence" in b.lower())
-    ]
+    qualifying = [b for b in shape_paragraphs if _paragraph_names_shape_and_requires_english(b)]
     assert qualifying, (
-        f"{agent_path.name}'s paragraph containing "
-        "'test_<unit>_<state>_<expected>' does not also require English for "
-        "docstrings or evidence in the same paragraph"
+        f"{agent_path.name}: no paragraph has both a sentence that "
+        f"affirmatively names {_SHAPE_LITERAL!r} (naming verb before the "
+        "literal, no negation) and a sentence that affirmatively requires "
+        "English for docstrings/evidence (no negation)"
+    )
+
+
+def test_ProbenameHelper_SyntheticParagraphs_Discriminates():
+    """Attack: pin the discriminating power of
+    `_paragraph_names_shape_and_requires_english` itself with three
+    synthetic paragraphs, independent of any real agent file — the round-2
+    finding was that the OLD check could not tell an affirmative naming
+    sentence from a forbidding one. GREEN now: all three cases already
+    hold against the current helper."""
+    real_adversary_sentence = (
+        "Every probe function is named `test_<unit>_<state>_<expected>` — "
+        "three underscore-separated parts (unit of work, state under test, "
+        "expected behaviour) — and its docstring, and any evidence note "
+        "you write, is in English."
+    )
+    assert _paragraph_names_shape_and_requires_english(real_adversary_sentence), (
+        "the real adversary.md naming sentence must pass"
+    )
+
+    negated_paragraph = (
+        "Probes are never named `test_<unit>_<state>_<expected>`; "
+        "docstrings are in English."
+    )
+    assert not _paragraph_names_shape_and_requires_english(negated_paragraph), (
+        "a paragraph that forbids the shape must not pass just because "
+        "'in English' appears elsewhere in it"
+    )
+
+    literal_no_naming_verb = (
+        "The string `test_<unit>_<state>_<expected>` appears in the docs. "
+        "Docstrings are in English."
+    )
+    assert not _paragraph_names_shape_and_requires_english(literal_no_naming_verb), (
+        "a paragraph with the literal but no naming verb before it must not pass"
     )
 
 
