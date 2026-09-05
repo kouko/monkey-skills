@@ -272,8 +272,13 @@ done
 A commit this loop prints does not enter the checkpoint — re-commit it
 with its trailer first.
 
-Call `loom-code:review` (scope = this wave) when **either** of these
-holds:
+Express and gate-only route straight to the round that closes the plan,
+skipping every wave-end checkpoint before it. When the user asks to
+change lane mid-build, read review's `references/lane-switch.md` for the
+three-option consequence prompt before switching.
+
+Otherwise, call `loom-code:review` (scope = this wave) when **either** of
+these holds:
 
 - the unreviewed delta exceeds **8 files** or **400 lines**;
 - any task in this wave was marked `review: after-task`.

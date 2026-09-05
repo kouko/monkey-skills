@@ -381,3 +381,56 @@ def test_matcher_push_checklist_mirrors_sentence_affirmative_accepted() -> None:
     assert "loom-code-ci.yml" in sentence.lower()
     assert "jobs" in sentence.lower()
     assert not _has_negation(sentence)
+
+
+# --- W1-04: lane PR line, gate-only ③ pointer -------------------------------
+
+
+def test_pr_body_template_carries_lane_line() -> None:
+    """The `## Review` section of the PR-body template carries the literal
+    `lane: <name>（第 N 輪起）` line — the format string a checkpoint round
+    fills in, not prose, so it is exempt from the English-only station-text
+    policy the same way `needs-design:` is."""
+    template = _pr_body_template()
+    section = template.split("## Review", 1)[1]
+    assert "lane: <name>（第 N 輪起）" in section
+
+
+def test_decision_point_3_names_gateonly_probe_and_test_result() -> None:
+    """Ship's step 2 (decision point ③) carries an affirmative sentence
+    naming gate-only's replacement material: a one-page probe-and-package-
+    test result, in place of the blind-run report, pointed at
+    `references/blind-run-report.md`."""
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    section = text.split("## 2. Decision point", 1)[1].split("## 3. Memory", 1)[0]
+    hits = [
+        s for s in _sentences(section)
+        if "gate-only" in s.lower()
+        and "probe" in s.lower()
+        and "package-test" in s.lower()
+        and "blind-run-report.md" in s
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "ship/SKILL.md decision point ③ has no affirmative sentence naming "
+        "gate-only's one-page probe-and-package-test result"
+    )
+
+
+def test_matcher_gateonly_sentence_negated_rejected() -> None:
+    sentence = (
+        "Gate-only does not present the review station's blind-run report "
+        "at decision point 3, never showing it."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_gateonly_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Gate-only presents the one-page probe-and-package-test result "
+        "there instead, shaped in `references/blind-run-report.md`."
+    )
+    assert "gate-only" in sentence.lower()
+    assert "probe" in sentence.lower()
+    assert "blind-run-report.md" in sentence
+    assert not _has_negation(sentence)
