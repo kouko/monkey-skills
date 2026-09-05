@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改審查鏡頭的參考文件、reviewer 契約、review.json 與 KICKOFF 的幾行欄位、ship 的 PR 內文模板；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-artifact-language-policy/review.json, docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/review.json, loom-code/skills/review/references/lenses.md]
-status: open
+status: confirmed 2026-09-05
 
 ## Problem
 loom 的複雜度防線只在 **code 鏡頭**裡：`deletion-first`（新的抽象要有兩個現成使用者，提 finding 必須說出更小的做法）、`deliberate-simplification`、`architecture`、`refactoring`，加上 implementer 基線的「Simplicity first」。但最近四個 change（#789、#790、#791、記憶步驟搬家）動的全是站文字、契約與模板，走的是 **docs／skill 鏡頭**——那兩條鏡頭沒有任何一維問「這個機制有必要嗎？有沒有更小的寫法？」。結果：
