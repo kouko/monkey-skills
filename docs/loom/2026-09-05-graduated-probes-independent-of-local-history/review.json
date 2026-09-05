@@ -449,11 +449,20 @@
       "vendor": "openai",
       "started": "2026-09-06T01:11:02+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-be-fix-d2f7",
+      "model": "sonnet",
+      "started": "2026-09-06T01:19:34+08:00",
+      "fresh_context": true,
+      "note": "branch-end adversary findings (b0ef19ff): also touches W2-02 (CHANGELOG) and W1-01/W1-02 (nested marker) — one implementer, commits carry the owning task's trailer"
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 20,
+    "dispatches": 21,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
