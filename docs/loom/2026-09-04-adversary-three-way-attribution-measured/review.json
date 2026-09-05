@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "db7d44f99afff18d3af7ee6060293102df64bb07",
+  "reviewed_sha": "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -267,6 +267,67 @@
           "fix": "count only error and timeout as failed; regression case asserting validated resumed runs do not increment failed_runs"
         }
       ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet-3b8e",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS",
+        "external-surface-grounding": "PASS",
+        "incorrect-fact": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "wave-end:1-02",
+          "status": "fixed",
+          "evidence": "d53373ea — loom-code/scripts/coldread_role_split.py:492-497 scored_bodies filter; invariant probe green"
+        },
+        {
+          "id": "wave-end:1-09",
+          "status": "fixed",
+          "evidence": "d53373ea — failed_runs counts error and timeout only"
+        },
+        {
+          "id": "nit-docstring-stdin",
+          "status": "fixed",
+          "evidence": "d53373ea — run_once docstring separates the --help facts from the empirical stdin observation"
+        }
+      ],
+      "findings": [],
+      "notes": "ran the module tests and probe directory: 77 passed; did not re-run the full package suite (implementer reported 1499 passed at e6e75845)"
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-91c0",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe",
+      "dimension_scores": {
+        "correctness": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "wave-end:1-02",
+          "status": "fixed",
+          "evidence": "d53373ea / loom-code/scripts/coldread_role_split.py:534-567"
+        },
+        {
+          "id": "wave-end:1-09",
+          "status": "fixed",
+          "evidence": "e6e75845 / loom-code/scripts/coldread_role_split.py:491-495,534-542"
+        }
+      ],
+      "findings": []
     }
   ],
   "probes": [
@@ -312,6 +373,33 @@
       "sha": "eb9bd60272a1eb9346db817e5cfe7f2e4650b58c",
       "result": "fail",
       "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py -q",
+      "sha": "99bc4df974e91fd9df48814c1f57adfb8cb0c0a2",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py",
+      "note": "fix-round RED for findings 01/03/04; passes since ebb1afab"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py -q",
+      "sha": "8db7da33ba4110dc233a8d43912e2ad46f302593",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py",
+      "note": "round-3 RED for findings 02/09 under the design re-look semantics; passes since e6e75845"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "2f12bcf5",
+      "result": "pass",
+      "artifact": "",
+      "note": "1499 passed, 3 skipped, 1 xfailed — run by the orchestrator before the round-3 dispatch"
     }
   ],
   "questions": [
@@ -342,7 +430,8 @@
       "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
       "raised_by": "rev-we1-codex-91c0, rev-we1-sonnet-3b8e, adv-we1-6f03",
       "severity": "fatal",
-      "text": "non-zero claude exit recorded as status ok — round 2: sonnet fixed (4a262c95), codex unfixed: an error run is marked but still scored into n and the item counts; stays open (no averaging)"
+      "text": "non-zero claude exit recorded as status ok — round 2: sonnet fixed (4a262c95), codex unfixed: an error run is marked but still scored into n and the item counts; stays open (no averaging)",
+      "resolved": "closed by d53373ea — failed runs never enter n (design re-look semantics); both readers round 3"
     },
     {
       "id": "wave-end:1-03",
@@ -404,7 +493,8 @@
       "origin_sha": "16f0706854eb9c00ea1fd1a2a358750aed1f5f43",
       "raised_by": "rev-we1-codex-91c0",
       "severity": "fatal",
-      "text": "failed_runs counts validated resumed runs (status resumed) as failures"
+      "text": "failed_runs counts validated resumed runs (status resumed) as failures",
+      "resolved": "closed by d53373ea/e6e75845 — failed_runs counts error and timeout only; both readers round 3"
     }
   ],
   "dispatch": [
@@ -560,6 +650,6 @@
   ],
   "second_vendor": "codex",
   "round_notes": {
-    "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05). | round 2: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION — 02 held open, 09 opened; codex accepted the report-language dismissal. Round 3 follows the fix-rounds third-round rule: design re-look before any further fix."
+    "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05). | round 2: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION — 02 held open, 09 opened; codex accepted the report-language dismissal. Round 3 follows the fix-rounds third-round rule: design re-look before any further fix. | round 3: PASS x2 after the design re-look (evidence/design-relook-run-status-2026-09-05.md); reviewed_sha -> da2fecfa."
   }
 }
