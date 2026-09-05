@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改 intent 模板一行、KICKOFF 一行、checker 的車道重算多讀一個宣告（規則數不變）、review／build／ship 站文字各一句加一份參考檔、PR 內文一行；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-artifact-language-policy/review.json, docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/review.json, docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json]
-status: open
+status: confirmed 2026-09-05
 
 ## Problem
 loom 的車道由 checker 從 diff 重算（small／full），不能宣告——這防的是 agent 自己選輕的。但「這個 change 我願意花多少驗證成本」跟「要不要第二讀者」一樣，是使用者的決定，而且常常做到一半才看得出這個 change 有多重。現在沒有任何方法讓使用者說「這次一位讀者就好」或「這次只過閘、不用審」；唯一的快路是不走 loom。
