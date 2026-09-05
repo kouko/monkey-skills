@@ -84,16 +84,42 @@ def _clone_ci_shaped(tmp_dir: Path) -> Path:
 NESTED_ENV = "REHEARSE_PROBES_NESTED"
 
 
+def _nested_marker_reason() -> str | None:
+    """Return a skip reason when the nested-rehearsal marker applies to
+    this process, else None. The marker carries the absolute path of the
+    rehearsal clone the marking process is running inside (set both by
+    rehearse_probes.py and by this probe's own clone-and-run call below);
+    this probe skips only when its own resolved file sits inside that
+    path, so a same-named marker left over from an unrelated shell or CI
+    job -- carrying a different, or non-path, value -- is ignored rather
+    than causing a silent skip. Any other truthy value (a bare "1", the
+    marker's historical shape) still skips loudly, naming the marker."""
+    marker = os.environ.get(NESTED_ENV)
+    if not marker:
+        return None
+    marker_path = Path(marker)
+    if marker_path.is_absolute():
+        here = Path(__file__).resolve()
+        try:
+            here.relative_to(marker_path.resolve())
+        except ValueError:
+            return None
+        return (
+            f"already inside a rehearsal clone ({NESTED_ENV}={marker!r}); a "
+            "nested clone-and-run would recurse"
+        )
+    return f"{NESTED_ENV} is set ({marker!r}); a nested clone-and-run would recurse"
+
+
 def test_no_history_class_skips_on_main() -> None:
     # This probe clones the repository and runs every graduated probe file
     # inside the clone -- including its own graduated copy. Both this probe
-    # and rehearse_probes.py set the marker below for the pytest they spawn;
-    # inside such a run this probe skips, so the clone never clones again.
-    if os.environ.get(NESTED_ENV):
-        pytest.skip(
-            f"already inside a rehearsal clone ({NESTED_ENV} is set); a "
-            "nested clone-and-run would recurse"
-        )
+    # and rehearse_probes.py set the marker below, as the clone's own
+    # absolute path, for the pytest they spawn; inside such a run this
+    # probe skips, so the clone never clones again.
+    reason = _nested_marker_reason()
+    if reason:
+        pytest.skip(reason)
     with tempfile.TemporaryDirectory() as tmp:
         clone_dir = _clone_ci_shaped(Path(tmp))
 
@@ -119,7 +145,7 @@ def test_no_history_class_skips_on_main() -> None:
 
         result = subprocess.run(
             pytest_args, cwd=str(clone_dir), capture_output=True, text=True,
-            env={**os.environ, NESTED_ENV: "1"},
+            env={**os.environ, NESTED_ENV: str(clone_dir)},
         )
 
         # wave-end:1-02: a collection error or a "no tests collected" exit
