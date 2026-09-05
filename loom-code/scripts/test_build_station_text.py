@@ -361,12 +361,6 @@ def test_matcher_perwave_sentence_affirmative_accepted() -> None:
 
 # --- W1-04: no wave-end checkpoint under express/gate-only; switch pointer --
 
-from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
-
-
-def _has_negation(sentence: str) -> bool:
-    return bool(_NEGATION_RE.search(sentence))
-
 
 def _wave_end_sentences() -> list[str]:
     text = BUILD_SKILL.read_text(encoding="utf-8")
@@ -413,3 +407,112 @@ def test_matcher_wave_end_sentence_affirmative_accepted() -> None:
     assert "closes the plan" in sentence.lower()
     assert "wave-end" in sentence.lower()
     assert not _has_negation(sentence)
+
+
+def _probe_graduation_paragraph() -> str:
+    """Return the Probe graduation paragraph's prose, with any HTML gate
+    markers stripped -- a `<!-- gate: ... -->` comment is structural
+    (recomputed by check_mechanisms.py's prose-gate class), not prose,
+    and its id text (e.g. `build.rehearsal-before-graduation`) must not
+    feed the sentence-level negation/graduation checks below."""
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    assert "**Probe graduation.**" in text, (
+        "graduation-paragraph start marker missing from build/SKILL.md"
+    )
+    assert "**Store entries.**" in text, (
+        "graduation-paragraph end marker missing from build/SKILL.md"
+    )
+    section = text.split("**Probe graduation.**", 1)[1]
+    section = section.split("**Store entries.**", 1)[0]
+    return re.sub(r"<!--.*?-->", "", section, flags=re.S)
+
+
+def test_graduation_paragraph_names_rehearsal_and_red_blocks_graduation() -> None:
+    """W2-01: the Probe graduation paragraph must name
+    `rehearse_probes.py` with the plugin-root prefix and carry an
+    affirmative sentence saying a red rehearsal blocks graduation, with
+    no negation token in that sentence (prose-pin rule).
+
+    W2-02 branch-end fix (adv-be-9c4e finding 2): the negation sweep is
+    not limited to the one sentence carrying the literal "blocks
+    graduation" -- it covers every sentence of the rehearsal
+    sub-paragraph (from the sentence naming `rehearse_probes.py` onward)
+    that mentions any inflection of "graduat", so a rewrite that inverts
+    the rule in a *different* sentence ("does not block graduation",
+    verb-inflection) is still caught. Sentences before the rehearsal
+    sub-paragraph are excluded on purpose: "Cold-read reports ... never
+    graduate" is a legitimate, unrelated negation earlier in the same
+    section. A prose self-exemption that adds no negation token at all
+    ("Graduate anyway when ...") is refused separately, by literal
+    prefix, since no negation matcher can see it."""
+    paragraph = _probe_graduation_paragraph()
+    assert "${CLAUDE_PLUGIN_ROOT}/scripts/rehearse_probes.py" in paragraph
+
+    flat = " ".join(paragraph.split())
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+", flat) if s.strip()]
+    pinned = [
+        s
+        for s in sentences
+        if "red rehearsal" in s.lower() and "blocks graduation" in s.lower()
+    ]
+    assert pinned, "no sentence pins 'a red rehearsal blocks graduation'"
+    for sentence in pinned:
+        assert not _has_negation(sentence), (
+            f"pinned rehearsal sentence carries a negation token: {sentence!r}"
+        )
+
+    start = next(
+        (
+            i
+            for i, s in enumerate(sentences)
+            if "rehearse_probes.py" in s or "red rehearsal" in s.lower()
+        ),
+        None,
+    )
+    assert start is not None, "no sentence names the rehearsal script or rehearsal"
+    rehearsal_sentences = sentences[start:]
+    graduation_sentences = [s for s in rehearsal_sentences if "graduat" in s.lower()]
+    assert graduation_sentences, "no graduation-related sentence in the rehearsal paragraph"
+    for sentence in graduation_sentences:
+        assert not _has_negation(sentence), (
+            "a graduation-related sentence in the rehearsal paragraph "
+            f"carries a negation token: {sentence!r}"
+        )
+    assert not any(
+        s.lower().startswith("graduate anyway") for s in rehearsal_sentences
+    ), "a self-exemption sentence ('Graduate anyway…') escapes the rule"
+
+
+def test_word_cap_still_within_soft_bound_after_rehearsal_sentences() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    word_count = len(text.split())
+    assert word_count <= 3750, f"word count {word_count} exceeds soft cap 3750"
+
+
+def test_rehearsal_paragraph_is_a_registered_prose_gate() -> None:
+    """Branch-end fix round 2 (finding branch-end-01): the rehearsal
+    paragraph is a blocking prose rule (`A red rehearsal blocks
+    graduation`), which PRINCIPLES.md forbids unless it is registered as
+    a prose gate -- the same shape as the `build.no-dispatch-without-a-
+    record` marker in §3. The paragraph naming `rehearse_probes.py` must
+    sit inside `<!-- gate: build.rehearsal-before-graduation -->` /
+    `<!-- /gate -->`, and the closing marker must land before
+    `**Store entries.**` so the gate covers only the rehearsal
+    paragraph, not the graduation section as a whole."""
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    open_marker = "<!-- gate: build.rehearsal-before-graduation -->"
+    close_marker = "<!-- /gate -->"
+    assert open_marker in text, "no build.rehearsal-before-graduation gate marker"
+
+    start = text.index(open_marker)
+    end = text.index(close_marker, start)
+    gated = text[start + len(open_marker):end]
+
+    assert "${CLAUDE_PLUGIN_ROOT}/scripts/rehearse_probes.py" in gated, (
+        "the rehearsal paragraph is not inside the gate markers"
+    )
+    assert "**Store entries.**" not in gated, (
+        "the gate must close before the Store entries paragraph"
+    )
+    store_index = text.index("**Store entries.**")
+    assert end < store_index, "the closing marker must precede Store entries."

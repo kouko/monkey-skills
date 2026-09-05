@@ -1,6 +1,6 @@
 ---
 name: pre-branch-end-ci-rehearsal-uses-full-history-without-a-local-main
-description: Rehearse CI before the branch-end checkpoint in a clone that matches CI — full history (fetch-depth 0) with origin/main but no local `main` — because a depth-1 single-branch clone is harsher than CI (a mechanism measure that reads an old sha and any probe comparing against a base sha go red there for no CI-relevant reason) while the local worktree is laxer (its stale `main` hides missing refs); a red after branch-end costs a fix round plus a close-commit rebuild
+description: Rehearse CI before the branch-end checkpoint in a clone that matches CI — full history (fetch-depth 0) with origin/main but no local `main` — because a depth-1 single-branch clone is harsher than CI (a mechanism measure that reads an old sha and any probe comparing against a base sha go red there for no CI-relevant reason) while the local worktree is laxer (its stale `main` hides missing refs); a red after branch-end costs a fix round plus a close-commit rebuild. `loom-code/scripts/rehearse_probes.py` makes this clone automatically.
 type: practice
 origin: 2026-09-04/05 — #789 and #790 each went red on CI after branch-end (doc-citation check, a graduated probe calling `git show main:`); artifact-language-policy rehearsed in a depth-1 clone and chased two failures CI could never produce
 ---
@@ -18,13 +18,17 @@ not have is a local branch named `main`. Two ways to rehearse it wrong:
   is absent, and a template-anchor probe that compares against a base
   sha skips or fails. Neither is a CI failure; chasing them costs time.
 
-**What matches CI:** `git clone --no-local file://<repo> <tmp>` (full
-history), then `git checkout <branch>` — no local `main` exists in the
-fresh clone unless you create it — and run the CI commands from the
-workflow file, including the doc-citation selection line verbatim, the
-package tests, and every probe that will graduate. Probes that need a
-base ref use `origin/main` first and skip, never fail, when nothing
-resolves.
+**What matches CI:** `python3 loom-code/scripts/rehearse_probes.py
+<test paths>` is the command that makes this clone — `git clone
+--no-local file://<repo> <tmp>` (full history), then `git checkout
+<branch>` — no local `main` exists in the fresh clone unless you create
+it — and runs the given test paths there, standing in for the manual
+sequence below whenever a probe just needs rehearsing rather than the
+full CI workflow run. The manual form: clone as above, then run the CI
+commands from the workflow file, including the doc-citation selection
+line verbatim, the package tests, and every probe that will graduate.
+Probes that need a base ref use `origin/main` first and skip, never
+fail, when nothing resolves.
 
 Related: [[a-close-commit-sits-directly-under-a-checkpoint-so-any-late-fix-buys-its-own-round]],
 [[a-backticked-token-with-a-slash-is-a-repo-path-to-the-citation-check]].

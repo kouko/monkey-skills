@@ -350,6 +350,16 @@ not its body is a name collision, not a duplicate — rename the probe
 copy rather than dropping it. Cold-read reports for docs or skill
 deltas never graduate.
 
+<!-- gate: build.rehearsal-before-graduation -->
+`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rehearse_probes.py <test paths>`
+clones the repo the way CI checks it out — full history, `origin/main`,
+no local trunk branch — and runs the copies there (on Codex, the script
+ships with the loom-code checkout). A red rehearsal blocks graduation
+until the probe reads `origin/main` first and skips when nothing
+resolves, and reading every skip it lists matters, since a skip naming a
+commit or a branch only this tree has verifies nothing on CI.
+<!-- /gate -->
+
 **Store entries.** Write any durable lesson as a `docs/loom/memory/`
 entry, in the format that store's own README defines, and regenerate
 its index — the store's README names the command

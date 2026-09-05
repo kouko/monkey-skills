@@ -15,9 +15,11 @@ Six attack classes, one attempt each, against the delta at HEAD:
 5. the six re-targeted ship pins -- do they still assert the phrases
    they asserted on origin/main, or did the re-target silently weaken
    one (compared against `git show origin/main:...`, guarded).
-6. the skip guard in the two graduated language-policy probe files -- a
-   `status: closed` line appearing anywhere else in the intent (inside a
-   fenced code span, not the frontmatter) must not trigger the skip.
+
+Class 6 (the skip guard in the two graduated language-policy probe
+files) is gone: 2026-09-05-graduated-probes-independent-of-local-history
+(W1-02) deleted that guard from both files as dead history-bound weight,
+so this file's own probes against it are removed alongside it.
 
 Every case is RED only on a real defect; a survived attack is recorded
 GREEN, per the adversarial recipe (`kind: adversarial` probes are a
@@ -41,10 +43,6 @@ BUILD_SKILL = REPO / "loom-code/skills/build/SKILL.md"
 ADVERSARY_MD = REPO / "loom-code/agents/adversary.md"
 BASELINE_MD = REPO / "loom-code/references/engineering-baseline.md"
 SHIP_TEST_MD = REPO / "loom-code/scripts/test_ship_station_text.py"
-LANGUAGE_POLICY_TEST = REPO / "loom-code/scripts/test_probes_language_policy.py"
-LANGUAGE_POLICY_BRANCH_END_TEST = (
-    REPO / "loom-code/scripts/test_probes_language_policy_branch_end.py"
-)
 
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 _NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
@@ -466,95 +464,6 @@ def test_shippins_retargeted_notweakened():
     ), (
         "neither the old re-run phrase nor its documented replacement "
         "('this step precedes the round') appears anywhere in HEAD's file"
-    )
-
-
-# --- (6) the language-policy skip guard vs. a status: closed line in a ----
-# --- fenced code span, not the frontmatter --------------------------------
-
-
-def _load_guard(path: Path):
-    """Exec the probe file's module body in an isolated namespace (never
-    importing it, to avoid colliding module names with the sibling file
-    of the same shape) and return its `_language_policy_intent_closed`
-    function."""
-    namespace: dict = {"__file__": str(path), "__name__": f"_probe_loaded_{path.stem}"}
-    exec(
-        compile(path.read_text(encoding="utf-8"), str(path), "exec"),
-        namespace,
-    )
-    return namespace["_language_policy_intent_closed"]
-
-
-@pytest.mark.parametrize(
-    "path", [LANGUAGE_POLICY_TEST, LANGUAGE_POLICY_BRANCH_END_TEST], ids=lambda p: p.name
-)
-def test_skipguard_statusclosedinfencedcodespan_notfrontmattertriggered(path: Path):
-    """Attack: feed the skip guard a synthetic intent whose frontmatter
-    `status:` line says `open` and comes FIRST, but whose body later
-    includes a fenced code example containing the literal line `status:
-    closed` (e.g. a worked example of what a closed intent looks like).
-    Held: the guard returns on the FIRST line matching `startswith
-    ("status:")` and never inspects the rest of the text, so a later
-    example line inside a fenced code span cannot override the real,
-    earlier frontmatter line. A companion case below shows the actual
-    boundary: the guard is blind to POSITION, not to code spans as
-    such -- a decoy `status: closed` line placed BEFORE the real
-    frontmatter line does win, which is why the guard's safety in
-    practice rests on intent files always opening with frontmatter, not
-    on any code-span awareness in the guard itself."""
-    if not path.is_file():
-        pytest.skip(f"{path} does not exist")
-    guard = _load_guard(path)
-
-    real_status_second = (
-        "status: open\n"
-        "\n"
-        "## Worked example\n"
-        "A closed intent's frontmatter looks like this:\n"
-        "\n"
-        "```\n"
-        "status: closed 2026-01-01 -- PR #1\n"
-        "```\n"
-    )
-    assert guard(real_status_second) is False, (
-        "expected the guard to decide False from the first (frontmatter) "
-        "status: line and ignore the later fenced-code-span line; a True "
-        "here would mean the code-span line won even though the real "
-        "frontmatter line came first -- that would be a genuine finding"
-    )
-
-    decoy_status_first = (
-        "```\n"
-        "status: closed 2026-01-01 -- PR #1\n"
-        "```\n"
-        "\n"
-        "status: open\n"
-    )
-    assert guard(decoy_status_first) is True, (
-        "documents the actual boundary: the guard has no concept of a "
-        "fenced code span, so whichever status:-prefixed line comes "
-        "FIRST in the text wins, decoy or not -- real intent files are "
-        "safe from this only because their frontmatter is always first"
-    )
-
-
-def test_skipguard_realintentfile_currentlyclosed():
-    """Sanity probe (not an attack): the guard's real target file,
-    2026-09-03-artifact-language-policy.md, is `status: closed` as of
-    this branch, so both graduated probe files should currently be
-    skipping their branch-scope assertions. Confirms the guard's
-    happy-path still fires on the real artifact, independent of the
-    synthetic case above."""
-    real_intent = REPO / "docs/loom/intent/2026-09-03-artifact-language-policy.md"
-    if not real_intent.is_file():
-        pytest.skip("the language-policy intent file does not exist in this tree")
-    guard = _load_guard(LANGUAGE_POLICY_TEST)
-    text = real_intent.read_text(encoding="utf-8")
-    assert guard(text) is True, (
-        "the real language-policy intent is expected to read status: "
-        "closed on this branch; if it does not, the two graduated probe "
-        "files are running their branch-scope assertions unexpectedly"
     )
 
 
