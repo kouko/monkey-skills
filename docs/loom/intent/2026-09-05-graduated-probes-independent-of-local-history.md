@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 一支 repo 內的排練腳本加 build 站記憶步驟的幾行文字；沒有使用者讀或輸入的介面
 evidence: [docs/loom/memory/pre-branch-end-ci-rehearsal-uses-full-history-without-a-local-main.md, .github/workflows/loom-code-ci.yml, loom-code/scripts/test_probes_complexity_wave_end.py]
-status: confirmed 2026-09-05
+status: closed 2026-09-06 — branch graduated-probes-clean-clone
 
 ## Problem
 畢業探針（change 結束時從 `evidence/probes/` 複製進 `loom-code/scripts/test_probes_*.py` 的測試）在本機 worktree 全綠，合併後在 CI 才紅，已經發生三次（#789、#790、#794）。原因都一樣：探針讀了只有本機才有的東西——本機的 `main` 分支、或 change 自己分支上的某個 commit（squash merge 後就不存在）。每次都是 branch-end 過了才發現，代價是一輪修正加一個重做的關閉 commit；#794 那次還讓 main 的 CI 紅到下一個 change 順手修掉為止。

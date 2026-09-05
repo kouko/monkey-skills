@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+  "reviewed_sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -379,6 +379,33 @@
       "notes": [
         "round-4 PASS stands — delta touches only review.json bookkeeping and the design-relook evidence note; no code, skill, report, or memory content changed"
       ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-e81a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "resumed": true,
+      "confirmation": "446ea5d4 touches only blind-run-report.md's 'I decided for you' section — adds branch-end-01 in consequence form and fixes the dismissed-count sentence from one to two; the 'one skip' phrasing elsewhere is not stale; nothing else changed.",
+      "findings": []
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-47d0",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "resumed": true,
+      "confirmation": "The nit batch records the dismissed fatal finding, keeps every skip statement consistent with the embedded transcripts, and changes nothing beyond the report and review dispatch bookkeeping.",
+      "findings": [],
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6"
     }
   ],
   "probes": [
@@ -510,6 +537,54 @@
       "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py -q -p no:cacheprovider",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py -q -p no:cacheprovider",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py -q -p no:cacheprovider",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py -q -p no:cacheprovider",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py -q -p no:cacheprovider",
+      "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py"
     }
   ],
   "questions": [
@@ -522,6 +597,11 @@
       "decision_point": 1,
       "type": "what",
       "text": "這次要不要用 Codex 當第二位讀者？（答：要 — second vendor codex for this change）"
+    },
+    {
+      "decision_point": 3,
+      "type": "done",
+      "text": "決策點 ③：盲跑報告——四條 Acceptance（1–3 在乾淨副本實跑通過、含 Python 3.11；4 在分支上符合、合併後 main 上的確認待做）、對既有資料無動作、我幫你決定的事（含一個被駁回的致命意見：「紅的不得畢業」登記為文字規則而非擋推送機制）。OK 嗎？（答：ＯＫ）"
     }
   ],
   "open_findings": [
@@ -888,10 +968,10 @@
     }
   ],
   "cost": {
-    "rounds": 5,
+    "rounds": 6,
     "dispatches": 29,
     "cap_changes": [],
-    "hours_plan_to_pr": null
+    "hours_plan_to_pr": 6.9
   },
   "second_vendor": "codex",
   "round_notes": [
@@ -944,6 +1024,15 @@
         "Sonnet's round-4 PASS stands: the only commits since its verdict are review.json records and the re-look note, inside no finding's anchor.",
         "Outcome PASS: reviewed_sha moves to HEAD^ of this record commit. The important-or-worse dismissal (branch-end-01) must be listed in the blind-run report's 'I decided for you' section — ship's nit batch carries that docs-only edit together with the Codex nit on the stale one-skip sentence, with the confirmation round fix-rounds.md and ship §3.5 prescribe.",
         "Probes re-run at the reviewed content (f0894e62) after the push gate refused the wave-end/round-3 entries as older shas: package tests 1682 passed 1 xfailed / 182 passed 1 skipped; five probe files 16+10+1+18+4 passed. Sonnet resumed for a round-5 standing confirmation so the round carries two verdicts."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "outcome": "PASS",
+      "notes": [
+        "Nit-batch confirmation round (ship §3.5): 446ea5d4 lists the dismissed fatal finding in the blind-run report; the Codex round-2 nit (stale one-skip sentence) was already resolved by the re-capture. Both readers confirm; reviewed_sha moves to the dispatch commit 2eaba052 (HEAD^ of this record, whose content tree equals the nit-batch commit).",
+        "Probes and package tests re-run at the nit-batch content (2eaba052): the push gate binds probes to the reviewed content tree, which the report edit changed."
       ]
     }
   ]
