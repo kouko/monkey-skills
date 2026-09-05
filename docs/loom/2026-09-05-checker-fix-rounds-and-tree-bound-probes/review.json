@@ -367,6 +367,15 @@
       "started": "2026-09-06T05:00:00+08:00",
       "fresh_context": false,
       "note": "record written before the work; the memory step runs after W2-02, before the closing round"
+    },
+    {
+      "task": "fix:W2-01",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T05:20:00+08:00",
+      "fresh_context": false,
+      "note": "W2-01 redefined _sentences in test_review_station_text.py, shadowing the graduated sentence-cap probes' helper (7 failures reported by the implementer as pre-existing — they were not); renamed"
     }
   ],
   "second_vendor": "codex",
