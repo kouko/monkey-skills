@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "39e4e20a8aef3e738389517c63149e4115019161",
+  "reviewed_sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -973,6 +973,115 @@
       },
       "findings": [],
       "notes": "package suite rerun in a detached worktree at HEAD (1848/182, no phantom failure); branch-end probes 10/10 and release probes 13/13 rerun; plan-edits and review-edits pass on this change; the wave-end:1-02 dismissal independently confirmed correct; the report states Acceptance 4 not met plainly."
+    },
+    {
+      "round": 13,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-r7v3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs+skill",
+      "verdict": "NEEDS_REVISION",
+      "sha": "a66619040514a150fb511f84af9b10b36b1b7ca9",
+      "standards_version": "lenses.md@a66619040514a150fb511f84af9b10b36b1b7ca9",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/skills/write-plan/SKILL.md:303",
+          "text": "issue (blocking): the engineering-spec instruction says to carry only Requirements, Design decision and UI flows, but the charter and template also require Alternatives considered and Current state evidence; an executor would write a spec the charter rejects.",
+          "fix": "name all five sections."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:89",
+          "text": "issue (blocking): the re-walked report still tells the user Acceptance 4 was not met and leaves its remedy as an open question, contradicting the fixed result recorded above.",
+          "fix": "make the decided-for-you and open-question sections match."
+        }
+      ],
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "fixed",
+          "evidence": "a0b58cda; A3/B3 and A4/B4 saved reports"
+        },
+        {
+          "id": "branch-end-02",
+          "status": "fixed",
+          "evidence": "527167a2; blind-run-report.md:67,81"
+        }
+      ],
+      "notes": "static fix-delta inspection; the supplied 1852/182 suites were not rerun in the read-only sandbox."
+    },
+    {
+      "round": 13,
+      "scope": "branch-end",
+      "reviewer": "rev-be-a-r7v3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs+skill",
+      "verdict": "PASS",
+      "sha": "a66619040514a150fb511f84af9b10b36b1b7ca9",
+      "standards_version": "lenses.md@a66619040514a150fb511f84af9b10b36b1b7ca9",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS",
+        "inconsistency": "PASS"
+      },
+      "findings": [],
+      "previous_findings": [],
+      "notes": "package suite rerun in a detached worktree at HEAD (1852/182); plan-edits, review-edits, contract citations and mechanisms clean; A/B numbers cross-checked against the six saved reports."
+    },
+    {
+      "round": 14,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-r7v3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs+skill",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "standards_version": "lenses.md@f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "dimension_scores": {
+        "correctness": "PASS_WITH_NOTES",
+        "inconsistency": "PASS"
+      },
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "branch-end-03",
+          "status": "fixed",
+          "evidence": "f1661acd; test_skill_names_the_engineering_spec_path"
+        },
+        {
+          "id": "branch-end-04",
+          "status": "fixed",
+          "evidence": "a888d64a"
+        }
+      ],
+      "notes": "static fix-delta inspection passed; the 51-test result was supplied, not rerun."
+    },
+    {
+      "round": 14,
+      "scope": "branch-end",
+      "reviewer": "rev-be-a-r7v3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs+skill",
+      "verdict": "PASS",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "standards_version": "lenses.md@f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "dimension_scores": {
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS"
+      },
+      "findings": [],
+      "previous_findings": [],
+      "notes": "package suite rerun in a detached worktree at f1661acd (1852/182); contract citations and mechanisms clean; word cap 4437/4500."
     }
   ],
   "probes": [
@@ -2535,6 +2644,206 @@
       "result": "pass",
       "artifact": "",
       "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_manifest_override_missing_file_fails_closed_not_traceback",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_manifest_override_directory_fails_closed_not_traceback",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_manifest_override_empty_file_fails_closed_not_traceback",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_manifest_override_no_artifacts_key_fails_closed_not_silent_fallback",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_manifest_override_pointed_at_real_path_matches_unset_env",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_manifest_flag_wins_over_conflicting_env_override",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_contract_dir_stays_on_plugin_path_when_manifest_overridden",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_graduated_twins_diff_only_in_allowed_lines",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_memory_readme_index_lists_exactly_the_files_present",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py -q -k test_ab_evidence_table_counts_match_saved_report_lines",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_marketplace_entry_version_field_absent_target_not_1_6_0",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_plugin_manifest_version_at_head_equals_target_1_6_0",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_mirror_stamp_version_equals_target_1_6_0",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_release_three_version_carriers_all_agree_with_each_other",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_checker_mirror_diff_from_source_is_exactly_one_inserted_line",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_contract_mirror_tree_byte_equal_no_orphans_either_side",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_changelog_top_entry_names_all_four_rule_ids_and_subcommands",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_list_rules_output_identical_between_plugin_and_mirror_checker",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_charter_subcommand_output_identical_between_plugin_and_mirror",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_plugin_version_malformed_or_downgraded_string_not_rejected_anywhere",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_readme_trio_rule_count_agrees_with_actual_list_rules_count",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_prose_pin_helper_synthetic_affirmative_example_accepted",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py -q -k test_prose_pin_helper_synthetic_negated_example_rejected",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_release_1_6_0.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "loom_checker.py charter / intake write-plan / plan / plan-edits / review-edits on stand-in fixtures; codex exec --sandbox read-only cold-read; NEEDS_CONTEXT lines counted across 8 saved A/B reports; python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "a0b58cdad4d374fa2175649909443c19afdbec30",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "f1661acd73e5013212a5ab8683167c0bf33a4dd0",
+      "result": "pass",
+      "artifact": "",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -2792,7 +3101,8 @@
       "origin_sha": "a78ca428c7afada29c2e7ec19cb1597072910f46",
       "raised_by": "rev-be-codex-r7v3",
       "severity": "fatal",
-      "text": "issue (blocking): Acceptance 4 is not met — the charter arm required 3 and 4 questions while the original required 2 and 2, exposing that design rationale is routed to a spec this engineering workflow does not provide."
+      "text": "issue (blocking): Acceptance 4 is not met — the charter arm required 3 and 4 questions while the original required 2 and 2, exposing that design rationale is routed to a spec this engineering workflow does not provide.",
+      "resolved": "resolved by a0b58cda — engineering spec home (94131757, ec779e4c, e9f6de9a); rerun pairs charter 0 and 1 against original 1 and 3 (rev-be-codex-r7v3, round 13)"
     },
     {
       "id": "branch-end-02",
@@ -2800,7 +3110,26 @@
       "origin_sha": "a78ca428c7afada29c2e7ec19cb1597072910f46",
       "raised_by": "rev-be-codex-r7v3",
       "severity": "important",
-      "text": "issue (blocking): the report calls the intermittent package failure unrelated to this change, but the recorded diagnosis says tests introduced on this branch rewrote the real manifest and the branch then fixed them with LOOM_MANIFEST_PATH."
+      "text": "issue (blocking): the report calls the intermittent package failure unrelated to this change, but the recorded diagnosis says tests introduced on this branch rewrote the real manifest and the branch then fixed them with LOOM_MANIFEST_PATH.",
+      "resolved": "resolved by 527167a2 — the report attributes the manifest race to this branch's own tests (rev-be-codex-r7v3, round 13)"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/skills/write-plan/SKILL.md:303",
+      "origin_sha": "a66619040514a150fb511f84af9b10b36b1b7ca9",
+      "raised_by": "rev-be-codex-r7v3",
+      "severity": "fatal",
+      "text": "issue (blocking): the engineering-spec instruction says to carry only Requirements, Design decision and UI flows, but the charter and template also require Alternatives considered and Current state evidence; an executor would write a spec the charter rejects.",
+      "resolved": "resolved by f1661acd — the sentence names all five template sections; test_skill_names_the_engineering_spec_path (rev-be-codex-r7v3, round 14)"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:89",
+      "origin_sha": "a66619040514a150fb511f84af9b10b36b1b7ca9",
+      "raised_by": "rev-be-codex-r7v3",
+      "severity": "important",
+      "text": "issue (blocking): the re-walked report still tells the user Acceptance 4 was not met and leaves its remedy as an open question, contradicting the fixed result recorded above.",
+      "resolved": "resolved by a888d64a — decided-for-you and open questions match the re-walked Acceptance 4 (rev-be-codex-r7v3, round 14)"
     }
   ],
   "dispatch": [
@@ -3174,7 +3503,7 @@
     }
   ],
   "cost": {
-    "rounds": 12,
+    "rounds": 14,
     "dispatches": 46,
     "cap_changes": [],
     "hours_plan_to_pr": null
