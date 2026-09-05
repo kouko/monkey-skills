@@ -965,11 +965,35 @@
       "round": 6,
       "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
       "note": "nit-batch confirmation (ship §3.5)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-e81a",
+      "model": "sonnet",
+      "started": "2026-09-06T07:35:40+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 7,
+      "note": "rebase-onto-1.6.0 confirmation"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-47d0",
+      "model": "codex",
+      "vendor": "openai",
+      "started": "2026-09-06T07:35:40+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 7,
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
+      "note": "rebase-onto-1.6.0 confirmation"
     }
   ],
   "cost": {
     "rounds": 6,
-    "dispatches": 29,
+    "dispatches": 31,
     "cap_changes": [],
     "hours_plan_to_pr": 6.9
   },
