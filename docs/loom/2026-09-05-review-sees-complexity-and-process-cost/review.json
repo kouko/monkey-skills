@@ -335,23 +335,147 @@
         "no package suite or probes run, per the fix-round procedure",
         "rev-we1-cx-sonnet stands from round 2: every path of the round-3 fix delta sits inside the returning reader's anchors"
       ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:342",
+          "text": "issue (blocking): probes[] still carries the schema placeholder as a real probe.",
+          "fix": "remove it from the realized record"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:410",
+          "text": "issue (blocking): the branch-end package-tests probe has an empty artifact; the command cannot name it as an argument.",
+          "fix": "artifact = scripts/run_package_tests.py, also for the earlier record"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:733",
+          "text": "issue (blocking): cost.rounds is 3 although branch-end is the fourth verdict round.",
+          "fix": "cost.rounds = 4"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe.",
+          "fix": "regenerate Acceptance 6 with 5 ≤ 2 + 4 = 6"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+          "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red.",
+          "fix": "delete or replace with the verified state"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:62",
+          "text": "issue (blocking): the agent-decided forks omit the history rewrite (W1-05 merge message, shas remapped).",
+          "fix": "add the consequence-form bullet"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:60",
+          "text": "issue (blocking): the existing-data section says only created files were touched; KICKOFF-DEFAULTS.md, CHANGELOG.md and runner tests are shared existing files.",
+          "fix": "state which shared files changed; keep the no-backfill claim"
+        }
+      ],
+      "notes": [
+        "every recorded 40-char sha resolves",
+        "the graduated wave-end probe is byte-identical to its evidence copy; no name collisions",
+        "read-only sandbox could not start pytest; static inspection confirms bare -- passes through and --then-only exits 2"
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A",
+        "user-judgment-leak": "N/A"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe.",
+          "fix": "regenerate Acceptance 6 with 5 ≤ 2 + 4 = 6"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+          "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red.",
+          "fix": "delete or replace with the verified state"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py:358",
+          "text": "issue (blocking): the docstring promises a round-role `started` check the implementation never performs (regex matches W<n>-<n> only); the branch-end entries' started (18:40) postdate their roles' commits.",
+          "fix": "implement the round-role branch or narrow the docstring; correct the four started values"
+        }
+      ],
+      "notes": [
+        "branch-end probe file 25 passed, graduated wave-end copy 26 passed, runner tests 5 passed; the --then rename is complete and the checker's kickoff_defaults parses the full value",
+        "memory entry and README index line byte-equal; the three related links resolve",
+        "twelve sha-like tokens in review.json resolve; five spot-checked against their notes"
+      ]
     }
   ],
   "probes": [
-    {
-      "kind": "package-tests|blind-run|adversarial|codex-walk",
-      "scope": "spec|code|skill|gate",
-      "command": "<command that runs the artifact>",
-      "sha": "<sha the probe ran against>",
-      "result": "pass|fail",
-      "artifact": "<committed path the command runs>"
-    },
     {
       "kind": "package-tests",
       "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto -- loom-design/scripts/ -q",
       "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
       "result": "pass",
-      "artifact": "",
+      "artifact": "scripts/run_package_tests.py",
       "scope": "wave-end:1"
     },
     {
@@ -407,7 +531,7 @@
       "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
       "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
       "result": "pass",
-      "artifact": "",
+      "artifact": "scripts/run_package_tests.py",
       "scope": "branch-end"
     },
     {
@@ -563,6 +687,73 @@
       "severity": "important",
       "text": "issue (blocking): Acceptance 6 counts every verdict round; four dispatch commits exceed two waves plus one verdict round; a future checkpoint counted as a round hides the fix-dispatch commit.",
       "resolved": "closed by 1eeaf6a8 — Acceptance 6 with the verdict-round reading and explicit arithmetic; codex fixed (round 3)"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:342",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): probes[] still carries the schema placeholder as a real probe.",
+      "resolved": "closed in the round-4 record commit — placeholder probe removed"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:410",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the branch-end package-tests probe has an empty artifact; the command cannot name it as an argument.",
+      "resolved": "closed in the round-4 record commit — package-tests artifact scripts/run_package_tests.py on both records"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:733",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): cost.rounds is 3 although branch-end is the fourth verdict round.",
+      "resolved": "closed in the round-4 record commit — cost.rounds 4"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe."
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red."
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:62",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the agent-decided forks omit the history rewrite (W1-05 merge message, shas remapped)."
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:60",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the existing-data section says only created files were touched; KICKOFF-DEFAULTS.md, CHANGELOG.md and runner tests are shared existing files."
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py:358",
+      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "raised_by": "rev-be-cx-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): the docstring promises a round-role `started` check the implementation never performs (regex matches W<n>-<n> only); the branch-end entries' started (18:40) postdate their roles' commits."
     }
   ],
   "dispatch": [
@@ -698,7 +889,7 @@
       "role": "adversary",
       "agent_id": "adv-be-cx",
       "model": "sonnet",
-      "started": "2026-09-05T18:40:00+08:00",
+      "started": "2026-09-05T17:24:44+08:00",
       "fresh_context": true
     },
     {
@@ -706,7 +897,7 @@
       "role": "blind-runner",
       "agent_id": "br-be-cx",
       "model": "sonnet",
-      "started": "2026-09-05T18:40:00+08:00",
+      "started": "2026-09-05T17:24:44+08:00",
       "fresh_context": true
     },
     {
@@ -714,7 +905,7 @@
       "role": "reviewer",
       "agent_id": "rev-be-cx-codex",
       "model": "gpt-5.6-sol",
-      "started": "2026-09-05T18:40:00+08:00",
+      "started": "2026-09-05T17:24:44+08:00",
       "fresh_context": true,
       "vendor": "openai"
     },
@@ -723,15 +914,24 @@
       "role": "reviewer",
       "agent_id": "rev-be-cx-sonnet",
       "model": "sonnet",
-      "started": "2026-09-05T18:40:00+08:00",
+      "started": "2026-09-05T17:24:44+08:00",
       "fresh_context": true,
       "vendor": "anthropic"
+    },
+    {
+      "task": "fix:branch-end-r5",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T18:09:16+0800",
+      "fresh_context": false,
+      "note": "round-4 fixes: review.json (placeholder probe, artifacts, cost.rounds, branch-end started values set to the record commit's timestamp — the orchestrator wrote them from a guessed clock, twice now); the report by br-be-cx (its own artifact); the branch-end probe's round-role check by adv-be-cx (its own artifact)"
     }
   ],
   "second_vendor": "codex",
   "cost": {
-    "rounds": 3,
-    "dispatches": 19,
+    "rounds": 4,
+    "dispatches": 20,
     "cap_changes": [],
     "hours_plan_to_pr": null
   }
