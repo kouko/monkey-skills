@@ -325,6 +325,28 @@ def test_new_task_carrying_landed_sha_annotation_reports_goes_to_dispatch(tmp_pa
     assert "goes to dispatch" in result.stderr
 
 
+def test_new_task_titled_with_hex_word_reports_goes_to_spec(tmp_path: Path) -> None:
+    """An unauthorised addition whose title is spelt from hexadecimal
+    letters ("defaced output") carries no `landed:` annotation, so it is
+    an ordinary addition and the BLOCK names `spec`, never `dispatch`
+    (a bare hex-looking word is not a landed sha)."""
+    repo = init_repo(tmp_path)
+    seed_plan(repo, base_plan_text())
+    edited = base_plan_text().replace(
+        "\n## Questions asked",
+        "\n**W2 defaced output**\n"
+        "- Files: z.py\n"
+        "- Test: the W2 test passes\n"
+        "- Risk: agent-decided -- low risk\n"
+        "\n## Questions asked",
+    )
+    edit_plan(repo, edited, "chore(loom): housekeeping, nothing named here")
+    result = run_plan_edits(repo)
+    assert result.returncode == 1
+    assert "goes to spec" in result.stderr
+    assert "goes to dispatch" not in result.stderr
+
+
 def test_ordinary_unauthorised_addition_still_reports_goes_to_spec(tmp_path: Path) -> None:
     """A brand-new task with no landed-sha annotation and no mention in
     the commit message still BLOCKs naming `spec`, unchanged."""

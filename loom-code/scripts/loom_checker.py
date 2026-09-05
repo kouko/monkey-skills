@@ -1975,11 +1975,11 @@ def check_plan_field_caps_at(manifest, repo: Path, change_id: str) -> list[tuple
 
 PLAN_COMMIT_SUBJECT = "docs(loom): plan {}"
 MARK_START = re.compile(r"(\*\*)\s*(claimed|blocked)\(")
-LANDED_SHA = re.compile(
-    r"landed:\s*[0-9a-f]{7,40}\b"
-    r"|(?<![A-Za-z0-9_-])[0-9a-f]{7,40}(?![A-Za-z0-9_-])",
-    re.IGNORECASE,
-)
+# Only the explicit `landed: <sha>` annotation counts. A bare hex-looking
+# token is not enough: ordinary words spelt from hex letters ("defaced",
+# "cafe") would otherwise send an unauthorised addition to `dispatch`
+# instead of `spec` (round-5 finding).
+LANDED_SHA = re.compile(r"landed:\s*[0-9a-f]{7,40}\b", re.IGNORECASE)
 MEMORY_TASK_ID = re.compile(r"^W\d+-memory$", re.IGNORECASE)
 TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$")
 KNOWN_PLAN_SECTIONS = {"Task DAG", "Risks", "Current State Evidence", "Questions asked"}
