@@ -3223,7 +3223,7 @@ def _lane_forcing_paths(
 
 def effective_lane_detail(
     repo: Path, reviewed_id: str | None, change_id: str | None, round_number: int,
-    earlier_rounds: frozenset[int] = frozenset(),
+    earlier_pairs: frozenset[tuple[str, int]] = frozenset(),
 ) -> tuple[str, str]:
     """`(lane, reason)` -- the lane `check_verdicts`' floor actually uses
     (plan W1-02).
@@ -3245,15 +3245,17 @@ def effective_lane_detail(
     no deferral at all (wave-end:1 adversary finding 2: a bare `lane:`
     line added mid-flight, via a commit whose message never even mentions
     it, dropped the floor in the SAME round it appeared in). `earlier_
-    rounds` -- every round number `review["verdicts"]` has ever recorded
-    for this change, of any scope -- answers whether this is really a
-    day-one declaration (① never has an earlier round to defer past) or a
-    mid-flight one: when at least one already-recorded round is strictly
-    before `round_number`, a bare declaration is treated exactly like an
+    pairs` -- `(scope, round)` pairs `_earlier_lane_pairs` shows already
+    existed before the declaration, numbering-agnostic since round
+    numbers restart per checkpoint -- answers whether this is really a
+    day-one declaration (① has no earlier pair to defer past, so the set
+    is empty) or a mid-flight/new-checkpoint one: when the set is
+    non-empty at all, a bare declaration is treated exactly like an
     explicit `from round <round_number>` switch -- honoured starting the
-    NEXT round, never this one. This mirrors the explicit-switch case
-    immediately below without needing a git-commit-to-round correlation
-    that the record format does not carry.
+    NEXT round of this same scope, never this one. This mirrors the
+    explicit-switch case immediately below without needing a plain
+    round-number comparison, which cannot see across a checkpoint
+    boundary where numbering resets.
 
     Otherwise `express` is eligible unless `_lane_forcing_paths` found a
     hard (gate-typed) reason; `gate-only` is eligible unless it found a
@@ -3266,11 +3268,7 @@ def effective_lane_detail(
     declared, origin, from_round = (
         declared_lane(repo, change_id) if change_id else ("full", "default", None)
     )
-    if (
-        from_round is None
-        and origin == "intent"
-        and any(earlier < round_number for earlier in earlier_rounds)
-    ):
+    if from_round is None and origin == "intent" and earlier_pairs:
         from_round = round_number
     if from_round is not None and not (round_number > from_round):
         return "full", (
@@ -3336,9 +3334,13 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
 
     kinds = artifact_types(manifest, changed) & ADVERSARIAL_TYPES
     round_number, _scoped = scored_verdicts(review)
+    current_scope = str(review.get("scope", "")).strip()
     try:
+        earlier_pairs = _earlier_lane_pairs(
+            repo, review, change_id, current_scope, round_number
+        )
         lane, _lane_reason = effective_lane_detail(
-            repo, reviewed_id, change_id, round_number, _earlier_rounds(review)
+            repo, reviewed_id, change_id, round_number, earlier_pairs
         )
     except (UsageError, OSError, KeyError):
         lane = "full"
@@ -4018,21 +4020,72 @@ def scored_verdicts(review) -> tuple[int, list[dict]]:
     return latest_round(usable_verdicts(review), scope or None)
 
 
-def _earlier_rounds(review) -> frozenset[int]:
-    """Every `round` number `review["verdicts"]` has ever recorded, of ANY
-    scope -- rounds restart per checkpoint (memory-step gotcha,
-    2026-09-05), so this is not "the current checkpoint's history", only
-    "has this change been reviewed at all before now". `effective_lane_
-    detail` uses it to decide whether a bare `lane:` declaration is a
-    day-one one (① has no earlier round to defer past) or a mid-flight one
-    (wave-end:1 adversary finding 2)."""
-    rounds = set()
+def _review_verdict_pairs(review) -> set[tuple[str, int]]:
+    """Every `(scope, round)` pair `review["verdicts"]` records, read
+    straight off the entries -- no filtering, no "latest round" scoping."""
+    pairs = set()
     for entry in review.get("verdicts", []):
         if isinstance(entry, dict):
-            value = entry.get("round")
-            if isinstance(value, int):
-                rounds.add(value)
-    return frozenset(rounds)
+            round_value, scope_value = entry.get("round"), entry.get("scope")
+            if isinstance(round_value, int) and isinstance(scope_value, str):
+                pairs.add((scope_value, round_value))
+    return pairs
+
+
+def _earlier_lane_pairs(
+    repo: Path, review, change_id: str | None, current_scope: str, round_number: int,
+) -> frozenset[tuple[str, int]]:
+    """`(scope, round)` pairs that count as "review history that predates
+    a bare `lane:` declaration" -- keyed to the pair, not the bare round
+    number, because round numbers RESTART at every new checkpoint
+    (`latest_round`'s own docstring, the memory-step gotcha): a plain
+    `round < round_number` comparison is blind to a declaration that lands
+    on round 1 of a brand-new checkpoint right after an earlier checkpoint
+    already ran real rounds (wave-end:1 adversary follow-up on finding 2).
+
+    Preferred source: `review.json`'s own content AT THE TREE of the
+    commit that last changed the intent's `lane:` line -- `deciding_
+    commit`, the same mechanism `check_needs_design_reason` uses -- read
+    via `git show <sha>:<review-path>`. That is the actual historical
+    record of what had already been reviewed when the line was written,
+    and every `(scope, round)` pair it carries counts as earlier,
+    regardless of what the CURRENT review.json goes on to record later.
+
+    That historical read is often unresolvable: no commit ever decided
+    the line, the file did not exist yet at that tree (review.json is
+    frequently committed once, at the very end, rather than incrementally
+    per round), or its content is not the shape expected. Any of those
+    fails CLOSED: it falls back to every `(scope, round)` pair the
+    CURRENT review.json's own `verdicts[]` already carries, other than
+    the one being decided right now -- so a bare declaration is honoured
+    immediately only when NO other round, of any scope, has ever been
+    recorded for this change at all; the moment any has, the declaration
+    defers to the next round exactly like an explicit `from round <n>`
+    switch would."""
+    if change_id is not None:
+        try:
+            manifest = load_manifest()
+            intent_path = artifact_path(manifest, "intent", change_id, repo)
+            relative = intent_path.resolve().relative_to(repo.resolve()).as_posix()
+            sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
+            if sha is not None:
+                review_rel = manifest["artifacts"]["review"]["path"].replace(
+                    "<change-id>", change_id
+                )
+                raw = git_maybe(repo, "show", f"{sha}:{review_rel}")
+                if raw is not None:
+                    try:
+                        historical = json.loads(raw)
+                    except json.JSONDecodeError:
+                        historical = None
+                    if isinstance(historical, dict):
+                        return frozenset(_review_verdict_pairs(historical))
+        except (UsageError, OSError, KeyError, ValueError):
+            pass
+    # Fail closed: no resolvable historical tree -- use the current
+    # review's own record of every OTHER round, of any scope.
+    current = (current_scope, round_number)
+    return frozenset(_review_verdict_pairs(review) - {current})
 
 
 def _split_names(raw) -> list[str]:
@@ -4195,8 +4248,9 @@ def check_verdicts(repo: Path, review, reviewed_id: str | None,
     reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts,
                                       dispatch_reviewers, change_id)
     try:
+        earlier_pairs = _earlier_lane_pairs(repo, review, change_id, scope, round_number)
         lane, lane_reason = effective_lane_detail(
-            repo, reviewed_id, change_id, round_number, _earlier_rounds(review)
+            repo, reviewed_id, change_id, round_number, earlier_pairs
         )
     except (UsageError, OSError, KeyError) as exc:
         lane, lane_reason = "full", f"cannot recompute the change lane: {exc}"
