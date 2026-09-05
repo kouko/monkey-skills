@@ -64,9 +64,9 @@ fresh checkpoint's rounds pick up the new lane exactly like a later round
 of the same checkpoint would. The `intent` checker subcommand blocks a
 declaring or switching commit whose message omits this line, the same
 way it blocks a `needs-design:` change with no matching commit line. At
-push, granting `express` over a raw-full recompute requires that same
-deciding commit's message to state the `lane:` line verbatim; short of
-that, the raw full recompute governs instead.
+push, honouring any declaration at all — express, gate-only, or a switch
+back to full — requires that same deciding commit's message to state the
+`lane:` line verbatim; short of that, the raw recompute governs instead.
 
 ## Recording the answer
 

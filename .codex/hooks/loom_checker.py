@@ -190,12 +190,12 @@ RULES: list[tuple[str, str]] = [
         "lane, one in the small lane, one in the express lane, zero in the gate-only lane, "
         "with gate-only granted only when the raw recompute is already the small lane "
         "(a raw full for any reason at all, standing document included, is never eligible); "
-        "a declared or switched `lane:` value that would otherwise widen the floor beyond a "
-        "raw full recompute (granting express) is honoured only when the commit that last "
-        "changed the `lane:` line states that exact line, verbatim, in its own message, else "
-        "it is ignored and the raw full recompute governs instead; a `from wave <n>` switch "
-        "or a plain declared value applies to any (scope, round) not already recorded before "
-        "the declaration, and a `from round <n>` switch applies to every round numbered "
+        "any declared or switched `lane:` value at all -- express, gate-only, or a switch "
+        "back to full -- is honoured only when the commit that last changed the `lane:` line "
+        "states that exact line, verbatim, in its own message, else it is ignored and the "
+        "raw recompute governs instead (small stays small, full stays full); a `from wave <n>` "
+        "switch or a plain declared value applies to any (scope, round) not already recorded "
+        "before the declaration, and a `from round <n>` switch applies to every round numbered "
         "strictly greater than n; where a later round of that scope may also count a "
         "non-returning previous-round reviewer whose earlier passing verdict still stands, "
         "provided every path the fix touched sits inside the anchor of an open finding raised "
@@ -3343,8 +3343,25 @@ def effective_lane_detail(
       no round at all in the true day-one case -- stays under the old
       lane.
 
-    Once timing clears, the RAW recompute and the declaration combine
-    differently per declared value:
+    Provenance (wave-end:1-r3, made unconditional after a follow-up
+    adversary probe pinned the gate-only direction too -- an earlier
+    version of this check applied only to granting `express`, reasoning
+    that only that step widens the floor past the raw recompute; that
+    reasoning missed that an unstated `gate-only` declaration on a raw
+    `small` delta still drops a real floor of 1 to 0, the more dangerous
+    direction of the two): EVERY intent-origin declaration -- `express`,
+    `gate-only`, or a switch back to `full` -- is honoured only when the
+    commit that last changed the `lane:` line states that exact line,
+    verbatim, in its own message (`_lane_declaration_stated_by_its_
+    commit`, the same mechanism `check_lane_reason`/`check_needs_design_
+    reason` use). A declaration that reached this schema-valid but never
+    confirmed by its own deciding commit (or whose deciding commit cannot
+    be found at all) is ignored outright, BEFORE the timing check and
+    before the raw/declared combination below ever run -- the lane is
+    simply the raw recompute, with a reason naming the commit.
+
+    Once provenance and timing both clear, the RAW recompute and the
+    declaration combine differently per declared value:
 
     - `gate-only` is the small lane with the reader floor waived, not a
       separate, narrower thing: it is eligible ONLY when the raw recompute
@@ -3359,35 +3376,25 @@ def effective_lane_detail(
       likewise never reaches raw `small` (skill is not one of `change_
       lane_detail`'s small-lane types), so the old separate skill-path
       exclusion is now unreachable dead weight, superseded by this.
-    - `express` is UNCHANGED from before this ratification: eligible
-      whenever the raw recompute is `full` and `_lane_forcing_paths` found
-      no hard (gate-typed) reason -- a standing document stays soft for
-      express specifically (`_lane_forcing_paths`' own `kind == "standing"`
-      exemption), and a raw `small` recompute means express was never
-      reachable in the first place (declaring `express` on an
-      already-small delta leaves it `small`, whose floor is the same 1
-      express would have given it).
+    - `express` is UNCHANGED from before the gate-only/small ratification:
+      eligible whenever the raw recompute is `full` and `_lane_forcing_
+      paths` found no hard (gate-typed) reason -- a standing document
+      stays soft for express specifically (`_lane_forcing_paths`' own
+      `kind == "standing"` exemption), and a raw `small` recompute means
+      express was never reachable in the first place (declaring `express`
+      on an already-small delta leaves it `small`, whose floor is the
+      same 1 express would have given it).
     - a declared (or default) `full` always stays `full`, whatever the raw
-      recompute said.
-
-    Provenance (wave-end:1-r3): granting `express` on top of a raw `full`
-    recompute is the one step that WIDENS the floor away from what the
-    recompute alone would set it to (raw `small` already carries a floor
-    of 1, the same `express` would give it; a raw-`full`-forced `gate-
-    only` is already rejected outright by the small-lane-classes rule
-    above, before provenance ever matters). That is the point checked:
-    an intent-origin declaration is honoured only when the commit that
-    last changed the `lane:` line states that exact line, verbatim, in
-    its own message (`_lane_declaration_stated_by_its_commit`) -- a
-    declaration that reached this schema-valid but never confirmed by
-    its own deciding commit (or whose deciding commit cannot be found at
-    all) is ignored outright right there, falling back to `full` with a
-    reason naming the commit."""
+      recompute said."""
     manifest = load_manifest()
     raw_lane, raw_reason = change_lane_detail(repo, reviewed_id)
     declared, origin, from_round, unit = (
         declared_lane(repo, change_id) if change_id else ("full", "default", None, None)
     )
+    if origin == "intent" and change_id is not None:
+        stated, detail = _lane_declaration_stated_by_its_commit(repo, change_id)
+        if not stated:
+            return raw_lane, f"lane declaration not stated by its commit {detail}"
     if unit == "round":
         if from_round is not None and not (round_number > from_round):
             return "full", (
@@ -3415,10 +3422,6 @@ def effective_lane_detail(
         return "full", raw_reason
     if declared == "gate-only":
         return "full", f"gate-only needs a small-lane delta: {raw_reason}"
-    if origin == "intent" and change_id is not None:
-        stated, detail = _lane_declaration_stated_by_its_commit(repo, change_id)
-        if not stated:
-            return "full", f"lane declaration not stated by its commit {detail}"
     hard, _skill = _lane_forcing_paths(repo, reviewed_id, manifest)
     if hard:
         return "full", f"declared `lane: {declared}` ({origin}) but {hard[0]}"

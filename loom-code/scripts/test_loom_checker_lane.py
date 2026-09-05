@@ -479,6 +479,34 @@ def test_effective_lane_declaration_ignored_when_no_deciding_commit_found(
     assert "not stated" in reason
 
 
+def test_effective_lane_gateonly_declaration_ignored_when_commit_omits_it(
+    tmp_path: Path,
+) -> None:
+    """The gate-only direction (follow-up adversary probe): an unstated
+    `lane: gate-only` declaration on a raw-`small` delta must NOT be
+    promoted -- provenance is unconditional, not scoped to `express`
+    alone (an earlier version of this fix scoped it to express only,
+    reasoning that only express widens the floor past the raw recompute;
+    that missed that gate-only-from-small still drops floor 1 to 0, the
+    more dangerous direction). The effective lane stays `small` (floor 1),
+    not `gate-only` (floor 0)."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff15"
+    _write_intent(
+        repo, change_id,
+        lane_lines=("lane: gate-only — declared 2026-09-05 by kouko",),
+    )
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")  # omits the line
+    (repo / "loom-code/scripts").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/scripts/test_foo.py").write_text("def test_x(): pass\n", encoding="utf-8")
+    reviewed_sha = _commit_all(repo, "test(loom-code): add a test file")
+
+    lane, reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "small"
+    assert "not stated" in reason
+
+
 # =============================================================================
 # `check_verdicts`' lane floor: full 2 / small 1 / express 1 / gate-only 0.
 # =============================================================================
