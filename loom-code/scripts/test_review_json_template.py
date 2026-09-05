@@ -46,6 +46,9 @@ def test_every_review_record_cost_block_has_exactly_the_declared_shape() -> None
             continue
         cost = record["cost"]
         assert set(cost) == {"rounds", "dispatches", "cap_changes", "hours_plan_to_pr"}, path
-        assert isinstance(cost["rounds"], int) and isinstance(cost["dispatches"], int), path
+        for key in ("rounds", "dispatches"):
+            assert type(cost[key]) is int, (path, key)  # bool is an int subclass; reject it
         assert isinstance(cost["cap_changes"], list), path
-        assert cost["hours_plan_to_pr"] is None or isinstance(cost["hours_plan_to_pr"], (int, float)), path
+        assert all(isinstance(item, str) for item in cost["cap_changes"]), path
+        hours = cost["hours_plan_to_pr"]
+        assert hours is None or type(hours) in (int, float), path
