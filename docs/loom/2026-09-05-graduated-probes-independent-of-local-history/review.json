@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "88162f4d7fb7fb8365ce47fdfe513ed2f63555cc",
+  "reviewed_sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -338,6 +338,47 @@
         }
       ],
       "findings": []
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-47d0",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "resumed": true,
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "dismissed",
+          "evidence": "Rebuttal accepted by rev-be-codex-47d0: the repo defines marked, registered prose-gates as an admitted mechanism class, and the user-confirmed intent explicitly excludes a checker push rule."
+        },
+        {
+          "id": "branch-end-02",
+          "status": "fixed",
+          "evidence": "662e3b35 / review.json — branch-end blind-run entry at 8e765e58 matches the current report's transcripts."
+        }
+      ],
+      "findings": []
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-e81a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "resumed": true,
+      "previous_findings": [],
+      "findings": [],
+      "notes": [
+        "round-4 PASS stands — delta touches only review.json bookkeeping and the design-relook evidence note; no code, skill, report, or memory content changed"
+      ]
     }
   ],
   "probes": [
@@ -421,6 +462,54 @@
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md",
       "note": "re-captured run behind the fix-round report (2cabe85a); the earlier entry at c237d9a0 is the first branch-end walk"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py -q -p no:cacheprovider",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py -q -p no:cacheprovider",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py -q -p no:cacheprovider",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py -q -p no:cacheprovider",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py -q -p no:cacheprovider",
+      "sha": "f0894e62cb79c0f00f3cc8f434fded23ec34689d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py"
     }
   ],
   "questions": [
@@ -488,7 +577,7 @@
       "raised_by": "rev-be-codex-47d0",
       "severity": "fatal",
       "resolved": "",
-      "dismissed": ""
+      "dismissed": "the paragraph is a registered prose gate (marked, in mechanisms.yaml, budget-exception declared) — the repo's admitted class for a blocking sentence that is not a checker rule; the intent bars a checker push rule by user decision; design re-look (evidence/design-relook-branch-end-2026-09-06.md) decision c by rev-be-codex-47d0"
     },
     {
       "id": "branch-end-02",
@@ -761,11 +850,22 @@
       "resumed": true,
       "round": 5,
       "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-e81a",
+      "model": "sonnet",
+      "started": "2026-09-06T01:53:35+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 5,
+      "note": "standing confirmation; started taken from the git clock of the amended round-5 record commit"
     }
   ],
   "cost": {
-    "rounds": 4,
-    "dispatches": 26,
+    "rounds": 5,
+    "dispatches": 27,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
@@ -809,6 +909,17 @@
       "notes": [
         "Sonnet PASS (both its findings fixed). Codex holds branch-end-01 (prose gate ≠ checker rule under PRINCIPLES.md:17) and branch-end-02 (blind-run probe sha behind the re-captured report — closed in this record).",
         "Round 5 would be the third round of this checkpoint: a design re-look (opus, design-relook-be-opus) is dispatched before any further fix, per fix-rounds.md; its conclusion is written on round 5's notes as the `design re-look:` line."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "outcome": "PASS",
+      "notes": [
+        "design re-look: accept as-is (decision c, design-relook-be-opus) — 'prose-only' under mechanisms.yaml counting: and CLAUDE.md means an unmarked paragraph; the registered prose gate is the admitted class; a checker rule is barred by the intent. The raising reviewer accepted the rebuttal and dismissed branch-end-01 itself.",
+        "Sonnet's round-4 PASS stands: the only commits since its verdict are review.json records and the re-look note, inside no finding's anchor.",
+        "Outcome PASS: reviewed_sha moves to HEAD^ of this record commit. The important-or-worse dismissal (branch-end-01) must be listed in the blind-run report's 'I decided for you' section — ship's nit batch carries that docs-only edit together with the Codex nit on the stale one-skip sentence, with the confirmation round fix-rounds.md and ship §3.5 prescribe.",
+        "Probes re-run at the reviewed content (f0894e62) after the push gate refused the wave-end/round-3 entries as older shas: package tests 1682 passed 1 xfailed / 182 passed 1 skipped; five probe files 16+10+1+18+4 passed. Sonnet resumed for a round-5 standing confirmation so the round carries two verdicts."
       ]
     }
   ]
