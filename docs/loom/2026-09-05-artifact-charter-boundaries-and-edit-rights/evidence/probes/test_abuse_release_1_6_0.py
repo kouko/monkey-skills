@@ -87,23 +87,26 @@ def _run_checker(checker: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 # ---------------------------------------------------------------------------
-# 1. Empty / absent — marketplace.json currently carries NO version field at
-#    all for the loom-code entry (only name/description/source). This is the
-#    "absent input" boundary: does the release actually add one, or does the
-#    release note claim a bump that the artifact never records?
+# 1. Empty / absent — marketplace.json's loom-code entry carries no version
+#    field at all, by design: this repo's history never once put a version
+#    field on a marketplace.json plugin entry (`git log` on that file shows
+#    only structural changes), so plugin.json is the single version carrier
+#    and marketplace.json is not expected to duplicate it.
 # ---------------------------------------------------------------------------
 def test_marketplace_entry_version_field_absent_target_not_1_6_0():
-    """The loom-code entry in marketplace.json must carry version == "1.6.0".
+    """The loom-code entry in marketplace.json must carry NO "version" key.
 
-    Fails RED at HEAD: the entry has no "version" key at all, so a reader
-    of marketplace.json alone cannot tell which plugin version is live —
-    plugin.json and the mirror stamp can each say 1.6.0 while marketplace
-    still looks like whatever it always looked like.
+    Corrected against repo history: marketplace.json has never carried a
+    per-plugin version field, and no commit in this task adds one.
+    plugin.json is the single version carrier; the mirror stamp derives
+    from it. A "version" key appearing here would be a new, undocumented
+    second carrier.
     """
     entry = _marketplace_loom_code_entry()
-    assert entry.get("version") == TARGET_VERSION, (
-        f"marketplace.json loom-code entry version is {entry.get('version')!r}, "
-        f"expected {TARGET_VERSION!r}"
+    assert "version" not in entry, (
+        f"marketplace.json loom-code entry unexpectedly carries a version "
+        f"field ({entry.get('version')!r}); plugin.json is the single "
+        "version carrier by design — do not add one here"
     )
 
 
@@ -135,24 +138,25 @@ def test_mirror_stamp_version_equals_target_1_6_0():
 
 
 # ---------------------------------------------------------------------------
-# 4. Three-way agreement — all three version carriers must name the SAME
-#    version, not just each individually equal the target (a partial bump
-#    that leaves one carrier behind is worse than a bump that never
-#    started, because it looks done at a glance).
+# 4. Two-way agreement — the two ACTUAL version carriers (plugin.json and
+#    the mirror stamp) must name the SAME version. marketplace.json is
+#    deliberately not a version carrier (see probe 1) so it is excluded
+#    here rather than forced into a three-way check against a field that
+#    is not supposed to exist.
 # ---------------------------------------------------------------------------
 def test_release_three_version_carriers_all_agree_with_each_other():
-    """plugin.json, marketplace.json and the mirror stamp must agree.
+    """plugin.json and the mirror stamp must agree at the target version.
 
-    RED at HEAD: marketplace.json has no version field (None), so the
-    three-way set never collapses to a single value.
+    Corrected against repo history: marketplace.json carries no per-plugin
+    version field (probe 1), so it is not a version carrier to check here.
+    plugin.json is the single source of truth; the mirror stamp is derived
+    from it and must equal it.
     """
     plugin_v = _plugin_version()
-    marketplace_v = _marketplace_loom_code_entry().get("version")
     mirror_v = _mirror_stamp_version()
-    assert plugin_v == marketplace_v == mirror_v == TARGET_VERSION, (
+    assert plugin_v == mirror_v == TARGET_VERSION, (
         f"version carriers disagree: plugin.json={plugin_v!r}, "
-        f"marketplace.json={marketplace_v!r}, mirror stamp={mirror_v!r}, "
-        f"target={TARGET_VERSION!r}"
+        f"mirror stamp={mirror_v!r}, target={TARGET_VERSION!r}"
     )
 
 

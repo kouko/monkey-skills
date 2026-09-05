@@ -5,6 +5,46 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] — 2026-09-06 — artifact charter, four recomputed rules, Codex mirror
+
+`docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/`.
+
+1. The artifact charter names, for each tracked artifact, which fields a
+   later station may still edit after the artifact's owning commit and
+   which are frozen — closing the boundary that let a downstream station
+   silently rewrite an upstream decision.
+2. Four new checker rules recomputed from the charter, all counted by
+   `--list-rules`: `contract.charter-complete` (every artifact in the
+   charter carries a complete edit-rights row), `plan.field-caps` (a
+   plan's charter-frozen fields stay within their length caps),
+   `plan.edits-after-commit` (an edit to a plan after its owning commit
+   only touches fields the charter marks editable), and
+   `review.round-append-only` (a review round only appends, never rewrites
+   an earlier round).
+3. Four new checker subcommands: `charter` (renders the charter as a
+   table), `plan <path>` (validates one plan file standalone),
+   `plan-edits <change-id>` (checks a plan's post-commit edits against
+   the charter), and `review-edits <change-id>` (checks a review.json's
+   rounds for append-only history).
+4. Two template stamps record which charter version a document was
+   written against: `plan.md` templates now open with `charter: 1.0` and
+   `review.json` templates carry `"charter": "1.0"`. Grandfathering rule:
+   a plan or review.json with no charter stamp is skipped by the new
+   rules, not failed — only stamped documents are checked against the
+   charter.
+5. `--list-rules` now emits 31 rules (was 27); the README trio's rule
+   count is refreshed to match.
+6. Codex mirror regenerated (`.codex/hooks/loom_checker.py`,
+   `.codex/hooks/contract/**`) at this version; `loom-code` bumped
+   1.5.1 → 1.6.0 in `plugin.json` (and its Codex manifest mirror via
+   `sync_codex_manifests.py`). `marketplace.json`'s loom-code entry
+   carries no version field, by design — it never has, in this repo's
+   history, and plugin.json remains the single version carrier.
+7. Deferred, not in scope here: `codex_scaffold.py` accepts any version
+   string for the mirror stamp with no semver-shape or downgrade check —
+   recorded as a finding by the adversary's probes, not fixed by this
+   task.
+
 ## [1.6.1] — 2026-09-06 — graduated probes rehearsed in a CI-shaped clone before graduation; nine dead history-bound tests removed
 
 budget-exception: build.rehearsal-before-graduation — branch-end fix round 2 registers the §6.5 rehearsal sentence ("a red rehearsal blocks graduation") as a prose gate, replacing the prose memory entry that failed to prevent the same CI-red three times (#789, #790, #794) with a marker a cold read can check.
