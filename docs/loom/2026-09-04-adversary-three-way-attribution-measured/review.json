@@ -425,6 +425,76 @@
           "fix": "correct one date so order agrees"
         }
       ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-0f4a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+code",
+      "verdict": "PASS",
+      "sha": "75f132617e3badb2188091a030dbbdef3054f4b1",
+      "dimension_scores": {
+        "incorrect-fact": "PASS",
+        "correctness": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "nit-changelog-chronology",
+          "status": "fixed",
+          "evidence": "origin/main 43e32034 had corrected the 1.4.0 date; the rebase carried it; no inversion at HEAD"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-7e21",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "75f132617e3badb2188091a030dbbdef3054f4b1",
+      "dimension_scores": {
+        "incorrect-fact": "PASS_WITH_NOTES"
+      },
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "fixed",
+          "evidence": "3a93e3f8"
+        },
+        {
+          "id": "branch-end-02",
+          "status": "fixed",
+          "evidence": "review.json probes[] branch-end entries"
+        },
+        {
+          "id": "branch-end-03",
+          "status": "dismissed",
+          "evidence": "package-test artifact is intentionally empty in the review station's worked record; push.probes-package-tests re-runs the repository-owned command without reading artifact"
+        },
+        {
+          "id": "branch-end-04",
+          "status": "fixed",
+          "evidence": "4a21968f, 3a93e3f8"
+        },
+        {
+          "id": "branch-end-05",
+          "status": "fixed",
+          "evidence": "4a21968f / CHANGELOG.md:58"
+        }
+      ],
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:45",
+          "text": "issue (blocking): the rebase changed the delivered bump to 1.5.0→1.5.1 and renamed its probe, but W2-03 still specifies 1.4.0→1.4.1 and test_changelog_carries_1_4_1.py",
+          "fix": "update W2-03 to name 1.5.1 and the renamed probe"
+        }
+      ]
     }
   ],
   "probes": [
@@ -626,7 +696,8 @@
       "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
       "raised_by": "rev-be-codex-7e21",
       "severity": "fatal",
-      "text": "git show call without a grounding citation"
+      "text": "git show call without a grounding citation",
+      "resolved": "closed by 3a93e3f8 — git-show(1)/gitrevisions(7) citation; codex round 5"
     },
     {
       "id": "branch-end-02",
@@ -643,7 +714,8 @@
       "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
       "raised_by": "rev-be-codex-7e21",
       "severity": "important",
-      "text": "package-tests probe artifact is empty"
+      "text": "package-tests probe artifact is empty",
+      "dismissed": "package-test artifact is intentionally empty in the review station's worked record (review SKILL §5); push.probes-package-tests re-runs the repository-owned command and reads no artifact by rev-be-codex-7e21"
     },
     {
       "id": "branch-end-04",
@@ -651,7 +723,8 @@
       "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
       "raised_by": "rev-be-codex-7e21",
       "severity": "important",
-      "text": "plan names a non-existent checker sub-command for the memory integrity check; the branch-end probe pins the wrong command failing"
+      "text": "plan names a non-existent checker sub-command for the memory integrity check; the branch-end probe pins the wrong command failing",
+      "resolved": "closed by 4a21968f (plan) and 3a93e3f8 (positive memory-integrity probe); codex round 5"
     },
     {
       "id": "branch-end-05",
@@ -659,7 +732,16 @@
       "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
       "raised_by": "rev-be-codex-7e21, rev-be-sonnet-0f4a",
       "severity": "important",
-      "text": "1.4.0 entry carries 2026-09-06, a day after 1.4.1; the 1.4.0 merge date is 2026-09-05"
+      "text": "1.4.0 entry carries 2026-09-06, a day after 1.4.1; the 1.4.0 merge date is 2026-09-05",
+      "resolved": "closed by 4a21968f and origin/main 43e32034 (1.4.0 date corrected to 2026-09-05); both readers round 5"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:45",
+      "origin_sha": "75f132617e3badb2188091a030dbbdef3054f4b1",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "plan W2-03 still names the 1.4.1 bump and the 1_4_1 probe after the rebase moved the bump to 1.5.1"
     }
   ],
   "dispatch": [
@@ -928,6 +1010,6 @@
   "second_vendor": "codex",
   "round_notes": {
     "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05). | round 2: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION — 02 held open, 09 opened; codex accepted the report-language dismissal. Round 3 follows the fix-rounds third-round rule: design re-look before any further fix. | round 3: PASS x2 after the design re-look (evidence/design-relook-run-status-2026-09-05.md); reviewed_sha -> da2fecfa.",
-    "branch-end": "round 4: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION. Rebuttal for branch-end-03 goes to the resumed codex reader: the review station's own worked record shows package-tests with artifact \"\", and push.probes-package-tests compares the command, not an artifact."
+    "branch-end": "round 4: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION. Rebuttal for branch-end-03 goes to the resumed codex reader: the review station's own worked record shows package-tests with artifact \"\", and push.probes-package-tests compares the command, not an artifact. | round 5 (after the rebase onto 1.5.0): sonnet PASS, codex PASS_WITH_NOTES; branch-end-03 dismissed by codex; branch-end-06 opened on stale plan text and fixed by 57d4fdf1 after the verdicts, so reviewed_sha does not move here and round 6 reads that one-file delta."
   }
 }
