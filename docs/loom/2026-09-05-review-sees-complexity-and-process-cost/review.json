@@ -401,6 +401,94 @@
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
       "scope": "wave-end:1"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see the report — clean worktree at 896b1533, Acceptance 1–6; Acceptance 5 re-verified after the probe-bound fix",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k graduated_probe -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k memory -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k kickoff -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k split_groups -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k dispatch -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k ship_checklist -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k word_caps -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k review_json_latest -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -q",
+      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "branch-end"
     }
   ],
   "questions": [
