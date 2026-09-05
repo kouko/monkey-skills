@@ -463,6 +463,22 @@
       "model": "sonnet",
       "started": "2026-09-05T17:55:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T18:45:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T18:45:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
