@@ -120,7 +120,10 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
     path: docs/loom/<change-id>/spec.md
     template: spec-minimal.md
     charter:
-      answers: "what the system must visibly do"
+      # also written by write-plan for an engineering change (needs-design:
+      # no) when a task's rationale exceeds its Risk line; no decision
+      # point 2 in that case.
+      answers: "what the system must visibly do, and the design decisions an engineering change's tasks rely on"
       readers: ["user at decision point 2 (product)", "reviewers", "implementers"]
       must:
         - "REQ lines one per Acceptance"
