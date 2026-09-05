@@ -426,3 +426,45 @@ def test_main_out_existing_file_and_missing_contract_exit_two(tmp_path, monkeypa
     err = capsys.readouterr().err
     assert "error:" in err
     assert str(missing_contract) in err
+
+
+def test_score_rejects_noncontiguous_fixture_item_numbers():
+    """finding 07: `score` must raise ValueError when a fixture's item
+    `n` values are not exactly 1..len(items) -- otherwise
+    `n_items = len(items)` silently mis-scores the item numbered beyond
+    len(items) as always wrong."""
+    fixture = {
+        "items": [
+            {"n": 1, "text": "a", "expected": "reviewer"},
+            {"n": 4, "text": "b", "expected": "adversary"},
+        ]
+    }
+    try:
+        score(["1. mine -- x\n4. other -- y"], fixture, "reviewer")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("score() accepted a non-contiguous fixture without raising")
+
+
+def test_main_noncontiguous_fixture_exits_two_at_load(tmp_path, monkeypatch, capsys):
+    """finding 07: main() must catch the ValueError at load time (before
+    calling claude) and exit 2 with an error: message."""
+    monkeypatch.setattr(
+        coldread_role_split.subprocess, "run",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not be called")),
+    )
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    contract = _write_cli_contract(tmp_path)
+    fixture_path = tmp_path / "fixture.json"
+    fixture_path.write_text(
+        _json.dumps({"items": [{"n": 1, "text": "a", "expected": "reviewer"},
+                                {"n": 3, "text": "b", "expected": "adversary"}]}),
+        encoding="utf-8",
+    )
+    out = tmp_path / "out"
+    rc = main(_cli_argv(contract, fixture_path, out, runs="1"))
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "error:" in err

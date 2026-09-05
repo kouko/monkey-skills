@@ -85,17 +85,36 @@ def _expected_label(expected_owner: str, role: str) -> str:
     return "other"
 
 
+def _validate_fixture_items(items: list) -> None:
+    """Require the fixture's item `n` values to be exactly `1..len(items)`
+    (contiguous, no gaps or duplicates). A gap silently mis-scores every
+    item numbered beyond `len(items)` as always wrong/unparsed regardless
+    of what the transcript says, so this is checked eagerly rather than
+    left to `dict` lookups to fail quietly."""
+    n_items = len(items)
+    actual = sorted(item["n"] for item in items)
+    expected = list(range(1, n_items + 1))
+    if actual != expected:
+        raise ValueError(
+            f"fixture item numbers must be exactly 1..{n_items} (contiguous, no gaps or "
+            f"duplicates); got {actual}"
+        )
+
+
 def score(responses: list[str], fixture: dict, role: str) -> dict:
     """Score N cold-read answer transcripts against `fixture` for `role`.
 
     `role` must be "reviewer" or "adversary" (ValueError otherwise).
     `fixture` must carry an "items" list of {n, expected} (KeyError
-    otherwise). "unparsed" is never counted as correct in either tally.
+    otherwise). Item `n` values must be exactly 1..len(items)
+    (`ValueError` otherwise — see `_validate_fixture_items`). "unparsed"
+    is never counted as correct in either tally.
     """
     if role not in _ROLE_OTHER:
         raise ValueError(f"unknown role: {role!r}")
 
     items = fixture["items"]
+    _validate_fixture_items(items)
     n_items = len(items)
     expected_by_n = {item["n"]: _expected_label(item["expected"], role) for item in items}
 
@@ -380,6 +399,11 @@ def main(argv: list[str] | None = None) -> int:
     fixture_hash = hashlib.sha256(fixture_bytes).hexdigest()
     contract_text = contract_bytes.decode("utf-8")
     fixture = json.loads(fixture_bytes.decode("utf-8"))
+    try:
+        _validate_fixture_items(fixture["items"])
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
 
     prompt = build_prompt(contract_text, fixture, args.role)
     prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
