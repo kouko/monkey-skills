@@ -513,6 +513,23 @@
       "started": "2026-09-05T18:40:00+08:00",
       "fresh_context": false,
       "note": "round 2 — resumed reader, fix delta 170d26bd..d7b3a2bb"
+    },
+    {
+      "task": "wave-end:1-fix",
+      "role": "reviewer",
+      "agent_id": "design-relook-we1-opus",
+      "model": "opus",
+      "started": "2026-09-05T18:58:00+08:00",
+      "fresh_context": true,
+      "note": "third-round design re-look per fix-rounds.md; output in evidence/design-relook-run-status-2026-09-05.md"
+    },
+    {
+      "task": "wave-end:1-fix",
+      "role": "adversary",
+      "agent_id": "adv-we1fix3-1a9b",
+      "model": "sonnet",
+      "started": "2026-09-05T19:00:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
