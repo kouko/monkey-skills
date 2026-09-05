@@ -273,27 +273,53 @@ def test_memstep_versionStamps_agreeEverywhereAndSyncCheckPasses():
 # --- class 4: commit provenance since the wave-1 review-only commit --------
 
 
-def test_memstep_commitsSinceReviewOnly_areWave2OrMemoryNeverPostReviewFix():
-    """Every commit strictly after the wave-end:1 review-only commit
-    (c2a5a82e) must be wave-2 implementation work, the memory step, or a
-    dispatch record -- never a fix issued because a completed review
-    round found something wrong (this branch's whole point is that such
-    fixes should not exist post-review). This asserts only what is true
-    at HEAD today: it does NOT claim anything about commits that land
-    after *this* round finishes -- the expectation for those is that only
-    a review-only commit and the single close commit may follow, and
-    that expectation is stated here, not asserted, because it has not
-    happened yet."""
+def test_memstep_preClosingCommits_wave2OrMemoryOnly():
+    """Scope: only the commits between the wave-1 review-only commit
+    (c2a5a82e, exclusive) and the FIRST branch-end dispatch-record commit
+    (subject "dispatch review branch-end -- adversary, blind-runner",
+    inclusive) -- found by subject, never by a hard-coded sha, since a
+    hard-coded sha goes stale the moment the branch is rewritten. Commits
+    after that dispatch record belong to the closing checkpoint itself
+    (which may legitimately run fix rounds while it has not yet passed --
+    a "fix:" subject there is the review station's normal shape, not a
+    defect) and are OUT OF SCOPE for this probe.
+
+    Every non-merge commit in scope must classify, by `Task:` trailer or
+    subject prefix -- never by matching the substring "fix" anywhere in
+    the subject, which false-positives on a dispatch record subject like
+    "dispatch fix:branch-end" -- as one of: wave-2 implementation work
+    (`Task: W2-01` or `Task: W2-02`), a `chore(loom): dispatch ...` record,
+    or a `chore(loom): checkpoint review ...` verdict-recording commit
+    (the wave-end:1 PASS_WITH_NOTES commit that lands right after the
+    review-only commit is exactly this kind, not a fix)."""
     _skip_if_ref_missing(WAVE1_REVIEW_ONLY_SHA)
-    subjects = _git(
-        "log", f"{WAVE1_REVIEW_ONLY_SHA}..HEAD", "--format=%s"
+    dispatch_candidates = [
+        sha
+        for sha in _commits_by_grep("dispatch review branch-end")
+        if "adversary" in _git("log", "-1", "--format=%s", sha)
+        and "blind-runner" in _git("log", "-1", "--format=%s", sha)
+    ]
+    assert dispatch_candidates, (
+        "no commit found with subject 'dispatch review branch-end ... "
+        "adversary, blind-runner'"
+    )
+    first_dispatch_sha = dispatch_candidates[-1]  # git log lists newest first
+
+    shas = _git(
+        "rev-list", "--no-merges", f"{WAVE1_REVIEW_ONLY_SHA}..{first_dispatch_sha}"
     ).strip("\n").splitlines()
-    assert subjects, "expected at least one commit after the wave-1 review-only commit"
-    forbidden_markers = ("fix:", "NEEDS_REVISION", "post-review fix", "re-fix")
-    for subject in subjects:
-        lowered = subject.lower()
-        assert not any(marker.lower() in lowered for marker in forbidden_markers), (
-            f"commit subject reads like a post-review fix, not wave-2/memory work: {subject!r}"
+    assert shas, "expected at least one commit between the review-only commit and the closing dispatch"
+    assert first_dispatch_sha in shas, "the closing dispatch commit must be inside its own scoped range"
+
+    for sha in shas:
+        subject = _git("log", "-1", "--format=%s", sha).strip()
+        body = _git("log", "-1", "--format=%B", sha)
+        is_wave2_or_memory = "Task: W2-01" in body or "Task: W2-02" in body
+        is_dispatch_record = subject.startswith("chore(loom): dispatch")
+        is_checkpoint_verdict = subject.startswith("chore(loom): checkpoint review")
+        assert is_wave2_or_memory or is_dispatch_record or is_checkpoint_verdict, (
+            f"commit {sha} ({subject!r}) is not wave-2 work, a memory-step "
+            "commit, a dispatch record, or a checkpoint-verdict commit"
         )
 
 
