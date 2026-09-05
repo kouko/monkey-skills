@@ -373,11 +373,28 @@
       "resumed": true,
       "round": 2,
       "codex_session_id": "01a0724f-3077-7c50-8edc-51a655eff3c3"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-4f8a",
+      "model": "sonnet",
+      "started": "2026-09-06T00:26:26+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "impl-w2-02-b13d",
+      "model": "sonnet",
+      "started": "2026-09-06T00:26:26+08:00",
+      "fresh_context": true,
+      "note": "dispatched after W2-01 returns (after: W2-01)"
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 11,
+    "dispatches": 13,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
