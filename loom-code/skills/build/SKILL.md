@@ -271,15 +271,21 @@ done
 A commit this loop prints does not enter the checkpoint — re-commit it
 with its trailer first.
 
-Call `loom-code:review`
-(scope = this wave) when **any** of these holds:
+Call `loom-code:review` (scope = this wave) when **either** of these
+holds:
 
 - the unreviewed delta exceeds **8 files** or **400 lines**;
-- any task in this wave was marked `review: after-task`;
-- this is the last wave of the plan.
+- any task in this wave was marked `review: after-task`.
 
 Otherwise continue to the next wave and let the delta accumulate — a small
 wave does not buy a checkpoint.
+
+**Last wave of the plan.** Do not call `loom-code:review` here. Instead
+continue in order to §6 (package tests), then §6.5 (the memory step), and
+only then call `loom-code:review` once, for the round that closes the
+plan — §7 names how that single closing round is recorded, so the
+reviewers read a tree with tests green and nothing left to graduate or
+store.
 
 Count checkpoints as you go: **at most 5 per plan**. Rounds that re-review
 after a `NEEDS_REVISION` are not counted; they are the same checkpoint
@@ -319,8 +325,9 @@ red tree wastes two reviewers.
 
 ## 6.5 Memory step — before the plan's final checkpoint
 
-When the last wave's tasks are integrated, and before this station calls
-`loom-code:review` for the round that closes the plan, do this station's
+The order is: §6 package tests, then this memory step, then §5's single
+closing call to `loom-code:review` — never after it. When the last wave's
+tasks are integrated and package tests are green, do this station's
 memory work now, not later: a commit that lands after that round always
 costs a confirmation round and a re-created close commit, so this step
 precedes the round and ship finds nothing left to graduate or store.
@@ -347,6 +354,10 @@ false`. `git add` the new files by name before a path-limited commit —
 `git commit -- <dir>` skips untracked files.
 
 ## 7. Hand-off
+
+The closing round §5 calls for the last wave is recorded `scope:
+branch-end` — the same value ship's §1 exemption reads, so hand-off finds
+nothing left to re-review.
 
 After the last wave's checkpoint returns `PASS` or `PASS_WITH_NOTES`, hand
 to `loom-code:ship` with the change id. `ship` runs the push (the checker
