@@ -317,8 +317,16 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="surrogateescape")
 
 
-def load_manifest(path: Path = MANIFEST_PATH):
-    return yaml.safe_load(read_text(path))
+def manifest_path_in_effect() -> Path:
+    """The manifest the checker reads: `LOOM_MANIFEST_PATH` when set (a
+    test points it at a scratch copy so nothing writes into the tree),
+    else the plugin's own contract manifest."""
+    override = os.environ.get("LOOM_MANIFEST_PATH", "").strip()
+    return Path(override) if override else MANIFEST_PATH
+
+
+def load_manifest(path: Path | None = None):
+    return yaml.safe_load(read_text(path if path is not None else manifest_path_in_effect()))
 
 
 GIT_TIMEOUT = 30  # a hung git is a failure, not a pass
@@ -5670,7 +5678,7 @@ def cmd_charter(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     `artifacts.<name>.charter` (manifest.yaml is the checker-read SSOT;
     this renders it). Prints one markdown row per artifact in manifest
     order and recomputes `contract.charter-complete` over every row."""
-    manifest_path = MANIFEST_PATH
+    manifest_path = manifest_path_in_effect()
     rest = list(args)
     while rest:
         token = rest.pop(0)

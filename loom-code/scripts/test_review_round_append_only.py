@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -25,10 +26,10 @@ def git(repo: Path, *args: str) -> str:
     ).stdout.strip()
 
 
-def run_review_edits(repo: Path) -> subprocess.CompletedProcess:
+def run_review_edits(repo: Path, env: dict | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(CHECKER), "review-edits", CHANGE_ID],
-        capture_output=True, text=True, cwd=str(repo),
+        capture_output=True, text=True, env=env, cwd=str(repo),
     )
 
 
@@ -262,11 +263,9 @@ def test_review_edits_reviewed_sha_changed_with_replace_policy_removed_blocks(tm
     doc2 = copy.deepcopy(doc)
     doc2["reviewed_sha"] = "2222222b"
     write_and_commit(repo, doc2, "chore(loom): checkpoint review — quietly move reviewed_sha")
-    try:
-        manifest_path.write_text(patched, encoding="utf-8")
-        result = run_review_edits(repo)
-    finally:
-        manifest_path.write_text(original, encoding="utf-8")
+    scratch = tmp_path / "manifest.yaml"
+    scratch.write_text(patched, encoding="utf-8")
+    result = run_review_edits(repo, env={**os.environ, "LOOM_MANIFEST_PATH": str(scratch)})
     assert result.returncode == 1
     assert "review.round-append-only" in blocked_rule_ids(result)
 
@@ -306,11 +305,9 @@ def test_review_edits_vendors_gains_entry_with_policy_removed_blocks(tmp_path: P
     doc2 = copy.deepcopy(doc)
     doc2["vendors"] = ["anthropic", "openai"]
     write_and_commit(repo, doc2, "chore(loom): checkpoint review — round 2 adds a vendor")
-    try:
-        manifest_path.write_text(original.replace(line, ""), encoding="utf-8")
-        result = run_review_edits(repo)
-    finally:
-        manifest_path.write_text(original, encoding="utf-8")
+    scratch = tmp_path / "manifest.yaml"
+    scratch.write_text(original.replace(line, ""), encoding="utf-8")
+    result = run_review_edits(repo, env={**os.environ, "LOOM_MANIFEST_PATH": str(scratch)})
     assert result.returncode == 1
     assert "review.round-append-only" in blocked_rule_ids(result)
     assert "vendors" in result.stderr
