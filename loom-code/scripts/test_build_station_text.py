@@ -258,3 +258,102 @@ def test_commitsparagraph_names_appendonlywhenabsent_branch() -> None:
     assert "W<n>-memory" in flat or "`W<n>-memory`" in paragraph, (
         "the append branch does not name the id it appends, W<n>-memory"
     )
+
+
+# --- W1-03: dispatch records commit once per wave, not once per record -----
+
+_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+
+
+def _has_negation(sentence: str) -> bool:
+    """True iff `sentence` contains a word-boundary negation token — 'not',
+    'never' or 'no' as whole words, or an "n't" contraction."""
+    return bool(_NEGATION_RE.search(sentence))
+
+
+def _flat_sentences(text: str) -> list[str]:
+    """Split text into sentences after collapsing newlines to spaces, so a
+    sentence that line-wraps in the SKILL.md source still reads as one
+    unit here."""
+    flat = " ".join(text.split())
+    return [p for p in re.split(r"(?<=[.!?])\s+", flat) if p.strip()]
+
+
+def _dispatch_record_section() -> str:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    start = text.index("## 3. The dispatch record")
+    end = text.index("## 4.", start)
+    return text[start:end]
+
+
+def _perwave_commit_paragraph() -> str:
+    """Return the blank-line-delimited paragraph naming the per-wave
+    commit literal -- isolated by paragraph, not by sentence-split,
+    because the preceding json code block and bold markdown in §3 defeat
+    a `.`/`!`/`?` sentence splitter (its own unterminated fragments merge
+    across paragraph boundaries and drag in an unrelated 'never')."""
+    section = _dispatch_record_section()
+    paragraphs = [p for p in section.split("\n\n") if p.strip()]
+    hits = [p for p in paragraphs if "chore(loom): dispatch <wave>" in p]
+    assert hits, "no paragraph in §3 names chore(loom): dispatch <wave>"
+    return hits[0]
+
+
+def test_dispatch_record_commits_once_per_wave_not_per_record() -> None:
+    """PR#792's branch had 56 commits, 16 dispatch records, because
+    'commit it on its own' was read as one commit per record. §3 must
+    instead carry an affirmative sentence that one wave's implementer
+    records are appended once and committed once, before the wave's
+    first dispatch."""
+    paragraph = _perwave_commit_paragraph()
+    flat = " ".join(paragraph.split())
+    hits = [
+        s for s in _flat_sentences(flat)
+        if "appended once" in s.lower()
+        and "committed once" in s.lower()
+        and "first dispatch" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "build/SKILL.md §3 has no affirmative sentence stating one wave's "
+        "implementer records are appended once and committed once before "
+        "the wave's first dispatch"
+    )
+
+
+def test_dispatch_record_commit_message_is_per_wave() -> None:
+    """The per-task commit message `chore(loom): dispatch <task-id>` is
+    replaced by a per-wave one, `chore(loom): dispatch <wave>` -- the
+    gate's ordering meaning (write the record before you dispatch) is
+    unchanged; only the commit *count* changes."""
+    section = _dispatch_record_section()
+    assert "chore(loom): dispatch <wave>" in section
+    assert "chore(loom): dispatch <task-id>" not in section
+
+
+def test_dispatch_record_gate_marker_intact() -> None:
+    """The gate marker comment lines must survive the rewrite verbatim --
+    the checker keys off them, not the prose between them."""
+    section = _dispatch_record_section()
+    assert "<!-- gate: build.no-dispatch-without-a-record -->" in section
+    assert "<!-- /gate -->" in section
+
+
+def test_matcher_perwave_sentence_negated_rejected() -> None:
+    sentence = (
+        "This wave's implementer records are never appended once and "
+        "committed once before the wave's first dispatch."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_perwave_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "This wave's implementer records are appended once and committed "
+        "once, before the wave's first dispatch, as "
+        "`chore(loom): dispatch <wave>`."
+    )
+    assert "appended once" in sentence.lower()
+    assert "committed once" in sentence.lower()
+    assert "first dispatch" in sentence.lower()
+    assert not _has_negation(sentence)

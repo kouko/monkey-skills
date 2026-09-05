@@ -114,6 +114,64 @@ def test_sentencepinsproserule_negatedsynthetic_rejected() -> None:
     )
 
 
+# --- W1-03: amend an unseen probe fix into its original commit -------------
+
+_AMEND_KW_RE = re.compile(r"\bamend(?:ed|s)?\b")
+_UNSEEN_KW_RE = re.compile(r"\bunseen\b")
+_PROBE_KW_RE = re.compile(r"\bprobes?\b")
+_COMMIT_KW_RE = re.compile(r"\bcommit\b")
+
+
+def _sentence_pins_unseen_probe_amend_rule(sentence: str) -> bool:
+    """True iff `sentence` names "amend"/"amended", "unseen", "probe"/
+    "probes" and "commit", with the amend verb appearing BEFORE the probe
+    literal it amends, and carries no negation token anywhere in the
+    sentence."""
+    low = sentence.lower()
+    m_amend = _AMEND_KW_RE.search(low)
+    m_unseen = _UNSEEN_KW_RE.search(low)
+    m_probe = _PROBE_KW_RE.search(low)
+    m_commit = _COMMIT_KW_RE.search(low)
+    if not (m_amend and m_unseen and m_probe and m_commit):
+        return False
+    if m_amend.start() >= m_probe.start():
+        return False
+    return not _has_negation(sentence)
+
+
+def test_adversarymd_unseenprobefixsentence_present() -> None:
+    """adversary.md must carry one sentence stating that a fix to its own
+    probe, not yet seen by any reader, is amended into that probe's
+    original commit rather than becoming a new one."""
+    text = ADVERSARY_MD.read_text(encoding="utf-8")
+    hits = [s for s in _sentences(text) if _sentence_pins_unseen_probe_amend_rule(s)]
+    assert hits, (
+        "loom-code/agents/adversary.md has no sentence pinning the "
+        "unseen-probe-fix-amend rule"
+    )
+
+
+def test_sentencepinsunseenprobeamendrule_negatedsynthetic_rejected() -> None:
+    """Self-test on `_sentence_pins_unseen_probe_amend_rule`: an
+    affirmative synthetic sentence carrying all four keywords in the
+    required order must be accepted, and a negated synthetic sentence
+    carrying the same four keywords must be rejected."""
+    affirmative = (
+        "Amend a fix to an unseen probe into its original commit."
+    )
+    assert _sentence_pins_unseen_probe_amend_rule(affirmative), (
+        "a genuinely affirmative synthetic sentence must pass"
+    )
+
+    negated = (
+        "Never amend a fix to an unseen probe into its original commit."
+    )
+    assert not _sentence_pins_unseen_probe_amend_rule(negated), (
+        "a negated synthetic sentence must be rejected even though it "
+        "names all four keywords in the required order"
+    )
+
+
 if __name__ == "__main__":  # pragma: no cover
     import sys
     import pytest
