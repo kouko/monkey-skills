@@ -925,6 +925,119 @@ def test_amending_the_code_commit_invalidates_the_review(tmp_path: Path) -> None
     assert "push.reviewed-sha" in blocked_rules(result)
 
 
+# --- push.reviewed-sha: content-tree bound (W1-02) -------------------------
+
+
+def test_reviewed_sha_message_only_code_commit_rewrite_passes(tmp_path: Path) -> None:
+    """reviewed_sha / message_only_code_commit_rewrite / passes
+    Attack: `git commit --amend` rewrites the code commit's MESSAGE only
+    (a trailer added, no file touched) after the checkpoint was already
+    recorded against the original sha, then the review-only commit is
+    replayed on top of the amended one -- same tree throughout, a brand
+    new commit id. RED before W1-02: `reviewed_id != parent` compared
+    exact commit ids and blocked even though nothing a reviewer looked at
+    moved. GREEN after: `same_reviewed_content` falls back to
+    `content_tree_id`, and a message-only rewrite's tree never moves."""
+    repo = build_repo(tmp_path)
+    original_code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "checkout", "-q", original_code_sha)
+    git(repo, "commit", "-q", "--amend", "-m", "feat: a (message rewritten)\n\nTask: T1")
+    new_code_sha = git(repo, "rev-parse", "HEAD")
+    git(repo, "rebase", "-q", "--onto", new_code_sha, original_code_sha, "work")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_reviewed_sha_review_only_commit_stacked_between_verdict_and_head_passes(
+    tmp_path: Path,
+) -> None:
+    """reviewed_sha / review_only_commit_stacked / passes
+    Attack: every verdict is recorded against the CODE commit, but the
+    pushed review-only HEAD's `reviewed_sha` names a SEPARATE review-only
+    commit stacked one level higher on that same code commit -- its tree,
+    minus this change's own review.json, is byte-identical to the code
+    commit's. RED before W1-02: `verdict_id != reviewed_id` compared exact
+    commit ids. GREEN after: content matches once review.json is set
+    aside."""
+    repo = build_repo(tmp_path)
+    code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "reset", "-q", "--hard", code_sha)
+
+    round_a = review_body(code_sha)
+    write_review(repo, round_a)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round A")
+    review_y = git(repo, "rev-parse", "HEAD")
+
+    round_b = review_body(review_y)
+    round_b["verdicts"] = round_a["verdicts"]  # still sha'd to code_sha, not review_y
+    write_review(repo, round_b)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round B")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_reviewed_sha_extra_file_change_between_verdict_and_head_still_blocks(
+    tmp_path: Path,
+) -> None:
+    """reviewed_sha / extra_file_change_between / still_blocks
+    Attack: same shape as the pass case above, but the intermediate
+    review-only commit ALSO carries an unrelated file change (`b.py`) --
+    a genuine content difference, not just review.json. Regression pin:
+    `content_tree_id` excludes ONLY this change's review.json, so a real
+    file difference must still block."""
+    repo = build_repo(tmp_path)
+    code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "reset", "-q", "--hard", code_sha)
+
+    round_a = review_body(code_sha)
+    write_review(repo, round_a)
+    (repo / "b.py").write_text("value = 2\n", encoding="utf-8")
+    git(repo, "add", REVIEW, "b.py")
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round A + b.py")
+    review_y = git(repo, "rev-parse", "HEAD")
+
+    round_b = review_body(review_y)
+    round_b["verdicts"] = round_a["verdicts"]
+    write_review(repo, round_b)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round B")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_reviewed_sha_recorded_verdict_sha_not_resolving_still_blocks_with_existing_message(
+    tmp_path: Path,
+) -> None:
+    """reviewed_sha / recorded_verdict_sha_not_resolving / still_blocks
+    Attack: a verdict records a `sha` that names no commit at all. W1-02
+    never touches this branch (the message names no "commit"/"content"
+    word to update) -- pinned so a future edit cannot silently change it."""
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS", "sha": parent},
+                {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS_WITH_NOTES", "sha": "abcdef1234567"},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "does not resolve to a commit" in result.stderr
+
+
 # --- push.open-findings-closed --------------------------------------------
 
 
@@ -1129,7 +1242,7 @@ def test_an_adversarial_probe_against_another_sha_does_not_count(tmp_path: Path)
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.probes-adversarial" in blocked_rules(result)
-    assert "not the reviewed commit" in result.stderr
+    assert "not the reviewed content" in result.stderr
 
 
 def test_a_docs_only_change_owes_no_adversarial_probe(tmp_path: Path) -> None:
@@ -1919,9 +2032,13 @@ def test_a_spec_scoped_verdict_missing_sha_still_blocks(tmp_path: Path) -> None:
 
 
 def test_a_probe_for_another_commit_blocks(tmp_path: Path) -> None:
+    """`main` (the seed commit) has genuinely different content from the
+    reviewed commit -- unlike naming this same change's own prior
+    review-only commit (W1-02: that now matches on content, since the two
+    trees differ only by review.json)."""
     repo = build_repo(tmp_path)
     body = rebuild(repo)
-    body["probes"][0]["sha"] = git(repo, "rev-parse", "HEAD")
+    body["probes"][0]["sha"] = git(repo, "rev-parse", "main")
     recommit_review(repo, body)
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1

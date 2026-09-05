@@ -490,3 +490,129 @@ def test_list_rules_states_the_dedup_counting_unit() -> None:
 
     assert "records" in section
     assert "executed once" in section
+
+
+# ============================================================================
+# push.probes-package-tests / push.probes-adversarial: content-tree bound
+# (W1-02) -- both rules go through the same `same_reviewed_content` helper,
+# so one representative fixture per behaviour covers both rule ids at once.
+# ============================================================================
+
+
+def _stack_review_only_commit(repo: Path, body: dict, message: str) -> str:
+    """Commit `body` as a review-only commit on the CURRENT HEAD and return
+    its sha -- used to build a second review-only commit sitting one level
+    above another, rather than replacing it in place the way
+    `recommit_review` does."""
+    write_review(repo, body)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", message)
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_probes_review_only_commit_on_top_of_recorded_probe_passes(tmp_path: Path) -> None:
+    """probes / review_only_commit_on_top / passes
+    Attack: the package-tests and adversarial probes are recorded against
+    the CODE commit, but the pushed review-only HEAD's `reviewed_sha`
+    names a SEPARATE review-only commit stacked one level higher on that
+    same code commit -- its tree, minus this change's own review.json, is
+    byte-identical to the code commit's. RED before W1-02: the comparison
+    was exact-commit-id, so both `push.probes-package-tests` and
+    `push.probes-adversarial` blocked with "not the reviewed commit" (now
+    "not the reviewed content"). GREEN after: `same_reviewed_content`
+    treats the two shas as equivalent."""
+    repo = build_repo(tmp_path)
+    code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "reset", "-q", "--hard", code_sha)
+
+    round_a = review_body(code_sha)
+    review_y = _stack_review_only_commit(repo, round_a, "chore(loom): checkpoint review round A")
+
+    round_b = review_body(review_y)
+    round_b["probes"] = round_a["probes"]  # still recorded against code_sha, not review_y
+    _stack_review_only_commit(repo, round_b, "chore(loom): checkpoint review round B")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_probes_extra_file_change_between_probe_and_head_still_blocks(tmp_path: Path) -> None:
+    """probes / extra_file_change_between / still_blocks
+    Attack: same shape as the pass case above, but the intermediate
+    review-only commit ALSO carries an unrelated file change (`b.py`) --
+    a genuine content difference, not just review.json. Regression pin:
+    `content_tree_id` excludes ONLY this change's review.json, so a real
+    file difference must still block both probe rules."""
+    repo = build_repo(tmp_path)
+    code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "reset", "-q", "--hard", code_sha)
+
+    round_a = review_body(code_sha)
+    write_review(repo, round_a)
+    (repo / "b.py").write_text("value = 2\n", encoding="utf-8")
+    git(repo, "add", REVIEW, "b.py")
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round A + b.py")
+    review_y = git(repo, "rev-parse", "HEAD")
+
+    round_b = review_body(review_y)
+    round_b["probes"] = round_a["probes"]
+    _stack_review_only_commit(repo, round_b, "chore(loom): checkpoint review round B")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    rules = blocked_rules(result)
+    assert "push.probes-package-tests" in rules
+    assert "push.probes-adversarial" in rules
+
+
+def test_probes_recorded_sha_not_resolving_still_blocks_with_existing_message(tmp_path: Path) -> None:
+    """probes / recorded_sha_not_resolving / still_blocks
+    Attack: a package-tests probe records a `sha` that names no commit at
+    all. Must still block, with the message shape unchanged apart from
+    "commit" -> "content" (W1-02's only wording change)."""
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        review_body(parent, probes=[
+            {"kind": "package-tests", "command": "python3 -c pass",
+             "sha": "abcdef1234567", "result": "pass", "artifact": ""},
+        ]),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.probes-package-tests" in blocked_rules(result)
+    assert "not the reviewed content" in result.stderr
+    assert "not the reviewed commit" not in result.stderr
+
+
+def test_probes_another_changes_review_json_changed_is_content_still_blocks(tmp_path: Path) -> None:
+    """probes / another_changes_review_json / still_blocks
+    Attack: the intermediate review-only commit's ONLY change beyond
+    `code_sha` is a DIFFERENT change's `docs/loom/<other-id>/review.json`
+    (not this change's own) -- content_tree_id must exclude only THIS
+    change's review path, so another change's record is ordinary content
+    and a real difference in it still blocks."""
+    repo = build_repo(tmp_path)
+    code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "reset", "-q", "--hard", code_sha)
+
+    other_review = repo / "docs/loom/other-change/review.json"
+    other_review.parent.mkdir(parents=True, exist_ok=True)
+    other_review.write_text('{"reviewed_sha": "0"}\n', encoding="utf-8")
+
+    round_a = review_body(code_sha)
+    write_review(repo, round_a)
+    git(repo, "add", REVIEW, str(other_review.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round A + other change's review.json")
+    review_y = git(repo, "rev-parse", "HEAD")
+
+    round_b = review_body(review_y)
+    round_b["probes"] = round_a["probes"]
+    _stack_review_only_commit(repo, round_b, "chore(loom): checkpoint review round B")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    rules = blocked_rules(result)
+    assert "push.probes-package-tests" in rules
+    assert "push.probes-adversarial" in rules

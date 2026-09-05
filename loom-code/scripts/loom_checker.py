@@ -136,16 +136,18 @@ RULES: list[tuple[str, str]] = [
     (
         "push.probes-adversarial",
         "A change carrying a code / spec / skill / gate artifact records at least three "
-        "adversarial probe records against the reviewed commit; a file referenced by "
-        "several records is executed once, and every record of a failing file is "
-        "unusable.",
+        "adversarial probe records against the reviewed content -- the reviewed commit, "
+        "or any commit whose tree matches it once this change's own review.json is set "
+        "aside; a file referenced by several records is executed once, and every record "
+        "of a failing file is unusable.",
     ),
     (
         "push.probes-package-tests",
         "The checker re-runs the package-test command KICKOFF-DEFAULTS declares, at the "
         "reviewed tree, and believes its own exit code: the recorded result is not trusted, "
-        "the probe's sha must be the reviewed commit, and its recorded command must be the "
-        "declared one.",
+        "the probe's sha must name the reviewed content -- the reviewed commit, or any "
+        "commit whose tree matches it once this change's own review.json is set aside -- "
+        "and its recorded command must be the declared one.",
     ),
     (
         "push.review-schema",
@@ -160,8 +162,10 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.reviewed-sha",
-        "review.json reviewed_sha names the commit HEAD^, so the reviewed tree is the pushed tree; "
-        "every verdict of the latest round names reviewed_sha.",
+        "review.json reviewed_sha names HEAD^'s content -- the commit itself, or any commit "
+        "whose tree matches it once this change's own review.json is set aside -- so the "
+        "reviewed tree is the pushed tree; every verdict of the latest round names that "
+        "same content.",
     ),
     (
         "push.second-vendor-honoured",
@@ -238,7 +242,7 @@ _ANNOTATION = re.compile(r"[【\[(].*$")
 # `docs/loom/<change-id>/review.json`'s own template path (manifest.yaml's
 # `review` artifact) -- the one file every checkpoint commit touches on
 # purpose, so a fix-round diff crossing it is never itself a fix delta.
-REVIEW_JSON_PATH = re.compile(r"docs/loom/[^/]+/review\.json")
+REVIEW_JSON_PATH = re.compile(r"docs/loom/(?P<change_id>[^/]+)/review\.json")
 
 
 def read_text(path: Path) -> str:
@@ -289,6 +293,81 @@ def git_raw_text(repo: Path, *args: str) -> str:
 def git_ok(repo: Path, *args: str) -> bool:
     """True when git exits 0 (used for existence probes like cat-file -e)."""
     return git_maybe(repo, *args) is not None
+
+
+_CONTENT_TREE_CACHE: dict[tuple[str, str], str | None] = {}
+
+
+def content_tree_id(repo: Path, sha: str, change_id: str) -> str | None:
+    """The content identity of `sha`'s tree with THIS change's own
+    `docs/loom/<change_id>/review.json` set aside -- a review-only commit
+    stacked on top of the commit a probe or verdict actually names (or a
+    message-only "trailer" rewrite that leaves every blob untouched) must
+    not read as different content from one whose only difference is that
+    one file, or a commit id that never moved at all. Built from real git
+    plumbing: `git ls-tree -r` (the mode/type/blob-id/path of every file
+    `sha`'s tree holds, recursively) with the one line naming that path
+    dropped, folded into a single id via `git hash-object --stdin` so two
+    shas with identical remaining listings always agree. Excludes only
+    THIS change's review.json -- another change's
+    `docs/loom/<other-id>/review.json` is ordinary content and stays in
+    the listing. Returns None when `sha` does not resolve to a tree at
+    all. Memoised per (sha, change_id): one push evaluates the same pair
+    across `push.reviewed-sha`, `push.probes-package-tests` and
+    `push.probes-adversarial`."""
+    key = (sha, change_id)
+    if key in _CONTENT_TREE_CACHE:
+        return _CONTENT_TREE_CACHE[key]
+    listing = git_maybe(repo, "ls-tree", "-r", sha)
+    if listing is None:
+        _CONTENT_TREE_CACHE[key] = None
+        return None
+    suffix = f"\tdocs/loom/{change_id}/review.json"
+    kept = [line for line in listing.split("\n") if line and not line.endswith(suffix)]
+    digest = _hash_object_stdin(repo, "\n".join(kept))
+    _CONTENT_TREE_CACHE[key] = digest
+    return digest
+
+
+def _hash_object_stdin(repo: Path, content: str) -> str | None:
+    """`git hash-object --stdin -t blob` over `content` -- `run_git` (the
+    shared git-invocation body) has no stdin plumbing, and adding it there
+    is a change to a file outside this one; this one call stays local and
+    uses the same encoding discipline (`git_exec.run_git`'s own
+    docstring): UTF-8 text with `surrogateescape` on both sides."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo), "hash-object", "--stdin", "-t", "blob"],
+            input=content, capture_output=True, timeout=GIT_TIMEOUT,
+            text=True, encoding="utf-8", errors="surrogateescape",
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip()
+
+
+def same_reviewed_content(
+    repo: Path, a: str | None, b: str | None, change_id: str | None
+) -> bool:
+    """True when `a` and `b` name the same commit outright, or -- when
+    both resolve and `change_id` is known -- the same content once this
+    change's own review.json is set aside (`content_tree_id`). Never true
+    when either id is missing or unresolved: an absent id stays a
+    failure regardless of content. `change_id` is None only when the
+    caller (a direct unit-test call, never the real push path) never
+    learned one; that keeps the fast commit-id-equal path exact and
+    degrades content comparison to "no match" rather than guessing."""
+    if a is None or b is None:
+        return False
+    if a == b:
+        return True
+    if change_id is None:
+        return False
+    tree_a = content_tree_id(repo, a, change_id)
+    tree_b = content_tree_id(repo, b, change_id)
+    return tree_a is not None and tree_a == tree_b
 
 
 def repo_root(start: Path) -> Path:
@@ -1836,11 +1915,13 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         if SHA_HEX.fullmatch(recorded)
         else None
     )
+    change_id_match = REVIEW_JSON_PATH.fullmatch(review_rel)
+    change_id = change_id_match.group("change_id") if change_id_match else None
 
-    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id, review)
+    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id, review, change_id)
     failures += check_open_findings_closed(review)
-    failures += check_probes_package_tests(repo, review, reviewed_id, out)
-    failures += check_probes_adversarial(repo, review, reviewed_id, out)
+    failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
+    failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
     failures += check_verdicts(repo, review, reviewed_id)
     failures += check_second_vendor_honoured(repo, review, reviewed_id)
     failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
@@ -2262,17 +2343,22 @@ def check_questions(review, review_rel: str) -> list[tuple[str, str]]:
 
 
 def check_reviewed_sha(
-    repo: Path, head_sha: str, recorded: str, reviewed_id: str | None, review: dict
+    repo: Path, head_sha: str, recorded: str, reviewed_id: str | None, review: dict,
+    change_id: str | None = None,
 ):
-    """The reviewed tree must be the tree being pushed. Compared as object
-    ids resolved by git, never as strings: a prefix compare accepts a
-    reviewed_sha that names no commit at all.
+    """The reviewed tree must be the tree being pushed. Compared as
+    content -- `same_reviewed_content`, exact commit id first, then the
+    same tree with this change's own review.json set aside -- never as
+    strings: a prefix compare accepts a reviewed_sha that names no commit
+    at all, and a bare commit-id compare would block a review-only commit
+    stacked one level higher, or a commit whose message alone was
+    rewritten, even though nothing a reviewer looked at moved.
 
     Also ties every verdict of the latest round (`scored_verdicts`, the same
-    round `check_verdicts` scores) to that same commit: each one must carry
-    a `sha` that resolves, as a git object id, to `reviewed_id` -- no scope
-    is exempt, `scope: spec` included. A round with zero usable verdicts
-    reports nothing here; that is `push.verdicts-ge-2`'s job."""
+    round `check_verdicts` scores) to that same content: each one must carry
+    a `sha` that resolves, as a git object id, to `reviewed_id`'s content --
+    no scope is exempt, `scope: spec` included. A round with zero usable
+    verdicts reports nothing here; that is `push.verdicts-ge-2`'s job."""
     parent = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^{{commit}}^")
     if not parent:
         return [("push.reviewed-sha", "HEAD has no parent commit to have reviewed.")]
@@ -2283,7 +2369,7 @@ def check_reviewed_sha(
                 f"reviewed_sha {recorded or '(empty)'} names no commit in this repo.",
             )
         ]
-    if reviewed_id != parent:
+    if not same_reviewed_content(repo, reviewed_id, parent, change_id):
         return [
             (
                 "push.reviewed-sha",
@@ -2310,7 +2396,7 @@ def check_reviewed_sha(
                     f"{reviewed_id[:8]}.",
                 )
             )
-        elif verdict_id != reviewed_id:
+        elif not same_reviewed_content(repo, verdict_id, reviewed_id, change_id):
             failures.append(
                 (
                     "push.reviewed-sha",
@@ -2452,7 +2538,7 @@ def declared_test_command(repo: Path) -> tuple[str | None, str]:
 
 
 def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
-                               out=sys.stdout):
+                               out=sys.stdout, change_id: str | None = None):
     """A recorded test run is not evidence -- the RUN is. The record only
     says which commit was tested and what to type; the checker then types it
     itself in a clean tree that is the reviewed tree, and the exit code it
@@ -2498,8 +2584,8 @@ def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
             if SHA_HEX.fullmatch(sha)
             else None
         )
-        if probe_id is None or reviewed_id is None or probe_id != reviewed_id:
-            reasons.append(f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed commit")
+        if not same_reviewed_content(repo, probe_id, reviewed_id, change_id):
+            reasons.append(f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed content")
             continue
         artifact = str(probe.get("artifact", "")).strip()
         if artifact and not git_ok(repo, "cat-file", "-e", f"{reviewed_id}:{artifact}"):
@@ -2757,7 +2843,7 @@ def change_lane(repo: Path, reviewed_id: str | None) -> str:
 
 
 def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
-                             out=sys.stdout):
+                             out=sys.stdout, change_id: str | None = None):
     """Same discipline as the package-tests rule: the record says which
     commit was attacked and what to type, and the checker types it itself.
     An adversarial case that only ran in the adversary's head is not
@@ -2833,9 +2919,9 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
             if SHA_HEX.fullmatch(sha)
             else None
         )
-        if probe_id is None or reviewed_id is None or probe_id != reviewed_id:
+        if not same_reviewed_content(repo, probe_id, reviewed_id, change_id):
             reasons.append(
-                f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed commit"
+                f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed content"
             )
             continue
         if git_text(repo, "status", "--porcelain").strip():
