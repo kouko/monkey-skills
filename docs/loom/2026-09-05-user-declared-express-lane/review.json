@@ -408,6 +408,102 @@
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "scripts/run_package_tests.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see the report — clean worktree at 56062fc7, Acceptance 1–7 with the branch's own checker; dispatch arithmetic corrected at cea1559c",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'graduated_probe' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'memory' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'push_gateonly or push_express' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'word_cap' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'dispatch_batching' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'ship_section4' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'list_rules or verdicts_ge_2' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'codex_mirror' -q",
+      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
     }
   ],
   "questions": [
