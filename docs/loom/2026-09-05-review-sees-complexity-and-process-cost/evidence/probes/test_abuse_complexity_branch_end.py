@@ -239,28 +239,29 @@ def test_kickoff_package_tests_value_run_verbatim_exits_zero() -> None:
     )
 
 
-def test_review_json_recorded_package_tests_probe_still_reproduces() -> None:
-    """The `package-tests` probe command already RECORDED in this change's
-    own review.json (from the wave-end:1 round, before the `--then` rename)
-    must still reproduce its recorded `pass` result on the current tree.
-    The recorded command still uses the retired bare `--` separator, which
-    the renamed runner no longer treats as a group boundary -- it now folds
-    both path groups into one pytest invocation that collects zero tests
-    (`no tests ran`, pytest exit 5) instead of running the suite it once
-    ran; a stale recorded probe is not evidence that reruns."""
+def test_review_json_latest_package_tests_record_matches_the_current_command() -> None:
+    """The push gate's `push.probes-package-tests` rule checks the LATEST
+    recorded `package-tests` probe against KICKOFF's own command -- so this
+    probe reads whichever `probes[]` entry of that kind is last (append
+    order), not a specific round by name, and asserts it equals the
+    installed checker's parsed KICKOFF value byte for byte. Today the only
+    recorded entry is the wave-end:1 one, written before the `--then`
+    rename (`43d8eb88`) -- it still carries the retired bare `--`
+    separator, so this probe is red until a fresh record is appended for a
+    later round; once one is, this test needs no edit to go green."""
     doc = json.loads(REVIEW_JSON.read_text(encoding="utf-8"))
-    recorded = next(
-        (p for p in doc.get("probes", []) if p.get("kind") == "package-tests"),
-        None,
-    )
-    assert recorded is not None, "no package-tests probe recorded in review.json"
-    command = recorded["command"]
-    result = subprocess.run(command, cwd=str(REPO), shell=True, capture_output=True, text=True)
-    ran_something = "no tests ran" not in result.stdout.lower()
-    assert result.returncode == 0 and ran_something, (
-        f"the recorded package-tests command {command!r} does not reproduce "
-        f"a real passing run (exit {result.returncode}, ran_something="
-        f"{ran_something}); stdout tail: {result.stdout[-500:]!r}"
+    pkg_probes = [p for p in doc.get("probes", []) if p.get("kind") == "package-tests"]
+    assert pkg_probes, "no package-tests probe recorded in review.json"
+    latest = pkg_probes[-1]
+
+    lc, _ = _load_installed_checker()
+    kickoff_value = lc.kickoff_defaults(REPO).get("package-tests")
+    assert kickoff_value, "kickoff_defaults() returned no package-tests key"
+
+    assert latest["command"] == kickoff_value, (
+        "the latest recorded package-tests probe (scope "
+        f"{latest.get('scope')!r}) does not match KICKOFF's current "
+        f"command:\nrecorded: {latest['command']!r}\nKICKOFF:  {kickoff_value!r}"
     )
 
 

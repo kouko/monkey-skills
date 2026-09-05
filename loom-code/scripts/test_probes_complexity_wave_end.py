@@ -542,22 +542,59 @@ def test_word_caps_hold_for_every_touched_station_file() -> None:
     assert build_skill_words <= 3750
 
 
+def _distinct_wave_ids(confirm_sha: str) -> set[str]:
+    """Every distinct `W<n>` prefix carried by a `Task:` trailer on this
+    branch -- the wave count, recomputed from git rather than frozen at
+    whatever wave existed when a probe was last written."""
+    body = subprocess.run(
+        ["git", "log", "--format=%B", f"{confirm_sha}..HEAD"],
+        cwd=str(REPO), capture_output=True, text=True, check=True,
+    ).stdout
+    return set(re.findall(r"^Task: (W\d+)-", body, re.MULTILINE))
+
+
+def _verdict_rounds_so_far(review_json_path: Path) -> int:
+    """The count of verdict rounds so far: the highest `round` among
+    review.json's real verdict entries (the schema's own template entry,
+    with its literal `<agent id>`/pipe-joined placeholder scope, is not a
+    real entry and is excluded), plus one more when a `dispatch[]` entry
+    names a checkpoint scope (`branch-end`, or `wave-end:<n>`) that no
+    verdict entry has scored yet -- the round that dispatch just opened."""
+    doc = json.loads(review_json_path.read_text(encoding="utf-8"))
+    real_verdicts = [
+        v for v in doc.get("verdicts", [])
+        if isinstance(v.get("round"), int)
+        and "|" not in str(v.get("scope", ""))
+        and "<" not in str(v.get("reviewer", ""))
+    ]
+    max_round = max((v["round"] for v in real_verdicts), default=0)
+    verdicted_scopes = {v.get("scope") for v in real_verdicts}
+    checkpoint_scopes = {
+        entry["task"] for entry in doc.get("dispatch", [])
+        if entry.get("task") == "branch-end" or re.fullmatch(r"wave-end:\d+", entry.get("task", ""))
+    }
+    opened_without_verdict = any(scope not in verdicted_scopes for scope in checkpoint_scopes)
+    return max_round + (1 if opened_without_verdict else 0)
+
+
 def test_dispatch_commit_count_within_waves_plus_rounds_bound() -> None:
     """Held: Acceptance 6's bound (dispatch-subject commits <= waves so far
-    + review rounds so far). At this fix round there are 2 waves (W1,
-    W2/fix-wave) and 2 review-station rounds so far (wave-end:1 round 1,
-    and the fix round's own dispatch), bound = 4."""
+    + review rounds so far), recomputed from git and review.json at
+    whatever round this actually runs in -- never a number frozen at the
+    round this test was written in, which the very next round would
+    outgrow."""
+    confirm_sha = _confirm_intent_sha()
     subjects = subprocess.run(
-        ["git", "log", "--format=%s", f"{_confirm_intent_sha()}..HEAD"],
+        ["git", "log", "--format=%s", f"{confirm_sha}..HEAD"],
         cwd=str(REPO), capture_output=True, text=True, check=True,
     ).stdout.splitlines()
     dispatch_commits = [s for s in subjects if s.startswith("chore(loom): dispatch")]
-    waves_so_far = 2
-    rounds_so_far = 2
+    waves_so_far = len(_distinct_wave_ids(confirm_sha))
+    rounds_so_far = _verdict_rounds_so_far(REVIEW_JSON)
     bound = waves_so_far + rounds_so_far
     assert len(dispatch_commits) <= bound, (
         f"{len(dispatch_commits)} dispatch-subject commits exceed the bound "
-        f"{bound}: {dispatch_commits}"
+        f"{bound} ({waves_so_far} waves + {rounds_so_far} rounds): {dispatch_commits}"
     )
 
 
