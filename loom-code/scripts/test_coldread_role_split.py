@@ -396,3 +396,33 @@ def test_run_once_docstring_cites_captured_help_evidence():
     delivery, --model, --output-format, and no-seed-flag claims instead
     of relying on an unverified assumption."""
     assert "claude-p-help-2026-09-05.txt" in (coldread_role_split.run_once.__doc__ or "")
+
+
+def test_main_out_existing_file_and_missing_contract_exit_two(tmp_path, monkeypatch, capsys):
+    """finding 06: --out naming an existing regular file, and a missing
+    --contract path, must each exit 2 with an error: message naming the
+    path -- never an uncaught traceback -- and never call the (faked,
+    assertion-raising) claude binary."""
+    monkeypatch.setattr(
+        coldread_role_split.subprocess, "run",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not be called")),
+    )
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    contract = _write_cli_contract(tmp_path)
+    fixture = _write_cli_fixture(tmp_path)
+
+    out_is_a_file = tmp_path / "out_is_a_file"
+    out_is_a_file.write_text("not a directory", encoding="utf-8")
+    rc = main(_cli_argv(contract, fixture, out_is_a_file, runs="1"))
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "error:" in err
+    assert str(out_is_a_file) in err
+
+    missing_contract = tmp_path / "does-not-exist.md"
+    rc = main(_cli_argv(missing_contract, fixture, tmp_path / "out2", runs="1"))
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "error:" in err
+    assert str(missing_contract) in err

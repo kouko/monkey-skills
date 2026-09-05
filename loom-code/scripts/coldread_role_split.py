@@ -350,6 +350,10 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     out_dir = Path(args.out)
+    if out_dir.exists() and not out_dir.is_dir():
+        print(f"error: --out is an existing file, not a directory: {out_dir}", file=sys.stderr)
+        return 2
+
     existing_runs = sorted(out_dir.glob("run-*.txt")) if out_dir.exists() else []
     if existing_runs and not args.resume:
         print(
@@ -359,10 +363,17 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     contract_path = Path(args.contract)
     fixture_path = Path(args.fixture)
+    if not contract_path.is_file():
+        print(f"error: --contract file not found: {contract_path}", file=sys.stderr)
+        return 2
+    if not fixture_path.is_file():
+        print(f"error: --fixture file not found: {fixture_path}", file=sys.stderr)
+        return 2
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     contract_bytes = contract_path.read_bytes()
     fixture_bytes = fixture_path.read_bytes()
     contract_hash = hashlib.sha256(contract_bytes).hexdigest()
