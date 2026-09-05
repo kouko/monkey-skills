@@ -83,7 +83,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: map,          kind: frontmatter, required: false}
       - {name: evidence,     kind: frontmatter, required: false}
       - {name: status,       kind: frontmatter, required: false, grammar: "open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>"}
-      - {name: lane,         kind: frontmatter, required: false, values: [express, gate-only], grammar: "express | gate-only | <name> — switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>", note: "user-declared only (checker cannot verify the author is not an agent; station text and the user-judgment-leak lens carry that prohibition); the switch suffix requires `by <name>`; a recomputed full lane always wins regardless of this field (W1-02)"}
+      - {name: lane,         kind: frontmatter, required: false, values: [express, gate-only, full], grammar: "express | gate-only | full | <name> — switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>", note: "user-declared only (checker cannot verify the author is not an agent; station text and the user-judgment-leak lens carry that prohibition); the switch suffix requires `by <name>` and accepts `full` (reverting is the same kind of line); a recomputed full lane always wins regardless of this field (W1-02)"}
       - {name: Problem,           kind: section, required: true}
       - {name: Proposed outcome,  kind: section, required: true}
       - {name: Acceptance,        kind: section, required: true}

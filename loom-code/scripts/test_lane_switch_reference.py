@@ -21,6 +21,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from prose_pin import NEGATION_RE
+
 REPO = Path(__file__).resolve().parents[2]
 LANE_SWITCH = REPO / "loom-code/skills/review/references/lane-switch.md"
 
@@ -76,6 +78,11 @@ def test_forbidden_option_listed_with_its_reason() -> None:
     assert hits, (
         "lane-switch.md has no sentence stating the forbidden option "
         "stays listed with its reason"
+    )
+    negated = [s for s in hits if NEGATION_RE.search(s)]
+    assert not negated, (
+        "the 'stays listed ... reason' sentence carries a negation token, "
+        f"so it does not affirmatively state the invariant: {negated!r}"
     )
 
 

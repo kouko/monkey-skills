@@ -136,7 +136,8 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.probes-adversarial",
-        "A change carrying a code / spec / skill / gate artifact records at least three "
+        "A change carrying a code / spec / skill / gate artifact, OR whose effective lane "
+        "is express or gate-only regardless of artifact type, records at least three "
         "adversarial probe records against the reviewed content -- the reviewed commit, "
         "or any commit whose tree matches it once this change's own review.json is set "
         "aside; a file referenced by several records is executed once, and every record "
@@ -187,6 +188,9 @@ RULES: list[tuple[str, str]] = [
         "The latest round of the checkpoint's own scope carries at least as many distinct "
         "fresh-context reviewers as the change's lane requires -- two distinct in the full "
         "lane, one in the small lane, one in the express lane, zero in the gate-only lane -- "
+        "where a bare (non-switch-suffixed) `lane:` declaration takes effect starting the "
+        "round strictly after the last round already recorded for the change, never the "
+        "round that introduces it, exactly like an explicit switch's `from round <n>` would; "
         "where a later round of that scope may also count a non-returning previous-round "
         "reviewer whose earlier passing verdict still stands, provided every path the fix "
         "touched sits inside the anchor of an open finding raised by a reviewer who did return "
@@ -1018,16 +1022,21 @@ def check_needs_design_reason(
 
 LANE_LINE_PREFIX = ("lane:",)
 
-# `lane: express` / `lane: gate-only`, or that name followed by a switch
-# suffix `— switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>`.
-# `by <name>` is mandatory in the suffix (plan Risk: the checker cannot
-# tell a user from an agent, so requiring `by <name>` is the only
-# machine-checkable trace that someone is named) -- a suffix missing it, or
-# missing the date or the `from` clause, fails the whole match rather than
-# silently matching just the bare name, so a truncated switch line is
-# rejected instead of read as if no switch had been declared.
+# `lane: express` / `lane: gate-only` / `lane: full`, or that name followed
+# by a switch suffix `— switched <YYYY-MM-DD> by <name>, from <wave
+# <n>|round <n>>`. `full` is legal both bare (equals absent, since `full`
+# is the default) and switch-suffixed -- the intent's own Proposed outcome
+# point 1 says reverting to `full` is "隨時可以，同樣一行" (always possible,
+# with the same kind of line), so the switch grammar must accept it
+# (wave-end:1 adversary finding 3). `by <name>` is mandatory in the suffix
+# (plan Risk: the checker cannot tell a user from an agent, so requiring
+# `by <name>` is the only machine-checkable trace that someone is named)
+# -- a suffix missing it, or missing the date or the `from` clause, fails
+# the whole match rather than silently matching just the bare name, so a
+# truncated switch line is rejected instead of read as if no switch had
+# been declared.
 LANE_GRAMMAR = re.compile(
-    r"^(?P<name>express|gate-only)"
+    r"^(?P<name>express|gate-only|full)"
     r"(?:\s*(?:—|–|--)\s*switched\s+(?P<date>\d{4}-\d{2}-\d{2})"
     r"\s+by\s+(?P<by>[^,]+?)\s*,\s*from\s+(?P<unit>wave|round)\s+(?P<n>\d+))?"
     r"\s*$"
@@ -1036,17 +1045,18 @@ LANE_GRAMMAR = re.compile(
 
 def check_lane_schema(front) -> list[tuple[str, str]]:
     """`lane:` is optional, but when present it must read `express` /
-    `gate-only`, or that name plus the switch suffix WITH `by <name>` --
-    a switch suffix that omits who switched it is unrecoverable and blocks
-    here rather than being silently accepted as a plain declaration."""
+    `gate-only` / `full`, or that name plus the switch suffix WITH `by
+    <name>` -- a switch suffix that omits who switched it is unrecoverable
+    and blocks here rather than being silently accepted as a plain
+    declaration."""
     raw = front.get("lane", "").strip()
     if not raw or LANE_GRAMMAR.match(raw):
         return []
     return [
         (
             "intent.schema",
-            f"`lane: {raw}` does not match `express | gate-only` or the switch "
-            "grammar `<name> — switched <YYYY-MM-DD> by <name>, from "
+            f"`lane: {raw}` does not match `express | gate-only | full` or the "
+            "switch grammar `<name> — switched <YYYY-MM-DD> by <name>, from "
             "<wave <n>|round <n>>`.",
         )
     ]
@@ -3106,6 +3116,41 @@ def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
     )
 
 
+def _evidence_masked_kind(manifest, path: str) -> str | None:
+    """`_artifact_type_for` walks `manifest.yaml`'s `artifact_types` in
+    order and stops at the first match; `**/evidence/**` sits ahead of
+    `**/SKILL.md`/`**/agents/*.md`/`**/hooks/**`/`**/scripts/check_*`, so a
+    skill or gate file with an `evidence` directory segment ANYWHERE in
+    its path -- not only inside this change's own store folder -- is
+    classified `evidence` no matter what the file actually is (wave-end:1
+    adversary finding 1: `loom-code/skills/x/evidence/SKILL.md`,
+    `loom-code/scripts/evidence/check_y.py`).
+
+    This does not reorder the manifest or change `_artifact_type_for`'s
+    answer -- every OTHER consumer of that function (adversarial-probe
+    typing, trailer duty, `artifact_types()`) keeps reading these paths as
+    `evidence`, exactly as documented. It answers a narrower question for
+    `_lane_forcing_paths` alone: dropping ONE path segment literally named
+    `evidence`, would what is left match a `gate` or `skill` glob? A `gate`
+    hit wins over a `skill` hit (gate forbids both express and gate-only;
+    skill only narrows gate-only), so this returns `"gate"` the moment one
+    is found and otherwise the last `"skill"` hit, or `None`."""
+    segments = path.split("/")
+    found_skill = None
+    for index, segment in enumerate(segments):
+        if segment != "evidence":
+            continue
+        candidate = "/".join(segments[:index] + segments[index + 1:])
+        if not candidate:
+            continue
+        kind = _artifact_type_for(manifest, candidate)
+        if kind == "gate":
+            return "gate"
+        if kind == "skill":
+            found_skill = "skill"
+    return found_skill
+
+
 def _lane_forcing_paths(
     repo: Path, reviewed_id: str | None, manifest,
 ) -> tuple[list[str], list[str]]:
@@ -3127,7 +3172,10 @@ def _lane_forcing_paths(
     express/gate-only eligibility text names only a gate path and a
     skill/agent-contract path, so a standing-doc-only delta -- including
     the very KICKOFF-DEFAULTS.md commit that declares a `default-lane:` --
-    never blocks a declared lane (adversary probe (i))."""
+    never blocks a declared lane (adversary probe (i)). An `evidence`-typed
+    path that `_evidence_masked_kind` shows is really a skill or gate file
+    one directory deeper is treated as that real type instead of being
+    skipped (adversary finding 1)."""
     remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
     hard: list[str] = []
     plugin_dirs = {
@@ -3147,6 +3195,17 @@ def _lane_forcing_paths(
             hard.append(f"{path} is a declared interface surface.")
             continue
         kind = _artifact_type_for(manifest, path)
+        if kind == "evidence":
+            masked = _evidence_masked_kind(manifest, path)
+            if masked == "gate":
+                hard.append(
+                    f"{path} is gate-typed once its `evidence` directory "
+                    "segment is set aside."
+                )
+                continue
+            if masked == "skill":
+                skill.append(path)
+                continue
         if kind in SMALL_LANE_ARTIFACT_TYPES:
             continue
         if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
@@ -3165,6 +3224,7 @@ def _lane_forcing_paths(
 
 def effective_lane_detail(
     repo: Path, reviewed_id: str | None, change_id: str | None, round_number: int,
+    earlier_rounds: frozenset[int] = frozenset(),
 ) -> tuple[str, str]:
     """`(lane, reason)` -- the lane `check_verdicts`' floor actually uses
     (plan W1-02).
@@ -3178,11 +3238,28 @@ def effective_lane_detail(
     `round_number` is not strictly after it, the pre-switch `full` lane
     still governs THIS round (there is no way to recover a lane older
     than the switch from the grammar, so the safe fallback is `full`, not
-    whatever came before). Otherwise `express` is eligible unless
-    `_lane_forcing_paths` found a hard (gate-typed) reason; `gate-only` is
-    eligible unless it found a hard reason OR a skill/agent-contract path.
-    Either ineligibility falls back to `full`, with the reason naming the
-    path that blocked it."""
+    whatever came before).
+
+    A BARE (non-switch-suffixed) declaration carries no `from_round` of
+    its own -- there is no grammar to parse one from. Read literally that
+    means it would apply starting the very round that introduced it, with
+    no deferral at all (wave-end:1 adversary finding 2: a bare `lane:`
+    line added mid-flight, via a commit whose message never even mentions
+    it, dropped the floor in the SAME round it appeared in). `earlier_
+    rounds` -- every round number `review["verdicts"]` has ever recorded
+    for this change, of any scope -- answers whether this is really a
+    day-one declaration (① never has an earlier round to defer past) or a
+    mid-flight one: when at least one already-recorded round is strictly
+    before `round_number`, a bare declaration is treated exactly like an
+    explicit `from round <round_number>` switch -- honoured starting the
+    NEXT round, never this one. This mirrors the explicit-switch case
+    immediately below without needing a git-commit-to-round correlation
+    that the record format does not carry.
+
+    Otherwise `express` is eligible unless `_lane_forcing_paths` found a
+    hard (gate-typed) reason; `gate-only` is eligible unless it found a
+    hard reason OR a skill/agent-contract path. Either ineligibility falls
+    back to `full`, with the reason naming the path that blocked it."""
     manifest = load_manifest()
     raw_lane, raw_reason = change_lane_detail(repo, reviewed_id)
     if raw_lane == "small":
@@ -3190,6 +3267,12 @@ def effective_lane_detail(
     declared, origin, from_round = (
         declared_lane(repo, change_id) if change_id else ("full", "default", None)
     )
+    if (
+        from_round is None
+        and origin == "intent"
+        and any(earlier < round_number for earlier in earlier_rounds)
+    ):
+        from_round = round_number
     if from_round is not None and not (round_number > from_round):
         return "full", (
             f"declared `lane: {declared}` switches from round {from_round}, but "
@@ -3227,7 +3310,19 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
     """Same discipline as the package-tests rule: the record says which
     commit was attacked and what to type, and the checker types it itself.
     An adversarial case that only ran in the adversary's head is not
-    evidence, and one that no longer passes is not a regression eval."""
+    evidence, and one that no longer passes is not a regression eval.
+
+    The floor is normally owed only when the delta's own §6 types
+    intersect `ADVERSARIAL_TYPES` (code/spec/skill/gate) -- but every one
+    of those types either forces `full` on its own (code, spec, gate are
+    `_lane_forcing_paths`-hard) or is excluded from `gate-only` outright
+    (skill), so a delta actually eligible for `express`/`gate-only` -- by
+    definition, none of those types -- could never owe the floor at all.
+    The intent (Proposed outcome points 2-3) states it unconditionally for
+    both of those lanes ("仍有 ≥3 探針", always at least 3 probes, even
+    with zero readers on the board), so this recomputes the effective lane
+    once more here and keeps the floor live regardless of `kinds` for
+    `express`/`gate-only` (wave-end:1 adversary finding 4)."""
     try:
         manifest = load_manifest()
         changed = changed_paths(repo)
@@ -3241,7 +3336,15 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
     changed = {path for path in changed if not is_review.match(path)}
 
     kinds = artifact_types(manifest, changed) & ADVERSARIAL_TYPES
-    if not kinds:
+    round_number, _scoped = scored_verdicts(review)
+    try:
+        lane, _lane_reason = effective_lane_detail(
+            repo, reviewed_id, change_id, round_number, _earlier_rounds(review)
+        )
+    except (UsageError, OSError, KeyError):
+        lane = "full"
+    lane_unconditional = lane in ("express", "gate-only")
+    if not kinds and not lane_unconditional:
         return []
 
     usable = 0
@@ -3351,10 +3454,15 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
     if usable >= ADVERSARIAL_FLOOR:
         return []
     detail = "; ".join(reasons) if reasons else "none recorded"
+    owed = (
+        f"touches {', '.join(sorted(kinds))}, which needs"
+        if kinds
+        else f"is declared `{lane}`, whose floor is unconditionally"
+    )
     return [
         (
             "push.probes-adversarial",
-            f"this change touches {', '.join(sorted(kinds))}, which needs "
+            f"this change {owed} "
             f"{ADVERSARIAL_FLOOR} adversarial probes; {usable} are usable ({detail}).",
         )
     ]
@@ -3911,6 +4019,23 @@ def scored_verdicts(review) -> tuple[int, list[dict]]:
     return latest_round(usable_verdicts(review), scope or None)
 
 
+def _earlier_rounds(review) -> frozenset[int]:
+    """Every `round` number `review["verdicts"]` has ever recorded, of ANY
+    scope -- rounds restart per checkpoint (memory-step gotcha,
+    2026-09-05), so this is not "the current checkpoint's history", only
+    "has this change been reviewed at all before now". `effective_lane_
+    detail` uses it to decide whether a bare `lane:` declaration is a
+    day-one one (① has no earlier round to defer past) or a mid-flight one
+    (wave-end:1 adversary finding 2)."""
+    rounds = set()
+    for entry in review.get("verdicts", []):
+        if isinstance(entry, dict):
+            value = entry.get("round")
+            if isinstance(value, int):
+                rounds.add(value)
+    return frozenset(rounds)
+
+
 def _split_names(raw) -> list[str]:
     return [name.strip() for name in str(raw or "").split(",") if name.strip()]
 
@@ -4071,7 +4196,9 @@ def check_verdicts(repo: Path, review, reviewed_id: str | None,
     reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts,
                                       dispatch_reviewers, change_id)
     try:
-        lane, lane_reason = effective_lane_detail(repo, reviewed_id, change_id, round_number)
+        lane, lane_reason = effective_lane_detail(
+            repo, reviewed_id, change_id, round_number, _earlier_rounds(review)
+        )
     except (UsageError, OSError, KeyError) as exc:
         lane, lane_reason = "full", f"cannot recompute the change lane: {exc}"
     floor = LANE_VERDICT_FLOOR.get(lane, 2)
