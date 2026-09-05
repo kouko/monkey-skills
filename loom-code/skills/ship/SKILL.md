@@ -151,19 +151,35 @@ with no prose after it:
 git commit --amend --no-edit --trailer "Learning: <one fact>"
 ```
 
-Amending is allowed **for this commit only**. Three things may change in
-it: the message (the trailers above), `review.json` itself (to append the
-`questions[]` entries step 2 recorded), and one line of
-`docs/loom/intent/<change-id>.md` — its `status:` line, from `confirmed
-<date>` to `closed <date> — branch <branch-name>` (§6 has why the close
-line names the branch, not a PR number, and the one-line note for
-branches that shipped under the older grammar). Nothing else — the
-parent does not move, the commit still touches only those two files, so
-`reviewed_sha` still equals `HEAD^` and step 1's fourth fact still holds,
-and the checker permits exactly this shape:
+The intent's `status` line changes in this same amended commit — not
+after the merge: from `confirmed <date>` to `closed <date> — branch
+<branch-name>`. The close line names the branch, not the pull request
+number, so it does not need to wait for one; §6 carries the reason and
+the one-line note for branches shipped before this rule. Before touching
+that line, check that the checker gating this push knows the shape — the
+station text and the checker can be different versions (a Codex scaffold
+copy, an older install):
 
 ```
-git add docs/loom/<change-id>/review.json docs/loom/intent/<change-id>.md
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py --list-rules | grep push.review-only-head
+```
+
+The line names `branch <name>` when the combined shape is admitted; a
+line without it means that checker predates the rule. On that older
+checker, leave the `status:` line untouched here — amend the trailers
+and `review.json` only, push and open the pull request that way — and
+close the intent by the fallback §6 spells out.
+
+Amending is allowed **for this commit only**. Three things may change in
+it: the message (the trailers above), `review.json` itself (to append the
+`questions[]` entries step 2 recorded), and the intent's `status:` line
+when the preflight admitted it. Nothing else — the parent does not move,
+the commit still touches only those two files, so `reviewed_sha` still
+equals `HEAD^` and step 1's fourth fact still holds, and the checker
+permits exactly this shape:
+
+```
+git add docs/loom/<change-id>/review.json docs/loom/intent/<change-id>.md   # intent only when the preflight admitted the close line
 git commit --amend --no-edit --trailer "Learning: <one fact>"
 ```
 
@@ -177,25 +193,6 @@ writes only the trailers on the review-only commit and the
 missed, that is a task for `loom-code:build` followed by a fresh
 `branch-end` checkpoint — never a commit made here.
 
-The intent's `status` line changes right here, in this same amended
-commit — not after the merge. The close line names the branch, not the
-pull request number, so it does not need to wait for one; §6 carries the
-exact grammar and the one-line note for branches shipped before this
-rule.
-
-Before that amend, check that the checker gating this push knows the
-shape — the station text and the checker can be different versions (a
-Codex scaffold copy, an older install):
-
-```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py --list-rules | grep push.review-only-head
-```
-
-The line names `branch <name>` when the combined shape is admitted; a
-line without it means that checker predates the rule. On that older
-checker, leave the `status:` line untouched here — amend the trailers
-and `review.json` only, push and open the pull request that way — and
-close the intent by the fallback §6 spells out.
 
 ## 3.5 The nit batch
 

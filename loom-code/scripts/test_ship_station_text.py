@@ -254,9 +254,15 @@ def test_ship_preflight_in_section_3_fallback_in_section_6() -> None:
     BEFORE the amend that adds the close line (an older checker would
     otherwise block the push before any fallback text is reached); §6
     names the fallback the older checker accepts."""
-    flat3 = _unwrapped(_section_3_memory())
+    sec3 = _section_3_memory()
+    flat3 = _unwrapped(sec3)
     assert "--list-rules | grep push.review-only-head" in flat3
     assert "leave the `status:` line untouched here" in flat3
+    # the preflight is read before the amend command that stages the intent
+    preflight_idx = sec3.index("--list-rules | grep push.review-only-head")
+    amend_idx = sec3.index("git add docs/loom/<change-id>/review.json docs/loom/intent/<change-id>.md")
+    assert preflight_idx < amend_idx, "§3 preflight sits after the amend command"
+    assert "when the preflight admitted" in flat3
     flat = _unwrapped(_section_6_merge_then_verify())
     assert "§3's preflight" in flat
     hits = [
