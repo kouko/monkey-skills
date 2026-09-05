@@ -57,11 +57,20 @@
       "started": "2026-09-05T19:40:38+0800",
       "fresh_context": false,
       "note": "main's loom-code CI is red after #794: the graduated probe test_probes_complexity_wave_end.py greps for that change's intent-confirmation commit by subject, which the squash merge erased; the probe (evidence original + graduated byte copy) now skips when the commit is absent, the pattern the language-policy probes use"
+    },
+    {
+      "task": "fix:W1-03",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T20:16:07+0800",
+      "fresh_context": false,
+      "note": "integration: W1-03's placeholder test asserted default-lane is NOT yet in manifest.yaml and its grammar test skipped on the same boundary; W1-01 has landed, so the test flips to assert the key is declared and the two skips go"
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 6,
+    "dispatches": 7,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
