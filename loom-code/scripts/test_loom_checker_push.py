@@ -1712,6 +1712,71 @@ def test_dispatched_non_returning_reviewer_still_stands(tmp_path: Path) -> None:
     assert "push.verdicts-ge-2" not in blocked_rules(result)
 
 
+def test_an_anchor_quote_containing_a_comma_authorizes_only_its_own_path(
+    tmp_path: Path,
+) -> None:
+    """A finding's anchor uses the documented `path :: verbatim quote` form,
+    and the quoted text itself contains a comma:
+    `notes/F.md :: quoted clause, notes/other.md`. Round 2 brings back only
+    the raising reader (rev-a), and the fix delta touches `notes/F.md`
+    (inside the anchor) AND `notes/other.md` (a real changed path with no
+    relation to the finding at all). Splitting the anchor on every comma
+    would misread the quote's own comma as a second authorized path and
+    let `notes/other.md` ride along for free; parsed correctly, only
+    `notes/F.md` is ever authorized, so the out-of-anchor change to
+    `notes/other.md` still costs the full-lane floor of 2 and the push
+    blocks."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md :: quoted clause, notes/other.md",
+                           "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md :: quoted clause, notes/other.md",
+             "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    (repo / "notes/other.md").write_text("# unrelated\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=round1["verdicts"] + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md :: quoted clause, notes/other.md",
+             "origin_sha": code_sha, "raised_by": "rev-a",
+             "resolved": f"fixed in {fix_sha[:8]}; confirmed rev-a round 2"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
 def test_round_scoring_uses_the_checkpoints_own_scope(tmp_path: Path) -> None:
     """A wave-end checkpoint reached round 3 with only one reviewer (a
     single-reader fix round the wave-end checkpoint itself already

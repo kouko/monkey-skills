@@ -3670,24 +3670,28 @@ def _split_names(raw) -> list[str]:
 
 
 def _anchor_paths(anchor) -> set[str]:
-    """The bare file path(s) an anchor names -- exact equality, never a
-    prefix. An anchor may list several `path[:line]` segments comma-
-    separated, and a path/test-name pair joined by ` :: `."""
-    paths: set[str] = set()
-    for segment in str(anchor or "").split(","):
-        segment = segment.strip()
-        if not segment:
-            continue
-        double = segment.find(" :: ")
+    """The bare file path an anchor names -- exact equality, never a prefix.
+
+    An anchor may be a plain `path[:line]`, or a `path :: verbatim quote`
+    pair -- the review skill's only documented anchor shapes (SKILL.md,
+    lenses.md; comma-separated multi-path anchors appear nowhere in that
+    documentation, so this never splits on comma). The ` :: ` form MUST be
+    recognized before any other split: everything after ` :: ` is quote
+    text, never a path, and that quote can itself contain a comma or a
+    colon -- splitting on those first (as an earlier version did) misreads
+    `docs/a.md :: quoted clause, src/unrelated.py` as authorizing two
+    paths when only `docs/a.md` was ever named (wave-end:1-03)."""
+    segment = str(anchor or "").strip()
+    if not segment:
+        return set()
+    double = segment.find(" :: ")
+    if double != -1:
+        path = segment[:double]
+    else:
         single = segment.find(":")
-        if double != -1 and (single == -1 or double < single):
-            path = segment[:double]
-        elif single != -1:
-            path = segment[:single]
-        else:
-            path = segment
-        paths.add(path.strip())
-    return paths
+        path = segment[:single] if single != -1 else segment
+    path = path.strip()
+    return {path} if path else set()
 
 
 def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
