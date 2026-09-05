@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "3528388c817c704df5f327a70993d1f0579b4d94",
+  "reviewed_sha": "4f94e124b52ed95574b95b5edd2591622fff3d2a",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -102,6 +102,60 @@
       ],
       "notes": [
         "Read the reviewed sha via git show because the working tree had moved (a fix implementer was already running); checker suites 180 passed at HEAD."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-chk-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "4f94e124b52ed95574b95b5edd2591622fff3d2a",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-02 fixed (scoped verdicts win; unmatched scope → (0, [])); wave-end:1-03 fixed (` :: ` parsed first). Pure-function checks; pytest unavailable in the read-only sandbox."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "4f94e124b52ed95574b95b5edd2591622fff3d2a",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS_WITH_NOTES",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-02, -03, -04 and the plan nit all verified fixed against the reviewed commit; checker suites 164 passed."
       ]
     }
   ],
@@ -296,10 +350,28 @@
       "started": "2026-09-06T04:20:00+08:00",
       "fresh_context": false,
       "note": "resumed round-1 reader"
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "impl-w2-02-chk",
+      "model": "sonnet",
+      "started": "2026-09-06T05:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T05:00:00+08:00",
+      "fresh_context": false,
+      "note": "record written before the work; the memory step runs after W2-02, before the closing round"
     }
   ],
   "second_vendor": "codex",
   "notes": [
-    "wave-end:1 round 1: NEEDS_REVISION from both readers (two shared fatals on the new verdicts-ge-2 semantics, one important); the adversary's fatal (ghost standing reviewer) had been fixed before the readers ran (2d02f759). Fix commits landed before round 2; plan nit fixed (040e7eff)."
+    "wave-end:1 round 1: NEEDS_REVISION from both readers (two shared fatals on the new verdicts-ge-2 semantics, one important); the adversary's fatal (ghost standing reviewer) had been fixed before the readers ran (2d02f759). Fix commits landed before round 2; plan nit fixed (040e7eff).",
+    "wave-end:1 outcome after two rounds: PASS_WITH_NOTES. reviewed_sha advanced to 4f94e124."
   ]
 }
