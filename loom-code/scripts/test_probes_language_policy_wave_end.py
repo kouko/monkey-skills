@@ -171,15 +171,22 @@ def test_TemplateMachineAnchors_AcrossTranslation_Unchanged():
             continue
         checked_any = True
         head_text = _read(path)
-        base_anchors = sorted(
+        base_anchors = set(
             m.group(0) for m in anchor_re.finditer(base_text.replace("→", "->"))
         )
-        head_anchors = sorted(
+        head_anchors = set(
             m.group(0) for m in anchor_re.finditer(head_text.replace("→", "->"))
         )
-        assert base_anchors == head_anchors, (
-            f"{name}: machine-read anchors drifted -- "
-            f"base={base_anchors} head={head_anchors}"
+        # Superset, not equality: the attack this probe guards against is an
+        # anchor silently LOST or RENAMED under cover of a translation pass
+        # -- base_anchors must all still be present. A later, unrelated
+        # change legitimately adding a brand-new machine-read field (e.g.
+        # W1-03's `lane:` key on intent.md, 2026-09-05-user-declared-
+        # express-lane) is not that attack and must not trip this probe.
+        missing = sorted(base_anchors - head_anchors)
+        assert not missing, (
+            f"{name}: machine-read anchors dropped or renamed -- "
+            f"missing={missing} head={sorted(head_anchors)}"
         )
     assert checked_any, "base ref did not resolve for any template; nothing was checked"
 
