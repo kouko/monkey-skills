@@ -82,13 +82,6 @@ AGENT_CAPS = {"reviewer.md": 1460, "blind-runner.md": 600, "adversary.md": 600}
 AGENTS_DIR = REPO / "loom-code/agents"
 SKILL_WORD_CAP = 4500
 
-W2_02_COMMITS = [
-    "3a972d9693acf6435c2b5a18905369a8def4f9ae",
-    "a478f7d2cebb4c3f9267fcb8cee97075112f125c",
-]
-W2_02_DISPATCH_COMMIT = "960d2543a6a03ee7d023a723e379e7f6722cb3f3"
-
-
 def _git(*args: str) -> str:
     return subprocess.run(
         ["git", *args], cwd=REPO, capture_output=True, text=True, check=True
@@ -307,24 +300,31 @@ def test_memstep_commitsSinceReviewOnly_areWave2OrMemoryNeverPostReviewFix():
 # --- class 5: W2-02 trailer + dispatch-before-work -------------------------
 
 
-def test_memstep_w2_02Trailer_presentAndDispatchRecordedButAfterWorkInHistory():
-    """Both W2-02 commits must carry `Task: W2-02`. review.json must carry
-    an implementer dispatch entry for W2-02 with fresh_context: false. The
-    dispatch-record-before-work claim is checked by git ANCESTRY, not by
-    comparing the narrative `started` timestamp against real commit
-    clocks (this branch's real commits all land within the same minute
-    while `started` values are spread across a simulated workday, so a
-    literal wall-clock comparison is not meaningful and is skipped here
-    -- this is the guard). Ancestry finds a real ordering defect: the
-    dispatch-record commit (960d2543, "dispatch W2-02 (orchestrator,
-    memory task)") is NOT an ancestor of the work commit (3a972d96,
-    "graduate the memory-step probes"); it is the other way around -- the
-    work commit precedes the dispatch record in this branch's history.
-    Recorded here as a finding, not weakened to pass."""
-    for sha in W2_02_COMMITS:
-        _skip_if_ref_missing(sha)
+def _commits_by_grep(pattern: str) -> list[str]:
+    """Newest-first list of commit shas on the current branch whose full
+    message matches `pattern` (a `git log --grep` pattern)."""
+    out = _git("log", "--format=%H", f"--grep={pattern}").strip("\n")
+    return out.splitlines() if out else []
+
+
+def test_memstep_w2_02Dispatch_precedesWork():
+    """Both W2-02 work commits (found by trailer, not by hard-coded sha --
+    a hard-coded sha goes stale the moment the branch is rewritten) must
+    carry `Task: W2-02`. review.json must carry an implementer dispatch
+    entry for W2-02 with fresh_context: false. The dispatch-record-
+    before-work claim is checked by git ANCESTRY, not by comparing the
+    narrative `started` timestamp against real commit clocks (this
+    branch's real commits land seconds apart while `started` values are
+    spread across a simulated workday, so a literal wall-clock comparison
+    is not meaningful and is skipped here -- this is the guard). The
+    dispatch commit (found by its subject, "dispatch W2-02") must be an
+    ancestor of the earliest work commit."""
+    work_shas = _commits_by_grep("^Task: W2-02")
+    assert work_shas, "no commit on this branch carries the Task: W2-02 trailer"
+    for sha in work_shas:
         message = _git("log", "-1", "--format=%B", sha)
         assert "Task: W2-02" in message, f"commit {sha} is missing the Task: W2-02 trailer"
+    earliest_work_sha = work_shas[-1]  # git log lists newest first
 
     review_json = REPO / "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/review.json"
     text = _read(review_json)
@@ -336,19 +336,22 @@ def test_memstep_w2_02Trailer_presentAndDispatchRecordedButAfterWorkInHistory():
         "the W2-02 dispatch entry does not declare fresh_context: false nearby"
     )
 
-    _skip_if_ref_missing(W2_02_DISPATCH_COMMIT)
-    work_sha = W2_02_COMMITS[0]
+    dispatch_shas = _commits_by_grep("dispatch W2-02")
+    assert dispatch_shas, "no commit on this branch has a subject naming 'dispatch W2-02'"
+    dispatch_sha = dispatch_shas[-1]  # earliest such commit, same convention
+
     dispatch_before_work = (
         subprocess.run(
-            ["git", "merge-base", "--is-ancestor", W2_02_DISPATCH_COMMIT, work_sha],
+            ["git", "merge-base", "--is-ancestor", dispatch_sha, earliest_work_sha],
             cwd=REPO,
         ).returncode
         == 0
     )
     assert dispatch_before_work, (
         "dispatch-record-before-work ordering violated: the dispatch commit "
-        f"{W2_02_DISPATCH_COMMIT} is not an ancestor of the work commit {work_sha} "
-        "-- the memory-step work was committed before its own dispatch record"
+        f"{dispatch_sha} is not an ancestor of the earliest work commit "
+        f"{earliest_work_sha} -- the memory-step work was committed before "
+        "its own dispatch record"
     )
 
 
