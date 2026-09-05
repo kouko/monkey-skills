@@ -233,6 +233,12 @@ def main(argv: list[str] | None = None) -> int:
         paths.append(rel)
     if not args.paths:
         paths = _default_paths(repo_root)
+        if not paths:
+            return _fail(
+                f"no test paths matched the default glob {DEFAULT_GLOB!r}; "
+                "pass explicit paths, or add a matching file, rather than "
+                "letting the rehearsal collect the whole repository"
+            )
 
     # `delete=False` (Python 3.12+) keeps the directory past this
     # TemporaryDirectory object's lifetime for `--keep`: without it, the
