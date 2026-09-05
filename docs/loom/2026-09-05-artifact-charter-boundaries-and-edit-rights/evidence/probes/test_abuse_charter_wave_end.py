@@ -69,7 +69,7 @@ BASE_TWO_ARTIFACT_MANIFEST = {
                 "must": ["a"],
                 "must_not": [{"kind": "z", "goes_to": "spec"}],
                 "signoff": "build",
-                "edits_after": ["c"],
+                "edits_after": [{"id": "c", "text": "c"}],
             }
         },
         "spec": {
@@ -79,7 +79,7 @@ BASE_TWO_ARTIFACT_MANIFEST = {
                 "must": ["b"],
                 "must_not": [{"kind": "z", "goes_to": "intent"}],
                 "signoff": "build",
-                "edits_after": ["c"],
+                "edits_after": [{"id": "c", "text": "c"}],
             }
         },
     },
@@ -164,14 +164,14 @@ def test_charter_row_goes_to_case_and_whitespace_mismatch_blocked(tmp_path: Path
                 "charter": {
                     "answers": "x", "readers": ["a"], "must": ["a"],
                     "must_not": [{"kind": "z", "goes_to": " Spec "}],
-                    "signoff": "build", "edits_after": ["c"],
+                    "signoff": "build", "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
             "spec": {
                 "charter": {
                     "answers": "y", "readers": ["a"], "must": ["b"],
                     "must_not": [{"kind": "z", "goes_to": "intent"}],
-                    "signoff": "build", "edits_after": ["c"],
+                    "signoff": "build", "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
         },
@@ -198,14 +198,14 @@ def test_charter_row_signoff_names_tool_not_station_blocked(tmp_path: Path) -> N
                     "answers": "x", "readers": ["a"], "must": ["a"],
                     "must_not": [{"kind": "z", "goes_to": "spec"}],
                     "signoff": "git-memory",
-                    "edits_after": ["c"],
+                    "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
             "spec": {
                 "charter": {
                     "answers": "y", "readers": ["a"], "must": ["b"],
                     "must_not": [{"kind": "z", "goes_to": "intent"}],
-                    "signoff": "build", "edits_after": ["c"],
+                    "signoff": "build", "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
         },
@@ -235,14 +235,14 @@ def test_render_charter_table_pipe_and_newline_in_cell_blocked(tmp_path: Path) -
                     "answers": "x", "readers": ["a"],
                     "must": ["a | injected-cell\nand-a-new-row"],
                     "must_not": [{"kind": "z", "goes_to": "spec"}],
-                    "signoff": "build", "edits_after": ["c"],
+                    "signoff": "build", "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
             "spec": {
                 "charter": {
                     "answers": "y", "readers": ["a"], "must": ["b"],
                     "must_not": [{"kind": "z", "goes_to": "intent"}],
-                    "signoff": "build", "edits_after": ["c"],
+                    "signoff": "build", "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
         },
@@ -324,14 +324,14 @@ def test_charter_command_mixed_manifest_reports_gap_and_good_row_exit_1(tmp_path
                 "charter": {
                     "answers": "x", "readers": ["a"], "must": ["a"],
                     "must_not": [],
-                    "signoff": "build", "edits_after": ["c"],
+                    "signoff": "build", "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
             "spec": {
                 "charter": {
                     "answers": "y", "readers": ["a"], "must": ["b"],
                     "must_not": [{"kind": "z", "goes_to": "intent"}],
-                    "signoff": "build", "edits_after": ["c"],
+                    "signoff": "build", "edits_after": [{"id": "c", "text": "c"}],
                 }
             },
         },
@@ -340,7 +340,7 @@ def test_charter_command_mixed_manifest_reports_gap_and_good_row_exit_1(tmp_path
     result = _run_charter(manifest_path)
     assert result.returncode == 1
     assert "intent.must_not is empty" in result.stderr
-    assert "| spec | y | a | b | z → intent | build | c |" in result.stdout
+    assert "| spec | y | a | b | z → intent | build | c: c |" in result.stdout
 
 
 # ---------------------------------------------------------------------------

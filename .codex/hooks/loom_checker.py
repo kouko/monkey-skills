@@ -1975,10 +1975,29 @@ def check_plan_field_caps_at(manifest, repo: Path, change_id: str) -> list[tuple
 # --- plan.edits-after-commit (W1-02) ----------------------------------------
 
 PLAN_COMMIT_SUBJECT = "docs(loom): plan {}"
-MARK_STRIP = re.compile(r"(\*\*)\s*(?:claimed|blocked)\([^)]*\)")
+MARK_START = re.compile(r"(\*\*)\s*(claimed|blocked)\(")
+LANDED_SHA = re.compile(
+    r"landed:\s*[0-9a-f]{7,40}\b"
+    r"|(?<![A-Za-z0-9_-])[0-9a-f]{7,40}(?![A-Za-z0-9_-])",
+    re.IGNORECASE,
+)
 MEMORY_TASK_ID = re.compile(r"^W\d+-memory$", re.IGNORECASE)
 TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$")
 KNOWN_PLAN_SECTIONS = {"Task DAG", "Risks", "Current State Evidence", "Questions asked"}
+
+# The plan charter's `edits_after` policy ids this rule actually
+# implements (W1-02 fix round): recomputed against
+# `manifest.artifacts.plan.charter.edits_after` at every run rather than
+# assumed, so a manifest id with no matching branch here fails closed
+# instead of silently drifting from the code (the "second drift surface"
+# named in the design finding).
+IMPLEMENTED_EDITS_AFTER_IDS = {
+    "mark-claimed-or-blocked",
+    "memory-task-appended",
+    "unlanded-task-replaced-on-spec-change",
+    "unlanded-task-amended-with-reason",
+    "questions-asked-appended",
+}
 
 
 def find_plan_commit_sha(repo: Path, change_id: str, head: str = "HEAD") -> str | None:
@@ -2024,13 +2043,54 @@ def _block(section: str, detail: str, goes_to: str) -> tuple[str, str]:
     return ("plan.edits-after-commit", f"{section} {detail}; goes to {goes_to}")
 
 
-def _normalize_task_title(title: str) -> str:
+def _strip_task_mark(title: str) -> tuple[str, str | None]:
     """Strip a `claimed(...)` / `blocked(...)` mark right after the closing
     `**` -- the one addition the charter allows on a task title line --
     so an otherwise-identical title compares equal. `landed(...)` (or any
     other annotation) is deliberately NOT stripped: it is not on the
-    allow-list, so it must keep reading as a real change."""
-    return MARK_STRIP.sub(r"\1", title)
+    allow-list, so it must keep reading as a real change.
+
+    Balances nested parentheses inside the mark (`blocked(waiting on
+    upstream (see #42))` strips cleanly) rather than stopping at the
+    first `)`. Returns `(normalized_title, None)` when there is no mark
+    or it strips cleanly; returns `(title, mark_text)` UNCHANGED when a
+    `claimed(`/`blocked(` mark starts but its parentheses never balance,
+    so the caller can BLOCK on the malformed mark instead of silently
+    leaving stray text behind in the comparison."""
+    match = MARK_START.search(title)
+    if not match:
+        return title, None
+    open_paren = match.end() - 1
+    depth = 0
+    close_paren = None
+    for i in range(open_paren, len(title)):
+        ch = title[i]
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                close_paren = i
+                break
+    if close_paren is None:
+        return title, title[match.start(2):]
+    head_end = match.start(1) + len(match.group(1))
+    return title[:head_end] + title[close_paren + 1:], None
+
+
+def _mentioned_token(task_id: str, message: str) -> bool:
+    """`task_id` counts as mentioned only as a whole token bounded by
+    non-id characters, so `W1-10` never satisfies a check for `W1-1`."""
+    pattern = r"(?<![A-Za-z0-9-])" + re.escape(task_id) + r"(?![A-Za-z0-9-])"
+    return re.search(pattern, message) is not None
+
+
+def _goes_to_for_unauthorised(title: str) -> str:
+    """An unauthorised add/change whose title line carries a landed-sha
+    annotation (`landed: <7-40 hex chars>`, or a bare 7-40 hex token) goes
+    to `dispatch` per the charter's must_not row for landed commit shas;
+    an ordinary unauthorised edit still goes to `spec`."""
+    return "dispatch" if LANDED_SHA.search(title) else "spec"
 
 
 def _parse_task_dag(text: str) -> dict[str, dict[str, str | None]]:
@@ -2052,14 +2112,25 @@ def _parse_task_dag(text: str) -> dict[str, dict[str, str | None]]:
 
 
 def _check_task_dag(
-    baseline_text: str, current_text: str, landed_ids: set[str], plan_touch_messages: list[str]
+    baseline_text: str, current_text: str, landed_ids: set[str],
+    plan_touch_messages: list[str], enabled_ids: set[str],
 ) -> list[tuple[str, str]]:
     baseline_tasks = _parse_task_dag(baseline_text)
     current_tasks = _parse_task_dag(current_text)
     failures: list[tuple[str, str]] = []
 
+    allow_mark = "mark-claimed-or-blocked" in enabled_ids
+    allow_memory = "memory-task-appended" in enabled_ids
+    allow_replaced = "unlanded-task-replaced-on-spec-change" in enabled_ids
+    allow_amended = "unlanded-task-amended-with-reason" in enabled_ids
+
     def mentioned(task_id: str) -> bool:
-        return any(task_id in message for message in plan_touch_messages)
+        return any(_mentioned_token(task_id, message) for message in plan_touch_messages)
+
+    def normalized_title(title: str) -> tuple[str, str | None]:
+        if not allow_mark:
+            return title, None
+        return _strip_task_mark(title)
 
     all_ids = list(dict.fromkeys([*baseline_tasks, *current_tasks]))
     for task_id in all_ids:
@@ -2067,24 +2138,37 @@ def _check_task_dag(
         in_current = task_id in current_tasks
         if in_baseline and in_current:
             before, after = baseline_tasks[task_id], current_tasks[task_id]
-            title_changed = _normalize_task_title(before["title"]) != _normalize_task_title(after["title"])
+            before_title, before_mark_error = normalized_title(before["title"])
+            after_title, after_mark_error = normalized_title(after["title"])
+            mark_error = before_mark_error or after_mark_error
+            if mark_error is not None:
+                failures.append((
+                    "plan.edits-after-commit",
+                    f"{task_id} carries an unbalanced claimed/blocked mark {mark_error!r}.",
+                ))
+                continue
+            title_changed = before_title != after_title
             fields_changed = any(before[field] != after[field] for field in ("Files", "Test", "Risk"))
             if not title_changed and not fields_changed:
                 continue
             if task_id in landed_ids:
                 failures.append(_block(task_id, "changed after landing", "git history"))
-            elif not mentioned(task_id):
-                failures.append(_block(task_id, "changed", "spec"))
+                continue
+            allowed = allow_replaced if title_changed else allow_amended
+            if not allowed or not mentioned(task_id):
+                failures.append(_block(task_id, "changed", _goes_to_for_unauthorised(after["title"])))
         elif in_baseline and not in_current:
             if task_id in landed_ids:
                 failures.append(_block(task_id, "removed after landing", "git history"))
-            elif not mentioned(task_id):
+            elif not allow_replaced or not mentioned(task_id):
                 failures.append(_block(task_id, "removed", "spec"))
         else:  # added since the plan commit
-            if MEMORY_TASK_ID.match(task_id):
+            if MEMORY_TASK_ID.match(task_id) and allow_memory:
                 continue
-            if not mentioned(task_id):
-                failures.append(_block(task_id, "added", "spec"))
+            if not allow_replaced or not mentioned(task_id):
+                failures.append(
+                    _block(task_id, "added", _goes_to_for_unauthorised(current_tasks[task_id]["title"]))
+                )
     return failures
 
 
@@ -2100,10 +2184,14 @@ def _check_cse(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
     return [_block("Current State Evidence", "section changed", "spec")]
 
 
-def _check_questions_asked(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
+def _check_questions_asked(
+    baseline_text: str, current_text: str, allow_append: bool
+) -> list[tuple[str, str]]:
     baseline_lines = [line.strip() for line in baseline_text.splitlines() if line.strip()]
     current_lines = [line.strip() for line in current_text.splitlines() if line.strip()]
-    if current_lines[: len(baseline_lines)] == baseline_lines:
+    if current_lines == baseline_lines:
+        return []
+    if allow_append and current_lines[: len(baseline_lines)] == baseline_lines:
         return []
     return [_block("Questions asked", "changed", "spec")]
 
@@ -2138,11 +2226,42 @@ def _check_other_sections(
     return failures
 
 
-def check_plan_edits_after_commit(repo: Path, plan_path: Path, change_id: str) -> list[tuple[str, str]]:
+def _plan_edits_after_ids(manifest) -> list[str]:
+    """The `id`s declared on `artifacts.plan.charter.edits_after`, in
+    manifest order -- ids missing or blank are dropped (contract.charter
+    -complete separately requires every entry to carry one)."""
+    entries = (
+        (manifest.get("artifacts") or {}).get("plan", {}).get("charter", {}).get("edits_after")
+        or []
+    )
+    return [
+        str(entry["id"]).strip()
+        for entry in entries
+        if isinstance(entry, dict) and str(entry.get("id", "")).strip()
+    ]
+
+
+def check_plan_edits_after_commit(
+    repo: Path, plan_path: Path, change_id: str, manifest
+) -> list[tuple[str, str]]:
     """Recomputed per-edit charter enforcement on a charter-stamped plan
     (W1-02): once the plan's own `docs(loom): plan <change-id>` commit
     lands, only the charter's `edits_after` list may still touch it --
-    everything else blocks, naming where the content belongs instead."""
+    everything else blocks, naming where the content belongs instead.
+
+    The allow-list is recomputed from `manifest.artifacts.plan.charter.
+    edits_after` by stable policy id (not hard-coded) every run: an id
+    with no matching branch in `IMPLEMENTED_EDITS_AFTER_IDS` fails closed
+    instead of silently drifting from the manifest."""
+    ids = _plan_edits_after_ids(manifest)
+    unsupported = [pid for pid in ids if pid not in IMPLEMENTED_EDITS_AFTER_IDS]
+    if unsupported:
+        return [
+            ("plan.edits-after-commit", f"unsupported policy id {pid!r}.")
+            for pid in unsupported
+        ]
+    enabled_ids = set(ids)
+
     text = read_text(plan_path)
     front, sections = parse_document(text)
     if "charter" not in front:
@@ -2170,7 +2289,7 @@ def check_plan_edits_after_commit(repo: Path, plan_path: Path, change_id: str) -
     failures += _check_frontmatter(baseline_front, front)
     failures += _check_task_dag(
         baseline_sections.get("Task DAG", ""), sections.get("Task DAG", ""),
-        landed_ids, plan_touch_messages,
+        landed_ids, plan_touch_messages, enabled_ids,
     )
     failures += _check_risks(baseline_sections.get("Risks", ""), sections.get("Risks", ""))
     failures += _check_cse(
@@ -2178,7 +2297,8 @@ def check_plan_edits_after_commit(repo: Path, plan_path: Path, change_id: str) -
         sections.get("Current State Evidence", ""),
     )
     failures += _check_questions_asked(
-        baseline_sections.get("Questions asked", ""), sections.get("Questions asked", "")
+        baseline_sections.get("Questions asked", ""), sections.get("Questions asked", ""),
+        "questions-asked-appended" in enabled_ids,
     )
     failures += _check_other_sections(baseline_sections, sections)
     return failures
@@ -2190,7 +2310,7 @@ def check_plan_edits_after_commit_at(manifest, repo: Path, change_id: str) -> li
     plan_path = artifact_path(manifest, "plan", change_id, repo)
     if not plan_path.is_file():
         return []
-    return check_plan_edits_after_commit(repo, plan_path, change_id)
+    return check_plan_edits_after_commit(repo, plan_path, change_id, manifest)
 
 
 SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
@@ -5092,6 +5212,20 @@ def _charter_join(values) -> str:
     return "; ".join(str(v) for v in values)
 
 
+KEBAB_ID = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+
+
+def _edits_after_cell(edits_after) -> str:
+    """`<id>: <text>` per entry, joined by '; ' -- the dict shape (W1-02's
+    charter-boundaries fix) every `edits_after` entry now carries."""
+    if not isinstance(edits_after, list) or not edits_after:
+        return ""
+    return "; ".join(
+        f"{item.get('id', '?')}: {item.get('text', '?')}"
+        for item in edits_after if isinstance(item, dict)
+    )
+
+
 def _charter_has_forbidden_chars(value: str) -> bool:
     """A `|` or a newline inside a charter cell would render as extra
     markdown table columns or rows -- reject both."""
@@ -5188,9 +5322,39 @@ def check_charter_row(
     if not isinstance(edits_after, list) or not edits_after:
         failures.append(("contract.charter-complete", f"{name}.edits_after is empty."))
     else:
+        seen_ids: set[str] = set()
         for item in edits_after:
-            if isinstance(item, str):
-                _check_charter_cell_chars(name, "edits_after", item, failures)
+            if not isinstance(item, dict):
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after has a non-mapping entry {item!r}.",
+                ))
+                continue
+            item_id = item.get("id")
+            if not isinstance(item_id, str) or not item_id.strip():
+                failures.append(
+                    ("contract.charter-complete", f"{name}.edits_after has an entry with no id.")
+                )
+            elif not KEBAB_ID.match(item_id):
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after id {item_id!r} is not kebab-case.",
+                ))
+            elif item_id in seen_ids:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after id {item_id!r} is not unique within this artifact.",
+                ))
+            else:
+                seen_ids.add(item_id)
+            text = item.get("text")
+            if not isinstance(text, str) or not text.strip():
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after entry {item.get('id', '?')!r} has no text.",
+                ))
+            elif isinstance(item_id, str):
+                _check_charter_cell_chars(name, "edits_after", text, failures)
 
     must_not_cell = "; ".join(
         f"{item.get('kind', '?')} → {item.get('goes_to', '?')}"
@@ -5203,7 +5367,7 @@ def check_charter_row(
         _charter_join(must),
         must_not_cell,
         str(signoff) if isinstance(signoff, str) and signoff.strip() else "",
-        _charter_join(edits_after),
+        _edits_after_cell(edits_after),
     )
     return failures, row
 
@@ -5306,7 +5470,7 @@ def cmd_plan_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if not plan_path.is_file():
         err.write(f"no plan file at {plan_path} for change {change_id!r}.\n")
         return 2
-    return report(check_plan_edits_after_commit(repo, plan_path, change_id), err)
+    return report(check_plan_edits_after_commit(repo, plan_path, change_id, manifest), err)
 
 
 REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")

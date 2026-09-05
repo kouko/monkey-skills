@@ -98,9 +98,9 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "lessons",                      goes_to: memory}
       signoff: capture-intent
       edits_after:
-        - "ship flips the status line to closed"
-        - "maintain appends an evidence path"
-        - "any other change starts a new intent"
+        - {id: ship-closes-status-line,     text: "ship flips the status line to closed"}
+        - {id: maintain-appends-evidence,   text: "maintain appends an evidence path"}
+        - {id: other-change-starts-new-intent, text: "any other change starts a new intent"}
     fields:
       - {name: originator,   kind: frontmatter, required: true}
       - {name: kind,         kind: frontmatter, required: true, values: [product, engineering]}
@@ -135,8 +135,8 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "lessons",             goes_to: memory}
       signoff: write-spec
       edits_after:
-        - "a changed REQ re-runs decision point 2 and recomputes confirmed-behavior"
-        - "the spec sha in every later verdict names the new text"
+        - {id: changed-req-reruns-decision-point-2, text: "a changed REQ re-runs decision point 2 and recomputes confirmed-behavior"}
+        - {id: spec-sha-replaced-in-later-verdicts,  text: "the spec sha in every later verdict names the new text"}
     fields:
       - {name: intent,             kind: frontmatter, required: true, grammar: "<change-id>@<sha>"}
       - {name: confirmed-behavior, kind: frontmatter, required: false, grammar: "<date> @<spec-blob-sha7>", note: "required when kind: product; the sha is `git hash-object` over the spec WITHOUT this line, i.e. the file as the user saw it, so a spec rewritten after decision point 2 no longer matches"}
@@ -165,11 +165,11 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "landed commit shas",            goes_to: dispatch}
       signoff: write-plan
       edits_after:
-        - "a task line gains a claimed or blocked mark"
-        - "the W<n>-memory task is appended"
-        - "A task with no Task trailer in git is replaced when a spec requirement changed."
-        - "An un-landed task's Files, Test or Risk line is amended when a fact the plan relied on proved wrong, the reason stated in the commit message."
-        - "a Questions asked line is appended"
+        - {id: mark-claimed-or-blocked, text: "a task line gains a claimed or blocked mark"}
+        - {id: memory-task-appended,    text: "the W<n>-memory task is appended"}
+        - {id: unlanded-task-replaced-on-spec-change, text: "A task with no Task trailer in git is replaced when a spec requirement changed."}
+        - {id: unlanded-task-amended-with-reason,     text: "An un-landed task's Files, Test or Risk line is amended when a fact the plan relied on proved wrong, the reason stated in the commit message."}
+        - {id: questions-asked-appended, text: "a Questions asked line is appended"}
     fields:
       - {name: intent, kind: frontmatter, required: true}
       - {name: spec,   kind: frontmatter, required: false}
@@ -199,10 +199,10 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "lessons",          goes_to: memory}
       signoff: review
       edits_after:
-        - "verdicts, probes, open_findings and dispatch gain entries"
-        - "reviewed_sha, scope and cost are replaced"
-        - "an open finding is resolved or dismissed in place"
-        - "questions is written once"
+        - {id: verdicts-probes-findings-dispatch-gain-entries, text: "verdicts, probes, open_findings and dispatch gain entries"}
+        - {id: reviewed-sha-scope-cost-replaced,                text: "reviewed_sha, scope and cost are replaced"}
+        - {id: open-finding-resolved-or-dismissed-in-place,     text: "an open finding is resolved or dismissed in place"}
+        - {id: questions-written-once,                          text: "questions is written once"}
     fields:
       - {name: reviewed_sha,  kind: json, required: true}
       - {name: scope,         kind: json, required: true}
@@ -241,7 +241,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "internal ids",     goes_to: review}
       signoff: ship
       edits_after:
-        - "a later round rewrites the whole report from review.json"
+        - {id: later-round-rewrites-report, text: "a later round rewrites the whole report from review.json"}
   memory:
     path: docs/loom/memory/<slug>.md
     template: memory-README.md
@@ -259,9 +259,9 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "task lists",       goes_to: plan}
       signoff: build
       edits_after:
-        - "entries are appended"
-        - "a superseded entry gains a pointer to its replacement"
-        - "the index is regenerated"
+        - {id: memory-entries-appended,               text: "entries are appended"}
+        - {id: superseded-entry-gains-replacement-pointer, text: "a superseded entry gains a pointer to its replacement"}
+        - {id: memory-index-regenerated,               text: "the index is regenerated"}
   kickoff-defaults:
     path: docs/loom/KICKOFF-DEFAULTS.md
     template: KICKOFF-DEFAULTS.md
@@ -276,8 +276,8 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "lessons",              goes_to: memory}
       signoff: capture-intent
       edits_after:
-        - "a line is replaced with a new value, reason and date"
-        - "a key is removed only with a dated reason line"
+        - {id: kickoff-line-replaced-with-value-reason-date, text: "a line is replaced with a new value, reason and date"}
+        - {id: kickoff-key-removed-with-dated-reason,        text: "a key is removed only with a dated reason line"}
   dispatch:
     path: "docs/loom/<change-id>/review.json#dispatch"
     template: null
@@ -297,8 +297,8 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "narrative",            goes_to: review}
       signoff: build
       edits_after:
-        - "entries are appended"
-        - "an existing entry is never edited"
+        - {id: dispatch-entries-appended,          text: "entries are appended"}
+        - {id: dispatch-existing-entry-never-edited, text: "an existing entry is never edited"}
 
 standing_docs:       # not per-change (§2a, §8)
   - {name: PRINCIPLES.md,       tool: product-principles, ratified_by: required, reject_when: "kind: product and missing"}

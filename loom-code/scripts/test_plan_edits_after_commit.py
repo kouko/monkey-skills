@@ -318,7 +318,7 @@ def test_new_task_carrying_landed_sha_annotation_reports_goes_to_dispatch(tmp_pa
         "- Risk: agent-decided -- low risk\n"
         "\n## Questions asked",
     )
-    edit_plan(repo, edited, "chore(loom): sneak in W2 with a landed marker")
+    edit_plan(repo, edited, "chore(loom): housekeeping, nothing named here")
     result = run_plan_edits(repo)
     assert result.returncode == 1
     assert "plan.edits-after-commit" in blocked_rules(result)

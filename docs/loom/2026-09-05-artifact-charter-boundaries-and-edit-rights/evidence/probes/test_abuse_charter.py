@@ -60,7 +60,7 @@ def _valid_row(name: str, goes_to: str) -> dict:
         "must": ["decision"],
         "must_not": [{"kind": "code", "goes_to": goes_to}],
         "signoff": "review",
-        "edits_after": ["a fix round lands"],
+        "edits_after": [{"id": f"{name}-fix-round-lands", "text": "a fix round lands"}],
     }
 
 
