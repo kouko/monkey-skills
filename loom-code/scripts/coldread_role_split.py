@@ -1,4 +1,4 @@
-"""Scoring core for the cold-read role-split measurement.
+"""Scoring core and CLI runner for the cold-read role-split measurement.
 
 Parses one cold-read answer transcript into a per-item label map and
 scores N such transcripts against a fixture's expected-owner map. The
@@ -7,10 +7,22 @@ contract owns this finding), "other" (the counterpart role owns it),
 "implementer" (a positive RED belongs to the implementer), and
 "unparsed" (the line for that item did not match the pinned answer
 format and is never counted as correct).
+
+Usage: python3 coldread_role_split.py --contract <path> --fixture <path>
+    --role reviewer|adversary --runs 10 --out <dir> [--model sonnet]
+    [--timeout 180] [--claude-bin claude] [--resume]
 """
 from __future__ import annotations
 
+import argparse
+import datetime
+import hashlib
+import json
+import os
 import re
+import shutil
+import subprocess
+import sys
 from collections import Counter
 
 _LABEL_TOKENS = ("mine", "other", "implementer")
@@ -152,3 +164,190 @@ def score(responses: list[str], fixture: dict, role: str) -> dict:
         "three_way_total": total_runs_times_items,
         "systematic": systematic,
     }
+
+
+# ---------------------------------------------------------------------------
+# CLI runner: build the cold-read prompt, call `claude -p` N times, score.
+# ---------------------------------------------------------------------------
+
+_ANSWER_INSTRUCTION = (
+    "Answer with (a) one sentence stating your own boundary versus the "
+    "other verification role named in the contract above, then (b) "
+    "exactly one line per finding above in the form "
+    "`<n>. mine|other|implementer — <reason>`, where `mine` means this "
+    "finding is yours to raise under the contract above, `other` means it "
+    "belongs to the other verification role the contract names as not "
+    "yours, and `implementer` means it belongs to whoever wrote the code."
+)
+
+
+def build_prompt(contract_text: str, fixture: dict, role: str) -> str:
+    """Build the cold-read prompt: contract verbatim, items verbatim, then
+    the pinned answer-format instruction. Never uses `str.format`/`%` on
+    caller-supplied text, and never mentions expected owners or role names
+    beyond what `contract_text` itself carries."""
+    del role  # instruction text is role-agnostic; role decides scoring only
+    lines = [contract_text, "", "Findings:"]
+    for i, item in enumerate(fixture["items"], start=1):
+        lines.append(str(i) + ". " + item["text"])
+    lines.append("")
+    lines.append(_ANSWER_INSTRUCTION)
+    return "\n".join(lines)
+
+
+def run_once(claude_bin: str, model: str, prompt: str, timeout: int) -> tuple[list[str], str]:
+    """Run one `claude -p` call. Lets `subprocess.TimeoutExpired` propagate.
+    On a non-zero return code, stdout and stderr are concatenated and still
+    returned rather than raising."""
+    argv = [claude_bin, "-p", prompt, "--model", model, "--output-format", "text"]
+    completed = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
+    if completed.returncode != 0:
+        return argv, (completed.stdout or "") + (completed.stderr or "")
+    return argv, completed.stdout
+
+
+def _redacted_argv(argv: list[str], prompt: str) -> list[str]:
+    return ["<prompt>" if part == prompt else part for part in argv]
+
+
+def _write_run_file(
+    path,
+    argv: list[str],
+    prompt: str,
+    contract_arg: str,
+    contract_hash: str,
+    fixture_arg: str,
+    fixture_hash: str,
+    i: int,
+    n: int,
+    body: str,
+) -> None:
+    command_line = "# command: " + " ".join(_redacted_argv(argv, prompt))
+    header_lines = [
+        command_line,
+        f"# contract: {contract_arg} sha256 {contract_hash}",
+        f"# fixture: {fixture_arg} sha256 {fixture_hash}",
+        f"# run: {i} of {n}",
+        f"# timestamp: {datetime.datetime.now().astimezone().isoformat()}",
+        f"# prompt-sha256: {hashlib.sha256(prompt.encode('utf-8')).hexdigest()}",
+    ]
+    path.write_text("\n".join(header_lines) + "\n\n" + body, encoding="utf-8")
+
+
+def main(argv: list[str] | None = None) -> int:
+    from pathlib import Path
+
+    cli_argv = list(argv) if argv is not None else sys.argv[1:]
+
+    parser = argparse.ArgumentParser(description="Cold-read role-split runner")
+    parser.add_argument("--contract", required=True)
+    parser.add_argument("--fixture", required=True)
+    parser.add_argument("--role", required=True, choices=["reviewer", "adversary"])
+    parser.add_argument("--runs", type=int, default=10)
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--model", default="sonnet")
+    parser.add_argument("--timeout", type=int, default=180)
+    parser.add_argument(
+        "--claude-bin", default=os.environ.get("COLDREAD_CLAUDE_BIN", "claude")
+    )
+    parser.add_argument("--resume", action="store_true")
+    args = parser.parse_args(cli_argv)
+
+    if args.runs < 1:
+        print(f"error: --runs must be >= 1, got {args.runs}", file=sys.stderr)
+        return 2
+
+    claude_bin = shutil.which(args.claude_bin)
+    if claude_bin is None:
+        print(f"error: claude binary not found on PATH: {args.claude_bin!r}", file=sys.stderr)
+        return 2
+
+    out_dir = Path(args.out)
+    existing_runs = sorted(out_dir.glob("run-*.txt")) if out_dir.exists() else []
+    if existing_runs and not args.resume:
+        print(
+            f"error: {out_dir} already contains run files "
+            f"(e.g. {existing_runs[0].name}); pass --resume to continue",
+            file=sys.stderr,
+        )
+        return 2
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    contract_path = Path(args.contract)
+    fixture_path = Path(args.fixture)
+    contract_bytes = contract_path.read_bytes()
+    fixture_bytes = fixture_path.read_bytes()
+    contract_hash = hashlib.sha256(contract_bytes).hexdigest()
+    fixture_hash = hashlib.sha256(fixture_bytes).hexdigest()
+    contract_text = contract_bytes.decode("utf-8")
+    fixture = json.loads(fixture_bytes.decode("utf-8"))
+
+    prompt = build_prompt(contract_text, fixture, args.role)
+
+    n = args.runs
+    responses: list[str] = []
+    runs_summary: list[dict] = []
+
+    for i in range(1, n + 1):
+        run_path = out_dir / f"run-{i}.txt"
+
+        if args.resume and run_path.exists():
+            text = run_path.read_text(encoding="utf-8")
+            body = text.split("\n\n", 1)[1] if "\n\n" in text else ""
+            responses.append(body)
+            runs_summary.append({"i": i, "file": run_path.name, "status": "resumed"})
+            continue
+
+        call_argv = [claude_bin, "-p", prompt, "--model", args.model, "--output-format", "text"]
+        try:
+            _, body = run_once(claude_bin, args.model, prompt, args.timeout)
+            status = "ok"
+        except subprocess.TimeoutExpired:
+            body = f"# error: timeout after {args.timeout}s"
+            status = "timeout"
+
+        _write_run_file(
+            run_path,
+            call_argv,
+            prompt,
+            args.contract,
+            contract_hash,
+            args.fixture,
+            fixture_hash,
+            i,
+            n,
+            body,
+        )
+        responses.append(body)
+        runs_summary.append({"i": i, "file": run_path.name, "status": status})
+
+    result = score(responses, fixture, args.role)
+
+    command_template = "# command: " + " ".join(
+        _redacted_argv(
+            [claude_bin, "-p", prompt, "--model", args.model, "--output-format", "text"],
+            prompt,
+        )
+    )
+
+    summary = {
+        "argv": cli_argv,
+        "command_template": command_template,
+        "n": n,
+        "model": args.model,
+        "seed": None,
+        "seed_note": "claude -p exposes no seed flag",
+        "contract": {"path": args.contract, "sha256": contract_hash},
+        "fixture": {"path": args.fixture, "sha256": fixture_hash},
+        "contract_delivery": "inline",
+        "role": args.role,
+        "runs": runs_summary,
+        **result,
+    }
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
