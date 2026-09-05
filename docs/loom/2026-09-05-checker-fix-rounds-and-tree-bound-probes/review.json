@@ -41,6 +41,15 @@
       "model": "sonnet",
       "started": "2026-09-06T00:05:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-chk",
+      "model": "sonnet",
+      "started": "2026-09-06T00:20:00+08:00",
+      "fresh_context": true,
+      "note": "started in parallel with W1-03 in its own worktree — station text depends on the intent's semantics, not on W1-03's code; disjoint files"
     }
   ]
 }
