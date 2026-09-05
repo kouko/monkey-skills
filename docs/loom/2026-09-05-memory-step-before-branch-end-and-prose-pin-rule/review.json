@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "c2a5a82ebf6369dae15e8570925e9d69e551cfb1",
+  "reviewed_sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -226,7 +226,7 @@
       ]
     },
     {
-      "round": 1,
+      "round": 4,
       "scope": "branch-end",
       "reviewer": "rev-be-ms-codex",
       "vendor": "openai",
@@ -279,7 +279,7 @@
       ]
     },
     {
-      "round": 1,
+      "round": 4,
       "scope": "branch-end",
       "reviewer": "rev-be-ms-sonnet",
       "vendor": "anthropic",
@@ -308,6 +308,110 @@
       ],
       "notes": [
         "Verified against git objects: 13 commits after c2a5a82e classify as wave-2 work / records / this round's artifacts; W2-02 dispatch record precedes its work; 27 rules; 1.3.1 everywhere; graduated copies differ by path lines + one rename; memory wikilinks resolve; package suite 1402 passed run by the reader. Process note: fix-round work started before both verdicts were collected."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "d5e57b1e474816610a1b7be389c81cdc027dff76",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md:3",
+          "text": "nitpick (non-blocking): identifiers remain in the opening narrative and the decided-for-you prose names W1-04.",
+          "fix": "Move them to an evidence field; describe the task in words."
+        }
+      ],
+      "notes": [
+        "branch-end-01 fixed (Acceptance 1 split at decision point 1, report marks the PR proof pending); branch-end-02 fixed (W<n>-memory the named exception; reuse before append; pinned); branch-end-03 fixed (range pinned to 46ad0b7a, seven lines, bound excluded)."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "d5e57b1e474816610a1b7be389c81cdc027dff76",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "CHANGELOG nit fixed (22b3a203); the four codex-raised fixes re-verified with no regression; package suite 1407 passed."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "notes": [
+        "report-identifiers nit fixed (48c1e8e0)."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Only the report commit and the dispatch record moved since d5e57b1e."
       ]
     }
   ],
@@ -391,6 +495,46 @@
       "sha": "da6ac94041c2a66493dedd93952c7a73e39c724f",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_memory_step.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_memory_step.py loom-code/scripts/test_probes_memory_step_wave_end.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_memory_step.py"
     }
   ],
   "questions": [
@@ -403,6 +547,11 @@
       "decision_point": 1,
       "text": "這兩個 change 要不要都用 Codex 當第二位讀者？",
       "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "你要的五件事：1a 做到（記憶步驟在收尾審查前、無審後修正）、1b 出貨時在 PR 內文看、2–5 做到；對既有資料沒動；我替你決定的 8 項已列——這是你要的嗎？OK 就走現行規則的關閉流程，推上去開 PR。",
+      "type": "done"
     }
   ],
   "open_findings": [
@@ -652,7 +801,7 @@
       "note": "resumed; fixes its own report (count reproducibility, identifiers in prose)"
     },
     {
-      "task": "branch-end round 2",
+      "task": "branch-end round 5",
       "role": "reviewer",
       "agent_id": "rev-be-ms-codex",
       "model": "codex-cli 0.151.0",
@@ -661,7 +810,7 @@
       "note": "resumed round-1 reader"
     },
     {
-      "task": "branch-end round 2",
+      "task": "branch-end round 5",
       "role": "reviewer",
       "agent_id": "rev-be-ms-sonnet",
       "model": "sonnet",
@@ -670,7 +819,7 @@
       "note": "resumed round-1 reader"
     },
     {
-      "task": "branch-end round 3",
+      "task": "branch-end round 6",
       "role": "reviewer",
       "agent_id": "rev-be-ms-codex",
       "model": "codex-cli 0.151.0",
@@ -679,7 +828,7 @@
       "note": "resumed; confirms the report nit"
     },
     {
-      "task": "branch-end round 3",
+      "task": "branch-end round 6",
       "role": "reviewer",
       "agent_id": "rev-be-ms-sonnet",
       "model": "sonnet",
@@ -693,6 +842,9 @@
     "Round 1 wave-end:1: NEEDS_REVISION (codex fatal on §5/§6.5 sequencing; both readers on the unreserved memory task). The guard position-blind nit is fixed inside the fix round with the same agent.",
     "wave-end:1 outcome after three rounds: PASS_WITH_NOTES. Remaining nit (sonnet round 3): a fenced status: closed line placed before the real status line inside the leading metadata block would still flip the graduated guard — an intent file that opens with a fenced block before its metadata is not an intent, so the boundary is accepted and recorded; folded at ship if wording is revisited. reviewed_sha advanced to c2a5a82e.",
     "Branch-end adversary (class 5) found the W2-02 dispatch-record commit landed after the W2-02 work commit. Fixed before the readers ran by cherry-picking the six unpushed commits in the corrected order (dispatch record first); trees identical to the pre-reorder tip (backup ref backup/memstep-pre-reorder, local only). Shas of the blind-run report and probe commits changed; the report's tested-sha line is refreshed by its author.",
-    "branch-end round 1: NEEDS_REVISION (codex) / PASS (sonnet). The fatal was an acceptance-wording problem, taken back to decision point 1 and re-confirmed; nits (report identifiers a8025a82; CHANGELOG attribution 22b3a203) fixed inside the fix round; the branch-end probe was re-scoped by its author (da6ac940) so fix rounds inside the closing checkpoint are not counted as post-review fixes."
+    "branch-end round 1: NEEDS_REVISION (codex) / PASS (sonnet). The fatal was an acceptance-wording problem, taken back to decision point 1 and re-confirmed; nits (report identifiers a8025a82; CHANGELOG attribution 22b3a203) fixed inside the fix round; the branch-end probe was re-scoped by its author (da6ac940) so fix rounds inside the closing checkpoint are not counted as post-review fixes.",
+    "branch-end outcome after three rounds: PASS (both readers). No open nits: the report-identifiers nit and the CHANGELOG nit were folded inside the fix rounds, so ship has no nit batch. Cost: plan→branch-end PASS ≈ 8.5h, 3 wave-end rounds + 3 branch-end rounds, 24 dispatch entries.",
+    "Ship, memory step: nothing left to store; the closing round's own adversarial probe file (evidence/probes/test_abuse_memory_step_branch_end.py) is by construction created after the memory step and is NOT graduated in this change — it stays evidence, recorded in probes[] and re-run by the push gate. Graduating closing-round probes without a post-review commit is a follow-up for the sibling checker intent (agent-decided).",
+    "Round numbers: branch-end rounds renumbered 4–6 (they continue the change's round count; the checker scores the highest round number across the record, so per-checkpoint numbering restarting at 1 made it score the wave-end round 3 verdicts). The 1.3.1 review SKILL text says rounds continue; recorded here for the sibling checker intent's attention."
   ]
 }
