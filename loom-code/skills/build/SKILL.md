@@ -348,10 +348,13 @@ its index — the store's README names the command
 this repo).
 
 **Commits.** Both kinds of commit carry the `Task:` id of the plan's
-last-wave memory task: the plan reserves one, and the orchestrator
-writes its own implementer dispatch entry for it with `fresh_context:
-false`. `git add` the new files by name before a path-limited commit —
-`git commit -- <dir>` skips untracked files.
+last-wave memory task, `W<n>-memory` — write-plan's Shape rule reserves
+it. A plan written before that rule existed reaches here with no such
+task: open it on the spot, append it to the plan, commit the plan, then
+write its dispatch entry. Either way the orchestrator writes its own
+implementer dispatch entry for that task with `fresh_context: false`.
+`git add` the new files by name before a path-limited commit — `git
+commit -- <dir>` skips untracked files.
 
 ## 7. Hand-off
 

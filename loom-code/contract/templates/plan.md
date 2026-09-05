@@ -16,6 +16,11 @@ spec: docs/loom/<change-id>/spec.md@<sha>     # only when needs-design: yes
 - Test: <the failing test written first>
 - Risk: <risk and the default choice; mark agent-decided>
 
+**<Wn-memory> Memory step — graduated probes and store entries**  after: <last task ids>
+- Files: <graduated probe copies under the repo's permanent test directory; docs/loom/memory/ entries>
+- Test: <the store integrity check; the graduated copies passing>
+- Risk: <risk and the default choice; mark agent-decided>
+
 ## Questions asked                        # every question asked at decision point ① (and at ② when it runs here)
 <decision point id> — <what|behaviour|done|consequence> — <verbatim quote>
 <!-- the review station copies this section into review.json's questions[]

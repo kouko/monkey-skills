@@ -394,6 +394,12 @@ a task by how long it will take.
   reads that line and blocks a third marker without one. A wave holding
   one still ends with its own wave-end checkpoint, and both count against
   the 5.
+- Every plan's last wave ends with a memory-step task, id `W<n>-memory`
+  (n = the last wave number): Files are the graduated probe copies and
+  the `docs/loom/memory/` entries, Test is the store integrity check
+  plus the graduated copies passing, and its implementer is the
+  orchestrator itself (`fresh_context: false`, dispatch entry written
+  before the work) — build's §6.5 uses this id.
 
 **Sections.**
 
