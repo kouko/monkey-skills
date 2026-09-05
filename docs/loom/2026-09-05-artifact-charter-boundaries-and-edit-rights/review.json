@@ -1266,11 +1266,19 @@
       "model": "sonnet",
       "started": "2026-09-05T20:51:54+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-05T21:08:07+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 21,
+    "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
