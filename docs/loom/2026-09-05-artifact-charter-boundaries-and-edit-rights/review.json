@@ -2364,11 +2364,43 @@
       "model": "sonnet",
       "started": "2026-09-05T22:54:39+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "wave-end:2",
+      "role": "adversary",
+      "agent_id": "adv-we2-n6q2",
+      "model": "sonnet",
+      "started": "2026-09-05T23:17:45+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:2",
+      "role": "blind-runner",
+      "agent_id": "blind-we2-n6q2",
+      "model": "sonnet",
+      "started": "2026-09-05T23:17:45+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:2",
+      "role": "reviewer",
+      "agent_id": "rev-we2-a-n6q2",
+      "model": "sonnet",
+      "started": "2026-09-05T23:17:45+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:2",
+      "role": "reviewer",
+      "agent_id": "rev-we2-codex-n6q2",
+      "model": "codex",
+      "started": "2026-09-05T23:17:45+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 9,
-    "dispatches": 31,
+    "dispatches": 35,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
