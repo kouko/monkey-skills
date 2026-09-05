@@ -255,13 +255,16 @@ def run_once(claude_bin: str, model: str, prompt: str, timeout: int) -> tuple[li
     The prompt is sent on `stdin` (`subprocess.run(..., input=prompt)`),
     never as an argv element: a real contract's YAML frontmatter starts
     with `---`, which `claude`'s option parser rejects as an unknown
-    option when the prompt is positional. Grounded in the captured
-    `claude -p --help` output at
-    docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/claude-p-help-2026-09-05.txt,
-    which this invocation relies on for three facts: the prompt is read
-    from stdin when none is given positionally, `--model` and
+    option when the prompt is positional. The captured `claude -p --help`
+    output at
+    docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/claude-p-help-2026-09-05.txt
+    grounds three facts this invocation relies on: `--model` and
     `--output-format text` are supported flags, and no `--seed` flag
-    exists."""
+    exists — that capture says nothing about stdin. Stdin delivery is
+    grounded empirically instead: on 2026-09-05, a prompt whose text
+    began with `---` was piped to `claude -p` on stdin (no positional
+    prompt argument) and was answered, not rejected as an unknown
+    option."""
     argv = _build_claude_argv(claude_bin, model)
     completed = subprocess.run(
         argv, input=prompt, capture_output=True, text=True, timeout=timeout

@@ -586,3 +586,96 @@ def test_main_all_runs_ok_is_complete_and_exits_zero(tmp_path, monkeypatch):
     assert summary["failed_runs"] == 0
 
 
+def test_main_resume_error_status_header_reruns_not_scored_as_resumed(tmp_path, monkeypatch):
+    """(e): a run file whose header carries `# status: error` must never
+    be resumed even though every other header field validates -- it is
+    re-run, overwritten, and its fresh result (here `ok`) is what gets
+    scored, closing wave-end:1-09's sibling defect at the package-test
+    level (a stale failure transcript must not silently survive
+    `--resume`)."""
+    calls = []
+
+    def fake_run(argv, **kwargs):
+        calls.append(argv)
+        return coldread_role_split.subprocess.CompletedProcess(argv, 0, stdout=_canned_stdout(), stderr="")
+
+    monkeypatch.setattr(coldread_role_split.subprocess, "run", fake_run)
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    out = tmp_path / "out"
+    out.mkdir()
+    contract = _write_cli_contract(tmp_path)
+    fixture = _write_cli_fixture(tmp_path)
+    contract_hash = coldread_role_split.hashlib.sha256(contract.read_bytes()).hexdigest()
+    fixture_hash = coldread_role_split.hashlib.sha256(fixture.read_bytes()).hexdigest()
+    prompt = coldread_role_split.build_prompt(
+        contract.read_text(encoding="utf-8"), _cli_fixture_dict(), "adversary"
+    )
+    prompt_hash = coldread_role_split.hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+    header = "\n".join(
+        [
+            f"# command: /usr/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 {prompt_hash})",
+            f"# contract: {contract} sha256 {contract_hash}",
+            f"# fixture: {fixture} sha256 {fixture_hash}",
+            "# run: 1 of 1",
+            "# model: sonnet",
+            "# status: error",
+            f"# prompt-sha256: {prompt_hash}",
+        ]
+    )
+    (out / "run-1.txt").write_text(header + "\n\n# error: exit 9\nold failure", encoding="utf-8")
+
+    rc = main(_cli_argv(contract, fixture, out, runs="1") + ["--resume"])
+    assert len(calls) == 1, "an error-status header must never be resumed"
+    assert rc == 0
+    summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    assert summary["runs"][0]["status"] == "ok"
+    assert summary["n"] == 1
+    assert summary["failed_runs"] == 0
+    assert summary["complete"] is True
+    body = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[1]
+    assert body == _canned_stdout()
+
+
+def test_main_resume_empty_body_no_status_line_reruns(tmp_path, monkeypatch):
+    """(e)/other observation: a legacy run file with no `# status:` line
+    and an empty body must not be resumed -- resuming it would silently
+    score every item "unparsed" for that run instead of re-running."""
+    calls = []
+
+    def fake_run(argv, **kwargs):
+        calls.append(argv)
+        return coldread_role_split.subprocess.CompletedProcess(argv, 0, stdout=_canned_stdout(), stderr="")
+
+    monkeypatch.setattr(coldread_role_split.subprocess, "run", fake_run)
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    out = tmp_path / "out"
+    out.mkdir()
+    contract = _write_cli_contract(tmp_path)
+    fixture = _write_cli_fixture(tmp_path)
+    contract_hash = coldread_role_split.hashlib.sha256(contract.read_bytes()).hexdigest()
+    fixture_hash = coldread_role_split.hashlib.sha256(fixture.read_bytes()).hexdigest()
+    prompt = coldread_role_split.build_prompt(
+        contract.read_text(encoding="utf-8"), _cli_fixture_dict(), "adversary"
+    )
+    prompt_hash = coldread_role_split.hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+    header = "\n".join(
+        [
+            f"# command: /usr/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 {prompt_hash})",
+            f"# contract: {contract} sha256 {contract_hash}",
+            f"# fixture: {fixture} sha256 {fixture_hash}",
+            "# run: 1 of 1",
+            "# model: sonnet",
+            f"# prompt-sha256: {prompt_hash}",
+        ]
+    )
+    (out / "run-1.txt").write_text(header + "\n\n", encoding="utf-8")
+
+    rc = main(_cli_argv(contract, fixture, out, runs="1") + ["--resume"])
+    assert len(calls) == 1, "an empty body with no status line must be re-run"
+    assert rc == 0
+    body = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[1]
+    assert body == _canned_stdout()
+
+
