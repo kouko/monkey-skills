@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "43e32034cdfb3fc0982afafd4b74a980186f158e",
-  "scope": "",
+  "reviewed_sha": "d4abdeb328beff8bfc6e116efa798e88f35f6dc1",
+  "scope": "wave-end:1",
   "vendors": [
     "anthropic"
   ],
@@ -207,6 +207,69 @@
         "ran test_loom_checker_lane.py (24), both probe files (11+23)",
         "the other reader's -01..-04 fixes broke nothing visible; ship still 3,497 words"
       ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "d4abdeb328beff8bfc6e116efa798e88f35f6dc1",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3393",
+          "text": "wave-end:1-01: fixed — every intent-origin declaration verified through _lane_declaration_stated_by_its_commit",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "design re-look: continue fixing was correct — the remaining defect was a bounded push-side provenance check; the ratified lane design did not require reopening",
+        "covers express, gate-only and switches back to full, including missing deciding commits",
+        "read-only sandbox: recorded test results not independently re-run"
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "d4abdeb328beff8bfc6e116efa798e88f35f6dc1",
+      "resumed": true,
+      "dimension_scores": {
+        "principles-conformance": "PASS",
+        "correctness": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "design re-look: round 3 on the same checkpoint; the remaining finding was a bounded mechanical gap, the ratified shape (gate-only = small with the floor waived, dated by <name> on every declaration, record-keyed timing) unchanged — continuing to fix was right",
+        "nothing from round 2 broken; ran the lane tests (28) and both probe files (11+26)"
+      ]
     }
   ],
   "probes": [
@@ -355,7 +418,8 @@
       "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
       "raised_by": "rev-we1-lane-codex",
       "severity": "fatal",
-      "text": "issue (blocking): the grammar accepts a bare `lane: express|gate-only|full` with no dated user attribution; Acceptance 1 says a declaration carries date and name like a switch; push never recomputes the schema, and gate-only has no reader to apply the lens."
+      "text": "issue (blocking): the grammar accepts a bare `lane: express|gate-only|full` with no dated user attribution; Acceptance 1 says a declaration carries date and name like a switch; push never recomputes the schema, and gate-only has no reader to apply the lens.",
+      "resolved": "closed by d0ffc2ec (dated declarations) + 727a566d + cc1a4ee5 (push verifies every declaration's provenance); codex fixed (round 3)"
     },
     {
       "id": "wave-end:1-02",
@@ -569,7 +633,7 @@
     }
   ],
   "cost": {
-    "rounds": 2,
+    "rounds": 3,
     "dispatches": 19,
     "cap_changes": [],
     "hours_plan_to_pr": null
