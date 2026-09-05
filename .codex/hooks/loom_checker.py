@@ -2510,8 +2510,14 @@ def _compare_review_round(
             continue
 
         if key in REVIEW_REPLACE_SET_FIELDS:
-            if not allow_replace and _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
-                failures.append(_review_block(f"{label}.{key}", "changed"))
+            if not allow_replace:
+                if _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
+                    failures.append(_review_block(f"{label}.{key}", "changed"))
+                continue
+            e_val, l_val = earlier.get(key), later.get(key)
+            expected_type = dict if key == "cost" else str
+            if isinstance(e_val, expected_type) and not isinstance(l_val, expected_type):
+                failures.append(_review_block(f"{label}.{key}", "replace-set type changed"))
             continue
 
         if key == "questions":
