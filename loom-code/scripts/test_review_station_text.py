@@ -7,6 +7,7 @@ landed in the files the review station and its reviewer contract read.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -563,4 +564,210 @@ def test_matcher_fix_round_resume_sentence_affirmative_accepted() -> None:
     assert "resumes the reader" in sentence.lower()
     assert "still-open findings" in sentence.lower()
     assert "push.verdicts-ge-2" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+# --- W1-02: batched reader records, cap-bump reason, cost block, ----------
+# --- third-round design re-look line ---------------------------------------
+
+
+def test_review_records_batched_before_any_of_the_three_is_dispatched() -> None:
+    """W1-02: SS2 states this round's adversary, blind-runner and reviewer
+    `dispatch[]` entries are appended once and committed once, together,
+    before any of the three is dispatched -- merging the two record-keeping
+    rules that used to batch adversary+blind-runner separately from
+    reviewers (plan.md Current State Evidence). Affirmative, un-negated."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    start = text.index("## 2. Read")
+    end = text.index("## 3. Blind run")
+    section = text[start:end]
+    hits = [
+        s for s in _flat_sentences(section)
+        if "adversary" in s.lower()
+        and "blind-runner" in s.lower()
+        and "reviewer" in s.lower()
+        and "appended once" in s.lower()
+        and "committed once" in s.lower()
+        and "before" in s.lower()
+        and "dispatched" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md SS2 has no affirmative sentence batching the "
+        "adversary, blind-runner and reviewer dispatch[] records into one "
+        "commit before any of the three is dispatched"
+    )
+
+
+def test_matcher_batched_records_sentence_negated_rejected() -> None:
+    sentence = (
+        "This round's adversary, blind-runner and reviewer dispatch[] "
+        "entries are never appended once and committed once before any of "
+        "the three is dispatched."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_batched_records_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "This round's adversary, blind-runner and reviewer dispatch[] "
+        "entries are appended once and committed once, together, before "
+        "any of the three is dispatched."
+    )
+    assert "adversary" in sentence.lower()
+    assert "blind-runner" in sentence.lower()
+    assert "reviewer" in sentence.lower()
+    assert "appended once" in sentence.lower()
+    assert "committed once" in sentence.lower()
+    assert "before" in sentence.lower()
+    assert "dispatched" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def _section7(text: str) -> str:
+    start = text.index("## 7. Write the record")
+    end = text.index("## 8. Hand back")
+    return text[start:end]
+
+
+def test_review_cap_bump_commit_records_one_line_reason() -> None:
+    """W1-02: SS7 states a commit that raises a `*_CAP` constant is recorded
+    with a one-line reason in this round's notes. Affirmative, un-negated."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    section = _section7(text)
+    hits = [
+        s for s in _flat_sentences(section)
+        if "*_cap" in s.lower()
+        and "reason" in s.lower()
+        and "notes" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md SS7 has no affirmative sentence recording a "
+        "one-line reason for a *_CAP bump in this round's notes"
+    )
+
+
+def test_matcher_cap_bump_reason_sentence_negated_rejected() -> None:
+    sentence = (
+        "A commit that raises a `*_CAP` constant is never recorded with a "
+        "one-line reason in this round's notes."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_cap_bump_reason_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "A commit that raises a `*_CAP` constant is recorded with a "
+        "one-line reason in this round's notes."
+    )
+    assert "*_cap" in sentence.lower()
+    assert "reason" in sentence.lower()
+    assert "notes" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_review_cost_block_updated_every_checkpoint() -> None:
+    """W1-02: SS7 states the record's top-level `cost` block (rounds,
+    dispatches, cap changes, hours from the plan commit to the PR) is
+    updated at every checkpoint. Affirmative, un-negated."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    section = _section7(text)
+    hits = [
+        s for s in _flat_sentences(section)
+        if "cost" in s.lower()
+        and "rounds" in s.lower()
+        and "dispatches" in s.lower()
+        and "cap changes" in s.lower()
+        and "hours" in s.lower()
+        and "checkpoint" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md SS7 has no affirmative sentence stating the cost "
+        "block is updated at every checkpoint"
+    )
+
+
+def test_review_worked_record_shows_cost_key() -> None:
+    """W1-02: the SS7 worked JSON record carries the `cost` key with the
+    shape rounds/dispatches/cap_changes/hours_plan_to_pr."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    section = _section7(text)
+    start = section.index("A worked record:")
+    fence_start = section.index("```json", start)
+    fence_end = section.index("```", fence_start + 7)
+    block = section[fence_start + len("```json"):fence_end]
+    record = json.loads(block)
+    assert "cost" in record, "worked record has no top-level `cost` key"
+    cost = record["cost"]
+    for key in ("rounds", "dispatches", "cap_changes", "hours_plan_to_pr"):
+        assert key in cost, f"worked record cost block is missing {key!r}"
+
+
+def test_matcher_cost_block_sentence_negated_rejected() -> None:
+    sentence = (
+        "The record's top-level cost block is never updated at every "
+        "checkpoint, this round included."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_cost_block_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "The record's top-level cost block -- rounds, dispatches, cap "
+        "changes and hours from the plan commit to the PR -- is updated "
+        "at every checkpoint, this round included."
+    )
+    assert "cost" in sentence.lower()
+    assert "rounds" in sentence.lower()
+    assert "dispatches" in sentence.lower()
+    assert "cap changes" in sentence.lower()
+    assert "hours" in sentence.lower()
+    assert "checkpoint" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_fix_rounds_third_round_carries_design_relook_line() -> None:
+    """W1-02: fix-rounds.md's "Third round" section states this round's
+    notes carry a `design re-look:` line (continue fixing / change the
+    design / accept as nit), and the verdict completes only with that line
+    present. Affirmative, un-negated."""
+    text = (
+        REPO / "loom-code/skills/review/references/fix-rounds.md"
+    ).read_text(encoding="utf-8")
+    start = text.index("## Third round")
+    section = text[start:]
+    hits = [
+        s for s in _flat_sentences(section)
+        if "design re-look:" in s
+        and "continue fixing" in s.lower()
+        and "change the design" in s.lower()
+        and "accept as nit" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "fix-rounds.md 'Third round' section has no affirmative sentence "
+        "requiring a design re-look: line in this round's notes"
+    )
+
+
+def test_matcher_design_relook_sentence_negated_rejected() -> None:
+    sentence = (
+        "This round's notes never carry a design re-look: line -- continue "
+        "fixing, change the design, or accept as nit."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_design_relook_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "This round's notes carry a design re-look: line -- continue "
+        "fixing, change the design, or accept as nit -- and this round's "
+        "verdict completes only when that line is present."
+    )
+    assert "design re-look:" in sentence
+    assert "continue fixing" in sentence.lower()
+    assert "change the design" in sentence.lower()
+    assert "accept as nit" in sentence.lower()
     assert not _has_negation(sentence)
