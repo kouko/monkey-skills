@@ -1,11 +1,440 @@
 {
   "reviewed_sha": "43e32034cdfb3fc0982afafd4b74a980186f158e",
-  "scope": "wave",
-  "vendors": [],
-  "verdicts": [],
-  "probes": [],
-  "questions": [],
-  "open_findings": [],
+  "scope": "wave-end:0",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:0",
+      "reviewer": "rev-we0-codex-d2e4",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs+skill",
+      "verdict": "NEEDS_REVISION",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "standards_version": "lenses.md@4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:4254",
+          "text": "issue (blocking): a manifest with no artifacts mapping becomes an empty mapping, produces no failures and exits 0, so contract.charter-complete reports success when every charter row is absent.",
+          "fix": "require artifacts to be a non-empty mapping and emit contract.charter-complete when it is absent, empty or the wrong type; change the wave-end probe to require that failure."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:4140",
+          "text": "issue (blocking): the human charter table drops answers and readers although the intent and contract README define those as part of what each charter row communicates.",
+          "fix": "render answers and readers as columns and extend the renderer tests to assert their values and non-emptiness for every artifact."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/plan.md:57",
+          "text": "issue (blocking): W3-02's Files list was changed after the plan commit, but the plan charter permits task replacement only after a spec change; this change has no spec.",
+          "fix": "restore the committed W3-02 Files list or add an explicit charter-authorised path for this class of pre-land task correction and record the qualifying reason."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:3",
+          "text": "issue (blocking): the blind run identifies revision 36a71b29 rather than the reviewed HEAD, so its package-test evidence does not cover the later W3-02 repair.",
+          "fix": "rerun the blind run at 4a3f947cc8484cf9af949b82f923ba74cd1f0eb2 and replace the report with evidence from that revision."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:1",
+          "text": "nitpick (non-blocking): the blind-run artifact is written in Chinese, contrary to the artifact-language policy.",
+          "fix": "rewrite the report in English."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:11",
+          "text": "nitpick (non-blocking): the report says nine document types but lists and renders eight.",
+          "fix": "change nine to eight."
+        }
+      ],
+      "notes": "live checks: 28 rules listed, mechanisms clean, mirrors match except the stamp line; pytest could not run in the read-only sandbox (no writable tmp)."
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:0",
+      "reviewer": "rev-we0-a-d2e4",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs+skill",
+      "verdict": "NEEDS_REVISION",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "standards_version": "lenses.md@4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "external-surface-grounding": "N/A — no external call added",
+        "principles-conformance": "N/A — no ratified PRINCIPLES.md for this plugin",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS_WITH_NOTES",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A — no skill prose in the delta"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/contract/manifest.yaml:79",
+          "text": "issue: the artifacts: section is commented per-change, yet memory and kickoff-defaults charter rows now sit under it; kickoff-defaults duplicates the standing_docs row for the same file — two classifications for one file.",
+          "fix": "reword the artifacts header comment to say it holds per-change and standing artifact charters, and cross-reference artifacts.kickoff-defaults.charter from the standing_docs row (or move the standing charters under standing_docs)."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:4150",
+          "text": "issue: check_charter_row and render_charter_table never escape or reject | or newline in a charter cell, so a cell renders as extra columns or rows and contract.charter-complete never flags it (adversary probe test_render_charter_table_pipe_and_newline_in_cell_corrupts_row shows exit 0).",
+          "fix": "reject (or escape) any charter string containing | or a newline in check_charter_row with a contract.charter-complete failure, and add a regression test asserting one row per artifact."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/contract/manifest.yaml:171",
+          "text": "issue: plan.charter.edits_after claims to be exhaustive, yet commit 76a50d37 amended W3-02's Files for a reason unrelated to a spec change — a shape none of the four categories covers; W1-02 will turn this list into a blocking rule.",
+          "fix": "add a fifth edits_after category: an un-landed task's Files/Test/Risk lines are amended with the reason stated in the commit message, so W1-02 can recompute it."
+        }
+      ],
+      "notes": "package suite re-run independently: 1553 passed, 5 skipped, 1 xfailed; mirrors byte-identical except the stamp line; blind-run report honest about wave-0 scope."
+    }
+  ],
+  "probes": [
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_row_with_empty_must_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_row_must_not_missing_goes_to_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_row_goes_to_unknown_artifact_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_row_goes_to_self_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_row_signoff_unknown_station_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_row_missing_entirely_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_command_manifest_path_missing_fails_closed",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_manifest_duplicate_artifact_key_collapses_silently",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_row_non_ascii_and_huge_answers_does_not_crash",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_charter_command_renders_eight_complete_rows_on_valid_manifest",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_list_rules_carries_charter_complete_rule_id",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py -q -k test_codex_mirror_manifest_matches_plugin_manifest_byte_for_byte",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_charter_command_artifacts_key_absent_passes_vacuously",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_charter_command_artifacts_as_list_fails_closed",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_charter_row_goes_to_case_and_whitespace_mismatch_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_charter_row_signoff_names_tool_not_station_blocked",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_render_charter_table_pipe_and_newline_in_cell_corrupts_row",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_charter_command_manifest_path_is_directory_fails_closed",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_charter_command_manifest_path_is_empty_file_fails_closed",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_charter_command_mixed_manifest_reports_gap_and_good_row_exit_1",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_codex_mirror_charter_renders_identical_table_to_plugin_checker",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_list_rules_count_is_exactly_28_and_charter_id_is_unique",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_contract_require_still_passes_after_manifest_growth",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_confirm_intent_sha_unreachable_skips_with_the_claimed_reason",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py -q -k test_confirm_intent_sha_reachable_commit_returns_sha_not_skip",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_charter_wave_end.py",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "blind-run",
+      "command": "python3 loom-code/scripts/loom_checker.py charter; python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "36a71b29",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md",
+      "scope": "wave-end:0"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "result": "pass",
+      "artifact": "",
+      "scope": "wave-end:0"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "範圍：這次只管 plan.md，還是 review.json 也一起？（答：所有類型的文件，包含但不限 intent、spec、plan、review）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "「implementer 拿到縮短後的派工單，NEEDS_CONTEXT 不比現在高」要當 Acceptance 還是只當 Constraints？（答：當驗收條件）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "重述：你要的是每種 loom 文件都有憲章…對嗎？（答：重點是正負向都要寫，該寫什麼與不該寫什麼）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "重述（修正後）：每列正負向兩欄、定稿點、定稿後允許變動，checker 重算…對嗎？（答：對）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "新 checker 規則只對上線後 confirmed 的變更生效，舊變更照舊，可以嗎？（答：舊的照舊）",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？（答：用 Codex）",
+      "type": "what"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:0-01",
+      "anchor": "loom-code/scripts/loom_checker.py:4254",
+      "origin_sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "raised_by": "rev-we0-codex-d2e4",
+      "severity": "fatal",
+      "text": "issue (blocking): a manifest with no artifacts mapping becomes an empty mapping, produces no failures and exits 0, so contract.charter-complete reports success when every charter row is absent."
+    },
+    {
+      "id": "wave-end:0-02",
+      "anchor": "loom-code/scripts/loom_checker.py:4140",
+      "origin_sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "raised_by": "rev-we0-codex-d2e4",
+      "severity": "fatal",
+      "text": "issue (blocking): the human charter table drops answers and readers although the intent and contract README define those as part of what each charter row communicates."
+    },
+    {
+      "id": "wave-end:0-03",
+      "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/plan.md:57",
+      "origin_sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "raised_by": "rev-we0-codex-d2e4",
+      "severity": "important",
+      "text": "issue (blocking): W3-02's Files list was changed after the plan commit, but the plan charter permits task replacement only after a spec change; this change has no spec."
+    },
+    {
+      "id": "wave-end:0-04",
+      "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:3",
+      "origin_sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "raised_by": "rev-we0-codex-d2e4",
+      "severity": "important",
+      "text": "issue (blocking): the blind run identifies revision 36a71b29 rather than the reviewed HEAD, so its package-test evidence does not cover the later W3-02 repair."
+    },
+    {
+      "id": "wave-end:0-05",
+      "anchor": "loom-code/contract/manifest.yaml:79",
+      "origin_sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "raised_by": "rev-we0-a-d2e4",
+      "severity": "important",
+      "text": "issue: the artifacts: section is commented per-change, yet memory and kickoff-defaults charter rows now sit under it; kickoff-defaults duplicates the standing_docs row for the same file — two classifications for one file."
+    },
+    {
+      "id": "wave-end:0-06",
+      "anchor": "loom-code/scripts/loom_checker.py:4150",
+      "origin_sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "raised_by": "rev-we0-a-d2e4",
+      "severity": "important",
+      "text": "issue: check_charter_row and render_charter_table never escape or reject | or newline in a charter cell, so a cell renders as extra columns or rows and contract.charter-complete never flags it (adversary probe test_render_charter_table_pipe_and_newline_in_cell_corrupts_row shows exit 0)."
+    },
+    {
+      "id": "wave-end:0-07",
+      "anchor": "loom-code/contract/manifest.yaml:171",
+      "origin_sha": "4a3f947cc8484cf9af949b82f923ba74cd1f0eb2",
+      "raised_by": "rev-we0-a-d2e4",
+      "severity": "important",
+      "text": "issue: plan.charter.edits_after claims to be exhaustive, yet commit 76a50d37 amended W3-02's Files for a reason unrelated to a spec change — a shape none of the four categories covers; W1-02 will turn this list into a blocking rule."
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
@@ -65,7 +494,7 @@
     }
   ],
   "cost": {
-    "rounds": 0,
+    "rounds": 1,
     "dispatches": 7,
     "cap_changes": [],
     "hours_plan_to_pr": null
