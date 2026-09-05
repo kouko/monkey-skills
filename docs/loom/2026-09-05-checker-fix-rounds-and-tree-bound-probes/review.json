@@ -376,6 +376,22 @@
       "started": "2026-09-06T05:20:00+08:00",
       "fresh_context": false,
       "note": "W2-01 redefined _sentences in test_review_station_text.py, shadowing the graduated sentence-cap probes' helper (7 failures reported by the implementer as pre-existing — they were not); renamed"
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-chk",
+      "model": "sonnet",
+      "started": "2026-09-06T06:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-chk",
+      "model": "sonnet",
+      "started": "2026-09-06T06:05:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
