@@ -1,7 +1,7 @@
 ---
 name: ship
 description: |
-  Closes a development branch out: confirms the branch-end checkpoint passed, presents the blind-run report to the user for acceptance, writes the memory, runs the deterministic push gate, opens the pull request from the review record, verifies the merge and closes the intent. Use when the last checkpoint returned PASS, or on "finish the branch", "open the PR", "ready to merge", "ship it".
+  Closes a development branch out: confirms the branch-end checkpoint passed, presents the blind-run report to the user for acceptance, writes the memory and the intent's close line into the review-only commit, runs the deterministic push gate, opens the pull request from the review record and verifies the merge. Use when the last checkpoint returned PASS, or on "finish the branch", "open the PR", "ready to merge", "ship it".
 version: 1.0.0
 ---
 
@@ -344,9 +344,23 @@ before the push, while the PR number is not — the squash commit's title
 carries `(#N)` afterward, and the branch name is what stays durable.
 `intake.confirmed` treats both grammars as terminal.
 
-A branch shipped before this rule closed the intent in its own commit,
-after the merge, with `status: closed <date> — PR #<N>` — the checker
-still accepts that older shape; this station no longer produces it.
+Check first that the checker gating this push knows the shape — the
+station text and the checker can be different versions (a Codex
+scaffold copy, an older install):
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py --list-rules | grep push.review-only-head
+```
+
+The line names `branch <name>` when the combined shape is admitted; a
+line without it means that checker predates the rule. On that older
+checker, keep `HEAD` review-only, push and open the pull request without
+a close line, then close the intent in a commit of its own with
+`status: closed <date> — PR #<N>`, give that commit its own `branch-end`
+round (two fresh readers under the docs lens, verdicts at the close
+commit, probes re-pinned there) and a review-only commit on top, and
+push again — the checker still accepts that older shape; this station
+produces it only on that fallback.
 
 Merge when the user asks and CI is green. Read the body back from the pull
 request itself rather than from the file written earlier — the file may be

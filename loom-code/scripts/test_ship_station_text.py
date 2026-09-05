@@ -232,3 +232,32 @@ def test_matcher_close_line_sentence_negated_rejected() -> None:
 def test_matcher_review_only_head_sentence_negated_rejected() -> None:
     sentence = "`push.review-only-head` does not admit exactly that shape."
     assert _has_negation(sentence)
+
+
+def test_matcher_close_line_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "The intent's close line rides in the review-only commit, pushed "
+        "once and PR'd once."
+    )
+    assert "rides in" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_matcher_review_only_head_sentence_affirmative_accepted() -> None:
+    sentence = "`push.review-only-head` admits exactly that shape."
+    assert "admits exactly that shape" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_ship_section_6_names_the_list_rules_preflight() -> None:
+    """§6 tells a cold agent to check the gating checker's own rule text
+    before choosing the combined close shape, and names the fallback the
+    older checker accepts."""
+    flat = _unwrapped(_section_6_merge_then_verify())
+    assert "--list-rules | grep push.review-only-head" in flat
+    hits = [
+        s for s in _sentences(_section_6_merge_then_verify())
+        if "closed <date> — PR #<N>" in s and "commit of its own" in s
+        and not _has_negation(s)
+    ]
+    assert hits, "§6 has no affirmative fallback sentence for an older checker"

@@ -544,3 +544,23 @@ def test_matcher_fix_round_resume_sentence_negated_rejected() -> None:
         "findings (push.verdicts-ge-2)."
     )
     assert _has_negation(sentence)
+
+
+def test_matcher_round_numbers_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Round numbers continue across a change's checkpoints — a branch-end "
+        "round after wave-end rounds 1-3 is round 4."
+    )
+    assert "continue" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_matcher_fix_round_resume_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "A fix round resumes the reader who raised the still-open findings "
+        "(push.verdicts-ge-2)."
+    )
+    assert "resumes the reader" in sentence.lower()
+    assert "still-open findings" in sentence.lower()
+    assert "push.verdicts-ge-2" in sentence.lower()
+    assert not _has_negation(sentence)
