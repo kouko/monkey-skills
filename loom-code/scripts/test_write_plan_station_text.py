@@ -90,3 +90,36 @@ def test_matcher_spec_change_sentence_negated_rejected() -> None:
         "in the commit message."
     )
     assert _has_negation(sentence)
+
+
+# --- W0-01/W2-01 fix round: an engineering spec has a home other than the
+# ninth artifact the branch-end finding warned against --------------------
+
+
+def test_skill_names_the_engineering_spec_path() -> None:
+    text = SKILL.read_text(encoding="utf-8")
+    sentence = (
+        "When a task's rationale outgrows its Risk line, write "
+        "`docs/loom/<change-id>/spec.md` from "
+        "`contract/templates/spec-minimal.md` — Requirements one per "
+        "Acceptance line, Design decision one line per agent-decided fork, "
+        "UI flows N/A — carrying only those sections."
+    )
+    flat = " ".join(text.split())
+    assert sentence in flat, (
+        "SKILL.md no longer carries the engineering-spec-for-oversized-"
+        "Risk-line sentence in step 4's `no` branch"
+    )
+    assert not _has_negation(sentence), (
+        "the engineering-spec sentence carries a negation token"
+    )
+
+
+def test_matcher_engineering_spec_sentence_negated_rejected() -> None:
+    sentence = (
+        "When a task's rationale will not fit its Risk line, write "
+        "`docs/loom/<change-id>/spec.md` from "
+        "`contract/templates/spec-minimal.md` with no `confirmed-behavior:` "
+        "line."
+    )
+    assert _has_negation(sentence)

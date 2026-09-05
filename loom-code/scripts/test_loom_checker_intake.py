@@ -326,6 +326,23 @@ def test_needs_design_no_needs_no_spec_review(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
 
 
+def test_needs_design_no_with_an_engineering_spec_present_still_passes(
+    tmp_path: Path,
+) -> None:
+    """Design decision "engineering spec for an oversized Risk line"
+    (branch-end-01 fix round): write-plan may itself write
+    `docs/loom/<change-id>/spec.md` for a `needs-design: no` change when a
+    task's rationale outgrows its Risk line. `intake.spec-pass` gates only
+    `needs-design: yes` at write-plan (`yes_at_write_plan` in
+    loom_checker.py) -- the spec's mere presence, with no review round of
+    its own, must not trip intake at all."""
+    repo = make_repo(tmp_path)
+    write_intent(repo)
+    write_spec(repo)
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
 def test_write_spec_does_not_require_a_spec_review(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     write_intent(repo, needs_design="yes — many states, no spec exists")

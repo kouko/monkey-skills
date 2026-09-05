@@ -5,6 +5,8 @@ confirmed-behavior: <date> @<spec-blob-sha7>   # only when kind: product; writte
 #   "before" this line was written (`git hash-object spec.md`);
 #   if the spec is rewritten afterward, this line no longer matches, and
 #   the checker requires the visible behavior to be presented again
+#   on an engineering spec that write-plan writes for a needs-design: no
+#   change, this line stays absent -- decision point ② is product-only
 
 ## Requirements                                    [user-readable; shown for product]
 REQ-1 — <name>

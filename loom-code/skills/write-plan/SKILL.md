@@ -300,6 +300,13 @@ surface the user reads or types into`.
 **`no`** — go to step 5. The plan carries the Current State Evidence
 section instead of a spec.
 
+When a task's rationale outgrows its Risk line, write
+`docs/loom/<change-id>/spec.md` from `contract/templates/spec-minimal.md` —
+Requirements one per Acceptance line, Design decision one line per
+agent-decided fork, UI flows N/A — carrying only those sections. Decision
+point ② stays product-only, and the first checkpoint reads the spec under
+the docs lens.
+
 **`yes`, and `docs/loom/<change-id>/spec.md` already exists** — go to the
 intake check below.
 
@@ -420,7 +427,9 @@ spoken to the user rather than read as a machine artifact.
 
 - When `needs-design: no`, the plan opens with **Current State Evidence** —
   Forward, Reverse, Error, Data, Boundary, each with a path and an anchor.
-  With a spec, that section lives there instead and the plan cites the spec.
+  With a spec, that section lives there instead, the plan cites the spec,
+  and each task's Risk line points at the spec's Design decision by REQ id
+  rather than restating the reasoning.
 - A **Questions asked** section carrying the list you kept from step 3 —
   one line per question, `<decision point> — <type> — <text>`. The review
   station reads this section at the first checkpoint and copies it into
