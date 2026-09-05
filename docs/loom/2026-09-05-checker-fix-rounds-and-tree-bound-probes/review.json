@@ -25,6 +25,14 @@
       "started": "2026-09-05T23:05:00+08:00",
       "fresh_context": true,
       "note": "serial in the working tree (one file for W1-01..03)"
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-chk",
+      "model": "sonnet",
+      "started": "2026-09-05T23:35:00+08:00",
+      "fresh_context": true
     }
   ]
 }
