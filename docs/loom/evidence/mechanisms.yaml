@@ -273,6 +273,9 @@ mechanisms:
   - id: "build.after-task-review-before-next-task"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
+  - id: "build.rehearsal-before-graduation"
+    class: prose-gate
+    eval: "cold-read: docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md"  # executable twin: loom-code/scripts/test_build_station_text.py::test_rehearsal_paragraph_is_a_registered_prose_gate
   - id: "write-plan.no-plan-without-confirmed-intent"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"

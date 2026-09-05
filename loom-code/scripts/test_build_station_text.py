@@ -416,6 +416,11 @@ def test_matcher_wave_end_sentence_affirmative_accepted() -> None:
 
 
 def _probe_graduation_paragraph() -> str:
+    """Return the Probe graduation paragraph's prose, with any HTML gate
+    markers stripped -- a `<!-- gate: ... -->` comment is structural
+    (recomputed by check_mechanisms.py's prose-gate class), not prose,
+    and its id text (e.g. `build.rehearsal-before-graduation`) must not
+    feed the sentence-level negation/graduation checks below."""
     text = BUILD_SKILL.read_text(encoding="utf-8")
     assert "**Probe graduation.**" in text, (
         "graduation-paragraph start marker missing from build/SKILL.md"
@@ -424,7 +429,8 @@ def _probe_graduation_paragraph() -> str:
         "graduation-paragraph end marker missing from build/SKILL.md"
     )
     section = text.split("**Probe graduation.**", 1)[1]
-    return section.split("**Store entries.**", 1)[0]
+    section = section.split("**Store entries.**", 1)[0]
+    return re.sub(r"<!--.*?-->", "", section, flags=re.S)
 
 
 def test_graduation_paragraph_names_rehearsal_and_red_blocks_graduation() -> None:
@@ -487,3 +493,32 @@ def test_word_cap_still_within_soft_bound_after_rehearsal_sentences() -> None:
     text = BUILD_SKILL.read_text(encoding="utf-8")
     word_count = len(text.split())
     assert word_count <= 3750, f"word count {word_count} exceeds soft cap 3750"
+
+
+def test_rehearsal_paragraph_is_a_registered_prose_gate() -> None:
+    """Branch-end fix round 2 (finding branch-end-01): the rehearsal
+    paragraph is a blocking prose rule (`A red rehearsal blocks
+    graduation`), which PRINCIPLES.md forbids unless it is registered as
+    a prose gate -- the same shape as the `build.no-dispatch-without-a-
+    record` marker in §3. The paragraph naming `rehearse_probes.py` must
+    sit inside `<!-- gate: build.rehearsal-before-graduation -->` /
+    `<!-- /gate -->`, and the closing marker must land before
+    `**Store entries.**` so the gate covers only the rehearsal
+    paragraph, not the graduation section as a whole."""
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    open_marker = "<!-- gate: build.rehearsal-before-graduation -->"
+    close_marker = "<!-- /gate -->"
+    assert open_marker in text, "no build.rehearsal-before-graduation gate marker"
+
+    start = text.index(open_marker)
+    end = text.index(close_marker, start)
+    gated = text[start + len(open_marker):end]
+
+    assert "${CLAUDE_PLUGIN_ROOT}/scripts/rehearse_probes.py" in gated, (
+        "the rehearsal paragraph is not inside the gate markers"
+    )
+    assert "**Store entries.**" not in gated, (
+        "the gate must close before the Store entries paragraph"
+    )
+    store_index = text.index("**Store entries.**")
+    assert end < store_index, "the closing marker must precede Store entries."
