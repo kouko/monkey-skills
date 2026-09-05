@@ -365,6 +365,24 @@
       "model": "sonnet",
       "started": "2026-09-05T18:14:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet-3b8e",
+      "model": "sonnet",
+      "started": "2026-09-05T18:40:00+08:00",
+      "fresh_context": false,
+      "note": "round 2 — resumed reader, fix delta 170d26bd..d7b3a2bb"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex-91c0",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T18:40:00+08:00",
+      "fresh_context": false,
+      "note": "round 2 — resumed reader, fix delta 170d26bd..d7b3a2bb"
     }
   ],
   "second_vendor": "codex",
