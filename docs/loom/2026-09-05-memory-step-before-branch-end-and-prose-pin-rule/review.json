@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+  "reviewed_sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -413,6 +413,48 @@
       "notes": [
         "Only the report commit and the dispatch record moved since d5e57b1e."
       ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-close-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": []
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-close-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A — no measured number",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "One line: confirmed → closed 2026-09-05 — PR #792; PR matches; the close asks the user nothing."
+      ]
     }
   ],
   "probes": [
@@ -533,6 +575,46 @@
       "scope": "branch-end",
       "command": "python3 -m pytest loom-code/scripts/test_probes_memory_step.py loom-code/scripts/test_probes_memory_step_wave_end.py -q",
       "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_memory_step.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_memory_step.py loom-code/scripts/test_probes_memory_step_wave_end.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_memory_step.py"
     }
@@ -835,6 +917,22 @@
       "started": "2026-09-05T20:40:00+08:00",
       "fresh_context": false,
       "note": "resumed; confirms nothing else moved"
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T21:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T21:40:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
@@ -845,6 +943,7 @@
     "branch-end round 1: NEEDS_REVISION (codex) / PASS (sonnet). The fatal was an acceptance-wording problem, taken back to decision point 1 and re-confirmed; nits (report identifiers a8025a82; CHANGELOG attribution 22b3a203) fixed inside the fix round; the branch-end probe was re-scoped by its author (da6ac940) so fix rounds inside the closing checkpoint are not counted as post-review fixes.",
     "branch-end outcome after three rounds: PASS (both readers). No open nits: the report-identifiers nit and the CHANGELOG nit were folded inside the fix rounds, so ship has no nit batch. Cost: plan→branch-end PASS ≈ 8.5h, 3 wave-end rounds + 3 branch-end rounds, 24 dispatch entries.",
     "Ship, memory step: nothing left to store; the closing round's own adversarial probe file (evidence/probes/test_abuse_memory_step_branch_end.py) is by construction created after the memory step and is NOT graduated in this change — it stays evidence, recorded in probes[] and re-run by the push gate. Graduating closing-round probes without a post-review commit is a follow-up for the sibling checker intent (agent-decided).",
-    "Round numbers: branch-end rounds renumbered 4–6 (they continue the change's round count; the checker scores the highest round number across the record, so per-checkpoint numbering restarting at 1 made it score the wave-end round 3 verdicts). The 1.3.1 review SKILL text says rounds continue; recorded here for the sibling checker intent's attention."
+    "Round numbers: branch-end rounds renumbered 4–6 (they continue the change's round count; the checker scores the highest round number across the record, so per-checkpoint numbering restarting at 1 made it score the wave-end round 3 verdicts). The 1.3.1 review SKILL text says rounds continue; recorded here for the sibling checker intent's attention.",
+    "close-intent round (two fresh readers): the status line only, PR #792; every CI job's check rehearsed at the close commit. reviewed_sha = the close commit."
   ]
 }
