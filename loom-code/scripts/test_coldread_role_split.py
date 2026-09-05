@@ -388,3 +388,11 @@ def test_main_resume_rejects_mismatched_header_field(tmp_path, monkeypatch, caps
     assert "error:" in err
     assert "contract" in err
     assert not (out / "summary.json").exists()
+
+
+def test_run_once_docstring_cites_captured_help_evidence():
+    """finding 04: run_once's docstring must cite the checked-in captured
+    `claude -p --help` evidence file by name, grounding the stdin
+    delivery, --model, --output-format, and no-seed-flag claims instead
+    of relying on an unverified assumption."""
+    assert "claude-p-help-2026-09-05.txt" in (coldread_role_split.run_once.__doc__ or "")
