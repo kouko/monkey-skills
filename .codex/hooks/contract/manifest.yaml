@@ -122,6 +122,7 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
       - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}
       - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
+      - {name: cost,          kind: json, required: false, grammar: "rounds: <int>, dispatches: <int>, cap_changes: [<str>], hours_plan_to_pr: <float> | null", note: "process-cost record for this change (W1-05); the review station (W1-02) is what populates and updates it at every checkpoint, so an older or in-flight review.json may not carry it yet"}
       # second_vendor (W0-02, optional top-level field, grammar "<cli> | none"):
       # the per-change answer to KICKOFF's `second-vendor: ask`, recorded once
       # at decision point ①. Not in `fields:` above -- unlike every field
