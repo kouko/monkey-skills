@@ -12,12 +12,19 @@ Versioning: [Semantic Versioning](https://semver.org/).
 1. New `scripts/rehearse_probes.py`: clones the repo with `git clone
    --no-local file://<repo>` (full history, `origin/main` resolves, no
    local `main`/`master`) and runs the given test paths there with the
-   script's own interpreter, `-n auto` added only when `xdist` imports.
-   FAILED and SKIPPED are read from the run's junit XML (nodeid and
-   reason), not from `-q -rs` terminal text, which truncates a reason at
-   the terminal width. Exit code is pytest's; a skip never changes it —
-   the rehearsal is advisory, not wired into the push gate. Python 3.11
-   compatible (`tempfile.TemporaryDirectory`, no 3.12-only cleanup API).
+   script's own interpreter; `-n auto` is deliberately never added, since
+   it swallows the missing-path collection error a test-not-found run
+   needs to report loudly. FAILED and SKIPPED are read from the run's
+   junit XML (nodeid and reason), not from `-q -rs` terminal text, which
+   truncates a reason at the terminal width. Exit code is pytest's; a
+   skip never changes it — the rehearsal is advisory, not wired into the
+   push gate. The clone directory comes from `tempfile.mkdtemp` with an
+   explicit `shutil.rmtree` on cleanup (gated on `--keep`), not
+   `TemporaryDirectory`'s 3.12-only `delete=False`, so the script stays
+   Python 3.11 compatible. The clone's pytest run carries
+   `REHEARSE_PROBES_NESTED` set to the clone's own path, so a graduated
+   probe that clones and reruns the suite itself can detect it is already
+   inside a rehearsal and skip instead of recursing.
 2. Build station §6.5 **Probe graduation**: a red rehearsal blocks
    graduation until the failing probe reads `origin/main` first and
    skips when nothing resolves; every skip the rehearsal lists needs
