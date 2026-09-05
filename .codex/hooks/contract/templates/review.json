@@ -1,6 +1,7 @@
 {
   "reviewed_sha": "<branch base sha; advances only on PASS / PASS_WITH_NOTES>",
   "scope": "<what this checkpoint reviewed>",
+  "cost": {"rounds": 0, "dispatches": 0, "cap_changes": [], "hours_plan_to_pr": 0},
   "vendors": ["anthropic"],
   "verdicts": [
     {"reviewer": "<agent id>", "vendor": "anthropic", "model": "<model>", "lens": "code|docs|spec|design|principles",
@@ -21,5 +22,6 @@
   ],
   "dispatch": [
     {"task": "<task id>", "role": "implementer|reviewer|blind-runner|adversary", "agent_id": "<id>", "model": "<model>", "started": "<iso timestamp>", "fresh_context": true}
-  ]
+  ],
+  "cost": {"rounds": 0, "dispatches": 0, "cap_changes": [], "hours_plan_to_pr": null}
 }
