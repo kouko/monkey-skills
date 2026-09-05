@@ -211,3 +211,50 @@ def test_closinground_recorded_branch_end_near_section5_reference() -> None:
         "build's §7 no longer ties the branch-end recording back to §5's "
         "closing call"
     )
+
+
+# --- branch-end-02: §6.5 Commits fallback names both branches -------------
+
+
+def _commits_paragraph() -> str:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 6.5 Memory step", 1)[1]
+    section = re.split(r"\n## ", section, 1)[0]
+    marker = "**Commits.**"
+    assert marker in section, "no Commits paragraph in build's §6.5"
+    tail = section.split(marker, 1)[1]
+    return marker + tail
+
+
+def test_commitsparagraph_names_reuse_branch_for_existing_memory_task() -> None:
+    """A plan written before the memory-step rule may already carry a task
+    doing the memory work under another id (files = graduated probe
+    copies and the docs/loom/memory/ entries) -- build must reuse that
+    id and append nothing, per branch-end-02."""
+    paragraph = _commits_paragraph()
+    flat = " ".join(paragraph.split())
+    assert "reuse" in flat.lower(), (
+        "the Commits paragraph does not name the reuse-existing-id branch"
+    )
+    assert "graduated probe copies" in flat and "docs/loom/memory/" in flat, (
+        "the reuse branch does not name its files: the graduated probe "
+        "copies and the docs/loom/memory/ entries"
+    )
+    assert "append nothing" in flat or "appends nothing" in flat, (
+        "the reuse branch does not say build appends nothing"
+    )
+
+
+def test_commitsparagraph_names_appendonlywhenabsent_branch() -> None:
+    """Only a plan with NO such task gets `W<n>-memory` appended -- the
+    paragraph must state the append path is conditional on absence, not
+    unconditional."""
+    paragraph = _commits_paragraph()
+    flat = " ".join(paragraph.split())
+    assert "no such task" in flat.lower(), (
+        "the Commits paragraph does not name the no-such-task condition "
+        "that gates appending W<n>-memory"
+    )
+    assert "W<n>-memory" in flat or "`W<n>-memory`" in paragraph, (
+        "the append branch does not name the id it appends, W<n>-memory"
+    )

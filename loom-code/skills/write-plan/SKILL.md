@@ -380,8 +380,10 @@ a task by how long it will take.
   Derive the wave count from that budget; as a rough guide that leaves
   about five waves, and needing more usually means the change is too big —
   say so rather than nesting further.
-- Task ids are `W<n>-<nn>` and are **stable**: once written, an id is never
-  renumbered, because commits refer to it in their `Task: <id>` trailer.
+- Task ids are `W<n>-<nn>`, plus the reserved `W<n>-memory` on the last
+  wave as the one named exception to that numeric form; both are
+  **stable**: once written, an id is never renumbered, because commits
+  refer to it in their `Task: <id>` trailer.
 - Dependencies go on the task line as `after: <ids>`. Tasks in one wave
   with no dependency between them run in parallel — but disjoint files are
   not enough: a shared symbol, a doc that mirrors code, or a

@@ -349,12 +349,15 @@ this repo).
 
 **Commits.** Both kinds of commit carry the `Task:` id of the plan's
 last-wave memory task, `W<n>-memory` — write-plan's Shape rule reserves
-it. A plan written before that rule existed reaches here with no such
-task: open it on the spot, append it to the plan, commit the plan, then
-write its dispatch entry. Either way the orchestrator writes its own
-implementer dispatch entry for that task with `fresh_context: false`.
-`git add` the new files by name before a path-limited commit — `git
-commit -- <dir>` skips untracked files.
+it. A plan written before that rule existed may already carry a task
+under another id whose files are the graduated probe copies and the
+`docs/loom/memory/` entries — reuse that id and append nothing. Only
+when no such task exists does this station open one, append it to the
+plan as `W<n>-memory`, commit the plan, then write its dispatch entry.
+Either way the orchestrator writes its own implementer dispatch entry
+for that task with `fresh_context: false`. `git add` the new files by
+name before a path-limited commit — `git commit -- <dir>` skips
+untracked files.
 
 ## 7. Hand-off
 
