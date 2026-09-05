@@ -1,13 +1,282 @@
 {
   "reviewed_sha": "db7d44f99afff18d3af7ee6060293102df64bb07",
-  "scope": "none yet — created by build at wave 1 start",
+  "scope": "wave-end:1",
   "vendors": [
-    "anthropic"
+    "anthropic",
+    "openai"
   ],
-  "verdicts": [],
-  "probes": [],
-  "questions": [],
-  "open_findings": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet-3b8e",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "NEEDS_REVISION",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+          "text": "issue (blocking): run_once passes the prompt as the positional value after -p; every real contract starts with YAML frontmatter `---`, which claude's option parser rejects as an unknown option before any network call (reproduced directly against the real binary). The tool cannot obtain a real cold-read answer against either real contract.",
+          "fix": "deliver the prompt in a form that cannot be parsed as an option (stdin), add a regression test whose prompt begins with ---, re-verify with a real --runs 2 call before any baseline"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+          "text": "issue: the claude -p invocation carries no grounding citation for how the positional prompt is parsed; the assumption is wrong for content starting with ---",
+          "fix": "grounding comment near run_once citing the exact claude --help behaviour relied on, plus a test at the parser boundary"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+          "text": "issue: a non-zero claude return code is folded into the body and recorded status ok, identical to a real answer — the mechanism that hid the fatal bug from summary.json",
+          "fix": "record the returncode; status ok only when 0, else error; surface it in summary.json runs[]"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/coldread_role_split.py:275,279",
+          "text": "issue: --out naming an existing file and a missing --contract path crash uncaught instead of the module's error/exit-2 convention",
+          "fix": "validate then return 2, same pattern as --runs and the missing binary"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/coldread_role_split.py:98-99",
+          "text": "issue: n_items = len(items) silently scores a non-contiguous fixture's highest item as always wrong",
+          "fix": "validate item numbers are exactly 1..len(items) at load, or index by actual n"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/coldread_role_split.py:302,327-332",
+          "text": "nitpick: the claude argv list is built twice in main",
+          "fix": "build once, pass to _redacted_argv"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/coldread_role_split.py:141-153",
+          "text": "nitpick: systematic fires on one wrong answer at --runs 1",
+          "fix": "minimum n or a docstring caveat"
+        }
+      ],
+      "notes": "reproduced the --- parsing failure against the real claude binary; ran the module tests and four probe files (46 passed), not the full suite"
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-91c0",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:186",
+          "text": "issue (blocking): passing the inline prompt directly after -p makes both real contracts fail because their leading --- is parsed as an option, so the runner produces no attribution measurements",
+          "fix": "use a supported stdin/end-of-options form that preserves the prompt verbatim; add a subprocess-facing regression test with a frontmatter contract"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:250",
+          "text": "issue (blocking): every non-zero claude exit is assigned status ok; auth or CLI failures can be scored as evidence and drive the wave-2 wording decision",
+          "fix": "persist the return code, mark non-zero as error, exclude failed invocations from conclusions or fail the batch"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:239",
+          "text": "issue (blocking): --resume accepts any existing run file without verifying contract, fixture, model, prompt hash or N, then writes a summary carrying the current inputs' hashes; stale transcripts can be attributed to a different experiment",
+          "fix": "validate every resumed header against the current hashes, model, prompt hash and N; reject mismatches with exit 2; regression tests"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:186",
+          "text": "issue (blocking): the external claude CLI surface is used without a grounding citation for the positional prompt, --model, --output-format, or the asserted lack of a seed flag",
+          "fix": "checked-in captured help evidence or a maintained citation supporting the exact invocation and the no-seed claim"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:8",
+          "text": "issue: the checkpoint's probes array is empty, so the adversary probes this round relies on are not inspectable",
+          "fix": "record each probe with its exact command and artifact in probes[]"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/coldread_role_split.py:212",
+          "text": "nitpick: main exceeds the 100-line threshold and combines validation, loading, execution, resume, scoring and serialization",
+          "fix": "extract cohesive helpers"
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/blind-run-report.md:1",
+          "text": "nitpick: the blind-run report is written in Chinese, contrary to the English-language shape rule",
+          "fix": "translate"
+        }
+      ],
+      "notes": "tests could not be run in the read-only sandbox (no usable temp dir)"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "5fb3de89dc2b1690334834489837f5ea59f61ec7",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py -q",
+      "sha": "a00f24044211064691b9645151dcd259eec91016",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py",
+      "note": "pre-implementation RED for W1-02; passes since 0b9e5d61"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py -q",
+      "sha": "8199ddd6",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py",
+      "note": "pre-implementation RED for W1-03; passes since 5fb3de89"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py -q",
+      "sha": "0630f37a05e4013232ce8f9d4ac47c0b1e651a8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py",
+      "note": "probes pin the current (defective) behaviour for findings 02, 06, 07, 08; they are rewritten to the fixed behaviour in the fix round"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "python3 loom-code/scripts/coldread_role_split.py --contract loom-code/agents/adversary.md --fixture docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json --role adversary --runs 2 --out <scratch> + python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_fixture_items_verbatim_prior_list.py -q + python3 -m pytest loom-code/scripts/test_coldread_role_split.py -q + python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "eb9bd60272a1eb9346db817e5cfe7f2e4650b58c",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/blind-run-report.md"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "(the restatement for this intent was asked and answered yes in the session that wrote it, the same session as PR #789; verbatim text not recorded in this change's store)",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：要）",
+      "type": "consequence"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-sonnet-3b8e, rev-we1-codex-91c0, blind-we1-a1d4",
+      "severity": "fatal",
+      "text": "prompt beginning with --- is rejected by claude -p as an option; deliver via stdin"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/scripts/coldread_role_split.py:250",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0, rev-we1-sonnet-3b8e, adv-we1-6f03",
+      "severity": "fatal",
+      "text": "non-zero claude exit recorded as status ok"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/coldread_role_split.py:239",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0",
+      "severity": "fatal",
+      "text": "--resume does not validate resumed headers against current contract/fixture/prompt hash, model and N"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/scripts/coldread_role_split.py:186",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0, rev-we1-sonnet-3b8e",
+      "severity": "fatal",
+      "text": "claude CLI invocation and no-seed claim have no grounding evidence"
+    },
+    {
+      "id": "wave-end:1-05",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:8",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0",
+      "severity": "important",
+      "text": "probes[] empty at dispatch time",
+      "resolved": "closed by this round's record commit — probes[] now carries package-tests, three adversarial probes and the blind run"
+    },
+    {
+      "id": "wave-end:1-06",
+      "anchor": "loom-code/scripts/coldread_role_split.py:275,279",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-sonnet-3b8e, adv-we1-6f03",
+      "severity": "important",
+      "text": "--out existing file and missing --contract crash uncaught"
+    },
+    {
+      "id": "wave-end:1-07",
+      "anchor": "loom-code/scripts/coldread_role_split.py:98-99",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-sonnet-3b8e, adv-we1-6f03",
+      "severity": "important",
+      "text": "n_items = len(items) mis-scores a non-contiguous fixture"
+    },
+    {
+      "id": "wave-end:1-08",
+      "anchor": "loom-code/scripts/coldread_role_split.py:141-153",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "adv-we1-6f03",
+      "severity": "important",
+      "text": "systematic fires on one wrong answer at n=1 (sonnet scored it nit; adversary important; opened at the higher severity)"
+    }
+  ],
   "dispatch": [
     {
       "task": "W1-01",
@@ -81,5 +350,9 @@
       "started": "2026-09-05T17:40:00+08:00",
       "fresh_context": true
     }
-  ]
+  ],
+  "second_vendor": "codex",
+  "round_notes": {
+    "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05)."
+  }
 }
