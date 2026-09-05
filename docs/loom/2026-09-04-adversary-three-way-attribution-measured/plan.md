@@ -53,7 +53,7 @@ Two waves, two checkpoints (wave 1 end; wave 2 end doubles as branch end). No `a
 
 ## Questions asked
 1 — what — (the restatement for this intent was asked and answered "yes" in the session that wrote it, the same session as PR #789; that session's store shows `status: confirmed 2026-09-04` but the verbatim text was not recorded in this change's store)
-1 — consequence — 這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（answer: asked at the end of the write-plan session; the review station records it in `second_vendor` at the first checkpoint）
+1 — consequence — 這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：要 — second vendor codex; the review station records it in `second_vendor` at the first checkpoint）
 
 ## Risks
 1. **The measurement itself may be noisy at N=10.** Ten runs resolve "≥50% wrong" against "≤20% wrong" with a wide margin but cannot resolve 30% from 40%; the intent's thresholds were chosen for exactly that gap, and `baselines.md` reports counts, not only percentages, so a reader sees 5/10 rather than "50%".
