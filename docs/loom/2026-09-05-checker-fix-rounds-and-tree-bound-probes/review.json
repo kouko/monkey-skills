@@ -469,6 +469,75 @@
       "notes": [
         "15 passed on test_ship_station_text.py"
       ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "cb5b5a7dd546daf101cc2ec08892e504fd1a64ed",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md:159",
+          "text": "branch-end-03: fixed — §3 performs the checker-capability preflight before the conditional close-line amend; the older-checker path leaves the status untouched for §6's fallback.",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "15 passed on test_ship_station_text.py including the preflight-before-amend ordering assertion"
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "verdict": "PASS",
+      "sha": "cb5b5a7dd546daf101cc2ec08892e504fd1a64ed",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md:154-171",
+          "text": "branch-end-03: fixed — the preflight and its older-checker branch sit before the amend command that stages the intent file; the test pins the ordering.",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "15 passed on test_ship_station_text.py"
+      ]
     }
   ],
   "probes": [
@@ -615,7 +684,8 @@
       "origin_sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
       "raised_by": "rev-be-chk-codex, rev-be-chk-sonnet",
       "severity": "important",
-      "text": "issue (blocking): ship §6 gives a cold agent no fallback for a checker older than 1.4.0 (a Codex scaffold copy, an older install; this branch itself per plan Risk 3) — the old separate-close procedure was deleted without a version-sensitive branch."
+      "text": "issue (blocking): ship §6 gives a cold agent no fallback for a checker older than 1.4.0 (a Codex scaffold copy, an older install; this branch itself per plan Risk 3) — the old separate-close procedure was deleted without a version-sensitive branch.",
+      "resolved": "closed by 9f1dfdda + 8365e1f4 + cb5b5a7d — preflight on push.review-only-head's rule text in ship §3 before the close-line amend, fallback in §6; both readers fixed (round 6)"
     },
     {
       "id": "branch-end-04",
@@ -824,6 +894,15 @@
       "started": "2026-09-06T08:05:00+08:00",
       "fresh_context": false,
       "note": "round-5 fix — third round on branch-end-03: design re-look done by the orchestrator (highest tier available): the finding is reading-order, the shape (preflight → conditional amend → fallback in §6) is right; preflight paragraph moved above 'Amending is allowed', staging command annotated conditional, test asserts preflight index < amend index"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T08:30:00+08:00",
+      "fresh_context": false,
+      "note": "post-round-6: the package suite at cb5b5a7d had one red — the round-3 nit reorder pushed ship's frontmatter description to 427 chars over the 400-char host cap (test_ship_pr_body); trimmed under the cap, same order; confirmation round 7 with both readers"
     }
   ],
   "second_vendor": "codex",
