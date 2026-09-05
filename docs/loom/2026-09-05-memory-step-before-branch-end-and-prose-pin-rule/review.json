@@ -16,6 +16,15 @@
       "model": "sonnet",
       "started": "2026-09-05T12:10:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T12:25:00+08:00",
+      "fresh_context": true,
+      "note": "sequenced before W1-01: the six ship pins re-target to the build section this task writes"
     }
   ]
 }
