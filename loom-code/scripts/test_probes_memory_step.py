@@ -355,8 +355,8 @@ def test_memstep_checker_rulecount_pinned():
     assert result.returncode == 0, (
         f"loom_checker.py --list-rules exited {result.returncode}: {result.stderr}"
     )
-    assert len(lines) == 29, (
-        f"--list-rules printed {len(lines)} non-empty lines, expected 29:\n"
+    assert len(lines) == 30, (
+        f"--list-rules printed {len(lines)} non-empty lines, expected 30:\n"
         + "\n".join(lines)
     )
 

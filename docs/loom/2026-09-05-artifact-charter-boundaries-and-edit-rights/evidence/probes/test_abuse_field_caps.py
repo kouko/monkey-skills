@@ -344,14 +344,17 @@ def test_plan_field_caps_block_line_names_task_id_and_field(tmp_path: Path) -> N
 # ---------------------------------------------------------------------------
 
 def test_list_rules_count_is_twenty_nine_and_names_plan_field_caps() -> None:
-    """`--list-rules` must grow from 28 to exactly 29 lines and must list
-    `plan.field-caps` -- the rule table is the SSOT other stations trust,
-    so a rule that runs but never registers here is invisible to anyone
-    auditing the rule set."""
+    """`--list-rules` must grow to exactly 30 lines (28 plus W1-01's
+    `plan.field-caps` plus W1-02's `plan.edits-after-commit`, both landed
+    after this probe was first written) and must list `plan.field-caps` --
+    the rule table is the SSOT other stations trust, so a rule that runs
+    but never registers here is invisible to anyone auditing the rule
+    set. (Count updated 30 for W1-02, authorised by that task's own
+    dispatch packet -- see the implementer's commit body.)"""
     result = _run("--list-rules")
     assert result.returncode == 0, f"--list-rules should exit 0; got {result.returncode}"
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 29, f"expected 29 rule lines, got {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 30, f"expected 30 rule lines, got {len(lines)}:\n{result.stdout}"
     assert any(line.startswith("plan.field-caps") for line in lines), (
         f"plan.field-caps missing from --list-rules:\n{result.stdout}"
     )

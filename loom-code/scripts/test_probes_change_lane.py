@@ -748,7 +748,7 @@ def test_list_rules_prints_exactly_27_ids(tmp_path: Path) -> None:
         for line in result.stdout.strip().splitlines()
         if line.strip()
     ]
-    assert len(ids) == len(set(ids)) == 29, f"got {len(ids)} ids: {ids}"
+    assert len(ids) == len(set(ids)) == 30, f"got {len(ids)} ids: {ids}"
 
 
 if __name__ == "__main__":

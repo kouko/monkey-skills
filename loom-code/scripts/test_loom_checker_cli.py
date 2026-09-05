@@ -25,6 +25,7 @@ EXPECTED_RULE_IDS = [
     "intent.needs-design-recompute",
     "intent.product-no-identifiers",
     "intent.schema",
+    "plan.edits-after-commit",
     "plan.field-caps",
     "push.dismissed-by-reviewer",
     "push.dispatch-covers-tasks",
@@ -132,7 +133,7 @@ def test_hooks_probe_is_gone() -> None:
 
 
 def test_the_rule_population_is_twenty_eight() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 29
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 30
 
 
 # --- contract --require (spec G) -------------------------------------------

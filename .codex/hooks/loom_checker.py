@@ -128,6 +128,18 @@ RULES: list[tuple[str, str]] = [
         "Risk line blocks too. A plan with no `charter:` line is skipped entirely.",
     ),
     (
+        "plan.edits-after-commit",
+        "A plan whose frontmatter carries a `charter:` key admits only the charter's "
+        "`edits_after` edits once its own plan commit (subject `docs(loom): plan "
+        "<change-id>`, the earliest such commit reachable from HEAD) has landed: a "
+        "claimed/blocked mark on a task title, an appended `W<n>-memory` task, a "
+        "change to a task with no `Task: <id>` trailer among the commits since that "
+        "carries a stated reason, or an appended `## Questions asked` line. Every "
+        "other edit -- a landed task's fields, `## Risks`, `## Current State "
+        "Evidence`, the frontmatter, or a new section -- blocks. A plan with no "
+        "`charter:` line is skipped entirely.",
+    ),
+    (
         "push.frozen-store-untouched",
         "No commit between the branch base and reviewed_sha writes into a frozen store "
         "(docs/loom/plans, specs, backlog, design or archive); only each store's own "
@@ -1960,6 +1972,227 @@ def check_plan_field_caps_at(manifest, repo: Path, change_id: str) -> list[tuple
     return check_plan_field_caps(read_text(plan_path))
 
 
+# --- plan.edits-after-commit (W1-02) ----------------------------------------
+
+PLAN_COMMIT_SUBJECT = "docs(loom): plan {}"
+MARK_STRIP = re.compile(r"(\*\*)\s*(?:claimed|blocked)\([^)]*\)")
+MEMORY_TASK_ID = re.compile(r"^W\d+-memory$", re.IGNORECASE)
+TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$")
+KNOWN_PLAN_SECTIONS = {"Task DAG", "Risks", "Current State Evidence", "Questions asked"}
+
+
+def find_plan_commit_sha(repo: Path, change_id: str, head: str = "HEAD") -> str | None:
+    """The earliest commit reachable from `head` whose subject is exactly
+    `docs(loom): plan <change-id>` -- `git log --reverse` walks oldest
+    first, so the first hit is the earliest one, pinning a tie to the
+    first plan commit ever made rather than a later re-stamp."""
+    log = git_maybe(repo, "log", "--reverse", "--format=%H\x01%s", head)
+    if not log:
+        return None
+    wanted = PLAN_COMMIT_SUBJECT.format(change_id)
+    for line in log.split("\n"):
+        if "\x01" not in line:
+            continue
+        sha, subject = line.split("\x01", 1)
+        if subject == wanted:
+            return sha
+    return None
+
+
+def _commits_between(repo: Path, baseline_sha: str, head: str = "HEAD", *paths: str) -> list[str]:
+    log = git_maybe(repo, "log", "--format=%H", f"{baseline_sha}..{head}", *(["--", *paths] if paths else []))
+    if not log:
+        return []
+    return log.splitlines()
+
+
+def _commit_message(repo: Path, sha: str) -> str:
+    return git_maybe(repo, "log", "-1", "--format=%B", sha) or ""
+
+
+def _landed_task_ids(repo: Path, commits: list[str]) -> set[str]:
+    ids: set[str] = set()
+    for sha in commits:
+        for line in _commit_message(repo, sha).splitlines():
+            match = TASK_TRAILER.match(line.strip())
+            if match:
+                ids.add(match.group(1))
+    return ids
+
+
+def _block(section: str, detail: str, goes_to: str) -> tuple[str, str]:
+    return ("plan.edits-after-commit", f"{section} {detail}; goes to {goes_to}")
+
+
+def _normalize_task_title(title: str) -> str:
+    """Strip a `claimed(...)` / `blocked(...)` mark right after the closing
+    `**` -- the one addition the charter allows on a task title line --
+    so an otherwise-identical title compares equal. `landed(...)` (or any
+    other annotation) is deliberately NOT stripped: it is not on the
+    allow-list, so it must keep reading as a real change."""
+    return MARK_STRIP.sub(r"\1", title)
+
+
+def _parse_task_dag(text: str) -> dict[str, dict[str, str | None]]:
+    tasks: dict[str, dict[str, str | None]] = {}
+    current_id: str | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        header = TASK_LINE.match(line)
+        if header:
+            current_id = header.group("id")
+            tasks[current_id] = {"title": line, "Files": None, "Test": None, "Risk": None}
+            continue
+        if current_id is None:
+            continue
+        field_match = TASK_FIELD_LINE.match(line)
+        if field_match:
+            tasks[current_id][field_match.group(1)] = field_match.group(2)
+    return tasks
+
+
+def _check_task_dag(
+    baseline_text: str, current_text: str, landed_ids: set[str], plan_touch_messages: list[str]
+) -> list[tuple[str, str]]:
+    baseline_tasks = _parse_task_dag(baseline_text)
+    current_tasks = _parse_task_dag(current_text)
+    failures: list[tuple[str, str]] = []
+
+    def mentioned(task_id: str) -> bool:
+        return any(task_id in message for message in plan_touch_messages)
+
+    all_ids = list(dict.fromkeys([*baseline_tasks, *current_tasks]))
+    for task_id in all_ids:
+        in_baseline = task_id in baseline_tasks
+        in_current = task_id in current_tasks
+        if in_baseline and in_current:
+            before, after = baseline_tasks[task_id], current_tasks[task_id]
+            title_changed = _normalize_task_title(before["title"]) != _normalize_task_title(after["title"])
+            fields_changed = any(before[field] != after[field] for field in ("Files", "Test", "Risk"))
+            if not title_changed and not fields_changed:
+                continue
+            if task_id in landed_ids:
+                failures.append(_block(task_id, "changed after landing", "git history"))
+            elif not mentioned(task_id):
+                failures.append(_block(task_id, "changed", "spec"))
+        elif in_baseline and not in_current:
+            if task_id in landed_ids:
+                failures.append(_block(task_id, "removed after landing", "git history"))
+            elif not mentioned(task_id):
+                failures.append(_block(task_id, "removed", "spec"))
+        else:  # added since the plan commit
+            if MEMORY_TASK_ID.match(task_id):
+                continue
+            if not mentioned(task_id):
+                failures.append(_block(task_id, "added", "spec"))
+    return failures
+
+
+def _check_risks(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
+    if baseline_text.strip() == current_text.strip():
+        return []
+    return [_block("Risks", "section changed", "review")]
+
+
+def _check_cse(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
+    if baseline_text.strip() == current_text.strip():
+        return []
+    return [_block("Current State Evidence", "section changed", "spec")]
+
+
+def _check_questions_asked(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
+    baseline_lines = [line.strip() for line in baseline_text.splitlines() if line.strip()]
+    current_lines = [line.strip() for line in current_text.splitlines() if line.strip()]
+    if current_lines[: len(baseline_lines)] == baseline_lines:
+        return []
+    return [_block("Questions asked", "changed", "spec")]
+
+
+def _check_frontmatter(baseline_front: dict[str, str], current_front: dict[str, str]) -> list[tuple[str, str]]:
+    if baseline_front == current_front:
+        return []
+    keys = sorted(
+        key for key in {*baseline_front, *current_front}
+        if baseline_front.get(key) != current_front.get(key)
+    )
+    return [_block("frontmatter", f"{', '.join(keys)} changed", "spec")]
+
+
+def _check_other_sections(
+    baseline_sections: dict[str, str], current_sections: dict[str, str]
+) -> list[tuple[str, str]]:
+    failures: list[tuple[str, str]] = []
+    baseline_other = {k: v for k, v in baseline_sections.items() if k not in KNOWN_PLAN_SECTIONS}
+    current_other = {k: v for k, v in current_sections.items() if k not in KNOWN_PLAN_SECTIONS}
+    for name in sorted({*baseline_other, *current_other}):
+        if baseline_other.get(name) == current_other.get(name):
+            continue
+        goes_to = "memory" if "lesson" in name.lower() else "spec"
+        if name not in baseline_other:
+            detail = "section added"
+        elif name not in current_other:
+            detail = "section removed"
+        else:
+            detail = "section changed"
+        failures.append(_block(name, detail, goes_to))
+    return failures
+
+
+def check_plan_edits_after_commit(repo: Path, plan_path: Path, change_id: str) -> list[tuple[str, str]]:
+    """Recomputed per-edit charter enforcement on a charter-stamped plan
+    (W1-02): once the plan's own `docs(loom): plan <change-id>` commit
+    lands, only the charter's `edits_after` list may still touch it --
+    everything else blocks, naming where the content belongs instead."""
+    text = read_text(plan_path)
+    front, sections = parse_document(text)
+    if "charter" not in front:
+        return []
+
+    baseline_sha = find_plan_commit_sha(repo, change_id)
+    if baseline_sha is None:
+        return [("plan.edits-after-commit", "no plan commit found")]
+
+    plan_rel = plan_path.relative_to(repo).as_posix()
+    baseline_text = git_maybe(repo, "show", f"{baseline_sha}:{plan_rel}")
+    if baseline_text is None:
+        return [("plan.edits-after-commit", "no plan commit found")]
+
+    baseline_front, baseline_sections = parse_document(baseline_text)
+    if baseline_front == front and baseline_sections == sections:
+        return []
+
+    commits = _commits_between(repo, baseline_sha)
+    landed_ids = _landed_task_ids(repo, commits)
+    plan_touch_shas = _commits_between(repo, baseline_sha, "HEAD", plan_rel)
+    plan_touch_messages = [_commit_message(repo, sha) for sha in plan_touch_shas]
+
+    failures: list[tuple[str, str]] = []
+    failures += _check_frontmatter(baseline_front, front)
+    failures += _check_task_dag(
+        baseline_sections.get("Task DAG", ""), sections.get("Task DAG", ""),
+        landed_ids, plan_touch_messages,
+    )
+    failures += _check_risks(baseline_sections.get("Risks", ""), sections.get("Risks", ""))
+    failures += _check_cse(
+        baseline_sections.get("Current State Evidence", ""),
+        sections.get("Current State Evidence", ""),
+    )
+    failures += _check_questions_asked(
+        baseline_sections.get("Questions asked", ""), sections.get("Questions asked", "")
+    )
+    failures += _check_other_sections(baseline_sections, sections)
+    return failures
+
+
+def check_plan_edits_after_commit_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+    """Same rule, applied to a change's own `plan.md` when it exists --
+    skipped silently when there is no plan file yet (push's shape)."""
+    plan_path = artifact_path(manifest, "plan", change_id, repo)
+    if not plan_path.is_file():
+        return []
+    return check_plan_edits_after_commit(repo, plan_path, change_id)
+
+
 SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
 
 
@@ -2350,6 +2583,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_open_findings_closed(review)
     if change_id:
         failures += check_plan_field_caps_at(manifest, repo, change_id)
+        failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
 
@@ -5057,6 +5291,24 @@ def cmd_plan(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return report(check_plan_field_caps(text), err)
 
 
+def cmd_plan_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py plan-edits <change-id>` -- runs `plan.edits-after-commit`
+    against that change's own `plan.md`. Exit 2 when the plan file is
+    missing (there is nothing to check, and never a silent 0 or 1)."""
+    if not args:
+        raise UsageError("plan-edits needs a change-id.")
+    if len(args) > 1:
+        raise UsageError(f"unexpected argument {args[1]!r}.")
+    change_id = args[0]
+    manifest = load_manifest()
+    repo = repo_root(Path.cwd())
+    plan_path = artifact_path(manifest, "plan", change_id, repo)
+    if not plan_path.is_file():
+        err.write(f"no plan file at {plan_path} for change {change_id!r}.\n")
+        return 2
+    return report(check_plan_edits_after_commit(repo, plan_path, change_id), err)
+
+
 REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")
 
 
@@ -5116,6 +5368,7 @@ COMMANDS = {
     "contract": cmd_contract,
     "charter": cmd_charter,
     "plan": cmd_plan,
+    "plan-edits": cmd_plan_edits,
 }
 
 

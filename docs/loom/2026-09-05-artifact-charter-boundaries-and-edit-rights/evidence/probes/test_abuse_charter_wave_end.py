@@ -378,16 +378,17 @@ def test_codex_mirror_charter_renders_identical_table_to_plugin_checker() -> Non
 # ---------------------------------------------------------------------------
 
 def test_list_rules_count_is_exactly_29_and_charter_id_is_unique() -> None:
-    """`--list-rules` names exactly 29 rules (28 plus W1-01's
-    `plan.field-caps`, landed after this probe was first written), and
-    `contract.charter-complete` is the only rule id starting with
-    `contract.charter` -- it does not collide with any existing
-    `contract.*` prefix (only `contract.requires` shares the family, and
-    the two ids differ after the dot)."""
+    """`--list-rules` names exactly 30 rules (28 plus W1-01's
+    `plan.field-caps` plus W1-02's `plan.edits-after-commit`, both landed
+    after this probe was first written -- count update authorised by
+    W1-02's own dispatch packet), and `contract.charter-complete` is the
+    only rule id starting with `contract.charter` -- it does not collide
+    with any existing `contract.*` prefix (only `contract.requires` shares
+    the family, and the two ids differ after the dot)."""
     result = _run("--list-rules")
     assert result.returncode == 0
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 29, f"expected exactly 29 rules, got {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 30, f"expected exactly 30 rules, got {len(lines)}:\n{result.stdout}"
     rule_ids = [line.split("\t", 1)[0] for line in lines]
     assert rule_ids.count("contract.charter-complete") == 1
     charter_prefixed = [rid for rid in rule_ids if rid.startswith("contract.charter")]
