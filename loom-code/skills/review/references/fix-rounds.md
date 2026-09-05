@@ -67,8 +67,8 @@ itself wrong, not just its wording — before dispatching any further fix.
 Do not iterate a fourth round on the same finding without that check.
 
 This round's notes carry a `design re-look:` line — continue fixing,
-change the design, or accept as nit — and this round's verdict completes
-only when that line is present.
+change the design, or accept as nit — and the next reader reads that
+line first, the way it reads `dispatch[].fresh_context`.
 
 These two rules — no finding outside the fix delta, and the third-round
 design re-look — are reader-trusted, not checker-enforced; no push rule
