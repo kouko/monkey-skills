@@ -252,6 +252,17 @@ _ANNOTATION = re.compile(r"[【\[(].*$")
 REVIEW_JSON_PATH = re.compile(r"docs/loom/(?P<change_id>[^/]+)/review\.json")
 
 
+def _is_this_changes_review_json(path: str, change_id: str | None) -> bool:
+    """True only for THIS change's own `docs/loom/<change_id>/review.json`
+    -- another change's review.json is ordinary content and must stay in
+    a fix-delta path listing, exactly as `content_tree_id` only sets aside
+    the one review.json belonging to the change being pushed."""
+    if not change_id:
+        return False
+    match = REVIEW_JSON_PATH.fullmatch(path)
+    return match is not None and match.group("change_id") == change_id
+
+
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="surrogateescape")
 
@@ -435,15 +446,31 @@ def latest_round(verdicts: list[dict], scope: str | None = None) -> tuple[int, l
     wave-end round 3 could outrank the branch-end round 1 that follows it,
     since round numbers restart per checkpoint (memory-step gotcha,
     2026-09-05). A verdict that names no scope at all is legacy shape and
-    always stays eligible."""
+    stays eligible only as a FALLBACK: when at least one verdict explicitly
+    names the current scope, only those explicitly-scoped entries are
+    scored -- an unscoped legacy round must never outrank a scoped current
+    round just because it carries a higher round number, since round
+    numbers restart per checkpoint and an older unscoped round 3 sitting
+    next to a current scoped round 1 would otherwise win on round number
+    alone and hide that round's own verdict (wave-end:1-02). When NEITHER
+    an explicitly-scoped nor a legacy unscoped verdict exists -- every
+    verdict names some OTHER scope -- the result is the empty list, never
+    the original unfiltered `verdicts`: a brand-new checkpoint starts with
+    no verdicts of its own, and falling through to the unfiltered list
+    would let a stale round from a different scope (e.g. an earlier
+    wave-end round) satisfy the current checkpoint's floor."""
     if scope:
-        in_scope = [
+        explicit = [
             entry for entry in verdicts
-            if not str(entry.get("scope", "")).strip()
-            or str(entry.get("scope", "")).strip() == scope
+            if str(entry.get("scope", "")).strip() == scope
         ]
-        if in_scope:
-            verdicts = in_scope
+        if explicit:
+            verdicts = explicit
+        else:
+            verdicts = [
+                entry for entry in verdicts
+                if not str(entry.get("scope", "")).strip()
+            ]
     if not verdicts:
         return 0, []
     numbered = [(int(entry.get("round", 1)), entry) for entry in verdicts]
@@ -1976,7 +2003,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # earlier round from ever counting -- recompute from a committed
     # record and never from the working tree (concept-model §2e).
     implementers, reviewers, dispatch_error = parse_dispatch(review)
-    failures += check_verdicts(repo, review, reviewed_id, reviewers)
+    failures += check_verdicts(repo, review, reviewed_id, reviewers, change_id)
     failures += check_second_vendor_honoured(repo, review, reviewed_id)
     failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
     failures += check_frozen_store_untouched(repo, reviewed_id)
@@ -3655,29 +3682,34 @@ def _split_names(raw) -> list[str]:
 
 
 def _anchor_paths(anchor) -> set[str]:
-    """The bare file path(s) an anchor names -- exact equality, never a
-    prefix. An anchor may list several `path[:line]` segments comma-
-    separated, and a path/test-name pair joined by ` :: `."""
-    paths: set[str] = set()
-    for segment in str(anchor or "").split(","):
-        segment = segment.strip()
-        if not segment:
-            continue
-        double = segment.find(" :: ")
+    """The bare file path an anchor names -- exact equality, never a prefix.
+
+    An anchor may be a plain `path[:line]`, or a `path :: verbatim quote`
+    pair -- the review skill's only documented anchor shapes (SKILL.md,
+    lenses.md; comma-separated multi-path anchors appear nowhere in that
+    documentation, so this never splits on comma). The ` :: ` form MUST be
+    recognized before any other split: everything after ` :: ` is quote
+    text, never a path, and that quote can itself contain a comma or a
+    colon -- splitting on those first (as an earlier version did) misreads
+    `docs/a.md :: quoted clause, src/unrelated.py` as authorizing two
+    paths when only `docs/a.md` was ever named (wave-end:1-03)."""
+    segment = str(anchor or "").strip()
+    if not segment:
+        return set()
+    double = segment.find(" :: ")
+    if double != -1:
+        path = segment[:double]
+    else:
         single = segment.find(":")
-        if double != -1 and (single == -1 or double < single):
-            path = segment[:double]
-        elif single != -1:
-            path = segment[:single]
-        else:
-            path = segment
-        paths.add(path.strip())
-    return paths
+        path = segment[:single] if single != -1 else segment
+    path = path.strip()
+    return {path} if path else set()
 
 
 def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
                         current_verdicts: list[dict],
-                        dispatch_reviewers: set[str]) -> set[str]:
+                        dispatch_reviewers: set[str],
+                        change_id: str | None) -> set[str]:
     """A later round of the same scope is a fix round: a previous-round
     reviewer who is not named in any still-open finding's `raised_by` need
     not return -- PROVIDED every path the fix delta actually touched sits
@@ -3757,13 +3789,17 @@ def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
             continue
         # The two shas being diffed are round-boundary commits, so the span
         # between them always crosses the review-only commit that landed
-        # the round in between -- review.json itself is not part of the
-        # fix, and W1-02 gives this exclusion a tree-bound identity instead
-        # of a path regex.
+        # the round in between -- THIS change's own review.json is not
+        # part of the fix. Excluding every `docs/loom/*/review.json` path
+        # (any change's) was too broad: a fix delta that legitimately
+        # touches ANOTHER change's own review.json would have that real
+        # change set aside for free (wave-end:1-04); only the path this
+        # change's own manifest artifact names is excluded, mirroring
+        # `content_tree_id`'s change-scoped exclusion.
         changed_paths = [
             line.strip()
             for line in changed.splitlines()
-            if line.strip() and not REVIEW_JSON_PATH.fullmatch(line.strip())
+            if line.strip() and not _is_this_changes_review_json(line.strip(), change_id)
         ]
         if all(path in returning_anchor_paths for path in changed_paths):
             standing.add(name)
@@ -3771,7 +3807,8 @@ def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
 
 
 def check_verdicts(repo: Path, review, reviewed_id: str | None,
-                    dispatch_reviewers: set[str]) -> list[tuple[str, str]]:
+                    dispatch_reviewers: set[str],
+                    change_id: str | None = None) -> list[tuple[str, str]]:
     """The reviewer-count floor, lane-dependent since W0-02: a small-lane
     change (plan risk 3: "its message now names the lane") needs one
     fresh-context verdict, a full-lane change still needs two. A fix round
@@ -3779,12 +3816,15 @@ def check_verdicts(repo: Path, review, reviewed_id: str | None,
     reviewer whose earlier PASS still stands (see `_standing_reviewers`) --
     but only when that reviewer is itself a dispatched reviewer
     (`dispatch_reviewers`, from `parse_dispatch`); a name with no
-    dispatch[] entry at all can never stand, however old its ghost PASS."""
+    dispatch[] entry at all can never stand, however old its ghost PASS.
+    `change_id` (the change actually being pushed) is threaded through to
+    `_standing_reviewers` so its fix-delta exclusion sets aside only THIS
+    change's own review.json, never another change's."""
     round_number, verdicts = scored_verdicts(review)
     reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
     scope = str(review.get("scope", "")).strip()
     reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts,
-                                      dispatch_reviewers)
+                                      dispatch_reviewers, change_id)
     try:
         lane, lane_reason = change_lane_detail(repo, reviewed_id)
     except (UsageError, OSError, KeyError) as exc:

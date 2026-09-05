@@ -1637,6 +1637,70 @@ def test_a_fix_round_with_a_path_outside_the_anchors_still_blocks(tmp_path: Path
     assert "push.verdicts-ge-2" in blocked_rules(result)
 
 
+def test_a_fix_delta_touching_another_changes_review_json_still_blocks(
+    tmp_path: Path,
+) -> None:
+    """Round 2 carries only the raising reader's (`rev-a`) confirming PASS,
+    same shape as the standing-PASS scenario, but the fix commit touches
+    `notes/F.md` (inside the finding's own anchor) AND
+    `docs/loom/other-change/review.json` -- a REAL changed path, but it
+    belongs to a different change entirely, not to the change actually
+    being pushed (`2026-09-02-a`). Excluding every `docs/loom/*/review.json`
+    path from the fix-delta listing (rather than only this change's own)
+    would set that other change's file aside for free and let `rev-b`'s
+    round-1 PASS stand; scoped correctly to this change's own review.json
+    only, `docs/loom/other-change/review.json` is an ordinary out-of-anchor
+    path and the full-lane floor of 2 still applies."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    other_review = repo / "docs/loom/other-change/review.json"
+    other_review.parent.mkdir(parents=True, exist_ok=True)
+    other_review.write_text('{"reviewed_sha": "deadbee"}\n', encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=round1["verdicts"] + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a",
+             "resolved": f"fixed in {fix_sha[:8]}; confirmed rev-a round 2"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
 def test_ghost_verdict_earlier_round_cannot_stand(tmp_path: Path) -> None:
     """A `ghost` PASS with no dispatch[] entry at all is planted in round 1
     alongside the two real reviewers (rev-a raises F-1, rev-b passes
