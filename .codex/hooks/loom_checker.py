@@ -4697,8 +4697,10 @@ def find_standing_doc(repo: Path, name: str) -> Path | None:
     return None
 
 
-CHARTER_HEADER = "| artifact | must | must not → goes to | sign-off | edits after |\n"
-CHARTER_SEPARATOR = "| --- | --- | --- | --- | --- |\n"
+CHARTER_HEADER = (
+    "| artifact | answers | readers | must | must not → goes to | sign-off | edits after |\n"
+)
+CHARTER_SEPARATOR = "| --- | --- | --- | --- | --- | --- | --- |\n"
 
 
 def _charter_join(values) -> str:
@@ -4709,7 +4711,7 @@ def _charter_join(values) -> str:
 
 def check_charter_row(
     name: str, charter: dict, all_names: list[str], stations: set[str]
-) -> tuple[list[tuple[str, str]], tuple[str, str, str, str, str]]:
+) -> tuple[list[tuple[str, str]], tuple[str, str, str, str, str, str, str]]:
     """Recompute every column of one charter row against the rules the
     `contract.charter-complete` description promises: non-empty answers/
     readers/must/must_not/edits_after, every must_not item naming a kind
@@ -4777,6 +4779,8 @@ def check_charter_row(
     ) if isinstance(must_not, list) else ""
     row = (
         name,
+        str(answers) if isinstance(answers, str) and answers.strip() else "",
+        _charter_join(readers),
         _charter_join(must),
         must_not_cell,
         str(signoff) if isinstance(signoff, str) and signoff.strip() else "",
@@ -4785,7 +4789,7 @@ def check_charter_row(
     return failures, row
 
 
-def render_charter_table(rows: list[tuple[str, str, str, str, str]]) -> str:
+def render_charter_table(rows: list[tuple[str, str, str, str, str, str, str]]) -> str:
     lines = [CHARTER_HEADER, CHARTER_SEPARATOR]
     for row in rows:
         lines.append("| " + " | ".join(row) + " |\n")
@@ -4811,14 +4815,24 @@ def cmd_charter(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         raise UsageError(f"no contract manifest at {manifest_path}")
 
     manifest = load_manifest(manifest_path)
-    artifacts = manifest.get("artifacts") or {}
+    artifacts = manifest.get("artifacts")
+    if not artifacts:
+        out.write(render_charter_table([]))
+        return report(
+            [(
+                "contract.charter-complete",
+                "manifest carries no artifacts: mapping (absent or empty) -- "
+                "every charter row is missing.",
+            )],
+            err,
+        )
     stations = {
         s["name"] for s in manifest.get("stations", []) if isinstance(s, dict) and s.get("name")
     }
     all_names = list(artifacts.keys())
 
     failures: list[tuple[str, str]] = []
-    rows: list[tuple[str, str, str, str, str]] = []
+    rows: list[tuple[str, str, str, str, str, str, str]] = []
     for name in all_names:
         entry = artifacts.get(name) or {}
         charter = entry.get("charter")
@@ -4827,7 +4841,7 @@ def cmd_charter(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
                 "contract.charter-complete",
                 f"{name} has no charter block (`charter:` is missing entirely).",
             ))
-            rows.append((name, "", "", "", ""))
+            rows.append((name, "", "", "", "", "", ""))
             continue
         row_failures, row = check_charter_row(name, charter, all_names, stations)
         failures.extend(row_failures)

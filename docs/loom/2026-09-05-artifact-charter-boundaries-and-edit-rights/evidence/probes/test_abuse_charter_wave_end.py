@@ -348,7 +348,7 @@ def test_charter_command_mixed_manifest_reports_gap_and_good_row_exit_1(tmp_path
     result = _run_charter(manifest_path)
     assert result.returncode == 1
     assert "intent.must_not is empty" in result.stderr
-    assert "| spec | b | z → intent | build | c |" in result.stdout
+    assert "| spec | y | a | b | z → intent | build | c |" in result.stdout
 
 
 # ---------------------------------------------------------------------------

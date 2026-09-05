@@ -54,8 +54,19 @@ def test_charter_command_every_column_of_every_row_is_non_empty() -> None:
     result = run_charter()
     rows = _data_rows(result.stdout)
     for row in rows:
-        assert len(row) >= 5
+        assert len(row) >= 7
         assert all(row), f"an empty column in row: {row!r}"
+
+
+def test_charter_command_answers_and_readers_columns_are_non_empty() -> None:
+    """wave-end:0-02: the rendered table must carry `answers` and `readers`
+    columns (positions 1 and 2, right after `artifact`), both non-empty for
+    every artifact."""
+    result = run_charter()
+    rows = {row[0]: row for row in _data_rows(result.stdout)}
+    for artifact, row in rows.items():
+        assert row[1].strip(), f"{artifact}: answers column is empty"
+        assert row[2].strip(), f"{artifact}: readers column is empty"
 
 
 def test_charter_command_must_not_cell_uses_arrow_goes_to_format() -> None:
@@ -63,7 +74,7 @@ def test_charter_command_must_not_cell_uses_arrow_goes_to_format() -> None:
     rows = {row[0]: row for row in _data_rows(result.stdout)}
     # every row's must_not cell should read "<kind> → <goes_to>", joined by "; "
     for artifact, row in rows.items():
-        must_not_cell = row[2]
+        must_not_cell = row[4]
         for entry in must_not_cell.split("; "):
             assert " → " in entry, f"{artifact}: malformed must_not entry {entry!r}"
 
