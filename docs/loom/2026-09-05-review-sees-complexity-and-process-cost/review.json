@@ -467,6 +467,129 @@
         "memory entry and README index line byte-equal; the three related links resolve",
         "twelve sha-like tokens in review.json resolve; five spot-checked against their notes"
       ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "28d960db21d0b5cfd61d56a085eb56ae0f5a700b",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-01: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-02: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-03: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-05: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-06: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-07: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "-01..-03 closed in the round-4 record commit; -04..-07 in the report commit 5e242e3a"
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "28d960db21d0b5cfd61d56a085eb56ae0f5a700b",
+      "resumed": true,
+      "dimension_scores": {
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:70",
+          "text": "nitpick: the agent-decided section still carries the 'not my decision… left for the next section' bullet about the bound test, stale after the adversary's recompute fix.",
+          "fix": "replace or delete the bullet"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+          "text": "branch-end-05: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py:373",
+          "text": "branch-end-08: fixed — round-role started ≤ own record commit, found by content; fix:* ≤ HEAD",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "-06/-07 (the other reader's) broke nothing visible; spot-checked shas still resolve",
+        "branch-end probe file 25 passed"
+      ]
     }
   ],
   "probes": [
@@ -721,7 +844,8 @@
       "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
       "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
       "severity": "important",
-      "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe."
+      "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe.",
+      "resolved": "closed by 5e242e3a — Acceptance 6 regenerated; both readers fixed (round 5)"
     },
     {
       "id": "branch-end-05",
@@ -729,7 +853,8 @@
       "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
       "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
       "severity": "important",
-      "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red."
+      "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red.",
+      "resolved": "closed by 5e242e3a — stale open question replaced; both readers fixed (round 5)"
     },
     {
       "id": "branch-end-06",
@@ -737,7 +862,8 @@
       "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
       "raised_by": "rev-be-cx-codex",
       "severity": "important",
-      "text": "issue (blocking): the agent-decided forks omit the history rewrite (W1-05 merge message, shas remapped)."
+      "text": "issue (blocking): the agent-decided forks omit the history rewrite (W1-05 merge message, shas remapped).",
+      "resolved": "closed by 5e242e3a — history-rewrite bullet in consequence form; codex fixed (round 5)"
     },
     {
       "id": "branch-end-07",
@@ -745,7 +871,8 @@
       "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
       "raised_by": "rev-be-cx-codex",
       "severity": "important",
-      "text": "issue (blocking): the existing-data section says only created files were touched; KICKOFF-DEFAULTS.md, CHANGELOG.md and runner tests are shared existing files."
+      "text": "issue (blocking): the existing-data section says only created files were touched; KICKOFF-DEFAULTS.md, CHANGELOG.md and runner tests are shared existing files.",
+      "resolved": "closed by 5e242e3a — shared files named; codex fixed (round 5)"
     },
     {
       "id": "branch-end-08",
@@ -753,7 +880,8 @@
       "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
       "raised_by": "rev-be-cx-sonnet",
       "severity": "important",
-      "text": "issue (blocking): the docstring promises a round-role `started` check the implementation never performs (regex matches W<n>-<n> only); the branch-end entries' started (18:40) postdate their roles' commits."
+      "text": "issue (blocking): the docstring promises a round-role `started` check the implementation never performs (regex matches W<n>-<n> only); the branch-end entries' started (18:40) postdate their roles' commits.",
+      "resolved": "closed by 28d960db — round-role started check implemented; sonnet fixed (round 5)"
     }
   ],
   "dispatch": [
@@ -930,7 +1058,7 @@
   ],
   "second_vendor": "codex",
   "cost": {
-    "rounds": 4,
+    "rounds": 5,
     "dispatches": 20,
     "cap_changes": [],
     "hours_plan_to_pr": null
