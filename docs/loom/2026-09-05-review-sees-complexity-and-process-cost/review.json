@@ -87,12 +87,38 @@
       "model": "sonnet",
       "started": "2026-09-06T10:30:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "fix:W1-05",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T12:10:00+08:00",
+      "fresh_context": false,
+      "note": "BLOCKED decision, agent-decided: one pytest session cannot run loom-code paths together with loom-design/scripts/ (its pytest.ini switches the session to importlib mode; 2 collection errors) — a 12-line runner script runs one session per `--`-separated path group; the KICKOFF command names loom-design/scripts/ literally; also dedupes the `cost` field both W1-02 and W1-05 declared in manifest.yaml"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T12:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T12:10:00+08:00",
+      "fresh_context": false,
+      "note": "record written with the wave; the step runs after W2-01, before the closing round"
     }
   ],
   "second_vendor": "codex",
   "cost": {
     "rounds": 0,
-    "dispatches": 5,
+    "dispatches": 8,
     "cap_changes": [],
     "hours_plan_to_pr": null,
     "plan_commit": "f23aadde",
