@@ -137,7 +137,10 @@ gate-typed path anywhere in the delta always forces `full`. The three
 declared lanes are `full`, keeping two or more readers and every run;
 `express`, keeping one reader and skipping the wave-end checkpoint; and
 `gate-only`, keeping zero readers and only the probes and package tests as
-evidence. `references/lane-switch.md` carries the three-option prompt for
+evidence. Gate-only applies only when the recompute above says `small`; a
+delta the recompute calls `full` for any reason keeps its declaration
+ignored, and the reason names the path (PRINCIPLES.md non-negotiable 2).
+`references/lane-switch.md` carries the three-option prompt for
 presenting a switch, and the grammar of the switch line itself.
 
 | Lane | Checkpoint |
