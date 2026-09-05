@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "db7d44f99afff18d3af7ee6060293102df64bb07",
+  "reviewed_sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -28,7 +28,7 @@
       "model": "gpt-5.6-sol",
       "lens": "skill+docs+code",
       "verdict": "NEEDS_REVISION",
-      "sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "dimension_scores": {
         "security": "PASS",
         "architecture": "PASS",
@@ -100,7 +100,7 @@
       "model": "sonnet",
       "lens": "skill+docs+code",
       "verdict": "PASS_WITH_NOTES",
-      "sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "dimension_scores": {
         "omission": "PASS_WITH_NOTES",
         "ambiguity": "PASS",
@@ -160,7 +160,7 @@
       "model": "gpt-5.6-sol",
       "lens": "skill+docs+code",
       "verdict": "NEEDS_REVISION",
-      "sha": "d96cfec13a4b0cc32524f68e16c6d0f0639df026",
+      "sha": "8873669d43454e53f1f494cb982e8c6469bd4e0d",
       "resumed": true,
       "dimension_scores": {
         "security": "PASS",
@@ -253,7 +253,7 @@
       "model": "sonnet",
       "lens": "skill+docs+code",
       "verdict": "PASS",
-      "sha": "d96cfec13a4b0cc32524f68e16c6d0f0639df026",
+      "sha": "8873669d43454e53f1f494cb982e8c6469bd4e0d",
       "resumed": true,
       "dimension_scores": {
         "omission": "PASS",
@@ -280,6 +280,61 @@
         "wave-end:1-01/-03/-05 fixes look correct and break nothing visible; -04/-06 are outside this delta and the other reader's to close",
         "176 passed on the eleven touched test files"
       ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/test_review_json_template.py:49",
+          "text": "wave-end:1-03: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:27",
+          "text": "wave-end:1-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:50",
+          "text": "wave-end:1-06: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "design re-look: continue fixing was the correct choice; the defects were bounded validator and report-evidence issues, and the underlying shape holds",
+        "no package suite or probes run, per the fix-round procedure",
+        "rev-we1-cx-sonnet stands from round 2: every path of the round-3 fix delta sits inside the returning reader's anchors"
+      ]
     }
   ],
   "probes": [
@@ -294,15 +349,15 @@
     {
       "kind": "package-tests",
       "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto -- loom-design/scripts/ -q",
-      "sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
       "result": "pass",
       "artifact": "",
       "scope": "wave-end:1"
     },
     {
       "kind": "blind-run",
-      "command": "see the report — clean clone at 40817ff6 then re-verified at baf36c70, Acceptance 1–6",
-      "sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "command": "see the report — clean clone at 5cc6f217 then re-verified at e7c55045, Acceptance 1–6",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md",
       "scope": "wave-end:1"
@@ -310,7 +365,39 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -q",
-      "sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k cost -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k runner -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k checklist -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k gate_blocks -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
       "scope": "wave-end:1"
@@ -319,61 +406,75 @@
   "questions": [
     {
       "decision_point": 1,
-      "text": "<question as asked>",
-      "type": "what|behaviour|done|consequence"
+      "text": "你要的是：讓審查也「看得見複雜度」——現在只有審程式碼的鏡頭會問「這段有必要嗎、有沒有更小的寫法」，審站文字和契約的鏡頭不會問……做完後你可以：（六項）……對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "不可逆的門：沒有——全是文字與紀錄欄位，舊 review.json 不用改。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？",
+      "type": "what",
+      "answer": "codex"
     }
   ],
   "open_findings": [
     {
       "id": "wave-end:1-01",
       "anchor": "loom-code/skills/review/references/fix-rounds.md:69",
-      "origin_sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "raised_by": "rev-we1-cx-codex",
       "severity": "fatal",
       "text": "issue (blocking): the unmarked prose makes a third-round verdict complete only with `design re-look:` — PRINCIPLES.md forbids prose-only gates; Acceptance 4 has no enforceable guarantee.",
-      "resolved": "closed by 689f9c0f — record obligation, PRINCIPLES.md prose-gate rule honoured; both readers fixed (round 2)"
+      "resolved": "closed by 3a72f623 — record obligation, PRINCIPLES.md prose-gate rule honoured; both readers fixed (round 2)"
     },
     {
       "id": "wave-end:1-02",
       "anchor": "loom-code/agents/adversary.md:65",
-      "origin_sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "raised_by": "rev-we1-cx-codex",
       "severity": "important",
       "text": "issue (blocking): `Amend probes' unseen fixes into one commit` permits a fresh commit; Acceptance 6 requires amending into the original probe commit.",
-      "resolved": "closed by d50d22f6 — names the probe's original commit; both readers fixed (round 2)"
+      "resolved": "closed by 8e3fab22 — names the probe's original commit; both readers fixed (round 2)"
     },
     {
       "id": "wave-end:1-03",
-      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:162",
-      "origin_sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "anchor": "loom-code/scripts/test_review_json_template.py:48",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "raised_by": "rev-we1-cx-codex",
       "severity": "important",
-      "text": "issue (blocking): the dogfood `cost` object carries undeclared `plan_commit` and `note` keys; nothing validates real records against the declared shape."
+      "text": "issue (blocking): the dogfood `cost` object carries undeclared `plan_commit` and `note` keys; nothing validates real records against the declared shape. (re-anchored by the reader in round 2 to the validator test)",
+      "resolved": "closed by 1e5bec02 — exact int checks, str cap_changes; codex fixed (round 3)"
     },
     {
       "id": "wave-end:1-04",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:28",
-      "origin_sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "raised_by": "rev-we1-cx-codex",
       "severity": "important",
-      "text": "issue (blocking): the report states 12 dispatches, the tree records 13; `rounds: 0` described as populated."
+      "text": "issue (blocking): the report states 12 dispatches, the tree records 13; `rounds: 0` described as populated.",
+      "resolved": "closed by 1eeaf6a8 — Acceptance 3 regenerated from the round-2 record; codex fixed (round 3)"
     },
     {
       "id": "wave-end:1-05",
       "anchor": "loom-code/CHANGELOG.md:18",
-      "origin_sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "raised_by": "rev-we1-cx-codex",
       "severity": "important",
       "text": "issue (blocking): the changelog says each role gets one record commit per round, contradicting review §2's single shared commit.",
-      "resolved": "closed by d96cfec1 — one shared record commit per round; both readers fixed (round 2)"
+      "resolved": "closed by 8873669d — one shared record commit per round; both readers fixed (round 2)"
     },
     {
       "id": "wave-end:1-06",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:52",
-      "origin_sha": "4dedcb56182b79c5597597f69a098cab16f6faf3",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
       "raised_by": "rev-we1-cx-codex",
       "severity": "important",
-      "text": "issue (blocking): Acceptance 6 counts every verdict round; four dispatch commits exceed two waves plus one verdict round; a future checkpoint counted as a round hides the fix-dispatch commit."
+      "text": "issue (blocking): Acceptance 6 counts every verdict round; four dispatch commits exceed two waves plus one verdict round; a future checkpoint counted as a round hides the fix-dispatch commit.",
+      "resolved": "closed by 1eeaf6a8 — Acceptance 6 with the verdict-round reading and explicit arithmetic; codex fixed (round 3)"
     }
   ],
   "dispatch": [
@@ -507,7 +608,7 @@
   ],
   "second_vendor": "codex",
   "cost": {
-    "rounds": 2,
+    "rounds": 3,
     "dispatches": 15,
     "cap_changes": [],
     "hours_plan_to_pr": null
