@@ -284,6 +284,60 @@
         }
       ],
       "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6"
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-e81a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "0751fe6a1c139ec2c22b48a2b4e549f1f4ac9d57",
+      "resumed": true,
+      "previous_findings": [
+        {
+          "id": "branch-end-04",
+          "status": "fixed",
+          "evidence": "2cabe85a / docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:15 — transcripts re-captured at 8e765e58"
+        },
+        {
+          "id": "branch-end-05",
+          "status": "fixed",
+          "evidence": "440e5a36, d5f9dc8f — entry matches _nested_marker_reason() behaviour; index regenerated"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-47d0",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "0751fe6a1c139ec2c22b48a2b4e549f1f4ac9d57",
+      "resumed": true,
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "unfixed",
+          "evidence": "7423bfe8 / PRINCIPLES.md:17 — registration makes the paragraph an admitted prose-gate but does not satisfy the explicit requirement that a blocking rule live in the checker."
+        },
+        {
+          "id": "branch-end-02",
+          "status": "unfixed",
+          "evidence": "bc83fafc + 2cabe85a / review.json:339 — the blind-run entry remains at c237d9a0 although the report was re-captured at 8e765e58."
+        },
+        {
+          "id": "branch-end-03",
+          "status": "fixed",
+          "evidence": "2cabe85a / docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:3"
+        }
+      ],
+      "findings": []
     }
   ],
   "probes": [
@@ -358,6 +412,15 @@
       "sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "python3 loom-code/scripts/rehearse_probes.py",
+      "sha": "8e765e58fd3812dd1aaf8b15d85cdb101bfd989e",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md",
+      "note": "re-captured run behind the fix-round report (2cabe85a); the earlier entry at c237d9a0 is the first branch-end walk"
     }
   ],
   "questions": [
@@ -433,7 +496,7 @@
       "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
       "raised_by": "rev-be-codex-47d0",
       "severity": "important",
-      "resolved": "closed in this record commit — four branch-end probes[] entries appended (package-tests, blind-run, two adversarial) at the sha each ran on",
+      "resolved": "closed in the round-4 record — blind-run probe appended at 8e765e58, the sha the current report's transcripts were captured on; earlier entries kept as history",
       "dismissed": ""
     },
     {
@@ -442,7 +505,7 @@
       "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
       "raised_by": "rev-be-codex-47d0",
       "severity": "important",
-      "resolved": "",
+      "resolved": "2cabe85a — opening rewritten; confirmed fixed by rev-be-codex-47d0 round 4",
       "dismissed": ""
     },
     {
@@ -451,7 +514,7 @@
       "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
       "raised_by": "rev-be-sonnet-e81a",
       "severity": "important",
-      "resolved": "",
+      "resolved": "2cabe85a — transcripts re-captured at 8e765e58; confirmed by rev-be-sonnet-e81a round 4",
       "dismissed": ""
     },
     {
@@ -460,7 +523,7 @@
       "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
       "raised_by": "rev-be-sonnet-e81a",
       "severity": "important",
-      "resolved": "",
+      "resolved": "440e5a36, d5f9dc8f — entry aligned with the shipped marker semantics; confirmed by rev-be-sonnet-e81a round 4",
       "dismissed": ""
     }
   ],
@@ -680,7 +743,7 @@
     }
   ],
   "cost": {
-    "rounds": 3,
+    "rounds": 4,
     "dispatches": 24,
     "cap_changes": [],
     "hours_plan_to_pr": null
@@ -716,6 +779,15 @@
         "Codex fatal branch-end-01: the graduation sentence is a prose-only block (PRINCIPLES.md:17). Resolution chosen by the orchestrator: register it as a prose gate (`<!-- gate: build.rehearsal-before-graduation -->`, mechanisms.yaml entry with its cold-read eval, budget-exception line in the 1.5.2 CHANGELOG entry) — the repo's own mechanism for a blocking sentence that is not a checker rule, consistent with the intent's constraint against a push rule.",
         "Codex could not run tests (read-only sandbox, no temp dir); the Anthropic reader ran the targeted files.",
         "Round 3 is the third round of this change overall but the first of the branch-end checkpoint; the design re-look rule counts rounds within a checkpoint."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "outcome": "NEEDS_REVISION",
+      "notes": [
+        "Sonnet PASS (both its findings fixed). Codex holds branch-end-01 (prose gate ≠ checker rule under PRINCIPLES.md:17) and branch-end-02 (blind-run probe sha behind the re-captured report — closed in this record).",
+        "Round 5 would be the third round of this checkpoint: a design re-look (opus, design-relook-be-opus) is dispatched before any further fix, per fix-rounds.md; its conclusion is written on round 5's notes as the `design re-look:` line."
       ]
     }
   ]
