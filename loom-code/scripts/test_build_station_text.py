@@ -413,3 +413,37 @@ def test_matcher_wave_end_sentence_affirmative_accepted() -> None:
     assert "closes the plan" in sentence.lower()
     assert "wave-end" in sentence.lower()
     assert not _has_negation(sentence)
+
+
+def _probe_graduation_paragraph() -> str:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("**Probe graduation.**", 1)[1]
+    return section.split("**Store entries.**", 1)[0]
+
+
+def test_graduation_paragraph_names_rehearsal_and_red_blocks_graduation() -> None:
+    """W2-01: the Probe graduation paragraph must name
+    `rehearse_probes.py` with the plugin-root prefix and carry an
+    affirmative sentence saying a red rehearsal blocks graduation, with
+    no negation token in that sentence (prose-pin rule)."""
+    paragraph = _probe_graduation_paragraph()
+    assert "${CLAUDE_PLUGIN_ROOT}/scripts/rehearse_probes.py" in paragraph
+
+    flat = " ".join(paragraph.split())
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+", flat) if s.strip()]
+    pinned = [
+        s
+        for s in sentences
+        if "red rehearsal" in s.lower() and "blocks graduation" in s.lower()
+    ]
+    assert pinned, "no sentence pins 'a red rehearsal blocks graduation'"
+    for sentence in pinned:
+        assert not _has_negation(sentence), (
+            f"pinned rehearsal sentence carries a negation token: {sentence!r}"
+        )
+
+
+def test_word_cap_still_within_soft_bound_after_rehearsal_sentences() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    word_count = len(text.split())
+    assert word_count <= 3750, f"word count {word_count} exceeds soft cap 3750"
