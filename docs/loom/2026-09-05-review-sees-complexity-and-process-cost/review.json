@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
-  "scope": "wave-end:1",
+  "reviewed_sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "openai"
@@ -344,7 +344,7 @@
       "model": "gpt-5.6-sol",
       "lens": "skill+docs+code",
       "verdict": "NEEDS_REVISION",
-      "sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "dimension_scores": {
         "omission": "NEEDS_REVISION",
         "ambiguity": "PASS",
@@ -422,7 +422,7 @@
       "model": "sonnet",
       "lens": "skill+docs+code",
       "verdict": "NEEDS_REVISION",
-      "sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "dimension_scores": {
         "omission": "PASS",
         "ambiguity": "PASS",
@@ -476,7 +476,7 @@
       "model": "gpt-5.6-sol",
       "lens": "skill+docs+code",
       "verdict": "PASS",
-      "sha": "28d960db21d0b5cfd61d56a085eb56ae0f5a700b",
+      "sha": "d7ce4b05a709fc9fe0a5063455dfeecba4e4b995",
       "resumed": true,
       "dimension_scores": {
         "omission": "PASS",
@@ -542,7 +542,7 @@
         }
       ],
       "notes": [
-        "-01..-03 closed in the round-4 record commit; -04..-07 in the report commit 5e242e3a"
+        "-01..-03 closed in the round-4 record commit; -04..-07 in the report commit 3ab852d4"
       ]
     },
     {
@@ -553,7 +553,7 @@
       "model": "sonnet",
       "lens": "skill+docs+code",
       "verdict": "PASS_WITH_NOTES",
-      "sha": "28d960db21d0b5cfd61d56a085eb56ae0f5a700b",
+      "sha": "d7ce4b05a709fc9fe0a5063455dfeecba4e4b995",
       "resumed": true,
       "dimension_scores": {
         "inconsistency": "PASS_WITH_NOTES",
@@ -589,6 +589,60 @@
       "notes": [
         "-06/-07 (the other reader's) broke nothing visible; spot-checked shas still resolve",
         "branch-end probe file 25 passed"
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "resumed": true,
+      "dimension_scores": {
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "nit confirmation: 7dbf493d touches only the stale bullet in the report; rev-be-cx-codex stands from round 5 — the nit-fix path is inside its round-4 anchors (push.verdicts-ge-2)"
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "nit confirmation: the nit commit changes exactly one bullet in the report; since round 5 only review.json record commits and the final review-only commit's intent status line"
       ]
     }
   ],
@@ -652,7 +706,7 @@
     {
       "kind": "package-tests",
       "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "scripts/run_package_tests.py",
       "scope": "branch-end"
@@ -660,7 +714,7 @@
     {
       "kind": "blind-run",
       "command": "see the report — clean worktree at 896b1533, Acceptance 1–6; Acceptance 5 re-verified after the probe-bound fix",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md",
       "scope": "branch-end"
@@ -668,7 +722,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k graduated_probe -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -676,7 +730,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k memory -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -684,7 +738,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k kickoff -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -692,7 +746,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k split_groups -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -700,7 +754,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k dispatch -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -708,7 +762,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k ship_checklist -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -716,7 +770,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k word_caps -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -724,7 +778,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k review_json_latest -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
       "scope": "branch-end"
@@ -732,7 +786,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -q",
-      "sha": "c995befc06261483833d71be91d4316bc1e1ef4d",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
       "scope": "branch-end"
@@ -754,6 +808,12 @@
       "text": "這次要不要用 Codex 當第二位讀者？",
       "type": "what",
       "answer": "codex"
+    },
+    {
+      "decision_point": 3,
+      "text": "Acceptance 1–6 walked in the blind-run report (deletion-first in docs/skill lenses, cap-bump cost, cost block, third-round line as a record obligation, runner + checklist, batched dispatch records: 5 ≤ 2 + 4); shared files modified, no older review.json back-filled; two commit messages rewritten for Task trailers. OK?",
+      "type": "done",
+      "answer": "OK"
     }
   ],
   "open_findings": [
@@ -814,7 +874,7 @@
     {
       "id": "branch-end-01",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:342",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-codex",
       "severity": "fatal",
       "text": "issue (blocking): probes[] still carries the schema placeholder as a real probe.",
@@ -823,7 +883,7 @@
     {
       "id": "branch-end-02",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:410",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-codex",
       "severity": "important",
       "text": "issue (blocking): the branch-end package-tests probe has an empty artifact; the command cannot name it as an argument.",
@@ -832,7 +892,7 @@
     {
       "id": "branch-end-03",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:733",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-codex",
       "severity": "important",
       "text": "issue (blocking): cost.rounds is 3 although branch-end is the fourth verdict round.",
@@ -841,47 +901,47 @@
     {
       "id": "branch-end-04",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
       "severity": "important",
       "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe.",
-      "resolved": "closed by 5e242e3a — Acceptance 6 regenerated; both readers fixed (round 5)"
+      "resolved": "closed by 3ab852d4 — Acceptance 6 regenerated; both readers fixed (round 5)"
     },
     {
       "id": "branch-end-05",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
       "severity": "important",
       "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red.",
-      "resolved": "closed by 5e242e3a — stale open question replaced; both readers fixed (round 5)"
+      "resolved": "closed by 3ab852d4 — stale open question replaced; both readers fixed (round 5)"
     },
     {
       "id": "branch-end-06",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:62",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-codex",
       "severity": "important",
       "text": "issue (blocking): the agent-decided forks omit the history rewrite (W1-05 merge message, shas remapped).",
-      "resolved": "closed by 5e242e3a — history-rewrite bullet in consequence form; codex fixed (round 5)"
+      "resolved": "closed by 3ab852d4 — history-rewrite bullet in consequence form; codex fixed (round 5)"
     },
     {
       "id": "branch-end-07",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:60",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-codex",
       "severity": "important",
       "text": "issue (blocking): the existing-data section says only created files were touched; KICKOFF-DEFAULTS.md, CHANGELOG.md and runner tests are shared existing files.",
-      "resolved": "closed by 5e242e3a — shared files named; codex fixed (round 5)"
+      "resolved": "closed by 3ab852d4 — shared files named; codex fixed (round 5)"
     },
     {
       "id": "branch-end-08",
       "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py:358",
-      "origin_sha": "9f76513aef2b2320da72fb1d601f11e6990050e6",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
       "raised_by": "rev-be-cx-sonnet",
       "severity": "important",
       "text": "issue (blocking): the docstring promises a round-role `started` check the implementation never performs (regex matches W<n>-<n> only); the branch-end entries' started (18:40) postdate their roles' commits.",
-      "resolved": "closed by 28d960db — round-role started check implemented; sonnet fixed (round 5)"
+      "resolved": "closed by d7ce4b05 — round-role started check implemented; sonnet fixed (round 5)"
     }
   ],
   "dispatch": [
@@ -1054,13 +1114,22 @@
       "started": "2026-09-05T18:09:16+0800",
       "fresh_context": false,
       "note": "round-4 fixes: review.json (placeholder probe, artifacts, cost.rounds, branch-end started values set to the record commit's timestamp — the orchestrator wrote them from a guessed clock, twice now); the report by br-be-cx (its own artifact); the branch-end probe's round-role check by adv-be-cx (its own artifact)"
+    },
+    {
+      "task": "fix:trailer",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T18:33:24+0800",
+      "fresh_context": false,
+      "note": "message-only history rewrite: the adversary's graduated-copy re-sync commit gains Task: W2-memory (push.dispatch-covers-tasks); trees unchanged, every recorded sha remapped to the rewritten ids"
     }
   ],
   "second_vendor": "codex",
   "cost": {
-    "rounds": 5,
-    "dispatches": 20,
+    "rounds": 6,
+    "dispatches": 21,
     "cap_changes": [],
-    "hours_plan_to_pr": null
+    "hours_plan_to_pr": 2.6
   }
 }
