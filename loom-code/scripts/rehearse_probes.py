@@ -42,12 +42,15 @@ Design choices the plan marks agent-decided:
 - Exit code is pytest's own return code; a skip never changes it. A
   skip is information for a human to read (the build station's
   graduation paragraph says so), not a gate condition here.
-- Cleanup goes through `tempfile.TemporaryDirectory` (`delete=False` for
-  `--keep`, Python 3.12+), never a shell `rm -rf`.
+- Cleanup goes through `tempfile.mkdtemp` + an explicit `shutil.rmtree`
+  gated on `--keep`, never a shell `rm -rf`. Not `TemporaryDirectory`'s
+  `delete=False` keyword: that is Python 3.12+ only, and CI runs this
+  script under Python 3.11.
 """
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -280,13 +283,14 @@ def main(argv: list[str] | None = None) -> int:
                 "letting the rehearsal collect the whole repository"
             )
 
-    # `delete=False` (Python 3.12+) keeps the directory past this
-    # TemporaryDirectory object's lifetime for `--keep`: without it, the
-    # object's finalizer removes the directory at interpreter exit even
-    # if `.cleanup()` is never called, since it is registered to run
-    # then regardless of any surviving reference.
-    tmp_ctx = tempfile.TemporaryDirectory(prefix="rehearse-probes-", delete=not args.keep)
-    clone_dir = Path(tmp_ctx.name)
+    # `tempfile.mkdtemp` (not `TemporaryDirectory`) because `--keep` must
+    # leave the directory behind past this function returning: the
+    # `delete=` keyword that would otherwise express that on a
+    # `TemporaryDirectory` object is Python 3.12+ only, and CI runs this
+    # script under Python 3.11 (`.github/workflows/loom-code-ci.yml`).
+    # `mkdtemp` never auto-removes anything, so cleanup is always this
+    # function's own explicit `shutil.rmtree` call, gated on `--keep`.
+    clone_dir = Path(tempfile.mkdtemp(prefix="rehearse-probes-"))
     try:
         head_sha = _clone_ci_shaped(repo_root, clone_dir)
     except subprocess.CalledProcessError as exc:
@@ -296,12 +300,12 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         if not args.keep:
-            tmp_ctx.cleanup()
+            shutil.rmtree(clone_dir, ignore_errors=True)
         return 2
     except (OSError, subprocess.TimeoutExpired) as exc:
         print(f"could not build the CI-shaped clone of {repo_root}: {exc}", file=sys.stderr)
         if not args.keep:
-            tmp_ctx.cleanup()
+            shutil.rmtree(clone_dir, ignore_errors=True)
         return 2
 
     junit_path = clone_dir / ".rehearsal-junit.xml"
@@ -319,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
     except subprocess.TimeoutExpired as exc:
         print(f"pytest timed out inside the rehearsal clone: {exc}", file=sys.stderr)
         if not args.keep:
-            tmp_ctx.cleanup()
+            shutil.rmtree(clone_dir, ignore_errors=True)
         return 2
 
     failed, skipped = _parse_junit(junit_path, clone_dir)
@@ -340,7 +344,7 @@ def main(argv: list[str] | None = None) -> int:
     print("\n".join(report))
 
     if not args.keep:
-        tmp_ctx.cleanup()
+        shutil.rmtree(clone_dir, ignore_errors=True)
     return proc.returncode
 
 

@@ -230,6 +230,72 @@ def test_parseJunit_malformedXml_returnsEmptyListsInsteadOfRaising(tmp_path: Pat
     assert skipped == []
 
 
+# --------------------------------------------------------------------------
+# wave-end:1-01 -- CI runs this script under Python 3.11
+# (`.github/workflows/loom-code-ci.yml`); `tempfile.TemporaryDirectory`'s
+# `delete=` keyword is 3.12+ only and would raise `TypeError` on every CI
+# run. This drives the script's actual (non `--help`) path through a real
+# Python 3.11 interpreter when one is available on this machine, so a
+# regression back to the 3.12-only keyword is caught locally too.
+# --------------------------------------------------------------------------
+
+def _python311_interpreter() -> str | None:
+    """Discover a Python 3.11 interpreter: `python3.11` on PATH, else
+    `uv python find 3.11`, else the known local uv-managed install --
+    in that order, never only the hard-coded path."""
+    found = shutil.which("python3.11")
+    if found:
+        return found
+
+    uv = shutil.which("uv")
+    if uv:
+        proc = subprocess.run(
+            [uv, "python", "find", "3.11"], capture_output=True, text=True, timeout=30
+        )
+        if proc.returncode == 0 and proc.stdout.strip():
+            return proc.stdout.strip()
+
+    fallback = "/Users/kouko/.local/share/uv/python/cpython-3.11-macos-aarch64-none/bin/python3.11"
+    if Path(fallback).exists():
+        return fallback
+
+    return None
+
+
+def test_rehearseProbes_underPython311_doesNotRaiseTypeErrorOnTheTempfileDeleteKeyword(
+    tmp_path: Path,
+) -> None:
+    interpreter = _python311_interpreter()
+    if interpreter is None:
+        pytest.skip(
+            "no Python 3.11 interpreter found via python3.11 on PATH, "
+            "`uv python find 3.11`, or the known local uv-managed install"
+        )
+    uv = shutil.which("uv")
+    if uv is None:
+        pytest.skip("uv is required to give the Python 3.11 interpreter a pytest to run with")
+
+    repo = make_repo(tmp_path, trunk="main")
+    commit_file(repo, "tests/test_green.py", "def test_ok():\n    assert True\n", "green")
+
+    # The script re-invokes pytest with its own `sys.executable` inside the
+    # rehearsal clone, so the 3.11 interpreter needs pytest importable too --
+    # `uv run --with pytest` supplies that without touching this project's
+    # own environment.
+    script = Path(rehearse_probes.__file__).resolve()
+    proc = subprocess.run(
+        [
+            uv, "run", "--python", "3.11", "--with", "pytest", "--",
+            "python", str(script), "tests/test_green.py", "--repo", str(repo),
+        ],
+        capture_output=True, text=True, timeout=300,
+    )
+    assert proc.returncode == 0, f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
+    assert "TypeError" not in proc.stderr, proc.stderr
+    assert "delete" not in proc.stderr, proc.stderr
+    assert "FAILED (0)" in proc.stdout, proc.stdout
+
+
 def test_parseJunit_realReport_reconstructsNodeidsFromClassnameWhenFileAttrAbsent(
     tmp_path: Path,
 ) -> None:
