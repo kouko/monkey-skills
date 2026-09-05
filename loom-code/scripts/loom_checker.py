@@ -184,14 +184,15 @@ RULES: list[tuple[str, str]] = [
     (
         "push.verdicts-ge-2",
         "The latest round of the checkpoint's own scope carries at least as many distinct "
-        "fresh-context reviewers as the change's lane requires -- one in the small lane, two "
-        "distinct in the full lane -- where a later round of that scope may also count a "
-        "non-returning previous-round reviewer whose earlier passing verdict still stands, "
-        "provided every path the fix touched sits inside the anchor of an open finding raised "
-        "by a reviewer who did return AND every reviewer named in that prior round has a "
-        "dispatch[] entry as reviewer, blind-runner or adversary in some round -- a single "
-        "undispatched name anywhere in that round poisons the whole round for standing, so no "
-        "one from it stands -- and blocks when any verdict in the latest round is not passing.",
+        "fresh-context reviewers as the change's lane requires -- two distinct in the full "
+        "lane, one in the small lane, one in the express lane, zero in the gate-only lane -- "
+        "where a later round of that scope may also count a non-returning previous-round "
+        "reviewer whose earlier passing verdict still stands, provided every path the fix "
+        "touched sits inside the anchor of an open finding raised by a reviewer who did return "
+        "AND every reviewer named in that prior round has a dispatch[] entry as reviewer, "
+        "blind-runner or adversary in some round -- a single undispatched name anywhere in "
+        "that round poisons the whole round for standing, so no one from it stands -- and "
+        "blocks when any verdict in the latest round is not passing.",
     ),
     (
         "spec.req-grammar",
@@ -3104,6 +3105,116 @@ def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
     )
 
 
+def _lane_forcing_paths(
+    repo: Path, reviewed_id: str | None, manifest,
+) -> tuple[list[str], list[str]]:
+    """`(hard, skill)` -- every reason `change_lane_detail` would force
+    `full` for, walked to the END of the delta rather than stopping at the
+    first hit (`change_lane_detail` only needs one reason; the declared-
+    lane eligibility below needs to know if a `skill`-typed path is the
+    ONLY reason, since that is the one case `gate-only` excludes but
+    `express` does not).
+
+    `hard` names paths (or the multi-plugin count) that force `full`
+    whatever a declared lane says: a declared interface surface, more than
+    one plugin directory, or non-test code (the manifest's `code`/`gate`
+    §6 types) -- this is what the plan calls a "gate-typed path". `skill`
+    names `SKILL.md`/`loom-code/agents/*.md` paths (§6 type `skill`) --
+    these force `gate-only` back to `full` (its own eligibility excludes
+    them) but never block `express`. A `standing` document (PRINCIPLES.md,
+    DESIGN.md, `docs/loom/KICKOFF-DEFAULTS.md`) forces neither: the
+    express/gate-only eligibility text names only a gate path and a
+    skill/agent-contract path, so a standing-doc-only delta -- including
+    the very KICKOFF-DEFAULTS.md commit that declares a `default-lane:` --
+    never blocks a declared lane (adversary probe (i))."""
+    remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
+    hard: list[str] = []
+    plugin_dirs = {
+        top for path in remaining
+        if (top := _top_level_plugin_dir(path)) is not None
+    }
+    if len(plugin_dirs) > 1:
+        hard.append(
+            f"touches {len(plugin_dirs)} plugin directories "
+            f"({', '.join(sorted(plugin_dirs))}); the small lane allows at most one."
+        )
+    surfaces, _origin = interface_surfaces(repo, manifest)
+    surface_patterns = [glob_to_regex(glob) for glob in surfaces]
+    skill: list[str] = []
+    for path in remaining:
+        if any(pattern.match(path) for pattern in surface_patterns):
+            hard.append(f"{path} is a declared interface surface.")
+            continue
+        kind = _artifact_type_for(manifest, path)
+        if kind in SMALL_LANE_ARTIFACT_TYPES:
+            continue
+        if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
+            continue
+        if kind == "standing":
+            continue
+        if kind == "skill":
+            skill.append(path)
+            continue
+        hard.append(
+            f"{path} is non-test code" if kind == "code"
+            else f"{path} is {kind or 'unclassified'}-typed"
+        )
+    return hard, skill
+
+
+def effective_lane_detail(
+    repo: Path, reviewed_id: str | None, change_id: str | None, round_number: int,
+) -> tuple[str, str]:
+    """`(lane, reason)` -- the lane `check_verdicts`' floor actually uses
+    (plan W1-02).
+
+    Recompute first: `change_lane_detail`'s own `small`/`full` call is
+    unchanged and runs first; a recomputed `small` stays `small` whatever
+    is declared -- the express/gate-only distinction only matters once the
+    plain recompute already says `full`. From there, the change's OWN
+    `declared_lane()` decides: a plain declared (or default) `full` stays
+    `full`. A switch's `from_round` gates everything else -- when
+    `round_number` is not strictly after it, the pre-switch `full` lane
+    still governs THIS round (there is no way to recover a lane older
+    than the switch from the grammar, so the safe fallback is `full`, not
+    whatever came before). Otherwise `express` is eligible unless
+    `_lane_forcing_paths` found a hard (gate-typed) reason; `gate-only` is
+    eligible unless it found a hard reason OR a skill/agent-contract path.
+    Either ineligibility falls back to `full`, with the reason naming the
+    path that blocked it."""
+    manifest = load_manifest()
+    raw_lane, raw_reason = change_lane_detail(repo, reviewed_id)
+    if raw_lane == "small":
+        return "small", raw_reason
+    declared, origin, from_round = (
+        declared_lane(repo, change_id) if change_id else ("full", "default", None)
+    )
+    if from_round is not None and not (round_number > from_round):
+        return "full", (
+            f"declared `lane: {declared}` switches from round {from_round}, but "
+            f"round {round_number} is not strictly after it -- the pre-switch "
+            "full lane still applies."
+        )
+    if declared == "full":
+        return "full", raw_reason
+    hard, skill = _lane_forcing_paths(repo, reviewed_id, manifest)
+    if hard:
+        return "full", f"declared `lane: {declared}` ({origin}) but {hard[0]}"
+    if declared == "express":
+        return "express", (
+            f"declared `lane: express` ({origin}); no gate-typed path in the delta."
+        )
+    if skill:
+        return "full", (
+            f"declared `lane: gate-only` ({origin}) but {skill[0]} is a "
+            "skill/agent-contract path."
+        )
+    return "gate-only", (
+        f"declared `lane: gate-only` ({origin}); no gate, skill or "
+        "agent-contract path in the delta."
+    )
+
+
 def change_lane(repo: Path, reviewed_id: str | None) -> str:
     """`"small"` or `"full"` -- see `change_lane_detail` for the reason."""
     lane, _reason = change_lane_detail(repo, reviewed_id)
@@ -3928,30 +4039,41 @@ def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
     return standing
 
 
+LANE_VERDICT_FLOOR = {"full": 2, "small": 1, "express": 1, "gate-only": 0}
+
+
 def check_verdicts(repo: Path, review, reviewed_id: str | None,
                     dispatch_reviewers: set[str],
                     change_id: str | None = None) -> list[tuple[str, str]]:
-    """The reviewer-count floor, lane-dependent since W0-02: a small-lane
-    change (plan risk 3: "its message now names the lane") needs one
-    fresh-context verdict, a full-lane change still needs two. A fix round
-    of the same scope may also count a non-returning previous-round
-    reviewer whose earlier PASS still stands (see `_standing_reviewers`) --
-    but only when that reviewer is itself a dispatched reviewer
-    (`dispatch_reviewers`, from `parse_dispatch`); a name with no
-    dispatch[] entry at all can never stand, however old its ghost PASS.
-    `change_id` (the change actually being pushed) is threaded through to
-    `_standing_reviewers` so its fix-delta exclusion sets aside only THIS
-    change's own review.json, never another change's."""
+    """The reviewer-count floor, lane-dependent since W0-02 and lane-aware
+    since W1-02: `full` 2 / `small` 1 / `express` 1 / `gate-only` 0
+    (`effective_lane_detail` -- recompute first, then the declared lane's
+    own eligibility, then the switch's `from_round` timing). A `gate-only`
+    round with a floor of 0 may carry no verdicts at all and still count
+    as the latest passing round -- `push.reviewed-sha`, `push.review-only-
+    head` and `push.open-findings-closed` already tolerate an empty
+    `verdicts[]` for their own scope (they never require a NON-empty
+    round; see their own docstrings), so this floor is the only place a
+    zero-verdict round needed a decision at all. A fix round of the same
+    scope may also count a non-returning previous-round reviewer whose
+    earlier PASS still stands (see `_standing_reviewers`) -- but only when
+    that reviewer is itself a dispatched reviewer (`dispatch_reviewers`,
+    from `parse_dispatch`); a name with no dispatch[] entry at all can
+    never stand, however old its ghost PASS. `change_id` (the change
+    actually being pushed) is threaded through to `_standing_reviewers` so
+    its fix-delta exclusion sets aside only THIS change's own review.json,
+    never another change's, and to `effective_lane_detail` so it can read
+    THIS change's own declared lane."""
     round_number, verdicts = scored_verdicts(review)
     reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
     scope = str(review.get("scope", "")).strip()
     reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts,
                                       dispatch_reviewers, change_id)
     try:
-        lane, lane_reason = change_lane_detail(repo, reviewed_id)
+        lane, lane_reason = effective_lane_detail(repo, reviewed_id, change_id, round_number)
     except (UsageError, OSError, KeyError) as exc:
         lane, lane_reason = "full", f"cannot recompute the change lane: {exc}"
-    floor = 1 if lane == "small" else 2
+    floor = LANE_VERDICT_FLOOR.get(lane, 2)
     failures = []
     if len(reviewers) < floor:
         detail = f" ({lane_reason})" if lane == "full" else ""

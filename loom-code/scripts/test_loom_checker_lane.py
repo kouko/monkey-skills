@@ -210,6 +210,227 @@ def test_intent_no_lane_line_is_unaffected(tmp_path: Path) -> None:
 
 
 # =============================================================================
+# `effective_lane_detail()` -- plan W1-02: recompute first, then the
+# declared lane's own eligibility (gate-typed forces full always; a
+# skill/agent-contract path forces gate-only back to full but never blocks
+# express; a switch's `from_round` applies only to rounds strictly after
+# it).
+# =============================================================================
+
+
+def _commit_all(repo: Path, message: str) -> str:
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", message)
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_effective_lane_recomputed_small_stays_small(tmp_path: Path) -> None:
+    """A declared `lane: gate-only` never matters once the plain recompute
+    already says `small` -- a test-named file change is small-lane safe
+    regardless of any declared lane."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff1"
+    _write_intent(repo, change_id, lane_lines=("lane: gate-only",))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "loom-code/scripts").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/scripts/test_foo.py").write_text("def test_x(): pass\n", encoding="utf-8")
+    reviewed_sha = _commit_all(repo, "test(loom-code): add a test file")
+
+    assert loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)[0] == "small"
+
+
+def test_effective_lane_gate_typed_path_forces_full_whatever_declared(tmp_path: Path) -> None:
+    """Declared `lane: express`, but the delta touches non-test code
+    (`loom_checker.py` itself) -- that forces `full` whatever is declared,
+    and the reason names the path."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff2"
+    _write_intent(repo, change_id, lane_lines=("lane: express",))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "loom-code/scripts").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/scripts/loom_checker.py").write_text("# extra\n", encoding="utf-8")
+    reviewed_sha = _commit_all(repo, "feat(loom-code): touch the checker")
+
+    lane, reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "full"
+    assert "loom_checker.py" in reason
+
+
+def test_effective_lane_express_needs_no_gate_path(tmp_path: Path) -> None:
+    """Declared `lane: express` with a SKILL.md in the delta but no
+    non-test-code/gate path -- express stays eligible; a skill path only
+    matters to gate-only."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff3"
+    _write_intent(repo, change_id, lane_lines=("lane: express",))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "loom-code/skills/example").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/skills/example/SKILL.md").write_text(
+        "---\nname: example\n---\nbody\n", encoding="utf-8"
+    )
+    reviewed_sha = _commit_all(repo, "docs(loom-code): a skill delta")
+
+    lane, _reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "express"
+
+
+def _write_standing_doc(repo: Path) -> None:
+    """`docs/loom/KICKOFF-DEFAULTS.md` -- a standing document, which forces
+    `change_lane_detail`'s own raw recompute to `full` (unaffected by this
+    task) so a fixture that also wants to exercise the DECLARED-lane
+    eligibility (which only matters once the raw recompute already says
+    `full`) needs a forcing path in its delta. A standing document is
+    itself soft for lane-eligibility purposes (adversary probe (i):
+    `default-lane:` lives in this very file), which is exactly what these
+    fixtures rely on to isolate the thing under test."""
+    path = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("# Kickoff Defaults\n", encoding="utf-8")
+
+
+def test_effective_lane_gate_only_needs_no_gate_skill_or_agent_contract_path(
+    tmp_path: Path,
+) -> None:
+    """Declared `lane: gate-only`, a docs delta plus a standing-doc write
+    (to force the raw recompute to `full` -- see `_write_standing_doc`) --
+    eligible, since neither a docs nor a standing path is gate/skill-typed."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff4"
+    _write_intent(repo, change_id, lane_lines=("lane: gate-only",))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
+    (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
+    _write_standing_doc(repo)
+    reviewed_sha = _commit_all(repo, "docs: a note")
+
+    lane, _reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "gate-only"
+
+
+def test_effective_lane_gate_only_blocked_by_skill_path(tmp_path: Path) -> None:
+    """Declared `lane: gate-only`, but a SKILL.md is in the delta -- gate-
+    only's own eligibility excludes any skill/agent-contract path, so this
+    falls back to `full` even though nothing non-test-code changed."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff5"
+    _write_intent(repo, change_id, lane_lines=("lane: gate-only",))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "loom-code/skills/example").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/skills/example/SKILL.md").write_text(
+        "---\nname: example\n---\nbody\n", encoding="utf-8"
+    )
+    reviewed_sha = _commit_all(repo, "docs(loom-code): a skill delta")
+
+    lane, reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "full"
+    assert "SKILL.md" in reason
+
+
+def test_effective_lane_switch_applies_only_strictly_after_from_round(tmp_path: Path) -> None:
+    """A switch `from round 2` applies to round 3 (strictly after) but not
+    to round 2 itself -- the pre-switch full lane still governs round 2."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff6"
+    _write_intent(
+        repo, change_id,
+        lane_lines=("lane: express — switched 2026-09-05 by kouko, from round 2",),
+    )
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
+    (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
+    _write_standing_doc(repo)
+    reviewed_sha = _commit_all(repo, "docs: a note")
+
+    lane_after, _ = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 3)
+    assert lane_after == "express"
+    lane_at, _ = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 2)
+    assert lane_at == "full"
+
+
+# =============================================================================
+# `check_verdicts`' lane floor: full 2 / small 1 / express 1 / gate-only 0.
+# =============================================================================
+
+
+def _verdict(reviewer: str, round_: int, sha: str) -> dict:
+    return {
+        "reviewer": reviewer, "vendor": "anthropic", "model": "m", "lens": "docs",
+        "verdict": "PASS", "dimension_scores": {}, "findings": [], "sha": sha,
+        "round": round_, "scope": "branch-end",
+    }
+
+
+def test_check_verdicts_gate_only_floor_zero_passes_with_no_verdicts(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff7"
+    _write_intent(repo, change_id, lane_lines=("lane: gate-only",))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
+    (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
+    _write_standing_doc(repo)
+    reviewed_sha = _commit_all(repo, "docs: a note")
+
+    review = {"scope": "branch-end", "verdicts": []}
+    failures = loom_checker.check_verdicts(repo, review, reviewed_sha, set(), change_id)
+    assert failures == []
+
+
+def test_check_verdicts_express_floor_one_passes_with_one_reader(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff8"
+    _write_intent(repo, change_id, lane_lines=("lane: express",))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
+    (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
+    reviewed_sha = _commit_all(repo, "docs: a note")
+
+    review = {
+        "scope": "branch-end",
+        "verdicts": [_verdict("r1", 1, reviewed_sha)],
+    }
+    failures = loom_checker.check_verdicts(repo, review, reviewed_sha, set(), change_id)
+    assert failures == []
+
+
+def test_check_verdicts_full_floor_two_blocks_with_one_reader(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff9"
+    (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
+    (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
+    (repo / "loom-code/scripts").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/scripts/loom_checker.py").write_text("# extra\n", encoding="utf-8")
+    reviewed_sha = _commit_all(repo, "feat(loom-code): touch the checker")
+
+    review = {
+        "scope": "branch-end",
+        "verdicts": [_verdict("r1", 1, reviewed_sha)],
+    }
+    failures = loom_checker.check_verdicts(repo, review, reviewed_sha, set(), change_id)
+    assert any(rule == "push.verdicts-ge-2" for rule, _ in failures)
+
+
+def test_list_rules_verdicts_ge_2_names_four_floors() -> None:
+    result = subprocess.run(
+        [sys.executable, str(CHECKER), "--list-rules"],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    line = next(
+        line for line in result.stdout.splitlines() if line.startswith("push.verdicts-ge-2\t")
+    )
+    for token in ("full", "small", "express", "gate-only"):
+        assert token in line, f"push.verdicts-ge-2 description missing {token!r}: {line}"
+
+
+# =============================================================================
 # Rule count pin.
 # =============================================================================
 
