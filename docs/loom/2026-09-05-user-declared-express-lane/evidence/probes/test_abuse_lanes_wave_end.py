@@ -35,6 +35,7 @@ sys.path.insert(0, str(PROBES_DIR))
 import loom_checker as lc  # noqa: E402
 from prose_pin import NEGATION_RE  # noqa: E402
 from test_loom_checker_push import (  # noqa: E402
+    PASSING_COMMAND,
     blocked_rules,
     git,
     run_checker,
@@ -62,31 +63,26 @@ LANE_SWITCH = REPO_ROOT / "loom-code/skills/review/references/lane-switch.md"
 
 
 # =============================================================================
-# Class 1 -- agent self-declaration. An intent whose confirmation commit
-# writes a PLAIN (non-switch-suffix) `lane: express` line with no `by
-# <name>` at all: nothing in `check_lane_schema` requires a name for the
-# bare (day-one) form -- `by <name>` is only mandatory inside the switch
-# SUFFIX (`LANE_GRAMMAR`'s optional group). GREEN today: this is the
-# manifest's own documented gap ("checker cannot verify the author is not
-# an agent"), not something W1-01/W1-02 promised to close -- pinned here
-# so the gap stays exactly this shape and does not silently widen (e.g. to
-# also excusing a malformed switch suffix).
+# Class 1 -- agent self-declaration, RETARGETED (fix round for wave-end:1-01
+# landed since this file's first draft): `LANE_GRAMMAR` now makes the
+# suffix (`declared <date> by <name>` or `switched <date> by <name>,
+# from ...`) MANDATORY for every value, not just the switch form -- a
+# bare `lane: express` with no suffix at all is no longer schema-valid,
+# closing the gap this probe used to pin as "reader-trusted by design".
+# Current correct invariant, and GREEN today: a bare declaration, agent-
+# authored or not, is now rejected outright.
 # =============================================================================
 
 
 def test_intent_bare_lane_declaration_by_agent_confirmation_commit_currently_unchecked(
     tmp_path: Path,
 ) -> None:
-    """A bare `lane: express` line (no switch suffix, so no `by <name>`
-    requirement applies) written and committed in the same commit that
-    confirms the intent passes `intent`'s schema/reason checks with
-    nothing that could tell the commit author was an agent rather than
-    the user. This is reader-trusted by design (manifest.yaml note on the
-    `lane` field, `contract/templates/intent.md:8` "only the user writes
-    it"; the enforcement lives in station text and the
-    `user-judgment-leak` lens, not in the checker) -- this probe pins that
-    the checker side of that trust is exactly as documented, no more and
-    no less."""
+    """A bare `lane: express` line (no `declared`/`switched` suffix at
+    all) written and committed in the same commit that confirms the
+    intent must now be rejected by `intent`'s schema check --
+    wave-end:1-01's dated-attribution requirement applies to the day-one
+    form too, not only a mid-flight switch, closing the gap this probe
+    used to document as an accepted, reader-trusted design choice."""
     repo = make_intent_repo(tmp_path)
     change_id = "2026-09-05-lane-self-declare"
     intent_rel = f"docs/loom/intent/{change_id}.md"
@@ -100,9 +96,9 @@ def test_intent_bare_lane_declaration_by_agent_confirmation_commit_currently_unc
     git(repo, "commit", "-q", "-m", message)
 
     result = run_checker("intent", str(repo / intent_rel), cwd=repo)
-    assert result.returncode == 0, (
-        "a bare `lane: express` declaration, agent-authored or not, is "
-        f"schema-valid today by design: {result.stderr}"
+    assert result.returncode != 0, (
+        "a bare `lane: express` declaration -- no dated-attribution suffix "
+        f"at all -- must be schema-invalid now; it passed instead: {result.stdout}"
     )
 
 
@@ -482,80 +478,37 @@ def test_push_gateonly_dismissal_by_undispatched_name_still_blocked(tmp_path: Pa
 def test_push_gateonly_pure_docs_delta_zero_adversarial_probes_still_passes(
     tmp_path: Path,
 ) -> None:
-    """The intent (Proposed outcome point 3) states gate-only's floor
-    unconditionally: "仍有 ≥3 探針（adversary 一次）" -- at least three
-    adversarial probes, always, even with no reviewer on the board. But
-    `check_probes_adversarial` (pre-existing, not new to this wave) only
-    fires when the changed paths' §6 types intersect `ADVERSARIAL_TYPES =
-    {code, spec, skill, gate}` -- and EVERY one of those types is either
-    `_lane_forcing_paths`-hard (code, spec, gate) or excluded specifically
-    from gate-only (skill), so a change that is actually eligible for
-    gate-only (by definition, none of those types) can never trigger the
-    adversarial-probe requirement at all. A pure-docs gate-only delta with
-    ZERO probes recorded, zero verdicts, and nothing but a package-tests
-    record still lets `push` exit 0 -- the "always >=3 probes" guarantee
-    the intent names does not hold for the one shape of delta gate-only
-    was built for.
-    # RED at HEAD: gateonly-adversarial-floor-never-actually-owed
+    """RETARGETED to the ratified shape: a raw-small, purely small-lane-
+    safe delta (docs only, no KICKOFF/standing-doc touch, so it is never
+    forced to `full` in the first place) with a DATED `lane: gate-only`
+    declaration, ONE reviewer verdict (satisfies whichever floor applies
+    today -- small's 1 -- so the reviewer count itself is never the
+    reason this blocks), zero verdicts is NOT what is tested here on
+    purpose: `check_probes_adversarial`'s own floor is unconditional for
+    `express`/`gate-only` (finding 4, already fixed) regardless of the
+    delta's own §6 types -- the intent's "仍有 ≥3 探針" is unconditional
+    for gate-only. Today, with the raw-small short-circuit still in
+    place, this delta's effective lane is `small`, not `gate-only` --
+    `lane_unconditional` never fires, `kinds` is empty (pure docs), so the
+    adversarial floor is never required and `push` passes despite zero
+    probes recorded. Once the ratified rule lands (raw small + declared
+    gate-only -> gate-only), this same delta's effective lane becomes
+    `gate-only`, which DOES make the floor unconditional -- `push` should
+    then block on `push.probes-adversarial`.
+    # RED at HEAD: raw-small-does-not-defer-to-declared-gate-only
     """
-    repo = _gateonly_docs_delta_repo(tmp_path, "2026-09-05-lane-no-probes")
+    repo = _seed_branch_with_kickoff(tmp_path)
     change_id = "2026-09-05-lane-no-probes"
-    _write_evidence(repo)  # tests.txt for the package-tests record only
-    git(repo, "add", "-A")
-    git(repo, "commit", "-q", "-m", "docs: pure docs delta")
-    reviewed_sha = git(repo, "rev-parse", "HEAD")
-
-    body = {
-        "reviewed_sha": reviewed_sha,
-        "scope": "branch-end",
-        "vendors": ["anthropic"],
-        "verdicts": [],
-        "probes": [_package_tests_record(reviewed_sha)],  # no adversarial entries at all
-        "open_findings": [],
-        "dispatch": [_dispatch("adversary", "agent-adv", "T1")],
-    }
-    review_rel = _write_review(repo, change_id, body)
-    _commit_review(repo, review_rel)
-
-    result = run_checker("push", cwd=repo)
-    assert result.returncode != 0, (
-        "gate-only's own stated invariant is >=3 adversarial probes always; "
-        f"a pure-docs delta with zero recorded passed instead: {result.stdout}"
-    )
-    assert "push.probes-adversarial" in blocked_rules(result)
-
-
-# =============================================================================
-# Class 5 -- floor arithmetic. A recomputed `small` always wins over a
-# declared `gate-only`: `effective_lane_detail` short-circuits to `small`
-# BEFORE it ever looks at `declared_lane()`. Its floor is 1, not 0 --
-# recompute-small never inherits gate-only's zero-reader floor.
-# =============================================================================
-
-
-def test_effective_lane_recomputed_small_overrides_declared_gate_only_floor_stays_one(
-    tmp_path: Path,
-) -> None:
-    """A delta that is entirely small-lane-safe (one plugin dir, no
-    KICKOFF/PRINCIPLES/DESIGN touch, no interface surface, only a docs
-    file) recomputes `small`, whatever `lane: gate-only` declares -- the
-    plan's own "recomputed small stays small" invariant. GREEN: this
-    pins the arithmetic directly (`effective_lane_detail` and
-    `LANE_VERDICT_FLOOR`) so a future change cannot let a declared
-    gate-only's floor of 0 leak into a recomputed-small round's floor of
-    1 without a visible test failure here."""
-    repo = _seed_branch(tmp_path)
-    change_id = "2026-09-05-lane-small-wins"
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
     _write(repo, f"docs/loom/intent/{change_id}.md",
-           _lane_intent_text(change_id, lane_line="lane: gate-only"))
+           _lane_intent_text(change_id, lane_line=lane_line))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
     git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
-    # No KICKOFF-DEFAULTS.md touch in this diff at all -- committed only
-    # on `main` before the branch existed -- so the recompute sees a
-    # single plugin-free docs file and nothing else.
-    _write(repo, "docs/notes.md", "a purely small-lane-safe delta\n")
+    _write(repo, "docs/notes.md", "a purely small-lane-safe delta, no probes\n")
+    (repo / "evidence").mkdir(exist_ok=True)
+    (repo / "evidence/tests.txt").write_text("1 passed\n", encoding="utf-8")
     git(repo, "add", "-A")
-    git(repo, "commit", "-q", "-m", "docs: a small-lane-safe delta\n\nTask: T1")
+    git(repo, "commit", "-q", "-m", "docs: raw-small delta, zero adversarial probes")
     reviewed_sha = git(repo, "rev-parse", "HEAD")
 
     raw_lane, _raw_reason = lc.change_lane_detail(repo, reviewed_sha)
@@ -563,13 +516,98 @@ def test_effective_lane_recomputed_small_overrides_declared_gate_only_floor_stay
         f"fixture check: expected the recompute itself to already say "
         f"small, got {raw_lane!r}"
     )
-    lane, reason = lc.effective_lane_detail(repo, reviewed_sha, change_id, 1)
-    assert lane == "small", (
-        f"a declared `lane: gate-only` must not override a recomputed "
-        f"small lane; got {lane!r} ({reason})"
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [_verdict("agent-rev", 1, "branch-end", reviewed_sha)],
+        "probes": [_package_tests_record(reviewed_sha)],  # no adversarial entries at all
+        "open_findings": [],
+        "dispatch": [_dispatch("reviewer", "agent-rev", "T1")],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "gate-only's own stated invariant is >=3 adversarial probes always; "
+        "with a dated gate-only declaration on a raw-small delta, this "
+        f"should block on push.probes-adversarial; it passed instead: {result.stdout}"
     )
-    assert lc.LANE_VERDICT_FLOOR[lane] == 1, (
-        "the small lane's own floor is 1, never gate-only's 0"
+    assert "push.probes-adversarial" in blocked_rules(result)
+
+
+# =============================================================================
+# Class 5 -- floor arithmetic, RETARGETED to the ratified shape (coordinator
+# message on the standing-doc observation): under the ratified rule, a
+# raw-small delta PLUS a declared gate-only IS the gate-only lane, floor 0
+# -- gate-only IS the small lane with reviewers waived when the user asks
+# for it, not a separate, narrower thing. The OLD invariant this test used
+# to pin ("recomputed small always wins, floor stays 1") is exactly what
+# the ratification reverses; keeping the old name/assertion here would pin
+# the wrong future. `effective_lane_detail` still returns `"small"`
+# unconditionally on `raw_lane == "small"` today (the short-circuit this
+# probe used to describe), which is why this is RED at HEAD.
+# =============================================================================
+
+
+def test_push_declared_gate_only_overrides_recomputed_small_floor_zero(
+    tmp_path: Path,
+) -> None:
+    """A delta that is entirely small-lane-safe (one plugin dir, no
+    standing-document touch, no interface surface, only a docs file --
+    KICKOFF-DEFAULTS.md exists only on `main`, before the branch, so it is
+    never part of the diff) with a DATED `lane: gate-only` declaration and
+    ZERO verdicts, but >=3 adversarial probes and a package-tests probe
+    recorded. Per the ratified small-lane-classes rule: raw recompute is
+    `small`; the effective declaration is `gate-only`; a raw-`small` delta
+    with a `gate-only` declaration IS the `gate-only` lane, floor 0 -- so
+    `push` should exit 0. It does not: `effective_lane_detail` still
+    returns `"small"` (floor 1) unconditionally the moment the raw
+    recompute says small, before ever consulting the declared lane, so
+    zero verdicts still blocks on `push.verdicts-ge-2`.
+    # RED at HEAD: raw-small-does-not-defer-to-declared-gate-only
+    """
+    repo = _seed_branch_with_kickoff(tmp_path)
+    change_id = "2026-09-05-lane-small-gateonly"
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _write(repo, f"docs/loom/intent/{change_id}.md",
+           _lane_intent_text(change_id, lane_line=lane_line))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    # No KICKOFF-DEFAULTS.md touch in this diff at all -- committed only
+    # on `main` before the branch existed -- so the recompute sees a
+    # single plugin-free docs file and nothing else: genuinely raw-small.
+    _write(repo, "docs/notes.md", "a purely small-lane-safe delta\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs: a small-lane-safe delta")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    raw_lane, _raw_reason = lc.change_lane_detail(repo, reviewed_sha)
+    assert raw_lane == "small", (
+        f"fixture check: expected the recompute itself to already say "
+        f"small, got {raw_lane!r}"
+    )
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [_dispatch("adversary", "agent-adv", "T1")],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (
+        "a raw-small delta with a dated `lane: gate-only` declaration "
+        "should be the gate-only lane (floor 0) and pass with zero "
+        f"verdicts; it was blocked instead: {result.stdout}"
     )
 
 
@@ -1189,23 +1227,58 @@ def test_push_from_wave_switch_declared_mid_checkpoint_single_reader_blocked(
 
 
 # =============================================================================
-# Ratified follow-up (PRINCIPLES.md 56a4dc4c, intent 48114098): gate-only
-# is available ONLY to the classes `change_lane_detail`'s own raw recompute
-# already calls "small" (tests only, docs only, CI/config, version sync,
-# clean revert -- one plugin, no gate/skill/contract/standing-document/
-# interface-surface), not merely "no gate/skill/agent-contract". Both
-# probes use the same shape the original W0-01 floor's case (c) does
-# (docs + a KICKOFF-DEFAULTS.md touch, both IN the delta) -- that touch
-# is what forces the RAW recompute to `full` in the first place (a
-# standing document forces full per `_small_lane_path_reason`), which is
-# the only way `effective_lane_detail` ever reaches gate-only's OWN
-# eligibility branch at all: a delta with no standing-doc touch recomputes
-# raw `small` and returns from `effective_lane_detail`'s very first branch
-# before the declared lane is even consulted (confirmed directly: a plain
-# docs+tests delta, no KICKOFF touch, recomputes `small`, floor 1 -- zero
-# verdicts already blocks it for an UNRELATED reason, so it would not
-# exercise this question at all).
+# Ratified follow-up (PRINCIPLES.md 56a4dc4c, intent 48114098), definition
+# SETTLED by the coordinator after the standing-doc observation below:
+# raw recompute runs first; if raw is `small` and the effective
+# declaration is `gate-only`, the lane IS `gate-only` with floor 0
+# (gate-only is the small lane with reviewers waived, not a separate,
+# narrower thing); if raw is `full` for ANY reason at all -- standing
+# document, second plugin dir, code, gate, skill, agent-contract,
+# interface surface -- the gate-only declaration is ignored and the delta
+# falls back to `full`, reason `gate-only needs a small-lane delta: <raw
+# reason>`; `express` is unchanged (raw full with no gate-typed path ->
+# floor 1); the `kind == "standing"` exemption in `_lane_forcing_paths`
+# is superseded by this and goes away. Both probes below use the shape
+# the original W0-01 floor's case (c) does (docs + a KICKOFF-DEFAULTS.md
+# touch, both IN the delta for one of them) -- that touch is what forces
+# the RAW recompute to `full` (a standing document forces full per
+# `_small_lane_path_reason`), which is the only way `effective_lane_
+# detail` today ever reaches gate-only's OWN eligibility branch at all: a
+# delta with no standing-doc touch recomputes raw `small` and returns
+# from `effective_lane_detail`'s very first branch before the declared
+# lane is even consulted (confirmed directly: a plain docs+tests delta,
+# no KICKOFF touch, recomputes `small`, floor 1 today -- the next test
+# below pins exactly that this should instead defer to the declared
+# `gate-only` and drop to floor 0).
 # =============================================================================
+
+
+def _seed_branch_with_kickoff(tmp_path: Path) -> Path:
+    """Like `_seed_branch`, but `docs/loom/KICKOFF-DEFAULTS.md` is
+    committed as PART OF THE SEED, on `main`, before `work` is checked
+    out -- so `declared_test_command` can still resolve `package-tests:`
+    from the final tree, but the file itself never appears in the diff
+    `branch_base` computes (any commit added to `work` after checkout
+    -- even the very first one -- is included in that diff, so a
+    genuinely raw-small delta needs KICKOFF to predate the branch, not
+    merely predate the delta commit)."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text(
+        f"# Kickoff Defaults\n\n- package-tests: {PASSING_COMMAND} — the "
+        "fixture's whole suite (2026-09-05)\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    return repo
 
 
 def test_push_gateonly_dated_declaration_nontest_code_in_delta_blocked(
@@ -1257,25 +1330,24 @@ def test_push_gateonly_dated_declaration_nontest_code_in_delta_blocked(
     assert "push.verdicts-ge-2" in blocked_rules(result)
 
 
-def test_push_gateonly_dated_declaration_standing_doc_touch_currently_passes(
+def test_push_gateonly_dated_declaration_standing_doc_touch_now_blocked(
     tmp_path: Path,
 ) -> None:
-    """(b) The mirror the coordinator asked for, run exactly as (a) but
-    WITHOUT the non-test module -- docs + KICKOFF-DEFAULTS.md only, same
-    dated declaration, zero verdicts. GREEN today, and the coordinator
-    expects it to stay GREEN -- but this exact fixture is itself the
-    ratification's real target, not a neutral control: KICKOFF-DEFAULTS.md
-    is a STANDING document, and it is the ONLY reason this delta ever
-    reaches gate-only's own eligibility branch at all (a delta with no
-    standing-doc touch recomputes raw `small` and returns before the
-    declared lane is consulted -- verified directly, see the module
-    docstring above this section). PRINCIPLES.md 56a4dc4c's own wording
-    excludes "standing document" from the small-lane classes gate-only is
-    now supposed to be limited to -- so THIS delta, touching
-    KICKOFF-DEFAULTS.md, should arguably now be blocked too, and passing
-    it is the real gap the ratification has not yet closed. Recorded here
-    as the coordinator's requested GREEN pin, with the divergence flagged
-    rather than silently pinned as if it were settled."""
+    """(b) RETARGETED: the coordinator's own follow-up settled the design
+    question this test used to leave open (see the superseded docstring
+    this replaces) -- under the ratified rule, gate-only IS the small
+    lane with a waived floor; a raw recompute of `full` for ANY reason,
+    including a standing-document touch, means the gate-only declaration
+    is ignored and the delta falls back to `full` (2 readers). The `kind
+    == "standing"` exemption in `_lane_forcing_paths` is the mechanism
+    that still lets this pass today -- it is slated to go. Same fixture
+    as (a) but WITHOUT the non-test module: docs + KICKOFF-DEFAULTS.md
+    (a standing document) touched IN the delta, same dated declaration,
+    zero verdicts, >=3 probes recorded. Per the ratified rule this must
+    now be BLOCKED (`gate-only needs a small-lane delta: <raw reason>`,
+    falling back to full's floor of 2); it still passes today.
+    # RED at HEAD: standing-doc-exemption-still-lets-gate-only-through
+    """
     repo = _seed_branch(tmp_path)
     change_id = "2026-09-05-lane-smallclass-standing"
     lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
@@ -1286,6 +1358,12 @@ def test_push_gateonly_dated_declaration_standing_doc_touch_currently_passes(
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "docs: docs+KICKOFF delta, no code")
     reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    raw_lane, raw_reason = lc.change_lane_detail(repo, reviewed_sha)
+    assert raw_lane == "full", (
+        f"fixture check: a KICKOFF-DEFAULTS.md touch must recompute raw "
+        f"full (it is a standing document); got {raw_lane!r} ({raw_reason})"
+    )
 
     body = {
         "reviewed_sha": reviewed_sha,
@@ -1300,7 +1378,9 @@ def test_push_gateonly_dated_declaration_standing_doc_touch_currently_passes(
     _commit_review(repo, review_rel)
 
     result = run_checker("push", cwd=repo)
-    assert result.returncode == 0, (
-        "a dated `lane: gate-only` declaration with a docs+KICKOFF-only "
-        f"delta and zero verdicts should pass today: {result.stdout}"
+    assert result.returncode != 0, (
+        "a dated `lane: gate-only` declaration must not survive a raw-full "
+        "recompute caused by a standing-document touch -- it should fall "
+        f"back to full (2 readers, zero present); it passed instead: {result.stdout}"
     )
+    assert "push.verdicts-ge-2" in blocked_rules(result)
