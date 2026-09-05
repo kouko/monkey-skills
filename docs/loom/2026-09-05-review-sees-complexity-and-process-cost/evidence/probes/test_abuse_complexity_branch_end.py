@@ -355,13 +355,63 @@ def test_dispatch_subject_commit_count_bound_by_waves_plus_verdict_rounds() -> N
     )
 
 
+def _normalize_iso_offset(ts: str) -> str:
+    """Insert the colon in a bare `+HHMM`/`-HHMM` offset so two ISO 8601
+    timestamps compare correctly as plain strings -- git's `%cI` always
+    emits a colon (`+08:00`); a hand-written review.json entry sometimes
+    does not (`+0800`), and the two would otherwise be incomparable at the
+    exact character where they diverge."""
+    if re.search(r"[+-]\d{4}$", ts):
+        return ts[:-2] + ":" + ts[-2:]
+    return ts
+
+
+def _dispatch_record_commit_time(task: str, confirm_sha: str) -> str | None:
+    """Committer time (ISO 8601) of the earliest commit whose review.json
+    tree already carries a dispatch[] entry naming this exact task -- the
+    record commit for that dispatch, found by content rather than by
+    subject line, since a fix round's dispatch is sometimes recorded inside
+    a combined checkpoint-verdict commit rather than its own
+    `chore(loom): dispatch` commit."""
+    commits = subprocess.run(
+        ["git", "log", "--format=%H %cI", "--reverse", f"{confirm_sha}..HEAD"],
+        cwd=str(REPO), capture_output=True, text=True, check=True,
+    ).stdout.strip().splitlines()
+    rel_path = REVIEW_JSON.relative_to(REPO).as_posix()
+    pattern = re.compile(r'"task":\s*"' + re.escape(task) + r'"')
+    for line in commits:
+        sha, _, committer_iso = line.partition(" ")
+        blob = subprocess.run(
+            ["git", "show", f"{sha}:{rel_path}"],
+            cwd=str(REPO), capture_output=True, text=True,
+        )
+        if blob.returncode == 0 and pattern.search(blob.stdout):
+            return committer_iso
+    return None
+
+
+def _head_committer_time() -> str:
+    return subprocess.run(
+        ["git", "log", "-1", "--format=%cI", "HEAD"],
+        cwd=str(REPO), capture_output=True, text=True, check=True,
+    ).stdout.strip()
+
+
 def test_every_dispatch_started_precedes_its_first_task_or_round_commit() -> None:
     """Every dispatch[] entry's `started` timestamp precedes the first
-    commit that could plausibly follow from it -- for an implementer, its
-    first `Task:` trailer commit; for a round role (adversary, blind-runner,
-    reviewer), any commit at or after the record commit that carries it.
-    Regression guard for the timestamp bug the wave-end round's own
-    adversary caught and fixed (639180ea)."""
+    commit that could plausibly follow from it: for a plain `W<n>-<n>`
+    implementer task, its first `Task:` trailer commit; for a round role
+    (adversary, blind-runner, reviewer) at a checkpoint (`wave-end:<n>`,
+    `branch-end`), the record commit that first introduced its own dispatch
+    entry -- these are batched and recorded before any of the round starts,
+    so `started` equals that commit's own committer time; for a `fix:*`
+    implementer entry, HEAD's own commit time -- the weakest bound the
+    "any commit at or after the record commit that carries it" rule
+    allows, since a fix round's real start legitimately trails its own
+    bookkeeping commit by minutes to over an hour. Regression guard for the
+    timestamp bug the wave-end round's own adversary caught and fixed
+    (639180ea), and for the branch-end round-role drift (`started` stamped
+    over an hour after its own record commit) corrected at `5db0419d`."""
     doc = json.loads(REVIEW_JSON.read_text(encoding="utf-8"))
     confirm_sha = _confirm_intent_sha()
     checked = 0
@@ -370,21 +420,43 @@ def test_every_dispatch_started_precedes_its_first_task_or_round_commit() -> Non
         started = entry.get("started")
         if not task or not started:
             continue
+        started = _normalize_iso_offset(started)
+
         m = re.match(r"^(W\d+-\d+)", task)
-        if not m:
+        if m:
+            task_id = m.group(1)
+            commit_iso = subprocess.run(
+                ["git", "log", "--format=%cI", f"--grep=^Task: {task_id}$",
+                 f"{confirm_sha}..HEAD"],
+                cwd=str(REPO), capture_output=True, text=True, check=True,
+            ).stdout.strip().splitlines()
+            if not commit_iso:
+                continue
+            first_commit_time = _normalize_iso_offset(commit_iso[-1])
+            assert started <= first_commit_time, (
+                f"{task}: started {started!r} does not precede its first "
+                f"Task-trailer commit {first_commit_time!r}"
+            )
+            checked += 1
             continue
-        task_id = m.group(1)
-        commit_iso = subprocess.run(
-            ["git", "log", "--format=%cI", f"--grep=^Task: {task_id}$",
-             f"{confirm_sha}..HEAD"],
-            cwd=str(REPO), capture_output=True, text=True, check=True,
-        ).stdout.strip().splitlines()
-        if not commit_iso:
+
+        is_checkpoint_round = task == "branch-end" or re.fullmatch(r"wave-end:\d+", task)
+        is_fix = task.startswith("fix:")
+        if not (is_checkpoint_round or is_fix):
             continue
-        first_commit_time = commit_iso[-1]
-        assert started <= first_commit_time, (
-            f"{task}: started {started!r} does not precede its first "
-            f"Task-trailer commit {first_commit_time!r}"
+
+        if is_checkpoint_round:
+            record_time = _dispatch_record_commit_time(task, confirm_sha)
+            assert record_time is not None, f"no record commit found for checkpoint task {task!r}"
+            bound = _normalize_iso_offset(record_time)
+            bound_desc = f"its own record commit ({bound!r})"
+        else:
+            bound = _normalize_iso_offset(_head_committer_time())
+            bound_desc = f"HEAD's own commit time ({bound!r})"
+
+        assert started <= bound, (
+            f"{task} ({entry.get('role')}): started {started!r} is after "
+            f"{bound_desc}"
         )
         checked += 1
     assert checked >= 5, f"expected at least the 5 W1 tasks checked, got {checked}"
