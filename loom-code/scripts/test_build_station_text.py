@@ -137,19 +137,30 @@ def _last_wave_paragraph() -> str:
     return marker + tail[:para_end]
 
 
+_NEGATED_CALL = re.compile(r"\b(?:not|never|no)\b|n't")
+
+
 def _package_tests_before_memory_before_review(paragraph: str) -> bool:
-    """True iff, in order, a package-tests reference (§6) precedes a
-    memory-step reference (§6.5) precedes the review-station call --
-    the sequencing wave-end:1-01 fixed. `rindex` on the review call
-    picks the call itself, not the earlier "do not call ... here"
-    sentence that may also name it."""
+    """True iff the paragraph contains EXACTLY ONE affirmative sentence that
+    calls the review station (a sentence naming `loom-code:review` with no
+    negation token -- "Do not call ... here" is a refusal, not a call), and
+    that single call comes after both the package-tests reference (§6) and
+    the memory-step reference (§6.5) -- the sequencing wave-end:1-01 fixed,
+    tightened in round 2 so an early call plus a late call is rejected."""
     flat = " ".join(paragraph.split())
+    sentences = re.split(r"(?<=[.!?])\s+", flat)
+    calls = [
+        s for s in sentences
+        if "loom-code:review" in s and not _NEGATED_CALL.search(s)
+    ]
+    if len(calls) != 1:
+        return False
     try:
         i_pkg = flat.index("§6 (package tests)")
         i_mem = flat.index("§6.5 (the memory step)")
-        i_review = flat.rindex("loom-code:review")
     except ValueError:
         return False
+    i_review = flat.index(calls[0]) + calls[0].index("loom-code:review")
     return i_pkg < i_mem < i_review
 
 
@@ -158,6 +169,20 @@ def test_lastwaveparagraph_orders_packagetests_then_memorystep_then_reviewcall()
     assert _package_tests_before_memory_before_review(paragraph), (
         "build's §5 last-wave paragraph does not order §6 before §6.5 "
         "before the review-station call"
+    )
+
+
+def test_orderchecker_synthetic_twocalls_rejected() -> None:
+    """Self-test: a paragraph that calls review before package tests AND
+    again after the memory step orders the last call correctly yet is not
+    a single closing round -- it must be rejected."""
+    synthetic = (
+        "**Last wave of the plan.** Call `loom-code:review` for the wave. "
+        "Then continue to §6 (package tests) and §6.5 (the memory step), "
+        "then call `loom-code:review` again for the closing round."
+    )
+    assert not _package_tests_before_memory_before_review(synthetic), (
+        "the order-checker accepted a paragraph with two review calls"
     )
 
 

@@ -362,7 +362,11 @@ def _language_policy_intent_closed(intent_text: str) -> bool:
     this change ships, its branch-scope pin below only makes sense on its
     own branch — any later branch that adds a docs/loom/<other-id>/ tree
     must not be failed by it)."""
+    # Only the leading metadata block decides: the lines before the first
+    # blank line. A `status:` line anywhere later in the body is prose.
     for line in intent_text.splitlines():
+        if not line.strip():
+            return False
         stripped = line.strip()
         if stripped.startswith("status:"):
             return stripped[len("status:") :].strip().startswith("closed")
@@ -397,6 +401,16 @@ def test_LanguagePolicyGuard_syntheticIntentTexts_decidesSkip():
         "some later paragraph mentions status: closed in passing.\n"
     )
     assert _language_policy_intent_closed(body_level_closed_text) is False
+    # a body-level decoy at line start, outside the metadata block, is prose
+    decoy_after_block = (
+        "# title\n"
+        "originator: kouko\n"
+        "status: confirmed 2026-09-05\n"
+        "\n"
+        "## Problem\n"
+        "status: closed 2026-09-05 — PR #791\n"
+    )
+    assert _language_policy_intent_closed(decoy_after_block) is False
 
 
 def _resolve_base_ref() -> str | None:
