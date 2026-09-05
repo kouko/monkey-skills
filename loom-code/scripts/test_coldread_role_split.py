@@ -166,9 +166,12 @@ def test_main_writes_run_files_with_command_line_and_summary(tmp_path, monkeypat
         assert run_file.exists()
         text = run_file.read_text(encoding="utf-8")
         header, body = text.split("\n\n", 1)
-        assert header.splitlines()[0] == (
-            "# command: /usr/bin/claude -p <prompt> --model sonnet --output-format text"
+        command_line = header.splitlines()[0]
+        assert command_line.startswith(
+            "# command: /usr/bin/claude -p --model sonnet --output-format text"
         )
+        assert "prompt on stdin" in command_line
+        assert "sha256" in command_line
         assert f"# contract: {contract} sha256" in header
         assert f"# fixture: {fixture} sha256" in header
         assert f"# run: {i} of 3" in header
@@ -272,3 +275,31 @@ def test_main_cli_timeout_expired_continues_loop(tmp_path, monkeypatch):
     assert run2["status"] == "timeout"
     for item in summary["items"].values():
         assert item["counts"].get("unparsed", 0) >= 1
+
+
+# ---------------------------------------------------------------------------
+# W1-03 fix round: package-level coverage for wave-end:1 findings 01/02/03/04/06/07/08
+# ---------------------------------------------------------------------------
+
+
+def test_run_once_sends_prompt_on_stdin_not_argv(monkeypatch):
+    """finding 01: the prompt must never be an argv element -- it must
+    arrive via `subprocess.run`'s `input=` kwarg -- so a prompt whose
+    text starts with `---` (real contract frontmatter) cannot be parsed
+    as an unknown option."""
+    captured = {}
+
+    def fake_run(argv, **kwargs):
+        captured["argv"] = argv
+        captured["kwargs"] = kwargs
+        return coldread_role_split.subprocess.CompletedProcess(argv, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(coldread_role_split.subprocess, "run", fake_run)
+
+    prompt = "---\nname: x\n---\nbody"
+    argv, body, returncode = coldread_role_split.run_once("claude", "sonnet", prompt, timeout=30)
+    assert returncode == 0
+    assert body == "ok"
+    assert prompt not in argv
+    assert captured["kwargs"]["input"] == prompt
+    assert argv == ["claude", "-p", "--model", "sonnet", "--output-format", "text"]

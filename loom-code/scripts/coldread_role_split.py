@@ -195,19 +195,36 @@ def build_prompt(contract_text: str, fixture: dict, role: str) -> str:
     return "\n".join(lines)
 
 
-def run_once(claude_bin: str, model: str, prompt: str, timeout: int) -> tuple[list[str], str]:
+def run_once(claude_bin: str, model: str, prompt: str, timeout: int) -> tuple[list[str], str, int]:
     """Run one `claude -p` call. Lets `subprocess.TimeoutExpired` propagate.
     On a non-zero return code, stdout and stderr are concatenated and still
-    returned rather than raising."""
-    argv = [claude_bin, "-p", prompt, "--model", model, "--output-format", "text"]
-    completed = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
+    returned rather than raising.
+
+    The prompt is sent on `stdin` (`subprocess.run(..., input=prompt)`),
+    never as an argv element: a real contract's YAML frontmatter starts
+    with `---`, which `claude`'s option parser rejects as an unknown
+    option when the prompt is positional. Grounded in the captured
+    `claude -p --help` output at
+    docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/claude-p-help-2026-09-05.txt,
+    which this invocation relies on for three facts: the prompt is read
+    from stdin when none is given positionally, `--model` and
+    `--output-format text` are supported flags, and no `--seed` flag
+    exists."""
+    argv = [claude_bin, "-p", "--model", model, "--output-format", "text"]
+    completed = subprocess.run(
+        argv, input=prompt, capture_output=True, text=True, timeout=timeout
+    )
     if completed.returncode != 0:
-        return argv, (completed.stdout or "") + (completed.stderr or "")
-    return argv, completed.stdout
+        return argv, (completed.stdout or "") + (completed.stderr or ""), completed.returncode
+    return argv, completed.stdout, completed.returncode
 
 
-def _redacted_argv(argv: list[str], prompt: str) -> list[str]:
-    return ["<prompt>" if part == prompt else part for part in argv]
+def _command_line(argv: list[str], prompt_hash: str) -> str:
+    """The `# command:` header line: the argv actually passed to
+    `subprocess.run` (the prompt is never one of its elements — see
+    `run_once`), annotated with how the prompt was delivered and its
+    hash so a reader can verify it without the prompt being printed."""
+    return "# command: " + " ".join(argv) + f"  (prompt on stdin, sha256 {prompt_hash})"
 
 
 def _write_run_file(
@@ -222,14 +239,14 @@ def _write_run_file(
     n: int,
     body: str,
 ) -> None:
-    command_line = "# command: " + " ".join(_redacted_argv(argv, prompt))
+    prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
     header_lines = [
-        command_line,
+        _command_line(argv, prompt_hash),
         f"# contract: {contract_arg} sha256 {contract_hash}",
         f"# fixture: {fixture_arg} sha256 {fixture_hash}",
         f"# run: {i} of {n}",
         f"# timestamp: {datetime.datetime.now().astimezone().isoformat()}",
-        f"# prompt-sha256: {hashlib.sha256(prompt.encode('utf-8')).hexdigest()}",
+        f"# prompt-sha256: {prompt_hash}",
     ]
     path.write_text("\n".join(header_lines) + "\n\n" + body, encoding="utf-8")
 
@@ -299,9 +316,9 @@ def main(argv: list[str] | None = None) -> int:
             runs_summary.append({"i": i, "file": run_path.name, "status": "resumed"})
             continue
 
-        call_argv = [claude_bin, "-p", prompt, "--model", args.model, "--output-format", "text"]
+        call_argv = [claude_bin, "-p", "--model", args.model, "--output-format", "text"]
         try:
-            _, body = run_once(claude_bin, args.model, prompt, args.timeout)
+            _, body, _ = run_once(claude_bin, args.model, prompt, args.timeout)
             status = "ok"
         except subprocess.TimeoutExpired:
             body = f"# error: timeout after {args.timeout}s"
@@ -324,11 +341,9 @@ def main(argv: list[str] | None = None) -> int:
 
     result = score(responses, fixture, args.role)
 
-    command_template = "# command: " + " ".join(
-        _redacted_argv(
-            [claude_bin, "-p", prompt, "--model", args.model, "--output-format", "text"],
-            prompt,
-        )
+    command_template = _command_line(
+        [claude_bin, "-p", "--model", args.model, "--output-format", "text"],
+        hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
     )
 
     summary = {
