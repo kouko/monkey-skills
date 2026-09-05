@@ -105,6 +105,11 @@ Wave 1 — three disjoint files sets, parallel worktrees.
   there. The baseline sentence is rule 8 of §5 "Working discipline"
   (agent-decided — the list is what the reviewer reads work against).
 
+**W1-04 Graduated branch-scope probes from #791 skip once their change has shipped**  after: W0-01
+- Files: `loom-code/scripts/test_probes_language_policy.py` (`test_branchdiff_scope_clean`), `loom-code/scripts/test_probes_language_policy_branch_end.py` (`test_BranchDiff_docsLoomPaths_scopedToChangeId`)
+- Test: both tests fail on this branch today (W1-03's package run: they treat this change's own `docs/loom/2026-09-05-…/` files as foreign paths of the 2026-09-03 change); after the fix they `pytest.skip` with a stated reason when `docs/loom/intent/2026-09-03-artifact-language-policy.md` reads `status: closed`, and still run (and pass) when it does not; a self-test feeds both intent states to the guard.
+- Risk: found during W1-03; a graduated probe that pins "this branch touches only its own change's docs" is only meaningful on that change's branch — every later branch adding a `docs/loom/<id>/` tree goes red on CI. Agent-decided: skip-on-closed, not delete (the pin stays alive for a reopened branch); the evidence originals are historical and are not edited. Added to the plan after the fact — noted in the wave report.
+
 Wave 2 — release plumbing, then this change's own memory step.
 
 **W2-01 Changelog 1.3.1, version, Codex manifest and scaffold stamps**  after: W1-01, W1-02, W1-03
