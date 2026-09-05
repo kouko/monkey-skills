@@ -417,6 +417,12 @@ def test_matcher_wave_end_sentence_affirmative_accepted() -> None:
 
 def _probe_graduation_paragraph() -> str:
     text = BUILD_SKILL.read_text(encoding="utf-8")
+    assert "**Probe graduation.**" in text, (
+        "graduation-paragraph start marker missing from build/SKILL.md"
+    )
+    assert "**Store entries.**" in text, (
+        "graduation-paragraph end marker missing from build/SKILL.md"
+    )
     section = text.split("**Probe graduation.**", 1)[1]
     return section.split("**Store entries.**", 1)[0]
 
@@ -425,7 +431,20 @@ def test_graduation_paragraph_names_rehearsal_and_red_blocks_graduation() -> Non
     """W2-01: the Probe graduation paragraph must name
     `rehearse_probes.py` with the plugin-root prefix and carry an
     affirmative sentence saying a red rehearsal blocks graduation, with
-    no negation token in that sentence (prose-pin rule)."""
+    no negation token in that sentence (prose-pin rule).
+
+    W2-02 branch-end fix (adv-be-9c4e finding 2): the negation sweep is
+    not limited to the one sentence carrying the literal "blocks
+    graduation" -- it covers every sentence of the rehearsal
+    sub-paragraph (from the sentence naming `rehearse_probes.py` onward)
+    that mentions any inflection of "graduat", so a rewrite that inverts
+    the rule in a *different* sentence ("does not block graduation",
+    verb-inflection) is still caught. Sentences before the rehearsal
+    sub-paragraph are excluded on purpose: "Cold-read reports ... never
+    graduate" is a legitimate, unrelated negation earlier in the same
+    section. A prose self-exemption that adds no negation token at all
+    ("Graduate anyway when ...") is refused separately, by literal
+    prefix, since no negation matcher can see it."""
     paragraph = _probe_graduation_paragraph()
     assert "${CLAUDE_PLUGIN_ROOT}/scripts/rehearse_probes.py" in paragraph
 
@@ -441,6 +460,27 @@ def test_graduation_paragraph_names_rehearsal_and_red_blocks_graduation() -> Non
         assert not _has_negation(sentence), (
             f"pinned rehearsal sentence carries a negation token: {sentence!r}"
         )
+
+    start = next(
+        (
+            i
+            for i, s in enumerate(sentences)
+            if "rehearse_probes.py" in s or "red rehearsal" in s.lower()
+        ),
+        None,
+    )
+    assert start is not None, "no sentence names the rehearsal script or rehearsal"
+    rehearsal_sentences = sentences[start:]
+    graduation_sentences = [s for s in rehearsal_sentences if "graduat" in s.lower()]
+    assert graduation_sentences, "no graduation-related sentence in the rehearsal paragraph"
+    for sentence in graduation_sentences:
+        assert not _has_negation(sentence), (
+            "a graduation-related sentence in the rehearsal paragraph "
+            f"carries a negation token: {sentence!r}"
+        )
+    assert not any(
+        s.lower().startswith("graduate anyway") for s in rehearsal_sentences
+    ), "a self-exemption sentence ('Graduate anyway…') escapes the rule"
 
 
 def test_word_cap_still_within_soft_bound_after_rehearsal_sentences() -> None:
