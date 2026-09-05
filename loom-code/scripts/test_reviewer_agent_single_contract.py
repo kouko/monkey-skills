@@ -255,8 +255,9 @@ def test_gate_markers_are_registered_mechanisms():
         "reviewer who did not implement, and a review-only commit are gates."
     )
     for gate_id in sorted(found):
-        assert gate_id.startswith("review."), (
-            f"gate id {gate_id!r} must be namespaced `review.<id>`."
+        assert gate_id.startswith("review.") or gate_id.startswith("charter."), (
+            f"gate id {gate_id!r} must be namespaced `review.<id>` or, for a "
+            "cross-artifact charter gate (W0-01), `charter.<id>`."
         )
         assert gate_id in registered, (
             f"gate {gate_id!r} is not registered in "

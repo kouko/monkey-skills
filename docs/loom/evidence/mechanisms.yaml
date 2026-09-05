@@ -334,3 +334,6 @@ mechanisms:
   - id: "design-system.never-blocks"
     class: prose-gate
     eval: loom-code/scripts/test_loom_checker_standing.py::test_missing_design_never_rejects
+  - id: "charter.plan-omission-narrow"
+    class: prose-gate
+    eval: loom-code/scripts/test_review_station_text.py::test_lenses_plan_omission_narrow_gate_present

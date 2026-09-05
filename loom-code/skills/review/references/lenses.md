@@ -64,6 +64,19 @@ literally wrong the text is:
 | missing-population | A measured number with no denominator or scope: "0% false positives" without saying over what |
 | deletion-first | See "Deletion-first for docs and skill" below — the same rule as the code lens's `deletion-first`, applied to station text and agent contracts |
 
+<!-- gate: charter.plan-omission-narrow -->
+**Plan omission, narrowed by the charter.** Omission on a `plan` is
+exactly one thing: a task whose Files, Test or Risk line leaves the
+implementer unable to start. A REQ left unrestated, a scenario left
+unlisted, or a rationale left unwritten is complete, because the plan
+charter's `must_not` column (`contract/manifest.yaml`,
+`artifacts.plan.charter`) sends each of those to `spec`. Content
+matching that `must_not` column found inside a plan scores
+`inconsistency`, the finding citing the charter row and its `goes_to`.
+A REQ missing task coverage is `cross-task-coherence` against the
+spec's REQ list, scored by the code lens.
+<!-- /gate -->
+
 **Deletion-first for docs and skill.** A new paragraph, mechanism, reserved
 task or fallback path in station text or a contract shows in the delta
 what it replaced, or names the already-observed failure it prevents by

@@ -1024,3 +1024,137 @@ def test_matcher_lane_line_sentence_affirmative_accepted() -> None:
     assert "user-judgment-leak" in sentence.lower()
     assert "finding" in sentence.lower()
     assert not _has_negation(sentence)
+
+# --- W2-02: build, review, fix-rounds and the docs lens recompute from the
+# --- charter rows ------------------------------------------------------
+
+
+def test_review_record_section_names_charter_accretion_recompute() -> None:
+    """W2-02: SS7 replaces the prose 'add to what is there; never
+    drop/rewrite' with an affirmative sentence citing the review charter
+    row and the `review-edits <change-id>` recompute
+    (`review.round-append-only`)."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    section = _section7(text)
+    hits = [
+        s for s in _flat_sentences(section)
+        if "artifacts.review.charter" in s
+        and "review-edits" in s
+        and "review.round-append-only" in s
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md SS7 has no affirmative sentence naming the review "
+        "charter row and the review-edits recompute"
+    )
+
+
+def test_matcher_review_charter_accretion_sentence_negated_rejected() -> None:
+    sentence = (
+        "The review charter row never names which keys gain entries, and "
+        "`review-edits <change-id>` does not recompute that accretion at "
+        "push (review.round-append-only)."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_review_charter_accretion_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "The review charter row (artifacts.review.charter) names which "
+        "keys gain entries at every round, and `review-edits <change-id>` "
+        "recomputes that accretion at push (review.round-append-only)."
+    )
+    assert "artifacts.review.charter" in sentence
+    assert "review-edits" in sentence
+    assert "review.round-append-only" in sentence
+    assert not _has_negation(sentence)
+
+
+def test_fix_rounds_names_where_the_fix_round_is_recorded() -> None:
+    """W2-02: fix-rounds.md's 'Where the fix round is recorded' paragraph
+    names the fix commits' reason, review.json as the record for
+    previous_findings and verdicts, and the plan charter's edits_after
+    list as the only exception to the plan staying as its commit left
+    it."""
+    text = (
+        REPO / "loom-code/skills/review/references/fix-rounds.md"
+    ).read_text(encoding="utf-8")
+    start = text.index("## Where the fix round is recorded")
+    end = text.index("## Third round")
+    section = text[start:end]
+    hits = [
+        s for s in _flat_sentences(section)
+        if "review.json" in s
+        and "previous_findings" in s
+        and "edits_after" in s
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "fix-rounds.md 'Where the fix round is recorded' section has no "
+        "affirmative sentence naming review.json, previous_findings and "
+        "the plan charter's edits_after list"
+    )
+
+
+def test_matcher_fix_round_record_sentence_negated_rejected() -> None:
+    sentence = (
+        "The fix commits carry no reason, previous_findings and this "
+        "round's verdicts never live in review.json, and the plan does "
+        "not keep the text its plan commit left."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_fix_round_record_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "The fix commits carry the reason for the fix; the resumed "
+        "reader's previous_findings and this round's verdicts live in "
+        "review.json; and the plan keeps the exact text its plan commit "
+        "left, the plan charter's edits_after list naming the only "
+        "exceptions."
+    )
+    assert "review.json" in sentence
+    assert "previous_findings" in sentence
+    assert "edits_after" in sentence
+    assert not _has_negation(sentence)
+
+
+# --- W2-02: lenses.md plan-omission sharpening block, gated -----------------
+
+
+def _plan_omission_gate_block() -> str:
+    text = (
+        REPO / "loom-code/skills/review/references/lenses.md"
+    ).read_text(encoding="utf-8")
+    start = text.index("<!-- gate: charter.plan-omission-narrow -->")
+    end = text.index("<!-- /gate -->", start) + len("<!-- /gate -->")
+    return text[start:end]
+
+
+def test_lenses_plan_omission_narrow_gate_present() -> None:
+    block = _plan_omission_gate_block()
+    assert "<!-- gate: charter.plan-omission-narrow -->" in block
+    assert "<!-- /gate -->" in block
+
+
+def test_lenses_plan_omission_narrow_names_implementer_cannot_start() -> None:
+    flat = " ".join(_plan_omission_gate_block().split()).lower()
+    assert "the implementer" in flat
+    assert "unable to start" in flat or "cannot start" in flat
+
+
+def test_lenses_plan_omission_narrow_scores_must_not_content_inconsistency() -> None:
+    flat = " ".join(_plan_omission_gate_block().split())
+    assert "must_not" in flat
+    assert "`inconsistency`" in flat
+    assert "goes_to" in flat
+
+
+def test_lenses_plan_omission_narrow_within_sentence_caps() -> None:
+    """W2-02: the sharpening block reads <= 120 words and, per the plan's
+    Test line, <= 6 sentences of <= 40 words each -- the same cap rule as
+    test_probes_sentence_cap.py."""
+    block = _plan_omission_gate_block()
+    inner = block.split("-->", 1)[1].rsplit("<!--", 1)[0]
+    assert len(inner.split()) <= 120
+    _assert_within_sentence_caps(inner)

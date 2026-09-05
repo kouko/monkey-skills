@@ -61,7 +61,11 @@ Then locate the change:
    is what makes resuming a half-built plan safe: run the command, subtract
    the ids it prints, continue with the rest. The only transient marks the
    plan may carry are `claimed(@branch)` while a task is in flight and
-   `blocked(<reason>)` when it stopped.
+   `blocked(<reason>)` when it stopped. After the plan commit the file
+   changes only by the plan charter's `edits_after` policies
+   (`contract/manifest.yaml`, `artifacts.plan.charter`), and
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py plan-edits
+   <change-id>` recomputes that at push.
 4. Read `docs/loom/<change-id>/review.json` if it exists — `reviewed_sha`
    is where the next delta measurement starts. If it does not exist, copy
    `${CLAUDE_PLUGIN_ROOT}/contract/templates/review.json`, set
@@ -364,7 +368,8 @@ commit or a branch only this tree has verifies nothing on CI.
 entry, in the format that store's own README defines, and regenerate
 its index — the store's README names the command
 (`python3 scripts/check_loom_memory_integrity.py --write`, run from
-this repo).
+this repo). The plan's Risks section stays exactly as the plan commit
+left it; the plan charter's `edits_after` list names the only exceptions.
 
 **Commits.** Both kinds of commit carry the `Task:` id of the plan's
 last-wave memory task, `W<n>-memory` — write-plan's Shape rule reserves

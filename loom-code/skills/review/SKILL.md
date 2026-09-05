@@ -368,9 +368,12 @@ Write `review.json` — verdicts, probes, findings and vendors of this round
 also carries `spec_sha`: the first seven characters of
 `git hash-object docs/loom/<change-id>/spec.md` as reviewed. It is what
 lets a later reader tell whether the spec the user confirmed
-(`confirmed-behavior: <date> @<spec sha7>`) is the spec that was reviewed. Add to what is there; never drop a key another
-station wrote (`dispatch[]` from `build`, `questions[]` from a decision
-point), and never rewrite an earlier round:
+(`confirmed-behavior: <date> @<spec sha7>`) is the spec that was reviewed. The
+review charter row (`contract/manifest.yaml`, `artifacts.review.charter`)
+names which keys gain entries at every round — including `dispatch[]` from
+`build` and `questions[]` from a decision point — and which are replaced
+whole; `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py review-edits
+<change-id>` recomputes that accretion at push (`review.round-append-only`).
 
 At the **first** checkpoint of a change, also fill `questions[]`, one entry
 each as `{decision_point, text, type}`. Those questions were asked at
