@@ -99,6 +99,15 @@
       "model": "sonnet",
       "started": "2026-09-06T02:40:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "impl-fix2-we1-chk",
+      "model": "sonnet",
+      "started": "2026-09-06T03:20:00+08:00",
+      "fresh_context": true,
+      "note": "codex round-1 fatals: scoped-vs-unscoped round selection; anchor comma split vs :: quote form"
     }
   ]
 }
