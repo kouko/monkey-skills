@@ -7,11 +7,23 @@ earlier adversary probe files in this same directory
 (`test_abuse_coldread_scoring.py`, `test_abuse_coldread_runner.py`).
 Every case here targets a state none of those three files exercised:
 non-contiguous fixture item numbers, a non-zero `subprocess.run`
-returncode folded into status "ok", `--out`/`--contract` pointing at a
-path that is not a usable file/dir, `systematic` semantics at n == 1,
-reverse item order, article/possessive label forms, an empty stdout
-body, `COLDREAD_CLAUDE_BIN`, and a resume body that itself contains the
+returncode, `--out`/`--contract` pointing at a path that is not a
+usable file/dir, `systematic` semantics near the n == 1 floor, reverse
+item order, article/possessive label forms, an empty stdout body,
+`COLDREAD_CLAUDE_BIN`, and a resume body that itself contains the
 `# command:` header sentinel.
+
+**Fix-round update (wave-end:1-02, -06, -07, -08):** four functions
+below were rewritten from pinning the pre-fix defect to asserting the
+corrected behaviour the fix round must deliver — a non-contiguous
+fixture must raise `ValueError`; a non-zero returncode must be
+recorded `status "error"`, not `"ok"`; an existing-file `--out` and a
+missing `--contract` must exit 2 with an `error:` message on stderr,
+never crash uncaught; and `systematic` must never fire below
+`n == 3`. Their function names now state the fixed expectation. They
+are RED against the pre-fix module and are the implementer's target
+for those four findings. The remaining functions in this file are
+unaffected by the fix and stay GREEN throughout.
 
 `subprocess.run` and `shutil.which` are monkeypatched throughout; no
 case calls the real `claude` binary.
@@ -77,14 +89,12 @@ def _base_argv(contract: Path, fixture: Path, out: Path, runs: str = "1", role: 
 # ---------------------------------------------------------------------------
 
 
-def test_score_fixture_with_gap_in_item_numbers_always_scores_high_n_wrong():
-    """A fixture with item numbers [1, 2, 5] (3 items, but max n is 5) sets
-    `n_items = len(items) == 3` inside score()/parse_response(). A response
-    that correctly answers "5. implementer -- z" is dropped by
-    parse_response's `n > n_items` guard, so item 5 is scored "unparsed"/
-    wrong even though the transcript answered it correctly. This proves the
-    fixture's `n` values must be contiguous 1..len(items) or scoring for
-    every item numbered beyond len(items) is silently always wrong."""
+def test_score_fixture_with_gap_in_item_numbers_raises_valueerror():
+    """A fixture with item numbers [1, 2, 5] (3 items, but max n is 5) is
+    not contiguous 1..len(items). `score` must reject it with
+    `ValueError` rather than silently computing `n_items = len(items)
+    == 3` and scoring every item numbered beyond len(items) (here, item
+    5) as always wrong/unparsed regardless of what the transcript says."""
     fixture = {
         "items": [
             {"n": 1, "text": "a", "expected": "reviewer"},
@@ -93,13 +103,33 @@ def test_score_fixture_with_gap_in_item_numbers_always_scores_high_n_wrong():
         ]
     }
     correct_response = "1. mine -- x\n2. other -- y\n5. implementer -- z"
+    try:
+        score([correct_response], fixture, "reviewer")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(
+            "score() accepted a fixture whose item numbers are not "
+            "contiguous 1..len(items) instead of raising ValueError"
+        )
+
+
+def test_score_fixture_with_contiguous_item_numbers_scores_normally():
+    """A control case for the probe above: a fixture whose item numbers
+    are exactly 1..len(items) must be accepted and scored without
+    raising, so the contiguity check does not reject valid fixtures."""
+    fixture = {
+        "items": [
+            {"n": 1, "text": "a", "expected": "reviewer"},
+            {"n": 2, "text": "b", "expected": "adversary"},
+            {"n": 3, "text": "c", "expected": "implementer"},
+        ]
+    }
+    correct_response = "1. mine -- x\n2. other -- y\n3. implementer -- z"
     result = score([correct_response], fixture, "reviewer")
-    assert result["items"]["5"]["expected"] == "implementer"
-    # The bug: despite the transcript answering item 5 correctly, it is
-    # recorded as wrong/unparsed because parse_response never sees n=5
-    # as in-range (n_items came out to 3, not 5).
-    assert result["items"]["5"]["wrong"] == 1
-    assert result["items"]["5"]["counts"] == {"unparsed": 1}
+    assert result["items"]["3"]["expected"] == "implementer"
+    assert result["items"]["3"]["wrong"] == 0
+    assert result["items"]["3"]["counts"] == {"implementer": 1}
 
 
 # ---------------------------------------------------------------------------
@@ -107,14 +137,14 @@ def test_score_fixture_with_gap_in_item_numbers_always_scores_high_n_wrong():
 # ---------------------------------------------------------------------------
 
 
-def test_main_nonzero_returncode_recorded_as_status_ok_not_distinguished():
-    """`run_once` folds a non-zero returncode's stdout+stderr into the
-    returned body without raising, and `main`'s loop only distinguishes
-    `TimeoutExpired` from success -- a failed `claude` invocation (auth
-    error, crash, non-zero exit) is written to run-1.txt and recorded in
-    summary.json with status "ok", identical to a genuine completed call.
-    A reader of summary.json cannot tell a real transcript from a failed
-    subprocess call folded into the same status bucket."""
+def test_main_nonzero_returncode_recorded_as_status_error_not_ok():
+    """A `claude` invocation that returns a non-zero exit code (auth
+    error, crash, ...) must be recorded in summary.json with status
+    "error", never "ok" -- and the transcript body must carry an
+    `# error: exit <code>` marker so a reader of run-1.txt alone can
+    tell the call failed. `summary.json["runs"][0]["returncode"]` must
+    carry the actual code, and `summary.json["failed_runs"]` must count
+    this run."""
 
     def fake_run(argv, **kwargs):
         return module.subprocess.CompletedProcess(
@@ -133,11 +163,14 @@ def test_main_nonzero_returncode_recorded_as_status_ok_not_distinguished():
         rc = main(_base_argv(contract, fixture, out))
         assert rc == 0
         summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
-        # The one and only run used a non-zero-returncode fake call, yet the
-        # runner records it exactly like a healthy call.
-        assert summary["runs"][0]["status"] == "ok"
+        # The one and only run used a non-zero-returncode fake call; the
+        # fixed runner must record it as "error", distinguishable from a
+        # genuine completed call.
+        assert summary["runs"][0]["status"] == "error"
+        assert summary["runs"][0]["returncode"] == 17
+        assert summary["failed_runs"] == 1
         body = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[1]
-        assert body == "fatal: not logged in"
+        assert "# error: exit 17" in body
     finally:
         module.shutil.which = module_which
         module.subprocess.run = module_run
@@ -148,16 +181,15 @@ def test_main_nonzero_returncode_recorded_as_status_ok_not_distinguished():
 # ---------------------------------------------------------------------------
 
 
-def test_main_out_path_is_existing_file_crashes_uncaught(tmp_path, monkeypatch):
-    """`--out` naming an existing regular file (not a directory) makes
-    `Path.glob` on it silently return no matches (so the "already contains
-    run files" guard never fires), then `out_dir.mkdir(parents=True,
-    exist_ok=True)` raises an uncaught `FileExistsError` -- a traceback,
-    not the graceful `error: ...` / exit 2 pattern every other invalid-
-    input case in this module uses."""
+def test_main_out_path_is_existing_file_exits_two_with_error(tmp_path, monkeypatch, capsys):
+    """`--out` naming an existing regular file (not a directory) must exit
+    2 with an `error:` message on stderr naming the path -- the same
+    graceful pattern every other invalid-input case in this module uses --
+    never an uncaught `FileExistsError` traceback, and the fake claude
+    call must never run."""
 
     def fake_run(argv, **kwargs):
-        raise AssertionError("must not be called before the crash")
+        raise AssertionError("must not be called on an invalid --out")
 
     monkeypatch.setattr(module.subprocess, "run", fake_run)
     monkeypatch.setattr(module.shutil, "which", lambda name: "/usr/bin/claude")
@@ -167,8 +199,11 @@ def test_main_out_path_is_existing_file_crashes_uncaught(tmp_path, monkeypatch):
     out = tmp_path / "out_is_a_file"
     out.write_text("i am a file, not a directory", encoding="utf-8")
 
-    with pytest.raises(FileExistsError):
-        main(_base_argv(contract, fixture, out))
+    rc = main(_base_argv(contract, fixture, out))
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "error:" in err
+    assert str(out) in err
 
 
 # ---------------------------------------------------------------------------
@@ -176,13 +211,14 @@ def test_main_out_path_is_existing_file_crashes_uncaught(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_main_missing_contract_file_crashes_uncaught(tmp_path, monkeypatch):
-    """A `--contract` path that does not exist raises an uncaught
-    `FileNotFoundError` from `Path.read_bytes()` rather than the module's
-    own `error: ...` / exit 2 pattern used for `--runs`/missing-binary."""
+def test_main_missing_contract_file_exits_two_with_error(tmp_path, monkeypatch, capsys):
+    """A `--contract` path that does not exist must exit 2 with an
+    `error:` message on stderr naming the missing path, matching the
+    module's own convention used for `--runs`/missing-binary, never an
+    uncaught `FileNotFoundError` traceback."""
 
     def fake_run(argv, **kwargs):
-        raise AssertionError("must not be called before the crash")
+        raise AssertionError("must not be called on a missing --contract")
 
     monkeypatch.setattr(module.subprocess, "run", fake_run)
     monkeypatch.setattr(module.shutil, "which", lambda name: "/usr/bin/claude")
@@ -191,8 +227,11 @@ def test_main_missing_contract_file_crashes_uncaught(tmp_path, monkeypatch):
     out = tmp_path / "out"
     missing_contract = tmp_path / "does-not-exist.md"
 
-    with pytest.raises(FileNotFoundError):
-        main(_base_argv(missing_contract, fixture, out))
+    rc = main(_base_argv(missing_contract, fixture, out))
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "error:" in err
+    assert str(missing_contract) in err
 
 
 # ---------------------------------------------------------------------------
@@ -200,18 +239,36 @@ def test_main_missing_contract_file_crashes_uncaught(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_score_single_run_wrong_answer_flagged_systematic_at_n_equals_1():
-    """With exactly one run (`n == 1`), a single wrong answer makes
-    `wrong_rate == 1.0 >= 0.5` and the dominant-wrong-label share is also
-    `1.0 >= 0.5`, so the item is included in `systematic` on the strength
-    of one data point. The field name and the checkpoint's own vocabulary
-    ("systematic" bias) imply a pattern across repeated runs; at n == 1 the
-    formula still fires, which is a caller-facing landmine for anyone who
-    treats `summary.json["systematic"]` at face value without also reading
-    `n`."""
+def test_score_single_run_wrong_answer_not_flagged_systematic_below_floor():
+    """With exactly one run (`n == 1`), a single wrong answer must NOT be
+    included in `systematic` -- the field name and the checkpoint's own
+    vocabulary ("systematic" bias) imply a pattern across repeated runs,
+    and one data point is not a pattern. `score` enforces a floor of
+    `n >= 3` before `systematic` can fire at all, below which the list
+    must always be empty regardless of how uniformly wrong the single (or
+    double) run was."""
     fixture = {"items": [{"n": 1, "text": "a", "expected": "reviewer"}]}
     result = score(["1. other -- wrong"], fixture, "reviewer")
     assert result["n"] == 1
+    assert result["systematic"] == []
+
+    result_two = score(["1. other -- wrong", "1. other -- wrong"], fixture, "reviewer")
+    assert result_two["n"] == 2
+    assert result_two["systematic"] == []
+
+
+def test_score_three_runs_all_wrong_flagged_systematic_at_floor():
+    """A control case for the probe above: at `n == 3` (the floor), three
+    unanimous wrong answers for the same item must still be flagged
+    `systematic` -- the floor must not silently swallow a genuine
+    systematic pattern once enough runs exist to call it one."""
+    fixture = {"items": [{"n": 1, "text": "a", "expected": "reviewer"}]}
+    result = score(
+        ["1. other -- wrong", "1. other -- wrong", "1. other -- wrong"],
+        fixture,
+        "reviewer",
+    )
+    assert result["n"] == 3
     assert result["systematic"] == [1]
 
 
