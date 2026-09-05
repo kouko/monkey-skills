@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
+  "reviewed_sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -465,6 +465,47 @@
           "fix": "Delete the second import and definition."
         }
       ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-e81a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "resumed": true,
+      "previous_findings": [
+        {
+          "id": "branch-end-06",
+          "status": "fixed",
+          "evidence": "b0a22014 / plan.md:33"
+        }
+      ],
+      "confirmation": "b774968f sets PREVIOUS_VERSION = 1.6.0 and 3049b9e3 removes the duplicate _has_negation — both nits closed; 28+18 tests pass; nothing else changed.",
+      "findings": []
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-47d0",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "resumed": true,
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
+      "previous_findings": [
+        {
+          "id": "branch-end-06",
+          "status": "fixed",
+          "evidence": "b0a22014 / plan.md:33"
+        }
+      ],
+      "confirmation": "The duplicate helper and stale PREVIOUS_VERSION nit are fixed; the remaining changes are review.json bookkeeping.",
+      "findings": []
     }
   ],
   "probes": [
@@ -644,6 +685,54 @@
       "sha": "2eaba0526db68aaede0a49bb82113b8212a34967",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py -q -p no:cacheprovider",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py -q -p no:cacheprovider",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py -q -p no:cacheprovider",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py -q -p no:cacheprovider",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_6_1.py -q -p no:cacheprovider",
+      "sha": "9a7efc400a30445eff6b4def5be6b11e0855e693",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_6_1.py"
     }
   ],
   "questions": [
@@ -1102,10 +1191,10 @@
     }
   ],
   "cost": {
-    "rounds": 7,
+    "rounds": 8,
     "dispatches": 35,
     "cap_changes": [],
-    "hours_plan_to_pr": 6.9
+    "hours_plan_to_pr": 8.4
   },
   "second_vendor": "codex",
   "round_notes": [
@@ -1177,6 +1266,14 @@
         "Rebase-confirmation round after main moved to loom-code 1.6.0 (#797): both readers confirm the substance unchanged and the version move complete. One shared important (plan path) fixed in b0a22014; the two nits (duplicate _has_negation, PREVIOUS_VERSION) fixed as code in 3049b9e3 and b774968f under their owning tasks rather than folded into ship's docs-only nit batch.",
         "rebase.updateRefs=true on this machine moved the backup ref along with the rebase; the true pre-rebase tip is b312c210 and the ref was repointed there mid-round (the Anthropic reader was told; the Codex reader's confirmation did not depend on the comparison).",
         "Rehearsal at the rebased tree: FAILED (0), SKIPPED (2) — the nesting guard and main's own version-pinned coldread probe (`plugin has moved past 1.5.1`), neither history-class."
+      ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "outcome": "PASS",
+      "notes": [
+        "Both readers confirm the round-7 fixes; reviewed_sha moves to 9a7efc40 (content tree = 3049b9e3). Probes and package tests re-run at that content (1792 passed / 182 passed; 16+10+1+18+4). This is the final round: rebase onto 1.6.0 done, version 1.6.1, PR #796 updated by force-with-lease."
       ]
     }
   ]
