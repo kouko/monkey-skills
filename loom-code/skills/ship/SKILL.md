@@ -236,7 +236,7 @@ python3 scripts/sync_codex_manifests.py --check --all
 python3 loom-code/scripts/check_mechanisms.py --baseline origin/main
 python3 loom-code/scripts/check_mechanisms.py --measure
 python3 loom-code/scripts/check_contract_citations.py
-python3 loom-code/scripts/check_doc_citations.py   # file selection: workflow step "Check doc citations resolve"
+git ls-files '*.md' | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)' | xargs python3 loom-code/scripts/check_doc_citations.py
 python3 loom-code/scripts/check-skill-crossrefs.py
 ```
 
