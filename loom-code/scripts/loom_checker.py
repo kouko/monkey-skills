@@ -5714,7 +5714,10 @@ def cmd_plan(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     """`loom_checker.py plan <path>` -- runs `plan.field-caps` (and any other
     `plan.*` rule) against one plan file directly, independent of a
     change-id -- the shape the `plan` subcommand's own tests and the
-    write-plan / push callers both rely on."""
+    write-plan / push callers both rely on. This is a raw-content check on
+    whatever file `<path>` names, by design: `plan-edits` and `push`
+    instead resolve and read the canonical `docs/loom/<change-id>/plan.md`
+    for that change-id."""
     if not args:
         raise UsageError("plan needs a path.")
     if len(args) > 1:

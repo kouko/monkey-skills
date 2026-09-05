@@ -26,8 +26,9 @@ report, not a silent guess):
     edits_after` are: `verdicts-probes-findings-dispatch-gain-entries`,
     `reviewed-sha-scope-cost-replaced`, `open-finding-resolved-or-
     dismissed-in-place`, `questions-written-once` (read from
-    loom-code/contract/manifest.yaml at dispatch time -- there is no
-    fifth id for `second_vendor`, see the findings below);
+    loom-code/contract/manifest.yaml at dispatch time -- a fifth id,
+    `second-vendor-set-once`, was added to the manifest mid-round; see
+    the findings below);
   - a round with no top-level `charter` key is skipped entirely
     (grandfathering), even when an earlier verdict is rewritten;
   - missing review.json exits 2; an unsupported policy id in the
