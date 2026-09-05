@@ -18,7 +18,9 @@ status: confirmed 2026-09-05
 3. build 站在 implementer 回報 DONE 時的檢查寫成命令，並在 wave 結束、合併 worktree 之後對整個 wave 的 commit 跑一次（`git log <reviewed_sha>..HEAD --format='%h %B' | grep -c '^Task: '` 之類），少一個尾標就不進 checkpoint。
 
 ## Acceptance
-1. 一個新 change 走完流程後，`git log <branch-end reviewed_sha>..HEAD` 只有 review-only commit 與關閉 intent 的 commit，沒有其他 commit——由盲跑報告列出這段 log 證明。
+1. 一個新 change 的收尾分成兩個可觀察的點（2026-09-05 決策點①重確認時拆分——原條文把兩件事都要求在盲跑報告裡證明，但第二件在報告寫成時還不存在）：
+   1a. 盲跑報告證明「記憶步驟（探針畢業、記憶庫條目）落在 closing review 之前，且該 change 的 wave 審查通過後沒有任何審後修正 commit」——列出 `git log <上一個 review-only commit>..<closing review 的派工紀錄 commit>`。
+   1b. ship 在 PR 內文列出 `git log <branch-end reviewed_sha>..HEAD`，只有 review-only commit 與關閉 intent 的 commit（甲案落地後只剩一個）。
 2. ship 站與 build 站各有一句寫明記憶步驟的位置（build：最後一個 wave 之後、branch-end 之前；ship：不再做畢業與記憶庫條目），並有站文字測試釘住。
 3. `loom-code/agents/adversary.md` 與 `loom-code/references/engineering-baseline.md` 各有一句散文釘規則（肯定動詞、無否定詞、正反自測），有測試釘住；既有字數帽照既有授權處理（壓縮或調帽由 agent 決定並記錄）。
 4. build 站 §4 與 §5 有可複製的尾標檢查命令；用一個故意漏尾標的測試 commit 在沙盒證明那條命令會抓到。
