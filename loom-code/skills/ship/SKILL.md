@@ -1,7 +1,7 @@
 ---
 name: ship
 description: |
-  Closes a development branch out: confirms the branch-end checkpoint passed, presents the blind-run report to the user for acceptance, writes the memory and the intent's close line into the review-only commit, runs the deterministic push gate, opens the pull request from the review record and verifies the merge. Use when the last checkpoint returned PASS, or on "finish the branch", "open the PR", "ready to merge", "ship it".
+  Closes a development branch out: confirms the branch-end checkpoint passed, presents the blind-run report for acceptance, writes the memory and the intent's close line into the review-only commit, runs the push gate, opens the pull request and verifies the merge. Use when the last checkpoint returned PASS, or on "finish the branch", "open the PR", "ready to merge", "ship it".
 version: 1.0.0
 ---
 
