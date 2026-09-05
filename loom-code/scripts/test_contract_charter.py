@@ -111,6 +111,41 @@ def test_list_rules_includes_contract_charter_complete() -> None:
     assert "contract.charter-complete" in rule_ids
 
 
+def test_charter_row_pipe_or_newline_in_a_cell_is_blocked(tmp_path) -> None:
+    """wave-end:0-06: a `|` or a newline inside any charter string field
+    would render as extra table cells or rows; `check_charter_row` rejects
+    it with a `contract.charter-complete` failure, so the command exits 1
+    and the table still carries exactly one physical row per artifact."""
+    doc = {
+        "version": "1.0.0",
+        "stations": [{"name": "build"}],
+        "artifacts": {
+            "intent": {
+                "charter": {
+                    "answers": "x", "readers": ["a"],
+                    "must": ["a | injected"],
+                    "must_not": [{"kind": "z", "goes_to": "spec"}],
+                    "signoff": "build", "edits_after": ["c"],
+                }
+            },
+            "spec": {
+                "charter": {
+                    "answers": "y", "readers": ["a"], "must": ["b"],
+                    "must_not": [{"kind": "z", "goes_to": "intent"}],
+                    "signoff": "build", "edits_after": ["c"],
+                }
+            },
+        },
+    }
+    import yaml as _yaml
+
+    manifest_path = tmp_path / "manifest.yaml"
+    manifest_path.write_text(_yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
+    result = run_charter("--manifest", str(manifest_path))
+    assert result.returncode == 1
+    assert "intent.must" in result.stderr
+
+
 def test_manifest_every_must_not_goes_to_names_another_real_artifact() -> None:
     """A direct check on the committed manifest content, independent of the
     checker's own recompute: every must_not.goes_to in every artifact's

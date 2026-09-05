@@ -4708,6 +4708,23 @@ def _charter_join(values) -> str:
     return "; ".join(str(v) for v in values)
 
 
+def _charter_has_forbidden_chars(value: str) -> bool:
+    """A `|` or a newline inside a charter cell would render as extra
+    markdown table columns or rows -- reject both."""
+    return "|" in value or "\n" in value
+
+
+def _check_charter_cell_chars(
+    name: str, key: str, value: str, failures: list[tuple[str, str]]
+) -> None:
+    if isinstance(value, str) and _charter_has_forbidden_chars(value):
+        failures.append((
+            "contract.charter-complete",
+            f"{name}.{key} contains a '|' or a newline, which would corrupt "
+            f"the rendered table: {value!r}.",
+        ))
+
+
 def check_charter_row(
     name: str, charter: dict, all_names: list[str], stations: set[str]
 ) -> tuple[list[tuple[str, str]], tuple[str, str, str, str, str, str, str]]:
@@ -4721,14 +4738,24 @@ def check_charter_row(
     answers = charter.get("answers")
     if not isinstance(answers, str) or not answers.strip():
         failures.append(("contract.charter-complete", f"{name}.answers is empty."))
+    else:
+        _check_charter_cell_chars(name, "answers", answers, failures)
 
     readers = charter.get("readers")
     if not isinstance(readers, list) or not readers:
         failures.append(("contract.charter-complete", f"{name}.readers is empty."))
+    else:
+        for item in readers:
+            if isinstance(item, str):
+                _check_charter_cell_chars(name, "readers", item, failures)
 
     must = charter.get("must")
     if not isinstance(must, list) or not must:
         failures.append(("contract.charter-complete", f"{name}.must is empty."))
+    else:
+        for item in must:
+            if isinstance(item, str):
+                _check_charter_cell_chars(name, "must", item, failures)
 
     must_not = charter.get("must_not")
     if not isinstance(must_not, list) or not must_not:
@@ -4740,6 +4767,7 @@ def check_charter_row(
                     ("contract.charter-complete", f"{name}.must_not has an entry with no kind.")
                 )
                 continue
+            _check_charter_cell_chars(name, "must_not.kind", str(item.get("kind")), failures)
             goes_to = str(item.get("goes_to") or "").strip()
             if not goes_to:
                 failures.append((
@@ -4758,6 +4786,8 @@ def check_charter_row(
                     f"{name}.must_not entry goes_to {goes_to!r} names an artifact "
                     "absent from the table.",
                 ))
+            else:
+                _check_charter_cell_chars(name, "must_not.goes_to", goes_to, failures)
 
     signoff = charter.get("signoff")
     if not isinstance(signoff, str) or not signoff.strip():
@@ -4767,10 +4797,16 @@ def check_charter_row(
             "contract.charter-complete",
             f"{name}.signoff names unknown station {signoff!r}.",
         ))
+    else:
+        _check_charter_cell_chars(name, "signoff", signoff, failures)
 
     edits_after = charter.get("edits_after")
     if not isinstance(edits_after, list) or not edits_after:
         failures.append(("contract.charter-complete", f"{name}.edits_after is empty."))
+    else:
+        for item in edits_after:
+            if isinstance(item, str):
+                _check_charter_cell_chars(name, "edits_after", item, failures)
 
     must_not_cell = "; ".join(
         f"{item.get('kind', '?')} → {item.get('goes_to', '?')}"

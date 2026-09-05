@@ -220,15 +220,12 @@ def test_charter_row_signoff_names_tool_not_station_blocked(tmp_path: Path) -> N
 # Markdown injection through cell text.
 # ---------------------------------------------------------------------------
 
-def test_render_charter_table_pipe_and_newline_in_cell_corrupts_row(tmp_path: Path) -> None:
-    """Neither `_charter_join` nor `render_charter_table` escapes `|` or
-    `\\n` in a cell's source text -- a `must` or `must_not.kind` string
-    carrying either character is written straight into the markdown row,
-    which then renders as MORE table cells and MORE table rows than the
-    manifest actually declares (a markdown-injection shape), and the
-    command still exits 0 because nothing about this trips
-    `contract.charter-complete`'s own checks (they only look at emptiness
-    and membership, never at cell content shape)."""
+def test_render_charter_table_pipe_and_newline_in_cell_blocked(tmp_path: Path) -> None:
+    """`check_charter_row` now rejects a `|` or a newline in any charter
+    string field -- `must` here -- with a `contract.charter-complete`
+    failure naming the artifact and the key, so the command exits 1.
+    Fixed for wave-end:0-06 -- previously this markdown-injection shape
+    tripped no rule at all and exited 0."""
     doc = {
         "version": "1.0.0",
         "stations": [{"name": "build"}],
@@ -252,21 +249,16 @@ def test_render_charter_table_pipe_and_newline_in_cell_corrupts_row(tmp_path: Pa
     }
     manifest_path = _write_yaml(tmp_path, doc)
     result = _run_charter(manifest_path)
-    assert result.returncode == 0, "the injected content trips no rule at all"
-    # A well-formed 2-artifact table is exactly 4 physical lines: header,
-    # separator, and one row per artifact. The injected `\n` inside a cell
-    # splits the `intent` row across two physical lines, so the total
-    # physical-line count exceeds 4 even though only 2 artifacts exist.
-    physical_lines = result.stdout.splitlines()
-    assert len(physical_lines) > 4, (
-        "expected the embedded newline to split the intent row across "
-        f"extra physical lines; got exactly {len(physical_lines)} lines:\n"
-        f"{result.stdout}"
+    assert result.returncode == 1, (
+        f"expected the '|'/newline-carrying must entry to be blocked (exit 1); "
+        f"got {result.returncode}: stdout={result.stdout!r} stderr={result.stderr!r}"
     )
+    assert "intent.must" in result.stderr
+    assert "'|'" in result.stderr or "newline" in result.stderr
     # Control: the same manifest with the `|`/`\n` stripped out of the
-    # `must` string renders the expected clean 4-line, 6-pipe intent row --
-    # so the extra line and the extra pipe above are attributable to the
-    # injected characters, not to something else about this manifest shape.
+    # `must` string is accepted cleanly -- so the block above is
+    # attributable to the injected characters, not to something else
+    # about this manifest shape.
     clean_doc = {**doc}
     clean_doc["artifacts"] = {
         "intent": {
@@ -279,12 +271,12 @@ def test_render_charter_table_pipe_and_newline_in_cell_corrupts_row(tmp_path: Pa
     }
     clean_manifest = _write_yaml(tmp_path, clean_doc, name="clean_manifest.yaml")
     clean_result = _run_charter(clean_manifest)
-    assert clean_result.returncode == 0
+    assert clean_result.returncode == 0, (
+        f"control manifest (no '|'/newline) should pass cleanly, got "
+        f"{clean_result.returncode}: {clean_result.stderr!r}"
+    )
     clean_lines = clean_result.stdout.splitlines()
     assert len(clean_lines) == 4, f"control manifest did not render cleanly: {clean_result.stdout!r}"
-    assert clean_lines[0].count("|") == result.stdout.splitlines()[0].count("|"), (
-        "control and injected runs must share the same header"
-    )
 
 
 # ---------------------------------------------------------------------------
