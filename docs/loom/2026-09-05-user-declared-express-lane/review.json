@@ -48,11 +48,20 @@
       "model": "sonnet",
       "started": "2026-09-05T19:31:14+0800",
       "fresh_context": true
+    },
+    {
+      "task": "fix:probes-main-red",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T19:40:38+0800",
+      "fresh_context": false,
+      "note": "main's loom-code CI is red after #794: the graduated probe test_probes_complexity_wave_end.py greps for that change's intent-confirmation commit by subject, which the squash merge erased; the probe (evidence original + graduated byte copy) now skips when the commit is absent, the pattern the language-policy probes use"
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 5,
+    "dispatches": 6,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
