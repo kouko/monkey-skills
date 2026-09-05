@@ -183,6 +183,20 @@ pull request number, so it does not need to wait for one; §6 carries the
 exact grammar and the one-line note for branches shipped before this
 rule.
 
+Before that amend, check that the checker gating this push knows the
+shape — the station text and the checker can be different versions (a
+Codex scaffold copy, an older install):
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py --list-rules | grep push.review-only-head
+```
+
+The line names `branch <name>` when the combined shape is admitted; a
+line without it means that checker predates the rule. On that older
+checker, leave the `status:` line untouched here — amend the trailers
+and `review.json` only, push and open the pull request that way — and
+close the intent by the fallback §6 spells out.
+
 ## 3.5 The nit batch
 
 Before the push, collect every `nit`-severity finding recorded in
@@ -344,18 +358,9 @@ before the push, while the PR number is not — the squash commit's title
 carries `(#N)` afterward, and the branch name is what stays durable.
 `intake.confirmed` treats both grammars as terminal.
 
-Check first that the checker gating this push knows the shape — the
-station text and the checker can be different versions (a Codex
-scaffold copy, an older install):
-
-```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py --list-rules | grep push.review-only-head
-```
-
-The line names `branch <name>` when the combined shape is admitted; a
-line without it means that checker predates the rule. On that older
-checker, keep `HEAD` review-only, push and open the pull request without
-a close line, then close the intent in a commit of its own with
+When §3's preflight found an older checker, `HEAD` went up review-only
+and the pull request has no close line yet. On that older checker, close
+the intent in a commit of its own with
 `status: closed <date> — PR #<N>`, give that commit its own `branch-end`
 round (two fresh readers under the docs lens, verdicts at the close
 commit, probes re-pinned there) and a review-only commit on top, and

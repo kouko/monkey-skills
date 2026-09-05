@@ -249,12 +249,16 @@ def test_matcher_review_only_head_sentence_affirmative_accepted() -> None:
     assert not _has_negation(sentence)
 
 
-def test_ship_section_6_names_the_list_rules_preflight() -> None:
-    """§6 tells a cold agent to check the gating checker's own rule text
-    before choosing the combined close shape, and names the fallback the
-    older checker accepts."""
+def test_ship_preflight_in_section_3_fallback_in_section_6() -> None:
+    """§3 tells a cold agent to check the gating checker's own rule text
+    BEFORE the amend that adds the close line (an older checker would
+    otherwise block the push before any fallback text is reached); §6
+    names the fallback the older checker accepts."""
+    flat3 = _unwrapped(_section_3_memory())
+    assert "--list-rules | grep push.review-only-head" in flat3
+    assert "leave the `status:` line untouched here" in flat3
     flat = _unwrapped(_section_6_merge_then_verify())
-    assert "--list-rules | grep push.review-only-head" in flat
+    assert "§3's preflight" in flat
     hits = [
         s for s in _sentences(_section_6_merge_then_verify())
         if "closed <date> — PR #<N>" in s and "commit of its own" in s
