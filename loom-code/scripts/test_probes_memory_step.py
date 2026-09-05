@@ -339,7 +339,7 @@ def test_trailercommandlocator_proseonly_rejected():
 # --- (e) GREEN pin: --list-rules line count ---------------------------------
 
 
-def test_checker_rulecount_pinned():
+def test_memstep_checker_rulecount_pinned():
     """GREEN pin: `loom_checker.py --list-rules`, resolved inside REPO,
     prints exactly 27 lines today — intent Acceptance 5 requires this
     stays unchanged by this branch (no checker rule is added or removed)."""
