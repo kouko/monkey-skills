@@ -117,11 +117,20 @@
       "started": "2026-09-05T20:29:19+0800",
       "fresh_context": false,
       "note": "record written with the wave; the step runs after W2-01 and the wave-end round, before the closing round"
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T20:45:09+0800",
+      "fresh_context": true,
+      "note": "before the readers are dispatched: the wave-end adversary's two fatals and three importants (evidence glob shadows skill/gate paths in artifact_types; push never runs the lane schema/reason checks and a bare lane: line has no round deferral; explicit revert to full rejected; gate-only owes no adversarial probe on a pure-docs delta; lane-switch pin lacks the negation matcher) — its six RED probes are the failing tests"
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 13,
+    "dispatches": 14,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
