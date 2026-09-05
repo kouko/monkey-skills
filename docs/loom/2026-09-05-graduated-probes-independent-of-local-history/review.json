@@ -390,11 +390,19 @@
       "started": "2026-09-06T00:26:26+08:00",
       "fresh_context": true,
       "note": "dispatched after W2-01 returns (after: W2-01)"
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-06T00:38:37+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 13,
+    "dispatches": 14,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
