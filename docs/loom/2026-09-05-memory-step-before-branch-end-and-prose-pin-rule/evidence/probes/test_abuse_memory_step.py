@@ -367,17 +367,22 @@ def test_checker_rulecount_pinned():
 
 def test_trailercommand_missingtrailercommit_caught():
     """Attack: extract the fenced trailer-check command from build's own
-    text (the block located by (d) above); in a temporary git repo
-    (tempfile, never REPO) create two commits — one carrying a `Task:
-    W9-99` trailer, one without — and show the extracted command's output
-    distinguishes them (the missing-trailer commit is reported, the
-    trailered one is not). Skips (never fails) until (d) is GREEN, per the
-    task guard, since there is no real command to extract yet. Never
+    §5 text (the block located by (d) above); in a temporary git repo
+    (tempfile, never REPO) build three commits deterministically — a
+    genesis commit (`reviewed_sha`), one carrying a `Task: W9-99` trailer,
+    one without — read them back with `git rev-list` (no NUL-splitting a
+    single log string, the bug W1-02 found: a string with no NUL byte
+    splits into one element, so an `or`-fallback after it never runs and
+    the commit count never matches). Substitute `<reviewed_sha>` with the
+    genesis commit's own sha, run the extracted command with cwd = the
+    sandbox repo, and assert its output names exactly the trailer-less
+    commit and not the trailered one. Skips (never fails) only when no
+    fenced git-log/Task: command exists yet (probe (d) still RED). Never
     touches the real repo's git state."""
     text = BUILD_SKILL.read_text(encoding="utf-8")
-    sec4 = _section_body(text, "4. After each task returns") or ""
     sec5 = _section_body(text, "5. Wave end") or ""
-    command = _trailer_check_command(sec4) or _trailer_check_command(sec5)
+    sec4 = _section_body(text, "4. After each task returns") or ""
+    command = _trailer_check_command(sec5) or _trailer_check_command(sec4)
     if command is None:
         pytest.skip(
             "build §4/§5 has no fenced git-log/Task: command yet "
@@ -386,44 +391,51 @@ def test_trailercommand_missingtrailercommit_caught():
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
-        env_git = ["git", "-C", str(tmp_path)]
-        subprocess.run(env_git + ["init", "-q"], check=True)
-        subprocess.run(env_git + ["config", "user.email", "probe@example.com"], check=True)
-        subprocess.run(env_git + ["config", "user.name", "probe"], check=True)
+        git = ["git", "-C", str(tmp_path)]
+        subprocess.run(git + ["init", "-q"], check=True)
+        subprocess.run(git + ["config", "user.email", "probe@example.com"], check=True)
+        subprocess.run(git + ["config", "user.name", "probe"], check=True)
 
-        (tmp_path / "a.txt").write_text("a\n")
-        subprocess.run(env_git + ["add", "a.txt"], check=True)
-        subprocess.run(
-            env_git + ["commit", "-q", "-m", "with trailer", "--trailer", "Task: W9-99"],
-            check=True,
+        def _commit(filename: str, message: str, trailer: str | None) -> str:
+            (tmp_path / filename).write_text(f"{filename}\n")
+            subprocess.run(git + ["add", filename], check=True)
+            args = git + ["commit", "-q", "-m", message]
+            if trailer is not None:
+                args += ["--trailer", trailer]
+            subprocess.run(args, check=True)
+            return subprocess.run(
+                git + ["rev-parse", "HEAD"], capture_output=True, text=True, check=True
+            ).stdout.strip()
+
+        reviewed_sha = _commit("genesis.txt", "genesis", None)
+        trailered_sha = _commit("with_trailer.txt", "with trailer", "Task: W9-99")
+        missing_sha = _commit("without_trailer.txt", "without trailer", None)
+
+        wave_commits = subprocess.run(
+            git + ["rev-list", f"{reviewed_sha}..HEAD", "--no-merges"],
+            capture_output=True, text=True, check=True,
+        ).stdout.split()
+        assert set(wave_commits) == {trailered_sha, missing_sha}, (
+            f"sandbox rev-list over {reviewed_sha}..HEAD did not return "
+            f"exactly the two wave commits: {wave_commits}"
         )
 
-        (tmp_path / "b.txt").write_text("b\n")
-        subprocess.run(env_git + ["add", "b.txt"], check=True)
-        subprocess.run(env_git + ["commit", "-q", "-m", "without trailer"], check=True)
-
-        # The extracted command is written against <reviewed_sha>..HEAD /
-        # this repo's own paths; run its shape directly rather than
-        # string-substituting into build's literal placeholder text.
-        log = subprocess.run(
-            ["git", "-C", str(tmp_path), "log", "--format=%H %B"],
+        substituted = command.replace("<reviewed_sha>", reviewed_sha)
+        result = subprocess.run(
+            ["bash", "-c", substituted],
+            cwd=tmp_path,
             capture_output=True,
             text=True,
-            check=True,
-        ).stdout
-        commits = [c for c in log.split("\0") if c.strip()] or [
-            block for block in re.split(r"(?=^[0-9a-f]{40} )", log, flags=re.MULTILINE) if block.strip()
-        ]
-        assert len(commits) == 2, f"expected 2 commits in the sandbox repo, found {len(commits)}"
-        with_trailer = [c for c in commits if "Task:" in c]
-        without_trailer = [c for c in commits if "Task:" not in c]
-        assert len(with_trailer) == 1 and len(without_trailer) == 1, (
-            "the sandbox repo's own git log does not distinguish the "
-            "trailered commit from the missing-trailer one"
         )
-        # The command found in build's text must itself contain a trailer
-        # grep shape ('Task:') that would apply the same distinction.
-        assert "Task:" in command, "extracted command lost the Task: literal"
+        assert missing_sha in result.stdout, (
+            f"build's §5 trailer loop did not name the missing-trailer "
+            f"commit {missing_sha} in its output: {result.stdout!r} "
+            f"(stderr {result.stderr!r})"
+        )
+        assert trailered_sha not in result.stdout, (
+            f"build's §5 trailer loop wrongly named the trailered commit "
+            f"{trailered_sha} as missing its trailer: {result.stdout!r}"
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover
