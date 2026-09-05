@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "8a1e3fa1b7b098a0116d3212f1fb74930f5c2647",
+  "reviewed_sha": "88162f4d7fb7fb8365ce47fdfe513ed2f63555cc",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -107,6 +107,72 @@
         }
       ],
       "codex_session_id": "01a0724f-3077-7c50-8edc-51a655eff3c3"
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet-2c9f",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "88162f4d7fb7fb8365ce47fdfe513ed2f63555cc",
+      "resumed": true,
+      "previous_findings": [
+        {
+          "id": "wave-end:1-05",
+          "status": "fixed",
+          "evidence": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/review.json — top-level second_vendor: codex present (27e9e13f)"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-b804",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "88162f4d7fb7fb8365ce47fdfe513ed2f63555cc",
+      "resumed": true,
+      "codex_session_id": "01a0724f-3077-7c50-8edc-51a655eff3c3",
+      "previous_findings": [
+        {
+          "id": "wave-end:1-01",
+          "status": "fixed",
+          "evidence": "01c98e9e / loom-code/scripts/rehearse_probes.py:293 mkdtemp plus explicit cleanup; Python 3.11 coverage at test_rehearse_probes.py:265"
+        },
+        {
+          "id": "wave-end:1-02",
+          "status": "fixed",
+          "evidence": "6b73060b / docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py:112"
+        },
+        {
+          "id": "wave-end:1-03",
+          "status": "fixed",
+          "evidence": "267d6ca0 / docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:18"
+        },
+        {
+          "id": "wave-end:1-04",
+          "status": "fixed",
+          "evidence": "267d6ca0 / docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:37 Python 3.11.14 walk, 384 passed, 1 xfailed, exit 0"
+        },
+        {
+          "id": "nit-language",
+          "status": "dismissed",
+          "evidence": "rebuttal accepted: ship/SKILL.md keeps the blind-run report in the user's language"
+        }
+      ],
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:126",
+          "text": "nitpick: the refreshed report still says the full run had one skip while the embedded output says zero.",
+          "fix": "Change the stale one-skip sentence to say the skip list was empty."
+        }
+      ]
     }
   ],
   "probes": [
@@ -170,7 +236,7 @@
       "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
       "raised_by": "rev-we1-codex-b804",
       "severity": "fatal",
-      "resolved": "",
+      "resolved": "01c98e9e — mkdtemp + shutil.rmtree; confirmed fixed by rev-we1-codex-b804 round 2",
       "dismissed": ""
     },
     {
@@ -179,7 +245,7 @@
       "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
       "raised_by": "rev-we1-codex-b804",
       "severity": "fatal",
-      "resolved": "",
+      "resolved": "6b73060b — returncode == 0 asserted; confirmed by rev-we1-codex-b804 round 2",
       "dismissed": ""
     },
     {
@@ -188,7 +254,7 @@
       "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
       "raised_by": "rev-we1-codex-b804",
       "severity": "important",
-      "resolved": "",
+      "resolved": "267d6ca0 — commands and outputs embedded; confirmed by rev-we1-codex-b804 round 2",
       "dismissed": ""
     },
     {
@@ -197,7 +263,7 @@
       "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
       "raised_by": "rev-we1-codex-b804",
       "severity": "important",
-      "resolved": "",
+      "resolved": "267d6ca0 — Python 3.11.14 walk recorded; confirmed by rev-we1-codex-b804 round 2",
       "dismissed": ""
     },
     {
@@ -310,7 +376,7 @@
     }
   ],
   "cost": {
-    "rounds": 1,
+    "rounds": 2,
     "dispatches": 11,
     "cap_changes": [],
     "hours_plan_to_pr": null
@@ -327,6 +393,14 @@
         "Codex could not execute tests in its read-only sandbox (no writable temp dir); its tests dimension is a static read. The Anthropic reader executed all four probe files.",
         "Build-phase adversary (adv-w1-01-5d2a) wrote 16 probes before the script existed; wave-end adversary (adv-we1-3e8b) wrote 10 more, 4 REPRODUCED, fixed in four commits bd29770a..c08e6411 before the readers were dispatched.",
         "Wave-end adversary finding on the plan (`-q -rs` prints no nodeid) amended into plan.md at de317b6f."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "outcome": "PASS",
+      "notes": [
+        "Both readers resumed (fix delta reached outside the sonnet finding's anchor). All four codex findings fixed; the language nit dismissed by codex on rebuttal. One new codex nit (stale one-skip sentence in the blind-run report) folds into ship's nit batch."
       ]
     }
   ]
