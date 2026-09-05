@@ -468,6 +468,7 @@
   "second_vendor": "codex",
   "notes": [
     "Round 1 wave-end:1: NEEDS_REVISION (codex fatal on §5/§6.5 sequencing; both readers on the unreserved memory task). The guard position-blind nit is fixed inside the fix round with the same agent.",
-    "wave-end:1 outcome after three rounds: PASS_WITH_NOTES. Remaining nit (sonnet round 3): a fenced status: closed line placed before the real status line inside the leading metadata block would still flip the graduated guard — an intent file that opens with a fenced block before its metadata is not an intent, so the boundary is accepted and recorded; folded at ship if wording is revisited. reviewed_sha advanced to c2a5a82e."
+    "wave-end:1 outcome after three rounds: PASS_WITH_NOTES. Remaining nit (sonnet round 3): a fenced status: closed line placed before the real status line inside the leading metadata block would still flip the graduated guard — an intent file that opens with a fenced block before its metadata is not an intent, so the boundary is accepted and recorded; folded at ship if wording is revisited. reviewed_sha advanced to c2a5a82e.",
+    "Branch-end adversary (class 5) found the W2-02 dispatch-record commit landed after the W2-02 work commit. Fixed before the readers ran by cherry-picking the six unpushed commits in the corrected order (dispatch record first); trees identical to the pre-reorder tip (backup ref backup/memstep-pre-reorder, local only). Shas of the blind-run report and probe commits changed; the report's tested-sha line is refreshed by its author."
   ]
 }
