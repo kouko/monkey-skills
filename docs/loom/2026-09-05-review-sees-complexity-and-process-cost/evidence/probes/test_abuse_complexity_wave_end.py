@@ -34,6 +34,15 @@ REPO = Path(
     ).stdout.strip()
 )
 
+# Several of the station-text test modules this file loads (via
+# _load_module, or "from prose_pin import ...") themselves import the
+# shared matcher from loom-code/scripts/prose_pin.py at THEIR module top.
+# That import must resolve whether this file runs whole or with `-k`
+# selecting only a subset -- the checker re-runs each recorded probe
+# command alone at push -- so the path is inserted here, unconditionally,
+# rather than inside whichever test happened to need it first.
+sys.path.insert(0, str(REPO / "loom-code" / "scripts"))
+
 REVIEW_JSON = REPO / "docs" / "loom" / "2026-09-05-review-sees-complexity-and-process-cost" / "review.json"
 TEMPLATE = REPO / "loom-code" / "contract" / "templates" / "review.json"
 CODEX_TEMPLATE = REPO / ".codex" / "hooks" / "contract" / "templates" / "review.json"
@@ -410,16 +419,37 @@ def test_runner_empty_argv_exits_nonzero_refusing_zero_groups() -> None:
     assert result.stderr.strip(), "expected a stderr message explaining the refusal"
 
 
-def test_runner_dashdash_only_argv_exits_nonzero_refusing_zero_groups() -> None:
-    """FIXED (0dc680c1): an argv of only `--` (every group empty after
-    splitting) also now exits 2 -- the same silent-success hole
-    (test_runner_empty_argv...) reached a different way, closed the same
-    way."""
+def test_runner_thenonly_argv_exits_nonzero_refusing_zero_groups() -> None:
+    """FIXED (0dc680c1, retargeted for 43d8eb88's `--then` separator): an
+    argv of only `--then` (every group empty after splitting) also now
+    exits 2 -- the same silent-success hole (test_runner_empty_argv...)
+    reached a different way, closed the same way. The separator itself
+    changed from a bare `--` to `--then` (43d8eb88) because `--` collides
+    with KICKOFF's ` -- ` note-separator grammar; this test names the
+    current separator token, not the retired one."""
     result = subprocess.run(
-        [sys.executable, str(RUNNER), "--"], cwd=str(REPO), capture_output=True, text=True,
+        [sys.executable, str(RUNNER), "--then"], cwd=str(REPO), capture_output=True, text=True,
     )
     assert result.returncode == 2
     assert result.stderr.strip()
+
+
+def test_runner_bare_dashdash_no_longer_a_group_separator() -> None:
+    """Regression guard for the separator change (43d8eb88): a bare `--` is
+    now an ordinary token passed through to pytest as part of the current
+    group, not a group-splitting separator -- `split_groups` must return
+    exactly one group containing it, not split on it."""
+    sys.path.insert(0, str(REPO / "scripts"))
+    import importlib
+    if "run_package_tests" in sys.modules:
+        importlib.reload(sys.modules["run_package_tests"])
+        runner_mod = sys.modules["run_package_tests"]
+    else:
+        runner_mod = importlib.import_module("run_package_tests")
+    groups = runner_mod.split_groups(["a/", "-q", "--", "-p", "no:cacheprovider"])
+    assert groups == [["a/", "-q", "--", "-p", "no:cacheprovider"]], (
+        f"expected a bare '--' to stay inside one group, got {groups}"
+    )
 
 
 def test_runner_still_runs_a_real_nonempty_group_and_exits_zero() -> None:
@@ -438,9 +468,11 @@ def test_runner_still_runs_a_real_nonempty_group_and_exits_zero() -> None:
 
 def test_runner_failing_first_group_shortcircuits_second_group() -> None:
     """Unchanged (not part of this fix round, per the coordinator): when the
-    first `--`-separated group fails, the runner returns immediately -- the
-    second group's pytest session never runs. Kept as a live record, not a
-    regression: the runner's own docstring never claimed otherwise."""
+    first `--then`-separated group fails, the runner returns immediately --
+    the second group's pytest session never runs. Kept as a live record,
+    not a regression: the runner's own docstring never claimed otherwise.
+    Retargeted for 43d8eb88's separator: uses `--then` where this test
+    previously used a bare `--`, which is no longer a group separator."""
     import tempfile
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -457,7 +489,7 @@ def test_runner_failing_first_group_shortcircuits_second_group() -> None:
         result = subprocess.run(
             [sys.executable, str(RUNNER),
              str(bad), "-q", "-p", "no:cacheprovider",
-             "--", str(good), "-q", "-p", "no:cacheprovider"],
+             "--then", str(good), "-q", "-p", "no:cacheprovider"],
             cwd=str(REPO), capture_output=True, text=True,
         )
         assert result.returncode != 0
