@@ -691,6 +691,102 @@ def test_codex_hooks_loom_checker_mirror_passes_sync_check() -> None:
     )
 
 
+# =============================================================================
+# Fix-round follow-up (029925d0) -- finding 2's remaining shape. The fix
+# added `_earlier_rounds`/`effective_lane_detail`'s `earlier_rounds`
+# parameter: a bare declaration defers to the round strictly after the
+# highest round number `review["verdicts"]` has EVER recorded, of any
+# scope. That closes the same-checkpoint case (probe above, round 3
+# mid-wave-end). But round numbers RESTART at every new checkpoint
+# (`latest_round`'s own docstring, the "memory-step gotcha") -- so a bare
+# declaration introduced at ROUND 1 of a NEW checkpoint, right after an
+# earlier checkpoint already ran two full rounds, compares its
+# `round_number` (1, freshly restarted) against `earlier_rounds` (`{1,
+# 2}`, from the PRIOR checkpoint) with plain `<`: nothing in `{1, 2}` is
+# less than 1, so the deferral never triggers and the bare declaration
+# applies immediately to that first round of the new checkpoint -- the
+# exact bug finding 2 named, surviving under the checkpoint boundary
+# instead of the mid-checkpoint round count.
+# =============================================================================
+
+
+def test_push_bare_lane_declaration_at_new_checkpoint_round_one_skips_deferral(
+    tmp_path: Path,
+) -> None:
+    """wave-end:1 runs two full rounds (two readers each, round 1 and 2).
+    A bare `lane: express` line is then introduced by a commit that never
+    mentions it, and branch-end's OWN round 1 (numbers restart per
+    checkpoint) carries just one reviewer. Real review history precedes
+    this declaration -- it is not a day-one declaration -- so the correct
+    invariant is the same as the mid-checkpoint case: this round still
+    owes the pre-declaration floor of two readers, deferring to branch-end
+    round 2 onward. `push` accepts one reviewer instead, because
+    `_earlier_rounds`' plain `<` comparison cannot see across the
+    checkpoint boundary where round numbers reset.
+    # RED at HEAD: push-lane-deferral-blind-to-checkpoint-round-reset
+    """
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-checkpoint-reset"
+    _write(repo, f"docs/loom/intent/{change_id}.md",
+           _lane_intent_text(change_id, lane_line=None))
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "wave-end:1 delta\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): wave-end:1 delta\n\nTask: T1")
+
+    # A bare declaration, committed with a message that never mentions
+    # "lane" -- introduced right at the checkpoint boundary.
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = text.replace(
+        "needs-design: no — no interface surface touched\n",
+        "needs-design: no — no interface surface touched\nlane: express\n",
+    )
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", "docs(loom): tidy up the intent wording")
+
+    _write(repo, "docs/more-notes.md", "branch-end round 1 delta\n")
+    git(repo, "add", "docs/more-notes.md")
+    git(repo, "commit", "-q", "-m", "docs: branch-end round 1\n\nTask: T1")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "--amend", "--no-edit")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [
+            _verdict("r1", 1, "wave-end:1", reviewed_sha),
+            _verdict("r2", 1, "wave-end:1", reviewed_sha),
+            _verdict("r1", 2, "wave-end:1", reviewed_sha),
+            _verdict("r2", 2, "wave-end:1", reviewed_sha),
+            _verdict("r3", 1, "branch-end", reviewed_sha),  # checkpoint's own round 1
+        ],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [
+            _dispatch("implementer", "agent-imp", "T1"),
+            _dispatch("reviewer", "r1"),
+            _dispatch("reviewer", "r2"),
+            _dispatch("reviewer", "r3"),
+        ],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "branch-end round 1 is a fresh checkpoint's first round, not a "
+        "day-one declaration -- real review history (wave-end:1 rounds 1 "
+        "and 2) precedes it, so it should still owe two readers; push "
+        f"accepted one instead: {result.stdout}"
+    )
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
 def test_list_rules_prints_exactly_twenty_seven_lines() -> None:
     """`--list-rules` is the rule-count SSOT (project CLAUDE.md Quality
     Gates); this wave adds no rule of its own (W1-01/W1-02 recompute an
