@@ -433,50 +433,91 @@ def _git_log_subjects(rev_range: str) -> list[str]:
     return [line for line in result.stdout.splitlines() if line]
 
 
+CHANGE_ID = "2026-09-05-user-declared-express-lane"
+
+
+def _task_trailers(rev_range: str) -> list[str]:
+    """Every `Task: <value>` trailer line on `rev_range` (one per commit
+    that carries one; a commit with none contributes nothing)."""
+    result = subprocess.run(
+        ["git", "log", "--format=%B%n---END-COMMIT---", rev_range],
+        capture_output=True, text=True, cwd=str(REPO_ROOT), check=True,
+    )
+    return [
+        line.removeprefix("Task:").strip()
+        for line in result.stdout.splitlines()
+        if line.startswith("Task:")
+    ]
+
+
+def _verdict_scope_round_pairs(review: dict) -> set[tuple[str, int]]:
+    return {(v["scope"], v["round"]) for v in review.get("verdicts", [])}
+
+
+def _pending_checkpoint_round_pairs(review: dict) -> set[tuple[str, int]]:
+    """A `dispatch[]` entry whose `task` names an explicit fix round for a
+    checkpoint scope (`fix:<wave-end:N|branch-end>-r<n>`) implies that
+    round exists, whether or not a verdict for it has landed yet."""
+    pattern = re.compile(r"^fix:(?P<scope>wave-end:\d+|branch-end)-r(?P<round>\d+)$")
+    pairs = set()
+    for entry in review.get("dispatch", []):
+        match = pattern.match(entry.get("task", ""))
+        if match:
+            pairs.add((match.group("scope"), int(match.group("round"))))
+    return pairs
+
+
 def test_dispatch_batching_within_corrected_budget() -> None:
-    """Count `chore(loom): dispatch` commits on `8a1e3fa1..HEAD`, the
-    waves and verdict rounds the record shows, and the mid-flight `dispatch
-    fix:` commits that are NOT themselves a checkpoint record commit.
-    The naive `count <= waves + rounds` bound (3 + 4 = 7) is exceeded by
-    this branch's 9 dispatch commits; the corrected bound folds in the
-    mid-flight fix dispatches as their own budget term. Mechanically
-    computed here, not hardcoded, because the dispatch packet's own claim
-    ("this change spent three such commits") undercounts by one against
-    what git log actually shows -- a discrepancy worth reporting rather
-    than papering over."""
+    """Count `chore(loom): dispatch` commits on `8a1e3fa1..HEAD`, and
+    recompute (never hardcode) the waves, verdict rounds, and mid-flight
+    `dispatch fix:` commits the corrected budget folds in -- a fixed
+    expectation here is exactly the failure mode this branch's own
+    memory entry warns about
+    (`a-graduated-probe-that-pins-a-fact-of-the-moment-goes-red-at-the-
+    next-change`): this probe already went red once, at HEAD 0d3ca919,
+    when a round 5 fix round landed after the numbers below were first
+    written as literals.
+
+    - waves: distinct `W<n>` tokens (case-sensitive; `wave-end`'s
+      lowercase `w` never matches) found in `Task:` trailers on the
+      range -- growing the plan by a wave grows this without an edit here.
+    - rounds: distinct (scope, round) pairs recorded in review.json's
+      `verdicts[]`, plus one if some `dispatch[]` entry names an explicit
+      fix round (`fix:<scope>-r<n>`) with no verdict recorded for it yet
+      -- a round already in flight, dispatched but not yet judged.
+    - mid_flight: `chore(loom): dispatch fix:` commits that are not
+      themselves a checkpoint record commit (`chore(loom): checkpoint
+      review`) -- a fix dispatched outside the record commit that closed
+      the round it was fixing.
+    """
     lines = _git_log_subjects(f"{BASE_REV}..HEAD")
     subjects_by_sha = {sha: subj for sha, subj in (line.split("\t", 1) for line in lines)}
 
     dispatch_subjects = [s for s in subjects_by_sha.values() if s.startswith("chore(loom): dispatch")]
     count = len(dispatch_subjects)
-    assert count == 9, f"expected 9 dispatch commits on {BASE_REV}..HEAD, found {count}: {dispatch_subjects}"
 
-    waves = {m.group(0) for s in dispatch_subjects for m in re.finditer(r"\bW[0-9]+\b", s)}
-    assert waves == {"W0", "W1", "W2"}, f"expected waves W0/W1/W2, found {waves}"
+    waves = {m.group(0) for trailer in _task_trailers(f"{BASE_REV}..HEAD")
+              for m in re.finditer(r"\bW(\d+)\b", trailer)}
+
+    review_path = REPO_ROOT / "docs" / "loom" / CHANGE_ID / "review.json"
+    review = json.loads(review_path.read_text(encoding="utf-8"))
+    verdict_pairs = _verdict_scope_round_pairs(review)
+    pending_pairs = _pending_checkpoint_round_pairs(review)
+    extra_pending = 1 if (pending_pairs - verdict_pairs) else 0
+    rounds = len(verdict_pairs) + extra_pending
 
     checkpoint_shas = {sha for sha, subj in subjects_by_sha.items()
                         if subj.startswith("chore(loom): checkpoint review")}
-    rounds = len(checkpoint_shas) + 1  # +1: the branch-end round this pass opens, not yet recorded
-    assert rounds == 4, f"expected 4 verdict rounds recorded (3 checkpoints + branch-end), found {rounds}"
-
     mid_flight = [
         sha for sha, subj in subjects_by_sha.items()
         if subj.startswith("chore(loom): dispatch fix:") and sha not in checkpoint_shas
     ]
-    # The dispatch packet's own docstring-worthy claim was "three such
-    # commits (a hotfix for main's red, an integration flip, a pre-reader
-    # fix)" -- git log shows FOUR: probes-main-red (hotfix), W1-03
-    # (integration flip), wave-end:1 ("before the readers" = pre-reader
-    # fix), AND wave-end:1-r2 (a second fix round the claim omitted).
-    assert len(mid_flight) == 4, (
-        f"expected 4 mid-flight `dispatch fix:` commits (one more than "
-        f"the dispatch packet's claimed three), found {mid_flight}"
-    )
 
     bound = len(waves) + rounds + len(mid_flight)
     assert count <= bound, (
-        f"{count} dispatch commits exceeds waves({len(waves)}) + "
-        f"rounds({rounds}) + mid_flight_fix_dispatches({len(mid_flight)}) = {bound}"
+        f"{count} dispatch commits exceeds waves({sorted(waves)}={len(waves)}) + "
+        f"rounds({sorted(verdict_pairs)} + {extra_pending} pending = {rounds}) + "
+        f"mid_flight_fix_dispatches({len(mid_flight)}: {mid_flight}) = {bound}"
     )
 
 
