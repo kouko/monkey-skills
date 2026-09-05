@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe",
-  "scope": "wave-end:1",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "openai"
@@ -328,6 +328,103 @@
         }
       ],
       "findings": []
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-0f4a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "security": "N/A — no injection/authn/secrets surface in the delta",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface; the claude -p citation lives in wave 1",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "loom-code/CHANGELOG.md:8",
+          "text": "nitpick: [1.4.1] dated 2026-09-05 sits above the pre-existing [1.4.0] dated 2026-09-06, a visible chronology inversion",
+          "fix": "correct the pre-existing 1.4.0 date to its merge date"
+        }
+      ],
+      "notes": "ran the package suite (1560 passed) and the graduated probes (61 passed) itself; did not re-derive baselines.md from the raw transcripts"
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-7e21",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "N/A — no applicable PRINCIPLES.md identified",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py:153 (the reader anchored the not-yet-graduated copy path)",
+          "text": "issue (blocking): the branch-end probe calls the external git show CLI without the grounding citation required for external CLI surfaces",
+          "fix": "adjacent citation to git documentation for git show <object>:<path>"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:404",
+          "text": "issue (blocking): probes[] ends with wave-end:1 records although branch-end adversary and blind-run artifacts were committed",
+          "fix": "add branch-end adversarial, blind-run and package-test probe entries"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:401",
+          "text": "issue (blocking): both package-test probe records have an empty artifact field",
+          "fix": "name a concrete artifact"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:51",
+          "text": "issue (blocking): the plan names `python3 loom-code/scripts/loom_checker.py memory` as the store-integrity check but the sub-command does not exist (exit 2); the branch-end probe asserts that the invalid command keeps failing",
+          "fix": "replace with `python3 scripts/check_loom_memory_integrity.py --check`; make the probe positive"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/CHANGELOG.md:8",
+          "text": "issue (blocking): 1.4.1 dated 2026-09-05 precedes the 1.4.0 entry dated 2026-09-06",
+          "fix": "correct one date so order agrees"
+        }
+      ]
     }
   ],
   "probes": [
@@ -400,6 +497,33 @@
       "result": "pass",
       "artifact": "",
       "note": "1499 passed, 3 skipped, 1 xfailed — run by the orchestrator before the round-3 dispatch"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py -q",
+      "sha": "fab8a795d99ee162a30204115e9bcd9162ba2dee",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py",
+      "note": "17 evidence-integrity checks over the four baselines, README, intent, graduated copies and arm-B precondition"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "git worktree add <clean> de2531c9 + python3 loom-code/scripts/coldread_role_split.py --contract loom-code/agents/adversary.md --fixture docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json --role adversary --runs 10 --out <scratch> + python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_fixture_items_verbatim_prior_list.py -q + python3 -m pytest loom-code/scripts/test_coldread_role_split.py -q + python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto + python3 loom-code/scripts/loom_checker.py --list-rules | wc -l",
+      "sha": "de2531c9360af002a4986a42fb0c055839873dc1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/blind-run-report.md",
+      "note": "fresh 10-run: three-way 77/80, systematic [], failed_runs 0"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "ab2ca8f574df5fdc4565a804072ee8d7e5dfbefe",
+      "result": "pass",
+      "artifact": "",
+      "note": "1560 passed, 3 skipped, 1 xfailed — run by the orchestrator after the memory step; artifact is empty by the review station's own worked record for package-tests"
     }
   ],
   "questions": [
@@ -495,6 +619,47 @@
       "severity": "fatal",
       "text": "failed_runs counts validated resumed runs (status resumed) as failures",
       "resolved": "closed by d53373ea/e6e75845 — failed_runs counts error and timeout only; both readers round 3"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py:153",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "fatal",
+      "text": "git show call without a grounding citation"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:404",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "branch-end probes absent from probes[]",
+      "resolved": "closed by this round's record commit — adversarial, blind-run and package-tests entries for branch-end added"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:401",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "package-tests probe artifact is empty"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:51",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "plan names a non-existent checker sub-command for the memory integrity check; the branch-end probe pins the wrong command failing"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/CHANGELOG.md:8",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21, rev-be-sonnet-0f4a",
+      "severity": "important",
+      "text": "1.4.0 entry carries 2026-09-06, a day after 1.4.1; the 1.4.0 merge date is 2026-09-05"
     }
   ],
   "dispatch": [
@@ -717,6 +882,7 @@
   ],
   "second_vendor": "codex",
   "round_notes": {
-    "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05). | round 2: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION — 02 held open, 09 opened; codex accepted the report-language dismissal. Round 3 follows the fix-rounds third-round rule: design re-look before any further fix. | round 3: PASS x2 after the design re-look (evidence/design-relook-run-status-2026-09-05.md); reviewed_sha -> da2fecfa."
+    "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05). | round 2: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION — 02 held open, 09 opened; codex accepted the report-language dismissal. Round 3 follows the fix-rounds third-round rule: design re-look before any further fix. | round 3: PASS x2 after the design re-look (evidence/design-relook-run-status-2026-09-05.md); reviewed_sha -> da2fecfa.",
+    "branch-end": "round 4: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION. Rebuttal for branch-end-03 goes to the resumed codex reader: the review station's own worked record shows package-tests with artifact \"\", and push.probes-package-tests compares the command, not an artifact."
   }
 }
