@@ -317,9 +317,15 @@ def main(argv: list[str] | None = None) -> int:
             continue
 
         call_argv = [claude_bin, "-p", "--model", args.model, "--output-format", "text"]
+        returncode = None
         try:
-            _, body, _ = run_once(claude_bin, args.model, prompt, args.timeout)
-            status = "ok"
+            _, raw_body, returncode = run_once(claude_bin, args.model, prompt, args.timeout)
+            if returncode == 0:
+                status = "ok"
+                body = raw_body
+            else:
+                status = "error"
+                body = f"# error: exit {returncode}\n" + raw_body
         except subprocess.TimeoutExpired:
             body = f"# error: timeout after {args.timeout}s"
             status = "timeout"
@@ -337,9 +343,12 @@ def main(argv: list[str] | None = None) -> int:
             body,
         )
         responses.append(body)
-        runs_summary.append({"i": i, "file": run_path.name, "status": status})
+        runs_summary.append(
+            {"i": i, "file": run_path.name, "status": status, "returncode": returncode}
+        )
 
     result = score(responses, fixture, args.role)
+    failed_runs = sum(1 for run in runs_summary if run["status"] != "ok")
 
     command_template = _command_line(
         [claude_bin, "-p", "--model", args.model, "--output-format", "text"],
@@ -356,6 +365,7 @@ def main(argv: list[str] | None = None) -> int:
         "contract": {"path": args.contract, "sha256": contract_hash},
         "fixture": {"path": args.fixture, "sha256": fixture_hash},
         "contract_delivery": "inline",
+        "failed_runs": failed_runs,
         "role": args.role,
         "runs": runs_summary,
         **result,

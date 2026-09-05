@@ -303,3 +303,29 @@ def test_run_once_sends_prompt_on_stdin_not_argv(monkeypatch):
     assert prompt not in argv
     assert captured["kwargs"]["input"] == prompt
     assert argv == ["claude", "-p", "--model", "sonnet", "--output-format", "text"]
+
+
+def test_main_records_nonzero_returncode_as_error_and_counts_failed_runs(tmp_path, monkeypatch):
+    """finding 02: a non-zero `claude` return code must be recorded
+    "error", never "ok", with `returncode` carried on the run entry and
+    tallied into `summary.json["failed_runs"]`."""
+
+    def fake_run(argv, **kwargs):
+        return coldread_role_split.subprocess.CompletedProcess(
+            argv, 3, stdout="", stderr="boom"
+        )
+
+    monkeypatch.setattr(coldread_role_split.subprocess, "run", fake_run)
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    contract = _write_cli_contract(tmp_path)
+    fixture = _write_cli_fixture(tmp_path)
+    out = tmp_path / "out"
+    rc = main(_cli_argv(contract, fixture, out, runs="1"))
+    assert rc == 0
+    summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    assert summary["runs"][0]["status"] == "error"
+    assert summary["runs"][0]["returncode"] == 3
+    assert summary["failed_runs"] == 1
+    body = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[1]
+    assert "# error: exit 3" in body
