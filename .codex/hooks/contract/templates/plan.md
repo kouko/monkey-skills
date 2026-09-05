@@ -8,6 +8,9 @@ charter: 1.0
 - Forward/Reverse/Error/Data/Boundary: <path and anchor>
 
 ## Task DAG
+<!-- When a spec requirement changes after this commit, the un-landed
+     tasks it touches are replaced and the reason is named in the commit
+     message. Landed tasks stay as they are. -->
 <wave segmentation; each task gets a stable ID; tasks with no dependency in the same wave can run in parallel>
 
 **<W0-01> <title>**  after: <ids>  review: after-task

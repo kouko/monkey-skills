@@ -388,8 +388,15 @@ a task by how long it will take.
   with no dependency between them run in parallel — but disjoint files are
   not enough: a shared symbol, a doc that mirrors code, or a
   producer/consumer pair stays sequential.
-- Each task lists **files it will touch**, **the test written failing
-  first**, and **its risk**.
+- Each task carries three one-line fields -- Files, Test and Risk -- whose
+  content kinds and word caps are set by the plan row of the artifact
+  charter (`contract/manifest.yaml`, `artifacts.plan.charter`, rendered by
+  `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py charter`). Run
+  `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py plan
+  docs/loom/<change-id>/plan.md` before the plan commit. After that commit,
+  the plan file changes only by the charter's `edits_after` policies,
+  recomputed by `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py
+  plan-edits <change-id>`.
 - `review: after-task` marks a task that gets its own review immediately
   after its commit. Budget **2 per plan**; more is allowed, and each extra
   one carries `— <reason>` on that task line — `intake.after-task-budget`
