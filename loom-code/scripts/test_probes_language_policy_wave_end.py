@@ -163,6 +163,10 @@ def test_TemplateMachineAnchors_AcrossTranslation_Unchanged():
         r"review: after-task|intake\.after-task-budget",
         re.MULTILINE,
     )
+    # Anchors legitimately added by later, non-translation work -- recorded
+    # here (not silently allowed) so an anchor that shows up for any OTHER
+    # reason still fails this test. `charter:` was added to plan.md by
+    # W1-01 (`plan.field-caps`), a feature commit, not a translation pass.
     checked_any = False
     for name in TEMPLATE_FILES:
         path = TEMPLATES_DIR / name

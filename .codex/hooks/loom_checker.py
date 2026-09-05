@@ -119,6 +119,15 @@ RULES: list[tuple[str, str]] = [
         "The intent file carries every required frontmatter field and H2 section declared in the contract manifest.",
     ),
     (
+        "plan.field-caps",
+        "A plan whose frontmatter carries a `charter:` key (any value, presence only) caps each "
+        "task's Test and Risk lines at 40 words, its Files line at 8 comma-separated entries "
+        "(a comma inside backticks does not split), each numbered `## Risks` item at 40 words, "
+        "and each `## Current State Evidence` bullet at 30 words -- CJK runs with no internal "
+        "whitespace count as one word by len(text.split()); a task missing its Files, Test or "
+        "Risk line blocks too. A plan with no `charter:` line is skipped entirely.",
+    ),
+    (
         "push.frozen-store-untouched",
         "No commit between the branch base and reviewed_sha writes into a frozen store "
         "(docs/loom/plans, specs, backlog, design or archive); only each store's own "
@@ -1504,6 +1513,8 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
     failures: list[tuple[str, str]] = []
     failures += check_after_task_budget(manifest, repo, change_id)
+    if station == "write-plan":
+        failures += check_plan_field_caps_at(manifest, repo, change_id)
 
     kind = front.get("kind", "").strip()
     needs_design = front.get("needs-design", "").strip().split()[:1]
@@ -1811,6 +1822,142 @@ def check_after_task_budget(manifest, repo: Path, change_id: str):
             )
         ]
     return []
+
+
+# --- plan.field-caps (W1-01) -----------------------------------------------
+
+PLAN_FIELD_CAP_TEST = 40
+PLAN_FIELD_CAP_RISK = 40
+PLAN_FIELD_CAP_FILES = 8
+PLAN_FIELD_CAP_RISKS_ITEM = 40
+PLAN_FIELD_CAP_CSE_BULLET = 30
+
+TASK_FIELD_LINE = re.compile(r"^-\s*(Files|Test|Risk):\s*(.*)$")
+NUMBERED_ITEM = re.compile(r"^\d+\.\s+(\S.*)$")
+BULLET_ITEM = re.compile(r"^-\s+(\S.*)$")
+
+
+def _split_respecting_backticks(text: str) -> list[str]:
+    """Comma-split `text`, except a comma sitting inside a `backtick span`
+    never splits -- a generated fixture path legitimately containing a
+    comma must still count as one Files entry (W1-01 adversary pin)."""
+    entries: list[str] = []
+    current: list[str] = []
+    in_backtick = False
+    for ch in text:
+        if ch == "`":
+            in_backtick = not in_backtick
+            current.append(ch)
+        elif ch == "," and not in_backtick:
+            entries.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    entries.append("".join(current))
+    return [entry.strip() for entry in entries if entry.strip()]
+
+
+def _parse_plan_task_fields(task_dag_text: str) -> dict[str, dict[str, str | None]]:
+    """One dict per task id, `{"Files": ..., "Test": ..., "Risk": ...}`,
+    values `None` when the task's block carries no such line at all --
+    distinct from an empty value, which the task did write."""
+    tasks: dict[str, dict[str, str | None]] = {}
+    current_id: str | None = None
+    for raw_line in task_dag_text.splitlines():
+        line = raw_line.strip()
+        header = TASK_LINE.match(line)
+        if header:
+            current_id = header.group("id")
+            tasks[current_id] = {"Files": None, "Test": None, "Risk": None}
+            continue
+        if current_id is None:
+            continue
+        field_match = TASK_FIELD_LINE.match(line)
+        if field_match:
+            tasks[current_id][field_match.group(1)] = field_match.group(2)
+    return tasks
+
+
+def _plan_numbered_items(text: str) -> list[str]:
+    items = []
+    for raw_line in text.splitlines():
+        match = NUMBERED_ITEM.match(raw_line.strip())
+        if match:
+            items.append(match.group(1))
+    return items
+
+
+def _plan_bullets(text: str) -> list[str]:
+    items = []
+    for raw_line in text.splitlines():
+        match = BULLET_ITEM.match(raw_line.strip())
+        if match:
+            items.append(match.group(1))
+    return items
+
+
+def check_plan_field_caps(plan_text: str) -> list[tuple[str, str]]:
+    """Recomputed per-field caps on a charter-stamped plan (W1-01).
+
+    Skipped entirely -- no output at all -- when the plan's frontmatter
+    carries no `charter:` key; presence is the stamp, not any particular
+    value, so grandfathering is by template, not by date (concept-model
+    §5, plan Risk #1)."""
+    front, sections = parse_document(plan_text)
+    if "charter" not in front:
+        return []
+
+    failures: list[tuple[str, str]] = []
+
+    tasks = _parse_plan_task_fields(sections.get("Task DAG", ""))
+    for task_id, fields in tasks.items():
+        for field, cap in (("Files", PLAN_FIELD_CAP_FILES), ("Test", PLAN_FIELD_CAP_TEST), ("Risk", PLAN_FIELD_CAP_RISK)):
+            value = fields.get(field)
+            if value is None:
+                failures.append(("plan.field-caps", f"{task_id}.{field} missing"))
+                continue
+            if field == "Files":
+                entries = _split_respecting_backticks(value)
+                if len(entries) > cap:
+                    failures.append((
+                        "plan.field-caps",
+                        f"{task_id}.Files {len(entries)} entries, cap {cap}",
+                    ))
+            else:
+                words = len(value.split())
+                if words > cap:
+                    failures.append((
+                        "plan.field-caps",
+                        f"{task_id}.{field} {words} words, cap {cap}",
+                    ))
+
+    for index, item in enumerate(_plan_numbered_items(sections.get("Risks", "")), start=1):
+        words = len(item.split())
+        if words > PLAN_FIELD_CAP_RISKS_ITEM:
+            failures.append((
+                "plan.field-caps",
+                f"Risks#{index} {words} words, cap {PLAN_FIELD_CAP_RISKS_ITEM}",
+            ))
+
+    cse = sections.get("Current State Evidence", "")
+    for index, item in enumerate(_plan_bullets(cse), start=1):
+        words = len(item.split())
+        if words > PLAN_FIELD_CAP_CSE_BULLET:
+            failures.append((
+                "plan.field-caps",
+                f"Current State Evidence#{index} {words} words, cap {PLAN_FIELD_CAP_CSE_BULLET}",
+            ))
+
+    return failures
+
+
+def check_plan_field_caps_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+    """Same rule, applied to a change's own `plan.md` when it exists -- the
+    shape `check_after_task_budget` uses, reused at intake and push."""
+    plan_path = artifact_path(manifest, "plan", change_id, repo)
+    if not plan_path.is_file():
+        return []
+    return check_plan_field_caps(read_text(plan_path))
 
 
 SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
@@ -2201,6 +2348,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
     failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id, review, change_id)
     failures += check_open_findings_closed(review)
+    if change_id:
+        failures += check_plan_field_caps_at(manifest, repo, change_id)
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
 
@@ -4887,6 +5036,27 @@ def cmd_charter(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return report(failures, err)
 
 
+def cmd_plan(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py plan <path>` -- runs `plan.field-caps` (and any other
+    `plan.*` rule) against one plan file directly, independent of a
+    change-id -- the shape the `plan` subcommand's own tests and the
+    write-plan / push callers both rely on."""
+    if not args:
+        raise UsageError("plan needs a path.")
+    if len(args) > 1:
+        raise UsageError(f"unexpected argument {args[1]!r}.")
+    path = Path(args[0])
+    if not path.is_file():
+        err.write(f"no such plan file: {path}\n")
+        return 2
+    try:
+        text = read_text(path)
+    except OSError as exc:
+        err.write(f"cannot read plan file {path}: {exc}\n")
+        return 2
+    return report(check_plan_field_caps(text), err)
+
+
 REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")
 
 
@@ -4945,6 +5115,7 @@ COMMANDS = {
     "standing": cmd_standing,
     "contract": cmd_contract,
     "charter": cmd_charter,
+    "plan": cmd_plan,
 }
 
 

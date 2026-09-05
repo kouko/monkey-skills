@@ -94,7 +94,7 @@ mechanisms:
     class: skill
     eval: "loom-workflow/scripts/test_critique_compaction.py"
 
-  # --- checker-rule (28; loom_checker.py --list-rules) ---
+  # --- checker-rule (29; loom_checker.py --list-rules) ---
   - id: contract.charter-complete
     class: checker-rule
     eval: loom-code/scripts/test_contract_charter.py::test_charter_command_every_column_of_every_row_is_non_empty
@@ -128,6 +128,9 @@ mechanisms:
   - id: intent.schema
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intent.py::test_complete_intent_passes
+  - id: plan.field-caps
+    class: checker-rule
+    eval: loom-code/scripts/test_plan_field_caps.py::test_check_plan_field_caps_test_field_over_cap_names_task_and_field
   - id: push.dismissed-by-reviewer
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_a_dismissal_by_the_implementer_blocks
