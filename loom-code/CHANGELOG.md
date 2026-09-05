@@ -7,6 +7,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [1.6.1] — 2026-09-06 — graduated probes rehearsed in a CI-shaped clone before graduation; nine dead history-bound tests removed
 
+budget-exception: build.rehearsal-before-graduation — branch-end fix round 2 registers the §6.5 rehearsal sentence ("a red rehearsal blocks graduation") as a prose gate, replacing the prose memory entry that failed to prevent the same CI-red three times (#789, #790, #794) with a marker a cold read can check.
+
 `docs/loom/2026-09-05-graduated-probes-independent-of-local-history/`.
 
 1. New `scripts/rehearse_probes.py`: clones the repo with `git clone
