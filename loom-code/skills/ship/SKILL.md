@@ -224,6 +224,22 @@ nit batch — fixing wording never substitutes for a passing probe run.
 
 ## 4. Push
 
+Before the push, walk this checklist once. It mirrors
+`.github/workflows/loom-code-ci.yml`'s jobs, command for command, so a
+red line here is red there too:
+
+```
+python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v -n auto
+python3 scripts/check_plugin_boundaries.py loom-code
+python3 scripts/check_plugin_boundaries.py loom-design
+python3 scripts/sync_codex_manifests.py --check --all
+python3 loom-code/scripts/check_mechanisms.py --baseline origin/main
+python3 loom-code/scripts/check_mechanisms.py --measure
+python3 loom-code/scripts/check_contract_citations.py
+git ls-files '*.md' | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)' | xargs python3 loom-code/scripts/check_doc_citations.py
+python3 loom-code/scripts/check-skill-crossrefs.py
+```
+
 Run the checker explicitly, then push:
 
 ```
@@ -310,6 +326,12 @@ consequence form>
 <`git log <reviewed_sha>..HEAD --format='%h %s'` — with §6's commit shape
 this is exactly one line, the review-only commit that also closed the
 intent>
+
+## Process cost
+Rounds: <`cost.rounds`>. Dispatches: <`cost.dispatches`>. Cap changes:
+<`cost.cap_changes`>. Hours plan-to-PR: <`cost.hours_plan_to_pr`>. Every
+figure here is copied straight from `review.json`'s own `cost` block,
+never estimated by hand.
 
 ## Memory
 

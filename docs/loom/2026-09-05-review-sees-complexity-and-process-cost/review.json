@@ -1,0 +1,1135 @@
+{
+  "reviewed_sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "reviewer": "<agent id>",
+      "vendor": "anthropic",
+      "model": "<model>",
+      "lens": "code|docs|spec|design|principles",
+      "scope": "spec|code|branch-end|wave-end:<n>",
+      "round": 1,
+      "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION",
+      "dimension_scores": {},
+      "findings": [],
+      "fallback": "<cli> missing at <YYYY-MM-DD>",
+      "spec_sha": "<git hash-object of the spec.md this verdict read; spec rounds only>",
+      "sha": "<reviewed_sha; the commit this verdict reviewed>"
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md:69",
+          "text": "issue (blocking): the unmarked prose makes a third-round verdict complete only with `design re-look:` — PRINCIPLES.md forbids prose-only gates; Acceptance 4 has no enforceable guarantee.",
+          "fix": "resolve the conflict: a recomputed rule (against the intent's constraint) or drop the completion condition and keep the line as a record obligation"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/agents/adversary.md:65",
+          "text": "issue (blocking): `Amend probes' unseen fixes into one commit` permits a fresh commit; Acceptance 6 requires amending into the original probe commit.",
+          "fix": "reword to name the probe's original commit"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:162",
+          "text": "issue (blocking): the dogfood `cost` object carries undeclared `plan_commit` and `note` keys; nothing validates real records against the declared shape.",
+          "fix": "remove the keys; add a validator over real review.json cost objects"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:28",
+          "text": "issue (blocking): the report states 12 dispatches, the tree records 13; `rounds: 0` described as populated.",
+          "fix": "regenerate Acceptance 3 from the final review.json after the checkpoint is recorded"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/CHANGELOG.md:18",
+          "text": "issue (blocking): the changelog says each role gets one record commit per round, contradicting review §2's single shared commit.",
+          "fix": "one sentence: all three roles' entries share one record commit per round"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:52",
+          "text": "issue (blocking): Acceptance 6 counts every verdict round; four dispatch commits exceed two waves plus one verdict round; a future checkpoint counted as a round hides the fix-dispatch commit.",
+          "fix": "use verdict rounds as the denominator; fold fix dispatches into the round's record commit or revise the formula"
+        }
+      ],
+      "notes": [
+        "the two review §2 gate ids and their text survived the reorder",
+        "new pinned sentences affirmative, ≤40 words, section-scoped; read-only sandbox could not start pytest",
+        "a root pytest.ini would be the broader, riskier shape; the two-session runner is the smaller local fix and the retargeted KICKOFF≈CI comparison stays meaningful"
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "dimension_scores": {
+        "omission": "PASS_WITH_NOTES",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "PASS_WITH_NOTES",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "scripts/run_package_tests.py:4-6",
+          "text": "issue (nit): the docstring says ~30 loom-code modules fail to collect; reproducing shows 3 modules (~90 test functions).",
+          "fix": "name the actual failure or drop the count"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/agents/adversary.md :: \"Amend probes' unseen fixes into one commit.\"",
+          "text": "nitpick: never says which commit — the original probe commit or a fresh one.",
+          "fix": "reword to the probe's own original commit"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/CHANGELOG.md :: \"## [1.4.0] — 2026-09-06\"",
+          "text": "issue (nit): pre-existing — 1.4.0's header is dated a day after 1.5.0's.",
+          "fix": "correct the date in the nit batch"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/prose_pin.py:1-8",
+          "text": "suggestion: the docstring omits that three graduated probe copies keep their own regex by design.",
+          "fix": "one clause in the docstring"
+        }
+      ],
+      "notes": [
+        "cost block consistent end-to-end; cap_changes [] is true — both near-cap tasks compressed",
+        "Acceptance 6: the report's reading (rounds = the continuous round counter across checkpoints) is correct; the gap is the formula's coverage of a mid-round implementer fix",
+        "ran the 12 touched test files (200 passed) and the checklist commands; trusted the report's package figures"
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8873669d43454e53f1f494cb982e8c6469bd4e0d",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md:69",
+          "text": "wave-end:1-01: fixed — a record obligation checked by the next reader, not a completion gate",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/agents/adversary.md:65",
+          "text": "wave-end:1-02: fixed — names the probe's original commit",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/test_review_json_template.py:48",
+          "text": "issue (blocking): wave-end:1-03: unfixed — the validator lets booleans pass as integers and does not require string elements in cap_changes",
+          "fix": "exact numeric type checks rejecting bool; every cap_changes element a string"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:28",
+          "text": "issue (blocking): wave-end:1-04: unfixed — the committed report still says rounds 0 / dispatches 12 while review.json says rounds 1 / dispatches 14; a promised regeneration is not evidence",
+          "fix": "regenerate Acceptance 3 from the record"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/CHANGELOG.md:18",
+          "text": "wave-end:1-05: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:51",
+          "text": "issue (blocking): wave-end:1-06: unfixed — the reading (every verdict round) is sound and four commits equal two waves plus two rounds at this boundary, but the committed report still says the formula cannot cover the fix dispatch",
+          "fix": "regenerate Acceptance 6 with the explicit count, wave count, round count and inequality"
+        },
+        {
+          "severity": "nit",
+          "anchor": "scripts/run_package_tests.py:3",
+          "text": "runner docstring nit: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/agents/adversary.md:65",
+          "text": "adversary sentence nit: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/CHANGELOG.md:35",
+          "text": "1.4.0 date nit: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/prose_pin.py:9",
+          "text": "prose_pin docstring nit: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "8873669d43454e53f1f494cb982e8c6469bd4e0d",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "all four round-1 nits fixed at their anchors",
+        "wave-end:1-01/-03/-05 fixes look correct and break nothing visible; -04/-06 are outside this delta and the other reader's to close",
+        "176 passed on the eleven touched test files"
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/test_review_json_template.py:49",
+          "text": "wave-end:1-03: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:27",
+          "text": "wave-end:1-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:50",
+          "text": "wave-end:1-06: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "design re-look: continue fixing was the correct choice; the defects were bounded validator and report-evidence issues, and the underlying shape holds",
+        "no package suite or probes run, per the fix-round procedure",
+        "rev-we1-cx-sonnet stands from round 2: every path of the round-3 fix delta sits inside the returning reader's anchors"
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:342",
+          "text": "issue (blocking): probes[] still carries the schema placeholder as a real probe.",
+          "fix": "remove it from the realized record"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:410",
+          "text": "issue (blocking): the branch-end package-tests probe has an empty artifact; the command cannot name it as an argument.",
+          "fix": "artifact = scripts/run_package_tests.py, also for the earlier record"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:733",
+          "text": "issue (blocking): cost.rounds is 3 although branch-end is the fourth verdict round.",
+          "fix": "cost.rounds = 4"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe.",
+          "fix": "regenerate Acceptance 6 with 5 ≤ 2 + 4 = 6"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+          "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red.",
+          "fix": "delete or replace with the verified state"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:62",
+          "text": "issue (blocking): the agent-decided forks omit the history rewrite (W1-05 merge message, shas remapped).",
+          "fix": "add the consequence-form bullet"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:60",
+          "text": "issue (blocking): the existing-data section says only created files were touched; KICKOFF-DEFAULTS.md, CHANGELOG.md and runner tests are shared existing files.",
+          "fix": "state which shared files changed; keep the no-backfill claim"
+        }
+      ],
+      "notes": [
+        "every recorded 40-char sha resolves",
+        "the graduated wave-end probe is byte-identical to its evidence copy; no name collisions",
+        "read-only sandbox could not start pytest; static inspection confirms bare -- passes through and --then-only exits 2"
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A",
+        "user-judgment-leak": "N/A"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe.",
+          "fix": "regenerate Acceptance 6 with 5 ≤ 2 + 4 = 6"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+          "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red.",
+          "fix": "delete or replace with the verified state"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py:358",
+          "text": "issue (blocking): the docstring promises a round-role `started` check the implementation never performs (regex matches W<n>-<n> only); the branch-end entries' started (18:40) postdate their roles' commits.",
+          "fix": "implement the round-role branch or narrow the docstring; correct the four started values"
+        }
+      ],
+      "notes": [
+        "branch-end probe file 25 passed, graduated wave-end copy 26 passed, runner tests 5 passed; the --then rename is complete and the checker's kickoff_defaults parses the full value",
+        "memory entry and README index line byte-equal; the three related links resolve",
+        "twelve sha-like tokens in review.json resolve; five spot-checked against their notes"
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "d7ce4b05a709fc9fe0a5063455dfeecba4e4b995",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-01: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-02: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-03: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-05: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-06: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-07: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "-01..-03 closed in the round-4 record commit; -04..-07 in the report commit 3ab852d4"
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "d7ce4b05a709fc9fe0a5063455dfeecba4e4b995",
+      "resumed": true,
+      "dimension_scores": {
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:70",
+          "text": "nitpick: the agent-decided section still carries the 'not my decision… left for the next section' bullet about the bound test, stale after the adversary's recompute fix.",
+          "fix": "replace or delete the bullet"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+          "text": "branch-end-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+          "text": "branch-end-05: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py:373",
+          "text": "branch-end-08: fixed — round-role started ≤ own record commit, found by content; fix:* ≤ HEAD",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "-06/-07 (the other reader's) broke nothing visible; spot-checked shas still resolve",
+        "branch-end probe file 25 passed"
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "resumed": true,
+      "dimension_scores": {
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "nit confirmation: 7dbf493d touches only the stale bullet in the report; rev-be-cx-codex stands from round 5 — the nit-fix path is inside its round-4 anchors (push.verdicts-ge-2)"
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-cx-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "nit confirmation: the nit commit changes exactly one bullet in the report; since round 5 only review.json record commits and the final review-only commit's intent status line"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto -- loom-design/scripts/ -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "scripts/run_package_tests.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see the report — clean clone at 5cc6f217 then re-verified at e7c55045, Acceptance 1–6",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k cost -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k runner -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k checklist -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -k gate_blocks -q",
+      "sha": "1eeaf6a8447dd8412cff8e38a94960fca4acc19b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "scripts/run_package_tests.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see the report — clean worktree at 896b1533, Acceptance 1–6; Acceptance 5 re-verified after the probe-bound fix",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k graduated_probe -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k memory -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k kickoff -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k split_groups -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k dispatch -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k ship_checklist -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k word_caps -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py -k review_json_latest -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -q",
+      "sha": "3dc2de2f7f473f13e1415596835e938e921c28f5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py",
+      "scope": "branch-end"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是：讓審查也「看得見複雜度」——現在只有審程式碼的鏡頭會問「這段有必要嗎、有沒有更小的寫法」，審站文字和契約的鏡頭不會問……做完後你可以：（六項）……對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "不可逆的門：沒有——全是文字與紀錄欄位，舊 review.json 不用改。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？",
+      "type": "what",
+      "answer": "codex"
+    },
+    {
+      "decision_point": 3,
+      "text": "Acceptance 1–6 walked in the blind-run report (deletion-first in docs/skill lenses, cap-bump cost, cost block, third-round line as a record obligation, runner + checklist, batched dispatch records: 5 ≤ 2 + 4); shared files modified, no older review.json back-filled; two commit messages rewritten for Task trailers. OK?",
+      "type": "done",
+      "answer": "OK"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/skills/review/references/fix-rounds.md:69",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "raised_by": "rev-we1-cx-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): the unmarked prose makes a third-round verdict complete only with `design re-look:` — PRINCIPLES.md forbids prose-only gates; Acceptance 4 has no enforceable guarantee.",
+      "resolved": "closed by 3a72f623 — record obligation, PRINCIPLES.md prose-gate rule honoured; both readers fixed (round 2)"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/agents/adversary.md:65",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "raised_by": "rev-we1-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): `Amend probes' unseen fixes into one commit` permits a fresh commit; Acceptance 6 requires amending into the original probe commit.",
+      "resolved": "closed by 8e3fab22 — names the probe's original commit; both readers fixed (round 2)"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/test_review_json_template.py:48",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "raised_by": "rev-we1-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the dogfood `cost` object carries undeclared `plan_commit` and `note` keys; nothing validates real records against the declared shape. (re-anchored by the reader in round 2 to the validator test)",
+      "resolved": "closed by 1e5bec02 — exact int checks, str cap_changes; codex fixed (round 3)"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:28",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "raised_by": "rev-we1-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the report states 12 dispatches, the tree records 13; `rounds: 0` described as populated.",
+      "resolved": "closed by 1eeaf6a8 — Acceptance 3 regenerated from the round-2 record; codex fixed (round 3)"
+    },
+    {
+      "id": "wave-end:1-05",
+      "anchor": "loom-code/CHANGELOG.md:18",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "raised_by": "rev-we1-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the changelog says each role gets one record commit per round, contradicting review §2's single shared commit.",
+      "resolved": "closed by 8873669d — one shared record commit per round; both readers fixed (round 2)"
+    },
+    {
+      "id": "wave-end:1-06",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:52",
+      "origin_sha": "99a8e26ac14b876f906346e479f7dfb9d3ecb491",
+      "raised_by": "rev-we1-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): Acceptance 6 counts every verdict round; four dispatch commits exceed two waves plus one verdict round; a future checkpoint counted as a round hides the fix-dispatch commit.",
+      "resolved": "closed by 1eeaf6a8 — Acceptance 6 with the verdict-round reading and explicit arithmetic; codex fixed (round 3)"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:342",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): probes[] still carries the schema placeholder as a real probe.",
+      "resolved": "closed in the round-4 record commit — placeholder probe removed"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:410",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the branch-end package-tests probe has an empty artifact; the command cannot name it as an argument.",
+      "resolved": "closed in the round-4 record commit — package-tests artifact scripts/run_package_tests.py on both records"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/review.json:733",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): cost.rounds is 3 although branch-end is the fourth verdict round.",
+      "resolved": "closed in the round-4 record commit — cost.rounds 4"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:54",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): Acceptance 6 still says the graduated probe uses a frozen bound and is red, contradicting Acceptance 5 and the current probe.",
+      "resolved": "closed by 3ab852d4 — Acceptance 6 regenerated; both readers fixed (round 5)"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:73",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-codex, rev-be-cx-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): the uncertainty section repeats that the bound probe is frozen and package tests stay red.",
+      "resolved": "closed by 3ab852d4 — stale open question replaced; both readers fixed (round 5)"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:62",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the agent-decided forks omit the history rewrite (W1-05 merge message, shas remapped).",
+      "resolved": "closed by 3ab852d4 — history-rewrite bullet in consequence form; codex fixed (round 5)"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/blind-run-report.md:60",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-codex",
+      "severity": "important",
+      "text": "issue (blocking): the existing-data section says only created files were touched; KICKOFF-DEFAULTS.md, CHANGELOG.md and runner tests are shared existing files.",
+      "resolved": "closed by 3ab852d4 — shared files named; codex fixed (round 5)"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_branch_end.py:358",
+      "origin_sha": "553905df463a4b582022f0dbceb4093ff587a540",
+      "raised_by": "rev-be-cx-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): the docstring promises a round-role `started` check the implementation never performs (regex matches W<n>-<n> only); the branch-end entries' started (18:40) postdate their roles' commits.",
+      "resolved": "closed by d7ce4b05 — round-role started check implemented; sonnet fixed (round 5)"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:08:34+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:08:34+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:08:34+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:08:34+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-05",
+      "role": "implementer",
+      "agent_id": "impl-w1-05-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:08:34+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:W1-05",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T16:29:20+08:00",
+      "fresh_context": false,
+      "note": "BLOCKED decision, agent-decided: one pytest session cannot run loom-code paths together with loom-design/scripts/ (its pytest.ini switches the session to importlib mode; 2 collection errors) — a 12-line runner script runs one session per `--`-separated path group; the KICKOFF command names loom-design/scripts/ literally; also dedupes the `cost` field both W1-02 and W1-05 declared in manifest.yaml"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:29:20+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T16:29:20+08:00",
+      "fresh_context": false,
+      "note": "record written with the wave; the step runs after W2-01, before the closing round"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:31:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "br-we1-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T16:31:56+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-cx-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-05T16:31:56+08:00",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-cx-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T16:31:56+08:00",
+      "fresh_context": true,
+      "vendor": "anthropic"
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T16:45:00+08:00",
+      "fresh_context": false,
+      "note": "fixes before the readers are dispatched, from the adversary's and blind-runner's findings: duplicate cost key in the template (merge of W1-02+W1-05), review.cost registered in the mechanisms ledger, runner exits non-zero on zero groups, ship §4 doc-citations line carries CI's full pipeline, the negation regex shared from one module (prose_pin.py) and widened; dispatch started timestamps corrected to their record commits (the originals were written with the wrong calendar day)"
+    },
+    {
+      "task": "fix:wave-end:1-r2",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T17:30:00+08:00",
+      "fresh_context": false,
+      "note": "round-1 fixes: the third-round line becomes a record obligation the next reader checks (PRINCIPLES forbids prose gates; the intent forbids a checker rule) — agent-decided; adversary sentence names the original probe commit; cost keys trimmed to the declared four plus a validator over real records; CHANGELOG wording and the 1.4.0 date; docstrings (runner count, prose_pin scope)"
+    },
+    {
+      "task": "fix:wave-end:1-r3",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T17:55:00+08:00",
+      "fresh_context": false,
+      "note": "design re-look: continue fixing — round 3 on the same checkpoint; the three open findings are validator strictness (-03) and the blind-run report's figures/arithmetic lagging the record (-04, -06); the change's shape holds. The report is regenerated by br-we1-cx (its own artifact, resumed); the validator by the orchestrator"
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T17:24:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-cx",
+      "model": "sonnet",
+      "started": "2026-09-05T17:24:44+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-cx-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-05T17:24:44+08:00",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-cx-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T17:24:44+08:00",
+      "fresh_context": true,
+      "vendor": "anthropic"
+    },
+    {
+      "task": "fix:branch-end-r5",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T18:09:16+0800",
+      "fresh_context": false,
+      "note": "round-4 fixes: review.json (placeholder probe, artifacts, cost.rounds, branch-end started values set to the record commit's timestamp — the orchestrator wrote them from a guessed clock, twice now); the report by br-be-cx (its own artifact); the branch-end probe's round-role check by adv-be-cx (its own artifact)"
+    },
+    {
+      "task": "fix:trailer",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T18:33:24+0800",
+      "fresh_context": false,
+      "note": "message-only history rewrite: the adversary's graduated-copy re-sync commit gains Task: W2-memory (push.dispatch-covers-tasks); trees unchanged, every recorded sha remapped to the rewritten ids"
+    }
+  ],
+  "second_vendor": "codex",
+  "cost": {
+    "rounds": 6,
+    "dispatches": 21,
+    "cap_changes": [],
+    "hours_plan_to_pr": 2.6
+  }
+}

@@ -35,6 +35,7 @@ SHIPPED_TEST = REPO / "loom-code/scripts/test_review_station_text.py"
 # complete enough for the whole module to run (not just the W1-01 tests).
 MIRRORED = (
     "loom-code/scripts/test_review_station_text.py",
+    "loom-code/scripts/prose_pin.py",
     "loom-code/skills/review/SKILL.md",
     "loom-code/skills/build/SKILL.md",
     "loom-code/skills/review/references/lenses.md",

@@ -53,7 +53,7 @@ def _sentences(text: str) -> list[str]:
 # negation anywhere in the sentence; mirrors
 # evidence/probes/test_abuse_language_policy.py's `_has_negation` /
 # affirmative-sentence pattern.
-_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
 _ENGLISH_AFFIRM_PHRASES = ("in english", "is english", "are english", "written in english")
 _USER_LANGUAGE_AFFIRM_PHRASES = (
     "stays in the user's language",

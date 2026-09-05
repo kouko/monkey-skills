@@ -5,7 +5,34 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [1.4.0] — 2026-09-06 — fix rounds by the raising reader, tree-bound records, the close line rides in the review-only commit
+## [1.5.0] — 2026-09-05 — review sees complexity and process cost
+
+budget-exception: 1.5.0 — one contract field registered (artifact:review.cost): the process-cost record the intent's outcome 3 asks for; it replaces the per-change cost notes that lived only in the orchestrator's memory.
+
+`docs/loom/2026-09-05-review-sees-complexity-and-process-cost/`.
+
+1. `deletion-first` now reaches the docs and skill lenses: `lenses.md`
+   and the reviewer's docs/skill rows require a named deletion
+   candidate whenever consecutive `*_CAP` bumps appear in the delta,
+   the same way the code lens already did.
+2. Review station: one record commit per round carries the adversary's,
+   the blind-runner's and the readers' dispatch entries, written before
+   any of them is dispatched; a
+   cap-bump commit needs a one-line reason recorded in that round's
+   notes; the `cost` block is refreshed at every checkpoint, and the
+   third round of a checkpoint carries a `design re-look:` line.
+3. Build §3: one record commit per wave, subject
+   `chore(loom): dispatch <wave>`; the adversary now amends an unseen
+   fix into its own probe instead of opening a fresh one.
+4. Ship gains a `## Process cost` PR section and a §4 pre-push
+   checklist mirroring the CI workflow's jobs one for one.
+5. `review.json`'s template and manifest gain a `cost` block.
+   `KICKOFF`'s package-tests step runs one pytest session per `--then`
+   group via `scripts/run_package_tests.py`, so `loom-design/scripts/`
+   is covered by its own session instead of being silently skipped.
+6. No checker rule was added or removed — `--list-rules` stays at 27.
+
+## [1.4.0] — 2026-09-05 — fix rounds by the raising reader, tree-bound records, the close line rides in the review-only commit
 
 `docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/`.
 

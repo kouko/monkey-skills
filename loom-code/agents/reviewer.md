@@ -42,11 +42,11 @@ dimension named below and the severity thresholds.
 | Lens | Dimensions |
 |---|---|
 | `code` | security, architecture, correctness, naming, tests, refactoring, cross-task-coherence, external-surface-grounding, principles-conformance, deliberate-simplification, deletion-first |
-| `docs` | omission, ambiguity, inconsistency, incorrect-fact, missing-population |
+| `docs` | omission, ambiguity, inconsistency, incorrect-fact, missing-population, deletion-first |
 | `spec` | the five `docs` dimensions, plus spec-conformance, design-conformance, principles-conformance, user-judgment-leak |
 | `design` | design-conformance |
 | `principles` | principles-conformance |
-| `skill` | the five `docs` dimensions, plus user-judgment-leak |
+| `skill` | the five `docs` dimensions, plus user-judgment-leak, deletion-first |
 
 On the `spec` lens, `user-judgment-leak` also fires the other way round —
 on a decision that was **not** put to the user: a `Design decision` that

@@ -58,10 +58,11 @@ before the pinned literal, rejects any negation token in that same
 sentence, and carries synthetic self-tests validating one affirmative
 example and one rejected negated example.
 
-Record attempts that **failed to break anything** too: they are what turns
-the catalogue into an eval instead of an anecdote. A case that ran only in
+Record attempts that **failed to break anything**: they turn the
+catalogue into an eval instead of an anecdote. A case that ran only in
 your head is not a probe — `command` must be re-runnable by someone else in
 a clean tree, and `artifact` must point at the file that now holds it.
+Amend an unseen probe fix into that probe's original commit.
 
 ## Traps
 
