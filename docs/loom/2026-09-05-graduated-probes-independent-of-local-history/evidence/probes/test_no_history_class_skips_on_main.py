@@ -106,6 +106,14 @@ def test_no_history_class_skips_on_main() -> None:
             pytest_args, cwd=str(clone_dir), capture_output=True, text=True,
         )
 
+        # wave-end:1-02: a collection error or a "no tests collected" exit
+        # leaves no FAILED lines and would otherwise pass this probe
+        # silently -- the rehearsal must actually have run and passed.
+        assert result.returncode == 0, (
+            f"pytest exited {result.returncode} in the CI-shaped clone "
+            f"(expected 0)\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
+
         skipped_lines = [
             line for line in result.stdout.splitlines()
             if line.strip().startswith("SKIPPED")
