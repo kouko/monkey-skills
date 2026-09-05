@@ -97,3 +97,32 @@ count. Both runs' full status reports are saved verbatim (not
 paraphrased) alongside this file once they complete, so the count can be
 independently re-checked against the quoted questions rather than taken
 on the run's own tally.
+
+## Rerun with the engineering spec (fix round)
+
+Branch-end finding branch-end-01 held that Acceptance 4 was not met
+because the design rationale every charter-arm run asked for (B1's
+species-neutral convention, B1/B2's annotate-in-place dating, B2's
+`--wood-hex` type/default framing) has no home on an engineering change:
+the charter routes "design rationale" to a spec, and a `needs-design: no`
+change carries none. The fix gives write-plan a spec path for exactly
+this case; `ab-spec-engineering.md` beside this file is the sample's copy
+of it, answering every question B1 and B2 asked.
+
+A third and fourth pair reruns the same T7 comparison with that spec
+added to the charter arm's packet only; the original arm is unchanged,
+since its plan already carries the rationale as prose. Dispatch packet:
+identical to the section above, except the charter runs' Resource Paths
+gain a fourth line, `spec: evidence/ab-spec-engineering.md`, and step 2
+also reads it.
+
+| run | plan | status | NEEDS_CONTEXT count | report |
+|---|---|---|---|---|
+| A3 | original (4,633 words) | DONE | 1 | `ab-run-a3-original.md` |
+| A4 | original | DONE | 3 | `ab-run-a4-original.md` |
+| B3 | charter (941 words) + engineering spec | — | — | pending |
+| B4 | charter + engineering spec | — | — | pending |
+
+A3 and A4 need no new spec (the original plan's rationale prose is
+unchanged), so the orchestrator ran them ahead of B3/B4, which wait on
+this spec file landing on the branch.
