@@ -38,7 +38,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[5]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "loom-code" / "scripts" / "rehearse_probes.py"
 SCRIPTS_DIR = REPO_ROOT / "loom-code" / "scripts"
 
