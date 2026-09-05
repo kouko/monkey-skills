@@ -273,6 +273,24 @@
       "started": "2026-09-05T16:10:00+08:00",
       "fresh_context": false,
       "note": "resumed round-1 reader"
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T16:40:00+08:00",
+      "fresh_context": false,
+      "note": "round-2 residue: order check counts affirmative review-call sentences (exactly one); guard scans the leading metadata block"
+    },
+    {
+      "task": "wave-end:1 round 3",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T16:42:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; adjudicates wave-end:1-03 and the guard nit"
     }
   ],
   "second_vendor": "codex",
