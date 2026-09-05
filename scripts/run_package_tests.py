@@ -2,8 +2,9 @@
 """Run one pytest session per `--`-separated group of arguments.
 
 loom-design/scripts/ carries its own pytest.ini (importlib import mode); a
-single session that also names loom-code paths adopts that ini and fails to
-collect ~30 loom-code modules. Two sessions, one exit code.
+single session that also names loom-code paths adopts that ini, and the
+loom-code modules that rely on bare sibling imports (three files, ~90
+tests) fail to collect. Two sessions, one exit code.
 """
 from __future__ import annotations
 

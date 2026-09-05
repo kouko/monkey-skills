@@ -10,6 +10,11 @@ place to widen it: nine test modules used to carry private copies of
 that pinned affirmative sentences use ("a reader who raised none keeps its
 previous PASS"; "that one intent line, nothing more"), and the hostile
 rewrites the adversary built used ``cannot`` and ``without``.
+
+Three graduated probe copies (test_probes_language_policy.py,
+test_probes_memory_step.py, test_probes_memory_step_wave_end.py) keep
+their own private regex by design: they are byte copies of frozen
+evidence and do not import this module.
 """
 from __future__ import annotations
 
