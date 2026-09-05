@@ -989,11 +989,29 @@
       "round": 7,
       "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
       "note": "rebase-onto-1.6.0 confirmation"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-06T07:39:12+08:00",
+      "fresh_context": false,
+      "note": "round-7 nit: duplicate _has_negation after the rebase merge"
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-06T07:39:12+08:00",
+      "fresh_context": false,
+      "note": "round-7: plan W2-02 path and PREVIOUS_VERSION after the rebase"
     }
   ],
   "cost": {
     "rounds": 6,
-    "dispatches": 31,
+    "dispatches": 33,
     "cap_changes": [],
     "hours_plan_to_pr": 6.9
   },
