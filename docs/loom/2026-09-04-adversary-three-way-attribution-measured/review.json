@@ -1,0 +1,12 @@
+{
+  "reviewed_sha": "db7d44f99afff18d3af7ee6060293102df64bb07",
+  "scope": "none yet — created by build at wave 1 start",
+  "vendors": ["anthropic"],
+  "verdicts": [],
+  "probes": [],
+  "questions": [],
+  "open_findings": [],
+  "dispatch": [
+    {"task": "W1-01", "role": "implementer", "agent_id": "impl-w1-01-7c2e", "model": "sonnet", "started": "2026-09-05T16:40:00+08:00", "fresh_context": true}
+  ]
+}
