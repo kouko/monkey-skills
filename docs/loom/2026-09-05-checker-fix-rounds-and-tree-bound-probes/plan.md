@@ -29,8 +29,10 @@ intent: 2026-09-05-checker-fix-rounds-and-tree-bound-probes@2f212f8d
   cases follow. `docs/loom/2026-09-03-artifact-language-policy/review.json`
   is the real fixture for the single-reader fix round (round 3 codex-only)
   and the trailer-only rewrite (rounds 5→6).
-- Boundary: `--list-rules` prints 27 lines; four rule descriptions change
-  wording, none is added or removed. `.codex/hooks/loom_checker.py` is a
+- Boundary: `--list-rules` prints 27 lines; six rule descriptions change
+  wording (`intake.confirmed`, `push.probes-adversarial`,
+  `push.probes-package-tests`, `push.review-only-head`, `push.reviewed-sha`,
+  `push.verdicts-ge-2`), none is added or removed. `.codex/hooks/loom_checker.py` is a
   byte mirror checked by `loom-code/scripts/test_codex_mirror_matches_checker.py`
   — every checker edit regenerates it (`codex_scaffold.py --repo .`). Station
   text: `loom-code/skills/ship/SKILL.md:323-360` §6 (close commit, its own
