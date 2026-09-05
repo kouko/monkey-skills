@@ -410,7 +410,42 @@
       "scope": "wave-end:1"
     }
   ],
-  "questions": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是：車道變成你能宣告的事，三格——full／express／gate-only……做完後你可以：在 ① 宣告，或做到一半說「切換模式」……對嗎？",
+      "type": "what",
+      "answer": "對"
+    },
+    {
+      "decision_point": 1,
+      "text": "不可逆的門：沒有。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這個 change 自己改 checker，走 full。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？",
+      "type": "what",
+      "answer": "用 Codex"
+    },
+    {
+      "decision_point": 1,
+      "text": "PRINCIPLES.md 第 2 條牴觸 gate-only（零讀者、不盲跑）：A 修憲章一句並把 gate-only 縮到 small 車道類別／B 保留一位讀者／C 拿掉 gate-only？",
+      "type": "consequence",
+      "answer": "A"
+    },
+    {
+      "decision_point": 1,
+      "text": "憲章那一句（gate-only 零讀者、不盲跑，只限 small 類別，push 閘照跑）——批准？",
+      "type": "consequence",
+      "answer": "批准"
+    }
+  ],
   "open_findings": [
     {
       "id": "wave-end:1-01",
