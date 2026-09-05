@@ -188,7 +188,10 @@ RULES: list[tuple[str, str]] = [
         "distinct in the full lane -- where a later round of that scope may also count a "
         "non-returning previous-round reviewer whose earlier passing verdict still stands, "
         "provided every path the fix touched sits inside the anchor of an open finding raised "
-        "by a reviewer who did return, and blocks when any verdict in that round is not passing.",
+        "by a reviewer who did return AND every reviewer named in that prior round has a "
+        "dispatch[] entry as reviewer, blind-runner or adversary in some round -- a single "
+        "undispatched name anywhere in that round poisons the whole round for standing, so no "
+        "one from it stands -- and blocks when any verdict in the latest round is not passing.",
     ),
     (
         "spec.req-grammar",
@@ -1964,15 +1967,19 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_open_findings_closed(review)
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
-    failures += check_verdicts(repo, review, reviewed_id)
+
+    # `dispatch[]` lives inside the review.json that was read out of the
+    # reviewed commit's tree, so both identity rules -- and the standing-
+    # reviewer recompute inside check_verdicts, which needs the same
+    # dispatch-legitimate reviewer set to keep a ghost verdict from an
+    # earlier round from ever counting -- recompute from a committed
+    # record and never from the working tree (concept-model §2e).
+    implementers, reviewers, dispatch_error = parse_dispatch(review)
+    failures += check_verdicts(repo, review, reviewed_id, reviewers)
     failures += check_second_vendor_honoured(repo, review, reviewed_id)
     failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
     failures += check_frozen_store_untouched(repo, reviewed_id)
 
-    # `dispatch[]` lives inside the review.json that was read out of the
-    # reviewed commit's tree, so both identity rules recompute from a
-    # committed record and never from the working tree (concept-model §2e).
-    implementers, reviewers, dispatch_error = parse_dispatch(review)
     failures += check_reviewer_ne_implementer(review, implementers, reviewers, dispatch_error)
     failures += check_dismissed_by_reviewer(review, implementers, reviewers, dispatch_error)
     return report(failures, err)
@@ -3668,13 +3675,28 @@ def _anchor_paths(anchor) -> set[str]:
 
 
 def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
-                        current_verdicts: list[dict]) -> set[str]:
+                        current_verdicts: list[dict],
+                        dispatch_reviewers: set[str]) -> set[str]:
     """A later round of the same scope is a fix round: a previous-round
     reviewer who is not named in any still-open finding's `raised_by` need
     not return -- PROVIDED every path the fix delta actually touched sits
     inside the anchor of an open finding raised by a reviewer who did
     return. Any path outside those anchors, or an unresolvable sha, drops
-    that reviewer back to the floor as before."""
+    that reviewer back to the floor as before.
+
+    A standing candidate must also actually BE a dispatched reviewer:
+    `dispatch_reviewers` names every agent_id `parse_dispatch` recorded
+    under role reviewer/blind-runner/adversary, in ANY round -- a name
+    whose only verdict entry is a ghost with no dispatch[] entry at all
+    can never stand, no matter which round planted it or which anchor its
+    fabricated PASS happens to sit inside (finding F-WE-1: the anchor
+    safety net checked paths, never dispatch legitimacy). More than that:
+    a single undispatched name found ANYWHERE in the prior round poisons
+    that whole round for standing purposes -- if an attacker could forge
+    one phantom entry into it, nothing else that round claims is provable
+    either, so a legitimate co-reviewer sitting right next to a ghost gets
+    no exemption from it this round; the reviewer floor falls back to a
+    plain headcount of who actually returned."""
     all_verdicts = usable_verdicts(review)
     scoped = [
         entry for entry in all_verdicts
@@ -3688,6 +3710,9 @@ def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
     prev_round_verdicts = [
         entry for entry in prior if int(entry.get("round", 1)) == prev_round_number
     ]
+    prev_round_names = {str(entry["reviewer"]).strip() for entry in prev_round_verdicts}
+    if not prev_round_names <= dispatch_reviewers:
+        return set()
     prev_reviewers = {
         str(entry["reviewer"]).strip()
         for entry in prev_round_verdicts
@@ -3702,7 +3727,7 @@ def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
     required = set()
     for entry in still_open:
         required |= set(_split_names(entry.get("raised_by")))
-    candidates = prev_reviewers - required
+    candidates = (prev_reviewers - required) & dispatch_reviewers
     if not candidates:
         return set()
     # The anchor safety net looks at every finding a returning reviewer ever
@@ -3744,16 +3769,21 @@ def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
     return standing
 
 
-def check_verdicts(repo: Path, review, reviewed_id: str | None) -> list[tuple[str, str]]:
+def check_verdicts(repo: Path, review, reviewed_id: str | None,
+                    dispatch_reviewers: set[str]) -> list[tuple[str, str]]:
     """The reviewer-count floor, lane-dependent since W0-02: a small-lane
     change (plan risk 3: "its message now names the lane") needs one
     fresh-context verdict, a full-lane change still needs two. A fix round
     of the same scope may also count a non-returning previous-round
-    reviewer whose earlier PASS still stands (see `_standing_reviewers`)."""
+    reviewer whose earlier PASS still stands (see `_standing_reviewers`) --
+    but only when that reviewer is itself a dispatched reviewer
+    (`dispatch_reviewers`, from `parse_dispatch`); a name with no
+    dispatch[] entry at all can never stand, however old its ghost PASS."""
     round_number, verdicts = scored_verdicts(review)
     reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
     scope = str(review.get("scope", "")).strip()
-    reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts)
+    reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts,
+                                      dispatch_reviewers)
     try:
         lane, lane_reason = change_lane_detail(repo, reviewed_id)
     except (UsageError, OSError, KeyError) as exc:

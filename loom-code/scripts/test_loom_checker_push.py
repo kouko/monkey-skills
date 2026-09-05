@@ -1637,6 +1637,81 @@ def test_a_fix_round_with_a_path_outside_the_anchors_still_blocks(tmp_path: Path
     assert "push.verdicts-ge-2" in blocked_rules(result)
 
 
+def test_ghost_verdict_earlier_round_cannot_stand(tmp_path: Path) -> None:
+    """A `ghost` PASS with no dispatch[] entry at all is planted in round 1
+    alongside the two real reviewers (rev-a raises F-1, rev-b passes
+    clean). Round 2 carries only rev-a's confirming PASS, with the fix
+    delta confined to notes/F.md -- exactly the anchor rev-a raised, the
+    same shape that lets a real co-reviewer stand. `ghost` has no
+    dispatch[] entry as reviewer/blind-runner/adversary in any round, so
+    it poisons round 1 for standing purposes: nobody from that round --
+    not even the legitimately dispatched rev-b -- can stand on it, and the
+    full-lane floor of 2 falls back to a plain headcount of 1 (rev-a
+    alone), which blocks."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+            {"reviewer": "ghost", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=round1["verdicts"] + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a",
+             "resolved": f"fixed in {fix_sha[:8]}"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_dispatched_non_returning_reviewer_still_stands(tmp_path: Path) -> None:
+    """Regression: with no ghost anywhere, `rev-b` -- a genuinely dispatched
+    reviewer (FIX_ROUND_DISPATCH names it as `reviewer`) who passed clean in
+    round 1 and never raised anything -- does not need to return in round 2
+    when the fix delta stays inside the anchor of the finding the
+    returning reader (rev-a) raised. The round-poisoning check this task
+    adds must not punish a clean round: `rev-b` still stands, the
+    full-lane floor of 2 is met by headcount 1 (rev-a) + standing 1
+    (rev-b), and the push is not blocked."""
+    repo = _build_fix_round_scenario(tmp_path, touch_outside_anchor=False)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.verdicts-ge-2" not in blocked_rules(result)
+
+
 def test_round_scoring_uses_the_checkpoints_own_scope(tmp_path: Path) -> None:
     """A wave-end checkpoint reached round 3 with only one reviewer (a
     single-reader fix round the wave-end checkpoint itself already
