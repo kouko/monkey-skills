@@ -2340,11 +2340,35 @@
       "model": "fable",
       "started": "2026-09-05T22:46:35+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w201-m4p7",
+      "model": "sonnet",
+      "started": "2026-09-05T22:54:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "impl-w202-m4p7",
+      "model": "sonnet",
+      "started": "2026-09-05T22:54:39+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-03",
+      "role": "implementer",
+      "agent_id": "impl-w203-m4p7",
+      "model": "sonnet",
+      "started": "2026-09-05T22:54:39+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 9,
-    "dispatches": 28,
+    "dispatches": 31,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
