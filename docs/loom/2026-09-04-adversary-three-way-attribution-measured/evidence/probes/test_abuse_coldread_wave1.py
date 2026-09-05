@@ -145,7 +145,12 @@ def test_main_nonzero_returncode_recorded_as_status_error_not_ok():
     `# error: exit <code>` marker so a reader of run-1.txt alone can
     tell the call failed. `summary.json["runs"][0]["returncode"]` must
     carry the actual code, and `summary.json["failed_runs"]` must count
-    this run."""
+    this run.
+
+    Design re-look 2026-09-05 (d): with the only run in the batch failed,
+    `complete` is false (`failed_runs == 1`, `n (scored) == 0 !=
+    attempted_runs == 1`), so `main` must return 1, not 0 -- a partial
+    baseline must not be committed silently by a green command."""
 
     def fake_run(argv, **kwargs):
         return module.subprocess.CompletedProcess(
@@ -162,7 +167,7 @@ def test_main_nonzero_returncode_recorded_as_status_error_not_ok():
         fixture = _write_fixture(tmp_path, [{"n": 1, "text": "a", "expected": "reviewer"}])
         out = tmp_path / "out"
         rc = main(_base_argv(contract, fixture, out))
-        assert rc == 0
+        assert rc == 1
         summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
         # The one and only run used a non-zero-returncode fake call; the
         # fixed runner must record it as "error", distinguishable from a
@@ -170,6 +175,8 @@ def test_main_nonzero_returncode_recorded_as_status_error_not_ok():
         assert summary["runs"][0]["status"] == "error"
         assert summary["runs"][0]["returncode"] == 17
         assert summary["failed_runs"] == 1
+        assert summary["n"] == 0
+        assert summary["complete"] is False
         body = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[1]
         assert "# error: exit 17" in body
     finally:
