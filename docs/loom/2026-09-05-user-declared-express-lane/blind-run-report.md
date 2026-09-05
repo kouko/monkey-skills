@@ -1,6 +1,8 @@
 # 使用者宣告車道（full／express／gate-only）——我試了什麼、發生了什麼
 
-在 2026-09-05 試的，用的是一份乾淨複製的專案，版本 `d31484fa`。
+在 2026-09-05 試的，用的是一份乾淨複製的專案。第 1、5、6、7 條驗收在版本
+`d31484fa` 上試的；對抗輪關掉五個問題之後，第 2、3、4 條在新版本
+`029925d0` 上又重新試了一次（同樣是乾淨複製）。
 
 **先說範圍**：這次試的是這個改動的「wave 1」——car 車道宣告、切換規則、
 車道重算、review／build／ship 三站的文字。改動計畫裡還排了「wave 2」
@@ -28,41 +30,65 @@
 ### 2. 沙盒：宣告 `express` 的 docs／skill 類改動，只有一位讀者，過閘要成功；同一份改動再動 checker 一行，要變回擋下
 - **怎麼試的**：自己搭一個小的假專案，寫一份 `lane: express` 的 intent，
   改一份 docs 檔和一份 skill 檔，只記一位讀者的審查結果，跑「過閘」指令；
-  接著在同一份改動再多改一行 checker 本身的程式碼，重跑一次過閘指令。
-- **發生了什麼**：第一次過閘指令回傳成功（結束碼 0）；加了 checker 那一行
-  之後回傳失敗（結束碼 1），並印出「因為改到了 `loom_checker.py`（非測試
-  程式碼），車道被強制拉回 full，需要 2 位讀者，現在只有 1 位」。
-- **證據**：手動實驗在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-express-repo`；也用專案自
-  帶的對抗測試檔 `test_abuse_lane_declaration.py` 裡對應的兩個測項重跑過，
-  全部通過（`pytest ... -q` → `11 passed`）。
+  接著在同一份改動再多改一行 checker 本身的程式碼，重跑一次過閘指令。對抗
+  輪關掉五個問題之後，在新版本 `029925d0` 上把這兩步整個重搭一次沙盒重跑。
+- **發生了什麼**：兩次都跟第一次試的結果一樣：第一次過閘指令回傳成功
+  （結束碼 0）；加了 checker 那一行之後回傳失敗（結束碼 1），並印出「因為
+  改到了 `loom_checker.py`（非測試程式碼），車道被強制拉回 full，需要 2
+  位讀者，現在只有 1 位」——這條規則沒有被對抗輪的修法動到。
+- **證據**：第一輪手動實驗在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-express-repo`；重新驗證的
+  手動實驗在 `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-express-repo`；
+  也用專案自帶的對抗測試檔 `test_abuse_lane_declaration.py` 裡對應的兩個
+  測項重跑過，全部通過（`pytest ... -q` → `11 passed`）。
 - **結論**：符合。
 
 ### 3. 沙盒：宣告 `gate-only` 的純 docs 改動，零讀者也能過閘（但要有 ≥3 個對抗測試和一次整包測試紀錄）；同一份改動加一個 SKILL.md 檔要擋下
 - **怎麼試的**：搭另一個假專案，寫一份 `lane: gate-only` 的 intent，只改
   一份 docs 檔，記零讀者、3 個對抗測試紀錄和 1 個整包測試紀錄，跑過閘；
-  再加一份 skill 說明檔（SKILL.md），重跑過閘。
-- **發生了什麼**：第一次過閘成功（結束碼 0）；加了 SKILL.md 之後失敗
-  （結束碼 1），訊息說「因為改到了一份 skill／agent 契約檔，車道被強制拉
-  回 full，需要 2 位讀者，現在 0 位」。
-- **證據**：手動實驗在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-gateonly-repo`；同一份
-  對抗測試檔裡的對應測項也全部通過。
-- **結論**：符合。
+  再加一份 skill 說明檔（SKILL.md），重跑過閘。對抗輪關掉五個問題之後，在
+  新版本 `029925d0` 上重搭一次沙盒重跑這兩步，另外多加一步：同樣是純 docs
+  改動、零讀者，但這次連對抗測試紀錄也整份拿掉（只留整包測試紀錄），因為
+  對抗輪指出「gate-only 永遠要 ≥3 個對抗測試」這件事，舊版本其實沒有真的
+  守住——這一步就是專門驗這個修法。
+- **發生了什麼**：前兩步跟第一次試的結果一樣：第一次過閘成功（結束碼 0）；
+  加了 SKILL.md 之後失敗（結束碼 1），訊息說「因為改到了一份 skill／agent
+  契約檔，車道被強制拉回 full，需要 2 位讀者，現在 0 位」。新加的第三步
+  （零對抗測試紀錄）在舊版本 `d31484fa` 上不會被擋（這正是對抗輪抓到的
+  漏洞），在修完的新版本 `029925d0` 上重跑，變成擋下（結束碼 1），工具印出
+  這一行（原文）：「BLOCK push.probes-adversarial: this change is declared
+  gate-only, whose floor is unconditionally 3 adversarial probes; 0 are
+  usable (none recorded).」
+- **證據**：第一輪手動實驗在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-gateonly-repo`；重新驗證
+  的手動實驗在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-gateonly-repo`；零對抗測試
+  紀錄那一步在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-gateonly-zeroprobes`；同一
+  份對抗測試檔（含新增的 `test_abuse_lanes_wave_end.py`）裡的對應測項也全
+  部通過。
+- **結論**：符合（含對抗輪新加的這一條）。
 
 ### 4. 沙盒：做到一半換車道——前面兩輪照舊兩位讀者，換車道之後那一輪起變一位讀者可通過；換車道那個 commit 沒帶那一行要擋
 - **怎麼試的**：跑專案自帶對抗測試檔裡建好的三個情境（前兩輪兩位讀者、
   「從第 2 輪起換車道」讓第 3 輪一位讀者過關、「從第 3 輪起換車道」讓第
   3 輪本身仍要兩位讀者），另外自己動手重跑一次「換車道 commit 沒帶那一行」
-  的情境。
+  的情境。對抗輪關掉五個問題之後（其中一個問題正是「沒帶切換後綴的
+  `lane:` 這一行，原本沒有等到下一輪才生效」），在新版本 `029925d0` 上把
+  手動那一步重搭沙盒重跑一次，並把兩份對抗測試檔（含新增那份記錄五個問題
+  的 `test_abuse_lanes_wave_end.py`）都整份重跑一次。
 - **發生了什麼**：三個情境都跟預期一致：從第 2 輪起換，第 3 輪一位讀者就
   過關；從第 3 輪起換，第 3 輪本身還是要兩位讀者、擋下來。手動重跑「commit
   沒帶那行」的情境，工具印出「commit ... 沒有帶著 `lane: express` 這一行」
-  並擋下（結束碼 1）。
+  並擋下（結束碼 1）——新版本上結果一樣沒變。兩份對抗測試檔分別跑出
+  `11 passed`（原本那份）和 `14 passed`（對抗輪新加的那份），一項沒有紅。
 - **證據**：`pytest test_abuse_lane_declaration.py -k "mid_flight or
-  switch_commit_message"` → `3 passed`；手動重跑同一份
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-switch-missing-line`
-  沙盒。
+  switch_commit_message"` → `3 passed`；第一輪手動重跑在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-switch-missing-line`；重新
+  驗證的手動重跑在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-switch-missing-line`；兩份
+  對抗測試檔整份重跑：`test_abuse_lane_declaration.py` → `11 passed`、
+  `test_abuse_lanes_wave_end.py` → `14 passed`。
 - **結論**：符合。
 
 ### 5. `references/lane-switch.md` 存在，含三格固定格式、「不能選的格照列並說原因」、口頭對應表；冷讀考驗——只讀 review 站文字和這份參考檔，面對「改動裡有一份 SKILL.md、使用者說『快速模式』」的情境，要列出三格、把 gate-only 標成不能選並說原因
