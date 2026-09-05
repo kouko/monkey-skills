@@ -144,15 +144,24 @@ the blind-runner (§3) — each in its own message so the two run
 concurrently; their probes and report are committed before any reviewer
 starts, because a verdict's `sha` must name the commit that becomes
 `reviewed_sha`, and dispatching reviewers first would let a later commit
-move that target out from under them. The two agents run concurrently;
-their `dispatch[]` entries are appended and committed once, before either
-is dispatched — never by the agents themselves and never in parallel.
-Then dispatch fresh-context
+move that target out from under them. Then dispatch fresh-context
 reviewers: **two or more, in one message so they run concurrently and
 cannot see each other's findings, in the full lane**; **exactly one, in
 the small lane** (§1). One reviewer in the full lane is not a review: it
 is an opinion with nothing to disagree with, and `push.verdicts-ge-2`
 refuses the push below the lane's floor.
+<!-- /gate -->
+
+This round's adversary, blind-runner and reviewer `dispatch[]` entries are
+appended once and committed once, together, before any of the three is
+dispatched. The orchestrator alone writes that commit, always as one
+commit covering all three roles together.
+
+<!-- gate: review.reviewer-not-implementer -->
+Written afterwards the record is a reconstruction, and it is the only
+evidence that the agent who reviewed is not the agent who wrote. An agent
+that implemented any task of this change may not take any of the three
+reviewing roles.
 <!-- /gate -->
 
 Each gets the contract `agents/reviewer.md` and this input:
@@ -206,14 +215,7 @@ absent, both legs run here and that is a complete review. **This station
 never suggests a second vendor**: that offer is made once per change by
 `write-plan`, inside decision point ①, and the answer is remembered.
 
-<!-- gate: review.reviewer-not-implementer -->
-Before dispatching, append one `dispatch[]` entry per agent — role
-`reviewer`, `blind-runner` or `adversary` — and commit it
-(`chore(loom): dispatch review <scope>`). Written afterwards the record is
-a reconstruction, and it is the only evidence that the agent who reviewed
-is not the agent who wrote. An agent that implemented any task of this
-change may not take any of the three reviewing roles.
-<!-- /gate -->
+The commit carries this shape: `chore(loom): dispatch review <scope>`.
 
 ## 3. Blind run
 
@@ -327,6 +329,13 @@ restarting at each one — a branch-end round following wave-end rounds
 1–3 is round 4 — because the checker scores the highest round within the
 checkpoint's own scope.
 
+A commit that raises a `*_CAP` constant is recorded with a one-line
+reason in this round's notes, naming why the extra headroom is needed.
+
+The record's top-level `cost` block — rounds, dispatches, cap changes and
+hours from the plan commit to the PR — is updated at every checkpoint,
+this round included.
+
 Every finding `text`, review note and dispatch note in `review.json` is
 written in English, and each finding `text` opens with a Conventional
 Comments label (`praise`, `nitpick`, `suggestion`, `issue`, `todo`,
@@ -388,6 +397,7 @@ A worked record:
 {
   "reviewed_sha": "be19b9612b0d4c7a9f0e21c3d8a5b6e7f0123456",
   "scope": "wave-end:1",
+  "cost": {"rounds": 2, "dispatches": 9, "cap_changes": [], "hours_plan_to_pr": 6.5},
   "vendors": ["anthropic"],
   "verdicts": [
     {"round": 1, "scope": "wave-end:1", "reviewer": "rev-w1-a", "vendor": "anthropic",
