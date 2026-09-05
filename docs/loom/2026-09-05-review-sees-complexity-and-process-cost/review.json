@@ -113,12 +113,46 @@
       "started": "2026-09-06T12:10:00+08:00",
       "fresh_context": false,
       "note": "record written with the wave; the step runs after W2-01, before the closing round"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T12:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "br-we1-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T12:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-cx-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-06T12:40:00+08:00",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-cx-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-06T12:40:00+08:00",
+      "fresh_context": true,
+      "vendor": "anthropic"
     }
   ],
   "second_vendor": "codex",
   "cost": {
     "rounds": 0,
-    "dispatches": 8,
+    "dispatches": 12,
     "cap_changes": [],
     "hours_plan_to_pr": null,
     "plan_commit": "f23aadde",
