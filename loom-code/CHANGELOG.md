@@ -12,8 +12,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
 1. `build/SKILL.md` gains a §6.5 memory step — probe graduation and
    `docs/loom/memory/` entries — that runs before the plan's single
    closing review round; §5's last wave now defers the review call
-   past package tests and the memory step, and §7 records the memory
-   step's scope as branch-end (once per plan, not per wave).
+   past package tests and the memory step, and §7 records the closing
+   review round's scope as branch-end (once per plan, not per wave).
 2. `ship/SKILL.md`'s §3 keeps the trailer loop, the `questions[]`
    carry-forward, and the escape hatch; its six pins that used to
    describe the pre-checkpoint memory work are re-targeted to build's
