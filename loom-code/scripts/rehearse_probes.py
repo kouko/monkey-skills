@@ -206,6 +206,14 @@ def _parse_junit(path: Path) -> tuple[list[str], list[tuple[str, str]]]:
             continue
         skip = testcase.find("skipped")
         if skip is not None:
+            # An expected failure (`@pytest.mark.xfail`) is not a skip -- it
+            # is junit-encoded as a `<skipped type="pytest.xfail">` element,
+            # and the SKIPPED section is what a reader audits for probes
+            # that verified nothing; mixing expected failures into it would
+            # inflate that count with tests that did run and did fail on
+            # purpose.
+            if (skip.get("type") or "").startswith("pytest.xfail"):
+                continue
             reason = skip.get("message") or (skip.text or "").strip() or "no reason given"
             skipped.append((nodeid, reason))
     return failed, skipped
