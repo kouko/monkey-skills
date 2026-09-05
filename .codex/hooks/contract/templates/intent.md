@@ -5,6 +5,7 @@ needs-design: yes | no — <reason>
 map: <map-id>                # optional
 evidence: [<paths>]          # optional; write-spec/review must read it
 status: open                 # open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>; absent = open
+lane: express | gate-only    # optional; absent = repo default (KICKOFF-DEFAULTS.md default-lane); switch form: `lane: <name> — switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>`; last line wins; only the user writes it
 
 ## Problem
 <the problem and who it affects, in plain language. product: no file paths, function/class identifiers, or script filenames>

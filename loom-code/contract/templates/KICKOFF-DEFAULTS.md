@@ -14,3 +14,4 @@ loom_checker.py reads this file. Absent key = default. -->
 - session-start-baseline: <sha> <words> — measured with `bash loom-code/hooks/session-start </dev/null | python3 -c 'import sys;print(len(sys.stdin.read().split()))'` in an empty git repo (Python str.split — wc disagrees between macOS and GNU) (<date>)
 - interface-surfaces: **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** — <why> (<date>)   # this is the default; edit to match the repo
 - artifact-types: <glob>=<type> — <why> (<date>)
+- default-lane: full | express | gate-only — <why> (<date>)   # this repo's lane when an intent declares none; gate-class deltas always run full regardless
