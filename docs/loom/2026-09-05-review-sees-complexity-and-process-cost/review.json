@@ -53,7 +53,7 @@
       "role": "implementer",
       "agent_id": "impl-w1-01-cx",
       "model": "sonnet",
-      "started": "2026-09-06T10:30:00+08:00",
+      "started": "2026-09-05T16:08:34+08:00",
       "fresh_context": true
     },
     {
@@ -61,7 +61,7 @@
       "role": "implementer",
       "agent_id": "impl-w1-02-cx",
       "model": "sonnet",
-      "started": "2026-09-06T10:30:00+08:00",
+      "started": "2026-09-05T16:08:34+08:00",
       "fresh_context": true
     },
     {
@@ -69,7 +69,7 @@
       "role": "implementer",
       "agent_id": "impl-w1-03-cx",
       "model": "sonnet",
-      "started": "2026-09-06T10:30:00+08:00",
+      "started": "2026-09-05T16:08:34+08:00",
       "fresh_context": true
     },
     {
@@ -77,7 +77,7 @@
       "role": "implementer",
       "agent_id": "impl-w1-04-cx",
       "model": "sonnet",
-      "started": "2026-09-06T10:30:00+08:00",
+      "started": "2026-09-05T16:08:34+08:00",
       "fresh_context": true
     },
     {
@@ -85,7 +85,7 @@
       "role": "implementer",
       "agent_id": "impl-w1-05-cx",
       "model": "sonnet",
-      "started": "2026-09-06T10:30:00+08:00",
+      "started": "2026-09-05T16:08:34+08:00",
       "fresh_context": true
     },
     {
@@ -93,7 +93,7 @@
       "role": "implementer",
       "agent_id": "orchestrator-fable",
       "model": "fable",
-      "started": "2026-09-06T12:10:00+08:00",
+      "started": "2026-09-05T16:29:20+08:00",
       "fresh_context": false,
       "note": "BLOCKED decision, agent-decided: one pytest session cannot run loom-code paths together with loom-design/scripts/ (its pytest.ini switches the session to importlib mode; 2 collection errors) — a 12-line runner script runs one session per `--`-separated path group; the KICKOFF command names loom-design/scripts/ literally; also dedupes the `cost` field both W1-02 and W1-05 declared in manifest.yaml"
     },
@@ -102,7 +102,7 @@
       "role": "implementer",
       "agent_id": "impl-w2-01-cx",
       "model": "sonnet",
-      "started": "2026-09-06T12:10:00+08:00",
+      "started": "2026-09-05T16:29:20+08:00",
       "fresh_context": true
     },
     {
@@ -110,7 +110,7 @@
       "role": "implementer",
       "agent_id": "orchestrator-fable",
       "model": "fable",
-      "started": "2026-09-06T12:10:00+08:00",
+      "started": "2026-09-05T16:29:20+08:00",
       "fresh_context": false,
       "note": "record written with the wave; the step runs after W2-01, before the closing round"
     },
@@ -119,7 +119,7 @@
       "role": "adversary",
       "agent_id": "adv-we1-cx",
       "model": "sonnet",
-      "started": "2026-09-06T12:40:00+08:00",
+      "started": "2026-09-05T16:31:56+08:00",
       "fresh_context": true
     },
     {
@@ -127,7 +127,7 @@
       "role": "blind-runner",
       "agent_id": "br-we1-cx",
       "model": "sonnet",
-      "started": "2026-09-06T12:40:00+08:00",
+      "started": "2026-09-05T16:31:56+08:00",
       "fresh_context": true
     },
     {
@@ -135,7 +135,7 @@
       "role": "reviewer",
       "agent_id": "rev-we1-cx-codex",
       "model": "gpt-5.6-sol",
-      "started": "2026-09-06T12:40:00+08:00",
+      "started": "2026-09-05T16:31:56+08:00",
       "fresh_context": true,
       "vendor": "openai"
     },
@@ -144,15 +144,24 @@
       "role": "reviewer",
       "agent_id": "rev-we1-cx-sonnet",
       "model": "sonnet",
-      "started": "2026-09-06T12:40:00+08:00",
+      "started": "2026-09-05T16:31:56+08:00",
       "fresh_context": true,
       "vendor": "anthropic"
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T16:45:00+08:00",
+      "fresh_context": false,
+      "note": "fixes before the readers are dispatched, from the adversary's and blind-runner's findings: duplicate cost key in the template (merge of W1-02+W1-05), review.cost registered in the mechanisms ledger, runner exits non-zero on zero groups, ship §4 doc-citations line carries CI's full pipeline, the negation regex shared from one module (prose_pin.py) and widened; dispatch started timestamps corrected to their record commits (the originals were written with the wrong calendar day)"
     }
   ],
   "second_vendor": "codex",
   "cost": {
     "rounds": 0,
-    "dispatches": 12,
+    "dispatches": 13,
     "cap_changes": [],
     "hours_plan_to_pr": null,
     "plan_commit": "f23aadde",
