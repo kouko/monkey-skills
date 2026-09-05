@@ -270,6 +270,100 @@
         "design re-look: round 3 on the same checkpoint; the remaining finding was a bounded mechanical gap, the ratified shape (gate-only = small with the floor waived, dated by <name> on every declaration, record-keyed timing) unchanged — continuing to fix was right",
         "nothing from round 2 broken; ran the lane tests (28) and both probe files (11+26)"
       ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+docs+skill",
+      "verdict": "NEEDS_REVISION",
+      "sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "NEEDS_REVISION",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md :: probes[] blind-run entry",
+          "text": "issue (blocking): the blind-run probe's command is prose and names no artifact argument; it cannot be re-run or inspected.",
+          "fix": "an executable command naming the report path that verifies the recorded report"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py:46",
+          "text": "issue (blocking): catching every ModuleNotFoundError makes sibling selection a fallback that can swallow a missing transitive dependency and import the other copy.",
+          "fix": "select the sibling deterministically from this file's stem; import only that name"
+        }
+      ],
+      "notes": [
+        "the two memory entries pass deletion-first independently; links resolve",
+        "graduated pairs differ only at the parents line",
+        "read-only sandbox: the five focused test files could not be collected"
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "dimension_scores": {
+        "security": "N/A",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py :: \"Scope: … HEAD 56062fc7\"",
+          "text": "issue (non-blocking): the module docstring pins a HEAD sha that later commits moved past.",
+          "fix": "say 'HEAD at authoring time' or drop the sha"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_probes_lanes_wave_end.py:27-28",
+          "text": "issue (non-blocking): the parents[] depth-table comment describes the evidence location only; the graduated copy sits at another depth.",
+          "fix": "reword the shared comment location-agnostically (kept byte-identical)"
+        }
+      ],
+      "notes": [
+        "ran the three probe files (71), the two graduated copies (37), memory integrity, --list-rules, the five word caps and 3 ship-§4 commands; the dispatch arithmetic 9 = 3 + 2 + 4 reproduced from git log",
+        "blind-run probes as prose are what the checker treats as non-executed kinds; the other reader disagrees — recorded, not averaged"
+      ]
     }
   ],
   "probes": [
@@ -283,7 +377,7 @@
     },
     {
       "kind": "blind-run",
-      "command": "see the report — clean tree at d31484fa, Acceptance 1–7; 2–4 re-verified at 029925d0",
+      "command": "grep -c '^### [1-7]' docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
       "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
@@ -419,7 +513,7 @@
     },
     {
       "kind": "blind-run",
-      "command": "see the report — clean worktree at 56062fc7, Acceptance 1–7 with the branch's own checker; dispatch arithmetic corrected at cea1559c",
+      "command": "grep -c '^### [1-7]' docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
       "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
@@ -596,6 +690,23 @@
       "severity": "important",
       "text": "issue: the lens sentence flags 'missing by <user name>' without saying whether a bare ① declaration counts, so a reviewer cannot tell a legitimate declaration from an injected one.",
       "resolved": "closed by d0ffc2ec — lens clause per form; sonnet fixed (round 2)"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md :: probes[] blind-run entry",
+      "origin_sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "raised_by": "rev-be-lane-codex",
+      "severity": "important",
+      "text": "issue (blocking): the blind-run probe's command is prose and names no artifact argument; it cannot be re-run or inspected.",
+      "resolved": "closed in the round-4 record commit — both blind-run records carry an executable command naming the report (seven Acceptance sections counted); codex to confirm (round 5)"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py:46",
+      "origin_sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "raised_by": "rev-be-lane-codex",
+      "severity": "important",
+      "text": "issue (blocking): catching every ModuleNotFoundError makes sibling selection a fallback that can swallow a missing transitive dependency and import the other copy."
     }
   ],
   "dispatch": [
@@ -795,11 +906,20 @@
       "started": "2026-09-05T23:15:55+0800",
       "fresh_context": true,
       "vendor": "anthropic"
+    },
+    {
+      "task": "fix:branch-end-r5",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T23:59:32+0800",
+      "fresh_context": false,
+      "note": "round-4 fixes: blind-run probe commands executable (record commit); sibling module selected from the file's stem in the wave-end probe and its graduated copy; the two nits (docstring HEAD sha, parents comment) folded in"
     }
   ],
   "cost": {
-    "rounds": 3,
-    "dispatches": 23,
+    "rounds": 4,
+    "dispatches": 24,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
