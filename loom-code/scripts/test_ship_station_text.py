@@ -26,7 +26,7 @@ REPO = Path(__file__).resolve().parents[2]
 SHIP_SKILL_MD = REPO / "loom-code/skills/ship/SKILL.md"
 BUILD_SKILL_MD = REPO / "loom-code/skills/build/SKILL.md"
 
-_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
 
 
 def _has_negation(sentence: str) -> bool:

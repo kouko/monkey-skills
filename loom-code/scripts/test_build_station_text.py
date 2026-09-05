@@ -262,7 +262,7 @@ def test_commitsparagraph_names_appendonlywhenabsent_branch() -> None:
 
 # --- W1-03: dispatch records commit once per wave, not once per record -----
 
-_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
 
 
 def _has_negation(sentence: str) -> bool:

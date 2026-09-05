@@ -26,7 +26,7 @@ ADVERSARY_MD = REPO / "loom-code" / "agents" / "adversary.md"
 BASELINE_MD = REPO / "loom-code" / "references" / "engineering-baseline.md"
 
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
-_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
 _AFFIRM_VERB_RE = re.compile(r"\b(require|requires|must|is|are|asserts)\b")
 _AFFIRM_KW_RE = re.compile(r"\baffirmative(ly)?\b")
 _NEGATION_KW_RE = re.compile(r"\bnegat(?:ion|ed)\b")
