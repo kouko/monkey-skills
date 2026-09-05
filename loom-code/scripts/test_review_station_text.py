@@ -478,7 +478,7 @@ def _has_negation(sentence: str) -> bool:
     return bool(_NEGATION_RE.search(sentence))
 
 
-def _sentences(text: str) -> list[str]:
+def _flat_sentences(text: str) -> list[str]:
     """Split text into sentences after collapsing newlines to spaces, so a
     sentence that line-wraps in the SKILL.md source still reads as one
     unit here."""
@@ -497,7 +497,7 @@ def test_review_round_numbers_continue_across_checkpoints() -> None:
     end = text.index("Every finding `text`, review note")
     section = text[start:end]
     hits = [
-        s for s in _sentences(section)
+        s for s in _flat_sentences(section)
         if "continue" in s.lower()
         and "checkpoint" in s.lower()
         and "round 4" in s.lower()
@@ -518,7 +518,7 @@ def test_review_fix_round_resumes_the_raising_reader() -> None:
     start = text.index("## 8a. Fix rounds")
     section = text[start:]
     hits = [
-        s for s in _sentences(section)
+        s for s in _flat_sentences(section)
         if "resumes the reader" in s.lower()
         and "still-open findings" in s.lower()
         and "push.verdicts-ge-2" in s.lower()
