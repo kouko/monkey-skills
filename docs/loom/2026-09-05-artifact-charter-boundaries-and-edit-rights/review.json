@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "f8338ce96dff20947bb967cb1f4f4b000e85c170",
-  "scope": "wave-end:0",
+  "scope": "after-task:W1-02",
   "vendors": [
     "anthropic",
     "openai"
@@ -253,6 +253,142 @@
         }
       ],
       "notes": "the broader trigger still requires a stated reason in the commit message, which W1-02 can recompute."
+    },
+    {
+      "round": 4,
+      "scope": "after-task:W1-02",
+      "reviewer": "rev-at102-codex-g7c3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "standards_version": "lenses.md@38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION",
+        "architecture": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "security": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A — no ratified PRINCIPLES.md for loom-code",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1858",
+          "text": "issue (blocking): task authorisation uses raw substring matching, so a commit mentioning W1-10 also authorises removal or alteration of W1-1.",
+          "fix": "tokenise task ids in commit messages and require an exact match; turn the RED probe green."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1775",
+          "text": "issue (blocking): the mark regex stops at the first closing parenthesis, so a charter-legal blocked(waiting (see #42)) falsely blocks a landed task.",
+          "fix": "balanced mark parsing or a validated mark grammar; turn the RED probe green."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1938",
+          "text": "issue (blocking): the rule checks only for a charter stamp and hard-codes its allow-list; it does not recompute policy from artifacts.plan.charter.edits_after — a second drift surface.",
+          "fix": "stable structured policy identifiers on edits_after entries in manifest.yaml; enforce by identifier; reject unsupported or divergent entries."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1883",
+          "text": "issue (blocking): an appended task carrying landed(<sha>) is routed to spec, although the charter sends landed commit shas to dispatch.",
+          "fix": "detect the landed-sha annotation and emit goes to dispatch, keeping spec for an ordinary unauthorised addition."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/loom_checker.py:1881",
+          "text": "nitpick (non-blocking): every new W<n>-memory task is exempt regardless of count or position.",
+          "fix": "bound count and require the appended position."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/loom_checker.py:1810",
+          "text": "nitpick (non-blocking): Task trailers on merge commits count as landed.",
+          "fix": "exclude merge commits or require task-relevant changes."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:1",
+          "text": "nitpick (non-blocking): the blind-run report is not in English.",
+          "fix": "translate."
+        }
+      ],
+      "notes": "read-only sandbox: pytest not run; code and tests read."
+    },
+    {
+      "round": 4,
+      "scope": "after-task:W1-02",
+      "reviewer": "rev-at102-a-g7c3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "standards_version": "lenses.md@38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A — no ratified PRINCIPLES.md for loom-code",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1858",
+          "text": "issue (blocking): mentioned() tests task_id in message, a raw substring check; removing W1-1 while the message names only W1-10 passes silently — the adversary probe test_removed_task_id_substring_of_renamed_sibling_hides_removal_block fails.",
+          "fix": "match task ids as whole tokens; promote the probe into test_plan_edits_after_commit.py."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:1775",
+          "text": "issue (blocking): MARK_STRIP's [^)]* stops at the first ), so a blocked() mark with a nested parenthetical leaves a stray ) and a landed task is falsely blocked — probe test_nested_parens_in_blocked_mark_on_landed_task_causes_false_block fails.",
+          "fix": "balance-aware MARK_STRIP or a restricted mark grammar documented in the charter; promote the probe."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:1900",
+          "text": "issue: the added branch always reports goes to spec; a new task carrying landed: <sha> must go to dispatch per the charter's must_not; reproduced in a scratch repo and flagged by the blind run.",
+          "fix": "detect a landed:/sha marker in the added task and report goes to dispatch; regression test."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:1938",
+          "text": "issue: check_plan_edits_after_commit never reads the charter's edits_after; five allow-categories are hand-written branches with no test tying them to the charter cell — the second drift surface the intent's Constraint 1 forbids.",
+          "fix": "pin the two together (a test asserting the branch count equals the edits_after count, or a structured policy id per entry)."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md:1",
+          "text": "nitpick (non-blocking): the report is in Chinese while KICKOFF pins internal loom docs to English.",
+          "fix": "rewrite in English."
+        }
+      ],
+      "notes": "package suite re-run: 1673 passed, 5 skipped, 1 xfailed / 182 passed, 1 skipped; mirror identical except the stamp; adversary's two nits accepted as nits."
     }
   ],
   "probes": [
@@ -695,6 +831,110 @@
       "result": "pass",
       "artifact": "",
       "scope": "wave-end:0"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_removed_task_id_substring_of_renamed_sibling_hides_removal_block",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_two_new_memory_tasks_with_different_ids_both_bypass_mention_check",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_memory_task_inserted_mid_wave_bypasses_position_check",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_task_trailer_on_merge_commit_message_marks_task_landed",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_head_at_plan_commit_itself_reports_no_edits",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_working_tree_crlf_plan_does_not_cause_false_block",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_nested_parens_in_blocked_mark_on_landed_task_causes_false_block",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_plan_commit_subject_trailing_whitespace_still_finds_plan_commit",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_rule_runs_correctly_from_nested_cwd",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_blocked_rules_helper_parses_block_line_affirmatively",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_blocked_rules_helper_rejects_non_block_line",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "blind-run",
+      "command": "python3 loom-code/scripts/loom_checker.py charter; python3 loom-code/scripts/loom_checker.py plan <path>; python3 loom-code/scripts/loom_checker.py plan-edits <change-id>; python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "dfb78af1e3ebf8728cb5beeaf58c276653130311",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "result": "pass",
+      "artifact": "",
+      "scope": "after-task:W1-02"
     }
   ],
   "questions": [
@@ -792,6 +1032,70 @@
       "severity": "important",
       "text": "issue: plan.charter.edits_after claims to be exhaustive, yet commit 76a50d37 amended W3-02's Files for a reason unrelated to a spec change — a shape none of the four categories covers; W1-02 will turn this list into a blocking rule.",
       "resolved": "resolved by f8338ce9 — edits_after names any fact the plan relied on (rev-we0-a-d2e4, round 3)"
+    },
+    {
+      "id": "after-task:W1-02-01",
+      "anchor": "loom-code/scripts/loom_checker.py:1858",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-codex-g7c3",
+      "severity": "fatal",
+      "text": "issue (blocking): task authorisation uses raw substring matching, so a commit mentioning W1-10 also authorises removal or alteration of W1-1."
+    },
+    {
+      "id": "after-task:W1-02-02",
+      "anchor": "loom-code/scripts/loom_checker.py:1775",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-codex-g7c3",
+      "severity": "fatal",
+      "text": "issue (blocking): the mark regex stops at the first closing parenthesis, so a charter-legal blocked(waiting (see #42)) falsely blocks a landed task."
+    },
+    {
+      "id": "after-task:W1-02-03",
+      "anchor": "loom-code/scripts/loom_checker.py:1938",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-codex-g7c3",
+      "severity": "fatal",
+      "text": "issue (blocking): the rule checks only for a charter stamp and hard-codes its allow-list; it does not recompute policy from artifacts.plan.charter.edits_after — a second drift surface."
+    },
+    {
+      "id": "after-task:W1-02-04",
+      "anchor": "loom-code/scripts/loom_checker.py:1883",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-codex-g7c3",
+      "severity": "fatal",
+      "text": "issue (blocking): an appended task carrying landed(<sha>) is routed to spec, although the charter sends landed commit shas to dispatch."
+    },
+    {
+      "id": "after-task:W1-02-05",
+      "anchor": "loom-code/scripts/loom_checker.py:1858",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-a-g7c3",
+      "severity": "fatal",
+      "text": "issue (blocking): mentioned() tests task_id in message, a raw substring check; removing W1-1 while the message names only W1-10 passes silently — the adversary probe test_removed_task_id_substring_of_renamed_sibling_hides_removal_block fails."
+    },
+    {
+      "id": "after-task:W1-02-06",
+      "anchor": "loom-code/scripts/loom_checker.py:1775",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-a-g7c3",
+      "severity": "important",
+      "text": "issue (blocking): MARK_STRIP's [^)]* stops at the first ), so a blocked() mark with a nested parenthetical leaves a stray ) and a landed task is falsely blocked — probe test_nested_parens_in_blocked_mark_on_landed_task_causes_false_block fails."
+    },
+    {
+      "id": "after-task:W1-02-07",
+      "anchor": "loom-code/scripts/loom_checker.py:1900",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-a-g7c3",
+      "severity": "important",
+      "text": "issue: the added branch always reports goes to spec; a new task carrying landed: <sha> must go to dispatch per the charter's must_not; reproduced in a scratch repo and flagged by the blind run."
+    },
+    {
+      "id": "after-task:W1-02-08",
+      "anchor": "loom-code/scripts/loom_checker.py:1938",
+      "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
+      "raised_by": "rev-at102-a-g7c3",
+      "severity": "important",
+      "text": "issue: check_plan_edits_after_commit never reads the charter's edits_after; five allow-categories are hand-written branches with no test tying them to the charter cell — the second drift surface the intent's Constraint 1 forbids."
     }
   ],
   "dispatch": [
@@ -957,7 +1261,7 @@
     }
   ],
   "cost": {
-    "rounds": 3,
+    "rounds": 4,
     "dispatches": 20,
     "cap_changes": [],
     "hours_plan_to_pr": null
