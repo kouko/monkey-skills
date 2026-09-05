@@ -230,7 +230,7 @@ def test_push_declared_express_lane_docs_skill_delta_single_reader_passes(
     branch-end -- `push` must exit 0 once the declared lane is honoured."""
     repo = _seed_branch(tmp_path)
     change_id = "2026-09-05-lane-a"
-    _commit_intent(repo, change_id, lane_line="lane: express")
+    _commit_intent(repo, change_id, lane_line="lane: express — declared 2026-09-05 by kouko")
     _write_kickoff(repo)
     _write(repo, "docs/notes.md", "some notes\n")
     _write(repo, "loom-code/skills/example/SKILL.md", "---\nname: example\n---\nbody\n")
@@ -275,7 +275,7 @@ def test_push_declared_express_lane_checker_code_delta_blocked(tmp_path: Path) -
     so one reader must stay blocked, declared `lane: express` or not."""
     repo = _seed_branch(tmp_path)
     change_id = "2026-09-05-lane-b"
-    _commit_intent(repo, change_id, lane_line="lane: express")
+    _commit_intent(repo, change_id, lane_line="lane: express — declared 2026-09-05 by kouko")
     _write_kickoff(repo)
     _write(repo, "docs/notes.md", "some notes\n")
     _write(repo, "loom-code/skills/example/SKILL.md", "---\nname: example\n---\nbody\n")
@@ -322,11 +322,29 @@ def test_push_declared_gate_only_lane_pure_docs_delta_zero_verdicts_passes(
     """A `lane: gate-only` intent, a pure docs delta, zero verdicts but
     >=3 adversarial probes and a package-tests probe recorded at the
     reviewed sha -- the whole `push` must exit 0 once gate-only's reader
-    floor of 0 is honoured."""
-    repo = _seed_branch(tmp_path)
+    floor of 0 is honoured. `KICKOFF-DEFAULTS.md` is seeded on `main`
+    BEFORE the branch is checked out (a standing document forces the raw
+    recompute to `full`, and gate-only is now eligible only when that raw
+    recompute is `small` -- ratified follow-up, PRINCIPLES.md 56a4dc4c),
+    so this delta stays genuinely docs-only and raw-small."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text(
+        f"# Kickoff Defaults\n\n- package-tests: {PASSING_COMMAND} — the "
+        "fixture's whole suite (2026-09-05)\n",
+        encoding="utf-8",
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
     change_id = "2026-09-05-lane-c"
-    _commit_intent(repo, change_id, lane_line="lane: gate-only")
-    _write_kickoff(repo)
+    _commit_intent(repo, change_id, lane_line="lane: gate-only — declared 2026-09-05 by kouko")
     _write(repo, "docs/notes.md", "some notes, no code or skill touched\n")
     _write_evidence(repo)
     git(repo, "add", "-A")
@@ -371,7 +389,7 @@ def test_push_declared_gate_only_lane_skill_delta_zero_verdicts_blocked(
     must stay blocked."""
     repo = _seed_branch(tmp_path)
     change_id = "2026-09-05-lane-d"
-    _commit_intent(repo, change_id, lane_line="lane: gate-only")
+    _commit_intent(repo, change_id, lane_line="lane: gate-only — declared 2026-09-05 by kouko")
     _write_kickoff(repo)
     _write(repo, "docs/notes.md", "some notes\n")
     _write(repo, "loom-code/skills/example/SKILL.md", "---\nname: example\n---\nbody\n")
@@ -534,7 +552,10 @@ def test_intent_switch_commit_message_missing_lane_line_blocked(tmp_path: Path) 
     repo = make_intent_repo(tmp_path)
     change_id = "2026-09-05-lane-f"
     intent_rel = f"docs/loom/intent/{change_id}.md"
-    _write(repo, intent_rel, _lane_intent_text(change_id, lane_line="lane: express"))
+    _write(
+        repo, intent_rel,
+        _lane_intent_text(change_id, lane_line="lane: express — declared 2026-09-05 by kouko"),
+    )
     git(repo, "add", intent_rel)
     # Carries `needs-design:` verbatim (that mechanism's own requirement,
     # unrelated to this probe) but deliberately omits `lane: express`.

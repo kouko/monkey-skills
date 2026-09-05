@@ -1021,31 +1021,40 @@ def check_needs_design_reason(
 
 LANE_LINE_PREFIX = ("lane:",)
 
-# `lane: express` / `lane: gate-only` / `lane: full`, or that name followed
-# by a switch suffix `— switched <YYYY-MM-DD> by <name>, from <wave
-# <n>|round <n>>`. `full` is legal both bare (equals absent, since `full`
-# is the default) and switch-suffixed -- the intent's own Proposed outcome
-# point 1 says reverting to `full` is "隨時可以，同樣一行" (always possible,
-# with the same kind of line), so the switch grammar must accept it
-# (wave-end:1 adversary finding 3). `by <name>` is mandatory in the suffix
-# (plan Risk: the checker cannot tell a user from an agent, so requiring
-# `by <name>` is the only machine-checkable trace that someone is named)
-# -- a suffix missing it, or missing the date or the `from` clause, fails
-# the whole match rather than silently matching just the bare name, so a
-# truncated switch line is rejected instead of read as if no switch had
-# been declared.
+# `lane: express` / `lane: gate-only` / `lane: full`, but NEVER bare: every
+# legal value carries dated user attribution, either the DECLARED suffix
+# `— declared <YYYY-MM-DD> by <name>` (day-one, no round/wave reference) or
+# the SWITCH suffix `— switched <YYYY-MM-DD> by <name>, from <wave
+# <n>|round <n>>` (mid-flight). Intent Acceptance 1 says it in so many
+# words: "宣告或切換都帶日期與人" -- declaring, not only switching, carries
+# date and person (wave-end:1 adversary finding 1-01) -- so a BARE `lane:
+# express`, with no suffix at all, is not a legal value; `by <name>` is
+# mandatory in both suffixes (plan Risk: the checker cannot tell a user
+# from an agent, so requiring `by <name>` is the only machine-checkable
+# trace that someone is named), and either suffix missing it, or missing
+# the date, fails the whole match rather than silently matching just the
+# bare name -- a truncated line is rejected instead of read as if nothing
+# had been declared. `full` is legal in both suffix forms (the intent's
+# own Proposed outcome point 1 says reverting to `full` is "隨時可以，同樣
+# 一行", always possible with the same kind of line).
 LANE_GRAMMAR = re.compile(
-    r"^(?P<name>express|gate-only|full)"
-    r"(?:\s*(?:—|–|--)\s*switched\s+(?P<date>\d{4}-\d{2}-\d{2})"
-    r"\s+by\s+(?P<by>[^,]+?)\s*,\s*from\s+(?P<unit>wave|round)\s+(?P<n>\d+))?"
+    r"^(?P<name>express|gate-only|full)\s*(?:—|–|--)\s*"
+    r"(?:"
+    r"declared\s+(?P<declared_date>\d{4}-\d{2}-\d{2})\s+by\s+(?P<declared_by>[^,]+?)"
+    r"|"
+    r"switched\s+(?P<date>\d{4}-\d{2}-\d{2})\s+by\s+(?P<by>[^,]+?)\s*,\s*from\s+"
+    r"(?P<unit>wave|round)\s+(?P<n>\d+)"
+    r")"
     r"\s*$"
 )
 
 
 def check_lane_schema(front) -> list[tuple[str, str]]:
-    """`lane:` is optional, but when present it must read `express` /
-    `gate-only` / `full`, or that name plus the switch suffix WITH `by
-    <name>` -- a switch suffix that omits who switched it is unrecoverable
+    """`lane:` is optional, but when present it must carry dated user
+    attribution -- the declared suffix `— declared <YYYY-MM-DD> by <name>`
+    or the switch suffix `— switched <YYYY-MM-DD> by <name>, from <wave
+    <n>|round <n>>`, both WITH `by <name>` -- a bare `lane: express` (no
+    suffix at all), or a suffix that omits who wrote it, is unrecoverable
     and blocks here rather than being silently accepted as a plain
     declaration."""
     raw = front.get("lane", "").strip()
@@ -1054,9 +1063,11 @@ def check_lane_schema(front) -> list[tuple[str, str]]:
     return [
         (
             "intent.schema",
-            f"`lane: {raw}` does not match `express | gate-only | full` or the "
-            "switch grammar `<name> — switched <YYYY-MM-DD> by <name>, from "
-            "<wave <n>|round <n>>`.",
+            f"`lane: {raw}` does not match the declared grammar `express | "
+            "gate-only | full — declared <YYYY-MM-DD> by <name>` or the switch "
+            "grammar `<name> — switched <YYYY-MM-DD> by <name>, from <wave "
+            "<n>|round <n>>` -- a bare lane name with no dated attribution is "
+            "not a legal value.",
         )
     ]
 
@@ -1102,9 +1113,9 @@ def check_lane_reason(
     return []
 
 
-def declared_lane(repo: Path, change_id: str) -> tuple[str, str, int | None]:
-    """`(lane, origin, from_round)` -- the lane the intent declares for
-    `change_id`, or the repo default in its silence.
+def declared_lane(repo: Path, change_id: str) -> tuple[str, str, int | None, str | None]:
+    """`(lane, origin, from_round, unit)` -- the lane the intent declares
+    for `change_id`, or the repo default in its silence.
 
     `lane` is one of `full`/`express`/`gate-only`. `origin` is `"intent"`
     when the intent's own `lane:` line decided it, `"kickoff"` when
@@ -1112,31 +1123,39 @@ def declared_lane(repo: Path, change_id: str) -> tuple[str, str, int | None]:
     no `lane:` line, or `"default"` when neither exists (full).
     `parse_document` already keeps only the LAST `lane:` line (it
     overwrites the frontmatter dict on each match), so "the last line
-    wins" needs no extra logic here. `from_round` is the round number
-    named by a `from round <n>` switch suffix; a `from wave <n>` suffix
-    yields no round number (there is no round to compare against inside a
-    wave) and neither does a plain, non-switch declaration -- both read as
-    None. This is a pure recompute -- it does not enforce `check_lane_schema`
-    or `check_lane_reason`; a malformed `lane:` line (which the `intent`
-    subcommand already blocks) falls through to the repo default rather
-    than raising, so a caller that runs after those checks have already
-    passed always gets a definite answer."""
+    wins" needs no extra logic here. `unit` is `"round"`/`"wave"` for a
+    switch suffix, or `None` for the declared (day-one) suffix -- kept
+    alongside `from_round` so `effective_lane_detail` can tell a `from
+    round <n>` switch (continuous-numbering comparison) apart from a
+    `from wave <n>` switch or a plain declaration (both use `_earlier_
+    lane_pairs` instead, wave-end:1 adversary finding 3). `from_round` is
+    the round number named by a `from round <n>` switch suffix only; a
+    `from wave <n>` suffix and a plain declared suffix both yield `None`
+    (there is no round number to compare against inside a wave, or at
+    all, for a day-one declaration).
+
+    This re-runs `check_lane_schema` itself and fails CLOSED: a `lane:`
+    line that would not pass the intent-time schema gate (most commonly a
+    BARE name with no dated-attribution suffix at all, wave-end:1
+    adversary finding 1-01) is never honoured here either, even if it
+    somehow reached a commit without going through that gate -- it falls
+    through to the repo default exactly as if no `lane:` line existed."""
     manifest = load_manifest()
     intent_path = artifact_path(manifest, "intent", change_id, repo)
     front: dict[str, str] = {}
     if intent_path.is_file():
         front, _sections = parse_document(read_text(intent_path))
     raw = front.get("lane", "").strip()
-    if raw:
+    if raw and not check_lane_schema(front):
         match = LANE_GRAMMAR.match(raw)
         if match:
             unit, number = match.group("unit"), match.group("n")
             from_round = int(number) if unit == "round" and number else None
-            return match.group("name"), "intent", from_round
+            return match.group("name"), "intent", from_round, unit
     default = kickoff_defaults(repo).get("default-lane", "").strip()
     if default in ("full", "express", "gate-only"):
-        return default, "kickoff", None
-    return "full", "default", None
+        return default, "kickoff", None, None
+    return "full", "default", None, None
 
 
 TEMPLATES_GLOB = "**/templates/**"
@@ -3205,14 +3224,25 @@ def _lane_forcing_paths(
             if masked == "skill":
                 skill.append(path)
                 continue
+        # gate/skill kinds are decided BEFORE the tests/CI-path exemption
+        # below (wave-end:1 adversary finding wave-end:1-02): a genuine
+        # gate or skill file that also happens to sit under a `tests/`
+        # path segment (`loom-code/hooks/tests/push.py`,
+        # `loom-code/skills/example/tests/SKILL.md`) must still force the
+        # lane its OWN type demands -- checking the tests/CI exemption
+        # first would wave it through as small-lane-safe, exactly the
+        # class of bug `_evidence_masked_kind` closed for `evidence/`.
+        if kind == "gate":
+            hard.append(f"{path} is gate-typed")
+            continue
+        if kind == "skill":
+            skill.append(path)
+            continue
         if kind in SMALL_LANE_ARTIFACT_TYPES:
             continue
         if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
             continue
         if kind == "standing":
-            continue
-        if kind == "skill":
-            skill.append(path)
             continue
         hard.append(
             f"{path} is non-test code" if kind == "code"
@@ -3224,75 +3254,108 @@ def _lane_forcing_paths(
 def effective_lane_detail(
     repo: Path, reviewed_id: str | None, change_id: str | None, round_number: int,
     earlier_pairs: frozenset[tuple[str, int]] = frozenset(),
+    current_scope: str = "",
 ) -> tuple[str, str]:
     """`(lane, reason)` -- the lane `check_verdicts`' floor actually uses
-    (plan W1-02).
+    (plan W1-02, ratified follow-up PRINCIPLES.md 56a4dc4c / intent
+    48114098).
 
-    Recompute first: `change_lane_detail`'s own `small`/`full` call is
-    unchanged and runs first; a recomputed `small` stays `small` whatever
-    is declared -- the express/gate-only distinction only matters once the
-    plain recompute already says `full`. From there, the change's OWN
-    `declared_lane()` decides: a plain declared (or default) `full` stays
-    `full`. A switch's `from_round` gates everything else -- when
-    `round_number` is not strictly after it, the pre-switch `full` lane
-    still governs THIS round (there is no way to recover a lane older
-    than the switch from the grammar, so the safe fallback is `full`, not
-    whatever came before).
+    Recompute first: `change_lane_detail`'s own `small`/`full` call
+    always runs first, and the declaration's TIMING is always checked
+    before its content -- a declaration or switch not yet in force must
+    never promote anything, whatever the raw recompute says.
 
-    A BARE (non-switch-suffixed) declaration carries no `from_round` of
-    its own -- there is no grammar to parse one from. Read literally that
-    means it would apply starting the very round that introduced it, with
-    no deferral at all (wave-end:1 adversary finding 2: a bare `lane:`
-    line added mid-flight, via a commit whose message never even mentions
-    it, dropped the floor in the SAME round it appeared in). `earlier_
-    pairs` -- `(scope, round)` pairs `_earlier_lane_pairs` shows already
-    existed before the declaration, numbering-agnostic since round
-    numbers restart per checkpoint -- answers whether this is really a
-    day-one declaration (① has no earlier pair to defer past, so the set
-    is empty) or a mid-flight/new-checkpoint one: when the set is
-    non-empty at all, a bare declaration is treated exactly like an
-    explicit `from round <round_number>` switch -- honoured starting the
-    NEXT round of this same scope, never this one. This mirrors the
-    explicit-switch case immediately below without needing a plain
-    round-number comparison, which cannot see across a checkpoint
-    boundary where numbering resets.
+    Two DIFFERENT timing checks, picked by `unit` (wave-end:1 adversary
+    finding 3 -- the two must not share one mechanism, or one of them
+    over- or under-blocks):
 
-    Otherwise `express` is eligible unless `_lane_forcing_paths` found a
-    hard (gate-typed) reason; `gate-only` is eligible unless it found a
-    hard reason OR a skill/agent-contract path. Either ineligibility falls
-    back to `full`, with the reason naming the path that blocked it."""
+    - `unit == "round"` (an explicit `from round <n>` switch): plain
+      numeric comparison in continuous numbering -- `round_number > n`.
+      When it is not strictly after, the pre-switch `full` lane still
+      governs THIS round (there is no way to recover a lane older than
+      the switch from the grammar, so the safe fallback is `full`, not
+      whatever came before).
+    - `unit == "wave"` (a `from wave <n>` switch) OR `unit is None` (a
+      plain declared suffix, no round/wave reference at all): NEITHER
+      carries a round number to compare against, and a plain numeric
+      "block every round from here on once any history exists" reading
+      (what an earlier round of this fix tried) over-blocks forever,
+      never letting a later checkpoint's fresh rounds -- or even later
+      rounds of the SAME checkpoint -- pick up the new lane once any
+      review history exists anywhere. The correct check is membership:
+      `earlier_pairs` (from `_earlier_lane_pairs` -- the real historical
+      `(scope, round)` pairs at the declaring commit's tree when that can
+      be read, else every pair the CURRENT review already carries except
+      the one being decided, fail closed) names every pair that existed
+      BEFORE the declaration; the declared lane applies to any `(scope,
+      round)` NOT in that set. Only the one round genuinely already in
+      flight when the switch landed -- or, for a plain declared suffix,
+      no round at all in the true day-one case -- stays under the old
+      lane.
+
+    Once timing clears, the RAW recompute and the declaration combine
+    differently per declared value:
+
+    - `gate-only` is the small lane with the reader floor waived, not a
+      separate, narrower thing: it is eligible ONLY when the raw recompute
+      is already `small` (floor 0 replaces small's floor 1) -- a raw
+      `full`, for ANY reason at all (a standing document, a second plugin
+      directory, non-test code, a gate/skill/agent-contract path, a
+      declared interface surface), means the declaration is ignored
+      outright and the delta falls back to `full`. This never consults
+      `_lane_forcing_paths` -- a path that would make `_lane_forcing_paths`
+      call something `hard` already made the RAW recompute `full` first
+      (the same manifest §6 types), and a skill/agent-contract path
+      likewise never reaches raw `small` (skill is not one of `change_
+      lane_detail`'s small-lane types), so the old separate skill-path
+      exclusion is now unreachable dead weight, superseded by this.
+    - `express` is UNCHANGED from before this ratification: eligible
+      whenever the raw recompute is `full` and `_lane_forcing_paths` found
+      no hard (gate-typed) reason -- a standing document stays soft for
+      express specifically (`_lane_forcing_paths`' own `kind == "standing"`
+      exemption), and a raw `small` recompute means express was never
+      reachable in the first place (declaring `express` on an
+      already-small delta leaves it `small`, whose floor is the same 1
+      express would have given it).
+    - a declared (or default) `full` always stays `full`, whatever the raw
+      recompute said."""
     manifest = load_manifest()
     raw_lane, raw_reason = change_lane_detail(repo, reviewed_id)
-    if raw_lane == "small":
-        return "small", raw_reason
-    declared, origin, from_round = (
-        declared_lane(repo, change_id) if change_id else ("full", "default", None)
+    declared, origin, from_round, unit = (
+        declared_lane(repo, change_id) if change_id else ("full", "default", None, None)
     )
-    if from_round is None and origin == "intent" and earlier_pairs:
-        from_round = round_number
-    if from_round is not None and not (round_number > from_round):
+    if unit == "round":
+        if from_round is not None and not (round_number > from_round):
+            return "full", (
+                f"declared `lane: {declared}` switches from round {from_round}, but "
+                f"round {round_number} is not strictly after it -- the pre-switch "
+                "full lane still applies."
+            )
+    elif origin == "intent" and (current_scope, round_number) in earlier_pairs:
         return "full", (
-            f"declared `lane: {declared}` switches from round {from_round}, but "
-            f"round {round_number} is not strictly after it -- the pre-switch "
-            "full lane still applies."
+            f"declared `lane: {declared}` ({origin}) but round {round_number} of "
+            f"scope {current_scope!r} was already on the board before the "
+            "declaration -- the pre-declaration full lane still applies to it."
         )
+
+    if raw_lane == "small":
+        if declared == "gate-only":
+            return "gate-only", (
+                f"raw recompute is small; declared `lane: gate-only` ({origin}) "
+                "waives the reader floor -- gate-only is the small lane with "
+                "reviewers waived."
+            )
+        return "small", raw_reason
+
     if declared == "full":
         return "full", raw_reason
-    hard, skill = _lane_forcing_paths(repo, reviewed_id, manifest)
+    if declared == "gate-only":
+        return "full", f"gate-only needs a small-lane delta: {raw_reason}"
+    hard, _skill = _lane_forcing_paths(repo, reviewed_id, manifest)
     if hard:
         return "full", f"declared `lane: {declared}` ({origin}) but {hard[0]}"
-    if declared == "express":
-        return "express", (
-            f"declared `lane: express` ({origin}); no gate-typed path in the delta."
-        )
-    if skill:
-        return "full", (
-            f"declared `lane: gate-only` ({origin}) but {skill[0]} is a "
-            "skill/agent-contract path."
-        )
-    return "gate-only", (
-        f"declared `lane: gate-only` ({origin}); no gate, skill or "
-        "agent-contract path in the delta."
+    return "express", (
+        f"declared `lane: express` ({origin}); no gate-typed path in the delta."
     )
 
 
@@ -3340,7 +3403,7 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
             repo, review, change_id, current_scope, round_number
         )
         lane, _lane_reason = effective_lane_detail(
-            repo, reviewed_id, change_id, round_number, earlier_pairs
+            repo, reviewed_id, change_id, round_number, earlier_pairs, current_scope
         )
     except (UsageError, OSError, KeyError):
         lane = "full"
@@ -4250,7 +4313,7 @@ def check_verdicts(repo: Path, review, reviewed_id: str | None,
     try:
         earlier_pairs = _earlier_lane_pairs(repo, review, change_id, scope, round_number)
         lane, lane_reason = effective_lane_detail(
-            repo, reviewed_id, change_id, round_number, earlier_pairs
+            repo, reviewed_id, change_id, round_number, earlier_pairs, scope
         )
     except (UsageError, OSError, KeyError) as exc:
         lane, lane_reason = "full", f"cannot recompute the change lane: {exc}"

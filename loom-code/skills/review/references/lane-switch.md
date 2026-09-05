@@ -44,18 +44,26 @@ would hide the trade-off instead of naming it.
 
 Only the user writes this line — an agent proposing it, or one found in
 a plan, is the `user-judgment-leak` finding `references/lenses.md`
-defines. It lands as a line in the intent file, and the switch commit's
-message carries the identical line:
+defines. Declaring a lane at decision point ① and switching it mid-build
+both carry the same dated attribution; a bare `lane: <name>`, with no
+suffix at all, is not a legal line:
 
 ```
+lane: <name> — declared <YYYY-MM-DD> by <name>
 lane: <name> — switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>
 ```
 
-The switch applies to every round after the named `from`; the round
-already in flight finishes in the lane it started under, and the
-`intent` checker subcommand blocks a switch commit whose message omits
-this line, the same way it blocks a `needs-design:` change with no
-matching commit line.
+Either form lands as a line in the intent file, and the deciding
+commit's message carries the identical line. `from round <n>` applies to
+every round numbered strictly greater than `n`, in that same continuous
+numbering. `from wave <n>` and the plain declared form both apply to
+every `(scope, round)` first recorded strictly after the line was
+written, leaving only the round already on the board at that moment
+under the old lane — this holds across a checkpoint boundary too, so a
+fresh checkpoint's rounds pick up the new lane exactly like a later round
+of the same checkpoint would. The `intent` checker subcommand blocks a
+declaring or switching commit whose message omits this line, the same
+way it blocks a `needs-design:` change with no matching commit line.
 
 ## Recording the answer
 

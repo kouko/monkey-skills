@@ -102,6 +102,40 @@ def test_switch_line_written_by_user_only() -> None:
     assert "Only the user writes this line" in flat
 
 
+def test_declared_line_grammar_present() -> None:
+    """A declaration at ① carries the same dated attribution a switch
+    does (intent Acceptance 1); a bare `lane: <name>` is not legal
+    (wave-end:1 adversary finding 1-01)."""
+    text = _text()
+    assert "lane: <name> — declared <YYYY-MM-DD> by <name>" in text
+    assert "not a legal line" in text
+
+
+def test_from_wave_and_declared_timing_pin_is_affirmative() -> None:
+    """`from wave <n>` and a plain declared form use the recorded-`(scope,
+    round)` check, not a round-number comparison -- an over-block bug an
+    earlier fix round introduced would silently make this section's
+    words untrue (wave-end:1 adversary finding 3). The sentence is pinned
+    affirmatively (no negation token) the same way the station-text
+    files pin their own new sentences."""
+    text = _text()
+    start = text.index("## The switch-line grammar")
+    end = text.index("## Recording the answer")
+    flat = " ".join(text[start:end].split())
+    hits = [
+        s for s in re.split(r"(?<=[.!?])\s+", flat)
+        if "from wave" in s.lower() and "recorded strictly after" in s.lower()
+    ]
+    assert hits, (
+        "lane-switch.md has no sentence defining `from wave <n>`/the "
+        "declared form's timing by recorded (scope, round) pairs"
+    )
+    negated = [s for s in hits if NEGATION_RE.search(s)]
+    assert not negated, (
+        f"the from-wave/declared timing sentence carries a negation token: {negated!r}"
+    )
+
+
 def test_questions_entry_type_consequence() -> None:
     text = _text()
     start = text.index("## Recording the answer")
