@@ -1,13 +1,215 @@
 {
   "reviewed_sha": "8a1e3fa1b7b098a0116d3212f1fb74930f5c2647",
-  "scope": "",
+  "scope": "wave-end:1",
   "vendors": [
-    "anthropic"
+    "anthropic",
+    "openai"
   ],
-  "verdicts": [],
-  "probes": [],
-  "questions": [],
-  "open_findings": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet-2c9f",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES — probes[] empty at dispatch; verified by running the four probe files directly (6+16+10+1 passed)",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS_WITH_NOTES — second_vendor finding",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES — plan vs review.json on second_vendor",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/review.json:3",
+          "text": "issue: plan.md records `second vendor codex for this change` and a codex reviewer dispatch is recorded, but review.json carries no top-level `second_vendor` field; check_second_vendor_honoured reads exactly that field under `second-vendor: ask` and fails the push at branch-end.",
+          "fix": "Add `\"second_vendor\": \"codex\"` to review.json's top level at this first checkpoint."
+        }
+      ],
+      "notes": [
+        "blind-run report items 3 and 4 honestly marked not-yet at this checkpoint; wave 2 files untouched at this sha",
+        "did not re-run rehearse_probes.py against the real suite (out of scope); test_no_history_class_skips_on_main.py drives the same path and passed",
+        "the four fix commits map 1:1 to the wave-end adversary's four REPRODUCED probes; all ten pass at HEAD"
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-b804",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "dimension_scores": {
+        "security": "PASS — Paths are constrained to the repository and subprocesses use argument lists without shell interpolation.",
+        "architecture": "PASS — Clone construction, report parsing, and command orchestration have clear boundaries.",
+        "correctness": "NEEDS_REVISION — The command uses a Python 3.12-only API while loom-code CI runs Python 3.11.",
+        "naming": "PASS — Production names communicate their responsibilities; no function exceeds the 100-line hard limit.",
+        "tests": "NEEDS_REVISION — The history-skip probe can pass after pytest exits nonzero without emitting a FAILED summary, and permitted tests could not start because this review environment has no writable temporary directory.",
+        "refactoring": "PASS — Shared operations are factored without unjustified duplication.",
+        "cross-task-coherence": "PASS — The rehearsal implementation and removal of permanently skipped probes support the same outcome.",
+        "external-surface-grounding": "PASS — Git and pytest usage is grounded by the cited CI workflow, existing subprocess convention, and measured plan evidence.",
+        "principles-conformance": "NEEDS_REVISION — A machine verification path can pass without proving the intended condition, conflicting with the requirement that quality comes from machines.",
+        "deliberate-simplification": "PASS — Omitting xdist and treating skips as informational are explicitly bounded and justified.",
+        "deletion-first": "PASS — New documentation explains the observed recurring failure and the removed dead-test population.",
+        "omission": "NEEDS_REVISION — The blind-run report says complete terminal output is evidence but neither embeds it nor identifies a retrievable artifact.",
+        "ambiguity": "PASS — The plan and reports distinguish current wave scope from later acceptance work.",
+        "inconsistency": "PASS — The plan, evidence probes, implementation, and blind-run narrative otherwise describe the same clone shape and exit policy.",
+        "incorrect-fact": "NEEDS_REVISION — The blind-run report declares the command complete without covering the repository's Python 3.11 CI runtime, where it cannot run.",
+        "missing-population": "PASS — Measured pass, skip, failure, and test counts identify their population and scope."
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/rehearse_probes.py:288",
+          "text": "issue (blocking): `TemporaryDirectory(delete=...)` was introduced in Python 3.12, but `.github/workflows/loom-code-ci.yml` runs loom-code under Python 3.11; every non-help invocation will raise `TypeError` before cloning.",
+          "fix": "Implement keep/cleanup using the Python 3.11-compatible `TemporaryDirectory` API and add a test executed under Python 3.11."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py:105",
+          "text": "issue (blocking): The probe never asserts `result.returncode == 0`, so collection errors, interpreter failures, or no-tests-collected exits can produce no `FAILED` lines and falsely satisfy the permanent regression check.",
+          "fix": "Assert a zero subprocess return code and include stdout and stderr in the failure message before inspecting skip reasons."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:20",
+          "text": "issue: The report names complete terminal output as evidence, but supplies neither the commands and output nor an artifact path, leaving its pass and skip claims unreproducible.",
+          "fix": "Embed the exact commands and relevant output or link each claim to a committed evidence artifact containing them."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:21",
+          "text": "issue: The conclusion says Acceptance 1 is complete even though the command was exercised only with Python 3.12 and fails on the declared Python 3.11 CI runtime.",
+          "fix": "Re-run the repaired command under Python 3.11 and revise the conclusion and evidence to include that result."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:1",
+          "text": "nitpick: This internal artifact is written in Traditional Chinese, while the repository's language policy requires internal delta artifacts to be English.",
+          "fix": "Translate the blind-run report into English while preserving its evidence and conclusions."
+        }
+      ],
+      "codex_session_id": "01a0724f-3077-7c50-8edc-51a655eff3c3"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "python3 loom-code/scripts/rehearse_probes.py",
+      "sha": "294d85ea21971ef48da72b2a070a35061398da8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py -q -p no:cacheprovider",
+      "sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py -q -p no:cacheprovider",
+      "sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_rehearse_probes_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py -q -p no:cacheprovider",
+      "sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "type": "what",
+      "text": "你要的是：畢業探針本機綠、合併後才在 CI 紅這件事不要再靠人記得排練；做完後你可以：在任何分支下一個命令，它自己做出像 CI 的乾淨 clone 跑畢業探針並列出 fail 與 skip 的理由，紅就 exit 非 0；拿一支故意讀本機 main 的探針試它會紅、改成先讀 origin/main 就綠；build 站的畢業步驟寫明「紅的不得畢業」並有測試釘住；main 上永遠 skip 的探針刪掉或改寫。對嗎？（答：對）"
+    },
+    {
+      "decision_point": 1,
+      "type": "what",
+      "text": "這次要不要用 Codex 當第二位讀者？（答：要 — second vendor codex for this change）"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/scripts/rehearse_probes.py:288",
+      "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "raised_by": "rev-we1-codex-b804",
+      "severity": "fatal",
+      "resolved": "",
+      "dismissed": ""
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py:105",
+      "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "raised_by": "rev-we1-codex-b804",
+      "severity": "fatal",
+      "resolved": "",
+      "dismissed": ""
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:20",
+      "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "raised_by": "rev-we1-codex-b804",
+      "severity": "important",
+      "resolved": "",
+      "dismissed": ""
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:21",
+      "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "raised_by": "rev-we1-codex-b804",
+      "severity": "important",
+      "resolved": "",
+      "dismissed": ""
+    },
+    {
+      "id": "wave-end:1-05",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/review.json:3",
+      "origin_sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
+      "raised_by": "rev-we1-sonnet-2c9f",
+      "severity": "important",
+      "resolved": "closed in this record commit — top-level `second_vendor: codex` added (round 1 record)",
+      "dismissed": ""
+    }
+  ],
   "dispatch": [
     {
       "task": "W1-01",
@@ -77,9 +279,24 @@
     }
   ],
   "cost": {
-    "rounds": 0,
+    "rounds": 1,
     "dispatches": 8,
     "cap_changes": [],
     "hours_plan_to_pr": null
-  }
+  },
+  "second_vendor": "codex",
+  "round_notes": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "outcome": "NEEDS_REVISION",
+      "notes": [
+        "Codex hook trust ledger at dispatch: PreToolUse Bash loom-checker fired (user approved /hooks in this folder on 2026-09-05); the two PostToolUse Write|Edit hooks still read never because no edit happened in that Codex session — the reviewer leg ran --sandbox read-only and never reaches them.",
+        "Codex nit (blind-run report written in Traditional Chinese) is dismissed by the orchestrator citing the loom language rule: the blind-run report and the PR body stay in the user's language; internal artifacts are English. Nits open no finding.",
+        "Codex could not execute tests in its read-only sandbox (no writable temp dir); its tests dimension is a static read. The Anthropic reader executed all four probe files.",
+        "Build-phase adversary (adv-w1-01-5d2a) wrote 16 probes before the script existed; wave-end adversary (adv-we1-3e8b) wrote 10 more, 4 REPRODUCED, fixed in four commits bd29770a..c08e6411 before the readers were dispatched.",
+        "Wave-end adversary finding on the plan (`-q -rs` prints no nodeid) amended into plan.md at de317b6f."
+      ]
+    }
+  ]
 }
