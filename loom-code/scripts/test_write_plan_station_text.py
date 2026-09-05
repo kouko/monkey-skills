@@ -103,7 +103,7 @@ def test_skill_names_the_engineering_spec_path() -> None:
         "`docs/loom/<change-id>/spec.md` from "
         "`contract/templates/spec-minimal.md` — Requirements one per "
         "Acceptance line, Design decision one line per agent-decided fork, "
-        "UI flows N/A — carrying only those sections."
+        "Alternatives considered, Current state evidence, UI flows N/A — carrying the template's five sections and leaving the `confirmed-behavior:` line to product changes."
     )
     flat = " ".join(text.split())
     assert sentence in flat, (

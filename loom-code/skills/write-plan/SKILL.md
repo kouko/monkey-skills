@@ -303,9 +303,10 @@ section instead of a spec.
 When a task's rationale outgrows its Risk line, write
 `docs/loom/<change-id>/spec.md` from `contract/templates/spec-minimal.md` —
 Requirements one per Acceptance line, Design decision one line per
-agent-decided fork, UI flows N/A — carrying only those sections. Decision
-point ② stays product-only, and the first checkpoint reads the spec under
-the docs lens.
+agent-decided fork, Alternatives considered, Current state evidence, UI
+flows N/A — carrying the template's five sections and leaving the
+`confirmed-behavior:` line to product changes. Decision point ② stays
+product-only, and the first checkpoint reads the spec under the docs lens.
 
 **`yes`, and `docs/loom/<change-id>/spec.md` already exists** — go to the
 intake check below.
