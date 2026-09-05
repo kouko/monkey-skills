@@ -291,6 +291,15 @@
       "started": "2026-09-05T16:42:00+08:00",
       "fresh_context": false,
       "note": "resumed; adjudicates wave-end:1-03 and the guard nit"
+    },
+    {
+      "task": "wave-end:1 round 3",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T16:45:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; adjudicates its guard nit"
     }
   ],
   "second_vendor": "codex",
