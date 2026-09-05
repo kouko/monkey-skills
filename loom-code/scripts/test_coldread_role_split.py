@@ -280,17 +280,29 @@ def test_main_cli_timeout_expired_continues_loop(tmp_path, monkeypatch):
     fixture = _write_cli_fixture(tmp_path)
     out = tmp_path / "out"
     rc = main(_cli_argv(contract, fixture, out))
-    assert rc == 0
+    # design re-look 2026-09-05 (a)/(d): a timeout is a non-observation,
+    # excluded from scoring; with 1 of 3 attempts failed the batch is
+    # not complete, so main returns 1, not 0.
+    assert rc == 1
     assert len(calls) == 3
 
     text2 = (out / "run-2.txt").read_text(encoding="utf-8")
     assert "# error:" in text2
+    header2 = text2.split("\n\n", 1)[0]
+    assert "# status: timeout" in header2
 
     summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
     run2 = next(r for r in summary["runs"] if r["i"] == 2)
     assert run2["status"] == "timeout"
+    assert summary["attempted_runs"] == 3
+    assert summary["failed_runs"] == 1
+    assert summary["complete"] is False
+    # the timed-out run never enters scoring: only the two "ok" runs
+    # (both the pinned _canned_stdout, fully parseable) are scored, so
+    # no item ever sees an "unparsed" count from the excluded run.
+    assert summary["n"] == 2
     for item in summary["items"].values():
-        assert item["counts"].get("unparsed", 0) >= 1
+        assert item["counts"].get("unparsed", 0) == 0
 
 
 # ---------------------------------------------------------------------------
@@ -338,13 +350,21 @@ def test_main_records_nonzero_returncode_as_error_and_counts_failed_runs(tmp_pat
     fixture = _write_cli_fixture(tmp_path)
     out = tmp_path / "out"
     rc = main(_cli_argv(contract, fixture, out, runs="1"))
-    assert rc == 0
+    # design re-look 2026-09-05 (d): the only run failed, so the batch
+    # is not complete and main returns 1, never 0.
+    assert rc == 1
     summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
     assert summary["runs"][0]["status"] == "error"
     assert summary["runs"][0]["returncode"] == 3
     assert summary["failed_runs"] == 1
+    assert summary["attempted_runs"] == 1
+    assert summary["complete"] is False
+    # (b)/(c): a failed run is never scored -- n counts only ok/resumed.
+    assert summary["n"] == 0
     body = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[1]
     assert "# error: exit 3" in body
+    header = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[0]
+    assert "# status: error" in header
 
 
 def test_main_resume_rejects_mismatched_header_field(tmp_path, monkeypatch, capsys):
@@ -499,3 +519,70 @@ def test_systematic_never_fires_below_floor_of_three(tmp_path, monkeypatch):
     summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
     assert summary["systematic_min_n"] == 3
     assert summary["systematic"] == []
+
+
+# ---------------------------------------------------------------------------
+# Round-3 fix: run-status semantics (wave-end:1-02, wave-end:1-09)
+# ---------------------------------------------------------------------------
+
+
+def test_all_runs_failing_scores_n_zero_without_crashing(tmp_path, monkeypatch):
+    """(d)/(f): every run in the batch fails -> scored `n == 0`, `score`
+    does not crash on an empty responses list, summary.json is still
+    written with `complete: false`, and main returns 1."""
+
+    def fake_run(argv, **kwargs):
+        return coldread_role_split.subprocess.CompletedProcess(argv, 1, stdout="", stderr="down")
+
+    monkeypatch.setattr(coldread_role_split.subprocess, "run", fake_run)
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    contract = _write_cli_contract(tmp_path)
+    fixture = _write_cli_fixture(tmp_path)
+    out = tmp_path / "out"
+    rc = main(_cli_argv(contract, fixture, out, runs="2"))
+    assert rc == 1
+    summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    assert summary["n"] == 0
+    assert summary["attempted_runs"] == 2
+    assert summary["failed_runs"] == 2
+    assert summary["complete"] is False
+    assert summary["systematic"] == []
+    assert summary["own_not_own_total"] == 0
+    assert summary["three_way_total"] == 0
+
+
+def test_score_empty_responses_list_does_not_crash():
+    """(f): `score([], fixture, role)` must not crash -- zero totals and
+    an empty `systematic`, mirroring the all-failed batch above at the
+    scoring-function level."""
+    fixture = {"items": [{"n": 1, "text": "a", "expected": "reviewer"}]}
+    result = score([], fixture, "reviewer")
+    assert result["n"] == 0
+    assert result["systematic"] == []
+    assert result["own_not_own_total"] == 0
+    assert result["three_way_total"] == 0
+
+
+def test_main_all_runs_ok_is_complete_and_exits_zero(tmp_path, monkeypatch):
+    """Control case: when every attempted run succeeds, `complete` is
+    true and `attempted_runs == n`, and main returns 0."""
+
+    def fake_run(argv, **kwargs):
+        return coldread_role_split.subprocess.CompletedProcess(argv, 0, stdout=_canned_stdout(), stderr="")
+
+    monkeypatch.setattr(coldread_role_split.subprocess, "run", fake_run)
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    contract = _write_cli_contract(tmp_path)
+    fixture = _write_cli_fixture(tmp_path)
+    out = tmp_path / "out"
+    rc = main(_cli_argv(contract, fixture, out, runs="3"))
+    assert rc == 0
+    summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    assert summary["complete"] is True
+    assert summary["attempted_runs"] == 3
+    assert summary["n"] == 3
+    assert summary["failed_runs"] == 0
+
+

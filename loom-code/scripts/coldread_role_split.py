@@ -11,6 +11,14 @@ format and is never counted as correct).
 Usage: python3 coldread_role_split.py --contract <path> --fixture <path>
     --role reviewer|adversary --runs 10 --out <dir> [--model sonnet]
     [--timeout 180] [--claude-bin claude] [--resume]
+
+Exit codes: 2 for a usage or precondition error (bad flags, a missing
+file, a resumed header that does not match this invocation) — nothing
+is run and no summary.json is written. 0 when every one of `--runs`
+attempts is scored (`complete: true` in summary.json). 1 when
+summary.json is written but at least one attempt did not score — a
+`claude` exit failure or timeout (`complete: false`); a partial batch
+must not look green to a caller that only checks the exit code.
 """
 from __future__ import annotations
 
@@ -118,6 +126,13 @@ def score(responses: list[str], fixture: dict, role: str) -> dict:
     fires below `SYSTEMATIC_MIN_N` (3) runs: "systematic" names a
     pattern across repeated runs, and fewer than 3 data points cannot
     establish one, however uniformly wrong they are.
+
+    `responses` is expected to hold only *scored* bodies (the CLI runner
+    filters out `error`/`timeout` non-observations before calling this,
+    keeping `ok` and `resumed`) — `n = len(responses)` and the
+    `SYSTEMATIC_MIN_N` floor both apply to that scored count, never to
+    how many runs were attempted. 10 attempted with 4 scored behaves
+    exactly like a 4-attempted/4-scored batch: `n == 4` either way.
     """
     if role not in _ROLE_OTHER:
         raise ValueError(f"unknown role: {role!r}")
@@ -223,6 +238,15 @@ def build_prompt(contract_text: str, fixture: dict, role: str) -> str:
     return "\n".join(lines)
 
 
+def _build_claude_argv(claude_bin: str, model: str) -> list[str]:
+    """The argv passed to `subprocess.run` for one `claude -p` call — the
+    single place this list is built. `run_once` calls it and returns the
+    result; a caller that needs the same argv without calling `run_once`
+    (a header written for a call that raised before returning) calls this
+    directly rather than re-typing the literal."""
+    return [claude_bin, "-p", "--model", model, "--output-format", "text"]
+
+
 def run_once(claude_bin: str, model: str, prompt: str, timeout: int) -> tuple[list[str], str, int]:
     """Run one `claude -p` call. Lets `subprocess.TimeoutExpired` propagate.
     On a non-zero return code, stdout and stderr are concatenated and still
@@ -238,7 +262,7 @@ def run_once(claude_bin: str, model: str, prompt: str, timeout: int) -> tuple[li
     from stdin when none is given positionally, `--model` and
     `--output-format text` are supported flags, and no `--seed` flag
     exists."""
-    argv = [claude_bin, "-p", "--model", model, "--output-format", "text"]
+    argv = _build_claude_argv(claude_bin, model)
     completed = subprocess.run(
         argv, input=prompt, capture_output=True, text=True, timeout=timeout
     )
@@ -266,6 +290,7 @@ def _write_run_file(
     i: int,
     n: int,
     model: str,
+    status: str,
     body: str,
 ) -> None:
     prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
@@ -275,6 +300,7 @@ def _write_run_file(
         f"# fixture: {fixture_arg} sha256 {fixture_hash}",
         f"# run: {i} of {n}",
         f"# model: {model}",
+        f"# status: {status}",
         f"# timestamp: {datetime.datetime.now().astimezone().isoformat()}",
         f"# prompt-sha256: {prompt_hash}",
     ]
@@ -284,10 +310,13 @@ def _write_run_file(
 def _parse_run_header(text: str) -> dict:
     """Parse the header block (everything before the first blank line) of
     a `run-<i>.txt` transcript into {"contract_hash", "fixture_hash",
-    "prompt_sha256", "run_i", "run_n", "model"}. A field absent from the
-    header is simply omitted from the result — never guessed or
+    "prompt_sha256", "run_i", "run_n", "model", "status"}. A field absent
+    from the header is simply omitted from the result — never guessed or
     defaulted — so a caller comparing against an expected value treats a
-    missing field as a mismatch."""
+    missing field as a mismatch. `"status"` is the one field this parser
+    is allowed to leave absent by design: a transcript written before
+    the `# status:` header line existed carries no such field, and that
+    absence is itself meaningful (see `_is_resumable`)."""
     header = text.split("\n\n", 1)[0]
     fields: dict = {}
     for line in header.splitlines():
@@ -308,7 +337,25 @@ def _parse_run_header(text: str) -> dict:
                 fields["run_n"] = int(match.group(2))
         elif line.startswith("# model:"):
             fields["model"] = line.split(":", 1)[1].strip()
+        elif line.startswith("# status:"):
+            fields["status"] = line.split(":", 1)[1].strip()
     return fields
+
+
+def _is_resumable(status: str | None, body: str) -> bool:
+    """Design re-look 2026-09-05 (e): a run file is resumable only if its
+    parsed `# status:` header is `"ok"`, or the header line is absent
+    entirely and the body neither starts with the legacy `# error:`
+    marker nor is empty. Any other status (`"error"`, `"timeout"`, or
+    anything else) means the transcript is not a real observation and
+    must be re-run and overwritten — an error transcript is never
+    resumed, and an absent-status file that looks like a failure is not
+    sniffed as resumable either."""
+    if status == "ok":
+        return True
+    if status is not None:
+        return False
+    return body != "" and not body.startswith("# error:")
 
 
 def _resume_mismatch(
@@ -417,33 +464,41 @@ def main(argv: list[str] | None = None) -> int:
     prompt = build_prompt(contract_text, fixture, args.role)
     prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
-    n = args.runs
-    responses: list[str] = []
-    runs_summary: list[dict] = []
+    attempted_runs = args.runs
+    # {"i", "file", "status", "returncode", "body"} per attempted run, in
+    # order. Scored statuses are "ok" and "resumed"; "error" and
+    # "timeout" are non-observations (design re-look 2026-09-05 (a)-(c)):
+    # their transcripts are written for audit but never scored.
+    all_runs: list[dict] = []
 
-    for i in range(1, n + 1):
+    for i in range(1, attempted_runs + 1):
         run_path = out_dir / f"run-{i}.txt"
 
         if args.resume and run_path.exists():
             text = run_path.read_text(encoding="utf-8")
             header_fields = _parse_run_header(text)
             mismatch = _resume_mismatch(
-                header_fields, run_path, i, n, args.model, contract_hash, fixture_hash, prompt_hash
+                header_fields, run_path, i, attempted_runs, args.model,
+                contract_hash, fixture_hash, prompt_hash,
             )
             if mismatch:
                 print(mismatch, file=sys.stderr)
                 return 2
             body = text.split("\n\n", 1)[1] if "\n\n" in text else ""
-            responses.append(body)
-            runs_summary.append(
-                {"i": i, "file": run_path.name, "status": "resumed", "returncode": None}
-            )
-            continue
+            if _is_resumable(header_fields.get("status"), body):
+                all_runs.append(
+                    {"i": i, "file": run_path.name, "status": "resumed",
+                     "returncode": None, "body": body}
+                )
+                continue
+            # Not resumable (an error/timeout transcript, or a legacy
+            # file the absent-status sniff rejects): fall through and
+            # re-run below, overwriting run_path.
 
-        call_argv = [claude_bin, "-p", "--model", args.model, "--output-format", "text"]
+        run_argv = _build_claude_argv(claude_bin, args.model)
         returncode = None
         try:
-            _, raw_body, returncode = run_once(claude_bin, args.model, prompt, args.timeout)
+            run_argv, raw_body, returncode = run_once(claude_bin, args.model, prompt, args.timeout)
             if returncode == 0:
                 status = "ok"
                 body = raw_body
@@ -456,48 +511,57 @@ def main(argv: list[str] | None = None) -> int:
 
         _write_run_file(
             run_path,
-            call_argv,
+            run_argv,
             prompt,
             args.contract,
             contract_hash,
             args.fixture,
             fixture_hash,
             i,
-            n,
+            attempted_runs,
             args.model,
+            status,
             body,
         )
-        responses.append(body)
-        runs_summary.append(
-            {"i": i, "file": run_path.name, "status": status, "returncode": returncode}
+        all_runs.append(
+            {"i": i, "file": run_path.name, "status": status,
+             "returncode": returncode, "body": body}
         )
 
-    result = score(responses, fixture, args.role)
-    failed_runs = sum(1 for run in runs_summary if run["status"] != "ok")
+    scored_bodies = [run["body"] for run in all_runs if run["status"] in ("ok", "resumed")]
+    failed_runs = sum(1 for run in all_runs if run["status"] in ("error", "timeout"))
+    runs_summary = [
+        {"i": run["i"], "file": run["file"], "status": run["status"], "returncode": run["returncode"]}
+        for run in all_runs
+    ]
+
+    result = score(scored_bodies, fixture, args.role)
+    complete = failed_runs == 0 and result["n"] == attempted_runs
 
     command_template = _command_line(
-        [claude_bin, "-p", "--model", args.model, "--output-format", "text"],
+        _build_claude_argv(claude_bin, args.model),
         hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
     )
 
     summary = {
         "argv": cli_argv,
         "command_template": command_template,
-        "n": n,
+        "attempted_runs": attempted_runs,
+        "failed_runs": failed_runs,
+        "complete": complete,
         "model": args.model,
         "seed": None,
         "seed_note": "claude -p exposes no seed flag",
         "contract": {"path": args.contract, "sha256": contract_hash},
         "fixture": {"path": args.fixture, "sha256": fixture_hash},
         "contract_delivery": "inline",
-        "failed_runs": failed_runs,
         "systematic_min_n": SYSTEMATIC_MIN_N,
         "role": args.role,
         "runs": runs_summary,
         **result,
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    return 0
+    return 0 if complete else 1
 
 
 if __name__ == "__main__":
