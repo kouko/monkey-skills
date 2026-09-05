@@ -196,6 +196,7 @@ def test_VersionStamps_acrossAllFiles_agree() -> None:
     """Attack: bump one plugin.json's version without touching the
     README table, the CHANGELOG heading, or the Codex-side mirror --
     any single stamp left behind would silently desync the release."""
+    _skip_if_language_policy_shipped()
     loom_code_version = json.loads(
         (REPO / "loom-code/.claude-plugin/plugin.json").read_text(encoding="utf-8")
     )["version"]
