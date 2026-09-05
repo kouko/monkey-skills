@@ -435,8 +435,8 @@ def test_confirm_intent_sha_unreachable_skips_with_the_claimed_reason() -> None:
     """`_confirm_intent_sha()`, called against a bare, empty tmp git repo
     where the confirmation commit provably cannot exist, raises pytest's
     `Skipped` with the EXACT reason string the function's own docstring
-    claims ("intent-confirmation commit unreachable: branch squash-merged
-    and deleted") -- the skip reason is not a generic placeholder, it is
+    claims (the trunk's 1.5.1 wording: the commit "is not in this clone's
+    history", squash-merged) -- the skip reason is not a generic placeholder, it is
     the specific claim this probe pins."""
     mod = _load_complexity_probe_module()
     tmp = tmp_empty_git_repo_no_matching_commit()
@@ -445,7 +445,7 @@ def test_confirm_intent_sha_unreachable_skips_with_the_claimed_reason() -> None:
         with pytest.raises(Skipped) as excinfo:
             mod._confirm_intent_sha()
         assert (
-            "intent-confirmation commit unreachable: branch squash-merged and deleted"
+            "is not in this clone's history"
             in str(excinfo.value)
         ), f"unexpected skip reason: {excinfo.value!r}"
     finally:
