@@ -627,8 +627,8 @@ def test_intent_lane_switch_line_without_by_name_blocked(tmp_path: Path) -> None
 # =============================================================================
 
 
-def test_list_rules_count_pinned_at_twenty_seven() -> None:
-    """`--list-rules` prints exactly 27 lines today; this probe file adds
+def test_list_rules_count_pinned_at_thirty_one() -> None:
+    """`--list-rules` prints exactly 31 lines today; this probe file adds
     no rule of its own, so the count must not move yet."""
     result = subprocess.run(
         [sys.executable, str(CHECKER), "--list-rules"],
@@ -636,7 +636,7 @@ def test_list_rules_count_pinned_at_twenty_seven() -> None:
     )
     assert result.returncode == 0, result.stderr
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 27, f"expected 27 rules, saw {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 31, f"expected 31 rules, saw {len(lines)}:\n{result.stdout}"
 
 
 # =============================================================================

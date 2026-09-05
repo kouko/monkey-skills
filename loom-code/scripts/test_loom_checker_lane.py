@@ -593,11 +593,11 @@ def test_list_rules_verdicts_ge_2_names_four_floors() -> None:
 # =============================================================================
 
 
-def test_list_rules_count_stays_twenty_seven() -> None:
+def test_list_rules_count_stays_thirty_one() -> None:
     result = subprocess.run(
         [sys.executable, str(CHECKER), "--list-rules"],
         capture_output=True, text=True,
     )
     assert result.returncode == 0, result.stderr
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 27, f"expected 27 rules, saw {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 31, f"expected 31 rules, saw {len(lines)}:\n{result.stdout}"

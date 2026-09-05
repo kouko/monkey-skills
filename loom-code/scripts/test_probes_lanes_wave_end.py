@@ -848,18 +848,18 @@ def test_push_bare_lane_declaration_at_new_checkpoint_round_one_skips_deferral(
     assert "push.verdicts-ge-2" in blocked_rules(result)
 
 
-def test_list_rules_prints_exactly_twenty_seven_lines() -> None:
+def test_list_rules_prints_exactly_thirty_one_lines() -> None:
     """`--list-rules` is the rule-count SSOT (project CLAUDE.md Quality
     Gates); this wave adds no rule of its own (W1-01/W1-02 recompute an
     existing floor, they do not register a new rule id), so the count
-    must stay 27."""
+    must stay 31 (four charter rules landed on this branch)."""
     result = subprocess.run(
         [sys.executable, str(CHECKER), "--list-rules"],
         capture_output=True, text=True, cwd=str(REPO_ROOT),
     )
     assert result.returncode == 0, result.stderr
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 27, f"expected 27 rules, saw {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 31, f"expected 31 rules, saw {len(lines)}:\n{result.stdout}"
     assert "push.verdicts-ge-2" in result.stdout
 
 

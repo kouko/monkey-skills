@@ -1,19 +1,19 @@
-"""W3-02 adversarial probes — the 1.6.0 release and the Codex mirror.
+"""W3-02 adversarial probes — the 1.7.0 release and the Codex mirror.
 
 These probes attack the release W3-02 is supposed to produce: loom-code
-1.5.1 -> 1.6.0 in ``loom-code/.claude-plugin/plugin.json`` and the
+1.5.1 -> 1.7.0 in ``loom-code/.claude-plugin/plugin.json`` and the
 loom-code entry of ``.claude-plugin/marketplace.json``; a re-scaffolded
-Codex mirror whose stamp reads 1.6.0 and whose ``contract/`` tree stays
-byte-equal to the plugin source; a 1.6.0 ``CHANGELOG.md`` entry naming
+Codex mirror whose stamp reads 1.7.0 and whose ``contract/`` tree stays
+byte-equal to the plugin source; a 1.7.0 ``CHANGELOG.md`` entry naming
 the four new rule ids and four new subcommands; and README agreement on
 any rule count they enumerate.
 
 Several of these are the adversary's RED for the implementer: they pin
-the literal ``1.6.0`` target and fail at HEAD (still 1.5.1, no
+the literal ``1.7.0`` target and fail at HEAD (still 1.5.1, no
 marketplace version field, stale CHANGELOG). Others are standing
 consistency checks recorded here because they are the adversary's job
 (byte-equality of a mirrored tree, cross-reader agreement) and must
-keep passing after 1.6.0 lands. A few document a gap this task does not
+keep passing after 1.7.0 lands. A few document a gap this task does not
 close (no semver/downgrade validation anywhere in the checker) —
 those are recorded findings, not RED tests for the implementer.
 """
@@ -44,7 +44,7 @@ README_TRIO = [
     REPO_ROOT / "loom-code" / "README.zh-TW.md",
 ]
 
-TARGET_VERSION = "1.6.0"
+TARGET_VERSION = "1.7.0"
 STAMP_PREFIX = "# loom-checker "
 
 RULE_IDS = [
@@ -114,7 +114,7 @@ def test_marketplace_entry_version_field_absent_target_not_1_6_0():
 # 2. Boundary — the plugin manifest version itself.
 # ---------------------------------------------------------------------------
 def test_plugin_manifest_version_at_head_equals_target_1_6_0():
-    """plugin.json's version must equal 1.6.0 once W3-02 lands.
+    """plugin.json's version must equal 1.7.0 once W3-02 lands.
 
     RED at HEAD: currently 1.5.1.
     """
@@ -128,7 +128,7 @@ def test_plugin_manifest_version_at_head_equals_target_1_6_0():
 # 3. Boundary — the Codex mirror stamp line.
 # ---------------------------------------------------------------------------
 def test_mirror_stamp_version_equals_target_1_6_0():
-    """The Codex mirror's inserted stamp line must read 1.6.0.
+    """The Codex mirror's inserted stamp line must read 1.7.0.
 
     RED at HEAD: currently `# loom-checker 1.5.1`.
     """
@@ -211,7 +211,7 @@ def test_contract_mirror_tree_byte_equal_no_orphans_either_side():
 #    not just claim a version bump.
 # ---------------------------------------------------------------------------
 def test_changelog_top_entry_names_all_four_rule_ids_and_subcommands():
-    """The [1.6.0] entry must be the top entry and must name all 4 rule ids
+    """The [1.7.0] entry must be the top entry and must name all 4 rule ids
     and all 4 subcommands verbatim.
 
     RED at HEAD: the top entry is [1.5.1] and names none of these strings.
@@ -229,14 +229,14 @@ def test_changelog_top_entry_names_all_four_rule_ids_and_subcommands():
 
     missing_rules = [rid for rid in RULE_IDS if rid not in entry_body]
     missing_subcommands = [sc for sc in SUBCOMMANDS if sc not in entry_body]
-    assert not missing_rules, f"CHANGELOG [1.6.0] entry never names rule ids: {missing_rules}"
-    assert not missing_subcommands, f"CHANGELOG [1.6.0] entry never names subcommands: {missing_subcommands}"
+    assert not missing_rules, f"CHANGELOG [1.7.0] entry never names rule ids: {missing_rules}"
+    assert not missing_subcommands, f"CHANGELOG [1.7.0] entry never names subcommands: {missing_subcommands}"
 
 
 # ---------------------------------------------------------------------------
 # 8. Cross-reader agreement — the mirror's --list-rules output must equal
 #    the plugin checker's, line for line (this already holds at HEAD; it
-#    must keep holding through the 1.6.0 regeneration).
+#    must keep holding through the 1.7.0 regeneration).
 # ---------------------------------------------------------------------------
 def test_list_rules_output_identical_between_plugin_and_mirror_checker():
     """`--list-rules` from the plugin checker and the Codex mirror must match exactly."""
@@ -280,7 +280,7 @@ def test_plugin_version_malformed_or_downgraded_string_not_rejected_anywhere():
 
     Builds a temp repo skeleton with a non-semver version ("banana-not-a-
     version") and, separately, a downgrade ("1.5.9" while the mirror
-    already stamps "1.6.0"), and calls the scaffold script's own
+    already stamps "1.7.0"), and calls the scaffold script's own
     `plugin_version` / `stamp_line` helpers directly (no shell execution,
     no subprocess needed for these pure functions) to show both flow
     through untouched. Records the gap as a finding: no rule in
