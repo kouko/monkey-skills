@@ -19,6 +19,7 @@ such marker are GREEN: an attack this file tried and the checker held.
 from __future__ import annotations
 
 import re
+import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -26,7 +27,7 @@ from pathlib import Path
 import pytest
 
 # file: docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/<this>.py
-# parents: [0]=probes [1]=evidence [2]=<change-id> [3]=loom [4]=docs [5]=repo root
+# REPO_ROOT: the parents[] index on the next line is counted from THIS file's own location (5 under evidence/probes, 2 under loom-code/scripts)
 REPO_ROOT = Path(__file__).resolve().parents[5]
 PROBES_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO_ROOT / "loom-code" / "scripts"))
@@ -43,36 +44,25 @@ from test_loom_checker_push import (  # noqa: E402
 from test_loom_checker_intent import (  # noqa: E402
     make_repo as make_intent_repo,
 )
-try:  # the sibling is test_abuse_lane_declaration under evidence/, test_probes_lane_declaration once graduated
-    from test_abuse_lane_declaration import (  # noqa: E402
-    _adversarial_records,
-    _commit_intent,
-    _commit_review,
-    _dispatch,
-    _lane_intent_text,
-    _package_tests_record,
-    _seed_branch,
-    _verdict,
-    _write,
-    _write_evidence,
-    _write_kickoff,
-    _write_review,
-    )
-except ModuleNotFoundError:  # pragma: no cover - the graduated copy's sibling name
-    from test_probes_lane_declaration import (  # noqa: E402
-    _adversarial_records,
-    _commit_intent,
-    _commit_review,
-    _dispatch,
-    _lane_intent_text,
-    _package_tests_record,
-    _seed_branch,
-    _verdict,
-    _write,
-    _write_evidence,
-    _write_kickoff,
-    _write_review,
-    )
+# The sibling helper module is selected from this file's own stem, never by
+# catching an import error: test_abuse_* under evidence/ pairs with
+# test_abuse_lane_declaration, the graduated test_probes_* copy with
+# test_probes_lane_declaration.
+_SIBLING = ("test_abuse_lane_declaration" if Path(__file__).stem.startswith("test_abuse_")
+            else "test_probes_lane_declaration")
+_sib = importlib.import_module(_SIBLING)
+_adversarial_records = _sib._adversarial_records
+_commit_intent = _sib._commit_intent
+_commit_review = _sib._commit_review
+_dispatch = _sib._dispatch
+_lane_intent_text = _sib._lane_intent_text
+_package_tests_record = _sib._package_tests_record
+_seed_branch = _sib._seed_branch
+_verdict = _sib._verdict
+_write = _sib._write
+_write_evidence = _sib._write_evidence
+_write_kickoff = _sib._write_kickoff
+_write_review = _sib._write_review
 
 CHECKER = REPO_ROOT / "loom-code" / "scripts" / "loom_checker.py"
 LANE_SWITCH = REPO_ROOT / "loom-code/skills/review/references/lane-switch.md"

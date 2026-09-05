@@ -41,7 +41,7 @@ from pathlib import Path
 import pytest
 
 # file: docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/<this>.py
-# parents: [0]=probes [1]=evidence [2]=<change-id> [3]=loom [4]=docs [5]=repo root
+# REPO_ROOT: the parents[] index on the next line is counted from THIS file's own location (5 under evidence/probes, 2 under loom-code/scripts)
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "loom-code" / "scripts"))
 
