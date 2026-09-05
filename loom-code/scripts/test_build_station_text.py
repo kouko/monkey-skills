@@ -10,6 +10,7 @@ the adversary attacking at the checkpoint instead.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -63,3 +64,59 @@ def test_order_is_discipline_not_a_gate() -> None:
 def test_paragraph_drops_this_repos_own_change_citation() -> None:
     paragraph = _dispatch_order_paragraph()
     assert "this change's own" not in paragraph
+
+
+# --- W1-02: memory step moves to build, before the plan's final checkpoint -
+
+
+def _headings() -> list[tuple[str, int]]:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    return [
+        (m.group(1).strip(), m.start())
+        for m in re.finditer(r"^##\s+(.*)$", text, re.MULTILINE)
+    ]
+
+
+def test_memorysection_heading_exists_beforehandoff() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    headings = _headings()
+    titles = [t.lower() for t, _ in headings]
+    memory_idx = next((i for i, t in enumerate(titles) if "memory" in t), None)
+    handoff_idx = next(
+        (i for i, t in enumerate(titles) if "hand-off" in t or "handoff" in t), None
+    )
+    assert memory_idx is not None, "build/SKILL.md has no heading naming memory"
+    assert handoff_idx is not None, "build/SKILL.md has no hand-off heading"
+    assert memory_idx < handoff_idx, (
+        "the memory heading must sit before the hand-off heading"
+    )
+
+
+def test_memorysection_names_graduation_and_memory_store() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    headings = _headings()
+    idx = next(i for i, (t, _) in enumerate(headings) if "memory" in t.lower())
+    start = headings[idx][1]
+    end = headings[idx + 1][1] if idx + 1 < len(headings) else len(text)
+    body = text[start:end].lower()
+    assert "evidence/probes/" in body or "graduat" in body
+    assert "docs/loom/memory/" in body
+
+
+def test_step4and5_fencedblocks_name_git_log_and_task_trailer() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    for heading in ("## 4. After each task returns", "## 5. Wave end"):
+        section = text.split(heading, 1)[1]
+        # stop at the next top-level heading
+        section = re.split(r"\n## ", section, 1)[0]
+        blocks = re.findall(r"```\n(.*?)```", section, re.DOTALL)
+        assert any("git log" in b and "Task:" in b for b in blocks), (
+            f"{heading} has no fenced block naming both 'git log' and 'Task:'"
+        )
+
+
+def test_step5_names_reviewed_sha_dot_dot_head() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 5. Wave end", 1)[1]
+    section = re.split(r"\n## ", section, 1)[0]
+    assert "<reviewed_sha>..HEAD" in section
