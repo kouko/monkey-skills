@@ -18,7 +18,7 @@ KICKOFF = REPO / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
 
 EXPECTED_COMMAND = (
     "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ "
-    ".claude/hooks/ -q -n auto -- loom-design/scripts/ -q"
+    ".claude/hooks/ -q -n auto --then loom-design/scripts/ -q"
 )
 
 

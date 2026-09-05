@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one pytest session per `--`-separated group of arguments.
+"""Run one pytest session per `--then`-separated group of arguments.
 
 loom-design/scripts/ carries its own pytest.ini (importlib import mode); a
 single session that also names loom-code paths adopts that ini, and the
@@ -15,7 +15,7 @@ import sys
 def split_groups(argv: list[str]) -> list[list[str]]:
     groups: list[list[str]] = [[]]
     for token in argv:
-        if token == "--":
+        if token == "--then":
             groups.append([])
         else:
             groups[-1].append(token)

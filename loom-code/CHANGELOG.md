@@ -27,7 +27,7 @@ budget-exception: 1.5.0 — one contract field registered (artifact:review.cost)
 4. Ship gains a `## Process cost` PR section and a §4 pre-push
    checklist mirroring the CI workflow's jobs one for one.
 5. `review.json`'s template and manifest gain a `cost` block.
-   `KICKOFF`'s package-tests step runs one pytest session per `--`
+   `KICKOFF`'s package-tests step runs one pytest session per `--then`
    group via `scripts/run_package_tests.py`, so `loom-design/scripts/`
    is covered by its own session instead of being silently skipped.
 6. No checker rule was added or removed — `--list-rules` stays at 27.
