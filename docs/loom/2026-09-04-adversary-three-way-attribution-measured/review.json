@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe",
+  "reviewed_sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -495,6 +495,28 @@
           "fix": "update W2-03 to name 1.5.1 and the renamed probe"
         }
       ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-7e21",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+code",
+      "verdict": "PASS",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "dimension_scores": {
+        "incorrect-fact": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "branch-end-06",
+          "status": "fixed",
+          "evidence": "57d4fdf1 / plan.md:45"
+        }
+      ],
+      "findings": [],
+      "notes": "the sonnet reader's round-5 PASS stands: the only fix since (57d4fdf1) touched plan.md:45-46, inside this reader's branch-end-06 anchor"
     }
   ],
   "probes": [
@@ -594,6 +616,69 @@
       "result": "pass",
       "artifact": "",
       "note": "1560 passed, 3 skipped, 1 xfailed — run by the orchestrator after the memory step; artifact is empty by the review station's own worked record for package-tests"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "",
+      "note": "1645 passed, 5 skipped, 1 xfailed; then 182 passed, 1 skipped — the KICKOFF package-tests line changed on main with 1.5.0; run at the reviewed content after the rebase"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py",
+      "note": "16 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py",
+      "note": "11 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py",
+      "note": "11 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py",
+      "note": "6 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py",
+      "note": "10 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py",
+      "note": "17 passed at the reviewed content (re-run after the rebase)"
     }
   ],
   "questions": [
@@ -606,6 +691,11 @@
       "decision_point": 1,
       "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：要）",
       "type": "consequence"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告逐條呈現（驗收 1–4 皆 works；既有資料未動；我幫你決定的事：契約內容塞進對話、無亂數種子、失敗呼叫不計分、≥50% 才算規律、走「寫進說明文件」這條路、README 段落用中文、讀者側規律記待辦、一則報告語言意見撤銷；報告後補記：rebase 到 1.5.0、版本改 1.5.1、基線綁量測快照、#794 兩個測試改跳過、一則 package-tests artifact 意見撤銷）。這樣 OK 嗎？（答：ok）",
+      "type": "done"
     }
   ],
   "open_findings": [
@@ -741,7 +831,8 @@
       "origin_sha": "75f132617e3badb2188091a030dbbdef3054f4b1",
       "raised_by": "rev-be-codex-7e21",
       "severity": "important",
-      "text": "plan W2-03 still names the 1.4.1 bump and the 1_4_1 probe after the rebase moved the bump to 1.5.1"
+      "text": "plan W2-03 still names the 1.4.1 bump and the 1_4_1 probe after the rebase moved the bump to 1.5.1",
+      "resolved": "closed by 57d4fdf1 — plan W2-03 names 1.5.1 and the renamed probe; codex round 6"
     }
   ],
   "dispatch": [
@@ -1019,6 +1110,6 @@
   "second_vendor": "codex",
   "round_notes": {
     "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05). | round 2: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION — 02 held open, 09 opened; codex accepted the report-language dismissal. Round 3 follows the fix-rounds third-round rule: design re-look before any further fix. | round 3: PASS x2 after the design re-look (evidence/design-relook-run-status-2026-09-05.md); reviewed_sha -> da2fecfa.",
-    "branch-end": "round 4: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION. Rebuttal for branch-end-03 goes to the resumed codex reader: the review station's own worked record shows package-tests with artifact \"\", and push.probes-package-tests compares the command, not an artifact. | round 5 (after the rebase onto 1.5.0): sonnet PASS, codex PASS_WITH_NOTES; branch-end-03 dismissed by codex; branch-end-06 opened on stale plan text and fixed by 57d4fdf1 after the verdicts, so reviewed_sha does not move here and round 6 reads that one-file delta."
+    "branch-end": "round 4: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION. Rebuttal for branch-end-03 goes to the resumed codex reader: the review station's own worked record shows package-tests with artifact \"\", and push.probes-package-tests compares the command, not an artifact. | round 5 (after the rebase onto 1.5.0): sonnet PASS, codex PASS_WITH_NOTES; branch-end-03 dismissed by codex; branch-end-06 opened on stale plan text and fixed by 57d4fdf1 after the verdicts, so reviewed_sha does not move here and round 6 reads that one-file delta. | round 6: codex PASS on the one-file delta; sonnet's round-5 PASS stands; reviewed_sha -> fea61f66."
   }
 }
