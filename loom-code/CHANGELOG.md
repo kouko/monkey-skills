@@ -36,7 +36,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
    count is refreshed to match.
 6. Codex mirror regenerated (`.codex/hooks/loom_checker.py`,
    `.codex/hooks/contract/**`) at this version; `loom-code` bumped
-   1.5.1 → 1.6.0 in `plugin.json` (and its Codex manifest mirror via
+   1.6.0 → 1.7.0 in `plugin.json` (and its Codex manifest mirror via
    `sync_codex_manifests.py`). `marketplace.json`'s loom-code entry
    carries no version field, by design — it never has, in this repo's
    history, and plugin.json remains the single version carrier.
