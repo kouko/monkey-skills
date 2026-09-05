@@ -146,7 +146,16 @@ def test_precap_contract_copies_byte_identical_to_git_history_4ab5224d() -> None
     """`contract-precap-adversary.md` and `contract-precap-reviewer.md`
     are supposed to be `git show 4ab5224d:loom-code/agents/<x>.md`
     verbatim, not a retyped or re-wrapped copy. This diffs the committed
-    file bytes against a fresh `git show` of that commit."""
+    file bytes against a fresh `git show` of that commit.
+
+    Grounding for the `git show <commit>:<path>` form relied on below:
+    git-show(1) (https://git-scm.com/docs/git-show), "git show <object>"
+    section — an <object> may be a `<rev>:<path>` blob reference, whose
+    grammar is defined in gitrevisions(7)
+    (https://git-scm.com/docs/gitrevisions), `<rev>:<path>` — and the
+    fact this probe relies on: a `<commit>:<path>` argument to `git show`
+    prints that path's blob contents as they existed at that commit,
+    with no other output mixed in."""
     for role, filename in (("adversary", "contract-precap-adversary.md"), ("reviewer", "contract-precap-reviewer.md")):
         committed = (EVIDENCE_DIR / filename).read_bytes()
         historical = subprocess.run(
@@ -247,23 +256,36 @@ def test_arm_b_taken_adversary_contract_byte_unchanged_since_da2fecfa() -> None:
     assert current == at_da2fecfa, "adversary.md changed since da2fecfa despite arm B being taken"
 
 
-def test_memory_step_stated_checker_command_actually_exits_2_not_0() -> None:
-    """The plan's W2-memory task names its own verification test as
-    `python3 loom-code/scripts/loom_checker.py memory`. Run exactly
-    that command: it does not exist as a sub-command (`--list-rules`,
-    `intent`, `intake`, `push`, `standing`, `contract` are the only
-    ones) and exits 2 ("unknown sub-command"), never 0. This is a
-    documentation defect in the plan, recorded here as a probe that
-    failed to find the plan's claim true rather than swallowed silently
-    — the real memory-store checker lives at repo-root
-    `scripts/check_loom_memory_integrity.py --check`, which does exit 0
-    (see the companion pass-case run in this session's evidence)."""
+def test_memory_step_store_integrity_check_exits_zero() -> None:
+    """The plan's W2-memory task originally named its own verification
+    test as `python3 loom-code/scripts/loom_checker.py memory` — that
+    sub-command does not exist (`--list-rules`, `intent`, `intake`,
+    `push`, `standing`, `contract` are the only ones) and the command
+    exited 2 ("unknown sub-command"), never 0. The plan line was
+    corrected at branch-end to name the real memory-store checker,
+    `python3 scripts/check_loom_memory_integrity.py --check` at repo
+    root. This probe runs the corrected command from the repo root
+    (resolved from `__file__`, not the process cwd) and asserts it
+    exits 0 against the committed memory store — the positive case the
+    original probe never carried."""
     result = subprocess.run(
+        [sys.executable, "scripts/check_loom_memory_integrity.py", "--check"],
+        cwd=REPO_ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, (
+        f"expected the corrected memory-store checker to pass with exit 0, "
+        f"got {result.returncode}: {result.stdout}{result.stderr}"
+    )
+
+    # Negative control, clearly labelled: the plan's ORIGINAL (now-corrected)
+    # command still does not exist and still exits 2 — kept as a witness
+    # that the fix in the plan, not a change to loom_checker.py itself, is
+    # what closed this finding.
+    stale_command = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "loom_checker.py"), "memory"],
         cwd=REPO_ROOT, capture_output=True, text=True,
     )
-    assert result.returncode == 2, (
-        f"expected the plan's literal command to fail with exit 2 (documenting the plan's "
-        f"drift), got {result.returncode}"
+    assert stale_command.returncode == 2, (
+        "negative control: the plan's original 'loom_checker.py memory' command "
+        f"was expected to still exit 2 (unknown sub-command), got {stale_command.returncode}"
     )
-    assert "unknown sub-command" in (result.stdout + result.stderr)
