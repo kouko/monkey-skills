@@ -76,7 +76,7 @@ actions:             # executable steps inside a station; not skills (§3)
 # what must/must-not live in it, who signs it off, what edits it after" —
 # stations, templates and agent contracts cite it by path (loom-code
 # contract charter <name>), they do not restate it (W0-01).
-artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sections
+artifacts:           # per-change AND standing artifact charters (§2a); fields are frontmatter keys or H2 sections
   intent:
     path: docs/loom/intent/<change-id>.md
     template: intent.md
@@ -304,6 +304,9 @@ standing_docs:       # not per-change (§2a, §8)
   - {name: PRINCIPLES.md,       tool: product-principles, ratified_by: required, reject_when: "kind: product and missing"}
   - {name: DESIGN.md,           tool: design-system,      ratified_by: required, reject_when: never}
   - {name: KICKOFF-DEFAULTS.md, tool: null,               path: docs/loom/KICKOFF-DEFAULTS.md}
+    # its charter (what it answers, must/must-not, sign-off, edits-after)
+    # lives at artifacts.kickoff-defaults.charter, not duplicated here --
+    # one shape for the checker to read (wave-end:0-05).
 
 kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
   - {name: second-vendor,          grammar: "<cli> | none | ask", note: "`ask` defers the choice to review.json's per-change `second_vendor` field (W0-02); the small lane never asks"}
