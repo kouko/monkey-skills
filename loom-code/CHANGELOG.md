@@ -5,6 +5,40 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] — 2026-09-06 — graduated probes rehearsed in a CI-shaped clone before graduation; nine dead history-bound tests removed
+
+`docs/loom/2026-09-05-graduated-probes-independent-of-local-history/`.
+
+1. New `scripts/rehearse_probes.py`: clones the repo with `git clone
+   --no-local file://<repo>` (full history, `origin/main` resolves, no
+   local `main`/`master`) and runs the given test paths there with the
+   script's own interpreter, `-n auto` added only when `xdist` imports.
+   FAILED and SKIPPED are read from the run's junit XML (nodeid and
+   reason), not from `-q -rs` terminal text, which truncates a reason at
+   the terminal width. Exit code is pytest's; a skip never changes it —
+   the rehearsal is advisory, not wired into the push gate. Python 3.11
+   compatible (`tempfile.TemporaryDirectory`, no 3.12-only cleanup API).
+2. Build station §6.5 **Probe graduation**: a red rehearsal blocks
+   graduation until the failing probe reads `origin/main` first and
+   skips when nothing resolves; every skip the rehearsal lists needs
+   reading, since a skip that names a commit or branch only the local
+   tree has verifies nothing on CI.
+3. Nine graduated probes deleted because the only way they could ever
+   run was to read this change's own local branch history — dead on
+   every CI checkout since the changes that grew them merged:
+   `loom-code/scripts/test_probes_complexity_wave_end.py` (2, via
+   `_confirm_intent_sha`), `loom-code/scripts/test_probes_language_policy.py`
+   (2) and `loom-code/scripts/test_probes_language_policy_branch_end.py`
+   (3, via `_skip_if_language_policy_shipped`), and
+   `loom-code/scripts/test_probes_memory_step_wave_end.py` (2, orphaned
+   once the language-policy guard they exercised was gone). Their
+   evidence originals stay untouched under each shipped change's own
+   `docs/loom/<its-cid>/evidence/probes/`.
+4. `docs/loom/memory/pre-branch-end-ci-rehearsal-uses-full-history-without-a-local-main.md`
+   now names `rehearse_probes.py` as the command that makes the
+   CI-shaped clone, in both its **What matches CI** paragraph and its
+   frontmatter `description`.
+
 ## [1.6.0] — 2026-09-05 — user-declared express and gate-only lanes
 
 budget-exception: 1.6.0 — one contract field registered (artifact:intent.lane): the user-facing `lane:` frontmatter field this change adds to the intent artifact; no checker rule was added alongside it.
