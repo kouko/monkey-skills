@@ -400,7 +400,7 @@ def test_cloneAndRunProbe_markerPresetOutsideAnyRehearsal_skipsWithTheReasonName
 
 CHANGELOG = REPO / "loom-code" / "CHANGELOG.md"
 TARGET_VERSION = "1.6.1"
-PREVIOUS_VERSION = "1.5.1"
+PREVIOUS_VERSION = "1.6.0"
 
 
 def _changelog_entry(version: str) -> str:
