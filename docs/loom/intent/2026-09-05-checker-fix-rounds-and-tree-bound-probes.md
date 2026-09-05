@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改 checker 四條既有規則的重算方式、review 站一句與 ship 站 §6；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-artifact-language-policy/review.json, loom-code/scripts/loom_checker.py]
-status: confirmed 2026-09-05
+status: closed 2026-09-05 — PR #793
 
 ## Problem
 #791 的 branch-end 審查跑了 11 輪。其中兩種浪費來自 checker 規則的重算方式，不是審查本身：
