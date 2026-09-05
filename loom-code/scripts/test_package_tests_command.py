@@ -44,7 +44,13 @@ KICKOFF_DEFAULTS = REPO / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
 
 def test_kickoff_and_ci_run_the_same_parallel_command() -> None:
     """W0-02 — KICKOFF-DEFAULTS' package-tests value and the CI pytest step
-    must both run with `-n auto`, and otherwise be the same command."""
+    must both run with `-n auto`.
+
+    W1-05 added `loom-design/scripts/` to KICKOFF's package-tests command
+    (#791 went red in CI twice because it was missing) -- that path runs in
+    CI's separate loom-design job (loom-design-ci.yml), not the loom-code
+    job this test reads, so it is the one deliberate divergence. Modulo
+    that path and `-q`/`-v`, the two commands must still be the same."""
     kickoff_text = KICKOFF_DEFAULTS.read_text(encoding="utf-8")
     kickoff_line = next(
         line
@@ -55,6 +61,7 @@ def test_kickoff_and_ci_run_the_same_parallel_command() -> None:
     # Drop the trailing " — <reason> (<date>)" comment.
     kickoff_command = kickoff_value.split("—")[0].strip()
     assert "-n auto" in kickoff_command
+    assert "loom-design/scripts/" in kickoff_command
 
     workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
     ci_run_line = next(
@@ -68,6 +75,6 @@ def test_kickoff_and_ci_run_the_same_parallel_command() -> None:
     def tokens(command: str, exclude: set[str]) -> list[str]:
         return [tok for tok in command.split() if tok not in exclude]
 
-    kickoff_tokens = tokens(kickoff_command, {"-q"})
+    kickoff_tokens = tokens(kickoff_command, {"-q", "loom-design/scripts/"})
     ci_tokens = tokens(ci_command, {"-v"})
     assert kickoff_tokens == ci_tokens
