@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+  "reviewed_sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -627,6 +627,133 @@
         }
       ],
       "notes": "ran the ten wave-end probes, the six permanent tests and the package suite (1687/182); mechanisms clean; mirrors identical except the stamp."
+    },
+    {
+      "round": 8,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-j2k5",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fe0c03ef5ed800b91cd3f74caa69cfe1ca622f97",
+      "standards_version": "lenses.md@fe0c03ef5ed800b91cd3f74caa69cfe1ca622f97",
+      "dimension_scores": {
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION",
+        "cross-task-coherence": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:2300",
+          "text": "issue (blocking): the fix adds vendors to REVIEW_ACCRETING_ARRAYS, so the generic allow_gain branch permits appending a vendor although no policy id authorises vendors to grow.",
+          "fix": "gate vendors by its own policy or keep it byte-equal."
+        }
+      ],
+      "previous_findings": [
+        {
+          "id": "wave-end:1-01",
+          "status": "fixed",
+          "evidence": "26fc5aeb"
+        },
+        {
+          "id": "wave-end:1-02",
+          "status": "dismissed",
+          "evidence": "loom-code/skills/review/SKILL.md:273 and :415"
+        }
+      ],
+      "notes": "in-memory comparison confirmed appending a vendor returned no failure; probes not rerun per the fix-round procedure."
+    },
+    {
+      "round": 8,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-a-j2k5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fe0c03ef5ed800b91cd3f74caa69cfe1ca622f97",
+      "standards_version": "lenses.md@fe0c03ef5ed800b91cd3f74caa69cfe1ca622f97",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:2140",
+          "text": "issue (blocking): vendors moved into REVIEW_ACCRETING_ARRAYS and rides on the four arrays' allow_gain; a round appending a second vendor between stamped commits passes; the rule's text says byte-equal and the charter names no id for vendors.",
+          "fix": "own branch for vendors with a regression test."
+        }
+      ],
+      "previous_findings": [
+        {
+          "id": "nit: stale probe comment",
+          "status": "fixed",
+          "evidence": "fe0c03ef"
+        },
+        {
+          "id": "nit: plan vs plan-edits doc",
+          "status": "fixed",
+          "evidence": "fe0c03ef"
+        },
+        {
+          "id": "nit: function length",
+          "status": "unfixed",
+          "evidence": "loom-code/scripts/loom_checker.py:2232"
+        }
+      ],
+      "notes": "reproduced the vendors gain passing at fe0c03ef; ran the permanent tests and probes."
+    },
+    {
+      "round": 9,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-j2k5",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "standards_version": "lenses.md@241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "wave-end:1-03",
+          "status": "fixed",
+          "evidence": "241817bc; test_review_edits_vendors_gains_entry_with_policy_passes / _with_policy_removed_blocks"
+        }
+      ],
+      "notes": "test results supplied, not independently rerun in the read-only sandbox."
+    },
+    {
+      "round": 9,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-a-j2k5",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "standards_version": "lenses.md@241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "wave-end:1-04",
+          "status": "fixed",
+          "evidence": "241817bc; reproduced both directions on the round-8 fixture"
+        }
+      ],
+      "notes": "reran test_review_round_append_only.py (11) and the package command (1692/182); mirror identical except the stamp."
     }
   ],
   "probes": [
@@ -1525,6 +1652,254 @@
       "result": "pass",
       "artifact": "",
       "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_two_commits_pure_appends_passes",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_reviewed_sha_and_scope_replaced_passes",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_cost_replaced_passes",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_open_finding_gains_resolved_passes",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_questions_filled_once_passes",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_no_charter_key_skips_even_with_rewritten_verdict",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_earlier_verdict_value_changed_blocks_naming_rewrite",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_verdict_entry_deleted_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_open_finding_anchor_edited_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_questions_filled_twice_blocks_on_second_change",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_top_level_key_removed_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_unknown_top_level_key_added_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_probe_result_flipped_blocks_as_tampering",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_dispatch_started_edited_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_vendors_replaced_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_missing_review_file_exits_2",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_unsupported_policy_id_blocks_closed",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_checker_list_rules_carries_review_round_append_only_at_31_lines",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_review_edits_this_changes_own_history_passes",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py -q -k test_base_review_fixture_matches_required_top_level_keys",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_review_edits.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_verdict_sha_sync_exception_smuggled_second_field_change_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_verdict_sha_diverges_from_new_reviewed_sha_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_open_finding_gains_both_resolved_and_dismissed_at_once_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_dismissed_reason_edited_after_being_set_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_second_vendor_unset_after_being_set_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_verdicts_reordered_same_multiset_different_position_blocks",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_review_edits_after_bare_string_shape_fails_closed_not_crash",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_smuggled_verdict_deletion_still_blocks_alongside_legal_second_vendor_set",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_plan_edits_after_bare_string_shape_fails_closed_not_crash",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py -q -k test_plan_and_plan_edits_subcommands_disagree_when_plan_lives_off_convention",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_1.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
+      "result": "pass",
+      "artifact": "",
+      "scope": "wave-end:1"
     }
   ],
   "questions": [
@@ -1710,7 +2085,8 @@
       "origin_sha": "e7aba2693366fc52066cafdc42f685387c74eb73",
       "raised_by": "rev-we1-codex-j2k5",
       "severity": "fatal",
-      "text": "issue (blocking): _compare_review_round has no exhaustive comparison for known top-level fields and skips accreting arrays when either value is not a list; a stamped round can change charter, or change reviewed_sha and scope after their policy id is removed, with no failure reported."
+      "text": "issue (blocking): _compare_review_round has no exhaustive comparison for known top-level fields and skips accreting arrays when either value is not a list; a stamped round can change charter, or change reviewed_sha and scope after their policy id is removed, with no failure reported.",
+      "resolved": "resolved by 26fc5aeb — exhaustive _compare_review_round; tests test_review_edits_charter_stamp_changed_blocks, _verdicts_replaced_by_object_blocks_array_type_changed, _reviewed_sha_changed_with_replace_policy_removed_blocks (rev-we1-codex-j2k5, round 8)"
     },
     {
       "id": "wave-end:1-02",
@@ -1718,7 +2094,26 @@
       "origin_sha": "e7aba2693366fc52066cafdc42f685387c74eb73",
       "raised_by": "rev-we1-codex-j2k5",
       "severity": "fatal",
-      "text": "issue (blocking): the recorded package-test probe has an empty artifact, so the record cannot bind the pass to the executable it claims was run."
+      "text": "issue (blocking): the recorded package-test probe has an empty artifact, so the record cannot bind the pass to the executable it claims was run.",
+      "dismissed": "the review station's contract records the package-test probe with an empty artifact by design (loom-code/skills/review/SKILL.md:273, :415); push.probes-package-tests binds the pass by re-running the recorded command by rev-we1-codex-j2k5"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/loom_checker.py:2300",
+      "origin_sha": "fe0c03ef5ed800b91cd3f74caa69cfe1ca622f97",
+      "raised_by": "rev-we1-codex-j2k5",
+      "severity": "fatal",
+      "text": "issue (blocking): the fix adds vendors to REVIEW_ACCRETING_ARRAYS, so the generic allow_gain branch permits appending a vendor although no policy id authorises vendors to grow.",
+      "resolved": "resolved by 241817bc — vendors-gain-entries policy id; test_review_edits_vendors_gains_entry_with_policy_removed_blocks (rev-we1-codex-j2k5, round 9)"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/scripts/loom_checker.py:2140",
+      "origin_sha": "fe0c03ef5ed800b91cd3f74caa69cfe1ca622f97",
+      "raised_by": "rev-we1-a-j2k5",
+      "severity": "fatal",
+      "text": "issue (blocking): vendors moved into REVIEW_ACCRETING_ARRAYS and rides on the four arrays' allow_gain; a round appending a second vendor between stamped commits passes; the rule's text says byte-equal and the charter names no id for vendors.",
+      "resolved": "resolved by 241817bc — vendors gated by its own policy id (rev-we1-a-j2k5, round 9)"
     }
   ],
   "dispatch": [
@@ -1948,7 +2343,7 @@
     }
   ],
   "cost": {
-    "rounds": 7,
+    "rounds": 9,
     "dispatches": 28,
     "cap_changes": [],
     "hours_plan_to_pr": null
