@@ -30,6 +30,7 @@ case calls the real `claude` binary.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -322,18 +323,43 @@ def test_main_resume_body_containing_header_sentinel_still_splits_correctly():
     text starting with `# command:` (mimicking the header) must still be
     read back whole on `--resume`: `text.split("\\n\\n", 1)` splits only on
     the FIRST blank line, so everything after it -- sentinel lookalike
-    included -- belongs to the body and must survive intact."""
+    included -- belongs to the body and must survive intact.
+
+    wave-end:1-03 follow-up: `--resume` now validates the resumed
+    header's contract/fixture/prompt hashes, run/N and model against the
+    current invocation, so the hand-written run file must carry the full
+    valid header (computed the same way the module computes it) instead
+    of the pre-fix minimal one -- otherwise validation rejects it before
+    the body-split behaviour under test is ever exercised."""
     tmp_path = Path(pytest.importorskip("tempfile").mkdtemp())
     out = tmp_path / "out"
     out.mkdir()
+
+    contract = _write_contract(tmp_path)
+    fixture_path = _write_fixture(tmp_path, [{"n": 1, "text": "a", "expected": "reviewer"}])
+    contract_hash = hashlib.sha256(contract.read_bytes()).hexdigest()
+    fixture_bytes = fixture_path.read_bytes()
+    fixture_hash = hashlib.sha256(fixture_bytes).hexdigest()
+    fixture_json = json.loads(fixture_bytes.decode("utf-8"))
+    prompt = module.build_prompt(contract.read_text(encoding="utf-8"), fixture_json, "reviewer")
+    prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+
     body = (
         "1. mine -- first paragraph\n\n"
         "# command: this looks like a header but is body content\n\n"
         "trailing body text"
     )
-    (out / "run-1.txt").write_text(
-        "# command: real-header\n# run: 1 of 1\n\n" + body, encoding="utf-8"
+    header = "\n".join(
+        [
+            f"# command: claude -p --model sonnet --output-format text  (prompt on stdin, sha256 {prompt_hash})",
+            f"# contract: {contract} sha256 {contract_hash}",
+            f"# fixture: {fixture_path} sha256 {fixture_hash}",
+            "# run: 1 of 1",
+            "# model: sonnet",
+            f"# prompt-sha256: {prompt_hash}",
+        ]
     )
+    (out / "run-1.txt").write_text(header + "\n\n" + body, encoding="utf-8")
 
     def fake_run(argv, **kwargs):
         raise AssertionError("must not run — this item is resumed from disk")
@@ -343,9 +369,7 @@ def test_main_resume_body_containing_header_sentinel_still_splits_correctly():
     module.shutil.which = lambda name: "/usr/bin/claude"
     module.subprocess.run = fake_run
     try:
-        contract = _write_contract(tmp_path)
-        fixture = _write_fixture(tmp_path, [{"n": 1, "text": "a", "expected": "reviewer"}])
-        rc = main(_base_argv(contract, fixture, out, runs="1") + ["--resume"])
+        rc = main(_base_argv(contract, fixture_path, out, runs="1") + ["--resume"])
         assert rc == 0
         summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
         assert summary["items"]["1"]["counts"] == {"mine": 1}

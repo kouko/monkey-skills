@@ -184,7 +184,16 @@ def test_main_existing_run_dir_without_resume_exits_2_preserves_file(tmp_path, m
 def test_main_resume_skips_existing_runs_calls_subprocess_once(tmp_path, monkeypatch):
     """With --resume and run-1.txt/run-2.txt already present, only run 3 is
     actually executed (subprocess.run called exactly once), and summary.json
-    still reports n == 3 (all three runs scored, two from disk)."""
+    still reports n == 3 (all three runs scored, two from disk).
+
+    wave-end:1-03 follow-up: `--resume` now validates every resumed
+    header's contract/fixture/prompt hashes, run/N and model against the
+    current invocation before trusting it, so the two hand-written run
+    files must carry the full valid header (computed the same way the
+    module computes it) instead of the pre-fix minimal one -- otherwise
+    the validation this probe does not target rejects them before the
+    behaviour under test (resume skips re-running, still scores all N)
+    is ever exercised."""
     calls = []
 
     def fake_run(argv, **kwargs):
@@ -196,14 +205,30 @@ def test_main_resume_skips_existing_runs_calls_subprocess_once(tmp_path, monkeyp
 
     out = tmp_path / "out"
     out.mkdir()
-    for i in (1, 2):
-        (out / f"run-{i}.txt").write_text(
-            f"# command: fake\n# run: {i} of 3\n\n{_canned_stdout()}", encoding="utf-8"
-        )
 
     contract = _write_contract(tmp_path)
-    fixture = _write_fixture(tmp_path)
-    argv = _base_argv(contract, fixture, out) + ["--resume"]
+    fixture_path = _write_fixture(tmp_path)
+    contract_hash = hashlib.sha256(contract.read_bytes()).hexdigest()
+    fixture_bytes = fixture_path.read_bytes()
+    fixture_hash = hashlib.sha256(fixture_bytes).hexdigest()
+    fixture = json.loads(fixture_bytes.decode("utf-8"))
+    prompt = module.build_prompt(contract.read_text(encoding="utf-8"), fixture, "adversary")
+    prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+
+    for i in (1, 2):
+        header = "\n".join(
+            [
+                f"# command: claude -p --model sonnet --output-format text  (prompt on stdin, sha256 {prompt_hash})",
+                f"# contract: {contract} sha256 {contract_hash}",
+                f"# fixture: {fixture_path} sha256 {fixture_hash}",
+                f"# run: {i} of 3",
+                "# model: sonnet",
+                f"# prompt-sha256: {prompt_hash}",
+            ]
+        )
+        (out / f"run-{i}.txt").write_text(header + f"\n\n{_canned_stdout()}", encoding="utf-8")
+
+    argv = _base_argv(contract, fixture_path, out) + ["--resume"]
     rc = module.main(argv)
     assert rc == 0
     assert len(calls) == 1
