@@ -22,5 +22,6 @@
   ],
   "dispatch": [
     {"task": "<task id>", "role": "implementer|reviewer|blind-runner|adversary", "agent_id": "<id>", "model": "<model>", "started": "<iso timestamp>", "fresh_context": true}
-  ]
+  ],
+  "cost": {"rounds": 0, "dispatches": 0, "cap_changes": [], "hours_plan_to_pr": null}
 }
