@@ -1,13 +1,170 @@
 {
   "reviewed_sha": "e895fbb3a57c04b2b12a23fa2127420a7cee02a6",
-  "scope": "",
+  "scope": "wave-end:1",
   "vendors": [
-    "anthropic"
+    "anthropic",
+    "openai"
   ],
-  "verdicts": [],
-  "probes": [],
-  "questions": [],
-  "open_findings": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/skills/build/SKILL.md:274",
+          "text": "issue (blocking): §5 tells build to call loom-code:review when this is the last wave, before execution reaches §6.5, while §6.5 says the memory work must precede that same closing round; following the numbered sections causes the post-review memory commit Acceptance 1–2 eliminate.",
+          "fix": "Move the final-wave review call after package tests and the memory step, or make §5 defer the last-wave call until §6 and §6.5 have completed; name the resulting call scope: branch-end when the final wave-end round doubles as branch-end."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/build/SKILL.md:343",
+          "text": "issue (blocking): build requires the plan's reserved last-wave memory task, but write-plan and its plan template never require or create it; a future plan reaches §6.5 without a valid task id and any graduated-test commit fails push.dispatch-covers-tasks.",
+          "fix": "Add the reservation to write-plan's plan-shape contract and plan template, or make build create the task and dispatch record through a documented mechanism."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_build_station_text.py:80",
+          "text": "issue (blocking): the station-text tests prove only that the memory heading precedes hand-off, not that it precedes the final-wave review call in §5, so the sequencing contradiction stays green.",
+          "fix": "Add a structural test requiring package tests, then §6.5 memory work, then exactly one closing review call recorded as branch-end."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:365",
+          "text": "nitpick (non-blocking): the duplicated graduated-probe guard is position-blind — it accepts the first status: line anywhere in the document.",
+          "fix": "Parse only the top metadata block; add a synthetic with a body-level status: closed before the real one; same in the branch_end copy."
+        }
+      ],
+      "notes": [
+        "--list-rules returned 27. Pytest could not start in the read-only sandbox (no writable temp dir). The §4 and §5 trailer commands are semantically sound for merge, docs-only, code and missing-trailer cases."
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "dimension_scores": {
+        "omission": "PASS_WITH_NOTES",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/build/SKILL.md:343-347",
+          "text": "issue: §6.5 asserts \"the plan reserves one\" memory task, but write-plan's Task DAG / Shape sections carry no such instruction; a future plan following §6.5 literally has no Task id for the trailer and push.dispatch-covers-tasks blocks.",
+          "fix": "Add a sentence to write-plan's Shape section reserving a last-wave memory task, or soften §6.5 and state what to do when none exists."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:360-367",
+          "text": "nitpick: the skip guard returns on the first status:-prefixed line anywhere in the file; safety rests on intent files opening with frontmatter.",
+          "fix": "Restrict the scan to the leading frontmatter block — optional."
+        }
+      ],
+      "notes": [
+        "Ran the delta's test files (119 passed, 2 skipped) and both probe files (23 passed); widened cap measured at 75 words; --list-rules 27; loom_checker.py absent from the diff. §6.5 scopes the memory step to the round that closes the plan; ship §1/§3/§3.5 and Acceptance 1 consistent once branch-end reviewed_sha is read as the latest before push."
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "4e3805f8",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "see docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md",
+      "sha": "de38277aa2dfcd772d455f0eb490cacc54338e0b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py -q",
+      "sha": "932a3e82db92c70b8261ac2ac7169862b3817174",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py -q",
+      "sha": "932a3e82db92c70b8261ac2ac7169862b3817174",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是——探針畢業與記憶庫條目改到最後一個 wave 結束、branch-end 審查之前做，審查看到的就是最終的樹，之後只剩關閉 intent 那一行；散文釘的「肯定句＋無否定詞＋正反自測」規則寫進 adversary 契約與 implementer 的基線；build 站對 `Task:` 尾標的檢查給出可複製的命令、wave 結束合併後跑一次。不加 checker 規則。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這兩個 change 要不要都用 Codex 當第二位讀者？",
+      "type": "what"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/skills/build/SKILL.md:274 (§5 last-wave review call before §6.5)",
+      "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "raised_by": "rev-we1-ms-codex"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/skills/build/SKILL.md:343 / loom-code/skills/write-plan/SKILL.md (no reserved memory task)",
+      "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "raised_by": "rev-we1-ms-codex, rev-we1-ms-sonnet"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/test_build_station_text.py:80",
+      "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "raised_by": "rev-we1-ms-codex"
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
@@ -90,6 +247,18 @@
       "model": "sonnet",
       "started": "2026-09-05T14:40:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T15:20:00+08:00",
+      "fresh_context": true
     }
+  ],
+  "second_vendor": "codex",
+  "notes": [
+    "Round 1 wave-end:1: NEEDS_REVISION (codex fatal on §5/§6.5 sequencing; both readers on the unreserved memory task). The guard position-blind nit is fixed inside the fix round with the same agent."
   ]
 }
