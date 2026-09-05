@@ -41,6 +41,23 @@
       "model": "sonnet",
       "started": "2026-09-05T12:50:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T13:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T13:20:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; fixes its own probe (f): log.split(NUL) fallback never runs"
     }
   ]
 }
