@@ -5,6 +5,29 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] — 2026-09-05 — cold-read role-split measurement script; adversary three-way attribution baselined at N=10
+
+`docs/loom/2026-09-04-adversary-three-way-attribution-measured/`.
+
+1. New `scripts/coldread_role_split.py`: runs a contract through
+   `claude -p --model sonnet` N times (prompt on stdin — a contract's
+   leading `---` frontmatter is rejected as an option when passed
+   positionally), scores every answer against a fixed 8-item fixture,
+   and writes per-run transcripts plus `summary.json` with per-item
+   label counts, own/not-own and three-way accuracy, a `systematic`
+   list (an item wrong in ≥50% of scored runs with the same wrong
+   label in ≥50%, floor n ≥ 3), and `complete`/`failed_runs` — failed
+   or timed-out calls are never scored. Unit tests fake the binary.
+2. Four N=10 baselines committed as evidence (adversary and reviewer
+   contracts, before and after the sentence-cap change). Adversary
+   side: 80/80 and 79/80 three-way, no systematic item — the
+   attribution sentence is left as it is (arm B of the plan); the
+   README role section explains who takes what is not theirs. The
+   reviewer contract, measured as a control, systematically claims
+   the two boundary items (6/10, 8/10) — recorded as a follow-up, not
+   changed here.
+3. No checker rule added; the script is not wired into CI.
+
 ## [1.5.0] — 2026-09-05 — review sees complexity and process cost
 
 budget-exception: 1.5.0 — one contract field registered (artifact:review.cost): the process-cost record the intent's outcome 3 asks for; it replaces the per-change cost notes that lived only in the orchestrator's memory.
