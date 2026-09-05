@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "d4abdeb328beff8bfc6e116efa798e88f35f6dc1",
-  "scope": "wave-end:1",
+  "reviewed_sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+  "scope": "branch-end",
   "vendors": [
     "anthropic"
   ],
@@ -364,6 +364,156 @@
         "ran the three probe files (71), the two graduated copies (37), memory integrity, --list-rules, the five word caps and 3 ship-§4 commands; the dispatch arithmetic 9 = 3 + 2 + 4 reproduced from git log",
         "blind-run probes as prose are what the checker treats as non-executed kinds; the other reader disagrees — recorded, not averaged"
       ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "d6aead7c893a40d1cf866959b5839e2f077360d0",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/review.json:380",
+          "text": "branch-end-01: fixed — executable blind-run commands naming the report",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py:47",
+          "text": "branch-end-02: fixed — sibling chosen from the file's stem, no exception-driven fallback",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_probes_lanes_wave_end.py:30",
+          "text": "parents comment nit: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4",
+          "text": "moving-HEAD docstring nit: unfixed at this sha (fixed at 0d3ca919, confirmed by its raiser in round 6)",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "no new findings; probes not rerun in the read-only sandbox"
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "d6aead7c893a40d1cf866959b5839e2f077360d0",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4-5",
+          "text": "nit 1 (moving HEAD): unfixed at this sha",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_probes_lanes_wave_end.py:30",
+          "text": "nit 2 (parents comment): fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "the other reader's fixes broke nothing; stem-based selection keeps the byte-copy invariant; 63 passed"
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "0d3ca91918744a0c923be40dc3d69e118c46bc7c",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4-5",
+          "text": "nit 1: fixed — HEAD named as the authoring-time sha",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "0d3ca919 touches only the docstring; rev-be-lane-codex stands (push.verdicts-ge-2)"
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "e3d1fb35: the dispatch-batching probe recomputes waves, rounds and mid-flight fixes instead of pinning a count (it went red when round 5 was recorded — the memory entry's own lesson); one test rerun green; rev-be-lane-codex stands"
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+docs+skill",
+      "verdict": "PASS",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "resumed": true,
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4",
+          "text": "nit (moving HEAD): fixed — authoring-time HEAD named; the dispatch-budget probe recomputes its populations and asserts only the inequality",
+          "fix": ""
+        }
+      ],
+      "notes": []
     }
   ],
   "probes": [
@@ -506,7 +656,7 @@
     {
       "kind": "package-tests",
       "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "scripts/run_package_tests.py",
       "scope": "branch-end"
@@ -514,7 +664,7 @@
     {
       "kind": "blind-run",
       "command": "grep -c '^### [1-7]' docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
       "scope": "branch-end"
@@ -522,7 +672,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py",
       "scope": "branch-end"
@@ -530,7 +680,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "branch-end"
@@ -538,7 +688,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'graduated_probe' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -546,7 +696,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'memory' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -554,7 +704,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'push_gateonly or push_express' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -562,7 +712,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'word_cap' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -570,7 +720,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'dispatch_batching' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -578,7 +728,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'ship_section4' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -586,7 +736,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'list_rules or verdicts_ge_2' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -594,7 +744,15 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'codex_mirror' -q",
-      "sha": "6ed7d1bb5bb6154de4ad1ade7b90a4ee02fdf722",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k dispatch_batching -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
       "scope": "branch-end"
@@ -634,6 +792,12 @@
       "text": "憲章那一句（gate-only 零讀者、不盲跑，只限 small 類別，push 閘照跑）——批准？",
       "type": "consequence",
       "answer": "批准"
+    },
+    {
+      "decision_point": 3,
+      "text": "Acceptance 1–7 walked in the blind-run report (dated declarations; express one reader; gate-only = small with the floor waived, ratified; record-keyed switch timing; cold-read three-option prompt; station text pinned; 27 rules, suite green); no older records touched; PRINCIPLES.md amended by your ratification. OK?",
+      "type": "done",
+      "answer": "OK"
     }
   ],
   "open_findings": [
@@ -706,7 +870,8 @@
       "origin_sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
       "raised_by": "rev-be-lane-codex",
       "severity": "important",
-      "text": "issue (blocking): catching every ModuleNotFoundError makes sibling selection a fallback that can swallow a missing transitive dependency and import the other copy."
+      "text": "issue (blocking): catching every ModuleNotFoundError makes sibling selection a fallback that can swallow a missing transitive dependency and import the other copy.",
+      "resolved": "closed by d6aead7c — sibling selected from the file's stem; both readers fixed (round 5)"
     }
   ],
   "dispatch": [
@@ -918,10 +1083,10 @@
     }
   ],
   "cost": {
-    "rounds": 4,
+    "rounds": 7,
     "dispatches": 24,
     "cap_changes": [],
-    "hours_plan_to_pr": null
+    "hours_plan_to_pr": 10.5
   },
   "second_vendor": "codex"
 }
