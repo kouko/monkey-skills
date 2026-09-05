@@ -29,11 +29,14 @@ docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/prob
 """
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+import pytest
 
 REPO = Path(
     subprocess.run(
@@ -78,7 +81,19 @@ def _clone_ci_shaped(tmp_dir: Path) -> Path:
     return clone_dir
 
 
+NESTED_ENV = "REHEARSE_PROBES_NESTED"
+
+
 def test_no_history_class_skips_on_main() -> None:
+    # This probe clones the repository and runs every graduated probe file
+    # inside the clone -- including its own graduated copy. Both this probe
+    # and rehearse_probes.py set the marker below for the pytest they spawn;
+    # inside such a run this probe skips, so the clone never clones again.
+    if os.environ.get(NESTED_ENV):
+        pytest.skip(
+            f"already inside a rehearsal clone ({NESTED_ENV} is set); a "
+            "nested clone-and-run would recurse"
+        )
     with tempfile.TemporaryDirectory() as tmp:
         clone_dir = _clone_ci_shaped(Path(tmp))
 
@@ -104,6 +119,7 @@ def test_no_history_class_skips_on_main() -> None:
 
         result = subprocess.run(
             pytest_args, cwd=str(clone_dir), capture_output=True, text=True,
+            env={**os.environ, NESTED_ENV: "1"},
         )
 
         # wave-end:1-02: a collection error or a "no tests collected" exit
@@ -118,8 +134,12 @@ def test_no_history_class_skips_on_main() -> None:
             line for line in result.stdout.splitlines()
             if line.strip().startswith("SKIPPED")
         ]
+        # Classify the REASON only: a `-rs` line is `SKIPPED [n] <path>:<line>: <reason>`,
+        # and the path may itself contain the word "history" (this probe's
+        # own graduated copy does), which is not a history-bound skip.
         history_class_skips = [
-            line for line in skipped_lines if HISTORY_CLASS_RE.search(line)
+            line for line in skipped_lines
+            if HISTORY_CLASS_RE.search(line.split(": ", 1)[1] if ": " in line else line)
         ]
         failed_lines = [
             line for line in result.stdout.splitlines()
