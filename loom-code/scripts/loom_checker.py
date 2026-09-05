@@ -4810,7 +4810,17 @@ def cmd_charter(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         raise UsageError(f"no contract manifest at {manifest_path}")
 
     manifest = load_manifest(manifest_path)
-    artifacts = manifest.get("artifacts") or {}
+    artifacts = manifest.get("artifacts")
+    if not artifacts:
+        out.write(render_charter_table([]))
+        return report(
+            [(
+                "contract.charter-complete",
+                "manifest carries no artifacts: mapping (absent or empty) -- "
+                "every charter row is missing.",
+            )],
+            err,
+        )
     stations = {
         s["name"] for s in manifest.get("stations", []) if isinstance(s, dict) and s.get("name")
     }

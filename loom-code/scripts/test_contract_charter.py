@@ -79,6 +79,17 @@ def test_charter_command_unexpected_argument_is_a_usage_error() -> None:
     assert result.returncode == 2
 
 
+def test_charter_command_artifacts_key_absent_is_blocked(tmp_path) -> None:
+    """A manifest with no `artifacts:` mapping at all -- absent, not just
+    empty -- must never render zero rows and exit 0; it is a
+    `contract.charter-complete` failure that exits 1 (wave-end:0-01)."""
+    manifest_path = tmp_path / "manifest.yaml"
+    manifest_path.write_text("version: 1.0.0\nstations: []\n", encoding="utf-8")
+    result = run_charter("--manifest", str(manifest_path))
+    assert result.returncode == 1
+    assert "contract.charter-complete" in result.stderr
+
+
 def test_list_rules_includes_contract_charter_complete() -> None:
     result = subprocess.run(
         [sys.executable, str(CHECKER), "--list-rules"],

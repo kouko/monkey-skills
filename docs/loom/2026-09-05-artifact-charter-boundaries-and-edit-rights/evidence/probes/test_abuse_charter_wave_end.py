@@ -96,24 +96,37 @@ def _write_yaml(tmp_path: Path, doc: dict, name: str = "manifest.yaml") -> Path:
 # `artifacts:` missing entirely, or present with the wrong container shape.
 # ---------------------------------------------------------------------------
 
-def test_charter_command_artifacts_key_absent_passes_vacuously(tmp_path: Path) -> None:
+def test_charter_command_artifacts_key_absent_blocked(tmp_path: Path) -> None:
     """A manifest that carries no `artifacts:` key at all is not a manifest
-    that should ever be reported healthy -- but `cmd_charter` reads
-    `manifest.get("artifacts") or {}`, so an absent key degrades to an
-    empty dict, the row loop iterates zero times, no failure is ever
-    appended, and the command exits 0 with an empty table. This is a
-    recorded gap, not a crash: the checker silently accepts a manifest
-    with no artifact charters as if every charter were complete."""
+    that should ever be reported healthy -- `cmd_charter` now checks
+    `manifest.get("artifacts")` for falsiness (covering both an absent key
+    and an explicit empty mapping) before the row loop, appends a
+    `contract.charter-complete` failure naming the gap, renders an empty
+    table, and exits 1. Fixed for wave-end:0-01 -- this used to exit 0
+    vacuously; it must never again."""
     manifest_path = _write_yaml(tmp_path, {"version": "1.0.0", "stations": []})
     result = _run_charter(manifest_path)
-    assert result.returncode == 0, (
-        f"expected the missing-artifacts manifest to exit 0 (vacuous pass); "
-        f"got {result.returncode}: {result.stderr}"
+    assert result.returncode == 1, (
+        f"expected the missing-artifacts manifest to be blocked (exit 1); "
+        f"got {result.returncode}: stdout={result.stdout!r} stderr={result.stderr!r}"
     )
     assert "| artifact |" in result.stdout
-    # No BLOCK line -- the absence of every artifact is reported as nothing
-    # to check, not as a gap in the manifest itself.
-    assert "BLOCK" not in result.stdout and "BLOCK" not in result.stderr
+    assert "contract.charter-complete" in result.stderr
+    assert "no artifacts" in result.stderr or "artifacts" in result.stderr
+
+
+def test_charter_command_artifacts_empty_mapping_blocked(tmp_path: Path) -> None:
+    """The sibling of the absent-key case: `artifacts:` present but an
+    explicit empty mapping (`{}`) collapses to the same falsy state and
+    must be blocked identically -- not silently accepted as zero rows to
+    check."""
+    manifest_path = _write_yaml(tmp_path, {"version": "1.0.0", "stations": [], "artifacts": {}})
+    result = _run_charter(manifest_path)
+    assert result.returncode == 1, (
+        f"expected the empty-artifacts manifest to be blocked (exit 1); "
+        f"got {result.returncode}: stdout={result.stdout!r} stderr={result.stderr!r}"
+    )
+    assert "contract.charter-complete" in result.stderr
 
 
 def test_charter_command_artifacts_as_list_fails_closed(tmp_path: Path) -> None:
