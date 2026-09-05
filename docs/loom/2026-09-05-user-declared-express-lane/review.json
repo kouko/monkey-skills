@@ -1,0 +1,28 @@
+{
+  "reviewed_sha": "43e32034cdfb3fc0982afafd4b74a980186f158e",
+  "scope": "",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:30:49+0800",
+      "fresh_context": true
+    }
+  ],
+  "cost": {
+    "rounds": 0,
+    "dispatches": 1,
+    "cap_changes": [],
+    "hours_plan_to_pr": null
+  },
+  "second_vendor": "codex"
+}
