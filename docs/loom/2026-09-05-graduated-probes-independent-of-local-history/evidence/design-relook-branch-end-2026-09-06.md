@@ -27,7 +27,7 @@ decision: c — accept as-is; the dismissal belongs to the raising reviewer.
   (intent Constraints and Out of scope). A reword would soften a rule the
   intent deliberately states as blocking station text.
 - The fix exceeds the class floor: budget exception declared
-  (CHANGELOG [1.5.2]), cold-read eval plus an executable twin
+  (CHANGELOG [1.6.1]; written as [1.5.2] before the rebase onto 1.6.0), cold-read eval plus an executable twin
   (test_build_station_text.py) recomputing marker presence and scope.
 - The disagreement is definitional, not a defect; no smaller correct shape
   keeps the intent's constraint. Per fix-rounds.md the dismissal is

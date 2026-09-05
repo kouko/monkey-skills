@@ -13,7 +13,7 @@ Targets, one probe group each:
    copied, so a later change to the pin is exercised by these probes too.
 2. The recursion guard `REHEARSE_PROBES_NESTED` in
    `loom-code/scripts/rehearse_probes.py` and in the clone-and-run probe.
-3. The 1.5.2 version stamps and the CHANGELOG entry's claims about the
+3. The 1.6.1 version stamps and the CHANGELOG entry's claims about the
    script it describes.
 4. The four graduated copies against their evidence originals.
 5. The `docs/loom/memory/` entries added by this delta.
@@ -203,7 +203,7 @@ def test_graduationPin_sectionEndMarkerRenamed_stillBoundsTheSearch(
     ).replace(STORE_HEAD, "**Store entries**")
     hostile += (
         "\n<!-- historical note -->\n"
-        "A red rehearsal blocks graduation, in the 1.5.2 sense of that phrase.\n"
+        "A red rehearsal blocks graduation, in the 1.6.1 sense of that phrase.\n"
     )
     assert not _pin_accepts(hostile, tmp_path / "boundary"), (
         "REPRODUCED: renaming the `**Store entries.**` run-in unbounds the "
@@ -399,7 +399,7 @@ def test_cloneAndRunProbe_markerPresetOutsideAnyRehearsal_skipsWithTheReasonName
 # ---------------------------------------------------------------------------
 
 CHANGELOG = REPO / "loom-code" / "CHANGELOG.md"
-TARGET_VERSION = "1.5.2"
+TARGET_VERSION = "1.6.1"
 PREVIOUS_VERSION = "1.5.1"
 
 
@@ -412,7 +412,7 @@ def _changelog_entry(version: str) -> str:
 
 def test_versionStamps_afterTheBump_allReadTheNewVersionAndNoneTheOld() -> None:
     """The six stamps the shipped enumeration checks must AGREE (its own
-    assertion) and must agree ON 1.5.2 -- agreement alone would be satisfied
+    assertion) and must agree ON 1.6.1 -- agreement alone would be satisfied
     by a uniform revert to 1.5.1."""
     module = _load(
         "_adv_positioning_branch_end", SCRIPTS / "test_probes_positioning_branch_end.py"
@@ -425,7 +425,7 @@ def test_versionStamps_afterTheBump_allReadTheNewVersionAndNoneTheOld() -> None:
 
 
 def test_changelogEntry_forTheNewVersion_describesTheScriptThatShipped() -> None:
-    """A CHANGELOG is a claim about the code. Two claims in the 1.5.2 entry
+    """A CHANGELOG is a claim about the code. Two claims in the 1.6.1 entry
     are checked here against `rehearse_probes.py` at HEAD: which temporary
     directory API it uses, and whether it ever passes `-n auto`."""
     entry = _changelog_entry(TARGET_VERSION)
@@ -492,7 +492,7 @@ GRADUATED_PAIRS = {
     for stem in (
         "abuse_rehearse_probes",
         "abuse_rehearse_probes_wave_end",
-        "changelog_carries_1_5_2",
+        "changelog_carries_1_6_1",
         "no_history_class_skips_on_main",
     )
 }
