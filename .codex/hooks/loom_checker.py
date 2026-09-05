@@ -177,9 +177,12 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.verdicts-ge-2",
-        "The latest review round carries at least as many distinct fresh-context reviewers as "
-        "the change's lane requires -- one in the small lane, two distinct in the full lane -- "
-        "and blocks when any verdict in that round is not passing.",
+        "The latest round of the checkpoint's own scope carries at least as many distinct "
+        "fresh-context reviewers as the change's lane requires -- one in the small lane, two "
+        "distinct in the full lane -- where a later round of that scope may also count a "
+        "non-returning previous-round reviewer whose earlier passing verdict still stands, "
+        "provided every path the fix touched sits inside the anchor of an open finding raised "
+        "by a reviewer who did return, and blocks when any verdict in that round is not passing.",
     ),
     (
         "spec.req-grammar",
@@ -232,6 +235,11 @@ PASSING_VERDICTS = {"PASS", "PASS_WITH_NOTES"}
 _COMMENT = re.compile(r"\s+#\s.*$")
 _FRONTMATTER_LINE = re.compile(r"^([A-Za-z][\w-]*):\s*(.*)$")
 _ANNOTATION = re.compile(r"[【\[(].*$")
+
+# `docs/loom/<change-id>/review.json`'s own template path (manifest.yaml's
+# `review` artifact) -- the one file every checkpoint commit touches on
+# purpose, so a fix-round diff crossing it is never itself a fix delta.
+REVIEW_JSON_PATH = re.compile(r"docs/loom/[^/]+/review\.json")
 
 
 def read_text(path: Path) -> str:
@@ -333,9 +341,24 @@ def artifact_path(manifest, artifact: str, change_id: str, repo: Path) -> Path:
     return repo / template.replace("<change-id>", change_id)
 
 
-def latest_round(verdicts: list[dict]) -> tuple[int, list[dict]]:
+def latest_round(verdicts: list[dict], scope: str | None = None) -> tuple[int, list[dict]]:
     """Only the newest round decides; earlier NEEDS_REVISION rounds are the
-    history that produced it (concept-model §5 state machine)."""
+    history that produced it (concept-model §5 state machine).
+
+    When `scope` is given (the record's top-level `scope` line), a verdict
+    that names a DIFFERENT scope of its own is excluded first -- otherwise a
+    wave-end round 3 could outrank the branch-end round 1 that follows it,
+    since round numbers restart per checkpoint (memory-step gotcha,
+    2026-09-05). A verdict that names no scope at all is legacy shape and
+    always stays eligible."""
+    if scope:
+        in_scope = [
+            entry for entry in verdicts
+            if not str(entry.get("scope", "")).strip()
+            or str(entry.get("scope", "")).strip() == scope
+        ]
+        if in_scope:
+            verdicts = in_scope
     if not verdicts:
         return 0, []
     numbered = [(int(entry.get("round", 1)), entry) for entry in verdicts]
@@ -3404,25 +3427,137 @@ def check_second_vendor_honoured(repo: Path, review, reviewed_id: str | None = N
     ]
 
 
-def scored_verdicts(review) -> tuple[int, list[dict]]:
-    """The latest round's verdicts, minus entries that name no reviewer or
-    carry no verdict -- an unreadable entry is not a second opinion."""
-    usable = [
+def usable_verdicts(review) -> list[dict]:
+    """Every verdict entry that names a reviewer and carries a verdict --
+    an unreadable entry is not a second opinion, in any round."""
+    return [
         entry
         for entry in review.get("verdicts", [])
         if isinstance(entry, dict)
         and str(entry.get("reviewer", "")).strip()
         and str(entry.get("verdict", "")).strip()
     ]
-    return latest_round(usable)
+
+
+def scored_verdicts(review) -> tuple[int, list[dict]]:
+    """The latest round's verdicts, scoped to the record's own top-level
+    `scope` line (see `latest_round`)."""
+    scope = str(review.get("scope", "")).strip()
+    return latest_round(usable_verdicts(review), scope or None)
+
+
+def _split_names(raw) -> list[str]:
+    return [name.strip() for name in str(raw or "").split(",") if name.strip()]
+
+
+def _anchor_paths(anchor) -> set[str]:
+    """The bare file path(s) an anchor names -- exact equality, never a
+    prefix. An anchor may list several `path[:line]` segments comma-
+    separated, and a path/test-name pair joined by ` :: `."""
+    paths: set[str] = set()
+    for segment in str(anchor or "").split(","):
+        segment = segment.strip()
+        if not segment:
+            continue
+        double = segment.find(" :: ")
+        single = segment.find(":")
+        if double != -1 and (single == -1 or double < single):
+            path = segment[:double]
+        elif single != -1:
+            path = segment[:single]
+        else:
+            path = segment
+        paths.add(path.strip())
+    return paths
+
+
+def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
+                        current_verdicts: list[dict]) -> set[str]:
+    """A later round of the same scope is a fix round: a previous-round
+    reviewer who is not named in any still-open finding's `raised_by` need
+    not return -- PROVIDED every path the fix delta actually touched sits
+    inside the anchor of an open finding raised by a reviewer who did
+    return. Any path outside those anchors, or an unresolvable sha, drops
+    that reviewer back to the floor as before."""
+    all_verdicts = usable_verdicts(review)
+    scoped = [
+        entry for entry in all_verdicts
+        if not str(entry.get("scope", "")).strip()
+        or str(entry.get("scope", "")).strip() == scope
+    ]
+    prior = [entry for entry in scoped if int(entry.get("round", 1)) < round_number]
+    if not prior:
+        return set()
+    prev_round_number = max(int(entry.get("round", 1)) for entry in prior)
+    prev_round_verdicts = [
+        entry for entry in prior if int(entry.get("round", 1)) == prev_round_number
+    ]
+    prev_reviewers = {
+        str(entry["reviewer"]).strip()
+        for entry in prev_round_verdicts
+        if str(entry.get("verdict", "")) in PASSING_VERDICTS
+    }
+    all_findings = [
+        entry for entry in review.get("open_findings", []) if isinstance(entry, dict)
+    ]
+    still_open = [
+        entry for entry in all_findings if not entry.get("resolved") and not entry.get("dismissed")
+    ]
+    required = set()
+    for entry in still_open:
+        required |= set(_split_names(entry.get("raised_by")))
+    candidates = prev_reviewers - required
+    if not candidates:
+        return set()
+    # The anchor safety net looks at every finding a returning reviewer ever
+    # raised, not only the ones still open now -- a finding this very round
+    # resolves is exactly what the fix delta is supposed to be about.
+    current_reviewers = {str(entry["reviewer"]).strip() for entry in current_verdicts}
+    returning_anchor_paths: set[str] = set()
+    for entry in all_findings:
+        if set(_split_names(entry.get("raised_by"))) & current_reviewers:
+            returning_anchor_paths |= _anchor_paths(entry.get("anchor"))
+    current_sha = str(current_verdicts[0].get("sha", "")).strip() if current_verdicts else ""
+    standing = set()
+    for name in candidates:
+        prev_sha = next(
+            (
+                str(entry.get("sha", "")).strip()
+                for entry in prev_round_verdicts
+                if str(entry["reviewer"]).strip() == name
+            ),
+            "",
+        )
+        if not prev_sha or not current_sha:
+            continue
+        changed = git_maybe(repo, "diff", "--name-only", f"{prev_sha}..{current_sha}")
+        if changed is None:
+            continue
+        # The two shas being diffed are round-boundary commits, so the span
+        # between them always crosses the review-only commit that landed
+        # the round in between -- review.json itself is not part of the
+        # fix, and W1-02 gives this exclusion a tree-bound identity instead
+        # of a path regex.
+        changed_paths = [
+            line.strip()
+            for line in changed.splitlines()
+            if line.strip() and not REVIEW_JSON_PATH.fullmatch(line.strip())
+        ]
+        if all(path in returning_anchor_paths for path in changed_paths):
+            standing.add(name)
+    return standing
 
 
 def check_verdicts(repo: Path, review, reviewed_id: str | None) -> list[tuple[str, str]]:
     """The reviewer-count floor, lane-dependent since W0-02: a small-lane
     change (plan risk 3: "its message now names the lane") needs one
-    fresh-context verdict, a full-lane change still needs two."""
+    fresh-context verdict, a full-lane change still needs two. A fix round
+    of the same scope may also count a non-returning previous-round
+    reviewer whose earlier PASS still stands (see `_standing_reviewers`)."""
     round_number, verdicts = scored_verdicts(review)
     reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
+    scope = str(review.get("scope", "")).strip()
+    reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts)
     try:
         lane, lane_reason = change_lane_detail(repo, reviewed_id)
     except (UsageError, OSError, KeyError) as exc:
