@@ -98,31 +98,19 @@ paraphrased) alongside this file once they complete, so the count can be
 independently re-checked against the quoted questions rather than taken
 on the run's own tally.
 
-## Rerun with the engineering spec (fix round)
+## Rerun with the engineering spec (fix round, 2026-09-06)
 
-Branch-end finding branch-end-01 held that Acceptance 4 was not met
-because the design rationale every charter-arm run asked for (B1's
-species-neutral convention, B1/B2's annotate-in-place dating, B2's
-`--wood-hex` type/default framing) has no home on an engineering change:
-the charter routes "design rationale" to a spec, and a `needs-design: no`
-change carries none. The fix gives write-plan a spec path for exactly
-this case; `ab-spec-engineering.md` beside this file is the sample's copy
-of it, answering every question B1 and B2 asked.
+The branch-end fix round gave engineering changes a home for design rationale: write-plan writes `docs/loom/<change-id>/spec.md` from spec-minimal when a task's reason outgrows its Risk line (no decision point ②). `ab-spec-engineering.md` (395 words) is that spec for the sample change. Two more pairs ran; the original arm reads the original plan alone, the charter arm reads the charter plan plus the spec. Git history was off-limits in every run.
 
-A third and fourth pair reruns the same T7 comparison with that spec
-added to the charter arm's packet only; the original arm is unchanged,
-since its plan already carries the rationale as prose. Dispatch packet:
-identical to the section above, except the charter runs' Resource Paths
-gain a fourth line, `spec: evidence/ab-spec-engineering.md`, and step 2
-also reads it.
-
-| run | plan | status | NEEDS_CONTEXT count | report |
+| run | inputs | status | NEEDS_CONTEXT count | report |
 |---|---|---|---|---|
-| A3 | original (4,633 words) | DONE | 1 | `ab-run-a3-original.md` |
-| A4 | original | DONE | 3 | `ab-run-a4-original.md` |
-| B3 | charter (941 words) + engineering spec | — | — | pending |
-| B4 | charter + engineering spec | — | — | pending |
+| A3 | original plan | DONE | 1 | `ab-run-a3-original.md` |
+| B3 | charter plan + engineering spec | DONE_WITH_CONCERNS | 0 | `ab-run-b3-charter-with-spec.md` |
+| A4 | original plan | DONE | 3 | `ab-run-a4-original.md` |
+| B4 | charter plan + engineering spec | DONE_WITH_CONCERNS | 1 | `ab-run-b4-charter-with-spec.md` |
 
-A3 and A4 need no new spec (the original plan's rationale prose is
-unchanged), so the orchestrator ran them ahead of B3/B4, which wait on
-this spec file landing on the branch.
+Questions left in the charter arm: B3 none (it noted a wording gap inside the spec — REQ-4 lists T4/T5/T6/T8/T9 while the Design decision names T7 — and resolved it from the Design decision); B4 one, the exact in-cell shape of the line-75 annotation, which it also resolved from the file's own precedent and flagged for a one-line confirmation.
+
+## Verdict after the fix round
+
+Acceptance 4 is met on the reran pairs: charter 0 ≤ original 1, and charter 1 ≤ original 3. Across all four pairs the original arm asked 2, 2, 1, 3 and the charter arm 3, 4 (plan alone) then 0, 1 (plan plus engineering spec). The first two pairs stand as recorded above: a charter plan without a spec asks for the rationale back; with the spec the shorter plan asks less than the long one. The combined artifact the charter arm read is 941 + 395 = 1,336 words against the original's 4,633.
