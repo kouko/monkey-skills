@@ -281,6 +281,124 @@
         "ran test_review_station_text.py + test_ship_station_text.py (33) and the branch-end probe file (16) myself; package suite taken from the blind-run report",
         "the working tree carried uncommitted edits to the four files at review time; scored strictly against 4ea90c1a"
       ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "9f1dfdda34f1e2ac5a1ca072df6c31f4a63fc0af",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md:16",
+          "text": "branch-end-02: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md:347",
+          "text": "issue (blocking): branch-end-03: unfixed — the preflight sits in §6, after §3 has already amended the branch-form close line and §4 has run the push gate; on an older checker execution blocks before the fallback is reached.",
+          "fix": "move the preflight before §3 changes the intent; omit the close line through the first push and PR on an older checker, then run the legacy close sequence"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md:67",
+          "text": "branch-end-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_review_station_text.py:548",
+          "text": "nitpick: affirmative self-tests: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_ship_station_text.py:237",
+          "text": "nitpick: affirmative self-tests: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "the reader's own verdict line read PASS_WITH_NOTES while holding an important finding unfixed; recorded as NEEDS_REVISION by consequence (an open important finding), the finding text kept verbatim",
+        "38 passed on the two station-text test files"
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "9f1dfdda34f1e2ac5a1ca072df6c31f4a63fc0af",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "PASS",
+        "cross-task-coherence": "PASS",
+        "tests": "PASS",
+        "naming": "PASS",
+        "correctness": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md :: \"The readers who raised the still-open findings are **resumed** for the next round\"",
+          "text": "branch-end-02: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md :: \"Check first that the checker gating this push knows the shape\"",
+          "text": "branch-end-03: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md :: \"已經修好並重新驗過，這件事沒有留著要你決定的部分\"",
+          "text": "branch-end-04: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/ship/SKILL.md:3",
+          "text": "nitpick: frontmatter ordering: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "38 passed on the two station-text test files; nothing outside the fix delta broke"
+      ]
     }
   ],
   "probes": [
@@ -418,7 +536,8 @@
       "origin_sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
       "raised_by": "rev-be-chk-codex, rev-be-chk-sonnet",
       "severity": "important",
-      "text": "issue (blocking): fix-rounds.md still resumes every reader, contradicting review §8a and push.verdicts-ge-2 (anchor-scoped standing PASS)."
+      "text": "issue (blocking): fix-rounds.md still resumes every reader, contradicting review §8a and push.verdicts-ge-2 (anchor-scoped standing PASS).",
+      "resolved": "closed by 9f1dfdda — fix-rounds.md resume paragraph states the anchor-scoped standing rule; both readers fixed (round 4)"
     },
     {
       "id": "branch-end-03",
@@ -434,7 +553,8 @@
       "origin_sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
       "raised_by": "rev-be-chk-codex, rev-be-chk-sonnet",
       "severity": "important",
-      "text": "issue (blocking): the open-questions section still lists the graduated-file name collision as undecided although Acceptance 5 records it fixed at 10cba457 and re-verified."
+      "text": "issue (blocking): the open-questions section still lists the graduated-file name collision as undecided although Acceptance 5 records it fixed at 10cba457 and re-verified.",
+      "resolved": "closed by 7457a824 — stale bullet replaced by a settled statement (br-be-chk); both readers fixed (round 4)"
     }
   ],
   "dispatch": [
@@ -616,6 +736,15 @@
       "started": "2026-09-06T07:05:00+08:00",
       "fresh_context": false,
       "note": "round-3 fix: fix-rounds.md resume paragraph, ship §6 preflight + fallback, ship description order, affirmative self-tests; the report bullet is fixed by br-be-chk (its own artifact)"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T07:40:00+08:00",
+      "fresh_context": false,
+      "note": "round-4 fix: preflight moved from ship §6 into §3 before the close-line amend; §6 keeps the fallback; ship test retargeted"
     }
   ],
   "second_vendor": "codex",
