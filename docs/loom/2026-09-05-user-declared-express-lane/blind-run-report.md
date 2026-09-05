@@ -1,8 +1,11 @@
 # 使用者宣告車道（full／express／gate-only）——我試了什麼、發生了什麼
 
-在 2026-09-05 試的，用的是一份乾淨複製的專案。第 1、5、6、7 條驗收在版本
-`d31484fa` 上試的；對抗輪關掉五個問題之後，第 2、3、4 條在新版本
-`029925d0` 上又重新試了一次（同樣是乾淨複製）。
+在 2026-09-05 試的，用的是一份乾淨複製的專案。第 5、6、7 條驗收在版本
+`d31484fa` 上試的；第 1-4 條經過兩輪對抗修正，最後一次在版本 `19b8c4e8`
+上重新試過（同樣是乾淨複製）——這一版把 gate-only 的定義改窄了：它現在
+是「small 車道拿掉讀者下限」，不是另一種獨立、範圍較窄的東西；而且宣告
+車道那一行現在強制要帶日期（`lane: <名> — declared <日期> by <人名>`），
+沒帶日期的一行會被拒絕。
 
 **先說範圍**：這次試的是這個改動的「wave 1」——car 車道宣告、切換規則、
 車道重算、review／build／ship 三站的文字。改動計畫裡還排了「wave 2」
@@ -10,86 +13,118 @@
 
 ## 你要的東西，一條一條試
 
-### 1. intent 範本要有 `lane:` 說明；KICKOFF 範本要有 `default-lane:` 說明；切換 commit 沒帶那一行就要擋
-- **怎麼試的**：打開兩份範本檔看說明文字；接著自己動手做兩個小實驗——寫
-  一個帶 `lane: express` 的 intent，commit 訊息裡「不寫」那一行，跑一次
-  checker 的 `intent` 檢查；再寫一個 commit 訊息裡「有寫」那一行，再跑一次。
-- **發生了什麼**：intent 範本裡真的有一行說明 `lane:` 欄位（可選、值只能
-  是 `express` 或 `gate-only`、切換要帶日期與人名）；KICKOFF 範本裡也有
-  `default-lane:` 的說明。commit 訊息漏寫那一行時，工具擋下來並印出訊息
-  「commit ... 沒有帶著 `lane: express` 這一行」；補上那一行後，同一個檢查
-  順利通過。
+### 1. intent 範本要有 `lane:` 說明；KICKOFF 範本要有 `default-lane:` 說明；切換 commit 沒帶那一行就要擋（本輪改為：宣告一定要帶日期）
+- **怎麼試的**：打開兩份範本檔看說明文字，確認宣告的寫法已經改成「一定
+  要帶日期與人名」；接著自己動手做三個小實驗——（a）寫一個帶
+  `lane: express — declared 2026-09-05 by kouko`（帶日期）的 intent，
+  commit 訊息裡「有寫」那一行，跑一次 checker 的 `intent` 檢查；（b）寫一
+  個只寫 `lane: express`（沒有日期、沒有人名）的 intent，跑同一個檢查，
+  期待被拒絕；（c）重跑一次「切換 commit 沒帶那一行」的舊實驗，確認換了
+  日期格式後這條規則還在。
+- **發生了什麼**：intent 範本裡的說明已經改成「宣告一定要帶日期與人名，
+  沒有日期的寫法不合法」；KICKOFF 範本裡的 `default-lane:` 說明沒變。
+  （a）帶日期的宣告，通過（結束碼 0）。（b）只寫 `lane: express`（沒日
+  期）被兩條規則同時擋下：一條說「這個寫法不合語法，沒有日期的車道名稱
+  不是合法值」，另一條說「commit 訊息沒有帶著這一行」（結束碼 1）——也就
+  是說，現在光靠寫日期還不夠，寫法本身也要合語法，改動的 commit 訊息也
+  要照樣抄一次。（c）帶日期的切換 commit，如果訊息漏寫那一行，一樣被擋
+  （結束碼 1），跟以前的規則邏輯一致，只是引號裡的原文換成了帶日期版本。
 - **證據**：範本檔 `loom-code/contract/templates/intent.md` 第 8 行、
-  `loom-code/contract/templates/KICKOFF-DEFAULTS.md` 第 17 行；手動實驗在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-switch-missing-line`，指令
-  `python3 loom_checker.py intent <路徑>`，前者印出
-  `BLOCK intent.needs-design-reason: the commit message ... does not carry
-  the line lane: express`（結束碼 1），後者結束碼 0。
-- **結論**：符合。
+  `loom-code/contract/templates/KICKOFF-DEFAULTS.md` 第 17 行；三個手動實
+  驗分別在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-templates`（帶日期通過，
+  結束碼 0）、
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-bare-lane`（無日期被擋，
+  印出「`lane: express` does not match the declared grammar ... a bare
+  lane name with no dated attribution is not a legal value」以及「commit
+  ... 沒有帶著 `lane: express` 這一行」，結束碼 1）、
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-switch-missing-line`
+  （帶日期的切換 commit 漏寫那一行被擋，印出「commit ... 沒有帶著
+  `lane: express — declared 2026-09-05 by kouko` 這一行」，結束碼 1）。
+- **結論**：符合（規則升級為「一定要帶日期」，行為一致重新驗過）。
 
 ### 2. 沙盒：宣告 `express` 的 docs／skill 類改動，只有一位讀者，過閘要成功；同一份改動再動 checker 一行，要變回擋下
-- **怎麼試的**：自己搭一個小的假專案，寫一份 `lane: express` 的 intent，
-  改一份 docs 檔和一份 skill 檔，只記一位讀者的審查結果，跑「過閘」指令；
-  接著在同一份改動再多改一行 checker 本身的程式碼，重跑一次過閘指令。對抗
-  輪關掉五個問題之後，在新版本 `029925d0` 上把這兩步整個重搭一次沙盒重跑。
-- **發生了什麼**：兩次都跟第一次試的結果一樣：第一次過閘指令回傳成功
-  （結束碼 0）；加了 checker 那一行之後回傳失敗（結束碼 1），並印出「因為
-  改到了 `loom_checker.py`（非測試程式碼），車道被強制拉回 full，需要 2
-  位讀者，現在只有 1 位」——這條規則沒有被對抗輪的修法動到。
+- **怎麼試的**：自己搭一個小的假專案，寫一份帶日期的
+  `lane: express — declared 2026-09-05 by kouko` 的 intent，改一份 docs
+  檔和一份 skill 檔，只記一位讀者的審查結果，跑「過閘」指令；接著在同一份
+  改動再多改一行 checker 本身的程式碼，重跑一次過閘指令。這是第三次驗這
+  一條——前兩輪對抗修正之後，這次改用新的「一定要帶日期」寫法，在最新版本
+  `19b8c4e8` 上把兩步整個重搭一次沙盒重跑。
+- **發生了什麼**：跟前兩次試的結果一樣：第一次過閘指令回傳成功（結束碼
+  0）；加了 checker 那一行之後回傳失敗（結束碼 1），並印出「因為改到了
+  `loom_checker.py`（非測試程式碼），車道被強制拉回 full，需要 2 位讀
+  者，現在只有 1 位」——這條規則從頭到尾沒有被任何一輪修法動到，只是宣告
+  的寫法換成了帶日期版本。
 - **證據**：第一輪手動實驗在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-express-repo`；重新驗證的
-  手動實驗在 `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-express-repo`；
-  也用專案自帶的對抗測試檔 `test_abuse_lane_declaration.py` 裡對應的兩個
-  測項重跑過，全部通過（`pytest ... -q` → `11 passed`）。
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-express-repo`；第二輪重
+  新驗證在 `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-express-repo`；
+  這次（帶日期寫法）重新驗證在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-express-repo`；也用專案
+  自帶的對抗測試檔 `test_abuse_lane_declaration.py` 整份重跑過，全部通過
+  （`pytest ... -q` → `11 passed`）。
 - **結論**：符合。
 
-### 3. 沙盒：宣告 `gate-only` 的純 docs 改動，零讀者也能過閘（但要有 ≥3 個對抗測試和一次整包測試紀錄）；同一份改動加一個 SKILL.md 檔要擋下
-- **怎麼試的**：搭另一個假專案，寫一份 `lane: gate-only` 的 intent，只改
-  一份 docs 檔，記零讀者、3 個對抗測試紀錄和 1 個整包測試紀錄，跑過閘；
-  再加一份 skill 說明檔（SKILL.md），重跑過閘。對抗輪關掉五個問題之後，在
-  新版本 `029925d0` 上重搭一次沙盒重跑這兩步，另外多加一步：同樣是純 docs
-  改動、零讀者，但這次連對抗測試紀錄也整份拿掉（只留整包測試紀錄），因為
-  對抗輪指出「gate-only 永遠要 ≥3 個對抗測試」這件事，舊版本其實沒有真的
-  守住——這一步就是專門驗這個修法。
-- **發生了什麼**：前兩步跟第一次試的結果一樣：第一次過閘成功（結束碼 0）；
-  加了 SKILL.md 之後失敗（結束碼 1），訊息說「因為改到了一份 skill／agent
-  契約檔，車道被強制拉回 full，需要 2 位讀者，現在 0 位」。新加的第三步
-  （零對抗測試紀錄）在舊版本 `d31484fa` 上不會被擋（這正是對抗輪抓到的
-  漏洞），在修完的新版本 `029925d0` 上重跑，變成擋下（結束碼 1），工具印出
-  這一行（原文）：「BLOCK push.probes-adversarial: this change is declared
-  gate-only, whose floor is unconditionally 3 adversarial probes; 0 are
-  usable (none recorded).」
-- **證據**：第一輪手動實驗在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-gateonly-repo`；重新驗證
-  的手動實驗在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-gateonly-repo`；零對抗測試
-  紀錄那一步在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-gateonly-zeroprobes`；同一
-  份對抗測試檔（含新增的 `test_abuse_lanes_wave_end.py`）裡的對應測項也全
-  部通過。
-- **結論**：符合（含對抗輪新加的這一條）。
+### 3. 沙盒：宣告 `gate-only` 的純 docs 改動，零讀者也能過閘（但要有 ≥3 個對抗測試和一次整包測試紀錄）；同一份改動加一個 SKILL.md 檔要擋下（本輪改為：gate-only 現在等於「small 車道、拿掉讀者下限」）
+- **這一條的規則變了，先說清楚**：gate-only 現在不是一種獨立的、有自己一
+  套准入名單的車道，而是「這份改動本來（不管有沒有宣告）就會被算成 small
+  車道時，讀者下限額外歸零」。換句話說：只要這份改動的內容讓 checker 自
+  己重算出來就已經是 small（純測試、純文件、CI／設定、版本同步、乾淨
+  revert 這幾類），宣告 gate-only 才會生效；只要delta 裡有任何一樣東西讓
+  checker 自己算出來是 full——不管是一份像 `KICKOFF-DEFAULTS.md` 這樣的
+  「常設文件」、第二個外掛目錄、一般程式碼、gate／skill／agent 契約檔，
+  還是 interface-surface 路徑——gate-only 這個宣告就直接被忽略，車道退回
+  full，讀者下限變回 2。
+- **怎麼試的**：搭三個獨立的假專案，跑三種情境——（a）一份原本就會被算成
+  small 的純 docs 改動，宣告帶日期的 `lane: gate-only`，零讀者、3 個對抗
+  測試紀錄、1 個整包測試紀錄，跑過閘，期待成功；（b）同一種改動，但這次
+  多加一份一般用途的 `.py` 程式檔（非測試），跑過閘，期待被擋，而且擋的
+  理由要點名是哪一個檔案；（c）同一種改動，但這次改動的內容本身包含了
+  `KICKOFF-DEFAULTS.md`（常設文件）的編輯，跑過閘，期待被擋。
+- **發生了什麼**：（a）成功（結束碼 0）。（b）失敗（結束碼 1），工具印出
+  這一行（原文）：「BLOCK push.verdicts-ge-2: full lane: review round 0
+  carries 0 distinct reviewer(s) with a readable verdict; 2 required
+  (gate-only needs a small-lane delta: src/module.py is non-test code).」
+  ——點名了確切是哪一個檔案讓 gate-only 失效。（c）也失敗（結束碼 1），
+  工具印出：「... (gate-only needs a small-lane delta:
+  docs/loom/KICKOFF-DEFAULTS.md is a standing document.)」——同一句話的
+  結構，換成點名 KICKOFF 這份常設文件。三種情境都跟這一輪改動想要達成的
+  行為一致。
+- **證據**：三個手動實驗分別在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-gateonly-repo2`（情境 a、
+  b，兩者疊在同一個分支上，先驗 a 成功，再加程式檔驗 b 失敗）、
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-gateonly-repo3`（情境
+  c，KICKOFF-DEFAULTS.md 的編輯本身就在被驗的改動範圍內）；另外
+  `pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/
+  test_abuse_lanes_wave_end.py -k
+  "gateonly_dated_declaration_nontest_code_in_delta_blocked or
+  gateonly_dated_declaration_standing_doc_touch_now_blocked"` 也各自通
+  過，跟手動重跑的結果一致。
+- **結論**：符合（gate-only 的定義已經改窄，三種情境都照新定義驗證過）。
 
-### 4. 沙盒：做到一半換車道——前面兩輪照舊兩位讀者，換車道之後那一輪起變一位讀者可通過；換車道那個 commit 沒帶那一行要擋
-- **怎麼試的**：跑專案自帶對抗測試檔裡建好的三個情境（前兩輪兩位讀者、
-  「從第 2 輪起換車道」讓第 3 輪一位讀者過關、「從第 3 輪起換車道」讓第
-  3 輪本身仍要兩位讀者），另外自己動手重跑一次「換車道 commit 沒帶那一行」
-  的情境。對抗輪關掉五個問題之後（其中一個問題正是「沒帶切換後綴的
-  `lane:` 這一行，原本沒有等到下一輪才生效」），在新版本 `029925d0` 上把
-  手動那一步重搭沙盒重跑一次，並把兩份對抗測試檔（含新增那份記錄五個問題
-  的 `test_abuse_lanes_wave_end.py`）都整份重跑一次。
-- **發生了什麼**：三個情境都跟預期一致：從第 2 輪起換，第 3 輪一位讀者就
-  過關；從第 3 輪起換，第 3 輪本身還是要兩位讀者、擋下來。手動重跑「commit
-  沒帶那行」的情境，工具印出「commit ... 沒有帶著 `lane: express` 這一行」
-  並擋下（結束碼 1）——新版本上結果一樣沒變。兩份對抗測試檔分別跑出
-  `11 passed`（原本那份）和 `14 passed`（對抗輪新加的那份），一項沒有紅。
-- **證據**：`pytest test_abuse_lane_declaration.py -k "mid_flight or
-  switch_commit_message"` → `3 passed`；第一輪手動重跑在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-switch-missing-line`；重新
-  驗證的手動重跑在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-switch-missing-line`；兩份
-  對抗測試檔整份重跑：`test_abuse_lane_declaration.py` → `11 passed`、
-  `test_abuse_lanes_wave_end.py` → `14 passed`。
-- **結論**：符合。
+### 4. 沙盒：做到一半換車道——前面兩輪照舊兩位讀者，換車道之後那一輪起變一位讀者可通過；換車道那個 commit 沒帶那一行要擋（本輪：換車道的計時規則改了）
+- **這一條也有規則變化**：以前「從第 2 輪起換」是照「輪數編號」比大小，
+  這次改成照「這個 change 到目前為止，已經記錄過哪些（範圍、輪數）的組
+  合」來判斷——不然一旦審查輪重新編號（例如修正輪不算進正式輪數），舊算
+  法會把後面所有輪次都誤判成「還沒輪到」，永遠卡住。另外沒有寫成切換格式
+  的「單純宣告」（`lane: express — declared <日期> by <人名>`），現在的
+  生效時機跟`from wave <n>`的切換是同一套算法：只套用在「宣告這個動作發
+  生之後才記錄的（範圍、輪數）」，宣告當下已經存在的紀錄不受影響。
+- **怎麼試的**：跑專案自帶對抗測試檔裡針對這個新算法建好的四個情境（含
+  「宣告發生在檢查點關閉之後」「宣告發生在檢查點進行中」等邊界案例），
+  另外自己動手重跑一次「換車道 commit 沒帶那一行」的情境（改用最新版本
+  `19b8c4e8`），並把兩份對抗測試檔整份重跑一次。
+- **發生了什麼**：四個情境都符合新算法的預期。手動重跑「commit 沒帶那
+  行」的情境，工具印出「commit ... 沒有帶著 `lane: express — declared
+  2026-09-05 by kouko` 這一行」並擋下（結束碼 1）——只是引號裡的原文換成
+  了帶日期版本，行為邏輯沒變。兩份對抗測試檔分別跑出 `11 passed`（原本
+  那份）和 `23 passed`（記錄這兩輪全部問題的那份，這次比上一輪多了 9
+  項，因為新一輪對抗又多寫了幾個情境），一項沒有紅。
+- **證據**：`pytest test_abuse_lanes_wave_end.py -k "from_wave or
+  bare_lane_declaration_at_new_checkpoint"` → `4 passed`；手動重跑在
+  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-switch-missing-line`；
+  兩份對抗測試檔整份重跑：`test_abuse_lane_declaration.py` → `11 passed`、
+  `test_abuse_lanes_wave_end.py` → `23 passed`。
+- **結論**：符合（計時算法已經改成不受輪數重編號影響，重新驗證過）。
 
 ### 5. `references/lane-switch.md` 存在，含三格固定格式、「不能選的格照列並說原因」、口頭對應表；冷讀考驗——只讀 review 站文字和這份參考檔，面對「改動裡有一份 SKILL.md、使用者說『快速模式』」的情境，要列出三格、把 gate-only 標成不能選並說原因
 - **怎麼試的**：只讀了 `loom-code/skills/review/SKILL.md` 和
@@ -201,6 +236,23 @@
   車道、但實際改動很小，也可能不會被問。換句話說，選車道只影響「要幾位
   讀者、要不要盲跑、有沒有中途檢查點」，不影響「要不要找第二家 AI」這件
   事——這兩者目前是分開算的，這次沒有把它們接起來。
+- **gate-only 被改窄成「small 車道拿掉讀者下限」，不是它原本設計的那個
+  獨立範圍** —— 一開始的設計是「gate-only 有自己一套准入名單，跟 full／
+  small 的判斷分開算」；試跑到一半發現這樣會漏掉一種情況（一份改動明明
+  已經被系統自己算成 full，卻因為使用者宣告了 gate-only 而被錯誤放行）
+  之後，把設計改成「gate-only 只是 small 車道少了讀者這一件事」，並把這
+  個決定寫進了公司規章（PRINCIPLES.md 第 2 條），要使用者親自點頭認可過
+  才生效。對你的影響：以後想宣告 gate-only 的改動，範圍會比原本設計的更
+  窄——只有系統本來就會判定為「small」的改動（純測試、純文件、CI／設定、
+  版本同步、乾淨 revert）才能選 gate-only；連改一份像 KICKOFF-DEFAULTS.md
+  這樣的「常設設定文件」都會讓 gate-only 整個失效、退回完整審查。這不是
+  我一個人決定的——這條規則被正式寫進了 PRINCIPLES.md，需要你本人簽核；
+  如果你還沒看過那句話，這裡先提醒你去確認一下。
+- **宣告車道現在強制要帶日期，舊的「只寫車道名稱」寫法直接不合法** —— 這
+  也是試跑途中發現的問題：如果宣告不用寫日期，工具沒辦法區分「這是使用
+  者今天決定的」還是「這行字放了三個月都沒人管」。對你的影響：以後宣告
+  車道，一定要照著 `lane: <名稱> — declared <日期> by <你的名字>` 這個
+  格式寫，少了日期或名字，intent 檢查會直接擋下、不會被當成有效宣告。
 
 沒有審查者對這份改動提出「important」以上、又被駁回的問題——review 這一
 輪目前還沒有讀者留下正式的審查意見（我是這一輪被派去試跑的角色之一），
