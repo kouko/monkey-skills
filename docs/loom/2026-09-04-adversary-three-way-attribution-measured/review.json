@@ -654,6 +654,15 @@
       "model": "sonnet",
       "started": "2026-09-05T19:55:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "impl-w2-02-a8e2",
+      "model": "sonnet",
+      "started": "2026-09-05T20:50:00+08:00",
+      "fresh_context": true,
+      "note": "arm B — baseline-current-adversary systematic == []"
     }
   ],
   "second_vendor": "codex",
