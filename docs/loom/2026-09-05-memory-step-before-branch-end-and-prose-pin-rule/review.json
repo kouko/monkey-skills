@@ -447,6 +447,22 @@
       "started": "2026-09-05T17:40:00+08:00",
       "fresh_context": false,
       "note": "the plan's memory task: two probe files graduated as byte copies (path lines only), one store entry, index regenerated — before the closing review round, per build §6.5"
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T17:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T17:55:00+08:00",
+      "fresh_context": true
     }
   ],
   "second_vendor": "codex",
