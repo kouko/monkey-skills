@@ -31,6 +31,7 @@ CONTRACT = REPO / "loom-code" / "contract"
 MECHANISMS = REPO / "docs" / "loom" / "evidence" / "mechanisms.yaml"
 
 WORD_CAP = 4500
+# Ceilings, not targets -- a file sitting well under its cap is fine.
 AGENT_CAPS = {"reviewer.md": 1460, "blind-runner.md": 600, "adversary.md": 600}
 DESCRIPTION_CAP = 400
 
