@@ -494,16 +494,26 @@ def test_push_gateonly_pure_docs_delta_zero_adversarial_probes_still_passes(
     probes recorded. Once the ratified rule lands (raw small + declared
     gate-only -> gate-only), this same delta's effective lane becomes
     `gate-only`, which DOES make the floor unconditional -- `push` should
-    then block on `push.probes-adversarial`.
-    # RED at HEAD: raw-small-does-not-defer-to-declared-gate-only
-    """
+    then block on `push.probes-adversarial`. GREEN as of the ratified
+    rule's landing (that fix has since arrived). Written directly (not
+    via `_commit_intent`) so the deciding commit's message states the
+    `lane:` line verbatim -- push's separate provenance check
+    (wave-end:1-r3) is scoped to declarations that WIDEN the floor past a
+    raw-full recompute (granting `express`), not to `gate-only` granted
+    from a raw-`small` recompute, but stating the line here removes any
+    doubt and matches the shape every other "declaration honoured" fixture
+    now uses."""
     repo = _seed_branch_with_kickoff(tmp_path)
     change_id = "2026-09-05-lane-no-probes"
     lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    # Written directly (not via `_commit_intent`) so the deciding commit's
+    # message states the `lane:` line verbatim -- this test's own outcome
+    # depends on the declaration being honoured, and push's provenance
+    # check (wave-end:1-r3) would otherwise ignore it.
     _write(repo, f"docs/loom/intent/{change_id}.md",
            _lane_intent_text(change_id, lane_line=lane_line))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     _write(repo, "docs/notes.md", "a purely small-lane-safe delta, no probes\n")
     (repo / "evidence").mkdir(exist_ok=True)
     (repo / "evidence/tests.txt").write_text("1 passed\n", encoding="utf-8")
@@ -563,19 +573,26 @@ def test_push_declared_gate_only_overrides_recomputed_small_floor_zero(
     recorded. Per the ratified small-lane-classes rule: raw recompute is
     `small`; the effective declaration is `gate-only`; a raw-`small` delta
     with a `gate-only` declaration IS the `gate-only` lane, floor 0 -- so
-    `push` should exit 0. It does not: `effective_lane_detail` still
-    returns `"small"` (floor 1) unconditionally the moment the raw
-    recompute says small, before ever consulting the declared lane, so
-    zero verdicts still blocks on `push.verdicts-ge-2`.
-    # RED at HEAD: raw-small-does-not-defer-to-declared-gate-only
-    """
+    `push` should exit 0. GREEN as of the ratified rule's landing (that
+    fix has since arrived; this used to be RED here, blocked on
+    `push.verdicts-ge-2` with the raw-small floor of 1 unconditionally
+    winning). Written directly (not via `_commit_intent`) so the deciding
+    commit's message states the `lane:` line verbatim -- push's separate
+    provenance check (wave-end:1-r3) is scoped to declarations that WIDEN
+    the floor past a raw-full recompute, not to this raw-small case, but
+    stating the line matches the shape every other "declaration honoured"
+    fixture now uses."""
     repo = _seed_branch_with_kickoff(tmp_path)
     change_id = "2026-09-05-lane-small-gateonly"
     lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    # Written directly (not via `_commit_intent`) so the deciding commit's
+    # message states the `lane:` line verbatim -- this test's own outcome
+    # depends on the declaration being honoured, and push's provenance
+    # check (wave-end:1-r3) would otherwise ignore it.
     _write(repo, f"docs/loom/intent/{change_id}.md",
            _lane_intent_text(change_id, lane_line=lane_line))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     # No KICKOFF-DEFAULTS.md touch in this diff at all -- committed only
     # on `main` before the branch existed -- so the recompute sees a
     # single plugin-free docs file and nothing else: genuinely raw-small.
@@ -1505,4 +1522,75 @@ def test_push_dated_lane_declaration_honoured_when_deciding_commit_states_it(
     assert result.returncode == 0, (
         "a dated `lane: express` declaration whose deciding commit states "
         f"the line verbatim should pass with one reviewer: {result.stdout}"
+    )
+
+
+# =============================================================================
+# Round-2 hold follow-up: the provenance fix (727a566d) is scoped to
+# declarations that WIDEN the floor past a raw-full recompute (granting
+# `express`) -- a `gate-only` declaration granted from a raw-`small`
+# recompute is read as a NARROWING within the same lane family (small's
+# floor is 1, gate-only's is 0) and is not provenance-checked at all. That
+# scoping is the hole in the more dangerous direction: a raw-small,
+# genuinely eligible delta gets its reviewer floor waived to ZERO from a
+# `lane:` line no commit ever actually stated.
+# =============================================================================
+
+
+def test_push_dated_gateonly_declaration_ignored_when_deciding_commit_omits_it(
+    tmp_path: Path,
+) -> None:
+    """A dated `lane: gate-only — declared <date> by kouko` line,
+    committed via `_commit_intent` (message: plain "docs(loom): add the
+    intent", never mentions `lane:` at all) -- the exact shape
+    `test_push_gateonly_pure_docs_delta_zero_adversarial_probes_still_
+    passes` and `test_push_declared_gate_only_overrides_recomputed_
+    small_floor_zero` used to have, before this round's fix stated the
+    line in their commit messages. A raw-small, purely small-lane-safe
+    delta (docs only, KICKOFF-DEFAULTS.md seeded on `main` before the
+    branch), zero verdicts, >=3 adversarial probes and a package-tests
+    probe recorded. If provenance is not checked for gate-only, this
+    grants floor 0 from an unstated declaration -- the more dangerous
+    direction (zero readers, not one). The correct invariant: with the
+    declaration ignored, the lane is the raw recompute (`small`, floor 1),
+    and zero verdicts must block on `push.verdicts-ge-2`.
+    # RED at HEAD: gateonly-provenance-not-checked-on-raw-small
+    """
+    repo = _seed_branch_with_kickoff(tmp_path)
+    change_id = "2026-09-05-lane-gateonly-no-provenance"
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _commit_intent(repo, change_id, lane_line=lane_line)
+    _write(repo, "docs/notes.md", "a purely small-lane-safe delta\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs: a small-lane-safe delta")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    raw_lane, _raw_reason = lc.change_lane_detail(repo, reviewed_sha)
+    assert raw_lane == "small", (
+        f"fixture check: expected the recompute itself to already say "
+        f"small, got {raw_lane!r}"
+    )
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [_dispatch("adversary", "agent-adv", "T1")],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "a dated `lane: gate-only` declaration whose deciding commit never "
+        "states the line must be ignored, falling back to the raw-small "
+        "recompute's own floor of 1 -- zero verdicts should block; it "
+        f"passed instead: {result.stdout}"
+    )
+    assert "push.verdicts-ge-2" in blocked_rules(result), (
+        f"expected push.verdicts-ge-2 among the blocked rules: {result.stderr}"
     )
