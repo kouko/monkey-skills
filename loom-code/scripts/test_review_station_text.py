@@ -771,3 +771,256 @@ def test_matcher_design_relook_sentence_affirmative_accepted() -> None:
     assert "change the design" in sentence.lower()
     assert "accept as nit" in sentence.lower()
     assert not _has_negation(sentence)
+
+
+# --- W1-04: three declared lanes, reader floors, blind-run/adversary by lane
+
+
+def _review_skill_text() -> str:
+    return (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+
+
+def _section_1_scope_and_type() -> str:
+    text = _review_skill_text()
+    start = text.index("## 1. Scope and artifact type")
+    end = text.index("## 2. Read")
+    return text[start:end]
+
+
+def _section_2_read() -> str:
+    text = _review_skill_text()
+    start = text.index("## 2. Read")
+    end = text.index("## 3. Blind run")
+    return text[start:end]
+
+
+def _section_3_blind_run() -> str:
+    text = _review_skill_text()
+    start = text.index("## 3. Blind run")
+    end = text.index("## 4. Adversarial")
+    return text[start:end]
+
+
+def _section_4_adversarial() -> str:
+    text = _review_skill_text()
+    start = text.index("## 4. Adversarial")
+    end = text.index("## 5. Package tests")
+    return text[start:end]
+
+
+def test_lane_paragraph_names_three_declared_lanes_and_what_each_drops() -> None:
+    hits = [
+        s for s in _flat_sentences(_section_1_scope_and_type())
+        if "`full`" in s
+        and "`express`" in s
+        and "`gate-only`" in s
+        and "skipping the wave-end checkpoint" in s.lower()
+        and "only the probes and package tests" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md §1's Lane paragraph has no affirmative sentence "
+        "naming full/express/gate-only and what each drops"
+    )
+
+
+def test_matcher_three_lane_sentence_negated_rejected() -> None:
+    sentence = (
+        "The three declared lanes are `full`, which never drops a reader; "
+        "`express`, which cannot keep two readers; and `gate-only`, which "
+        "has no readers at all."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_three_lane_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "The three declared lanes are `full`, keeping two or more readers "
+        "and every run; `express`, keeping one reader and skipping the "
+        "wave-end checkpoint; and `gate-only`, keeping zero readers and "
+        "only the probes and package tests as evidence."
+    )
+    assert "`full`" in sentence
+    assert "`express`" in sentence
+    assert "`gate-only`" in sentence
+    assert "skipping the wave-end checkpoint" in sentence.lower()
+    assert "only the probes and package tests" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_reader_floor_sentence_names_all_four_lanes() -> None:
+    hits = [
+        s for s in _flat_sentences(_section_2_read())
+        if "full two" in s.lower()
+        and "small one" in s.lower()
+        and "express one" in s.lower()
+        and "gate-only zero" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md §2 has no affirmative sentence stating the reader "
+        "floors for all four lanes"
+    )
+
+
+def test_matcher_floor_sentence_negated_rejected() -> None:
+    sentence = (
+        "Reader floors are never full two, small one, express one, and "
+        "gate-only zero -- nobody recomputes them."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_floor_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Reader floors are full two, small one, express one, and "
+        "gate-only zero -- the checker's `push.verdicts-ge-2` recomputes "
+        "each floor from the effective lane every round."
+    )
+    assert "full two" in sentence.lower()
+    assert "small one" in sentence.lower()
+    assert "express one" in sentence.lower()
+    assert "gate-only zero" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_blindrun_by_lane_sentences_present() -> None:
+    section = _section_3_blind_run()
+    hits = [
+        s for s in _flat_sentences(section)
+        if "express" in s.lower()
+        and "resists a mechanical check" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md §3 has no affirmative sentence on express's blind-"
+        "run trigger"
+    )
+    hits2 = [
+        s for s in _flat_sentences(section)
+        if "gate-only" in s.lower()
+        and "skips the blind run always" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits2, (
+        "review/SKILL.md §3 has no affirmative sentence on gate-only "
+        "skipping the blind run"
+    )
+
+
+def test_matcher_blindrun_express_sentence_negated_rejected() -> None:
+    sentence = (
+        "Express never runs the blind run unless an Acceptance line "
+        "cannot be settled mechanically."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_blindrun_express_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Express triggers the blind run only for an Acceptance line that "
+        "resists a mechanical check, matching the small lane's trigger; "
+        "every mechanical line skips it."
+    )
+    assert "express" in sentence.lower()
+    assert "resists a mechanical check" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_matcher_blindrun_gateonly_sentence_negated_rejected() -> None:
+    sentence = "Gate-only never runs the blind run, no matter what."
+    assert _has_negation(sentence)
+
+
+def test_matcher_blindrun_gateonly_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Gate-only skips the blind run always, relying on probes and "
+        "package tests alone as its evidence."
+    )
+    assert "gate-only" in sentence.lower()
+    assert "skips the blind run always" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_adversary_once_at_branchend_sentence_present() -> None:
+    hits = [
+        s for s in _flat_sentences(_section_4_adversarial())
+        if "express" in s.lower()
+        and "gate-only" in s.lower()
+        and "once" in s.lower()
+        and "branch-end" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md §4 has no affirmative sentence stating express/"
+        "gate-only run the adversary once, at branch-end"
+    )
+
+
+def test_matcher_adversary_once_sentence_negated_rejected() -> None:
+    sentence = (
+        "Express and gate-only never run the adversary more than once, "
+        "and cannot run it before branch-end."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_adversary_once_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Express and gate-only run the adversary once, at branch-end, "
+        "keeping the probe floor of three regardless of lane."
+    )
+    assert "express" in sentence.lower()
+    assert "gate-only" in sentence.lower()
+    assert "once" in sentence.lower()
+    assert "branch-end" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+# --- W1-04: user-judgment-leak lens catches an agent-written `lane:` line --
+
+
+def _lenses_user_judgment_leak_row() -> str:
+    text = (REPO / "loom-code/skills/review/references/lenses.md").read_text(
+        encoding="utf-8"
+    )
+    start = text.index("| user-judgment-leak |")
+    end = text.index("\n", start)
+    return text[start:end]
+
+
+def test_lens_names_agent_written_lane_line_as_finding() -> None:
+    row = _lenses_user_judgment_leak_row()
+    hits = [
+        s for s in _flat_sentences(row)
+        if "`lane:`" in s
+        and "written by an agent" in s.lower()
+        and "user-judgment-leak" in s.lower()
+        and "finding" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "lenses.md's user-judgment-leak row has no affirmative sentence "
+        "naming an agent-written `lane:` line as a finding"
+    )
+
+
+def test_matcher_lane_line_sentence_negated_rejected() -> None:
+    sentence = (
+        "A `lane:` line written by an agent is never a "
+        "`user-judgment-leak` finding, no matter who wrote it."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_lane_line_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "A `lane:` line written by an agent, missing `by <user name>`, or "
+        "appearing in a plan, is a `user-judgment-leak` finding -- the "
+        "lane is a user's decision only."
+    )
+    assert "`lane:`" in sentence
+    assert "written by an agent" in sentence.lower()
+    assert "user-judgment-leak" in sentence.lower()
+    assert "finding" in sentence.lower()
+    assert not _has_negation(sentence)
