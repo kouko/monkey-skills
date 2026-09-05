@@ -1,0 +1,101 @@
+{
+  "reviewed_sha": "db7d44f99afff18d3af7ee6060293102df64bb07",
+  "scope": "",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [
+    {
+      "reviewer": "<agent id>",
+      "vendor": "anthropic",
+      "model": "<model>",
+      "lens": "code|docs|spec|design|principles",
+      "scope": "spec|code|branch-end|wave-end:<n>",
+      "round": 1,
+      "verdict": "PASS|PASS_WITH_NOTES|NEEDS_REVISION",
+      "dimension_scores": {},
+      "findings": [],
+      "fallback": "<cli> missing at <YYYY-MM-DD>",
+      "spec_sha": "<git hash-object of the spec.md this verdict read; spec rounds only>",
+      "sha": "<reviewed_sha; the commit this verdict reviewed>"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests|blind-run|adversarial|codex-walk",
+      "scope": "spec|code|skill|gate",
+      "command": "<command that runs the artifact>",
+      "sha": "<sha the probe ran against>",
+      "result": "pass|fail",
+      "artifact": "<committed path the command runs>"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "<question as asked>",
+      "type": "what|behaviour|done|consequence"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "<id>",
+      "anchor": "<file:line>",
+      "origin_sha": "<sha>",
+      "raised_by": "<reviewer>",
+      "resolved": "<evidence>",
+      "dismissed": "<reason> by <agent_id>"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T10:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T10:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T10:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T10:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-05",
+      "role": "implementer",
+      "agent_id": "impl-w1-05-cx",
+      "model": "sonnet",
+      "started": "2026-09-06T10:30:00+08:00",
+      "fresh_context": true
+    }
+  ],
+  "second_vendor": "codex",
+  "cost": {
+    "rounds": 0,
+    "dispatches": 5,
+    "cap_changes": [],
+    "hours_plan_to_pr": null,
+    "plan_commit": "f23aadde",
+    "note": "updated by hand at every checkpoint; dispatches counts every dispatch[] entry"
+  }
+}
