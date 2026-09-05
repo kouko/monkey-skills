@@ -894,6 +894,143 @@ def test_manifest_intent_path_drift_fails_closed(tmp_path: Path) -> None:
     assert any("docs/loom/intent/<change-id>.md" in msg for _, msg in failures)
 
 
+# --- push.review-only-head: the close line rides in the review-only
+# commit itself (W1-03) -------------------------------------------------
+
+
+def _review_only_close_commit(repo: Path, intent_rel: str, *, kind: str = "PR",
+                              identifier: str = "999", date: str = "2026-09-03",
+                              extra_line: bool = False,
+                              third_file: str | None = None) -> str:
+    """Replace the review-only HEAD (built by `_seed_intent`) with one that
+    ALSO carries the close line: review.json plus the intent file's status
+    line flipping to a closed form -- the new combined shape (spec REQ-1,
+    W1-03). `third_file`, when given, rides along as a THIRD touched path
+    -- still must block."""
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    descriptor = f"PR #{identifier}" if kind == "PR" else f"branch {identifier}"
+    text = re.sub(r"status: .*\n", f"status: closed {date} — {descriptor}\n", text)
+    if extra_line:
+        text = text.replace("## Problem\nx\n", "## Problem\ny\n")
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    paths = [REVIEW, intent_rel]
+    if third_file is not None:
+        (repo / third_file).parent.mkdir(parents=True, exist_ok=True)
+        (repo / third_file).write_text("x\n", encoding="utf-8")
+        paths.append(third_file)
+    git(repo, "add", *paths)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_review_only_head_with_pr_form_status_line_passes(tmp_path: Path) -> None:
+    """The review-only commit touches review.json AND the intent file, but
+    the intent file's whole diff is its `status:` line flipping to the PR
+    closed form -- must PASS, not BLOCK on a second touched path."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, kind="PR", identifier="999")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.review-only-head" not in blocked_rules(result)
+
+
+def test_review_only_head_with_branch_form_status_line_passes(tmp_path: Path) -> None:
+    """Same shape, but the closed form names a branch instead of a PR."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, kind="branch", identifier="ship-it")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.review-only-head" not in blocked_rules(result)
+
+
+def test_review_only_head_with_another_intent_line_changed_is_blocked(tmp_path: Path) -> None:
+    """Same shape, but an UNRELATED intent body line changes alongside the
+    status flip -- the close-line exemption stays scoped to the status
+    line alone and must still BLOCK."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, extra_line=True)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_review_only_head_with_a_third_file_is_blocked(tmp_path: Path) -> None:
+    """Same shape, but a THIRD file rides in the same commit -- still
+    blocks; the exemption is exactly {review.json, this change's intent}."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, third_file="docs/loom/notes.md")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert "docs/loom/notes.md" in result.stderr
+
+
+def test_the_old_separate_close_commit_shape_still_passes_with_branch_form(tmp_path: Path) -> None:
+    """The OLD shape -- a close commit of its own under a review-only
+    commit -- must keep passing, now also with the branch form."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _close_commit_with_kind(repo, intent_rel, kind="branch", identifier="ship-it")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def _close_commit_with_kind(repo: Path, intent_rel: str, *, kind: str,
+                            identifier: str, date: str = "2026-09-03") -> str:
+    """Like `_close_commit`, but the closed form is chosen by `kind`
+    ('PR' or 'branch') rather than always the PR form."""
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    descriptor = f"PR #{identifier}" if kind == "PR" else f"branch {identifier}"
+    text = re.sub(r"status: .*\n", f"status: closed {date} — {descriptor}\n", text)
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    return git(repo, "rev-parse", "HEAD")
+
+
+# --- intake.confirmed: both closed forms are terminal (W1-03) --------------
+
+
+def _intent_only_repo(tmp_path: Path, status: str, change_id: str = CHANGE) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / intent_rel).write_text(
+        f"# {change_id}\nstatus: {status}\n\n## Problem\nx\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "seed")
+    return repo
+
+
+def test_intake_write_plan_blocks_the_pr_closed_form_as_terminal(tmp_path: Path) -> None:
+    repo = _intent_only_repo(tmp_path, "closed 2026-09-03 — PR #999")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "closed (PR #999)" in result.stderr
+    assert "start a new intent" in result.stderr
+
+
+def test_intake_write_plan_blocks_the_branch_closed_form_as_terminal(tmp_path: Path) -> None:
+    repo = _intent_only_repo(tmp_path, "closed 2026-09-05 — branch ship-it")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "closed (branch ship-it)" in result.stderr
+    assert "start a new intent" in result.stderr
+
+
 # --- push.reviewed-sha -----------------------------------------------------
 
 

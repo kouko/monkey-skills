@@ -67,11 +67,11 @@ RULES: list[tuple[str, str]] = [
     (
         "intake.confirmed",
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
-        "with a date the calendar has; `closed <date> — PR #<N>` is blocked -- that change is "
-        "closed and a new change starts from a new intent. closed is terminal: reopening it -- "
-        "reverting the status line, or branching from a trunk that already carries the close -- "
-        "is blocked the same way, recomputed from the branch's own history and the trunk's copy "
-        "of the file, not from the status line alone.",
+        "with a date the calendar has; `closed <date> — PR #<N>` or `closed <date> — branch <name>` "
+        "is blocked -- that change is closed and a new change starts from a new intent. closed is "
+        "terminal either way: reopening it -- reverting the status line, or branching from a trunk "
+        "that already carries the close -- is blocked the same way, recomputed from the branch's "
+        "own history and the trunk's copy of the file, not from the status line alone.",
     ),
     (
         "intake.confirmed-behavior",
@@ -155,10 +155,13 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.review-only-head",
-        "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json. "
-        "When HEAD^ turns an intent's status to closed, its shape is recomputed too: it must touch "
-        "only that intent file, change exactly its status line, and sit on a checkpoint whose own "
-        "review.json vouches for HEAD^^^.",
+        "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json, "
+        "optionally together with that change's own intent file when the intent's ENTIRE diff is "
+        "its sole `status:` line flipping to a closed form (`closed <date> — PR #<N>` or "
+        "`closed <date> — branch <name>`) -- any other intent-file edit riding along still blocks. "
+        "When instead HEAD^ turns an intent's status to closed as a commit of its own, its shape "
+        "is recomputed too: it must touch only that intent file, change exactly its status line, "
+        "and sit on a checkpoint whose own review.json vouches for HEAD^^^.",
     ),
     (
         "push.reviewed-sha",
@@ -1058,11 +1061,17 @@ def check_kind_recompute(touched: list[str]) -> list[tuple[str, str]]:
 
 CHANGE_ID = re.compile(r"[A-Za-z0-9._-]+")
 # `status:` grammar (contract/manifest.yaml, contract/templates/intent.md):
-# `open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>`,
-# each alternative allowing a trailing ` #...` comment -- shared by
-# intake.confirmed (below) and the closed-commit shape push.review-only-head
-# recomputes (W0-04). Groups: 1=confirmed date, 2=closed date, 3=PR number.
-_STATUS_CLOSED_ALT = r"closed (\d{4}-\d{2}-\d{2}) — PR #(\d+)"
+# `open | confirmed <date> | closed <date> — PR #<N> | closed <date> —
+# branch <name> | withdrawn — <reason>`, each alternative allowing a
+# trailing ` #...` comment -- shared by intake.confirmed (below) and the
+# closed-commit shape push.review-only-head recomputes (W0-04, W1-03).
+# Groups: 1=confirmed date, 2=PR-form closed date, 3=PR number,
+# 4=branch-form closed date, 5=branch name. Only one of (2,3)/(4,5) is
+# ever non-None on a match -- `_status_closed_info` picks the pair that fired.
+_STATUS_CLOSED_ALT = (
+    r"closed (\d{4}-\d{2}-\d{2}) — PR #(\d+)"
+    r"|closed (\d{4}-\d{2}-\d{2}) — branch ([A-Za-z0-9._/-]+)"
+)
 STATUS = re.compile(
     r"(?:open"
     r"|confirmed (\d{4}-\d{2}-\d{2})"
@@ -1084,14 +1093,38 @@ REOPEN_LOG_PATTERN = rf"^status:[[:space:]]*{STATUS_CLOSED_LITERAL}"
 INTAKE_STATIONS = ("write-spec", "write-plan")  # the two stations that accept an intent
 
 
-def _status_closed_pr_number(text: str) -> str | None:
-    """The PR number of a `closed` status line in `text`'s frontmatter, or
-    None when the status is anything else (including absent/malformed)."""
+def _status_closed_info(match: re.Match) -> tuple[str, str, str] | None:
+    """`(date, kind, identifier)` for a `STATUS` match that hit either
+    closed alternative -- `kind` is `"PR"` or `"branch"`, `identifier` the
+    PR number or the branch name. None when `match` did not hit a closed
+    alternative at all (W1-03)."""
+    if match.group(2) is not None:
+        return match.group(2), "PR", match.group(3)
+    if match.group(4) is not None:
+        return match.group(4), "branch", match.group(5)
+    return None
+
+
+def _status_closed_descriptor(kind: str, identifier: str) -> str:
+    """The human-readable naming of a closed status's identifier -- `PR
+    #<n>` or `branch <name>` -- shared by every message that reports a
+    closed intent (W1-03)."""
+    return f"PR #{identifier}" if kind == "PR" else f"branch {identifier}"
+
+
+def _status_closed_descriptor_from_text(text: str) -> str | None:
+    """The closed-status descriptor (`PR #<n>` or `branch <name>`) from
+    `text`'s frontmatter status line, or None when the status is anything
+    else (including absent/malformed)."""
     front, _sections = parse_document(text)
     match = STATUS.fullmatch(front.get("status", "").strip())
-    if match and match.group(2) is not None:
-        return match.group(3)
-    return None
+    if match is None:
+        return None
+    info = _status_closed_info(match)
+    if info is None:
+        return None
+    _date, kind, identifier = info
+    return _status_closed_descriptor(kind, identifier)
 
 
 def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str, out) -> tuple[str, str] | None:
@@ -1118,11 +1151,11 @@ def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str, out
         content = git_maybe(repo, "show", f"{commit}:{intent_rel}")
         if content is None:
             continue
-        pr_number = _status_closed_pr_number(content)
-        if pr_number is not None:
+        descriptor = _status_closed_descriptor_from_text(content)
+        if descriptor is not None:
             return (
                 "intake.confirmed",
-                f"{change_id} was closed (PR #{pr_number}) and closed intents "
+                f"{change_id} was closed ({descriptor}) and closed intents "
                 "are not reopened; start a new intent",
             )
 
@@ -1131,11 +1164,11 @@ def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str, out
             continue
         content = git_maybe(repo, "show", f"{candidate}:{intent_rel}")
         if content is not None:
-            pr_number = _status_closed_pr_number(content)
-            if pr_number is not None:
+            descriptor = _status_closed_descriptor_from_text(content)
+            if descriptor is not None:
                 return (
                     "intake.confirmed",
-                    f"{change_id} was closed (PR #{pr_number}) and closed intents "
+                    f"{change_id} was closed ({descriptor}) and closed intents "
                     "are not reopened; start a new intent",
                 )
         break
@@ -1177,14 +1210,16 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     status = front.get("status", "").strip()
     match = STATUS.fullmatch(status)
     confirmed_date = match.group(1) if match else None
-    closed_date, pr_number = (match.group(2), match.group(3)) if match else (None, None)
-    if closed_date is not None:
+    closed_info = _status_closed_info(match) if match else None
+    if closed_info is not None:
+        closed_date, kind, identifier = closed_info
+        descriptor = _status_closed_descriptor(kind, identifier)
         if not is_real_date(closed_date):
             return report(
                 [
                     (
                         "intake.confirmed",
-                        f"`status: closed {closed_date} — PR #{pr_number}` names "
+                        f"`status: closed {closed_date} — {descriptor}` names "
                         "something that is not a real date.",
                     )
                 ],
@@ -1195,7 +1230,8 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
                 (
                     "intake.confirmed",
                     f"{station} accepts only `status: confirmed <date>`; this change "
-                    f"is closed (PR #{pr_number}); a new change starts from a new intent.",
+                    f"is closed ({descriptor}) and closed intents are not reopened; "
+                    "start a new intent.",
                 )
             ],
             err,
@@ -1895,10 +1931,16 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if not head_sha:
         raise UsageError(f"cannot resolve {head!r} in {repo}.")
 
-    review_rel, failures = check_review_only_head(manifest, repo, head_sha)
+    review_rel, failures, closes_intent_in_head = check_review_only_head(manifest, repo, head_sha)
     if review_rel is None:
         return report(failures, err)
-    failures += check_close_commit_shape(manifest, repo, head_sha)
+    # When HEAD itself already carries a validated close line (W1-03), the
+    # OLD shape's HEAD^-must-be-a-close-commit recompute is not this
+    # commit's business -- HEAD^ never claimed to be a close commit, and
+    # forcing it through that shape would block an ordinary commit that
+    # merely happens to have introduced (or last touched) the intent file.
+    if not closes_intent_in_head:
+        failures += check_close_commit_shape(manifest, repo, head_sha)
 
     raw = git_text(repo, "show", f"{head_sha}:{review_rel}")
     try:
@@ -1940,8 +1982,19 @@ SHA_HEX = re.compile(r"[0-9a-f]{7,40}")
 
 
 def check_review_only_head(manifest, repo: Path, head_sha: str):
-    """A checkpoint push rides on a review-only commit: exactly one file,
-    and that file is this change's review.json (concept-model §2e)."""
+    """A checkpoint push rides on a review-only commit: touching nothing
+    but this change's review.json, OR that file together with the SAME
+    change's intent file when the intent's entire diff is its sole
+    `status:` line flipping to a closed form -- the close line riding
+    along with the checkpoint commit itself (spec REQ-1, W1-03). Any
+    other second file, or any other edit inside the intent file, falls
+    through to the same blanket failure below (concept-model §2e).
+
+    Returns `(review_rel, failures, closes_intent_in_head)`: `review_rel`
+    is None on failure; `closes_intent_in_head` is True only on the new
+    combined-shape success path, telling `_cmd_push` that HEAD^ never
+    claimed to be a close commit of its own and so must not be forced
+    through `check_close_commit_shape`."""
     # `--name-only` lets rename detection collapse a delete and an add into
     # one path, so a commit that renames a tracked file INTO the review path
     # deletes that file while the gate counts one path. `--raw
@@ -1961,14 +2014,66 @@ def check_review_only_head(manifest, repo: Path, head_sha: str):
     is_review = glob_to_regex(template.replace("<change-id>", "*"))
     reviews = [path for path in touched if is_review.match(path)]
     if len(touched) == 1 and reviews:
-        return reviews[0], []
+        return reviews[0], [], False
+
+    if len(touched) == 2 and len(reviews) == 1:
+        review_rel = reviews[0]
+        change_id_match = REVIEW_JSON_PATH.fullmatch(review_rel)
+        if change_id_match is not None:
+            expected_intent = INTENT_PATH_TEMPLATE.replace(
+                "<change-id>", change_id_match.group("change_id")
+            )
+            other = next(path for path in touched if path != review_rel)
+            if other == expected_intent and _review_only_head_closes_intent(
+                repo, head_sha, other
+            ):
+                return review_rel, [], True
+
     detail = ", ".join(touched) if touched else "nothing"
     return None, [
         (
             "push.review-only-head",
             f"HEAD must touch only {template}; it touches {detail}.",
         )
-    ]
+    ], False
+
+
+def _review_only_head_closes_intent(repo: Path, head_sha: str, intent_rel: str) -> bool:
+    """True when `head_sha`'s diff on `intent_rel` is exactly its sole
+    `status:` line changing to a closed form -- the close line riding
+    along with a review-only commit (spec REQ-1, W1-03). Reuses
+    `_regenerated_closed_text`'s regeneration so nothing else in the file
+    is trusted to have stayed put; a mismatch here is never reported on
+    its own -- `check_review_only_head` falls through to its generic
+    failure instead."""
+    parent_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^")
+    if parent_sha is None:
+        return False
+    entries = _raw_diff_entries(repo, parent_sha, head_sha)
+    intent_entries = [entry for entry in entries if entry[1] == intent_rel]
+    if len(intent_entries) != 1:
+        return False
+    status, _path, old_mode, new_mode = intent_entries[0]
+    if status != "M" or old_mode != _REGULAR_FILE_MODE or new_mode != _REGULAR_FILE_MODE:
+        return False
+    before_text = git_raw_text(repo, "show", f"{parent_sha}:{intent_rel}")
+    after_text = git_raw_text(repo, "show", f"{head_sha}:{intent_rel}")
+    if len(_status_line_positions(before_text)) != 1:
+        return False
+    if len(_status_line_positions(after_text)) != 1:
+        return False
+    front, _sections = parse_document(after_text)
+    match = STATUS.fullmatch(front.get("status", "").strip())
+    if match is None:
+        return False
+    info = _status_closed_info(match)
+    if info is None:
+        return False
+    date, kind, identifier = info
+    regenerated = _regenerated_closed_text(before_text, date, kind, identifier)
+    if regenerated is None:
+        return False
+    return regenerated == after_text
 
 
 def _raw_diff_entries(repo: Path, base_sha: str, target_sha: str) -> list[tuple[str, str, str, str]]:
@@ -2034,11 +2139,13 @@ def _status_line_positions(text: str) -> list[int]:
     return [index for index, line in enumerate(text.splitlines()) if line.startswith("status:")]
 
 
-def _regenerated_closed_text(before_text: str, date: str, pr_number: str) -> str | None:
+def _regenerated_closed_text(before_text: str, date: str, kind: str, identifier: str) -> str | None:
     """Step (c): `before_text` with ONLY its sole `status:` line's value
-    replaced by `closed <date> — PR #<pr_number>` -- no trailing comment,
-    everything else byte-identical. None when `before_text` does not have
-    exactly one raw `status:` line to regenerate from."""
+    replaced by the closed alternative named by `kind`/`identifier` --
+    `closed <date> — PR #<identifier>` when `kind == "PR"`, `closed <date>
+    — branch <identifier>` otherwise -- no trailing comment, everything
+    else byte-identical. None when `before_text` does not have exactly one
+    raw `status:` line to regenerate from."""
     positions = _status_line_positions(before_text)
     if len(positions) != 1:
         return None
@@ -2046,16 +2153,17 @@ def _regenerated_closed_text(before_text: str, date: str, pr_number: str) -> str
     index = positions[0]
     stripped = lines[index].rstrip("\r\n")
     ending = lines[index][len(stripped):]
-    lines[index] = f"status: closed {date} — PR #{pr_number}{ending}"
+    descriptor = _status_closed_descriptor(kind, identifier)
+    lines[index] = f"status: closed {date} — {descriptor}{ending}"
     return "".join(lines)
 
 
 def _close_after_status_match(repo: Path, close_sha: str, closing_path: str,
                               rule: str) -> tuple[re.Match | None, list[tuple[str, str]]]:
     """Condition (b): HEAD^'s file has exactly one raw `status:` line, and
-    `parse_document`'s frontmatter value for it is the closed
-    alternative. Returns the match (group(2)=date, group(3)=PR number) or
-    the failure explaining why not."""
+    `parse_document`'s frontmatter value for it is a closed alternative
+    (PR form or branch form). Returns the match (`_status_closed_info`
+    reads date/kind/identifier off it) or the failure explaining why not."""
     after_text = git_raw_text(repo, "show", f"{close_sha}:{closing_path}")
     after_positions = _status_line_positions(after_text)
     if len(after_positions) != 1:
@@ -2066,7 +2174,7 @@ def _close_after_status_match(repo: Path, close_sha: str, closing_path: str,
         )]
     front, _sections = parse_document(after_text)
     match = STATUS.fullmatch(front.get("status", "").strip())
-    if not match or match.group(2) is None:
+    if not match or _status_closed_info(match) is None:
         return None, [_not_a_close_commit(
             rule, close_sha, closing_path,
             "HEAD^'s frontmatter `status:` value to be the closed alternative",
@@ -2088,7 +2196,8 @@ def _close_blob_failures(repo: Path, diff_base: str, close_sha: str, closing_pat
             "exactly one `status:` line in HEAD^^'s file to regenerate from",
             str(len(before_positions)),
         )]
-    regenerated = _regenerated_closed_text(before_text, match.group(2), match.group(3))
+    date, kind, identifier = _status_closed_info(match)
+    regenerated = _regenerated_closed_text(before_text, date, kind, identifier)
     # `before_text` (and therefore `regenerated`) came from `git_raw_text`,
     # which decodes blob bytes with `errors="surrogateescape"` so a
     # non-UTF-8 byte round-trips as a lone surrogate rather than being
@@ -2214,7 +2323,9 @@ def _checkpoint_parent_failures(
     must itself be a checkpoint -- touching only review.json -- whose
     reviewed_sha resolves to HEAD^^^, so no commit can sit between the last
     review and the close commit unseen (spec REQ-1, W0-04)."""
-    checkpoint_rel, checkpoint_failures = check_review_only_head(manifest, repo, pre_close_sha)
+    checkpoint_rel, checkpoint_failures, _closes_intent = check_review_only_head(
+        manifest, repo, pre_close_sha
+    )
     if checkpoint_rel is None:
         # `checkpoint_failures` carries `check_review_only_head`'s own
         # computed detail (the actual touched paths); surface it instead

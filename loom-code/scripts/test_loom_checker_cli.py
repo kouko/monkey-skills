@@ -75,6 +75,18 @@ def test_list_rules_describes_the_closed_status_alternative() -> None:
     assert "PR #" in confirmed_line
 
 
+def test_list_rules_describes_the_branch_closed_form_too() -> None:
+    """W1-03: `intake.confirmed` and `push.review-only-head` both gained a
+    second closed form (`closed <date> — branch <name>`); their
+    descriptions must name it, not just the PR form."""
+    lines = run_checker("--list-rules").stdout.splitlines()
+    confirmed_line = next(line for line in lines if line.startswith("intake.confirmed\t"))
+    assert "branch <name>" in confirmed_line
+    review_only_line = next(line for line in lines if line.startswith("push.review-only-head\t"))
+    assert "branch <name>" in review_only_line
+    assert "review.json" in review_only_line
+
+
 def test_list_rules_covers_exactly_the_planned_population() -> None:
     ids = [line.split("\t")[0] for line in run_checker("--list-rules").stdout.splitlines()]
     assert ids == EXPECTED_RULE_IDS
