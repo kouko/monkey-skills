@@ -229,13 +229,29 @@ def test_main_cli_resume_skips_existing_run_files(tmp_path, monkeypatch):
 
     out = tmp_path / "out"
     out.mkdir()
-    for i in (1, 2):
-        (out / f"run-{i}.txt").write_text(
-            f"# command: fake\n# run: {i} of 3\n\n{_canned_stdout()}", encoding="utf-8"
-        )
 
     contract = _write_cli_contract(tmp_path)
     fixture = _write_cli_fixture(tmp_path)
+    contract_hash = coldread_role_split.hashlib.sha256(contract.read_bytes()).hexdigest()
+    fixture_hash = coldread_role_split.hashlib.sha256(fixture.read_bytes()).hexdigest()
+    prompt = coldread_role_split.build_prompt(
+        contract.read_text(encoding="utf-8"), _cli_fixture_dict(), "adversary"
+    )
+    prompt_hash = coldread_role_split.hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+
+    for i in (1, 2):
+        header = "\n".join(
+            [
+                f"# command: /usr/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 {prompt_hash})",
+                f"# contract: {contract} sha256 {contract_hash}",
+                f"# fixture: {fixture} sha256 {fixture_hash}",
+                f"# run: {i} of 3",
+                "# model: sonnet",
+                f"# prompt-sha256: {prompt_hash}",
+            ]
+        )
+        (out / f"run-{i}.txt").write_text(header + f"\n\n{_canned_stdout()}", encoding="utf-8")
+
     argv = _cli_argv(contract, fixture, out) + ["--resume"]
     rc = main(argv)
     assert rc == 0
@@ -329,3 +345,46 @@ def test_main_records_nonzero_returncode_as_error_and_counts_failed_runs(tmp_pat
     assert summary["failed_runs"] == 1
     body = (out / "run-1.txt").read_text(encoding="utf-8").split("\n\n", 1)[1]
     assert "# error: exit 3" in body
+
+
+def test_main_resume_rejects_mismatched_header_field(tmp_path, monkeypatch, capsys):
+    """finding 03: --resume must validate every resumed header (contract
+    hash, fixture hash, prompt hash, model, run count N) against the
+    current invocation; a mismatch exits 2 with an error naming the
+    field and writes no summary.json."""
+    monkeypatch.setattr(
+        coldread_role_split.subprocess, "run",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not run on a header mismatch")),
+    )
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+
+    contract = _write_cli_contract(tmp_path)
+    fixture = _write_cli_fixture(tmp_path)
+    out = tmp_path / "out"
+    out.mkdir()
+    prompt = coldread_role_split.build_prompt(
+        contract.read_text(encoding="utf-8"), _cli_fixture_dict(), "adversary"
+    )
+    prompt_hash = coldread_role_split.hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+    fixture_hash = coldread_role_split.hashlib.sha256(fixture.read_bytes()).hexdigest()
+    (out / "run-1.txt").write_text(
+        "\n".join(
+            [
+                f"# command: /usr/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 {prompt_hash})",
+                "# contract: stale-path sha256 not-the-real-hash",
+                f"# fixture: {fixture} sha256 {fixture_hash}",
+                "# run: 1 of 3",
+                "# model: sonnet",
+                f"# prompt-sha256: {prompt_hash}",
+            ]
+        )
+        + f"\n\n{_canned_stdout()}",
+        encoding="utf-8",
+    )
+
+    rc = main(_cli_argv(contract, fixture, out) + ["--resume"])
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "error:" in err
+    assert "contract" in err
+    assert not (out / "summary.json").exists()

@@ -237,6 +237,7 @@ def _write_run_file(
     fixture_hash: str,
     i: int,
     n: int,
+    model: str,
     body: str,
 ) -> None:
     prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
@@ -245,10 +246,79 @@ def _write_run_file(
         f"# contract: {contract_arg} sha256 {contract_hash}",
         f"# fixture: {fixture_arg} sha256 {fixture_hash}",
         f"# run: {i} of {n}",
+        f"# model: {model}",
         f"# timestamp: {datetime.datetime.now().astimezone().isoformat()}",
         f"# prompt-sha256: {prompt_hash}",
     ]
     path.write_text("\n".join(header_lines) + "\n\n" + body, encoding="utf-8")
+
+
+def _parse_run_header(text: str) -> dict:
+    """Parse the header block (everything before the first blank line) of
+    a `run-<i>.txt` transcript into {"contract_hash", "fixture_hash",
+    "prompt_sha256", "run_i", "run_n", "model"}. A field absent from the
+    header is simply omitted from the result — never guessed or
+    defaulted — so a caller comparing against an expected value treats a
+    missing field as a mismatch."""
+    header = text.split("\n\n", 1)[0]
+    fields: dict = {}
+    for line in header.splitlines():
+        if line.startswith("# contract:"):
+            match = re.search(r"sha256\s+(\S+)", line)
+            if match:
+                fields["contract_hash"] = match.group(1)
+        elif line.startswith("# fixture:"):
+            match = re.search(r"sha256\s+(\S+)", line)
+            if match:
+                fields["fixture_hash"] = match.group(1)
+        elif line.startswith("# prompt-sha256:"):
+            fields["prompt_sha256"] = line.split(":", 1)[1].strip()
+        elif line.startswith("# run:"):
+            match = re.match(r"#\s*run:\s*(\d+)\s+of\s+(\d+)", line)
+            if match:
+                fields["run_i"] = int(match.group(1))
+                fields["run_n"] = int(match.group(2))
+        elif line.startswith("# model:"):
+            fields["model"] = line.split(":", 1)[1].strip()
+    return fields
+
+
+def _resume_mismatch(
+    fields: dict,
+    run_path,
+    i: int,
+    n: int,
+    model: str,
+    contract_hash: str,
+    fixture_hash: str,
+    prompt_hash: str,
+) -> str | None:
+    """Compare a resumed run's parsed header `fields` against the current
+    invocation. Returns an `error:` message naming the mismatching field
+    and the offending file, or None when every field matches."""
+    checks = [
+        ("contract", fields.get("contract_hash"), contract_hash),
+        ("fixture", fields.get("fixture_hash"), fixture_hash),
+        ("prompt-sha256", fields.get("prompt_sha256"), prompt_hash),
+        ("model", fields.get("model"), model),
+    ]
+    for name, actual, expected in checks:
+        if actual != expected:
+            return (
+                f"error: resumed run {run_path} has mismatching {name} "
+                f"(expected {expected!r}, got {actual!r})"
+            )
+    if fields.get("run_n") != n:
+        return (
+            f"error: resumed run {run_path} has mismatching run count N "
+            f"(expected {n}, got {fields.get('run_n')!r})"
+        )
+    if fields.get("run_i") != i:
+        return (
+            f"error: resumed run {run_path} has mismatching run index "
+            f"(expected {i}, got {fields.get('run_i')!r})"
+        )
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -301,6 +371,7 @@ def main(argv: list[str] | None = None) -> int:
     fixture = json.loads(fixture_bytes.decode("utf-8"))
 
     prompt = build_prompt(contract_text, fixture, args.role)
+    prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
     n = args.runs
     responses: list[str] = []
@@ -311,9 +382,18 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.resume and run_path.exists():
             text = run_path.read_text(encoding="utf-8")
+            header_fields = _parse_run_header(text)
+            mismatch = _resume_mismatch(
+                header_fields, run_path, i, n, args.model, contract_hash, fixture_hash, prompt_hash
+            )
+            if mismatch:
+                print(mismatch, file=sys.stderr)
+                return 2
             body = text.split("\n\n", 1)[1] if "\n\n" in text else ""
             responses.append(body)
-            runs_summary.append({"i": i, "file": run_path.name, "status": "resumed"})
+            runs_summary.append(
+                {"i": i, "file": run_path.name, "status": "resumed", "returncode": None}
+            )
             continue
 
         call_argv = [claude_bin, "-p", "--model", args.model, "--output-format", "text"]
@@ -340,6 +420,7 @@ def main(argv: list[str] | None = None) -> int:
             fixture_hash,
             i,
             n,
+            args.model,
             body,
         )
         responses.append(body)
