@@ -113,6 +113,100 @@
         "forbidden types come from manifest artifact_types via _artifact_type_for; a SKILL.md renamed away from that filename escapes the glob (pre-existing)",
         "zero-verdict push rules confirmed tolerant; package run and ≥3 probes unconditional for gate-only"
       ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3bbb0dcac1eabec1262360156ed7bd336437d1be",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1149",
+          "text": "issue (blocking): wave-end:1-01: unfixed — push rejects bare declarations but honours a dated declaration without running the provenance check; an agent can omit the commit-message line, skip the `intent` command and obtain the lighter lane.",
+          "fix": "push ignores or blocks a declaration whose deciding commit does not carry the identical lane: line; pin the dated-but-unlinked case"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3227",
+          "text": "wave-end:1-02: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3329",
+          "text": "wave-end:1-03: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/build/SKILL.md:275",
+          "text": "wave-end:1-04: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "no new finding outside the fix delta",
+        "read-only sandbox could not start pytest"
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "3bbb0dcac1eabec1262360156ed7bd336437d1be",
+      "resumed": true,
+      "dimension_scores": {
+        "principles-conformance": "PASS",
+        "ambiguity": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "PRINCIPLES.md:9",
+          "text": "wave-end:1-05: fixed — ratified sentence present; effective_lane_detail honours gate-only only on a raw-small delta",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/lenses.md:88",
+          "text": "wave-end:1-06: fixed — every valid lane: line carries by <user name>",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "ran test_loom_checker_lane.py (24), both probe files (11+23)",
+        "the other reader's -01..-04 fixes broke nothing visible; ship still 3,497 words"
+      ]
     }
   ],
   "probes": [
@@ -261,7 +355,8 @@
       "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
       "raised_by": "rev-we1-lane-codex",
       "severity": "fatal",
-      "text": "issue (blocking): the test-path exemption in `_lane_forcing_paths` runs before gate/skill kinds, so `hooks/tests/x.py` or `skills/x/tests/SKILL.md` enter express/gate-only."
+      "text": "issue (blocking): the test-path exemption in `_lane_forcing_paths` runs before gate/skill kinds, so `hooks/tests/x.py` or `skills/x/tests/SKILL.md` enter express/gate-only.",
+      "resolved": "closed by d0ffc2ec — manifest kinds before the tests exemption; codex fixed (round 2)"
     },
     {
       "id": "wave-end:1-03",
@@ -269,7 +364,8 @@
       "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
       "raised_by": "rev-we1-lane-codex",
       "severity": "fatal",
-      "text": "issue (blocking): `from wave <n>` and a bare declaration both reduce to from_round None and go through record-deferral; the wave semantics is undefined in code and text."
+      "text": "issue (blocking): `from wave <n>` and a bare declaration both reduce to from_round None and go through record-deferral; the wave semantics is undefined in code and text.",
+      "resolved": "closed by d0ffc2ec + c24de521 — from-wave/declaration keyed to recorded (scope, round) pairs; codex fixed (round 2)"
     },
     {
       "id": "wave-end:1-04",
@@ -277,7 +373,8 @@
       "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
       "raised_by": "rev-we1-lane-codex",
       "severity": "important",
-      "text": "issue (blocking): build tells every DECLARED express/gate-only change to skip wave-end checkpoints; only the EFFECTIVE lane (after the forbidden-type recompute) may skip."
+      "text": "issue (blocking): build tells every DECLARED express/gate-only change to skip wave-end checkpoints; only the EFFECTIVE lane (after the forbidden-type recompute) may skip.",
+      "resolved": "closed by 5ff35feb — build routes on the effective lane; ship material extracted; codex fixed (round 2)"
     },
     {
       "id": "wave-end:1-05",
@@ -285,7 +382,8 @@
       "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
       "raised_by": "rev-we1-lane-sonnet",
       "severity": "fatal",
-      "text": "issue (blocking): Non-negotiable 2 fixes the floor at one reviewer and a blind run omitted only when every Acceptance line is mechanical; gate-only (zero readers, blind run always skipped) contradicts the ratified constitution, which this delta did not amend."
+      "text": "issue (blocking): Non-negotiable 2 fixes the floor at one reviewer and a blind run omitted only when every Acceptance line is mechanical; gate-only (zero readers, blind run always skipped) contradicts the ratified constitution, which this delta did not amend.",
+      "resolved": "closed by 56a4dc4c (PRINCIPLES.md ratified by kouko 2026-09-05) + d0ffc2ec + 19b8c4e8 — gate-only is the small lane with floor 0; sonnet fixed (round 2)"
     },
     {
       "id": "wave-end:1-06",
@@ -293,7 +391,8 @@
       "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
       "raised_by": "rev-we1-lane-sonnet",
       "severity": "important",
-      "text": "issue: the lens sentence flags 'missing by <user name>' without saying whether a bare ① declaration counts, so a reviewer cannot tell a legitimate declaration from an injected one."
+      "text": "issue: the lens sentence flags 'missing by <user name>' without saying whether a bare ① declaration counts, so a reviewer cannot tell a legitimate declaration from an injected one.",
+      "resolved": "closed by d0ffc2ec — lens clause per form; sonnet fixed (round 2)"
     }
   ],
   "dispatch": [
@@ -441,11 +540,29 @@
       "started": "2026-09-05T22:21:46+0800",
       "fresh_context": false,
       "note": "review §1's declared-lane paragraph: one clause stating gate-only applies only when the recompute says small (the ratified shape); the implementer's batch covered the checker, templates, references, build and ship"
+    },
+    {
+      "task": "fix:wave-end:1-r3",
+      "role": "adversary",
+      "agent_id": "adv-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T22:33:26+0800",
+      "fresh_context": false,
+      "note": "resumed: RED probe — push ignores a dated declaration whose deciding commit did not state the line"
+    },
+    {
+      "task": "fix:wave-end:1-r3",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T22:33:26+0800",
+      "fresh_context": false,
+      "note": "design re-look: continue fixing — round 3 on this checkpoint; the one open finding (-01) is a missing provenance check at push, a bounded addition to effective_lane_detail; the lane shape itself (gate-only = small with floor 0, dated declarations, record-keyed timing) is settled and ratified"
     }
   ],
   "cost": {
-    "rounds": 1,
-    "dispatches": 17,
+    "rounds": 2,
+    "dispatches": 19,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
