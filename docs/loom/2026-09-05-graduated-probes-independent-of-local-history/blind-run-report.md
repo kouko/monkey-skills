@@ -1,6 +1,6 @@
 # 畢業探針不得依賴本機分支歷史 — 我試了什麼、發生了什麼
 
-2026-09-06 在一份乾淨的專案副本上試的（分支結束檢查點），版本號前七碼 `c237d9a0`。這是分支結束的完整驗收：先前一輪（第一波檢查點）只能驗到前兩條，這次四條全部都能真的試。
+2026-09-06 在一份乾淨的專案副本上試的（分支結束檢查點），版本號前七碼 `8e765e58`。這是分支結束的驗收：第 1、2、3 條這次都真的照做並看到結果；第 4 條目前只有「合併前」的證據——這個分支還沒合併進 main，合併後在 main 上再跑一次確認的那一步還沒做，下面第 4 條會說清楚。
 
 ## 你要的東西，一條一條試
 
@@ -12,11 +12,11 @@
 
     ```
     $ python3 loom-code/scripts/rehearse_probes.py
-    Rehearsed c237d9a092ff9fcd9170131f9123b08a796e2723 (…/blind-be)
+    Rehearsed 8e765e58fd3812dd1aaf8b15d85cdb101bfd989e (…/blind-be2)
 
     FAILED (0)
     SKIPPED (1)
-    SKIPPED loom-code/scripts/test_probes_rehearsal_no_history_class_skips_on_main.py::test_no_history_class_skips_on_main: already inside a rehearsal clone (REHEARSE_PROBES_NESTED is set); a nested clone-and-run would recurse
+    SKIPPED loom-code/scripts/test_probes_rehearsal_no_history_class_skips_on_main.py::test_no_history_class_skips_on_main: already inside a rehearsal clone (REHEARSE_PROBES_NESTED='/var/folders/m5/4cb4p8h938qc4qcpdykwz2480000gn/T/rehearse-probes-f6ddj0zg'); a nested clone-and-run would recurse
 
     ........................................................................ [ 17%]
     ........................................................................ [ 34%]
@@ -24,7 +24,7 @@
     ........................................................................ [ 69%]
     ...........................................s............................ [ 86%]
     ..x.....................................................                 [100%]
-    414 passed, 1 skipped, 1 xfailed in 59.27s
+    414 passed, 1 skipped, 1 xfailed in 64.45s (0:01:04)
     EXIT:0
     ```
 
@@ -32,13 +32,13 @@
 
     ```
     $ uv run --python 3.11 --with-requirements requirements-dev.txt --with wcwidth -- python loom-code/scripts/rehearse_probes.py
-    Rehearsed c237d9a092ff9fcd9170131f9123b08a796e2723 (…/blind-be)
+    Rehearsed 8e765e58fd3812dd1aaf8b15d85cdb101bfd989e (…/blind-be2)
 
     FAILED (0)
     SKIPPED (1)
-    SKIPPED loom-code/scripts/test_probes_rehearsal_no_history_class_skips_on_main.py::test_no_history_class_skips_on_main: already inside a rehearsal clone (REHEARSE_PROBES_NESTED is set); a nested clone-and-run would recurse
+    SKIPPED loom-code/scripts/test_probes_rehearsal_no_history_class_skips_on_main.py::test_no_history_class_skips_on_main: already inside a rehearsal clone (REHEARSE_PROBES_NESTED='/var/folders/m5/4cb4p8h938qc4qcpdykwz2480000gn/T/rehearse-probes-a8zy1zxo'); a nested clone-and-run would recurse
 
-    414 passed, 1 skipped, 1 xfailed in 46.66s
+    414 passed, 1 skipped, 1 xfailed in 47.81s
     EXIT:0
     ```
 
@@ -47,7 +47,7 @@
 
     ```
     $ python3 loom-code/scripts/rehearse_probes.py --repo <一次性測試專案路徑> -- loom-code/scripts/test_probes_toy_reads_local_main.py
-    Rehearsed 79e2d8eaf581a556b1cffd28580d4a089afcc2c9 (<一次性測試專案路徑>)
+    Rehearsed ddcb1a2d9457ddbd696498826086cd422aa9157c (<一次性測試專案路徑>)
 
     FAILED (1)
     FAILED loom-code/scripts/test_probes_toy_reads_local_main.py::test_toy_reads_local_main
@@ -60,26 +60,11 @@
     EXIT:1
     ```
 
-  - 改寫成先試遠端 main、都沒有才跳過之後：
+  - 改寫成先試遠端 main、都沒有就跳過，並把這個一次性專案裡連遠端都沒有一個叫 main 的東西之後，再跑一次：
 
     ```
     $ python3 loom-code/scripts/rehearse_probes.py --repo <一次性測試專案路徑> -- loom-code/scripts/test_probes_toy_reads_local_main.py
-    Rehearsed 0e8066626e0c90c4a32aaa7a85a727c2a0805d01 (<一次性測試專案路徑>)
-
-    FAILED (0)
-    SKIPPED (0)
-
-    .                                                                        [100%]
-    1 passed in 0.10s
-    EXIT:0
-    ```
-
-    （這一次遠端真的解得到，所以直接通過，還沒走到跳過那條路；下面再把遠端也拿掉。）
-  - 把遠端 main 也拿掉（分支改名，連遠端都沒有一個叫 main 的東西）：
-
-    ```
-    $ python3 loom-code/scripts/rehearse_probes.py --repo <一次性測試專案路徑> -- loom-code/scripts/test_probes_toy_reads_local_main.py
-    Rehearsed 0e8066626e0c90c4a32aaa7a85a727c2a0805d01 (<一次性測試專案路徑>)
+    Rehearsed 176f090cc132e933f5dcfa50b2baac4baba7ab32 (<一次性測試專案路徑>)
 
     FAILED (0)
     SKIPPED (1)
@@ -91,38 +76,48 @@
     ```
 
     跳過不會讓命令變紅——這條路徑本身也印出了理由，而且結束碼仍是 0。
-- **證據**：以上五段完整終端輸出，涵蓋兩種直譯器版本（這台機器的、你們自動化檢查用的）與三個情境（真正的專案、假探針紅、假探針改寫後綠含跳過路徑）。
+- **證據**：以上四段完整終端輸出，涵蓋兩種直譯器版本（這台機器的、你們自動化檢查用的）與兩個情境（假探針紅、假探針改寫後綠含跳過路徑）。
 - **結論**：做到了。
 
 ### 2. 用一支故意讀本機 main 的合成探針試它：命令要紅；把探針改成先讀遠端 main、都沒有就跳過，命令要綠
 
 - **我怎麼試的**：同上一條——這條驗證的正是同一組操作，這裡把它單獨列出來對照。
 - **發生了什麼**：讀本機 main 的版本在乾淨副本裡讀不到，命令回報失敗、結束碼 1；改寫成先讀遠端 main、都沒有才跳過的版本，命令回報通過（或在遠端也不存在時改成跳過並印出理由）、結束碼 0。
-- **證據**：與第 1 條相同的三段終端輸出（`FAILED (1)` … `EXIT:1`，接著兩段 `EXIT:0`，其中一段是跳過路徑）。
+- **證據**：與第 1 條相同的兩段終端輸出（`FAILED (1)` … `EXIT:1`，接著 `SKIPPED (1)` … `EXIT:0`）。
 - **結論**：做到了。
 
 ### 3. build 站的記憶步驟文字寫明「畢業前跑這命令，紅的不得畢業」，且有測試釘住那句話
 
 - **我怎麼試的**：打開 build 站現在的文字，找「畢業」那一段，看有沒有提到這個新命令、有沒有講紅了不能畢業；接著跑釘住這句話的那支測試。另外，我把自己當成一個只讀過這一段文字、什麼都不知道的人，照著文字做一次「盲跑」：文字要我打哪個指令、看到紅字要做什麼、看到列出的跳過要做什麼。
 - **發生了什麼**：
-  - 這一段現在確實寫了：把 change 的探針複製進永久測試目錄之後，接著要用這個新命令（在乾淨副本裡跑一次），紅了就不准把探針算作畢業；還特別交代——列出來的每一條跳過理由都要讀,因為如果跳過的理由講的是「只有這棵樹才找得到的某個 commit 或分支」，那條跳過在真正的自動化檢查裡等於什麼都沒驗到。
-  - 釘住這句話的測試：
+  - 這一段現在確實寫了，而且現在被明確標記成一段「不能改壞」的守則段落，逐字照抄如下（原文英文，我照原樣貼出）：
+
+    > `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rehearse_probes.py <test paths>`
+    > clones the repo the way CI checks it out — full history, `origin/main`,
+    > no local trunk branch — and runs the copies there (on Codex, the script
+    > ships with the loom-code checkout). A red rehearsal blocks graduation
+    > until the probe reads `origin/main` first and skips when nothing
+    > resolves, and reading every skip it lists matters, since a skip naming a
+    > commit or a branch only this tree has verifies nothing on CI.
+
+    意思是：把 change 的探針複製進永久測試目錄之後，接著要用這個新命令（在乾淨副本裡跑一次），紅了就不准把探針算作畢業；還特別交代——列出來的每一條跳過理由都要讀，因為如果跳過的理由講的是「只有這棵樹才找得到的某個 commit 或分支」，那條跳過在真正的自動化檢查裡等於什麼都沒驗到。
+  - 釘住這句話、也釘住「這段是守則不能被改壞」的測試：
 
     ```
-    $ python3 -m pytest loom-code/scripts/test_build_station_text.py -q -p no:cacheprovider -k rehearsal
-    ..                                                                       [100%]
-    2 passed, 21 deselected in 0.11s
+    $ python3 -m pytest loom-code/scripts/test_build_station_text.py -q -p no:cacheprovider -k "rehearsal or prose_gate"
+    ...                                                                      [100%]
+    3 passed, 21 deselected in 0.11s
     EXIT:0
     ```
 
   - 冷讀盲跑（只照文字做，不看程式碼）：文字裡給的指令樣板是「用這個新命令＋要跑的測試路徑」；但「要跑的測試路徑」具體填什麼，這句指令本身沒講——要往前多讀一段（複製探針那句）才知道是指剛複製進永久測試目錄的那批探針檔案。看到紅字：文字說「紅的不得畢業」，我會照做——回去把探針改成先讀遠端、讀不到才跳過,再重跑一次,不會就地放行。看到列出的跳過：文字說每一條理由都要讀,一旦理由裡點名了「只有這棵樹才有」的東西（某個 commit、某個分支）,那條跳過等於沒驗到,我會當成還沒過關處理,不會直接放行。
-- **證據**：這一段文字目前的內容（已在第 3 條的說明裡逐句轉述）；上面那段測試輸出（2 passed）；上面那段冷讀紀錄，包含唯一需要往前多讀一句才確定的地方。
+- **證據**：這一段文字目前逐字的內容（上面引用區塊）；上面那段測試輸出（3 passed）；上面那段冷讀紀錄，包含唯一需要往前多讀一句才確定的地方。
 - **結論**：做到了。
 
 ### 4. 這個 change 合併後，在 main 上跑這命令：0 失敗，且跳過理由裡沒有「commit 不在歷史」「change 已 shipped」這兩類
 
 - **我怎麼試的**：在乾淨副本（也就是這個分支目前的樣子，還沒合併）上直接跑了一次完整命令，逐句檢查跳過清單裡的理由。
-- **發生了什麼**：0 支失敗。跳過清單只有 1 支，理由是：「已經在一次排練用的乾淨副本裡面了（有一個內部標記在），再巢狀地做一次複製再跑一次會沒完沒了」。這是防止命令自己套自己、無限遞迴的保護，不是在講「某個 commit 只有這棵樹找得到」或「這個 change 已經出貨了」——跟你原本問的那兩類完全無關，理由裡也沒有出現「歷史」「squash」「出貨」「自己的分支」這些字眼。原本那兩類——一類是讀某個已經被壓縮合併、本機才找得到的 commit，一類是讀某個 change 是否已經出貨的分支狀態——對應的測試判斷已經不在測試檔裡了：
+- **發生了什麼**：0 支失敗。跳過清單只有 1 支，理由是：「已經在一次排練用的乾淨副本裡面了（理由裡直接印出那份副本在磁碟上的路徑），再巢狀地做一次複製再跑一次會沒完沒了」。這是防止命令自己套自己、無限遞迴的保護，不是在講「某個 commit 只有這棵樹找得到」或「這個 change 已經出貨了」——跟你原本問的那兩類完全無關，理由裡也沒有出現「歷史」「squash」「出貨」「自己的分支」這些字眼。原本那兩類——一類是讀某個已經被壓縮合併、本機才找得到的 commit，一類是讀某個 change 是否已經出貨的分支狀態——對應的測試判斷已經不在測試檔裡了：
 
   ```
   $ grep -rn "_confirm_intent_sha\|_skip_if_language_policy_shipped" loom-code/scripts/test_probes_complexity_wave_end.py loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_branch_end.py
