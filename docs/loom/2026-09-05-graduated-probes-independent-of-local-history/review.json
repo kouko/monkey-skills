@@ -65,11 +65,20 @@
       "started": "2026-09-05T23:49:38+08:00",
       "fresh_context": true,
       "vendor": "openai"
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-fix-6d0c",
+      "model": "sonnet",
+      "started": "2026-09-05T23:56:36+08:00",
+      "fresh_context": true,
+      "note": "fix round for the wave-end:1 adversary findings (probes 434c6e7d)"
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 7,
+    "dispatches": 8,
     "cap_changes": [],
     "hours_plan_to_pr": null
   }
