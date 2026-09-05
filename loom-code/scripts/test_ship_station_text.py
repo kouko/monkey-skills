@@ -8,14 +8,46 @@ pin on ship's escape-hatch sentence.
 A cheap string-presence assertion; it does not parse or execute the
 prose, it only proves the paragraph landed in the file the reading
 station reads, in the right place, within the section's word cap.
+
+W2-01 adds: ship no longer closes the intent in its own commit, its own
+checkpoint and a second push after the pull request exists (option A).
+The close line now rides in the same review-only commit §3 already
+amends for the memory trailers, and §6 is "Merge, then verify" — pins
+below cover that shape, the PR body's new "## Closing log" section, and
+the one-line backward-compatibility note for branches shipped under the
+older `PR #<N>` grammar.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 SHIP_SKILL_MD = REPO / "loom-code/skills/ship/SKILL.md"
 BUILD_SKILL_MD = REPO / "loom-code/skills/build/SKILL.md"
+
+_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+
+
+def _has_negation(sentence: str) -> bool:
+    """True iff `sentence` contains a word-boundary negation token — 'not',
+    'never' or 'no' as whole words, or an "n't" contraction."""
+    return bool(_NEGATION_RE.search(sentence))
+
+
+def _sentences(text: str) -> list[str]:
+    """Split text into sentences after collapsing newlines to spaces, so a
+    sentence that line-wraps in the SKILL.md source still reads as one
+    unit here."""
+    flat = " ".join(text.split())
+    return [p for p in re.split(r"(?<=[.!?])\s+", flat) if p.strip()]
+
+
+def _section_6_merge_then_verify() -> str:
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    start = text.index("## 6. Merge, then verify")
+    end = text.index("## 7. Clean-up")
+    return text[start:end]
 
 
 def _section_3_memory() -> str:
@@ -123,3 +155,80 @@ def test_ship_memory_escapehatch_names_build_task() -> None:
     assert "a task for `loom-code:build`" in flat
     assert "fresh" in flat and "branch-end" in flat
     assert "never a commit made here" in flat
+
+
+def test_ship_close_line_rides_in_review_only_commit() -> None:
+    """W2-01: ship's §6 states the intent's close line rides in the same
+    review-only commit that carries `review.json` — pushed once and PR'd
+    once, no separate close commit or second push. Affirmative,
+    un-negated."""
+    section = _section_6_merge_then_verify()
+    hits = [
+        s for s in _sentences(section)
+        if "close line" in s.lower()
+        and "review-only" in s.lower()
+        and "pushed once and pr'd once" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "ship/SKILL.md §6 has no affirmative close-line-rides-in-commit sentence"
+    )
+
+
+def test_ship_push_review_only_head_admits_close_shape() -> None:
+    """§6: `push.review-only-head` admits the `review.json` + one intent
+    line shape — the rule this option relies on."""
+    section = _section_6_merge_then_verify()
+    hits = [
+        s for s in _sentences(section)
+        if "push.review-only-head" in s.lower()
+        and "admits exactly that shape" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "ship/SKILL.md §6 has no push.review-only-head admits-exactly-that-shape "
+        "sentence"
+    )
+
+
+def test_ship_older_pr_number_shape_still_accepted() -> None:
+    """§6: a branch shipped before this rule used `status: closed <date> —
+    PR #<N>`; the checker still accepts that older shape — a one-line
+    backward-compatibility note, not a second code path this station
+    produces."""
+    section = _section_6_merge_then_verify()
+    flat = _unwrapped(section)
+    assert "PR #<N>" in flat
+    assert "the checker still accepts that older shape" in flat
+
+
+def test_ship_pr_body_has_closing_log_section_before_memory() -> None:
+    """§5's PR-body template gains a `## Closing log` section that pastes
+    `git log <reviewed_sha>..HEAD --format='%h %s'`, placed before
+    `## Memory` — the trailer footer must stay the template's last
+    block (`ship.pr-body-carries-trailer-footer`)."""
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    closing_idx = text.index("## Closing log")
+    memory_idx = text.index("## Memory")
+    assert closing_idx < memory_idx
+    flat = _unwrapped(text)
+    assert "git log <reviewed_sha>..HEAD --format='%h %s'" in flat
+
+
+# --- synthetic self-tests for the negation-aware matcher --------------------
+
+
+def test_matcher_close_line_sentence_negated_rejected() -> None:
+    """A sentence carrying every required substring but negated with
+    'never' must be rejected by the matcher, mirroring
+    test_language_station_text.py's synthetic-negative pattern."""
+    sentence = (
+        "The intent's close line never rides in the review-only commit, "
+        "pushed once and PR'd once."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_review_only_head_sentence_negated_rejected() -> None:
+    sentence = "`push.review-only-head` does not admit exactly that shape."
+    assert _has_negation(sentence)
