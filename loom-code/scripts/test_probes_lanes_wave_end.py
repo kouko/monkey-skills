@@ -43,7 +43,8 @@ from test_loom_checker_push import (  # noqa: E402
 from test_loom_checker_intent import (  # noqa: E402
     make_repo as make_intent_repo,
 )
-from test_abuse_lane_declaration import (  # noqa: E402
+try:  # the sibling is test_abuse_lane_declaration under evidence/, test_probes_lane_declaration once graduated
+    from test_abuse_lane_declaration import (  # noqa: E402
     _adversarial_records,
     _commit_intent,
     _commit_review,
@@ -56,7 +57,22 @@ from test_abuse_lane_declaration import (  # noqa: E402
     _write_evidence,
     _write_kickoff,
     _write_review,
-)
+    )
+except ModuleNotFoundError:  # pragma: no cover - the graduated copy's sibling name
+    from test_probes_lane_declaration import (  # noqa: E402
+    _adversarial_records,
+    _commit_intent,
+    _commit_review,
+    _dispatch,
+    _lane_intent_text,
+    _package_tests_record,
+    _seed_branch,
+    _verdict,
+    _write,
+    _write_evidence,
+    _write_kickoff,
+    _write_review,
+    )
 
 CHECKER = REPO_ROOT / "loom-code" / "scripts" / "loom_checker.py"
 LANE_SWITCH = REPO_ROOT / "loom-code/skills/review/references/lane-switch.md"
