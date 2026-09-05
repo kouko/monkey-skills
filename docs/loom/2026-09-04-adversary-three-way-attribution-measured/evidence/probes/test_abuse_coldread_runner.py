@@ -30,9 +30,10 @@ Interface pinned by the dispatch packet (loom-code plan.md W1-03):
         exit 2, existing files untouched. `--resume` reads back existing
         run-<i>.txt (header stripped at the first blank line) instead of
         re-running, and still scores all N. A TimeoutExpired on one run
-        writes that run's transcript with `# error:`, scores `unparsed`
-        for every item of that run, and the loop continues to the next
-        run.
+        writes that run's transcript with `# status: timeout` and
+        `# error:`, excludes that run from every scored count (design
+        re-look 2026-09-05 (a) -- see test_abuse_coldread_run_status.py),
+        and the loop continues to the next run.
 """
 from __future__ import annotations
 
@@ -241,10 +242,16 @@ def test_main_resume_skips_existing_runs_calls_subprocess_once(tmp_path, monkeyp
 # ---------------------------------------------------------------------------
 
 
-def test_main_timeout_expired_run_written_as_error_and_loop_continues(tmp_path, monkeypatch):
-    """A TimeoutExpired on run 2 of 3 must not abort the batch: run-2.txt gets
-    an `# error:` line and that run is scored unparsed for every item, but
-    run-3 is still attempted and written."""
+def test_main_timeout_expired_run_excluded_from_scored_counts(tmp_path, monkeypatch):
+    """Design re-look 2026-09-05 (a): a TimeoutExpired on run 2 of 3 must
+    not abort the batch (run-3 is still attempted and written) and must
+    not be scored -- it is a non-observation, not a wrong answer. Its
+    transcript still carries `# status: timeout` in the header and an
+    `# error:` line in the body (audit trail), but it contributes no
+    "unparsed" (or any other) count to any item, `n == 2` (only the two
+    ok runs are scored), `failed_runs == 1`, `complete` is false, and
+    `main` returns 1 -- a partial batch is never reported as a green
+    exit code."""
     calls = []
 
     def fake_run(argv, **kwargs):
@@ -264,13 +271,20 @@ def test_main_timeout_expired_run_written_as_error_and_loop_continues(tmp_path, 
     assert len(calls) == 3, "the loop must still attempt run 3 after run 2 times out"
     assert (out / "run-3.txt").exists()
     text2 = (out / "run-2.txt").read_text(encoding="utf-8")
-    assert "# error:" in text2
+    header2 = text2.split("\n\n", 1)[0]
+    body2 = text2.split("\n\n", 1)[1]
+    assert "# status: timeout" in header2
+    assert "# error:" in body2
 
     summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
     run2_entry = next(r for r in summary["runs"] if r["i"] == 2)
     assert run2_entry["status"] == "timeout"
+    assert summary["n"] == 2
+    assert summary["failed_runs"] == 1
+    assert summary["complete"] is False
+    assert rc == 1
     for item in summary["items"].values():
-        assert item["counts"].get("unparsed", 0) >= 1
+        assert item["counts"].get("unparsed", 0) == 0
 
 
 # ---------------------------------------------------------------------------
