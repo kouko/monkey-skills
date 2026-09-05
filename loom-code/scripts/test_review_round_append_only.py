@@ -203,6 +203,74 @@ def test_review_edits_second_vendor_set_once_then_immutable(tmp_path: Path) -> N
     assert "review.round-append-only" in blocked_rule_ids(result)
 
 
+def test_review_edits_charter_stamp_changed_blocks(tmp_path: Path) -> None:
+    """The `charter` stamp itself is immutable once present -- changing
+    its value between two committed rounds must block, naming "charter
+    stamp changed", never treated as a replaceable field."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["charter"] = "2.0"
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — quietly bump charter")
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+    assert "charter stamp changed" in result.stderr
+
+
+def test_review_edits_verdicts_replaced_by_object_blocks_array_type_changed(tmp_path: Path) -> None:
+    """`verdicts` turning from a list into an object between two committed
+    rounds is neither a shrink nor a gain -- the exhaustive comparison
+    must block it as an array type change, never silently skip it
+    because one side is no longer a list."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["verdicts"] = {"reviewer": "r1", "verdict": "PASS"}
+    write_and_commit(
+        repo, doc2, "chore(loom): checkpoint review — quietly replace verdicts with an object"
+    )
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+    assert "array type changed" in result.stderr
+
+
+def test_review_edits_reviewed_sha_changed_with_replace_policy_removed_blocks(tmp_path: Path) -> None:
+    """`load_manifest()` always resolves the real
+    loom-code/contract/manifest.yaml, never a path this test's own tmp
+    repo could redirect (mirroring the adversary's
+    test_review_edits_unsupported_policy_id_blocks_closed), so this test
+    patches that manifest on disk to drop
+    `reviewed-sha-scope-cost-replaced` from the review charter's
+    edits_after, then checks that quietly moving `reviewed_sha` between
+    two committed rounds blocks with the replace policy gone."""
+    manifest_path = CHECKER.parent.parent / "contract" / "manifest.yaml"
+    original = manifest_path.read_text(encoding="utf-8")
+    line = (
+        '        - {id: reviewed-sha-scope-cost-replaced,                '
+        'text: "reviewed_sha, scope and cost are replaced"}\n'
+    )
+    assert line in original, "expected edits_after line not found in manifest.yaml"
+    patched = original.replace(line, "")
+    assert patched != original
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["reviewed_sha"] = "2222222b"
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — quietly move reviewed_sha")
+    try:
+        manifest_path.write_text(patched, encoding="utf-8")
+        result = run_review_edits(repo)
+    finally:
+        manifest_path.write_text(original, encoding="utf-8")
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+
+
 if __name__ == "__main__":
     import pytest
     raise SystemExit(pytest.main([__file__, "-v"]))

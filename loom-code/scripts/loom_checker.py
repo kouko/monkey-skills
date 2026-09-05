@@ -2339,7 +2339,8 @@ IMPLEMENTED_REVIEW_EDITS_AFTER_IDS = {
     "second-vendor-set-once",
 }
 
-REVIEW_ACCRETING_ARRAYS = ("verdicts", "probes", "open_findings", "dispatch")
+REVIEW_ACCRETING_ARRAYS = ("verdicts", "probes", "open_findings", "dispatch", "vendors")
+REVIEW_REPLACE_SET_FIELDS = ("reviewed_sha", "scope", "cost")
 OPEN_FINDING_MOVABLE_KEYS = ("resolved", "dismissed")
 
 
@@ -2437,7 +2438,11 @@ def _compare_review_round(
     """One consecutive pair of review.json rounds: `earlier` may only
     differ from `later` per the charter's enabled policy ids -- skipped
     entirely when `earlier` carries no top-level `charter` key
-    (grandfathering)."""
+    (grandfathering). Every known top-level key is checked here; a key
+    absent from this function's own categories below (accreting array,
+    replace-set, questions, second_vendor, charter) blocks on any
+    difference by falling through to the catch-all at the end -- there
+    is no key this function silently ignores."""
     if "charter" not in earlier:
         return []
 
@@ -2456,56 +2461,72 @@ def _compare_review_round(
         if key not in known_top_level_keys:
             failures.append(_review_block(f"{label}.{key}", "unknown key added"))
 
-    for arr_name in REVIEW_ACCRETING_ARRAYS:
-        e_list, l_list = earlier.get(arr_name), later.get(arr_name)
-        if not isinstance(e_list, list) or not isinstance(l_list, list):
+    for key in sorted((earlier_keys | later_keys) & known_top_level_keys):
+        if key in earlier_keys - later_keys:
+            continue  # already reported as "key removed" above
+
+        if key == "charter":
+            if _review_norm(earlier.get("charter")) != _review_norm(later.get("charter")):
+                failures.append(_review_block(f"{label}.charter", "charter stamp changed"))
             continue
-        if len(l_list) < len(e_list):
-            failures.append(_review_block(f"{label}.{arr_name}", "earlier round rewritten"))
+
+        if key in REVIEW_ACCRETING_ARRAYS:
+            e_list, l_list = earlier.get(key), later.get(key)
+            if not isinstance(e_list, list) or not isinstance(l_list, list):
+                if _review_norm(e_list) != _review_norm(l_list):
+                    failures.append(_review_block(f"{label}.{key}", "array type changed"))
+                continue
+            if len(l_list) < len(e_list):
+                failures.append(_review_block(f"{label}.{key}", "earlier round rewritten"))
+                continue
+            for index, e_entry in enumerate(e_list):
+                l_entry = l_list[index]
+                if _review_norm(e_entry) == _review_norm(l_entry):
+                    continue
+                if (
+                    key == "open_findings"
+                    and allow_resolve
+                    and _open_finding_gained_resolution_only(e_entry, l_entry)
+                ):
+                    continue
+                if (
+                    key == "verdicts"
+                    and allow_replace
+                    and _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier, later)
+                ):
+                    continue
+                if key == "probes" and _probe_only_result_changed(e_entry, l_entry):
+                    failures.append(_review_block(f"{label}.{key}[{index}]", "evidence tampering"))
+                    continue
+                failures.append(_review_block(f"{label}.{key}[{index}]", "earlier round rewritten"))
+            if len(l_list) > len(e_list) and not allow_gain:
+                failures.append(
+                    _review_block(f"{label}.{key}", "gained entries with no charter allowance")
+                )
             continue
-        for index, e_entry in enumerate(e_list):
-            l_entry = l_list[index]
-            if _review_norm(e_entry) == _review_norm(l_entry):
-                continue
-            if (
-                arr_name == "open_findings"
-                and allow_resolve
-                and _open_finding_gained_resolution_only(e_entry, l_entry)
-            ):
-                continue
-            if (
-                arr_name == "verdicts"
-                and allow_replace
-                and _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier, later)
-            ):
-                continue
-            if arr_name == "probes" and _probe_only_result_changed(e_entry, l_entry):
-                failures.append(_review_block(f"{label}.{arr_name}[{index}]", "evidence tampering"))
-                continue
-            failures.append(_review_block(f"{label}.{arr_name}[{index}]", "earlier round rewritten"))
-        if len(l_list) > len(e_list) and not allow_gain:
-            failures.append(
-                _review_block(f"{label}.{arr_name}", "gained entries with no charter allowance")
-            )
 
-    if (
-        "vendors" in earlier
-        and "vendors" in later
-        and _review_norm(earlier["vendors"]) != _review_norm(later["vendors"])
-    ):
-        failures.append(_review_block(f"{label}.vendors", "replaced"))
+        if key in REVIEW_REPLACE_SET_FIELDS:
+            if not allow_replace and _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
+                failures.append(_review_block(f"{label}.{key}", "changed"))
+            continue
 
-    if "questions" in earlier or "questions" in later:
-        e_q, l_q = earlier.get("questions", []), later.get("questions", [])
-        if _review_norm(e_q) != _review_norm(l_q):
-            if not (allow_questions_fill and not e_q and l_q):
-                failures.append(_review_block(f"{label}.questions", "changed"))
+        if key == "questions":
+            e_q, l_q = earlier.get("questions", []), later.get("questions", [])
+            if _review_norm(e_q) != _review_norm(l_q):
+                if not (allow_questions_fill and not e_q and l_q):
+                    failures.append(_review_block(f"{label}.questions", "changed"))
+            continue
 
-    if "second_vendor" in earlier or "second_vendor" in later:
-        e_sv, l_sv = earlier.get("second_vendor"), later.get("second_vendor")
-        if e_sv != l_sv:
-            if not (allow_second_vendor_set and e_sv is None and l_sv is not None):
-                failures.append(_review_block(f"{label}.second_vendor", "changed"))
+        if key == "second_vendor":
+            e_sv, l_sv = earlier.get("second_vendor"), later.get("second_vendor")
+            if e_sv != l_sv:
+                if not (allow_second_vendor_set and e_sv is None and l_sv is not None):
+                    failures.append(_review_block(f"{label}.second_vendor", "changed"))
+            continue
+
+        # Any other known top-level key: block on any difference.
+        if _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
+            failures.append(_review_block(f"{label}.{key}", "changed"))
 
     return failures
 
