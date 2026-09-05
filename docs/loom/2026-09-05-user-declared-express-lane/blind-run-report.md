@@ -1,290 +1,93 @@
-# 使用者宣告車道（full／express／gate-only）——我試了什麼、發生了什麼
+# 使用者宣告的車道（full／express／gate-only）— 我試了什麼、發生了什麼
 
-在 2026-09-05 試的，用的是一份乾淨複製的專案。第 5、6、7 條驗收在版本
-`d31484fa` 上試的；第 1-4 條經過兩輪對抗修正，最後一次在版本 `19b8c4e8`
-上重新試過（同樣是乾淨複製）——這一版把 gate-only 的定義改窄了：它現在
-是「small 車道拿掉讀者下限」，不是另一種獨立、範圍較窄的東西；而且宣告
-車道那一行現在強制要帶日期（`lane: <名> — declared <日期> by <人名>`），
-沒帶日期的一行會被拒絕。
-
-**先說範圍**：這次試的是這個改動的「wave 1」——car 車道宣告、切換規則、
-車道重算、review／build／ship 三站的文字。改動計畫裡還排了「wave 2」
-（版本號更新到 1.6.0、記憶步驟），但那部分還沒做出來，這次不試也不評論。
+分支結束（branch-end）驗收。2026-09-05 在一份乾淨的複本上試的，複本切在短碼 `56062fc7`（本次分支的最新一版）。這是這份報告的第二版，取代分支中段（wave-end）寫的那份，把整條分支——三個工作波次、三輪修正、還有使用者剛簽字的那條產品原則修訂——一起走了一遍。
 
 ## 你要的東西，一條一條試
 
-### 1. intent 範本要有 `lane:` 說明；KICKOFF 範本要有 `default-lane:` 說明；切換 commit 沒帶那一行就要擋（本輪改為：宣告一定要帶日期）
-- **怎麼試的**：打開兩份範本檔看說明文字，確認宣告的寫法已經改成「一定
-  要帶日期與人名」；接著自己動手做三個小實驗——（a）寫一個帶
-  `lane: express — declared 2026-09-05 by kouko`（帶日期）的 intent，
-  commit 訊息裡「有寫」那一行，跑一次 checker 的 `intent` 檢查；（b）寫一
-  個只寫 `lane: express`（沒有日期、沒有人名）的 intent，跑同一個檢查，
-  期待被拒絕；（c）重跑一次「切換 commit 沒帶那一行」的舊實驗，確認換了
-  日期格式後這條規則還在。
-- **發生了什麼**：intent 範本裡的說明已經改成「宣告一定要帶日期與人名，
-  沒有日期的寫法不合法」；KICKOFF 範本裡的 `default-lane:` 說明沒變。
-  （a）帶日期的宣告，通過（結束碼 0）。（b）只寫 `lane: express`（沒日
-  期）被兩條規則同時擋下：一條說「這個寫法不合語法，沒有日期的車道名稱
-  不是合法值」，另一條說「commit 訊息沒有帶著這一行」（結束碼 1）——也就
-  是說，現在光靠寫日期還不夠，寫法本身也要合語法，改動的 commit 訊息也
-  要照樣抄一次。（c）帶日期的切換 commit，如果訊息漏寫那一行，一樣被擋
-  （結束碼 1），跟以前的規則邏輯一致，只是引號裡的原文換成了帶日期版本。
-- **證據**：範本檔 `loom-code/contract/templates/intent.md` 第 8 行、
-  `loom-code/contract/templates/KICKOFF-DEFAULTS.md` 第 17 行；三個手動實
-  驗分別在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-templates`（帶日期通過，
-  結束碼 0）、
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-bare-lane`（無日期被擋，
-  印出「`lane: express` does not match the declared grammar ... a bare
-  lane name with no dated attribution is not a legal value」以及「commit
-  ... 沒有帶著 `lane: express` 這一行」，結束碼 1）、
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-switch-missing-line`
-  （帶日期的切換 commit 漏寫那一行被擋，印出「commit ... 沒有帶著
-  `lane: express — declared 2026-09-05 by kouko` 這一行」，結束碼 1）。
-- **結論**：符合（規則升級為「一定要帶日期」，行為一致重新驗過）。
-
-### 2. 沙盒：宣告 `express` 的 docs／skill 類改動，只有一位讀者，過閘要成功；同一份改動再動 checker 一行，要變回擋下
-- **怎麼試的**：自己搭一個小的假專案，寫一份帶日期的
-  `lane: express — declared 2026-09-05 by kouko` 的 intent，改一份 docs
-  檔和一份 skill 檔，只記一位讀者的審查結果，跑「過閘」指令；接著在同一份
-  改動再多改一行 checker 本身的程式碼，重跑一次過閘指令。這是第三次驗這
-  一條——前兩輪對抗修正之後，這次改用新的「一定要帶日期」寫法，在最新版本
-  `19b8c4e8` 上把兩步整個重搭一次沙盒重跑。
-- **發生了什麼**：跟前兩次試的結果一樣：第一次過閘指令回傳成功（結束碼
-  0）；加了 checker 那一行之後回傳失敗（結束碼 1），並印出「因為改到了
-  `loom_checker.py`（非測試程式碼），車道被強制拉回 full，需要 2 位讀
-  者，現在只有 1 位」——這條規則從頭到尾沒有被任何一輪修法動到，只是宣告
-  的寫法換成了帶日期版本。
-- **證據**：第一輪手動實驗在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/manual-express-repo`；第二輪重
-  新驗證在 `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun2-express-repo`；
-  這次（帶日期寫法）重新驗證在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-express-repo`；也用專案
-  自帶的對抗測試檔 `test_abuse_lane_declaration.py` 整份重跑過，全部通過
-  （`pytest ... -q` → `11 passed`）。
+### 1. 模板要有車道欄位；一行沒寫日期的宣告要被擋
+- **我怎麼試的**：打開這個 repo 真正在用的「開新工作要填的東西」模板，找 `lane:` 這一行；再打開「這個 repo 平常怎麼跑」模板，找 `default-lane:` 這一行。接著自己動手做兩個假的小案例：(1) 寫一行沒有日期、沒有人名的「lane: express」交給檢查工具；(2) 假裝實作到一半要切換車道，但那次的 commit 訊息裡忘了寫那句切換宣告，一樣交給檢查工具。
+- **發生了什麼**：兩份模板都各有一行清楚的說明——一份寫「這裡可以選 express 或 gate-only，不寫就照這個 repo 的預設走」；另一份寫「這個 repo 預設走哪一格」。案例 (1) 被工具擋下，理由是「一個只寫車道名字、沒有日期和人名的行，不是合法的寫法」；案例 (2) 也被擋下，理由是「(切換的) commit 訊息裡沒有那一行一模一樣的文字」。
+- **證據**：模板檔（`loom-code/contract/templates/intent.md` 第 8 行、`loom-code/contract/templates/KICKOFF-DEFAULTS.md` 第 17 行）；我自建的沙盒 `/tmp/br_manual6_*`，跑檢查工具 `intent` 子指令，兩案例都印出擋下訊息並以非零狀態結束。
 - **結論**：符合。
 
-### 3. 沙盒：宣告 `gate-only` 的純 docs 改動，零讀者也能過閘（但要有 ≥3 個對抗測試和一次整包測試紀錄）；同一份改動加一個 SKILL.md 檔要擋下（本輪改為：gate-only 現在等於「small 車道、拿掉讀者下限」）
-- **這一條的規則變了，先說清楚**：gate-only 現在不是一種獨立的、有自己一
-  套准入名單的車道，而是「這份改動本來（不管有沒有宣告）就會被算成 small
-  車道時，讀者下限額外歸零」。換句話說：只要這份改動的內容讓 checker 自
-  己重算出來就已經是 small（純測試、純文件、CI／設定、版本同步、乾淨
-  revert 這幾類），宣告 gate-only 才會生效；只要delta 裡有任何一樣東西讓
-  checker 自己算出來是 full——不管是一份像 `KICKOFF-DEFAULTS.md` 這樣的
-  「常設文件」、第二個外掛目錄、一般程式碼、gate／skill／agent 契約檔，
-  還是 interface-surface 路徑——gate-only 這個宣告就直接被忽略，車道退回
-  full，讀者下限變回 2。
-- **怎麼試的**：搭三個獨立的假專案，跑三種情境——（a）一份原本就會被算成
-  small 的純 docs 改動，宣告帶日期的 `lane: gate-only`，零讀者、3 個對抗
-  測試紀錄、1 個整包測試紀錄，跑過閘，期待成功；（b）同一種改動，但這次
-  多加一份一般用途的 `.py` 程式檔（非測試），跑過閘，期待被擋，而且擋的
-  理由要點名是哪一個檔案；（c）同一種改動，但這次改動的內容本身包含了
-  `KICKOFF-DEFAULTS.md`（常設文件）的編輯，跑過閘，期待被擋。
-- **發生了什麼**：（a）成功（結束碼 0）。（b）失敗（結束碼 1），工具印出
-  這一行（原文）：「BLOCK push.verdicts-ge-2: full lane: review round 0
-  carries 0 distinct reviewer(s) with a readable verdict; 2 required
-  (gate-only needs a small-lane delta: src/module.py is non-test code).」
-  ——點名了確切是哪一個檔案讓 gate-only 失效。（c）也失敗（結束碼 1），
-  工具印出：「... (gate-only needs a small-lane delta:
-  docs/loom/KICKOFF-DEFAULTS.md is a standing document.)」——同一句話的
-  結構，換成點名 KICKOFF 這份常設文件。三種情境都跟這一輪改動想要達成的
-  行為一致。
-- **證據**：三個手動實驗分別在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-gateonly-repo2`（情境 a、
-  b，兩者疊在同一個分支上，先驗 a 成功，再加程式檔驗 b 失敗）、
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-gateonly-repo3`（情境
-  c，KICKOFF-DEFAULTS.md 的編輯本身就在被驗的改動範圍內）；另外
-  `pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/
-  test_abuse_lanes_wave_end.py -k
-  "gateonly_dated_declaration_nontest_code_in_delta_blocked or
-  gateonly_dated_declaration_standing_doc_touch_now_blocked"` 也各自通
-  過，跟手動重跑的結果一致。
-- **結論**：符合（gate-only 的定義已經改窄，三種情境都照新定義驗證過）。
+### 2. express：文件＋skill 的改動、一位讀者過關；改到檢查工具本身就被擋
+- **我怎麼試的**：自己搭了一個乾淨的假專案，宣告「這次走 express」，只改一份說明文件和一份技能說明檔，只找一位讀者簽名，交給檢查工具的「要不要放行」指令。接著在同一個假專案上，多改一行檢查工具自己的程式碼，其他都不變，再跑一次。
+- **發生了什麼**：第一次——一位讀者、文件＋技能檔的改動——检查工具說可以放行。第二次——多了那一行程式碼——檢查工具擋下，理由寫得很白：「這是非測試用的程式碼，不算在 express 可以放行的範圍」。
+- **證據**：我自己動手搭的沙盒（`/tmp/br_manual2_*`），兩次都是真的跑檢查工具、不是猜的：第一次結束碼 0；第二次結束碼 1，擋下的理由點名了改動的檔案路徑。另外這個分支自己也留了同款自動化案例並且是綠的：`test_push_declared_express_lane_docs_skill_delta_single_reader_passes`、`test_push_declared_express_lane_checker_code_delta_blocked`。
+- **結論**：符合。
 
-### 4. 沙盒：做到一半換車道——前面兩輪照舊兩位讀者，換車道之後那一輪起變一位讀者可通過；換車道那個 commit 沒帶那一行要擋（本輪：換車道的計時規則改了）
-- **這一條也有規則變化**：以前「從第 2 輪起換」是照「輪數編號」比大小，
-  這次改成照「這個 change 到目前為止，已經記錄過哪些（範圍、輪數）的組
-  合」來判斷——不然一旦審查輪重新編號（例如修正輪不算進正式輪數），舊算
-  法會把後面所有輪次都誤判成「還沒輪到」，永遠卡住。另外沒有寫成切換格式
-  的「單純宣告」（`lane: express — declared <日期> by <人名>`），現在的
-  生效時機跟`from wave <n>`的切換是同一套算法：只套用在「宣告這個動作發
-  生之後才記錄的（範圍、輪數）」，宣告當下已經存在的紀錄不受影響。
-- **怎麼試的**：跑專案自帶對抗測試檔裡針對這個新算法建好的四個情境（含
-  「宣告發生在檢查點關閉之後」「宣告發生在檢查點進行中」等邊界案例），
-  另外自己動手重跑一次「換車道 commit 沒帶那一行」的情境（改用最新版本
-  `19b8c4e8`），並把兩份對抗測試檔整份重跑一次。
-- **發生了什麼**：四個情境都符合新算法的預期。手動重跑「commit 沒帶那
-  行」的情境，工具印出「commit ... 沒有帶著 `lane: express — declared
-  2026-09-05 by kouko` 這一行」並擋下（結束碼 1）——只是引號裡的原文換成
-  了帶日期版本，行為邏輯沒變。兩份對抗測試檔分別跑出 `11 passed`（原本
-  那份）和 `23 passed`（記錄這兩輪全部問題的那份，這次比上一輪多了 9
-  項，因為新一輪對抗又多寫了幾個情境），一項沒有紅。
-- **證據**：`pytest test_abuse_lanes_wave_end.py -k "from_wave or
-  bare_lane_declaration_at_new_checkpoint"` → `4 passed`；手動重跑在
-  `/Users/kouko/.claude/jobs/f14c84f2/tmp/rerun3-switch-missing-line`；
-  兩份對抗測試檔整份重跑：`test_abuse_lane_declaration.py` → `11 passed`、
-  `test_abuse_lanes_wave_end.py` → `23 passed`。
-- **結論**：符合（計時算法已經改成不受輪數重編號影響，重新驗證過）。
+### 3. gate-only：純文件、零位讀者也能過；碰到程式碼／模板／技能檔就擋，宣告沒寫進 commit 也擋
+- **我怎麼試的**：同樣自己搭一個乾淨假專案，宣告「這次只過閘」，只改一份純文字說明，零位讀者簽名，但留下三個以上的「刁難測試」紀錄和一次整包測試的紀錄，交給檢查工具。然後分別另外試四種會出錯的狀況：(a) delta 裡混進一份非測試用的程式碼；(b) delta 裡碰到這個 repo「平常怎麼跑」的那份設定文件；(c) delta 裡加了一份技能說明檔；(d) 宣告「只過閘」但那次的 commit 訊息裡沒有把宣告的那一行寫進去。
+- **發生了什麼**：純文件、零讀者那次，檢查工具放行。(a) 被擋，理由點名「這份程式碼不是測試用的」；(b) 被擋，理由點名「這是一份需要全程走完整流程的設定文件」；(c) 被擋，理由點名「這是一份技能說明檔」；(d) 被擋，理由是逐字這一句——「lane declaration not stated by its commit」（宣告沒有被那次 commit 的訊息說出來），並附上那次 commit 的短碼。
+- **證據**：我自己動手搭的沙盒（`/tmp/br_manual4_*`、`/tmp/br_manual5_*`），全部是真的跑檢查工具：純文件零讀者結束碼 0；(a)(b)(c)(d) 全部結束碼 1，且訊息裡都點名了原因。這個分支也留了同款的十幾個自動化案例，我逐一跑過，全綠。
+- **結論**：符合。
 
-### 5. `references/lane-switch.md` 存在，含三格固定格式、「不能選的格照列並說原因」、口頭對應表；冷讀考驗——只讀 review 站文字和這份參考檔，面對「改動裡有一份 SKILL.md、使用者說『快速模式』」的情境，要列出三格、把 gate-only 標成不能選並說原因
-- **怎麼試的**：只讀了 `loom-code/skills/review/SKILL.md` 和
-  `loom-code/skills/review/references/lane-switch.md` 這兩份文件（不看其他
-  任何程式碼），然後自己扮演拿到這份文件的人，面對合成情境：「這次改動
-  裡有一份 `loom-code/skills/build/SKILL.md`；使用者在第 2 輪說『快速
-  模式』」，照著參考檔要求的格式寫出三格提示。
-- **發生了什麼**：口頭對應表把「快速模式」對應到 `express`（無需再問）。
-  三格提示如下——
+### 4. 實作途中切換車道：照「從第幾輪開始」算數，切換 commit 忘了寫那一行也擋
+- **我怎麼試的**：這條牽涉「同一次審查裡，第二輪還是舊車道、第三輪才變新車道」這種跨輪次的精細計時，還有「上一個工作波次結束後才切換」這種跨波次的算法。我讀了這個分支自己留下的自動化案例（不是我猜的規格，是這個分支的作者自己承諾要做到的行為），逐一跑過。
+- **發生了什麼**：全部通過——第 2 輪維持兩位讀者（切換還沒生效），第 3 輪起接受一位讀者（切換生效）；「上一個波次結束、下一個波次才切」的案例也是同樣的算法；切換 commit 缺那一行的案例被擋。
+- **證據**：`python3 -m pytest loom-code/scripts/test_probes_lane_declaration.py loom-code/scripts/test_probes_lanes_wave_end.py -q` — 我親自執行，`11 passed`、`26 passed`，其中含 `test_push_mid_flight_switch_before_current_round_single_reader_passes`、`test_push_mid_flight_switch_after_current_round_single_reader_blocked`、`test_push_from_wave_switch_declared_after_checkpoint_closes_single_reader_blocked`、`test_push_from_wave_switch_declared_mid_checkpoint_single_reader_blocked`、`test_intent_switch_commit_message_missing_lane_line_blocked`。
+- **結論**：符合。這一條我沒有自己另外重搭沙盒重跑，是因為第 1–3 條我已經證明了同一套檢查工具在真實案例上跑得動、擋得住；第 4 條的邏輯是同一顆檢查工具的延伸，我讀過並跑過這個分支自己準備的沙盒案例（案例本身就是自建的乾淨 git 專案、真的呼叫檢查工具，不是模擬），逐條看過通過訊息無誤。
 
-  | 車道 | 失去什麼 | 還剩什麼 | 估計 |
+### 5. 冷讀：只讀兩份文件，能不能自己講出「三格後果」
+- **我怎麼試的**：我只讀了兩份文件——「審查站怎麼運作」的說明、和「切換車道時要講什麼」的參考頁——假裝自己是被派去做這件事、事先什麼都不知道的人。情境是使用者給的合成題目：「這次的改動裡有一份技能說明檔，使用者在審查跑到第二輪的時候說了『快速模式』」。我要照文件的規定講出三格選項。
+- **發生了什麼**：文件裡有一張口語對照表，「快速模式」直接對應到「express」；文件也明講「三格永遠都要列出來，連這次不能選的那格也要列，並且要說原因」。照著做出來的三格是——
+
+  | 車道 | 會失去什麼 | 還留著什麼 | 大概要多久 |
   |---|---|---|---|
-  | full（目前所在） | （不變，全部都在） | 兩位以上讀者、盲跑、branch-end 對抗 | — |
-  | express | 從兩位以上讀者降成一位、中途的 wave-end 檢查點 | 一位讀者、驗收條非機械可查時仍跑盲跑、branch-end 對抗一次 | 無估計（這次沒有可比的 cost 紀錄） |
-  | gate-only（不能選） | 全部讀者、盲跑 | 對抗測試、整包測試、branch-end 對抗一次 | 無估計 —— **不能選，因為這次改動裡有一份 SKILL.md（skill／agent 契約類檔案），gate-only 明文禁止這類改動宣告** |
+  | full（目前所在） | 不會失去什麼 | 兩位以上讀者、盲跑報告、分支結束前的刁難測試 | —（本來就在這格） |
+  | express | 從兩位以上讀者降到一位、跳過工作波次中途的檢查點 | 一位讀者、只有在驗收條件真的沒辦法用「跑一次指令、比對數字」查完時才做盲跑、分支結束時仍有一次刁難測試 | 讀這次改動自己的紀錄：3 輪、23 次派工；小時數——無估計 |
+  | gate-only（**這次delta不能選**，原因：這次改動裡有一份技能說明檔，會讓「這改動有多大」的重新計算結果變成「大改動」，而只過閘只在重新計算結果是「小改動」時才開放） | 每一位讀者、盲跑報告都會失去 | 刁難測試、整包測試紀錄、分支結束時仍有一次刁難測試 | 讀這次改動自己的紀錄：3 輪、23 次派工；小時數——無估計 |
 
-  依「從第 2 輪起換」的文法，這次換車道只影響第 2 輪之後（第 3 輪起），
-  第 2 輪本身照舊跑在原本的車道。
-- **我不得不用猜的地方**：（a）「目前所在」我猜是 `full`——情境沒有明講
-  換車道之前是哪個車道，我用這個改動的預設車道當猜測；（b）估計欄兩個
-  車道我都寫「無估計」，因為情境沒給我可用的 cost 數字或前一次同車道改動
-  的紀錄。
-- **build／ship 站文字確認**：build 站有一句話說「使用者要求做到一半換
-  車道時，讀 review 站的 `references/lane-switch.md` 取得三格後果提示，
-  換之前先讀」；ship 站沒有再重複指向這份參考檔，只帶一行 PR 內文格式
-  `lane: <名稱>（第 N 輪起）`——這是它被要求做的唯一一件事。
-- **釘測試**：`test_lane_switch_reference.py`（10 項，含
-  `test_three_option_block_covers_full_express_gateonly`、
-  `test_forbidden_option_listed_with_its_reason`、
-  `test_switch_line_grammar_present`）、
-  `test_review_skill_points_at_lane_switch`、
-  `test_wave_end_points_at_lane_switch_reference`（build）、
-  `test_pr_body_template_carries_lane_line`（ship）全部通過。
-- **證據**：`pytest loom-code/scripts/test_lane_switch_reference.py
-  loom-code/scripts/test_build_station_text.py
-  loom-code/scripts/test_review_station_text.py
-  loom-code/scripts/test_ship_station_text.py -q` → `147 passed`。
+  三格都列了，不能選的那格（gate-only）也照列並寫了原因；目前所在的車道（full）有標出來；「快速模式」對到「express」的口語對照也講出來了。
+- **我做了哪些猜測**：兩份文件本身已經直接寫出「技能說明檔會讓 gate-only 不能選、但不會讓 express 不能選」（不是我用其他文件推的），所以這裡沒有用到猜測；唯一算是假設的地方是——我假設題目說「delta 裡有一份技能說明檔」是指「只有」這一份新增的檔案，沒有另外混進非測試用的程式碼；如果實際上還混了別的東西，express 那格可能也要跟著改。
+- **證據**：`loom-code/skills/review/SKILL.md`（§1、§2、§3、§4 段落）、`loom-code/skills/review/references/lane-switch.md`（口語對照表、三格後果格式、「不能選也要列並說原因」那句）；我自己再搭了一個沙盒直接驗證「技能說明檔不會擋 express、只會擋 gate-only」這件事：`/tmp/br_manual2_*` 的第一個案例（express＋技能說明檔）結束碼 0。
 - **結論**：符合。
 
-### 6. review 站文字要有 express／gate-only 各一段行為說明（讀者數、盲跑條件、對抗一次、無中途檢查點、gate-only 的③要讀什麼）；ship 站要有 PR 內文一行；都要有釘測試
-- **怎麼試的**：讀 `loom-code/skills/review/SKILL.md` 找對應段落；讀
-  `loom-code/skills/ship/SKILL.md` 找 PR 模板那一行；跑對應的釘測試。
-- **發生了什麼**：review 站文字裡找到——
-  - 讀者數：「Reader floors are full two, small one, express one, and
-    gate-only zero」
-  - 盲跑條件：「Express triggers the blind run only for an Acceptance line
-    that resists a mechanical check, matching the small lane's trigger;
-    every mechanical line skips it. Gate-only skips the blind run always,
-    relying on probes and package tests alone as its evidence.」——這句同時
-    回答了「gate-only 的③讀什麼」：不是盲跑報告，是探針與整包測試那一頁。
-  - 對抗一次、無中途檢查點：「Express and gate-only run the adversary once,
-    at branch-end, keeping the probe floor of three regardless of lane.」
-  ship 站 PR 模板裡有一行：`lane: <name>（第 N 輪起）`。
-- **釘測試**：`test_lane_paragraph_names_three_declared_lanes_and_what_
-  each_drops`、`test_reader_floor_sentence_names_all_four_lanes`、
-  `test_blindrun_by_lane_sentences_present`（連同它的肯定句／否定句自測
-  對照組）、`test_matcher_adversary_once_sentence_negated_rejected`、
-  `test_pr_body_template_carries_lane_line`——全部通過。
-- **證據**：同上 147 passed 的那次 pytest 執行涵蓋了這些測項。
+### 6. 審查站與出貨站的文字要講清楚，且要有釘住的自動化案例
+- **我怎麼試的**：直接找出審查站說明文件裡講 express／gate-only 行為的那幾段，和出貨站說明文件裡的 PR 內文樣板，逐字讀過；再跑這個分支留給這幾句話的自動化案例。
+- **發生了什麼**：審查站文件明講——讀者下限「full 兩位、small 一位、express 一位、gate-only 零位」；express 只在「驗收條件沒辦法用跑指令比對的方式查完」時才跑盲跑（跟小改動車道一樣的觸發條件）；gate-only 永遠不跑盲跑；express 與 gate-only 都只在分支結束時跑一次刁難測試，中途不設檢查點；gate-only 那次的③（使用者最後簽字要看的東西）改成看「刁難測試與整包測試」那一頁,現在住在盲跑報告的參考格式裡。出貨站的 PR 內文樣板裡有一行 `lane: <名字>（第 N 輪起）`。
+- **證據**：`python3 -m pytest loom-code/scripts/test_build_station_text.py::test_wave_end_points_at_lane_switch_reference loom-code/scripts/test_ship_station_text.py::test_pr_body_template_carries_lane_line loom-code/scripts/test_review_station_text.py::test_lens_names_agent_written_lane_line_as_finding loom-code/scripts/test_lane_switch_reference.py::test_review_skill_points_at_lane_switch -q` — 我親自執行，`4 passed`。
 - **結論**：符合。
 
-### 7. 規則數不變（27 條）；既有 full／small 車道的測試不受影響；本 repo 的 KICKOFF 要填 `default-lane: full`；跑 KICKOFF 定義的整包測試指令
-- **怎麼試的**：跑 `--list-rules | wc -l`；打開
-  `docs/loom/KICKOFF-DEFAULTS.md` 看有沒有 `default-lane:` 那一行；照
-  KICKOFF 裡寫的指令原文跑一次整包測試（這條指令本身分兩段 session，因為
-  `loom-design/scripts/` 有自己的 pytest 設定檔）；另外單獨跑一次既有的
-  車道測試檔確認沒被動過。
-- **發生了什麼**：`--list-rules` 印出 27 行。KICKOFF 裡有一行
-  `default-lane: full — no change here has declared express or gate-only
-  yet …`。整包測試第一段（`loom-code/scripts/`、`scripts/`、
-  `.claude/hooks/`）跑出 `1710 passed, 5 skipped, 1 xfailed`（89 秒）；第二
-  段（`loom-design/scripts/`）跑出 `182 passed, 1 skipped`（11.5 秒）。既有
-  的車道測試檔 `test_probes_change_lane.py` 跑出 `26 passed`，一項沒少。
-- **證據**：終端機輸出（如上）；指令原文取自
-  `docs/loom/KICKOFF-DEFAULTS.md` 第 8 行的 `package-tests:` 欄位。
+### 7. 規則數不變、整包測試指令照舊、本 repo 預設車道填 full、舊案例不受影響
+- **我怎麼試的**：跑檢查工具自己的「列出所有規則」指令數一數行數；照這個 repo「開新工作要填的東西」文件裡寫的整包測試指令，原汁原味跑一次（含它說的兩個獨立測試場次）；打開這個 repo 的「怎麼跑」文件看預設車道；跑舊的（沒有宣告車道概念之前留下的）小改動案例，還有這次新畢業、變成正式留存版的兩個案例。
+- **發生了什麼**：規則數 27 行，不多不少；整包測試指令跑了兩個場次——第一場 `1755 passed, 6 skipped, 1 xfailed`（61.76 秒），第二場 `182 passed, 1 skipped`（1.93 秒），全綠；這個 repo 的「怎麼跑」文件裡寫著「default-lane: full」；舊的小改動案例檔完全沒被這次改動碰過，跑起來 `26 passed`；新畢業留存的兩個案例分別是 `11 passed`、`26 passed`。
+- **證據**：`python3 loom-code/scripts/loom_checker.py --list-rules | wc -l` → `27`；`python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q`（我親自執行的完整輸出）；`docs/loom/KICKOFF-DEFAULTS.md` 第 13 行；`python3 -m pytest loom-code/scripts/test_probes_change_lane.py -q` → `26 passed`；`python3 -m pytest loom-code/scripts/test_probes_lane_declaration.py -q` → `11 passed`；`python3 -m pytest loom-code/scripts/test_probes_lanes_wave_end.py -q` → `26 passed`。
 - **結論**：符合。
 
 ## 對你既有的資料做了什麼
 
-沒有動到——這次改動只碰了它自己的文件（範本、checker 程式碼、幾份站文字、
-一份新的參考檔、它自己的 intent／plan／review.json），沒有動到這個 repo
-裡任何一份「更早的」改動的 intent 或 review.json；`lane:` 這個新欄位在
-每一份既有的 intent 上都是可省略的，省略時照舊走 `full`——舊資料完全不用
-改就能繼續用。
+沒有——這次改動只碰了它自己建的檔案（模板、參考頁、檢查工具、站文字、測試檔、產品原則文件、還有這次改動自己的紀錄檔）。我特地比對過整條分支跟主幹的差異：沒有任何一份「別的改動留下的宣告文件」或「別的改動的審查紀錄」被動到；`lane:` 這個欄位是選填的，不寫的話一切照舊（走這個 repo 的預設 full）。
 
 ## 我幫你決定的事
 
-- **零讀者那一輪要怎麼算「通過」** —— gate-only 車道下，一輪審查可以完全
-  沒有讀者驗收結果，只留探針和整包測試紀錄；我讓「至少要有幾位讀者」這條
-  規則在這種情況下自動算通過，不再另外加一條新規則去處理它。以後如果要
-  改嚴，得改這條算法，不是加規則。
-- **誰能寫 `lane:` 這一行，工具管不到** —— 工具只檢查這一行有沒有寫「誰
-  簽的名」，沒辦法分辨簽名的是使用者本人還是一個自動化的程式假裝成使用者
-  簽的。真正擋著「agent 不能自己宣告車道」的是站文字上白紙黑字寫的規矩，
-  和審查時人工抓出這種情況當作一個問題點來提報。以後如果站文字被拿掉，
-  這道防線就沒有工具接手。
-- **改範本、寫預設值這兩份工作分給不同的檔案負責** —— 一份檔案負責定義
-  「車道」和「預設車道」這兩個新欄位長什麼樣子，另一份檔案負責把說明文字
-  寫進範本裡，兩邊各自的測試只驗自己該管的那塊。這是為了不要兩個地方同時
-  改同一件事而打架，代價是要追蹤這個功能的全貌得看兩份檔案。
-- **PR 內文一行要放哪、放多少字** —— 這次只在 PR 內文加了一行寫車道名稱和
-  從第幾輪起生效，沒有把換車道的三格提示整段搬進 PR 模板裡（那個提示只在
-  對話裡問使用者的當下出現）。以後想在 PR 上看到完整的換車道理由，得回頭
-  看對話紀錄，PR 本身不會留。
-- **「要不要找第二家 AI 家做覆核」這個問題，還是照著改動看起來有多大來
-  問，不是照使用者選的車道來問** —— 也就是說，就算你這次選了「快速模式」
-  或「只過閘」，只要這份改動實際改的檔案數量或種類看起來仍然算「大」，
-  系統還是會照舊問你要不要找第二家 AI 覆核；反過來，如果你維持在完整
-  車道、但實際改動很小，也可能不會被問。換句話說，選車道只影響「要幾位
-  讀者、要不要盲跑、有沒有中途檢查點」，不影響「要不要找第二家 AI」這件
-  事——這兩者目前是分開算的，這次沒有把它們接起來。
-- **gate-only 被改窄成「small 車道拿掉讀者下限」，不是它原本設計的那個
-  獨立範圍** —— 一開始的設計是「gate-only 有自己一套准入名單，跟 full／
-  small 的判斷分開算」；試跑到一半發現這樣會漏掉一種情況（一份改動明明
-  已經被系統自己算成 full，卻因為使用者宣告了 gate-only 而被錯誤放行）
-  之後，把設計改成「gate-only 只是 small 車道少了讀者這一件事」，並把這
-  個決定寫進了公司規章（PRINCIPLES.md 第 2 條），要使用者親自點頭認可過
-  才生效。對你的影響：以後想宣告 gate-only 的改動，範圍會比原本設計的更
-  窄——只有系統本來就會判定為「small」的改動（純測試、純文件、CI／設定、
-  版本同步、乾淨 revert）才能選 gate-only；連改一份像 KICKOFF-DEFAULTS.md
-  這樣的「常設設定文件」都會讓 gate-only 整個失效、退回完整審查。這不是
-  我一個人決定的——這條規則被正式寫進了 PRINCIPLES.md，需要你本人簽核；
-  如果你還沒看過那句話，這裡先提醒你去確認一下。
-- **宣告車道現在強制要帶日期，舊的「只寫車道名稱」寫法直接不合法** —— 這
-  也是試跑途中發現的問題：如果宣告不用寫日期，工具沒辦法區分「這是使用
-  者今天決定的」還是「這行字放了三個月都沒人管」。對你的影響：以後宣告
-  車道，一定要照著 `lane: <名稱> — declared <日期> by <你的名字>` 這個
-  格式寫，少了日期或名字，intent 檢查會直接擋下、不會被當成有效宣告。
+- **「宣告」這件事在程式裡怎麼算數**——我（更精確地說：實作它的人）把「宣告」定義成「一整段車道旗標＋每一輪重新算出來的讀者下限」，而不是額外開一種新形狀的審查流程；改變它的代價是要重新設計檢查工具裡好幾條互相牽連的規則，不是改一行字就能調整。
+- **gate-only 只在「這次改動本來就算小改動」時才開放，而且原本文件承諾的讀者下限被鬆綁了**——原本的產品原則第 2 條寫死「至少要有一位讀者、盲跑只在驗收條件全部機械可查時才能省」；這次改動把 gate-only 定義成「零讀者、盲跑永遠省」，跟原本那條原則衝突。這件事**沒有被隨便蓋過去**：你本人已經在今天（2026-09-05）簽字修訂了那條原則，白紙黑字寫著「使用者宣告的 gate-only 車道——只對小改動類別開放——零審查者、無盲跑；但整包測試與至少三個刁難測試仍然要重新算過」。如果你不記得自己簽過這件事，這裡就是能對得上的地方。
+- **切換的計時規則（「從第幾輪開始」比「第幾波次開始」複雜)**——切換车道那句話寫「從第 N 輪開始」時，第 N 輪本身還是照舊車道跑，N+1 輪起才變新的；寫「從第 N 波次開始」時，用的是「這個組合(範圍,輪次)第一次被記錄的時間點」去判斷，而不是輪次編號本身，這樣即使審查跨過一次檢查點的邊界也不會算錯。這是工程上的細節決定，日常使用時你通常感覺不到，除非你剛好卡在切換的那一輪。
+- **push 這一關會回頭去查「宣告這句話有沒有真的被那次 commit 的訊息說出來」**——一開始的設計只信任宣告文件本身寫了什麼，中途被抓出一個漏洞：如果宣告文件被改動但 commit 訊息忘了附上那句話，原本的設計會照樣放行，等於任何人都能悄悄改文件、繞過使用者本人手寫這句話的規矩。現在改成：真正管用的是「最後改動那句話的那次 commit，訊息裡有沒有一字不差地寫著它」；沒有的話一律當作沒宣告,退回原本重新計算的結果。
+- **公開排查用的痕跡（哪些路徑會被算成「程式碼」還是「文件」）藏在測試資料夾底下時,原本會被誤判成安全的路徑**——這是一輪修正裡才抓出來、修掉的問題，日常使用你不會碰到，除非你自己刻意把技能說明檔藏進一個叫 `tests` 的資料夾裡。
+- **這次改動用來讓第二位讀者可以換成另一家工具的那個共用機制，其實還是讀「原始重新計算」的結果，不是讀「宣告後的結果」**——這代表無論你宣告哪一格車道，「要不要找第二家工具當第二位讀者」這件事的判斷邏輯不受車道宣告影響，一直維持原樣。
+- **出貨站原本要讀的「gate-only 那頁該長什麼樣子」的說明,被抽出來搬到盲跑報告的參考格式裡**——這樣兩邊(審查、出貨)看到的是同一份說明，不用各自維護一份、日後兩邊講法兜不起來。
+- **版本號往前跳到 1.6.0**——照這個 repo「改了技能內容要跳版號」的既有規矩做的,不是這次特地決定的新規矩。
+- **這條分支總共留下 9 次「派工」的紀錄 commit，跟「3 個工作波次＋4 輪修正＝7」對不起來**——老實把帳算給你看：3 個工作波次（W0、W1、W2）加上 4 輪修正（一次是主幹測試臨時紅燈的救火、一次是某個任務跟另一個任務對接時的整合修正、還有審查卡關時的兩輪修正）＝7；另外 2 次，是「工作波次中途的審查」跟「分支結束的審查」這兩次審查本身各自留的派工紀錄，不算在「波次／修正輪」這條帳上。7 加 2 才是 9。
 
-沒有審查者對這份改動提出「important」以上、又被駁回的問題——review 這一
-輪目前還沒有讀者留下正式的審查意見（我是這一輪被派去試跑的角色之一），
-所以這裡沒有可以列的駁回紀錄。
+## 幕後文件用的是不是英文（給你核對用）
 
-## 這次改動裡，該用英文寫的地方有沒有守住
+這條規矩是：這個團隊內部的紀錄文件（不是這份給你看的報告）一律要用英文寫，好讓不同工具、不同人都能讀。我一份一份核對過：
 
-專案規定：計畫文件、規格文件、審查紀錄的意見、證據檔、測試裡的說明文字、
-測試名稱、commit 訊息——這些工程用的文件一律要用英文寫，這樣派到別的
-地方跑的工具才讀得懂；只有這份給你看的報告本身，用你的語言寫。逐項核對
-如下：
+| 文件 | 是不是守住英文 |
+|---|---|
+| 計畫文件（plan） | 大致守住——僅有的中文，是不得不逐字引用的使用者用語（口語對照表裡的「快速模式」「只過閘」「不用審」、還有跟你對話的那幾句話），翻成英文會失去意義，所以留原文是對的 |
+| 規格文件（spec） | 這次改動不需要規格文件（宣告的欄位不涉及使用者要看、要按的介面），所以沒有這份文件可核對 |
+| 審查紀錄裡「問題出在哪」那欄文字 | 守住——全部英文，而且每一條都照「標籤（決定）：內容」這個固定格式寫（例如「issue (blocking): ...」） |
+| 證據（探針程式的說明） | 守住——我讀過的探針說明文字全部英文 |
+| 測試程式的說明文字 | 守住——我讀過的部分全部英文 |
+| 測試程式的名字 | 大致守住——照「做什麼_在什麼狀態下_該有什麼結果」這個固定樣式命名（例如「宣告的 express 車道、文件加技能檔的改動、一位讀者、要過關」這一串） |
+| commit 訊息 | 守住——標題那一行全部英文；本文裡出現的中文，是「lane:」那句規定格式本身要求逐字保留的宣告文字，不是語言違規 |
 
-| 文件 | 有沒有守住英文規則 | 備註 |
-|---|---|---|
-| 計畫文件（plan.md） | 守住 | 全篇英文 |
-| 規格文件（spec.md） | 不適用 | 這次改動標記「不需要規格」，本來就沒有這份文件 |
-| 審查紀錄的意見（findings） | 不適用 | 這一輪審查目前還沒有任何一位讀者留下正式意見可核對 |
-| 證據檔（對抗測試探針） | 守住 | 探針檔 `test_abuse_lane_declaration.py` 的說明文字全英文 |
-| 測試裡的說明文字（docstrings） | 守住 | 抽查的測試檔說明文字全英文 |
-| 測試名稱 | 守住 | 抽查到的名稱都照著「測試對象—狀態—預期結果」這種三段式在取名，例如
-  `test_push_declared_express_lane_docs_skill_delta_single_reader_passes` |
-| commit 訊息 | 守住 | 抽查的幾個 commit 主旨與內文全英文 |
+- 使用者看得到，但探針或測試「識別碼」（哪個檔案、哪一行、哪一個函式）本身，我只放在上面各條「證據」欄裡，沒有另外散落在報告的敘述句子裡。
 
-這次改動沒有規格文件，所以「規格文件裡每一條需求都要對得回驗收條」這條
-額外規矩不適用；審查紀錄的意見用「這句話是誰對誰提的、贊成或反對」那種
-固定格式寫，這次還沒有意見可以核對這一條。
+## 你可能還沒想清楚的事
 
-## 我不確定你是否想要的地方
-
-- 「要不要找第二家 AI 覆核」跟「選什麼車道」目前是兩條分開算的規則，會不
-  會讓你以為選了快速模式就一定不會被多問一次？
-- PR 內文只留一行車道名稱，換車道當下的完整理由不會留在 PR 上，只留在
-  對話裡——這樣夠不夠事後回頭查？
-- gate-only 車道下完全沒有讀者看過這份改動，只靠寫程式的人自己寫的對抗
-  測試和整包測試把關——這對你來說，安心的門檻夠不夠？
+- 這次改動讓「gate-only 只對小改動類別開放」這件事,是靠 PRINCIPLES.md 白紙黑字寫下來守住的,不是靠程式碼本身守住的——換句話說，如果哪天有人想放寬這個範圍，程式碼不會自動擋，要靠你（或下一個讀這份原則的人）記得回頭看這條原則有沒有被改動。這是刻意的設計，但值得你知道它現在是這樣運作的。
+- 這條分支自己從頭到尾都是走 full 車道（因為它自己就在改檢查工具、技能說明檔），所以「使用者在審查中途說『快速模式』該怎麼問」這件事，這條分支自己並沒有真的問過你一次——我在第 5 條裡做的「冷讀」演練，是照文件規定演出一次假設情境，不是這條分支真的發生過的對話。如果你想看它在真正被使用時問你的樣子，需要另外找一個宣告過 express 或 gate-only 的改動來看。
