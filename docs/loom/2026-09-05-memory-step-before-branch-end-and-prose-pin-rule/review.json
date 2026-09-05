@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "e895fbb3a57c04b2b12a23fa2127420a7cee02a6",
+  "reviewed_sha": "c2a5a82ebf6369dae15e8570925e9d69e551cfb1",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -97,6 +97,133 @@
       "notes": [
         "Ran the delta's test files (119 passed, 2 skipped) and both probe files (23 passed); widened cap measured at 75 words; --list-rules 27; loom_checker.py absent from the diff. §6.5 scopes the memory step to the round that closes the plan; ship §1/§3/§3.5 and Acceptance 1 consistent once branch-end reviewed_sha is read as the latest before push."
       ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8d9b4ad3189c565a92887a5e73b707e702e6c5db",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_build_station_text.py:140",
+          "text": "issue (blocking): wave-end:1-03 unfixed — the helper uses rindex and checks only ordering; an early call plus a late call still passes.",
+          "fix": "Require exactly one review call in the last-wave paragraph; add a two-call negative synthetic."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:365",
+          "text": "nitpick: guard still scans every line to the first status:; the added synthetic puts the real status first.",
+          "fix": "Restrict parsing to the leading metadata block; add a decoy outside it."
+        }
+      ],
+      "notes": [
+        "wave-end:1-01 fixed (last wave defers review past §6/§6.5, one closing round recorded branch-end); wave-end:1-02 fixed (write-plan reserves W<n>-memory, both templates, build fallback)."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8d9b4ad3189c565a92887a5e73b707e702e6c5db",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:359-368",
+          "text": "nitpick: the guard function itself was not edited; the added self-test checks a decoy after the real line only.",
+          "fix": "Stop scanning at the end of the leading frontmatter block; add a decoy-before test."
+        }
+      ],
+      "notes": [
+        "wave-end:1-02 fixed; codex's 1-01 and 1-03 fixes confirmed with no regression (122 passed, 2 skipped; probes 23)."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "c2a5a82ebf6369dae15e8570925e9d69e551cfb1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-03 fixed — exactly one affirmative review-call sentence after §6 and §6.5, two-call synthetic rejected; guard nit fixed — both guards stop at the first blank line with a body-level decoy test."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "c2a5a82ebf6369dae15e8570925e9d69e551cfb1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:362-375",
+          "text": "nitpick: partially fixed — a body-level decoy after a blank line no longer flips the guard, but a fenced status: closed line placed before the real status line inside the leading block still does (the adversary's own documented boundary).",
+          "fix": "Optional: require the block's status: line to be unique or anchor to known field order."
+        }
+      ],
+      "notes": [
+        "Nothing else moved; 123 passed, 2 skipped; probes 23."
+      ]
     }
   ],
   "probes": [
@@ -150,19 +277,22 @@
       "id": "wave-end:1-01",
       "anchor": "loom-code/skills/build/SKILL.md:274 (§5 last-wave review call before §6.5)",
       "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
-      "raised_by": "rev-we1-ms-codex"
+      "raised_by": "rev-we1-ms-codex",
+      "resolved": "closed by 50fb1049 — build §5 last wave defers the review call past §6 and §6.5, one closing round recorded scope: branch-end (§7); confirmed rev-we1-ms-codex round 2, no regression per rev-we1-ms-sonnet"
     },
     {
       "id": "wave-end:1-02",
       "anchor": "loom-code/skills/build/SKILL.md:343 / loom-code/skills/write-plan/SKILL.md (no reserved memory task)",
       "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
-      "raised_by": "rev-we1-ms-codex, rev-we1-ms-sonnet"
+      "raised_by": "rev-we1-ms-codex, rev-we1-ms-sonnet",
+      "resolved": "closed by 2d23dd0f — write-plan Shape bullet reserves W<n>-memory; plan template + Codex mirror; build §6.5 fallback for older plans; confirmed both readers round 2"
     },
     {
       "id": "wave-end:1-03",
       "anchor": "loom-code/scripts/test_build_station_text.py:80",
       "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
-      "raised_by": "rev-we1-ms-codex"
+      "raised_by": "rev-we1-ms-codex",
+      "resolved": "closed by ea0f82c1 + fbd6f202^ (exactly one affirmative review-call sentence after §6/§6.5, two-call synthetic rejected); confirmed rev-we1-ms-codex round 3"
     }
   ],
   "dispatch": [
@@ -304,6 +434,7 @@
   ],
   "second_vendor": "codex",
   "notes": [
-    "Round 1 wave-end:1: NEEDS_REVISION (codex fatal on §5/§6.5 sequencing; both readers on the unreserved memory task). The guard position-blind nit is fixed inside the fix round with the same agent."
+    "Round 1 wave-end:1: NEEDS_REVISION (codex fatal on §5/§6.5 sequencing; both readers on the unreserved memory task). The guard position-blind nit is fixed inside the fix round with the same agent.",
+    "wave-end:1 outcome after three rounds: PASS_WITH_NOTES. Remaining nit (sonnet round 3): a fenced status: closed line placed before the real status line inside the leading metadata block would still flip the graduated guard — an intent file that opens with a fenced block before its metadata is not an intent, so the boundary is accepted and recorded; folded at ship if wording is revisited. reviewed_sha advanced to c2a5a82e."
   ]
 }
