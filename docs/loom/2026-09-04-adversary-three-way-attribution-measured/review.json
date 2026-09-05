@@ -905,6 +905,24 @@
       "started": "2026-09-05T23:05:00+08:00",
       "fresh_context": true,
       "note": "two graduated probes from PR #794 fail in any clone without that change's local branch; CI on main is red at 43e32034 — minimal skip-when-unreachable fix following the repo's own precedent"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-0f4a",
+      "model": "sonnet",
+      "started": "2026-09-05T23:30:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 — resumed reader; fix delta 938525cb..HEAD plus the rebase onto 1.5.0"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-7e21",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T23:30:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 — resumed reader; fix delta 938525cb..HEAD plus the rebase onto 1.5.0"
     }
   ],
   "second_vendor": "codex",
