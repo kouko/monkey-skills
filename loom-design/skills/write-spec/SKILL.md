@@ -132,6 +132,13 @@ Write `docs/loom/<change-id>/spec.md` from `spec-minimal.md` in
 `loom-code`'s `contract/templates/` directory. Every section is required —
 `N/A — <reason>` is an answer, silence is not.
 
+The spec is written in English, and each `REQ-<n>` line is one of the five
+EARS forms (`WHEN <trigger>, the <system> shall <response>`, `WHILE
+<state>`, `WHERE <feature>`, `IF <condition> THEN`, or the plain `The
+<system> shall <response>`), keeping its `→ Acceptance #<n>` suffix;
+decision point ② below is still presented to the user in the user's
+language, since it is spoken to them rather than read by a checker.
+
 - **`intent: <change-id>@<sha>`** — the sha of the commit that confirmed
   the intent, not of HEAD. It is the version of the ask this spec answers.
 - **`## Requirements`** — `REQ-<n> — <name>`, then one sentence of

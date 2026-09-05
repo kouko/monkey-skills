@@ -1,0 +1,1634 @@
+{
+  "reviewed_sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/agents/blind-runner.md:46",
+          "text": "issue (blocking): The new instruction requires the report to identify plan, review.json findings, evidence, probe names, and commit messages per artifact, but the unchanged trap at line 69 forbids file paths, function names, and loom vocabulary in that same report. A blind runner cannot satisfy both instructions reliably.",
+          "fix": "Carve the mandated language/template compliance table out of the line-69 prohibition, or require user-readable artifact labels while explicitly allowing the identifiers needed as evidence."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/contract/templates/PRINCIPLES-interview.md:3",
+          "text": "issue (blocking): The template says its English opening line must be said verbatim and localized at run time, while capture-intent still commands the executor to open with a different hard-coded Chinese sentence plus an English parenthetical. The station therefore does not actually localize the template for an arbitrary user's language.",
+          "fix": "Make the template an explicitly non-verbatim semantic source owned by capture-intent, or update capture-intent so it localizes and uses the template's opening instead of its hard-coded bilingual text."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py:216",
+          "text": "issue (blocking): The RED probe accepts any occurrence of 'three-part', 'three part', or 'UnitOfWork' plus any occurrence of 'English' anywhere in each agent contract. Text that rejects three-part names or mentions English for unrelated content would satisfy the test, so it does not pin the required instruction.",
+          "fix": "Assert the literal `test_<unit>_<state>_<expected>` shape and verify that the same instruction requires English probe docstrings and evidence notes."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py:110",
+          "text": "nitpick: The wave-end probe names contain six to ten underscore-separated fields, contradicting the newly declared three-part `test_<unit>_<state>_<expected>` shape.",
+          "fix": "Rename every test in this probe file so each name has exactly three semantic fields after `test_`, using compact or CamelCase field names where a field contains multiple words."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md:18",
+          "text": "nitpick: The report exempts two commit messages containing Chinese because the text is quoted, but the policy says commit messages are English and declares no quotation exception.",
+          "fix": "Report these two commit messages as language-policy misses, or amend the governing policy explicitly if quoted user-language text is intended to be allowed."
+        }
+      ],
+      "notes": [
+        "Reviewer paragraph outside the docs-lint carve-out; templates preserve keys/headings/markers; re-pins keep semantics. Pytest not executed (read-only sandbox has no writable temp dir)."
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-design/skills/capture-intent/SKILL.md :: \"Open with the sentence that template gives you: > 做產品功能前這個 repo 要先有一份產品原則...\"",
+          "text": "issue (blocking): capture-intent/SKILL.md hardcodes, verbatim, the template's PRE-change Chinese opening line plus a hand-written English gloss, both of which now diverge from PRINCIPLES-interview.md's new canonical English line; the station does not localise at run time here — it quotes a fixed string that the source of truth no longer contains.",
+          "fix": "Quote the template's current English sentence and drop the parenthetical, or replace the fixed quote with an instruction to read the template's current opening line and translate it into the user's language at run time."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/agents/reviewer.md :: \"a finding `text` not opening with a Conventional Comments label ... is a `nit`\" vs loom-code/agents/adversary.md:50 and loom-code/agents/blind-runner.md:57",
+          "text": "issue (blocking): reviewer.md's new clause scores ANY finding text in the delta against the Conventional Comments label and Acceptance 5 requires every review.json finding to comply, but adversary.md:50 and blind-runner.md:57 still show `text: \"<what>\"` unlabeled in their own output schema; their findings will be systematically nit-worthy or Acceptance 5 silently fails for those roles.",
+          "fix": "Add the `<label> (<decoration>): ...` prefix to the text: line in adversary.md's and blind-runner.md's output-contract examples, or narrow reviewer.md's paragraph to the reviewer's own text field and correct Acceptance 5 to match."
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/agents/blind-runner.md :: \"The report also lists, per internal artifact of the change (plan, review.json findings, evidence, probe names, commit messages), whether the English rule and the three template rules ... held.\"",
+          "text": "nitpick: the sentence implies all three template rules are checked against each of the five artifacts, but EARS binds only REQ-<n> lines, the label only review.json finding text, and the name shape only probe files.",
+          "fix": "Reword to name which rule binds which artifact."
+        }
+      ],
+      "notes": [
+        "Re-pins move together (1300→1340→1450), word counts re-verified (1447, gap 3). spec-minimal REQ-1 is a correct EARS event-driven form; the checker's annotation stripper tolerates both bracket styles. Ran pytest loom-code/scripts/ (1058 passed, 1 xfailed) and the probes dir (26 passed, 6 expected wave-2 RED)."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "1bd2d4970ccf79a0522f017281ce5bbcefd64b6b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py:229",
+          "text": "issue (blocking): wave-end:1-03 unfixed — the tightened probe still accepts a paragraph that forbids `test_<unit>_<state>_<expected>` while requiring English docstrings.",
+          "fix": "Require affirmative naming language in the qualifying paragraph and reject nearby negation of the literal shape."
+        }
+      ],
+      "notes": [
+        "wave-end:1-01 fixed; wave-end:1-02 fixed; nits (wave_end probe names, quoted source text) fixed. Probes not re-run per fix-round contract."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs",
+      "verdict": "PASS",
+      "sha": "1bd2d4970ccf79a0522f017281ce5bbcefd64b6b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-02 fixed (fa33422e); wave-end:1-04 fixed (3717325b); rule-to-artifact nit fixed (e6a1ad5a). No collateral damage from a3756372 (cap 1450→1460, body 1451)."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "6f2f6836f869a1def01984dd755e33a656084981",
+      "dimension_scores": {
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-03 fixed — the probe requires affirmative, non-negated naming and English sentences and its synthetic cases distinguish the forbidden-shape wording (test_abuse_language_policy.py:205)."
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-design/skills/capture-intent/SKILL.md:147",
+          "text": "issue (blocking): The sentence says English is the language of the plan, spec, and \"everything that follows,\" contradicting ship/SKILL.md and the intent's language table, which keep the later blind-run report and PR body in the user's language.",
+          "fix": "Replace \"everything that follows\" with an explicit list limited to machine-read internal artifacts, preserving the blind-run report, PR body, and decision-point dialogue as user-language exceptions."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_language_station_text.py:49",
+          "text": "issue (blocking): The station tests only require keywords to coexist in a sentence, so contradictory instructions such as \"The plan is not written in English\" pass their predicates. The tests therefore do not pin the claimed language facts.",
+          "fix": "Make each station assertion recognize the required affirmative relationship and reject nearby negation, with synthetic positive and contradictory cases proving the matcher discriminates them."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md:50",
+          "text": "issue (blocking): The \"I decided for you\" section omits plan-marked agent decisions, including fact-based rather than verbatim station pins, the single implementer for the cross-plugin station task, the minor/patch version-bump choice, and use of the installed 1.2.4 reviewer contract during this change.",
+          "fix": "Add user-readable bullets covering every agent-decided item named in the plan, including those four implementation and release decisions."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py:73",
+          "text": "nitpick: All eight branch-end probe functions use more than the required three semantic fields after `test_`, despite this change making `test_<unit>_<state>_<expected>` mandatory.",
+          "fix": "Rename all eight branch-end probe functions to exactly three underscore-separated semantic fields after `test_`."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md:42",
+          "text": "nitpick: The report claims all 34 test functions follow the three-part naming template, but the eight functions in the branch-end probe file do not.",
+          "fix": "Rename the branch-end probes, then recompute and update the reported count and result."
+        }
+      ],
+      "notes": [
+        "Six station tests passed locally; the full pytest set could not start in the read-only sandbox. Template mirrors byte-identical and CJK/U+3000-free; version surfaces agree; manifest sync and version-bump checks pass; 27 rules; KICKOFF docs-lint parses as none."
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md :: \"共 34 個測試函式，全部符合三段式命名\"",
+          "text": "issue: the blind-run report claims all 34 test functions conform to the three-part shape, but the 8 functions in test_abuse_language_policy_branch_end.py are long snake_case sentences; nothing mechanically checks the repo's own probe files against the shape, so the false claim went unchallenged.",
+          "fix": "Rename the 8 functions to the three-part shape, or correct the report's claim and count."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py:73",
+          "text": "nitpick: every function name in this file violates the three-part shape this change establishes; repeats a defect already fixed once in this checkpoint history.",
+          "fix": "Rename each function to three underscore-separated semantic fields."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md :: \"## 我幫你決定了的事\"",
+          "text": "issue: the decisions-made-on-your-behalf section omits at least three agent-decided items plan.md names: W2-01's single implementer for the cross-plugin sentences, W2-02's minor-vs-patch bump rationale, and Risk 3 (reviewers dispatched from the installed 1.2.4 contract, not the branch).",
+          "fix": "Add one bullet per omitted agent-decided item, in the user's language."
+        }
+      ],
+      "notes": [
+        "Verified independently: package suite green (1105 passed in the two-path subset), 27 rules, version-bump and manifest-sync checks exit 0, templates and mirrors byte-identical and CJK/U+3000-free, branch diff scoped, all 9 review.json findings labelled, the two Chinese-bearing commit messages are quoted-source exemptions."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "715ccab6904448a11f02bbcd38e55c6076a37a97",
+      "dimension_scores": {
+        "omission": "PASS_WITH_NOTES",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md:62",
+          "text": "issue: the added disclosure describes two product stations, but W2-01 covered six stations across two plugins.",
+          "fix": "Name the six stations across two plugins."
+        }
+      ],
+      "notes": [
+        "branch-end-01 fixed; branch-end-02 fixed; branch-end-03 unfixed (report bullet said two product stations, W2-01 covered six across two plugins); probe-name nit fixed; report-count nit unfixed (test_matcher_shipPredicate_negatedSentence_rejected has four fields)."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "715ccab6904448a11f02bbcd38e55c6076a37a97",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "loom-code/scripts/test_language_station_text.py:225",
+          "text": "issue: test_matcher_shipPredicate_negatedSentence_rejected has four underscore-separated segments, so the report's all-37-three-part claim is inaccurate by one function.",
+          "fix": "Rename to a three-part form and re-verify the claim."
+        }
+      ],
+      "notes": [
+        "branch-end-04 fixed; branch-end-03 fixed; probe-name nit fixed. New: the fix delta added a four-field test name, so the report's 'all 37 three-part' claim is off by one."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "059939af7dae47a2ab2f475904ef4e77a91846d9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "branch-end-03 fixed (six stations across two plugins named); report-count nit fixed (test_matcher_shipNegatedSentence_rejected)."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "059939af7dae47a2ab2f475904ef4e77a91846d9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Round-2 important fixed: three-part name; 9+8+11+9=37 all three-part."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/memory/README.md:199",
+          "text": "issue (blocking): the index links to a-prose-pin-must-require-an-affirmative-un-negated-sentence.md but the body file is untracked and absent from the reviewed commit.",
+          "fix": "Add and commit the file."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/memory/README.md:356",
+          "text": "issue (blocking): the index links to pre-branch-end-ci-rehearsal-uses-full-history-without-a-local-main.md but the body file is untracked and absent from the reviewed commit.",
+          "fix": "Add and commit the file."
+        }
+      ],
+      "notes": [
+        "Graduated copies match originals after masking path lines; no name collisions; scope widening limited to docs/loom/memory/."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "omission",
+          "anchor": "docs/loom/memory/README.md :: [a-prose-pin-…] and [pre-branch-end-ci-rehearsal-…]",
+          "text": "issue: 5e3b45ca adds two index lines but never git-added the two entry files; the branch would push a memory README with two dangling wikilinks and silently drop both lessons.",
+          "fix": "git add both files and commit."
+        }
+      ],
+      "notes": [
+        "Graduated probes byte-identical apart from path lines; no collisions; scope widening commented. Ran the three graduated files: 41 passed."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "bc4e9948b71483a7503f726369d8cc1243116b5a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Both memory entry bodies exist in the reviewed commit; memory integrity check passes; the delta contains only the two bodies and the dispatch record."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "bc4e9948b71483a7503f726369d8cc1243116b5a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Round-4 fatal fixed by 9e6cb1cf; both paths resolve via git show; content identical to what was verified in round 4; no dangling wikilinks."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Pre-rewrite and rewritten reviewed trees are the identical tree object; exactly four of 65 messages changed, each by appending Task: fix:wave-end:1; the review.json note records the rewrite accurately."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Diffed old vs new bodies of the four rewritten commits: one added line each; trees byte-identical (%T); review.json changes purely additive plus the reviewed_sha bump."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "1656ddd0e675a5fd10dee5970806527ff1f96568",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy_branch_end.py:212",
+          "text": "issue: the widened assertion accepts any non-zero exit whose stderr contains both tokens, including a usage or internal error.",
+          "fix": "Require returncode == 1 and the `BLOCK intake.confirmed:` marker with the closed-intent text; keep exit 0."
+        }
+      ],
+      "notes": [
+        "Original and graduated copy identical apart from path lines."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1656ddd0e675a5fd10dee5970806527ff1f96568",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Identical edit in both files; widening scoped to the closed-intent block; 16 passed."
+      ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Round-7 finding fixed: exit 1 + `BLOCK intake.confirmed:` + closed; all other non-zero outcomes fail."
+      ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Verified the literal against loom_checker.py's BLOCK format; both files match; 16 passed."
+      ]
+    },
+    {
+      "round": 9,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "6b148a55 (pre-recreation tip; same tree as the round-10 fix's parent)",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-design/scripts/spec/test_capture_intent_contract.py:144",
+          "text": "issue: the two independent substring assertions are satisfied even if the station says the sentence is not translated; the pin checks vocabulary presence, not the affirmative relationship.",
+          "fix": "Match instruction and sentence in the same passage, reject negation, add a contradictory synthetic case."
+        }
+      ],
+      "notes": [
+        "SKILL.md carries the intended sentence and affirmative instruction; 125 tests ran before the read-only sandbox ran out of temp dir."
+      ]
+    },
+    {
+      "round": 9,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "6b148a55 (pre-recreation tip)",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Pin matches SKILL.md:206-211 after flattening; loom-design suite 181 passed."
+      ]
+    },
+    {
+      "round": 10,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Round-9 finding fixed: one affirmative un-negated instruction sentence adjacent to the quoted source; synthetic negated case fails."
+      ]
+    },
+    {
+      "round": 10,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Helper checks the relationship; self-test discriminates; 182 passed; only the test file and review.json moved."
+      ]
+    },
+    {
+      "round": 11,
+      "scope": "branch-end",
+      "reviewer": "rev-close3-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Delta is the status line only (1 insertion, 1 deletion); PR #791 matches."
+      ]
+    },
+    {
+      "round": 11,
+      "scope": "branch-end",
+      "reviewer": "rev-close3-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A — no measured number in the delta",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "One-line status change matching the repo's close convention; PR matches; the close asks the user nothing."
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "1cf2076e",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "see docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md",
+      "sha": "9aa955547f9764f5267ce0b2f58c6520e8f9f8a3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "3b87c6a78f2ac048cef4071182ebe057cf5e1b45",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q -k \"not stations_english\"",
+      "sha": "3b87c6a78f2ac048cef4071182ebe057cf5e1b45",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "9e4ca03e9242d6cae6092e3cdcc39ac68d102b2f",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md",
+      "sha": "d06dca3c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "9e4ca03e9242d6cae6092e3cdcc39ac68d102b2f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "9e4ca03e9242d6cae6092e3cdcc39ac68d102b2f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "9e4ca03e9242d6cae6092e3cdcc39ac68d102b2f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "3227e59be72c34d0cc2050e22a62002d7ae842a8",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "10938d655619e60087f2aa45a1a40120b4a3d10f",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "319b47a3e1bada39c0368ffbae7bb9c270af646b",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "37c7df69bf7e150703fd61f891abbf903340998a",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "cf18a19e4a60a13a7712c36a3fcf934ae552c7ba",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_language_policy.py loom-code/scripts/test_probes_language_policy_wave_end.py loom-code/scripts/test_probes_language_policy_branch_end.py -q",
+      "sha": "ff23b7383c53a666095bb7f9d04b76d1cecc5fdd",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_language_policy_branch_end.py"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是——流程裡給機器讀的產物（spec、plan、審查紀錄、evidence、探針註解、commit、站文字、模板註解）一律英文；給你讀的（intent、三個決策點的對話、盲跑報告、PR 內文）維持你的語言；新 change 起硬切換、舊的不翻；違反只記 nit 不擋。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這組用詞規範要不要併進這個 change 的驗收（多一條：「內部文件遵守 RFC 2119 ＋ EARS ＋ 三條通用規則，寫進契約」），還是先只做「一律英文」、用詞規範另開？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？",
+      "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "你要的五件事都試過、結果如上（第 5 條第一版報告數字曾錯、已更正揭露）；對既有資料沒動；我替你決定的 11 項已列——這是你要的嗎？OK 就推上去開 PR。",
+      "type": "done"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/agents/blind-runner.md:46",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-codex",
+      "resolved": "closed by e6a1ad5a — blind-runner rows use user-readable labels, identifiers only in the evidence cell; confirmed rev-we1-codex round 2"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/contract/templates/PRINCIPLES-interview.md:3 / loom-design/skills/capture-intent/SKILL.md opening line",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-codex, rev-we1-sonnet",
+      "resolved": "closed by fa33422e — PRINCIPLES-interview.md is the semantic source, capture-intent quotes its current English line and translates at run time; confirmed rev-we1-codex and rev-we1-sonnet round 2"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "docs/loom/2026-09-03-artifact-language-policy/evidence/probes/test_abuse_language_policy.py:216",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-codex",
+      "resolved": "closed by 8d32dc38 + 0d140550 (probe: affirmative un-negated naming sentence, self-test) and ddadf7e2 + 6f2f6836 (blind-runner sentences reworded); confirmed rev-we1-codex round 3"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/agents/adversary.md:50, loom-code/agents/blind-runner.md:57",
+      "origin_sha": "86869c44f217107da624ed4c976635527f40fb96",
+      "raised_by": "rev-we1-sonnet",
+      "resolved": "closed by 3717325b — adversary.md and blind-runner.md finding text opens with a Conventional Comments label; confirmed rev-we1-sonnet round 2"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-design/skills/capture-intent/SKILL.md:147",
+      "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
+      "raised_by": "rev-be-codex",
+      "resolved": "closed by 8c55ce1a — capture-intent sentence lists the internal artifacts and keeps dialogue, blind-run report and PR body in the user's language; confirmed rev-be-codex round 2"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/scripts/test_language_station_text.py:49",
+      "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
+      "raised_by": "rev-be-codex",
+      "resolved": "closed by da682b2e — station pins require an affirmative un-negated sentence, three matcher self-tests; confirmed rev-be-codex round 2"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md :: 我幫你決定了的事",
+      "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
+      "raised_by": "rev-be-codex, rev-be-sonnet",
+      "resolved": "closed by 9ec37a08 + 7a02311a — decided-for-you bullets added, six stations across two plugins named; confirmed rev-be-sonnet round 2 and rev-be-codex round 3"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-03-artifact-language-policy/blind-run-report.md :: 34 個測試函式",
+      "origin_sha": "fc123ee648650a8d108d436c6594d9362a87acfe",
+      "raised_by": "rev-be-sonnet",
+      "resolved": "closed by 6ec8995e + 9ec37a08 + 7a02311a — probes renamed, count recomputed (37, all three-part), earlier false claim disclosed; confirmed rev-be-sonnet rounds 2–3"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/scripts/test_language_station_text.py:225",
+      "origin_sha": "715ccab6904448a11f02bbcd38e55c6076a37a97",
+      "raised_by": "rev-be-sonnet",
+      "resolved": "closed by 7a02311a — renamed test_matcher_shipNegatedSentence_rejected; confirmed rev-be-sonnet round 3"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/memory/README.md:199,356",
+      "origin_sha": "6b191f2bc1f70736e4056fb454923a045574e10f",
+      "raised_by": "rev-be-codex, rev-be-sonnet",
+      "resolved": "closed by 9e6cb1cf — both entry bodies committed; confirmed both readers round 5"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "loom-code/scripts/test_probes_language_policy_branch_end.py:212",
+      "origin_sha": "1656ddd0e675a5fd10dee5970806527ff1f96568",
+      "raised_by": "rev-be-codex",
+      "resolved": "closed by 592d45d5 — exit-1 + BLOCK intake.confirmed: marker required; confirmed rev-be-codex round 8"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "loom-design/scripts/spec/test_capture_intent_contract.py:144",
+      "origin_sha": "6b148a55",
+      "raised_by": "rev-be-codex",
+      "resolved": "closed by 02835198 — affirmative same-passage matcher with contradictory self-test; confirmed rev-be-codex round 10"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T01:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T01:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T01:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T01:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T01:58:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "br-we1-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T01:58:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T02:12:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T02:12:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T02:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T02:40:00+08:00",
+      "fresh_context": false,
+      "note": "resumed W0-01 adversary fixes its own probe (wave-end:1-03) and the wave_end probe names nit"
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T03:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T03:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T03:25:00+08:00",
+      "fresh_context": false,
+      "note": "one-sentence reword of blind-runner.md so the naming sentence carries an affirmative verb (wave-end:1-03 round 3)"
+    },
+    {
+      "task": "wave-end:1 round 3",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T03:27:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; adjudicates wave-end:1-03 only"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T03:45:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "impl-w2-02-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T03:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T04:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T04:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T04:40:00+08:00",
+      "fresh_context": false,
+      "note": "two U+3000 separators removed from plan.md template and its Codex mirror; stale probe docstring corrected (branch-end adversary finding)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T04:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T04:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "impl-fix-be-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T05:15:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T05:15:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; renames its own branch-end probes to the three-part shape"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-lang",
+      "model": "sonnet",
+      "started": "2026-09-05T05:50:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; updates its own report for branch-end-03 and branch-end-04"
+    },
+    {
+      "task": "branch-end round 2",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T06:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "branch-end round 2",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T06:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T06:20:00+08:00",
+      "fresh_context": false,
+      "note": "round-2 leftovers: report bullet says six stations across two plugins; one four-field test name renamed"
+    },
+    {
+      "task": "branch-end round 3",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T06:22:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; adjudicates branch-end-03 and the report-count nit"
+    },
+    {
+      "task": "branch-end round 3",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T06:30:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; adjudicates its round-2 finding (four-field test name)"
+    },
+    {
+      "task": "ship-graduate",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T06:50:00+08:00",
+      "fresh_context": false,
+      "note": "ship memory step: two store entries, three probe files graduated as byte copies (path lines only), branch-scope probe admits docs/loom/memory/"
+    },
+    {
+      "task": "branch-end round 4",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T06:58:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the memory entries and graduated probes delta"
+    },
+    {
+      "task": "branch-end round 4",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T06:58:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the memory entries and graduated probes delta"
+    },
+    {
+      "task": "branch-end round 5",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T07:12:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the two memory entry files are committed"
+    },
+    {
+      "task": "branch-end round 5",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T07:12:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the two memory entry files are committed"
+    },
+    {
+      "task": "branch-end round 6",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T07:55:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the trailer-only history rewrite left every tree identical"
+    },
+    {
+      "task": "branch-end round 6",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T07:55:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the trailer-only history rewrite left every tree identical"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T09:05:00+08:00",
+      "fresh_context": false,
+      "note": "branch-end scope probe accepts the closed-intent intake block (found re-pinning probes at the close commit; the first close attempt was reset)"
+    },
+    {
+      "task": "branch-end round 7",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T09:08:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the probe fix"
+    },
+    {
+      "task": "branch-end round 7",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T09:08:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the probe fix"
+    },
+    {
+      "task": "branch-end round 8",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T09:30:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the tightened intake path"
+    },
+    {
+      "task": "branch-end round 8",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T09:30:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the tightened intake path"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T10:20:00+08:00",
+      "fresh_context": false,
+      "note": "loom-design capture-intent contract test re-pinned to the English opening line (CI loom-design pytest job red on both pushes; that suite is outside the KICKOFF package-tests command). Second close attempt (6deea171, close round PASS from rev-close2-codex/sonnet) reset."
+    },
+    {
+      "task": "branch-end round 9–10",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T10:22:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the loom-design test re-pin"
+    },
+    {
+      "task": "branch-end round 9–10",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T10:22:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the loom-design test re-pin"
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close3-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T10:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close3-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T10:55:00+08:00",
+      "fresh_context": true
+    }
+  ],
+  "second_vendor": "codex",
+  "notes": [
+    "Round 1 outcome NEEDS_REVISION (both readers). Nits (probe file names in wave_end probes; quoted-source-text exception for commit messages; rule-to-artifact wording in blind-runner.md) are fixed inside the fix round because the same agents edit the same sentences; readers confirm them in round 2.",
+    "wave-end:1 outcome after three rounds: PASS_WITH_NOTES (round 2 codex PASS_WITH_NOTES on the one remaining id, round 3 PASS). reviewed_sha advanced to 6f2f6836.",
+    "branch-end round 1: NEEDS_REVISION (both readers). The branch-end adversary's U+3000 finding was fixed before the readers ran (e9561501) and is recorded in dispatch[] as fix:branch-end; the adversarial probe files are recorded at the sha where all three pass.",
+    "branch-end outcome after five rounds: PASS (rounds 3 and 5 PASS from both readers; the round-4 finding was the ship memory step's own untracked files). reviewed_sha advanced to bc4e9948. Cost of this change: ~6h plan→branch-end, 26 dispatch entries (7 reviewer rounds × 2 readers counted), two Codex sessions resumed across rounds.",
+    "2026-09-05 ship: the push checker blocked on push.dispatch-covers-tasks — four fix-round commits (blind-runner rows, PRINCIPLES opening line, label prefix, quoted-source-text exception) carried Closes: lines but no Task: trailer. Commit messages from the branch base to HEAD were rewritten with git filter-branch --msg-filter to add `Task: fix:wave-end:1` to those four; every tree is byte-identical (git diff against the pre-rewrite tip is empty; backup ref backup/artifact-language-policy-pre-trailer-rewrite kept locally), so verdict, probe and open_findings shas recorded before this note name the pre-rewrite commits of the same trees. reviewed_sha moved to the rewritten tip and the package tests and adversarial probes were re-run and re-recorded there.",
+    "branch-end round 6 (both readers PASS at the rewritten tip): the trailer-only rewrite confirmed tree-identical; reviewed_sha = that review.json-only commit, probes re-recorded there.",
+    "First close attempt (79016e99, close round PASS from both readers, CI green) was reset: re-pinning the probes at the close commit showed the branch-end scope probe calling `intake write-plan`, which blocks by design once the intent is closed. The probe was fixed before the close commit is re-created so the close-commit shape holds.",
+    "branch-end rounds 7–8 (probe fix for the closed-intent intake block): PASS from both readers at 37c7df69; reviewed_sha there.",
+    "Second close attempt reset: CI's separate loom-design pytest job (loom-design/scripts/, not in the KICKOFF package-tests command) failed on test_capture_intent_contract.py::test_ui_flow_six_sentence_present, which pinned the pre-change Chinese opening line. Re-pinned to the English source sentence; the KICKOFF package-tests gap is a follow-up (maintain).",
+    "branch-end rounds 9–10 (loom-design capture-intent contract test re-pinned to the English opening line with an affirmative same-passage matcher): PASS from both readers at cf18a19e.",
+    "close-intent round, third attempt (two fresh readers): status line only, PR #791; every CI job's check was rehearsed locally at the close commit before this round (loom-design suite included). The two earlier close attempts (79016e99, 6deea171) and their readers stay in dispatch[] for the record."
+  ]
+}

@@ -5,6 +5,48 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-09-05 — internal artifacts in English, three checkable templates
+
+`docs/loom/2026-09-03-artifact-language-policy/`.
+
+1. The four contract templates that carry field comments —
+   `contract/templates/intent.md`, `plan.md`, `spec-minimal.md`,
+   `PRINCIPLES-interview.md` — are now written in English; every key,
+   heading and marker byte stays the same, only the prose around them
+   moved. `plan.md`'s bullet labels are now `Files:` / `Test:` / `Risk:`
+   (quoted by name at `build/SKILL.md:104,130`), and `spec-minimal.md`'s
+   `REQ-<n>` example is now one EARS form with the `→ Acceptance #<n>`
+   suffix kept. `PRINCIPLES-interview.md`'s opening line is now the
+   semantic source that `capture-intent` translates into the user's
+   language at run time, rather than a Chinese line the station read
+   verbatim.
+2. `agents/reviewer.md` gains a paragraph, outside the `docs-lint`
+   carve-out: an internal artifact of the delta not in English, a
+   `REQ-<n>` line outside the five EARS forms, a finding `text` not
+   opening with a Conventional Comments label, or a probe function name
+   not in the `test_<unit>_<state>_<expected>` shape, is a `nit`
+   regardless of `docs-lint`, and never more than a `nit` — quoted
+   source text is exempted. `AGENT_CAPS["reviewer.md"]` in
+   `test_reviewer_agent_single_contract.py` moves 1340 → 1460 to hold
+   the new paragraph; the two graduated pins move with it.
+3. `agents/adversary.md` and `agents/blind-runner.md` now require probe
+   function names in the three-part `test_<unit>_<state>_<expected>`
+   shape and English evidence text; the blind-run report gains a
+   per-artifact language/template row, and finding `text` on both
+   agents opens with a Conventional Comments label.
+4. One language sentence lands in each of six stations —
+   `write-plan/SKILL.md`, `build/SKILL.md`, `review/SKILL.md`,
+   `ship/SKILL.md` and loom-design's `capture-intent/SKILL.md`,
+   `write-spec/SKILL.md` — naming English and that station's own
+   artifact(s), pinned by the new `test_language_station_text.py`.
+5. This is a hard cutover: it governs new changes only. Existing
+   Chinese docs under `docs/loom/2026-09-0*/` and `docs/loom/intent/`
+   are untouched, and the user-facing carriers — the intent, the blind
+   run report, the PR body — stay in the user's own language.
+   `loom_checker.py --list-rules` is unchanged at 27 lines; no checker
+   rule was added, the new clauses are contract prose enforced by the
+   reviewer, not by the checker.
+
 ## [1.2.4] — 2026-09-04 — per-definition Codex hook trust
 
 `docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/`.

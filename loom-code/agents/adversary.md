@@ -47,8 +47,13 @@ file first — it holds the per-type recipes and the exact probe shape.
 ```yaml
 probes: [{kind: adversarial, command: "<re-runnable command>", sha: "<sha>",
           result: pass | fail, artifact: "<where the case now lives>"}]
-findings: [{severity: fatal | important | nit, anchor: "<where>", text: "<what>", fix: "<what would close it>"}]
+findings: [{severity: fatal | important | nit, anchor: "<where>", text: "<label> (<decoration>): <what>", fix: "<what would close it>"}]
 ```
+
+Every probe function is named `test_<unit>_<state>_<expected>` — three
+underscore-separated parts (unit of work, state under test, expected
+behaviour) — and its docstring, and any evidence note you write, is in
+English.
 
 Record attempts that **failed to break anything** too: they are what turns
 the catalogue into an eval instead of an anecdote. A case that ran only in

@@ -322,6 +322,12 @@ confirmed by the reader who raised it in one line — no new round.
 
 ## 7. Write the record
 
+Every finding `text`, review note and dispatch note in `review.json` is
+written in English, and each finding `text` opens with a Conventional
+Comments label (`praise`, `nitpick`, `suggestion`, `issue`, `todo`,
+`question`, `thought`, `chore` or `note`, optional decoration allowed) —
+`agents/reviewer.md` owns the rule.
+
 Write `review.json` — verdicts, probes, findings and vendors of this round
 — and commit it **alone**. On a round whose `scope` is `spec`, every verdict
 also carries `spec_sha`: the first seven characters of

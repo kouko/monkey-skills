@@ -132,6 +132,11 @@ Ask one question: what did this change teach that the next change here
 would otherwise learn the hard way? An honest "nothing" is an answer;
 inventing a lesson costs the next reader more than it saves.
 
+The memory trailers and any store entry under `docs/loom/memory/` are
+written in English regardless of the change's own language, while the
+blind-run report and the pull-request body stay in the user's language,
+since those two are what the user reads at decision point ③ and afterward.
+
 Two carriers, both written now, before the push:
 
 **Git trailers**, on the review-only commit at HEAD. Invoke

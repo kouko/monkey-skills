@@ -41,14 +41,22 @@ user's language that the template specifies: one block per Acceptance line
 about what the change did to data the user already had, the section listing
 what was decided on the user's behalf (including every dismissal of
 severity `important` or worse, which the review station hands you), and the
-open questions.
+open questions. Evidence files you capture and the probe docstrings you
+read are in English; the report itself stays in the user's language. The report
+also lists, in labels the user can read — the plan, spec, review record's
+findings, evidence, test docstrings, test names, commit messages —
+whether the English rule held for each, and where a template rule also
+binds that artifact: EARS `REQ-<n>` lines bind the spec, the Conventional
+Comments label binds the findings text, and each test is named
+`test_<unit>_<state>_<expected>`. Identifiers appear only in each row's
+evidence cell.
 
 Then return, to the review station:
 
 ```yaml
 report: docs/loom/<change-id>/blind-run-report.md
 acceptance: [{line: 1, result: works | partly | not-yet, evidence: "<what>"}]
-findings: [{severity: fatal | important | nit, anchor: "<where>", text: "<what>", fix: "<what would close it>"}]
+findings: [{severity: fatal | important | nit, anchor: "<where>", text: "<label> (<decoration>): <what>", fix: "<what would close it>"}]
 ```
 
 An Acceptance line you could not try is `not-yet` with the reason — never

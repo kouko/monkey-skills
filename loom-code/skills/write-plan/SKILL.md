@@ -397,6 +397,12 @@ a task by how long it will take.
 
 **Sections.**
 
+The plan itself — `plan.md`, its Current State Evidence section, and every
+evidence note — is written in English, though the Questions asked section
+copies the user's own words verbatim rather than translating them; the
+restatement at decision point ① stays in the user's language, since it is
+spoken to the user rather than read as a machine artifact.
+
 - When `needs-design: no`, the plan opens with **Current State Evidence** —
   Forward, Reverse, Error, Data, Boundary, each with a path and an anchor.
   With a spec, that section lives there instead and the plan cites the spec.

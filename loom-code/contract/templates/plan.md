@@ -1,23 +1,25 @@
 # <title> — plan
 intent: <change-id>@<sha>
-spec: docs/loom/<change-id>/spec.md@<sha>     # 只在 needs-design: yes
+spec: docs/loom/<change-id>/spec.md@<sha>     # only when needs-design: yes
 
-## Current State Evidence                  # 只在 needs-design: no（spec 不存在時，五條在這裡）
-- Forward／Reverse／Error／Data／Boundary：<路徑與錨點>
+## Current State Evidence                  # only when needs-design: no (spec doesn't exist, the five lines go here)
+- Forward/Reverse/Error/Data/Boundary: <path and anchor>
 
 ## Task DAG
-<wave 分段；每 task 穩定 ID；同 wave 無依賴者可平行>
+<wave segmentation; each task gets a stable ID; tasks with no dependency in the same wave can run in parallel>
 
-**<W0-01> <title>**　after: <ids>　review: after-task
-<!-- 前兩個 after-task 免理由；第三個起寫成 `review: after-task — <理由>`，
-     checker 規則 intake.after-task-budget 讀這一行 -->
-- 檔：<會動的檔案>
-- 測：<先寫失敗的測試>
-- 風：<風險與預設選擇；agent-decided 標記>
+**<W0-01> <title>**  after: <ids>  review: after-task
+<!-- the first two after-task lines need no reason; the third onward is
+     written as `review: after-task — <reason>`, read by checker rule
+     intake.after-task-budget -->
+- Files: <files this task touches>
+- Test: <the failing test written first>
+- Risk: <risk and the default choice; mark agent-decided>
 
-## Questions asked                        # 決策點 ①（與在此執行的 ②）問過的每一題
-<決策點編號> — <what|behaviour|done|consequence> — <原話>
-<!-- review 站在第一次 checkpoint 把這一段抄進 review.json 的 questions[] -->
+## Questions asked                        # every question asked at decision point ① (and at ② when it runs here)
+<decision point id> — <what|behaviour|done|consequence> — <verbatim quote>
+<!-- the review station copies this section into review.json's questions[]
+     at the first checkpoint -->
 
 ## Risks
-1. <全 plan 風險>
+1. <plan-wide risk>
