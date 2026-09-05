@@ -31,3 +31,22 @@ status: confirmed 2026-09-04
 
 ## Open questions
 - none
+
+## Measurement record
+2026-09-05，N=10、`--model sonnet`（腳本預設），契約整份用 stdin 內嵌
+傳入，固定 fixture
+`docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json`。
+四份分佈（own/not-own 與三方歸屬在這份 fixture 上數字相同，見
+evidence/baselines.md 的說明）：
+
+- pre-cap adversary — own/not-own 80/80、三方 80/80、systematic []
+- pre-cap reviewer — own/not-own 52/80、三方 52/80、systematic [3, 8]
+- current adversary — own/not-own 79/80、三方 79/80、systematic []
+- current reviewer — own/not-own 66/80、三方 66/80、systematic [2, 6]
+
+對抗者側最差的一條是第 3 條，current 契約 10 輪中錯 1 輪（標成
+other），遠低於 50% 的系統性門檻；pre-cap 契約在同一條上是 0/10
+全對。結論：量過、不是措辭問題——對抗者契約現行那句三方歸屬不再
+改一次。讀者側 52/80→66/80、且改後第 2、6 條
+（6/10、8/10，都判成「mine」）是新出現的系統性誤判，這屬於讀者契約
+本身，記為待辦、不在本 change 範圍內處理。
