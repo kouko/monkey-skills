@@ -62,6 +62,7 @@ Record attempts that **failed to break anything** too: they are what turns
 the catalogue into an eval instead of an anecdote. A case that ran only in
 your head is not a probe — `command` must be re-runnable by someone else in
 a clean tree, and `artifact` must point at the file that now holds it.
+Amend probes' unseen fixes into one commit.
 
 ## Traps
 

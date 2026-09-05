@@ -185,7 +185,8 @@ dispatch to the `dispatch[]` array of `docs/loom/<change-id>/review.json`:
 {"task": "W1-02", "role": "implementer", "agent_id": "impl-w1-02-a3f1", "model": "sonnet", "started": "2026-09-02T14:05:00+08:00", "fresh_context": true}
 ```
 
-Commit it on its own: `chore(loom): dispatch <task-id>`.
+This wave's implementer records are appended once and committed once,
+before the wave's first dispatch, as `chore(loom): dispatch <wave>`.
 
 Written after the fact, the record is a reconstruction — and the push rules
 `push.reviewer-ne-implementer` and `push.dismissed-by-reviewer` read this
