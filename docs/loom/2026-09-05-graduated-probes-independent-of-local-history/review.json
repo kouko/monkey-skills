@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "88162f4d7fb7fb8365ce47fdfe513ed2f63555cc",
-  "scope": "wave-end:1",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "openai"
@@ -173,6 +173,117 @@
           "fix": "Change the stale one-skip sentence to say the skip list was empty."
         }
       ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-e81a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "dimension_scores": {
+        "code.security": "PASS",
+        "code.architecture": "PASS",
+        "code.correctness": "PASS",
+        "code.naming": "PASS",
+        "code.tests": "PASS_WITH_NOTES — targeted files run directly, all green",
+        "code.refactoring": "PASS",
+        "code.cross-task-coherence": "PASS",
+        "code.external-surface-grounding": "PASS",
+        "code.principles-conformance": "PASS_WITH_NOTES",
+        "code.deliberate-simplification": "PASS",
+        "code.deletion-first": "PASS",
+        "skill.omission": "PASS",
+        "skill.ambiguity": "PASS",
+        "skill.inconsistency": "PASS",
+        "skill.incorrect-fact": "PASS",
+        "skill.missing-population": "N/A — no population claim",
+        "skill.user-judgment-leak": "PASS",
+        "skill.deletion-first": "PASS",
+        "docs.omission": "PASS",
+        "docs.ambiguity": "PASS",
+        "docs.inconsistency": "NEEDS_REVISION — memory entry vs shipped script",
+        "docs.incorrect-fact": "NEEDS_REVISION — blind-run transcripts vs shipped code",
+        "docs.missing-population": "PASS",
+        "docs.deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:19",
+          "text": "issue: the embedded transcripts (lines 13-29, 33-42) show the skip reason as `REHEARSE_PROBES_NESTED is set`, but 8f799525 changed the marker to the clone's absolute path; a user reproducing the command will see different output.",
+          "fix": "Re-run the rehearsal at HEAD and replace both transcripts."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/memory/a-probe-that-runs-the-probe-suite-in-a-clone-needs-a-nesting-marker-or-it-recurses.md:3",
+          "text": "issue: the entry says the guard sets `REHEARSE_PROBES_NESTED=1`; since 8f799525 the marker carries the clone's absolute path, as the script docstring and CHANGELOG already say.",
+          "fix": "Update description and body; regenerate the index."
+        }
+      ],
+      "notes": [
+        "the path-scoped skip in test_no_history_class_skips_on_main.py is correct and covered by the branch-end adversary probe",
+        "CHANGELOG nine-test count, tempdir and -n auto claims re-verified against the tree"
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-47d0",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "dimension_scores": {
+        "code.security": "PASS — Repository paths are constrained and subprocess arguments avoid shell interpolation.",
+        "code.architecture": "PASS — Clone construction, result parsing, and orchestration remain separated.",
+        "code.correctness": "PASS_WITH_NOTES — Static inspection supports the intended behavior, but individual pytest runs could not start because the read-only environment has no usable temporary directory.",
+        "code.naming": "PASS — Production names communicate their roles and no changed function exceeds the hard length limit.",
+        "code.tests": "NEEDS_REVISION — review.json records only wave-end:1 probes at older SHAs and contains no branch-end probe entries for the changed branch-end artifacts.",
+        "code.refactoring": "PASS — No three-site production duplication or newly introduced residual helper was found.",
+        "code.cross-task-coherence": "PASS — Script, graduated probes, station text, version bump, and memory entries describe the same rehearsal workflow.",
+        "code.external-surface-grounding": "PASS — Git, pytest, JUnit XML, and Python-version decisions are grounded in the plan, workflow, and measured evidence.",
+        "code.principles-conformance": "NEEDS_REVISION — The new blocking instruction is prose-only, contrary to the ratified prohibition on prose-only gates.",
+        "code.deliberate-simplification": "PASS — Omitting xdist and treating skips as informational have explicit ceilings and reasons.",
+        "code.deletion-first": "PASS — The new mechanism is tied to three observed CI failures, and the removed tests are enumerated.",
+        "skill.omission": "NEEDS_REVISION — “A red rehearsal blocks graduation” is an executable rule without a registered gate comment or recomputing mechanism.",
+        "skill.ambiguity": "PASS — The command, target copies, failure response, and skip-reading obligation have one operational reading.",
+        "skill.inconsistency": "NEEDS_REVISION — The blocking prose conflicts with the repository principle that blocking rules cannot be prose-only.",
+        "skill.incorrect-fact": "PASS — The clone shape and command description match the current script.",
+        "skill.missing-population": "PASS — The relevant probe population is scoped to the copied test paths and listed skips.",
+        "skill.user-judgment-leak": "PASS — The station does not ask the user to judge implementation or review quality.",
+        "skill.deletion-first": "PASS — The paragraph cites the concrete recurring failure it prevents through the surrounding change artifacts.",
+        "docs.omission": "NEEDS_REVISION — The branch-end adversarial and blind-run executions are absent from review.json probes[].",
+        "docs.ambiguity": "PASS — Advisory versus blocking behavior and post-merge verification limits are otherwise stated explicitly.",
+        "docs.inconsistency": "NEEDS_REVISION — The blind-run opening says all four acceptance lines were actually tested, while its fourth section says the post-merge main check cannot yet be performed.",
+        "docs.incorrect-fact": "PASS — Version 1.5.2, nine removed tests, cleanup API, xdist policy, and marker behavior match the current tree.",
+        "docs.missing-population": "PASS — Pass, skip, deletion, and interpreter claims state their counts and scopes.",
+        "docs.deletion-first": "PASS — New documentation and memory entries trace to observed recursion, interpreter, reporting, and history-bound-test failures."
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/skills/build/SKILL.md:348",
+          "text": "issue (blocking): This adds a prose-only blocking rule, while PRINCIPLES.md says a rule that must block lives in the checker; the paragraph also lacks a registered gate marker, so nothing recomputes the claimed block.",
+          "fix": "Resolve the intent/principle conflict, then implement the graduation block as a registered recomputing gate with its regression eval and required mechanism-budget accounting."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/review.json:178",
+          "text": "issue: probes[] contains only wave-end:1 executions at older SHAs; it records neither the branch-end adversarial command nor the branch-end blind run that this checkpoint relies on.",
+          "fix": "Append branch-end probe entries whose commands name their committed artifacts and whose sha is the exact tree on which each command ran."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:3",
+          "text": "issue: The report says all four acceptance lines were actually tested, but lines 132–134 acknowledge that Acceptance 4's post-merge main run cannot yet be performed.",
+          "fix": "State that Acceptance 1–3 were exercised and Acceptance 4 is only pre-merge evidence pending the required post-merge main run."
+        }
+      ],
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6"
     }
   ],
   "probes": [
@@ -215,6 +326,38 @@
       "sha": "c08e64119beb68e7ae44e38e09d485869ec32e00",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_no_history_class_skips_on_main.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "python3 loom-code/scripts/rehearse_probes.py",
+      "sha": "c237d9a092ff9fcd9170131f9123b08a796e2723",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py -q -p no:cacheprovider",
+      "sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py -q -p no:cacheprovider",
+      "sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_changelog_carries_1_5_2.py"
     }
   ],
   "questions": [
@@ -273,6 +416,51 @@
       "raised_by": "rev-we1-sonnet-2c9f",
       "severity": "important",
       "resolved": "closed in this record commit — top-level `second_vendor: codex` added (round 1 record)",
+      "dismissed": ""
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/skills/build/SKILL.md:348",
+      "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "raised_by": "rev-be-codex-47d0",
+      "severity": "fatal",
+      "resolved": "",
+      "dismissed": ""
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/review.json:178",
+      "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "raised_by": "rev-be-codex-47d0",
+      "severity": "important",
+      "resolved": "closed in this record commit — four branch-end probes[] entries appended (package-tests, blind-run, two adversarial) at the sha each ran on",
+      "dismissed": ""
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:3",
+      "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "raised_by": "rev-be-codex-47d0",
+      "severity": "important",
+      "resolved": "",
+      "dismissed": ""
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md:19",
+      "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "raised_by": "rev-be-sonnet-e81a",
+      "severity": "important",
+      "resolved": "",
+      "dismissed": ""
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "docs/loom/memory/a-probe-that-runs-the-probe-suite-in-a-clone-needs-a-nesting-marker-or-it-recurses.md:3",
+      "origin_sha": "da1023e5fab7a145cddc58d4b1a08898b0c1bc29",
+      "raised_by": "rev-be-sonnet-e81a",
+      "severity": "important",
+      "resolved": "",
       "dismissed": ""
     }
   ],
@@ -461,7 +649,7 @@
     }
   ],
   "cost": {
-    "rounds": 2,
+    "rounds": 3,
     "dispatches": 21,
     "cap_changes": [],
     "hours_plan_to_pr": null
@@ -486,6 +674,17 @@
       "outcome": "PASS",
       "notes": [
         "Both readers resumed (fix delta reached outside the sonnet finding's anchor). All four codex findings fixed; the language nit dismissed by codex on rebuttal. One new codex nit (stale one-skip sentence in the blind-run report) folds into ship's nit batch."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "outcome": "NEEDS_REVISION",
+      "notes": [
+        "Branch-end adversary (adv-be-9c4e) wrote 18 probes, 2 REPRODUCED (pin blind to inverted sentences; CHANGELOG described the plan not the shipped script), fixed in ed3f6835..da1023e5 before the readers were dispatched; its two nits (paragraph boundary assert, bare-boolean marker) fixed in the same round as code.",
+        "Codex fatal branch-end-01: the graduation sentence is a prose-only block (PRINCIPLES.md:17). Resolution chosen by the orchestrator: register it as a prose gate (`<!-- gate: build.rehearsal-before-graduation -->`, mechanisms.yaml entry with its cold-read eval, budget-exception line in the 1.5.2 CHANGELOG entry) — the repo's own mechanism for a blocking sentence that is not a checker rule, consistent with the intent's constraint against a push rule.",
+        "Codex could not run tests (read-only sandbox, no temp dir); the Anthropic reader ran the targeted files.",
+        "Round 3 is the third round of this change overall but the first of the branch-end checkpoint; the design re-look rule counts rounds within a checkpoint."
       ]
     }
   ]
