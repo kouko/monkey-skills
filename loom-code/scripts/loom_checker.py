@@ -97,7 +97,7 @@ RULES: list[tuple[str, str]] = [
     (
         "intent.needs-design-reason",
         "The needs-design line carries a reason and appears verbatim in the message of the "
-        "commit that last changed the intent's status or needs-design line.",
+        "commit that last changed the intent's status, needs-design or lane line.",
     ),
     (
         "intent.needs-design-recompute",
@@ -680,6 +680,8 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_intent_schema(manifest, front, sections)
     failures += check_map_exists(repo, front)
     failures += check_product_no_identifiers(front, sections)
+    failures += check_lane_schema(front)
+    failures += check_lane_reason(front, commit_msg, repo, path, out)
 
     reason_failures, needs_design = check_needs_design_reason(
         front, commit_msg, repo, path, out
@@ -807,9 +809,14 @@ NEEDS_DESIGN_GRAMMAR = re.compile(r"^(yes|no)\s*(?:—|–|--)\s*(\S.*)$")
 FRONTMATTER_DECISION = ("status:", "needs-design:")
 
 
-def deciding_commit(repo: Path, relative: str) -> str | None:
+def deciding_commit(
+    repo: Path, relative: str, prefixes: tuple[str, ...] = FRONTMATTER_DECISION
+) -> str | None:
     """The newest commit that CHANGED the intent's `status:` or
-    `needs-design:` line -- the one that decided something.
+    `needs-design:` line -- the one that decided something. `prefixes`
+    generalizes this to another frontmatter line with the same discipline
+    (the `lane:` switch line reuses it below) without touching the
+    needs-design/status callers, which keep the default.
 
     Reading the newest touching commit instead made every later edit to the
     intent body (a new open question, an evidence path) owe the needs-design
@@ -818,7 +825,7 @@ def deciding_commit(repo: Path, relative: str) -> str | None:
     for sha in git_text(repo, "log", "--format=%H", "--", relative).splitlines():
         if not sha.strip():
             continue
-        if _decides_in_frontmatter(repo, sha, relative):
+        if _decides_in_frontmatter(repo, sha, relative, prefixes=prefixes):
             return sha
     return None
 
@@ -836,10 +843,12 @@ def frontmatter_end(text: str) -> int:
     return len(text.splitlines()) + 1
 
 
-def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
-    """Did this commit change a `status:`/`needs-design:` line that lived in
-    the intent's FRONT MATTER? A quoted or fenced copy in the body is an
-    example, not a decision (W2 re-review)."""
+def _decides_in_frontmatter(
+    repo: Path, sha: str, relative: str, prefixes: tuple[str, ...] = FRONTMATTER_DECISION
+) -> bool:
+    """Did this commit change a `status:`/`needs-design:` line (or another
+    `prefixes` line) that lived in the intent's FRONT MATTER? A quoted or
+    fenced copy in the body is an example, not a decision (W2 re-review)."""
     diff = git_text(repo, "show", "--format=", "--unified=0", sha, "--", relative)
     after = frontmatter_end(git_maybe(repo, "show", f"{sha}:{relative}") or "")
     before = frontmatter_end(git_maybe(repo, "show", f"{sha}^:{relative}") or "")
@@ -852,10 +861,10 @@ def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
             continue
         marker, body = line[:1], line[1:]
         if marker == "+":
-            decisive = body.lstrip().startswith(FRONTMATTER_DECISION) and new_line < after
+            decisive = body.lstrip().startswith(prefixes) and new_line < after
             new_line += 1
         elif marker == "-":
-            decisive = body.lstrip().startswith(FRONTMATTER_DECISION) and old_line < before
+            decisive = body.lstrip().startswith(prefixes) and old_line < before
             old_line += 1
         else:
             old_line += 1
@@ -1003,6 +1012,120 @@ def check_needs_design_reason(
             verdict,
         )
     return [], verdict
+
+
+LANE_LINE_PREFIX = ("lane:",)
+
+# `lane: express` / `lane: gate-only`, or that name followed by a switch
+# suffix `— switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>`.
+# `by <name>` is mandatory in the suffix (plan Risk: the checker cannot
+# tell a user from an agent, so requiring `by <name>` is the only
+# machine-checkable trace that someone is named) -- a suffix missing it, or
+# missing the date or the `from` clause, fails the whole match rather than
+# silently matching just the bare name, so a truncated switch line is
+# rejected instead of read as if no switch had been declared.
+LANE_GRAMMAR = re.compile(
+    r"^(?P<name>express|gate-only)"
+    r"(?:\s*(?:—|–|--)\s*switched\s+(?P<date>\d{4}-\d{2}-\d{2})"
+    r"\s+by\s+(?P<by>[^,]+?)\s*,\s*from\s+(?P<unit>wave|round)\s+(?P<n>\d+))?"
+    r"\s*$"
+)
+
+
+def check_lane_schema(front) -> list[tuple[str, str]]:
+    """`lane:` is optional, but when present it must read `express` /
+    `gate-only`, or that name plus the switch suffix WITH `by <name>` --
+    a switch suffix that omits who switched it is unrecoverable and blocks
+    here rather than being silently accepted as a plain declaration."""
+    raw = front.get("lane", "").strip()
+    if not raw or LANE_GRAMMAR.match(raw):
+        return []
+    return [
+        (
+            "intent.schema",
+            f"`lane: {raw}` does not match `express | gate-only` or the switch "
+            "grammar `<name> — switched <YYYY-MM-DD> by <name>, from "
+            "<wave <n>|round <n>>`.",
+        )
+    ]
+
+
+def check_lane_reason(
+    front, commit_msg: Path | None, repo: Path, path: Path, out=sys.stdout
+) -> list[tuple[str, str]]:
+    """The `lane:` line, declared or switched, must appear verbatim in the
+    message of the commit that last changed it -- the same discipline
+    `check_needs_design_reason` applies to `status:`/`needs-design:`,
+    reused here (`deciding_commit`/`_decides_in_frontmatter` take a
+    `prefixes` argument for exactly this) since only the user may write
+    this line and its provenance matters the same way."""
+    raw = front.get("lane", "").strip()
+    if not raw:
+        return []
+    sha = relative = None
+    if commit_msg is not None:
+        if not commit_msg.is_file():
+            raise UsageError(f"no commit message file at {commit_msg}")
+        message, source = read_text(commit_msg), str(commit_msg)
+    else:
+        relative = path.resolve().relative_to(repo.resolve()).as_posix()
+        sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
+        if sha is None:
+            message, source = "", f"{relative} (no commit has decided it yet)"
+        else:
+            message = git_text(repo, "show", "-s", "--format=%B", sha)
+            source = f"commit {sha[:7]}, which last changed lane"
+    line = f"lane: {raw}"
+    if _squeeze(line) not in _squeeze(message):
+        if sha is not None and relative is not None:
+            note = _squash_note(repo, relative, sha)
+            if note is not None:
+                out.write(note + "\n")
+                return []
+        return [
+            (
+                "intent.needs-design-reason",
+                f"the commit message ({source}) does not carry the line `{line}`.",
+            )
+        ]
+    return []
+
+
+def declared_lane(repo: Path, change_id: str) -> tuple[str, str, int | None]:
+    """`(lane, origin, from_round)` -- the lane the intent declares for
+    `change_id`, or the repo default in its silence.
+
+    `lane` is one of `full`/`express`/`gate-only`. `origin` is `"intent"`
+    when the intent's own `lane:` line decided it, `"kickoff"` when
+    KICKOFF-DEFAULTS' `default-lane` decided it because the intent carries
+    no `lane:` line, or `"default"` when neither exists (full).
+    `parse_document` already keeps only the LAST `lane:` line (it
+    overwrites the frontmatter dict on each match), so "the last line
+    wins" needs no extra logic here. `from_round` is the round number
+    named by a `from round <n>` switch suffix; a `from wave <n>` suffix
+    yields no round number (there is no round to compare against inside a
+    wave) and neither does a plain, non-switch declaration -- both read as
+    None. This is a pure recompute -- it does not enforce `check_lane_schema`
+    or `check_lane_reason`; a malformed `lane:` line (which the `intent`
+    subcommand already blocks) falls through to the repo default rather
+    than raising, so a caller that runs after those checks have already
+    passed always gets a definite answer."""
+    manifest = load_manifest()
+    intent_path = artifact_path(manifest, "intent", change_id, repo)
+    front: dict[str, str] = {}
+    if intent_path.is_file():
+        front, _sections = parse_document(read_text(intent_path))
+    raw = front.get("lane", "").strip()
+    if raw:
+        match = LANE_GRAMMAR.match(raw)
+        if match:
+            unit, number = match.group("unit"), match.group("n")
+            from_round = int(number) if unit == "round" and number else None
+            return match.group("name"), "intent", from_round
+    default = kickoff_defaults(repo).get("default-lane", "").strip()
+    if default in ("full", "express", "gate-only"):
+        return default, "kickoff", None
+    return "full", "default", None
 
 
 TEMPLATES_GLOB = "**/templates/**"
