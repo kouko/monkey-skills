@@ -1,6 +1,6 @@
 {
-  "reviewed_sha": "4f94e124b52ed95574b95b5edd2591622fff3d2a",
-  "scope": "wave-end:1",
+  "reviewed_sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "openai"
@@ -538,6 +538,54 @@
       "notes": [
         "15 passed on test_ship_station_text.py"
       ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "notes": [
+        "confirmation: the delta only trims ship/SKILL.md:4 to 378 characters and preserves the §3/§6 step order",
+        "39 focused tests passed; 2 tmp-dir fixtures could not run in the read-only sandbox"
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "verdict": "PASS",
+      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "confirmation: only the frontmatter description (lines 3–4) trimmed 427→378 characters, same step order; 41 passed on test_ship_pr_body.py + test_ship_station_text.py"
+      ]
     }
   ],
   "probes": [
@@ -576,7 +624,7 @@
     {
       "kind": "package-tests",
       "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
-      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
       "result": "pass",
       "artifact": "",
       "scope": "branch-end"
@@ -584,7 +632,7 @@
     {
       "kind": "blind-run",
       "command": "see the report — clean clone, Acceptance 1–6 walked with the branch's own checker; Acceptance 5 re-verified at 10cba457",
-      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md",
       "scope": "branch-end"
@@ -592,7 +640,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_branch_end.py -q",
-      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_branch_end.py",
       "scope": "branch-end"
@@ -600,7 +648,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest loom-code/scripts/test_probes_checker_semantics.py -q",
-      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_checker_semantics.py",
       "scope": "branch-end"
@@ -608,7 +656,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest loom-code/scripts/test_probes_checker_semantics_wave_end.py -q",
-      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_checker_semantics_wave_end.py",
       "scope": "branch-end"
@@ -629,6 +677,12 @@
       "decision_point": 1,
       "text": "甲案：關閉 intent 那一行與 review-only 同一個 commit、關閉文法接受分支名、ship 拿掉關閉輪——照甲走嗎？",
       "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "Acceptance 1–6 walked in the blind-run report (fix rounds need only the raising reader; records bound to content not commit id; trailer-only rewrites keep records; 27 rules recompute; suite green after the collision rename; the close line rides in the review-only commit — verified in a sandbox, this branch itself closes the old way); existing data untouched. OK?",
+      "type": "done",
+      "answer": "ok"
     }
   ],
   "open_findings": [
@@ -903,6 +957,26 @@
       "started": "2026-09-06T08:30:00+08:00",
       "fresh_context": false,
       "note": "post-round-6: the package suite at cb5b5a7d had one red — the round-3 nit reorder pushed ship's frontmatter description to 427 chars over the 400-char host cap (test_ship_pr_body); trimmed under the cap, same order; confirmation round 7 with both readers"
+    },
+    {
+      "task": "close",
+      "role": "reviewer",
+      "agent_id": "rev-close-chk-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-06T09:10:00+08:00",
+      "fresh_context": true,
+      "vendor": "openai",
+      "note": "close round (round 8) for the old close sequence — the installed 1.3.1 checker admits no commit between the close commit and the review-only commit that vouches for it, so the record rides in the amended branch-end review-only commit"
+    },
+    {
+      "task": "close",
+      "role": "reviewer",
+      "agent_id": "rev-close-chk-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-06T09:10:00+08:00",
+      "fresh_context": true,
+      "vendor": "anthropic",
+      "note": "close round (round 8) for the old close sequence — the installed 1.3.1 checker admits no commit between the close commit and the review-only commit that vouches for it, so the record rides in the amended branch-end review-only commit"
     }
   ],
   "second_vendor": "codex",
