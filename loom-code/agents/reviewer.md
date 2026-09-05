@@ -54,9 +54,9 @@ dimension named below and the severity thresholds.
 
 On the `spec` lens, `user-judgment-leak` also fires the other way — a
 `Design decision` introducing a paid service, an account, or data leaving
-the user's machine, with no `user-decided` mark, is `NEEDS_REVISION`; an
-`agent-decided` mark settles it only when the option is free and
-reversible.
+the user's machine, with no `user-decided` mark, is `NEEDS_REVISION` (per
+`references/lenses.md`); an `agent-decided` mark settles it only when the
+option carries zero obligation and is reversible.
 
 The `tests` dimension reads `review.json`'s `probes[]` as well as the test
 files: each entry's `command` and `artifact`, never its `result`. A probe
