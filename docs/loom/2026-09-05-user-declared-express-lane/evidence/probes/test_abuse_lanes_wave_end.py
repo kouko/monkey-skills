@@ -800,3 +800,389 @@ def test_list_rules_prints_exactly_twenty_seven_lines() -> None:
     lines = [line for line in result.stdout.splitlines() if line.strip()]
     assert len(lines) == 27, f"expected 27 rules, saw {len(lines)}:\n{result.stdout}"
     assert "push.verdicts-ge-2" in result.stdout
+
+
+# =============================================================================
+# Round-1 reader follow-up (three more holes found reviewing 029925d0 /
+# c24de521 at HEAD a271120c). Each section below is one reader finding.
+# =============================================================================
+
+# --- wave-end:1-01: a declaration needs the SAME dated-attribution
+# discipline the switch form already has. Acceptance 1 of the intent says
+# it in so many words: "宣告或切換都帶日期與人" -- BOTH declaring and
+# switching carry date and person, not only switching. `LANE_GRAMMAR`
+# today makes the switch suffix's `by <name>`/date mandatory but leaves
+# the bare (day-one) form entirely unattributed -- `express`/`gate-only`/
+# `full` alone matches with no date, no name, nothing. Two probes: the
+# schema should refuse an unattributed declaration outright, and `push`
+# should never honour one it somehow sees (falls back to `full`).
+# =============================================================================
+
+
+def test_intent_undated_bare_lane_declaration_rejected_by_schema(tmp_path: Path) -> None:
+    """Acceptance 1 requires the declaration itself, not only a switch, to
+    carry date and person -- the correct grammar is `lane: <name> —
+    declared <YYYY-MM-DD> by <name>` for the day-one form, mirroring the
+    switch suffix's `by <name>`. A bare `lane: express`, with no such
+    suffix at all, should be schema-invalid; `check_lane_schema` accepts
+    it today because `LANE_GRAMMAR`'s entire suffix group (switch OR
+    declared) is optional.
+    # RED at HEAD: lane-declaration-needs-dated-attribution
+    """
+    repo = make_intent_repo(tmp_path)
+    change_id = "2026-09-05-lane-undated"
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    _write(repo, intent_rel, _lane_intent_text(change_id, lane_line="lane: express"))
+    git(repo, "add", intent_rel)
+    message = (
+        "docs(loom): add an intent\n\n"
+        "needs-design: no — no interface surface touched\n"
+        "lane: express"
+    )
+    git(repo, "commit", "-q", "-m", message)
+
+    result = run_checker("intent", str(repo / intent_rel), cwd=repo)
+    assert result.returncode != 0, (
+        "an undated, unattributed `lane: express` declaration should be "
+        f"schema-invalid; it passed instead: {result.stdout}"
+    )
+
+
+def test_push_undated_bare_lane_declaration_falls_back_to_full(tmp_path: Path) -> None:
+    """The push-side mirror: even if an undated bare declaration somehow
+    reaches `push` (the `intent` subcommand is a separate, commit-time
+    gate -- finding 2's own architecture), the effective lane must fall
+    back to `full` rather than granting `express`'s floor of one. It does
+    not: `declared_lane`/`effective_lane_detail` read any grammar-valid
+    `lane:` value with no attribution requirement at all, so a docs+skill
+    delta with one reviewer currently passes.
+    # RED at HEAD: lane-declaration-needs-dated-attribution
+    """
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-undated-push"
+    _commit_intent(repo, change_id, lane_line="lane: express")
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "some notes\n")
+    _write(repo, "loom-code/skills/example/SKILL.md", "---\nname: example\n---\nbody\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): example skill note\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [_verdict("agent-rev", 1, "branch-end", reviewed_sha)],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [
+            _dispatch("implementer", "agent-imp", "T1"),
+            _dispatch("reviewer", "agent-rev"),
+        ],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "an undated, unattributed `lane: express` declaration must fall "
+        f"back to full (two readers); one reviewer passed instead: {result.stdout}"
+    )
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+# =============================================================================
+# wave-end:1-02: the `tests/`-segment exemption (`_is_small_lane_test_path`
+# -- "any `tests/` path segment" -- `loom_checker.py:2976-2982`) is checked
+# in `_lane_forcing_paths` BEFORE the gate/skill kind is ever consulted for
+# that path (`:3210` runs before the `kind == "skill"` branch at `:3214`,
+# and `_evidence_masked_kind`'s gate/skill unmasking from 029925d0 is never
+# reached at all since the path is typed `gate`/`skill` directly, not
+# `evidence`) -- so a genuine gate or skill file sitting under a `tests/`
+# directory is waved through as small-lane-safe, exactly the class of bug
+# `_evidence_masked_kind` closed for `evidence/`, left open here.
+# =============================================================================
+
+
+def test_push_express_declared_gate_script_hidden_under_tests_segment_incorrectly_passes(
+    tmp_path: Path,
+) -> None:
+    """`loom-code/hooks/tests/push.py` types `gate` (`**/hooks/**`) but
+    also carries a `tests` path segment -- `_is_small_lane_test_path`
+    waves it through before `_lane_forcing_paths` ever asks what kind it
+    is, so a declared `lane: express` delta touching it keeps one
+    reviewer instead of being forced to `full`.
+    # RED at HEAD: tests-segment-exemption-precedes-gate-skill-kind
+    """
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-tests-gate"
+    _commit_intent(repo, change_id, lane_line="lane: express")
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "some notes\n")
+    _write(
+        repo,
+        "loom-code/hooks/tests/push.py",
+        "def test_push_disguised_as_hook_test():\n    assert True\n",
+    )
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat(loom-code): a disguised gate script\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    kind = lc._artifact_type_for(lc.load_manifest(), "loom-code/hooks/tests/push.py")
+    assert kind == "gate", f"classification pin: got {kind!r}"
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [_verdict("agent-rev", 1, "branch-end", reviewed_sha)],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [
+            _dispatch("implementer", "agent-imp", "T1"),
+            _dispatch("reviewer", "agent-rev"),
+        ],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "a gate-typed script under a `tests/` path segment must still "
+        f"force the full lane and block one reviewer: {result.stdout}"
+    )
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_push_gateonly_declared_skill_path_hidden_under_tests_segment_incorrectly_passes(
+    tmp_path: Path,
+) -> None:
+    """`loom-code/skills/example/tests/SKILL.md` types `skill`
+    (`**/SKILL.md`) but also carries a `tests` path segment -- the same
+    exemption-before-kind ordering waves it through gate-only's skill
+    exclusion, so zero reviewers currently pass.
+    # RED at HEAD: tests-segment-exemption-precedes-gate-skill-kind
+    """
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-tests-skill"
+    _commit_intent(repo, change_id, lane_line="lane: gate-only")
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "some notes\n")
+    _write(
+        repo,
+        "loom-code/skills/example/tests/SKILL.md",
+        "---\nname: example\n---\nbody\n",
+    )
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat(loom-code): a disguised skill file\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    kind = lc._artifact_type_for(
+        lc.load_manifest(), "loom-code/skills/example/tests/SKILL.md"
+    )
+    assert kind == "skill", f"classification pin: got {kind!r}"
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [
+            _dispatch("implementer", "agent-imp", "T1"),
+            _dispatch("adversary", "agent-adv", "T1"),
+        ],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "a skill-typed file under a `tests/` path segment must still "
+        f"force the full lane and block zero reviewers: {result.stdout}"
+    )
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+# =============================================================================
+# wave-end:1-03: `from wave <n>` switch timing. `lane-switch.md` says
+# "The switch applies to every round after the named `from`; the round
+# already in flight finishes in the lane it started under" -- read
+# plainly this is ROUND-RECORDING order, not checkpoint identity: the one
+# round already being worked when the switch commit lands keeps the old
+# lane, and every OTHER round recorded from then on -- whether in the
+# same wave/checkpoint or a later one -- gets the new lane. That is also
+# the coordinator's stated reading, and it is what these two probes pin.
+#
+# `effective_lane_detail`'s auto-inferred branch (029925d0/c24de521) does
+# not implement this: for a bare or `from wave <n>` declaration with
+# `from_round is None`, it sets `from_round = round_number` -- the round
+# CURRENTLY being asked about, recomputed fresh on every call -- so
+# `round_number > from_round` is `N > N`, always False. Once
+# `_earlier_lane_pairs` is non-empty for a change (any review history
+# exists at all), EVERY future round -- forever, in every later
+# checkpoint too -- is blocked back to `full`, never just the one round
+# genuinely in flight when the switch landed. The two probes below show
+# this for both directions the coordinator asked about: a switch declared
+# well after wave-end:1 fully closes (still blocks branch-end round 1),
+# and a switch declared mid-wave, before wave-end:1's own round 2 is
+# recorded (still blocks that very round 2, which the reference's "every
+# round after" wording says should already carry the new lane).
+# =============================================================================
+
+
+def _closed_wave_end_repo(tmp_path: Path, change_id: str):
+    """`main`/`work` seeded, an intent with no `lane:` line yet, and
+    wave-end:1 fully run to two rounds of two readers each, with every
+    round's review.json actually committed (so `deciding_commit`'s later
+    tree reads see real history) -- the common setup both `from wave`
+    timing probes build on."""
+    repo = _seed_branch(tmp_path)
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    _write(repo, intent_rel, _lane_intent_text(change_id, lane_line=None))
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "wave-end:1 round1 delta\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): wave-end:1 round1 delta\n\nTask: T1")
+    round1_sha = git(repo, "rev-parse", "HEAD")
+
+    review1 = {
+        "reviewed_sha": round1_sha,
+        "scope": "wave-end:1",
+        "vendors": ["anthropic"],
+        "verdicts": [
+            _verdict("r1", 1, "wave-end:1", round1_sha),
+            _verdict("r2", 1, "wave-end:1", round1_sha),
+        ],
+        "probes": [_package_tests_record(round1_sha), *_adversarial_records(round1_sha)],
+        "open_findings": [],
+        "dispatch": [
+            _dispatch("implementer", "agent-imp", "T1"),
+            _dispatch("reviewer", "r1"),
+            _dispatch("reviewer", "r2"),
+        ],
+    }
+    review_rel = _write_review(repo, change_id, review1)
+    _commit_review(repo, review_rel)
+    return repo, intent_rel, review_rel, review1, round1_sha
+
+
+def test_push_from_wave_switch_declared_after_checkpoint_closes_single_reader_blocked(
+    tmp_path: Path,
+) -> None:
+    """wave-end:1 runs a SECOND round (still two readers, closing the
+    checkpoint), and only THEN does the `from wave 1` switch commit land.
+    branch-end round 1 -- a fresh round recorded strictly after the
+    switch, in a later checkpoint -- should get `express`'s floor of one
+    per lane-switch.md's "every round after the named from". `push`
+    blocks it instead.
+    # RED at HEAD: from-wave-switch-blocks-every-later-round-forever
+    """
+    change_id = "2026-09-05-lane-wave-after"
+    repo, intent_rel, review_rel, review1, round1_sha = _closed_wave_end_repo(
+        tmp_path, change_id
+    )
+
+    _write(repo, "docs/notes2.md", "wave-end:1 round2 delta\n")
+    git(repo, "add", "docs/notes2.md")
+    git(repo, "commit", "-q", "-m", "docs: wave-end:1 round2\n\nTask: T1")
+    round2_sha = git(repo, "rev-parse", "HEAD")
+    review2 = dict(review1)
+    review2["reviewed_sha"] = round2_sha
+    review2["verdicts"] = review1["verdicts"] + [
+        _verdict("r1", 2, "wave-end:1", round2_sha),
+        _verdict("r2", 2, "wave-end:1", round2_sha),
+    ]
+    review2["probes"] = [_package_tests_record(round2_sha), *_adversarial_records(round2_sha)]
+    _write_review(repo, change_id, review2)
+    _commit_review(repo, review_rel)
+
+    # The switch commit, well after wave-end:1's second (closing) round.
+    switch_line = "lane: express — switched 2026-09-06 by kouko, from wave 1"
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = text.replace(
+        "needs-design: no — no interface surface touched\n",
+        "needs-design: no — no interface surface touched\n" + switch_line + "\n",
+    )
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): switch lane\n\n{switch_line}")
+
+    _write(repo, "docs/more-notes.md", "branch-end round1 delta\n")
+    git(repo, "add", "docs/more-notes.md")
+    git(repo, "commit", "-q", "-m", "docs: branch-end round1\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    review3 = dict(review2)
+    review3["reviewed_sha"] = reviewed_sha
+    review3["scope"] = "branch-end"
+    review3["verdicts"] = review2["verdicts"] + [
+        _verdict("r3", 1, "branch-end", reviewed_sha),
+    ]
+    review3["probes"] = [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)]
+    review3["dispatch"] = review2["dispatch"] + [_dispatch("reviewer", "r3")]
+    _write_review(repo, change_id, review3)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (
+        "branch-end round 1 is recorded strictly after the `from wave 1` "
+        "switch commit (which itself landed after wave-end:1 fully "
+        "closed) -- lane-switch.md's own wording says every round after "
+        f"the switch is covered; push blocked it instead: {result.stdout}"
+    )
+
+
+def test_push_from_wave_switch_declared_mid_checkpoint_single_reader_blocked(
+    tmp_path: Path,
+) -> None:
+    """The mirror: the `from wave 1` switch commit lands BEFORE wave-end:1's
+    OWN round 2 is recorded (mid-checkpoint, right after round 1). Round 2
+    is still recorded strictly after the switch commit, so by the same
+    "every round after the named from" wording it should already carry
+    `express`'s floor of one -- only round 1 (already in flight when the
+    switch landed) keeps the old lane. `push` blocks round 2 as well.
+    # RED at HEAD: from-wave-switch-blocks-every-later-round-forever
+    """
+    change_id = "2026-09-05-lane-wave-mid"
+    repo, intent_rel, review_rel, review1, round1_sha = _closed_wave_end_repo(
+        tmp_path, change_id
+    )
+
+    # The switch commit lands BEFORE round 2's review record.
+    switch_line = "lane: express — switched 2026-09-06 by kouko, from wave 1"
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    text = text.replace(
+        "needs-design: no — no interface surface touched\n",
+        "needs-design: no — no interface surface touched\n" + switch_line + "\n",
+    )
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): switch lane\n\n{switch_line}")
+
+    _write(repo, "docs/notes2.md", "wave-end:1 round2 fix delta\n")
+    git(repo, "add", "docs/notes2.md")
+    git(repo, "commit", "-q", "-m", "docs: wave-end:1 round2 fix\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    review2 = dict(review1)
+    review2["reviewed_sha"] = reviewed_sha
+    review2["verdicts"] = review1["verdicts"] + [_verdict("r1", 2, "wave-end:1", reviewed_sha)]
+    review2["probes"] = [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)]
+    _write_review(repo, change_id, review2)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (
+        "wave-end:1 round 2 is recorded strictly after the `from wave 1` "
+        "switch commit (which landed right after round 1) -- only round 1 "
+        "itself should keep the old lane per lane-switch.md's wording; "
+        f"push blocked round 2 instead: {result.stdout}"
+    )
