@@ -13,6 +13,7 @@ invocation against THIS tree; nothing here asserts from memory.
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -542,48 +543,51 @@ def test_ship_section4_full_package_tests_reproduces_within_two_tries() -> None:
 
 
 def test_codex_mirror_loom_checker_diverges_only_by_the_known_version_header() -> None:
-    """`.codex/hooks/loom_checker.py` is meant to mirror
-    `loom-code/scripts/loom_checker.py` byte-for-byte -- no sync script
-    checks this (sync_codex_manifests.py only syncs plugin.json shared
-    fields, never hook script bodies), so drift between the two is
-    silent. Today's actual, reproducible divergence is exactly one
-    inserted line: `# loom-checker 1.6.0` after the shebang in the Codex
-    copy. This predates the branch (same at reviewed_sha d4abdeb3, same
-    at the commit that last touched either file, cc1a4ee5), so it is
-    reported as a finding, not attributed to this change -- but the test
-    is left genuinely RED (not xfailed, not weakened) so it pins the
-    divergence's exact shape: it will fail LOUDER, not quieter, if a
-    second differing line ever appears."""
-    import difflib
+    """`.codex/hooks/loom_checker.py` is not meant to be byte-identical to
+    `loom-code/scripts/loom_checker.py` -- `codex_scaffold.py` is the only
+    legal way to write the mirror (docs/loom/2026-09-04-checker-seams/
+    intent.md #6) and it deliberately inserts exactly one version-stamp
+    line (`# loom-checker <version>`) right after the shebang, otherwise
+    copying the source byte for byte
+    (`codex_scaffold.py::_checker_copy_content`). This shape is already
+    pinned as a drift gate that runs in the package suite --
+    `loom-code/scripts/test_codex_mirror_matches_checker.py::
+    test_mirror_is_the_source_with_exactly_one_stamp_line_inserted` (plus
+    its sibling `test_mirror_stamp_version_matches_plugin_manifest`) --
+    so this is a regression pin on the SAME invariant from the evidence
+    side, not a new claim: mirror == source with exactly one stamp line
+    inserted after the shebang, and that stamp's version matches
+    `loom-code/.claude-plugin/plugin.json`."""
+    plugin_manifest = REPO_ROOT / "loom-code" / ".claude-plugin" / "plugin.json"
+    manifest_version = json.loads(plugin_manifest.read_text(encoding="utf-8"))["version"]
+    stamp_prefix = "# loom-checker "
 
-    canonical = CHECKER.read_text(encoding="utf-8").splitlines()
-    mirror = CODEX_CHECKER.read_text(encoding="utf-8").splitlines()
-    if canonical == mirror:
-        return
-    opcodes = difflib.SequenceMatcher(a=canonical, b=mirror).get_opcodes()
-    inserted_in_mirror = [
-        mirror[j1:j2] for tag, i1, i2, j1, j2 in opcodes if tag == "insert"
-    ]
-    deleted_from_canonical = [
-        canonical[i1:i2] for tag, i1, i2, j1, j2 in opcodes if tag == "delete"
-    ]
-    replaced = [
-        (canonical[i1:i2], mirror[j1:j2])
-        for tag, i1, i2, j1, j2 in opcodes if tag == "replace"
-    ]
-    assert not deleted_from_canonical and not replaced, (
-        f"unexpected divergence shape (not a pure insertion): "
-        f"deleted={deleted_from_canonical!r} replaced={replaced!r}"
+    source_lines = CHECKER.read_text(encoding="utf-8").splitlines(keepends=True)
+    mirror_lines = CODEX_CHECKER.read_text(encoding="utf-8").splitlines(keepends=True)
+
+    assert len(mirror_lines) == len(source_lines) + 1, (
+        f"the mirror must be the source plus exactly one inserted stamp "
+        f"line -- source has {len(source_lines)} lines, mirror has {len(mirror_lines)}"
     )
-    assert inserted_in_mirror == [["# loom-checker 1.6.0"]], (
-        f"the codex mirror's insertion no longer matches the known single "
-        f"version-header line: {inserted_in_mirror!r}"
+
+    at = 1 if source_lines and source_lines[0].startswith("#!") else 0
+    stamped_line = mirror_lines[at]
+    assert stamped_line.startswith(stamp_prefix), (
+        f"expected the inserted line at index {at} to start with "
+        f"{stamp_prefix!r}, got {stamped_line!r}"
     )
-    pytest.fail(
-        "finding: .codex/hooks/loom_checker.py is NOT byte-identical to "
-        "loom-code/scripts/loom_checker.py -- it carries one extra line, "
-        "'# loom-checker 1.6.0' (predates this branch), and no CI check "
-        "or ship §4 command verifies hook-script byte-mirroring at all"
+    assert stamped_line.rstrip("\n") == f"{stamp_prefix}{manifest_version}", (
+        f"mirror stamp is {stamped_line!r}, expected "
+        f"{stamp_prefix + manifest_version!r} -- re-run "
+        f"`python3 loom-code/scripts/codex_scaffold.py --repo .`"
+    )
+
+    rebuilt = mirror_lines[:at] + mirror_lines[at + 1:]
+    assert rebuilt == source_lines, (
+        "removing the stamp line from the mirror must reproduce the "
+        "source byte for byte -- the mirror has drifted from "
+        "loom_checker.py and needs "
+        "`python3 loom-code/scripts/codex_scaffold.py --repo .`"
     )
 
 
