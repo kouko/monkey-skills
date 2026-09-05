@@ -168,7 +168,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "a task line gains a claimed or blocked mark"
         - "the W<n>-memory task is appended"
         - "A task with no Task trailer in git is replaced when a spec requirement changed."
-        - "An un-landed task's Files, Test or Risk line is amended when a Current State Evidence line proved wrong, the reason stated in the commit message."
+        - "An un-landed task's Files, Test or Risk line is amended when a fact the plan relied on proved wrong, the reason stated in the commit message."
         - "a Questions asked line is appended"
     fields:
       - {name: intent, kind: frontmatter, required: true}
