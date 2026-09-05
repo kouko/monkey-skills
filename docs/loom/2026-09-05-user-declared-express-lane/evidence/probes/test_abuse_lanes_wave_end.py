@@ -1384,3 +1384,125 @@ def test_push_gateonly_dated_declaration_standing_doc_touch_now_blocked(
         f"back to full (2 readers, zero present); it passed instead: {result.stdout}"
     )
     assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+# =============================================================================
+# Round-2 hold (Codex, wave-end:1-01 follow-up): a syntactically dated
+# `lane:` declaration (`express|gate-only — declared <date> by <name>`)
+# is honoured by `push` even when the commit that last changed that line
+# never states it in its own message -- the `intent` subcommand's
+# `check_lane_reason` would catch this (the same discipline
+# `check_needs_design_reason` applies to `needs-design:`/`status:`), but
+# `push` never calls `check_lane_reason` at all: nothing forces `intent`
+# to have run before a `lane:` line is trusted. Ratified direction: push
+# itself recomputes provenance -- `deciding_commit(repo, intent_path,
+# prefixes=LANE_LINE_PREFIX)` finds the commit that last changed the
+# line, and that commit's OWN message must carry it verbatim; otherwise
+# the declaration is ignored (falls back to the raw recompute) with the
+# reason `lane declaration not stated by its commit <sha7>`.
+# =============================================================================
+
+
+def test_push_dated_lane_declaration_ignored_when_deciding_commit_omits_it(
+    tmp_path: Path,
+) -> None:
+    """A dated `lane: express — declared <date> by kouko` line, committed
+    via `_commit_intent` -- which writes the intent's full content
+    (including the `lane:` line) in one commit whose message is the plain
+    "docs(loom): add the intent", never mentioning `lane:` at all, exactly
+    like every OTHER probe in this file that has used `_commit_intent`
+    with a lane_line so far. A docs+skill delta (skill never blocks
+    `express`), one reviewer at branch-end. Per the ratified provenance
+    rule, `deciding_commit` finds this exact commit as the one that
+    introduced the line, its message carries no `lane:` line at all, so
+    the declaration must be ignored -- the raw recompute (a SKILL.md path
+    forces `full`) governs instead, and one reviewer must be blocked.
+    `push` currently trusts the declaration with no provenance check at
+    all, so one reviewer passes.
+    # RED at HEAD: push-never-verifies-lane-declaration-commit-provenance
+    """
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-no-provenance"
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    _commit_intent(repo, change_id, lane_line=lane_line)
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "some notes\n")
+    _write(repo, "loom-code/skills/example/SKILL.md", "---\nname: example\n---\nbody\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): example skill note\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [_verdict("agent-rev", 1, "branch-end", reviewed_sha)],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [
+            _dispatch("implementer", "agent-imp", "T1"),
+            _dispatch("reviewer", "agent-rev"),
+        ],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "a dated `lane: express` declaration whose deciding commit never "
+        "states the line in its own message must be ignored (falling "
+        "back to the raw recompute, which forces `full` for the SKILL.md "
+        f"path) -- one reviewer passed instead: {result.stdout}"
+    )
+    assert "push.verdicts-ge-2" in blocked_rules(result), (
+        f"expected push.verdicts-ge-2 among the blocked rules: {result.stderr}"
+    )
+
+
+def test_push_dated_lane_declaration_honoured_when_deciding_commit_states_it(
+    tmp_path: Path,
+) -> None:
+    """The mirror: the SAME dated `lane: express — declared <date> by
+    kouko` line, but this time the commit that introduces it carries that
+    exact line verbatim in its own message (the discipline `check_lane_
+    reason`/`check_needs_design_reason` already enforce for the separate
+    `intent` subcommand). Same docs+skill delta, one reviewer at
+    branch-end. GREEN today, and should stay GREEN once the ratified
+    provenance check lands -- a `deciding_commit` whose message DOES
+    carry the line is exactly the case the new check must let through."""
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-with-provenance"
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    _write(repo, intent_rel, _lane_intent_text(change_id, lane_line=lane_line))
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "some notes\n")
+    _write(repo, "loom-code/skills/example/SKILL.md", "---\nname: example\n---\nbody\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): example skill note\n\nTask: T1")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [_verdict("agent-rev", 1, "branch-end", reviewed_sha)],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [
+            _dispatch("implementer", "agent-imp", "T1"),
+            _dispatch("reviewer", "agent-rev"),
+        ],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (
+        "a dated `lane: express` declaration whose deciding commit states "
+        f"the line verbatim should pass with one reviewer: {result.stdout}"
+    )
