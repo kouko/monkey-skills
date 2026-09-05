@@ -50,6 +50,30 @@ def _section_6_merge_then_verify() -> str:
     return text[start:end]
 
 
+def _section_4_push() -> str:
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    start = text.index("## 4. Push")
+    end = text.index("## 5. The pull request")
+    return text[start:end]
+
+
+def _pr_body_template() -> str:
+    """The fenced block right after the PR-body anchor comment."""
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    tail = text.split("<!-- pr-body-template -->", 1)[1].splitlines()
+    opened = False
+    collected: list[str] = []
+    for line in tail:
+        if line.strip().startswith("```"):
+            if opened:
+                return "\n".join(collected)
+            opened = True
+            continue
+        if opened:
+            collected.append(line)
+    raise AssertionError("the PR-body anchor is not followed by a closed fenced block.")
+
+
 def _section_3_memory() -> str:
     text = SHIP_SKILL_MD.read_text(encoding="utf-8")
     start = text.index("## 3. Memory")
@@ -271,3 +295,89 @@ def test_ship_preflight_in_section_3_fallback_in_section_6() -> None:
         and not _has_negation(s)
     ]
     assert hits, "§6 has no affirmative fallback sentence for an older checker"
+
+
+# --- W1-04: process-cost section in the PR body; push checklist ------------
+
+
+def test_ship_pr_body_has_process_cost_section_between_closing_log_and_memory() -> None:
+    """The PR-body template gains a `## Process cost` section, pinned by
+    index order: after `## Closing log`, before `## Memory` (the trailer
+    footer must stay the template's last block — ship.pr-body-carries-
+    trailer-footer)."""
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    closing_idx = text.index("## Closing log")
+    process_idx = text.index("## Process cost")
+    memory_idx = text.index("## Memory")
+    assert closing_idx < process_idx < memory_idx
+
+
+def test_ship_pr_body_process_cost_lists_rounds_dispatches_caps_hours() -> None:
+    """The `## Process cost` section lists rounds, dispatches, cap changes
+    and hours, sourced from `review.json`'s `cost` block."""
+    section = _pr_body_template()
+    idx = section.index("## Process cost")
+    tail = _unwrapped(section[idx:])
+    assert "cost.rounds" in tail
+    assert "cost.dispatches" in tail
+    assert "cost.cap_changes" in tail
+    assert "cost.hours_plan_to_pr" in tail
+    assert "review.json" in tail
+
+
+def test_ship_push_checklist_lists_one_command_per_ci_job() -> None:
+    """§4 lists, before the push, one command per job of this repo's
+    loom-code CI workflow."""
+    section = _section_4_push()
+    for expected in (
+        "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/",
+        "check_plugin_boundaries.py loom-code",
+        "check_plugin_boundaries.py loom-design",
+        "sync_codex_manifests.py --check --all",
+        "check_mechanisms.py --baseline origin/main",
+        "check_mechanisms.py --measure",
+        "check_contract_citations.py",
+        "check_doc_citations.py",
+        "check-skill-crossrefs.py",
+    ):
+        assert expected in section, f"§4's checklist is missing {expected!r}"
+    # the checklist appears before the push command
+    checklist_idx = section.index("check-skill-crossrefs.py")
+    push_idx = section.index("git push -u origin")
+    assert checklist_idx < push_idx
+
+
+def test_ship_push_checklist_mirrors_workflow_sentence() -> None:
+    """§4 carries an affirmative, un-negated sentence stating the checklist
+    mirrors the CI workflow's jobs."""
+    section = _section_4_push()
+    hits = [
+        s for s in _sentences(section)
+        if "mirrors" in s.lower()
+        and "loom-code-ci.yml" in s.lower()
+        and "jobs" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "ship/SKILL.md §4 has no affirmative sentence stating the checklist "
+        "mirrors the workflow's jobs"
+    )
+
+
+def test_matcher_push_checklist_mirrors_sentence_negated_rejected() -> None:
+    sentence = (
+        "This checklist never mirrors `.github/workflows/loom-code-ci.yml`'s "
+        "jobs."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_push_checklist_mirrors_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "This checklist mirrors `.github/workflows/loom-code-ci.yml`'s jobs, "
+        "command for command."
+    )
+    assert "mirrors" in sentence.lower()
+    assert "loom-code-ci.yml" in sentence.lower()
+    assert "jobs" in sentence.lower()
+    assert not _has_negation(sentence)
