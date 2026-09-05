@@ -390,6 +390,14 @@ def test_LanguagePolicyGuard_syntheticIntentTexts_decidesSkip():
     confirmed_text = "status: confirmed 2026-09-05\n"
     assert _language_policy_intent_closed(confirmed_text) is False
 
+    body_level_closed_text = (
+        "status: confirmed 2026-09-05\n"
+        "\n"
+        "## Body\n"
+        "some later paragraph mentions status: closed in passing.\n"
+    )
+    assert _language_policy_intent_closed(body_level_closed_text) is False
+
 
 def _resolve_base_ref() -> str | None:
     for ref in ("origin/main", "main"):
