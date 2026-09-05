@@ -33,6 +33,24 @@ def test_reviewer_agent_documents_docs_lint() -> None:
     assert "docs-lint" in text
 
 
+def test_reviewer_agent_settlement_threshold_matches_lenses_verbatim() -> None:
+    """wave-end:2-04: reviewer.md's compressed user-judgment-leak paragraph
+    must state the same settlement threshold lenses.md defines in full --
+    'zero obligation and is reversible' -- not a paraphrase like 'free and
+    reversible', which reads differently to a cold reviewer deciding
+    whether an agent-decided mark settles a one-way-door choice."""
+    reviewer_text = (REPO / "loom-code/agents/reviewer.md").read_text(encoding="utf-8")
+    lenses_text = (
+        REPO / "loom-code/skills/review/references/lenses.md"
+    ).read_text(encoding="utf-8")
+    threshold = "carries zero obligation and is reversible"
+    assert threshold in lenses_text, f"lenses.md no longer states {threshold!r}"
+    assert threshold in reviewer_text, (
+        f"reviewer.md's user-judgment-leak paragraph no longer matches "
+        f"lenses.md's settlement threshold ({threshold!r})"
+    )
+
+
 def test_lenses_severity_section_defines_act_wrongly() -> None:
     text = (REPO / "loom-code/skills/review/references/lenses.md").read_text(encoding="utf-8")
     start = text.index("## Severity and verdict")
