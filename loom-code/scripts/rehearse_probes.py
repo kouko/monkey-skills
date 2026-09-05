@@ -50,11 +50,14 @@ Design choices the plan marks agent-decided:
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ET
+
+NESTED_ENV = "REHEARSE_PROBES_NESTED"
 from pathlib import Path
 
 from git_exec import run_git  # sibling module (no __init__.py, no conftest)
@@ -315,10 +318,14 @@ def main(argv: list[str] | None = None) -> int:
         "--junit-xml", str(junit_path),
     ]
 
+    # Mark the clone's pytest as nested: a graduated probe that itself clones
+    # the repository and runs the probe files reads this and skips, so a
+    # rehearsal never re-enters itself from inside its own clone.
+    env = {**os.environ, NESTED_ENV: "1"}
     try:
         proc = subprocess.run(
             cmd, cwd=str(clone_dir), capture_output=True, text=True,
-            timeout=PYTEST_TIMEOUT,
+            timeout=PYTEST_TIMEOUT, env=env,
         )
     except subprocess.TimeoutExpired as exc:
         print(f"pytest timed out inside the rehearsal clone: {exc}", file=sys.stderr)

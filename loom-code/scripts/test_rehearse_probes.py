@@ -319,3 +319,29 @@ def test_parseJunit_realReport_reconstructsNodeidsFromClassnameWhenFileAttrAbsen
     failed, skipped = rehearse_probes._parse_junit(xml_path)
     assert failed == ["tests/test_x.py::test_fails"]
     assert skipped == [("tests/test_x.py::test_skips", "a reason")]
+
+
+# --------------------------------------------------------------------------
+# recursion guard: the clone's pytest carries REHEARSE_PROBES_NESTED=1 so a
+# graduated probe that clones and runs the probe files can skip inside a
+# rehearsal instead of rehearsing again (found at the memory step: 40
+# nested rehearsals before the tree was killed)
+# --------------------------------------------------------------------------
+
+NESTED_MARKER_PROBE = """\
+import os
+
+def test_marker_is_set_inside_the_rehearsal_clone():
+    assert os.environ.get("REHEARSE_PROBES_NESTED") == "1"
+"""
+
+
+def test_cloneRun_carriesTheNestedMarker_soCloneAndRunProbesCanSkip(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = make_repo(tmp_path, trunk="main")
+    commit_file(repo, "tests/test_marker.py", NESTED_MARKER_PROBE, "marker probe")
+    code = rehearse_probes.main(["tests/test_marker.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert "FAILED (0)" in out, out
