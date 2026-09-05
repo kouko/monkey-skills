@@ -1186,3 +1186,121 @@ def test_push_from_wave_switch_declared_mid_checkpoint_single_reader_blocked(
         "itself should keep the old lane per lane-switch.md's wording; "
         f"push blocked round 2 instead: {result.stdout}"
     )
+
+
+# =============================================================================
+# Ratified follow-up (PRINCIPLES.md 56a4dc4c, intent 48114098): gate-only
+# is available ONLY to the classes `change_lane_detail`'s own raw recompute
+# already calls "small" (tests only, docs only, CI/config, version sync,
+# clean revert -- one plugin, no gate/skill/contract/standing-document/
+# interface-surface), not merely "no gate/skill/agent-contract". Both
+# probes use the same shape the original W0-01 floor's case (c) does
+# (docs + a KICKOFF-DEFAULTS.md touch, both IN the delta) -- that touch
+# is what forces the RAW recompute to `full` in the first place (a
+# standing document forces full per `_small_lane_path_reason`), which is
+# the only way `effective_lane_detail` ever reaches gate-only's OWN
+# eligibility branch at all: a delta with no standing-doc touch recomputes
+# raw `small` and returns from `effective_lane_detail`'s very first branch
+# before the declared lane is even consulted (confirmed directly: a plain
+# docs+tests delta, no KICKOFF touch, recomputes `small`, floor 1 -- zero
+# verdicts already blocks it for an UNRELATED reason, so it would not
+# exercise this question at all).
+# =============================================================================
+
+
+def test_push_gateonly_dated_declaration_nontest_code_in_delta_blocked(
+    tmp_path: Path,
+) -> None:
+    """(a) A dated `lane: gate-only — declared <date> by <name>` intent
+    (the grammar the fix round is landing), a delta adding
+    `loom-code/scripts/helper_bypass.py` -- a plain, non-test, non-`check_*`
+    `.py` file -- alongside docs+KICKOFF-DEFAULTS.md, zero verdicts, >=3
+    adversarial probes and a package-tests probe recorded. Empirically
+    this is GREEN today, not RED: `_lane_forcing_paths` already appends
+    `"{path} is non-test code"` to its `hard` list for any `code`-typed
+    path (`loom_checker.py`'s existing, pre-ratification logic), and a
+    `hard` reason forces `full` for `gate-only` exactly as it does for
+    `express` -- independent of whether "the small-lane classes" reading
+    has landed yet. Kept as a probe (not deleted) because it pins the
+    invariant the ratification cares about, even though this particular
+    example was already covered before the ratification existed."""
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-smallclass-code"
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _commit_intent(repo, change_id, lane_line=lane_line)
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "some notes, no code or skill touched\n")
+    _write(repo, "loom-code/scripts/helper_bypass.py", "def helper():\n    return True\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs: docs+KICKOFF delta plus one non-test module")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [_dispatch("adversary", "agent-adv", "T1")],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode != 0, (
+        "a dated `lane: gate-only` declaration must not grant zero readers "
+        "to a delta that adds a plain non-test `.py` module; blocked "
+        f"today already, for a pre-existing reason: {result.stdout}"
+    )
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_push_gateonly_dated_declaration_standing_doc_touch_currently_passes(
+    tmp_path: Path,
+) -> None:
+    """(b) The mirror the coordinator asked for, run exactly as (a) but
+    WITHOUT the non-test module -- docs + KICKOFF-DEFAULTS.md only, same
+    dated declaration, zero verdicts. GREEN today, and the coordinator
+    expects it to stay GREEN -- but this exact fixture is itself the
+    ratification's real target, not a neutral control: KICKOFF-DEFAULTS.md
+    is a STANDING document, and it is the ONLY reason this delta ever
+    reaches gate-only's own eligibility branch at all (a delta with no
+    standing-doc touch recomputes raw `small` and returns before the
+    declared lane is consulted -- verified directly, see the module
+    docstring above this section). PRINCIPLES.md 56a4dc4c's own wording
+    excludes "standing document" from the small-lane classes gate-only is
+    now supposed to be limited to -- so THIS delta, touching
+    KICKOFF-DEFAULTS.md, should arguably now be blocked too, and passing
+    it is the real gap the ratification has not yet closed. Recorded here
+    as the coordinator's requested GREEN pin, with the divergence flagged
+    rather than silently pinned as if it were settled."""
+    repo = _seed_branch(tmp_path)
+    change_id = "2026-09-05-lane-smallclass-standing"
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _commit_intent(repo, change_id, lane_line=lane_line)
+    _write_kickoff(repo)
+    _write(repo, "docs/notes.md", "some notes, no code or skill touched\n")
+    _write_evidence(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs: docs+KICKOFF delta, no code")
+    reviewed_sha = git(repo, "rev-parse", "HEAD")
+
+    body = {
+        "reviewed_sha": reviewed_sha,
+        "scope": "branch-end",
+        "vendors": ["anthropic"],
+        "verdicts": [],
+        "probes": [_package_tests_record(reviewed_sha), *_adversarial_records(reviewed_sha)],
+        "open_findings": [],
+        "dispatch": [_dispatch("adversary", "agent-adv", "T1")],
+    }
+    review_rel = _write_review(repo, change_id, body)
+    _commit_review(repo, review_rel)
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, (
+        "a dated `lane: gate-only` declaration with a docs+KICKOFF-only "
+        f"delta and zero verdicts should pass today: {result.stdout}"
+    )
