@@ -465,3 +465,82 @@ def test_blind_run_and_adversary_sections_point_at_the_contract_trap_section() -
             "(branch-end fix N2: a `[Tt]rap` substring match let a reworded "
             "no-op sentence through as long as it kept the word `trap`)"
         )
+
+
+# --- W2-01: round numbering continuity, and who a fix round resumes --------
+
+_NEGATION_RE = re.compile(r"\b(?:not|never|no)\b|n't", re.IGNORECASE)
+
+
+def _has_negation(sentence: str) -> bool:
+    """True iff `sentence` contains a word-boundary negation token — 'not',
+    'never' or 'no' as whole words, or an "n't" contraction."""
+    return bool(_NEGATION_RE.search(sentence))
+
+
+def _sentences(text: str) -> list[str]:
+    """Split text into sentences after collapsing newlines to spaces, so a
+    sentence that line-wraps in the SKILL.md source still reads as one
+    unit here."""
+    flat = " ".join(text.split())
+    return [p for p in re.split(r"(?<=[.!?])\s+", flat) if p.strip()]
+
+
+def test_review_round_numbers_continue_across_checkpoints() -> None:
+    """W2-01: review/SKILL.md §7 states round numbers continue across a
+    change's checkpoints rather than restarting at each one — a
+    branch-end round after wave-end rounds 1-3 is round 4 — because the
+    checker scores the highest round within the checkpoint's own scope.
+    Affirmative, un-negated."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    start = text.index("## 7. Write the record")
+    end = text.index("Every finding `text`, review note")
+    section = text[start:end]
+    hits = [
+        s for s in _sentences(section)
+        if "continue" in s.lower()
+        and "checkpoint" in s.lower()
+        and "round 4" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md §7 has no affirmative round-numbers-continue sentence"
+    )
+
+
+def test_review_fix_round_resumes_the_raising_reader() -> None:
+    """W2-01: review/SKILL.md §8a states a fix round resumes the reader(s)
+    who raised the still-open findings, and a reader who raised none keeps
+    its previous PASS standing when the fix stays inside those findings'
+    anchors — `push.verdicts-ge-2` recomputes this. Affirmative,
+    un-negated."""
+    text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
+    start = text.index("## 8a. Fix rounds")
+    section = text[start:]
+    hits = [
+        s for s in _sentences(section)
+        if "resumes the reader" in s.lower()
+        and "still-open findings" in s.lower()
+        and "push.verdicts-ge-2" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md §8a has no affirmative resumes-the-raising-reader "
+        "sentence naming push.verdicts-ge-2"
+    )
+
+
+def test_matcher_round_numbers_sentence_negated_rejected() -> None:
+    sentence = (
+        "Round numbers never continue across a change's checkpoints — a "
+        "branch-end round after wave-end rounds 1-3 is round 4."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_fix_round_resume_sentence_negated_rejected() -> None:
+    sentence = (
+        "A fix round does not resume the reader who raised the still-open "
+        "findings (push.verdicts-ge-2)."
+    )
+    assert _has_negation(sentence)

@@ -151,15 +151,19 @@ with no prose after it:
 git commit --amend --no-edit --trailer "Learning: <one fact>"
 ```
 
-Amending is allowed **for this commit only**. Two things may change in it:
-the message (the trailers above) and `review.json` itself, to append the
-`questions[]` entries step 2 recorded. Nothing else — the parent does not
-move, the commit still touches only `review.json`, so `reviewed_sha` still
-equals `HEAD^` and step 1's fourth fact still holds, and the checker
-permits exactly this shape:
+Amending is allowed **for this commit only**. Three things may change in
+it: the message (the trailers above), `review.json` itself (to append the
+`questions[]` entries step 2 recorded), and one line of
+`docs/loom/intent/<change-id>.md` — its `status:` line, from `confirmed
+<date>` to `closed <date> — branch <branch-name>` (§6 has why the close
+line names the branch, not a PR number, and the one-line note for
+branches that shipped under the older grammar). Nothing else — the
+parent does not move, the commit still touches only those two files, so
+`reviewed_sha` still equals `HEAD^` and step 1's fourth fact still holds,
+and the checker permits exactly this shape:
 
 ```
-git add docs/loom/<change-id>/review.json
+git add docs/loom/<change-id>/review.json docs/loom/intent/<change-id>.md
 git commit --amend --no-edit --trailer "Learning: <one fact>"
 ```
 
@@ -173,8 +177,11 @@ writes only the trailers on the review-only commit and the
 missed, that is a task for `loom-code:build` followed by a fresh
 `branch-end` checkpoint — never a commit made here.
 
-The intent's `status` is **not** touched yet. It becomes `closed` after the
-merge (step 6), because that is when it is true.
+The intent's `status` line changes right here, in this same amended
+commit — not after the merge. The close line names the branch, not the
+pull request number, so it does not need to wait for one; §6 carries the
+exact grammar and the one-line note for branches shipped before this
+rule.
 
 ## 3.5 The nit batch
 
@@ -288,6 +295,11 @@ has found a leak of agent judgement into the user's lap.>
 <the agent-decided forks and the important-or-worse dismissals, in
 consequence form>
 
+## Closing log
+<`git log <reviewed_sha>..HEAD --format='%h %s'` — with §6's commit shape
+this is exactly one line, the review-only commit that also closed the
+intent>
+
 ## Memory
 
 Decision: <the decision this change made, and what it rules out>
@@ -320,36 +332,21 @@ mandatory.
 Resolve the number once and reuse it: `gh pr view "$PR_URL" --json number
 --jq .number`.
 
-## 6. Close the intent, then merge, then verify
+## 6. Merge, then verify
 
-Close the intent on the branch, before the merge — the pull request
-already has a number (§5), so the status line can be written now:
+The intent's close line rides in the same review-only commit §3 already
+amends — `status: closed <date> — branch <branch-name>` sitting beside
+`review.json` in the one commit at `HEAD`, pushed once and PR'd once.
+`push.review-only-head` admits exactly that shape: `review.json` plus
+that one intent line, nothing more. The close line names the branch
+rather than the pull request number because the branch name is known
+before the push, while the PR number is not — the squash commit's title
+carries `(#N)` afterward, and the branch name is what stays durable.
+`intake.confirmed` treats both grammars as terminal.
 
-```
-git commit -m "docs(loom): close intent <change-id>" \
-  -- docs/loom/intent/<change-id>.md
-```
-
-The commit changes exactly one line, `status:`, from `confirmed <date>` to
-`closed <YYYY-MM-DD> — PR #<N>`; nothing else in the file moves.
-
-That commit needs its own checkpoint before it can be pushed. Call
-`loom-code:review` again, scope `branch-end`, delta
-`<reviewed_sha>..<close commit>`: two fresh reviewers under the docs and
-user-judgment-leak lenses, each stating the delta is that one status line
-and nothing else; every verdict carries `sha: <close commit>`; package
-tests and adversarial probes are re-pinned there. No blind run is owed —
-an intent-typed delta has no Acceptance line to walk, and the branch-end
-blind-run report already covers the change. Then the review-only commit,
-`reviewed_sha` set to the close commit, and push again.
-
-Consequence: the commit right before a review-only commit may not touch
-any intent file for a reason other than closing it — not decision point
-①'s confirmation commit, not a new intent from `maintain`, not an
-amendment; each of those goes in its own, earlier commit.
-`push.review-only-head` blocks any other shape there and says so. Merging
-before this sequence finishes leaves the intent looking unfinished on
-`main`; say so in the final report if the session ends first.
+A branch shipped before this rule closed the intent in its own commit,
+after the merge, with `status: closed <date> — PR #<N>` — the checker
+still accepts that older shape; this station no longer produces it.
 
 Merge when the user asks and CI is green. Read the body back from the pull
 request itself rather than from the file written earlier — the file may be
