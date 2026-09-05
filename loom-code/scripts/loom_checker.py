@@ -434,15 +434,31 @@ def latest_round(verdicts: list[dict], scope: str | None = None) -> tuple[int, l
     wave-end round 3 could outrank the branch-end round 1 that follows it,
     since round numbers restart per checkpoint (memory-step gotcha,
     2026-09-05). A verdict that names no scope at all is legacy shape and
-    always stays eligible."""
+    stays eligible only as a FALLBACK: when at least one verdict explicitly
+    names the current scope, only those explicitly-scoped entries are
+    scored -- an unscoped legacy round must never outrank a scoped current
+    round just because it carries a higher round number, since round
+    numbers restart per checkpoint and an older unscoped round 3 sitting
+    next to a current scoped round 1 would otherwise win on round number
+    alone and hide that round's own verdict (wave-end:1-02). When NEITHER
+    an explicitly-scoped nor a legacy unscoped verdict exists -- every
+    verdict names some OTHER scope -- the result is the empty list, never
+    the original unfiltered `verdicts`: a brand-new checkpoint starts with
+    no verdicts of its own, and falling through to the unfiltered list
+    would let a stale round from a different scope (e.g. an earlier
+    wave-end round) satisfy the current checkpoint's floor."""
     if scope:
-        in_scope = [
+        explicit = [
             entry for entry in verdicts
-            if not str(entry.get("scope", "")).strip()
-            or str(entry.get("scope", "")).strip() == scope
+            if str(entry.get("scope", "")).strip() == scope
         ]
-        if in_scope:
-            verdicts = in_scope
+        if explicit:
+            verdicts = explicit
+        else:
+            verdicts = [
+                entry for entry in verdicts
+                if not str(entry.get("scope", "")).strip()
+            ]
     if not verdicts:
         return 0, []
     numbered = [(int(entry.get("round", 1)), entry) for entry in verdicts]

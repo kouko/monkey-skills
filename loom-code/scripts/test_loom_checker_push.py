@@ -1817,6 +1817,103 @@ def test_a_multi_name_raised_by_requires_every_named_reviewer_to_return(tmp_path
     assert "push.verdicts-ge-2" in blocked_rules(result)
 
 
+def test_an_unscoped_legacy_round_never_outranks_a_scoped_current_round(
+    tmp_path: Path,
+) -> None:
+    """Two unscoped (legacy-shape, no `scope` key) verdicts from an older
+    round 3 sit in `verdicts[]` next to two scope-`"checkpoint"` verdicts
+    from the current round 1, one of which is NEEDS_REVISION. The current
+    checkpoint's own `scope` is `"checkpoint"`. Since round numbers restart
+    per checkpoint, scoring by round number alone would pick the unscoped
+    round 3 (both PASS) and let the push through -- hiding the current
+    round 1's own NEEDS_REVISION. Explicitly-scoped entries must be scored
+    in preference to unscoped legacy ones whenever any exist, so round 1
+    is what gets scored and the not-passing verdict blocks the push."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    dispatch = FIX_ROUND_DISPATCH + [
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-x", "model": "m",
+         "started": "2026-09-05T09:13:00Z", "fresh_context": True},
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-y", "model": "m",
+         "started": "2026-09-05T09:14:00Z", "fresh_context": True},
+    ]
+    body = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            # Unscoped legacy round 3 -- both PASS.
+            {"reviewer": "rev-x", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 3, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+            {"reviewer": "rev-y", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 3, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+            # Explicitly scoped current round 1 -- one NEEDS_REVISION.
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "checkpoint", "round": 1, "verdict": "NEEDS_REVISION",
+             "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "checkpoint", "round": 1, "verdict": "PASS",
+             "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[],
+    )
+    body["dispatch"] = dispatch
+    _commit_fix_round_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+    assert "rev-a=NEEDS_REVISION" in result.stderr
+
+
+def test_a_brand_new_scope_with_no_matching_verdict_scores_nothing(tmp_path: Path) -> None:
+    """The current checkpoint's own top-level scope is `"branch-end"`, and
+    `verdicts[]` holds only two entries from a DIFFERENT, earlier scope
+    (`"wave-end:1"`, round 3, both PASS, two distinct reviewers -- enough
+    to meet the full-lane floor on their own) -- no entry names
+    `"branch-end"` and no entry is unscoped legacy shape either. Falling
+    through to the unfiltered list on an empty legacy fallback would let
+    that stale wave-end round satisfy the branch-end checkpoint's reviewer
+    floor and pass; a brand-new checkpoint must instead start with zero
+    scored verdicts, so the floor is unmet and the push blocks."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    dispatch = FIX_ROUND_DISPATCH + [
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-x", "model": "m",
+         "started": "2026-09-05T09:13:00Z", "fresh_context": True},
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-y", "model": "m",
+         "started": "2026-09-05T09:14:00Z", "fresh_context": True},
+    ]
+    body = _fix_round_body(
+        code_sha,
+        scope="branch-end",
+        verdicts=[
+            {"reviewer": "rev-x", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "wave-end:1", "round": 3, "verdict": "PASS",
+             "dimension_scores": {}, "sha": code_sha, "findings": []},
+            {"reviewer": "rev-y", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "wave-end:1", "round": 3, "verdict": "PASS",
+             "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[],
+    )
+    body["dispatch"] = dispatch
+    _commit_fix_round_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
 # --- push.reviewer-ne-implementer, read from review.json `dispatch[]` ------
 
 
@@ -2220,13 +2317,19 @@ def test_every_verdict_sha_equal_to_reviewed_sha_passes(tmp_path: Path) -> None:
 
 
 def test_a_spec_scoped_verdict_missing_sha_still_blocks(tmp_path: Path) -> None:
-    """No scope is exempt from push.reviewed-sha, `scope: spec` included."""
+    """No scope is exempt from push.reviewed-sha, `scope: spec` included.
+    The record's own top-level `scope` must match (`"spec"`) so these
+    verdicts are the explicitly-scoped entries `scored_verdicts` actually
+    picks -- since checker fix wave-end:1-02, a verdict naming a scope the
+    record's own top-level line does not name is out of scope entirely,
+    never scored by fallback."""
     repo = build_repo(tmp_path)
     parent = git(repo, "rev-parse", "HEAD~1")
     recommit_review(
         repo,
         rebuild(
             repo,
+            scope="spec",
             verdicts=[
                 {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
                  "scope": "spec", "verdict": "PASS", "sha": parent},
