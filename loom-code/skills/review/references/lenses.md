@@ -53,7 +53,7 @@ literally wrong the text is:
 | deliberate-simplification | A shortcut taken on purpose is annotated with its ceiling and its upgrade path; an annotation saying "later" or "someday" names no ceiling and is a finding | — |
 | deletion-first | Every new abstraction, flag, config or extension point justifies itself with two concrete users now, an explicit request, or a visible motivation. A finding must name the smaller shape that does the same job — no finding without a concrete alternative | — |
 
-## Docs — five dimensions
+## Docs — five dimensions, plus deletion-first
 
 | Dimension | What fires it |
 |---|---|
@@ -62,6 +62,18 @@ literally wrong the text is:
 | inconsistency | Two passages contradicting, including changed against unchanged: the delta says X and an untouched paragraph still says not-X |
 | incorrect-fact | A citation that does not support its claim — open the source and read the cited span before scoring — or a stated number or path that is wrong against the artifact it describes |
 | missing-population | A measured number with no denominator or scope: "0% false positives" without saying over what |
+| deletion-first | See "Deletion-first for docs and skill" below — the same rule as the code lens's `deletion-first`, applied to station text and agent contracts |
+
+**Deletion-first for docs and skill.** A new paragraph, mechanism, reserved
+task or fallback path in station text or a contract shows in the delta
+what it replaced, or names the already-observed failure it prevents by
+citing a `review.json` line or a `docs/loom/memory` entry — otherwise it
+is a finding, and the finding names the smaller shape that does the same
+job, the same rule and severity-by-consequence as the code lens's
+`deletion-first` above. A `*_CAP` constant raised in the same file across
+two consecutive changes is a design smell: the `deletion-first` dimension
+always names at least one deletion candidate for that file, standing
+until it is rebutted with evidence.
 
 Read the whole artifact, not the delta. The delta says where to look
 hardest; it never bounds the review.
@@ -78,7 +90,8 @@ hardest; it never bounds the review.
 ## Skill lens
 
 A `SKILL.md` or an agent contract is prose that an agent executes, so it is
-scored on the five docs dimensions plus `user-judgment-leak`, with two
+scored on the five docs dimensions plus `user-judgment-leak` and
+`deletion-first` (see "Deletion-first for docs and skill" above), with two
 sharpenings: a step whose input the reader must guess is an omission, and a
 paragraph used as a rule without a `<!-- gate: <id> -->` comment is an
 omission too — an unregistered rule is a mechanism nobody recomputes.
