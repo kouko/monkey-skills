@@ -354,6 +354,65 @@ def test_checker_rulecount_pinned():
 # --- (g) GREEN pin: branch diff stays scoped to this change's own paths ----
 
 
+_LANGUAGE_POLICY_INTENT = REPO / "docs/loom/intent/2026-09-03-artifact-language-policy.md"
+
+
+def _language_policy_intent_closed(intent_text: str) -> bool:
+    """True iff `intent_text`'s `status:` line starts with "closed" (once
+    this change ships, its branch-scope pin below only makes sense on its
+    own branch — any later branch that adds a docs/loom/<other-id>/ tree
+    must not be failed by it)."""
+    # Only the leading metadata block decides: the lines before the first
+    # blank line. A `status:` line anywhere later in the body is prose.
+    for line in intent_text.splitlines():
+        if not line.strip():
+            return False
+        stripped = line.strip()
+        if stripped.startswith("status:"):
+            return stripped[len("status:") :].strip().startswith("closed")
+    return False
+
+
+def _skip_if_language_policy_shipped() -> None:
+    if not _LANGUAGE_POLICY_INTENT.is_file():
+        return
+    text = _LANGUAGE_POLICY_INTENT.read_text(encoding="utf-8")
+    if _language_policy_intent_closed(text):
+        pytest.skip(
+            "2026-09-03-artifact-language-policy has shipped (status: "
+            "closed); its branch-scope pin applies only to its own branch"
+        )
+
+
+def test_LanguagePolicyGuard_syntheticIntentTexts_decidesSkip():
+    """Feed the guard two synthetic intent texts, independent of the real
+    intent file on disk: a closed status must decide True (skip), any
+    other status must decide False (run unchanged)."""
+    closed_text = "status: closed 2026-09-05 — PR #791\n"
+    assert _language_policy_intent_closed(closed_text) is True
+
+    confirmed_text = "status: confirmed 2026-09-05\n"
+    assert _language_policy_intent_closed(confirmed_text) is False
+
+    body_level_closed_text = (
+        "status: confirmed 2026-09-05\n"
+        "\n"
+        "## Body\n"
+        "some later paragraph mentions status: closed in passing.\n"
+    )
+    assert _language_policy_intent_closed(body_level_closed_text) is False
+    # a body-level decoy at line start, outside the metadata block, is prose
+    decoy_after_block = (
+        "# title\n"
+        "originator: kouko\n"
+        "status: confirmed 2026-09-05\n"
+        "\n"
+        "## Problem\n"
+        "status: closed 2026-09-05 — PR #791\n"
+    )
+    assert _language_policy_intent_closed(decoy_after_block) is False
+
+
 def _resolve_base_ref() -> str | None:
     for ref in ("origin/main", "main"):
         probe = subprocess.run(
@@ -376,6 +435,8 @@ def test_branchdiff_scope_clean():
     pull in two other already-landed changes' doc paths; `origin/main` is
     caught up and gives the clean, expected diff. Skips (does not fail) if
     neither ref resolves, per the task guard."""
+    _skip_if_language_policy_shipped()
+
     base_ref = _resolve_base_ref()
     if base_ref is None:
         pytest.skip("neither origin/main nor main resolves in this checkout")

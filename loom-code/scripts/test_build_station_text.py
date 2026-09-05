@@ -10,6 +10,7 @@ the adversary attacking at the checkpoint instead.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -63,3 +64,197 @@ def test_order_is_discipline_not_a_gate() -> None:
 def test_paragraph_drops_this_repos_own_change_citation() -> None:
     paragraph = _dispatch_order_paragraph()
     assert "this change's own" not in paragraph
+
+
+# --- W1-02: memory step moves to build, before the plan's final checkpoint -
+
+
+def _headings() -> list[tuple[str, int]]:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    return [
+        (m.group(1).strip(), m.start())
+        for m in re.finditer(r"^##\s+(.*)$", text, re.MULTILINE)
+    ]
+
+
+def test_memorysection_heading_exists_beforehandoff() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    headings = _headings()
+    titles = [t.lower() for t, _ in headings]
+    memory_idx = next((i for i, t in enumerate(titles) if "memory" in t), None)
+    handoff_idx = next(
+        (i for i, t in enumerate(titles) if "hand-off" in t or "handoff" in t), None
+    )
+    assert memory_idx is not None, "build/SKILL.md has no heading naming memory"
+    assert handoff_idx is not None, "build/SKILL.md has no hand-off heading"
+    assert memory_idx < handoff_idx, (
+        "the memory heading must sit before the hand-off heading"
+    )
+
+
+def test_memorysection_names_graduation_and_memory_store() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    headings = _headings()
+    idx = next(i for i, (t, _) in enumerate(headings) if "memory" in t.lower())
+    start = headings[idx][1]
+    end = headings[idx + 1][1] if idx + 1 < len(headings) else len(text)
+    body = text[start:end].lower()
+    assert "evidence/probes/" in body or "graduat" in body
+    assert "docs/loom/memory/" in body
+
+
+def test_step4and5_fencedblocks_name_git_log_and_task_trailer() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    for heading in ("## 4. After each task returns", "## 5. Wave end"):
+        section = text.split(heading, 1)[1]
+        # stop at the next top-level heading
+        section = re.split(r"\n## ", section, 1)[0]
+        blocks = re.findall(r"```\n(.*?)```", section, re.DOTALL)
+        assert any("git log" in b and "Task:" in b for b in blocks), (
+            f"{heading} has no fenced block naming both 'git log' and 'Task:'"
+        )
+
+
+def test_step5_names_reviewed_sha_dot_dot_head() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 5. Wave end", 1)[1]
+    section = re.split(r"\n## ", section, 1)[0]
+    assert "<reviewed_sha>..HEAD" in section
+
+
+# --- wave-end:1-03: last-wave sequencing (package tests -> memory step ----
+# --- -> the single closing review call, recorded branch-end) -------------
+
+
+def _last_wave_paragraph() -> str:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 5. Wave end", 1)[1]
+    section = re.split(r"\n## ", section, 1)[0]
+    marker = "**Last wave of the plan.**"
+    assert marker in section, "no last-wave paragraph in build's §5"
+    tail = section.split(marker, 1)[1]
+    para_end = tail.index("\n\n")
+    return marker + tail[:para_end]
+
+
+_NEGATED_CALL = re.compile(r"\b(?:not|never|no)\b|n't")
+
+
+def _package_tests_before_memory_before_review(paragraph: str) -> bool:
+    """True iff the paragraph contains EXACTLY ONE affirmative sentence that
+    calls the review station (a sentence naming `loom-code:review` with no
+    negation token -- "Do not call ... here" is a refusal, not a call), and
+    that single call comes after both the package-tests reference (§6) and
+    the memory-step reference (§6.5) -- the sequencing wave-end:1-01 fixed,
+    tightened in round 2 so an early call plus a late call is rejected."""
+    flat = " ".join(paragraph.split())
+    sentences = re.split(r"(?<=[.!?])\s+", flat)
+    calls = [
+        s for s in sentences
+        if "loom-code:review" in s and not _NEGATED_CALL.search(s)
+    ]
+    if len(calls) != 1:
+        return False
+    try:
+        i_pkg = flat.index("§6 (package tests)")
+        i_mem = flat.index("§6.5 (the memory step)")
+    except ValueError:
+        return False
+    i_review = flat.index(calls[0]) + calls[0].index("loom-code:review")
+    return i_pkg < i_mem < i_review
+
+
+def test_lastwaveparagraph_orders_packagetests_then_memorystep_then_reviewcall() -> None:
+    paragraph = _last_wave_paragraph()
+    assert _package_tests_before_memory_before_review(paragraph), (
+        "build's §5 last-wave paragraph does not order §6 before §6.5 "
+        "before the review-station call"
+    )
+
+
+def test_orderchecker_synthetic_twocalls_rejected() -> None:
+    """Self-test: a paragraph that calls review before package tests AND
+    again after the memory step orders the last call correctly yet is not
+    a single closing round -- it must be rejected."""
+    synthetic = (
+        "**Last wave of the plan.** Call `loom-code:review` for the wave. "
+        "Then continue to §6 (package tests) and §6.5 (the memory step), "
+        "then call `loom-code:review` again for the closing round."
+    )
+    assert not _package_tests_before_memory_before_review(synthetic), (
+        "the order-checker accepted a paragraph with two review calls"
+    )
+
+
+def test_orderchecker_synthetic_reviewfirst_rejected() -> None:
+    """Self-test on the order-checker above: a synthetic paragraph that
+    calls review BEFORE naming §6 and §6.5 must be rejected."""
+    synthetic = (
+        "**Last wave of the plan.** Call `loom-code:review` once here, "
+        "then continue to §6 (package tests) and §6.5 (the memory step)."
+    )
+    assert not _package_tests_before_memory_before_review(synthetic), (
+        "the order-checker accepted a synthetic paragraph that calls "
+        "review before §6 and §6.5 -- it should have rejected it"
+    )
+
+
+def test_closinground_recorded_branch_end_near_section5_reference() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 7. Hand-off", 1)[1]
+    section = re.split(r"\n## ", section, 1)[0]
+    assert "branch-end" in section, (
+        "build's §7 no longer names the closing round's recorded scope "
+        "value 'branch-end'"
+    )
+    assert "§5" in section, (
+        "build's §7 no longer ties the branch-end recording back to §5's "
+        "closing call"
+    )
+
+
+# --- branch-end-02: §6.5 Commits fallback names both branches -------------
+
+
+def _commits_paragraph() -> str:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 6.5 Memory step", 1)[1]
+    section = re.split(r"\n## ", section, 1)[0]
+    marker = "**Commits.**"
+    assert marker in section, "no Commits paragraph in build's §6.5"
+    tail = section.split(marker, 1)[1]
+    return marker + tail
+
+
+def test_commitsparagraph_names_reuse_branch_for_existing_memory_task() -> None:
+    """A plan written before the memory-step rule may already carry a task
+    doing the memory work under another id (files = graduated probe
+    copies and the docs/loom/memory/ entries) -- build must reuse that
+    id and append nothing, per branch-end-02."""
+    paragraph = _commits_paragraph()
+    flat = " ".join(paragraph.split())
+    assert "reuse" in flat.lower(), (
+        "the Commits paragraph does not name the reuse-existing-id branch"
+    )
+    assert "graduated probe copies" in flat and "docs/loom/memory/" in flat, (
+        "the reuse branch does not name its files: the graduated probe "
+        "copies and the docs/loom/memory/ entries"
+    )
+    assert "append nothing" in flat or "appends nothing" in flat, (
+        "the reuse branch does not say build appends nothing"
+    )
+
+
+def test_commitsparagraph_names_appendonlywhenabsent_branch() -> None:
+    """Only a plan with NO such task gets `W<n>-memory` appended -- the
+    paragraph must state the append path is conditional on absence, not
+    unconditional."""
+    paragraph = _commits_paragraph()
+    flat = " ".join(paragraph.split())
+    assert "no such task" in flat.lower(), (
+        "the Commits paragraph does not name the no-such-task condition "
+        "that gates appending W<n>-memory"
+    )
+    assert "W<n>-memory" in flat or "`W<n>-memory`" in paragraph, (
+        "the append branch does not name the id it appends, W<n>-memory"
+    )

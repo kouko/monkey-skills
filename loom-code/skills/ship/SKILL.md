@@ -166,31 +166,12 @@ git commit --amend --no-edit --trailer "Learning: <one fact>"
 Amending any other file, or an earlier commit, invalidates the review and
 sends you back to `loom-code:review`.
 
-**Store entries**, when the lesson is durable rather than bound to this one
-commit: a file under `docs/loom/memory/`, one fact per file, in the format
-that store's own README defines (scaffolded from
-`contract/templates/memory-README.md`). A durable practice, habit or
-recurring gotcha belongs there; a decision about this change alone belongs
-only in the trailer. Adding a store entry means the tree is dirty again:
-commit it separately **before** the review-only commit, and re-run the
-`branch-end` checkpoint, because step 1's fourth fact is now false.
-Trailers cost nothing here; a store entry costs a checkpoint. Decide which
-one the fact deserves.
-
-Before the push, copy this change's pytest probes under `evidence/probes/`
-into the repo's permanent test directory as byte copies, adjusting only
-their path lines and keeping the evidence originals, whenever no existing
-test in that directory shares a probe's test-function name; commit them
-with a `Task:` trailer. Cold-read reports for docs or skill deltas never
-graduate.
-
-A permanent test that shares a probe's function name but not its body is
-a name collision, not a duplicate — rename the probe copy rather than
-dropping it.
-
-Like a store entry, this graduation commit lands before the review-only
-commit; commit it separately and re-run the `branch-end` checkpoint,
-because step 1's fourth fact is now false.
+Durable-lesson entries under `docs/loom/memory/` and probe graduation were
+done by build's memory step before the plan's final checkpoint; ship
+writes only the trailers on the review-only commit and the
+`questions[]` entries. If ship finds a lesson or a probe that build
+missed, that is a task for `loom-code:build` followed by a fresh
+`branch-end` checkpoint — never a commit made here.
 
 The intent's `status` is **not** touched yet. It becomes `closed` after the
 merge (step 6), because that is when it is true.

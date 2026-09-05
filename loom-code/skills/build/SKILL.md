@@ -200,8 +200,13 @@ Reviewer, blind-runner and adversary entries are appended the same way by
 
 ## 4. After each task returns
 
-1. `DONE` — check the commit exists and carries its `Task:` trailer, then
-   continue.
+1. `DONE` — check the commit exists and carries its `Task:` trailer:
+
+   ```
+   git log -1 --format=%B <sha> | grep -q '^Task: <task-id>$' || echo "MISSING Task trailer on <sha>"
+   ```
+
+   then continue.
 2. `DONE_WITH_CONCERNS` — same, and carry the concern into the wave's
    report so the checkpoint reviewers see it.
 3. `NEEDS_CONTEXT` — answer it if the answer is in the plan, the spec or
@@ -253,15 +258,34 @@ When every task of the wave has returned and every worktree is integrated:
 git diff --stat <reviewed_sha>..HEAD
 ```
 
-`reviewed_sha` comes from `review.json`. Call `loom-code:review`
-(scope = this wave) when **any** of these holds:
+`reviewed_sha` comes from `review.json`. Then check every wave commit
+for the same `Task:` trailer, over `<reviewed_sha>..HEAD`:
+
+```
+for c in $(git rev-list <reviewed_sha>..HEAD --no-merges); do
+  git diff-tree --no-commit-id --name-only -r "$c" | grep -qv '^docs/' \
+    && { git log -1 --format=%B "$c" | grep -q '^Task: ' || echo "no Task trailer: $c"; }
+done
+```
+
+A commit this loop prints does not enter the checkpoint — re-commit it
+with its trailer first.
+
+Call `loom-code:review` (scope = this wave) when **either** of these
+holds:
 
 - the unreviewed delta exceeds **8 files** or **400 lines**;
-- any task in this wave was marked `review: after-task`;
-- this is the last wave of the plan.
+- any task in this wave was marked `review: after-task`.
 
 Otherwise continue to the next wave and let the delta accumulate — a small
 wave does not buy a checkpoint.
+
+**Last wave of the plan.** Do not call `loom-code:review` here. Instead
+continue in order to §6 (package tests), then §6.5 (the memory step), and
+only then call `loom-code:review` once, for the round that closes the
+plan — §7 names how that single closing round is recorded, so the
+reviewers read a tree with tests green and nothing left to graduate or
+store.
 
 Count checkpoints as you go: **at most 5 per plan**. Rounds that re-review
 after a `NEEDS_REVISION` are not counted; they are the same checkpoint
@@ -299,11 +323,51 @@ checker re-runs the command itself on a clean tree at push time
 found. If the suite is red, fix it before the checkpoint; a checkpoint on a
 red tree wastes two reviewers.
 
+## 6.5 Memory step — before the plan's final checkpoint
+
+The order is: §6 package tests, then this memory step, then §5's single
+closing call to `loom-code:review` — never after it. When the last wave's
+tasks are integrated and package tests are green, do this station's
+memory work now, not later: a commit that lands after that round always
+costs a confirmation round and a re-created close commit, so this step
+precedes the round and ship finds nothing left to graduate or store.
+
+**Probe graduation.** Copy this change's pytest probes under
+`evidence/probes/` into the repo's permanent test directory as byte
+copies, adjusting only their path lines and keeping the evidence
+originals, whenever no existing test there shares a probe's
+test-function name. A test that shares a probe's test-function name but
+not its body is a name collision, not a duplicate — rename the probe
+copy rather than dropping it. Cold-read reports for docs or skill
+deltas never graduate.
+
+**Store entries.** Write any durable lesson as a `docs/loom/memory/`
+entry, in the format that store's own README defines, and regenerate
+its index — the store's README names the command
+(`python3 scripts/check_loom_memory_integrity.py --write`, run from
+this repo).
+
+**Commits.** Both kinds of commit carry the `Task:` id of the plan's
+last-wave memory task, `W<n>-memory` — write-plan's Shape rule reserves
+it. A plan written before that rule existed may already carry a task
+under another id whose files are the graduated probe copies and the
+`docs/loom/memory/` entries — reuse that id and append nothing. Only
+when no such task exists does this station open one, append it to the
+plan as `W<n>-memory`, commit the plan, then write its dispatch entry.
+Either way the orchestrator writes its own implementer dispatch entry
+for that task with `fresh_context: false`. `git add` the new files by
+name before a path-limited commit — `git commit -- <dir>` skips
+untracked files.
+
 ## 7. Hand-off
 
+The closing round §5 calls for the last wave is recorded `scope:
+branch-end` — the same value ship's §1 exemption reads, so hand-off finds
+nothing left to re-review.
+
 After the last wave's checkpoint returns `PASS` or `PASS_WITH_NOTES`, hand
-to `loom-code:ship` with the change id. `ship` runs the memory step, the
-push (the checker gates it), the pull request, and decision point ③ — the
+to `loom-code:ship` with the change id. `ship` runs the push (the checker
+gates it), the pull request, and decision point ③ — the
 user's acceptance, read off the blind-run report rather than the diff.
 
 If the last checkpoint is `NEEDS_REVISION`, you are not finished: close its

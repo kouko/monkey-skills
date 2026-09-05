@@ -28,6 +28,8 @@ import re
 import subprocess
 from pathlib import Path
 
+import pytest
+
 # evidence/probes/test_abuse_language_policy_branch_end.py -> parents[2]
 # is the repo root (scripts -> loom-code -> repo root). Graduated copy; only path lines differ. (
 # repo root).
@@ -56,6 +58,65 @@ STATION_SENTENCES = {
         "must_say_english_for": ["spec"],
     },
 }
+
+
+_LANGUAGE_POLICY_INTENT = REPO / "docs/loom/intent/2026-09-03-artifact-language-policy.md"
+
+
+def _language_policy_intent_closed(intent_text: str) -> bool:
+    """True iff `intent_text`'s `status:` line starts with "closed" (once
+    this change ships, its branch-scope pin below only makes sense on its
+    own branch — any later branch that adds a docs/loom/<other-id>/ tree
+    must not be failed by it)."""
+    # Only the leading metadata block decides: the lines before the first
+    # blank line. A `status:` line anywhere later in the body is prose.
+    for line in intent_text.splitlines():
+        if not line.strip():
+            return False
+        stripped = line.strip()
+        if stripped.startswith("status:"):
+            return stripped[len("status:") :].strip().startswith("closed")
+    return False
+
+
+def _skip_if_language_policy_shipped() -> None:
+    if not _LANGUAGE_POLICY_INTENT.is_file():
+        return
+    text = _LANGUAGE_POLICY_INTENT.read_text(encoding="utf-8")
+    if _language_policy_intent_closed(text):
+        pytest.skip(
+            "2026-09-03-artifact-language-policy has shipped (status: "
+            "closed); its branch-scope pin applies only to its own branch"
+        )
+
+
+def test_LanguagePolicyGuard_syntheticIntentTexts_decidesSkip() -> None:
+    """Feed the guard two synthetic intent texts, independent of the real
+    intent file on disk: a closed status must decide True (skip), any
+    other status must decide False (run unchanged)."""
+    closed_text = "status: closed 2026-09-05 — PR #791\n"
+    assert _language_policy_intent_closed(closed_text) is True
+
+    confirmed_text = "status: confirmed 2026-09-05\n"
+    assert _language_policy_intent_closed(confirmed_text) is False
+
+    body_level_closed_text = (
+        "status: confirmed 2026-09-05\n"
+        "\n"
+        "## Body\n"
+        "some later paragraph mentions status: closed in passing.\n"
+    )
+    assert _language_policy_intent_closed(body_level_closed_text) is False
+    # a body-level decoy at line start, outside the metadata block, is prose
+    decoy_after_block = (
+        "# title\n"
+        "originator: kouko\n"
+        "status: confirmed 2026-09-05\n"
+        "\n"
+        "## Problem\n"
+        "status: closed 2026-09-05 — PR #791\n"
+    )
+    assert _language_policy_intent_closed(decoy_after_block) is False
 
 
 def _resolve_base_ref() -> str:
@@ -135,6 +196,7 @@ def test_VersionStamps_acrossAllFiles_agree() -> None:
     """Attack: bump one plugin.json's version without touching the
     README table, the CHANGELOG heading, or the Codex-side mirror --
     any single stamp left behind would silently desync the release."""
+    _skip_if_language_policy_shipped()
     loom_code_version = json.loads(
         (REPO / "loom-code/.claude-plugin/plugin.json").read_text(encoding="utf-8")
     )["version"]
@@ -220,10 +282,10 @@ def test_BranchDiff_docsLoomPaths_scopedToChangeId() -> None:
     """Attack: smuggle an edit to another change's docs/loom/<id>/ tree
     (or to a different change's intent file) inside this branch, hoping
     the branch-end review only samples the six SKILL.md files."""
+    _skip_if_language_policy_shipped()
+
     base_ref = _resolve_base_ref()
     if not base_ref:
-        import pytest
-
         pytest.skip("neither origin/main nor main resolves in this tree")
 
     result = subprocess.run(

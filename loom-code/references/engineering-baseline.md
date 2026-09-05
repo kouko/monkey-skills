@@ -146,3 +146,8 @@ Terse rules the reviewer reads work against:
 7. **Fail loud.** "Done" is wrong if anything was skipped silently; "tests
    pass" is wrong if you did not run them. A claim resting on belief is
    downgraded, never asserted — say "will verify by: `<command>`" instead.
+8. **Prose-pin tests are affirmative.** A test that pins a sentence of
+   prose requires an affirmative verb before the pinned literal, rejects
+   any negation token in that same sentence, and carries synthetic
+   self-tests validating one affirmative example and one rejected negated
+   example.

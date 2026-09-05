@@ -1,0 +1,949 @@
+{
+  "reviewed_sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "ambiguity",
+          "anchor": "loom-code/skills/build/SKILL.md:274",
+          "text": "issue (blocking): §5 tells build to call loom-code:review when this is the last wave, before execution reaches §6.5, while §6.5 says the memory work must precede that same closing round; following the numbered sections causes the post-review memory commit Acceptance 1–2 eliminate.",
+          "fix": "Move the final-wave review call after package tests and the memory step, or make §5 defer the last-wave call until §6 and §6.5 have completed; name the resulting call scope: branch-end when the final wave-end round doubles as branch-end."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/build/SKILL.md:343",
+          "text": "issue (blocking): build requires the plan's reserved last-wave memory task, but write-plan and its plan template never require or create it; a future plan reaches §6.5 without a valid task id and any graduated-test commit fails push.dispatch-covers-tasks.",
+          "fix": "Add the reservation to write-plan's plan-shape contract and plan template, or make build create the task and dispatch record through a documented mechanism."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_build_station_text.py:80",
+          "text": "issue (blocking): the station-text tests prove only that the memory heading precedes hand-off, not that it precedes the final-wave review call in §5, so the sequencing contradiction stays green.",
+          "fix": "Add a structural test requiring package tests, then §6.5 memory work, then exactly one closing review call recorded as branch-end."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:365",
+          "text": "nitpick (non-blocking): the duplicated graduated-probe guard is position-blind — it accepts the first status: line anywhere in the document.",
+          "fix": "Parse only the top metadata block; add a synthetic with a body-level status: closed before the real one; same in the branch_end copy."
+        }
+      ],
+      "notes": [
+        "--list-rules returned 27. Pytest could not start in the read-only sandbox (no writable temp dir). The §4 and §5 trailer commands are semantically sound for merge, docs-only, code and missing-trailer cases."
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "dimension_scores": {
+        "omission": "PASS_WITH_NOTES",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/build/SKILL.md:343-347",
+          "text": "issue: §6.5 asserts \"the plan reserves one\" memory task, but write-plan's Task DAG / Shape sections carry no such instruction; a future plan following §6.5 literally has no Task id for the trailer and push.dispatch-covers-tasks blocks.",
+          "fix": "Add a sentence to write-plan's Shape section reserving a last-wave memory task, or soften §6.5 and state what to do when none exists."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:360-367",
+          "text": "nitpick: the skip guard returns on the first status:-prefixed line anywhere in the file; safety rests on intent files opening with frontmatter.",
+          "fix": "Restrict the scan to the leading frontmatter block — optional."
+        }
+      ],
+      "notes": [
+        "Ran the delta's test files (119 passed, 2 skipped) and both probe files (23 passed); widened cap measured at 75 words; --list-rules 27; loom_checker.py absent from the diff. §6.5 scopes the memory step to the round that closes the plan; ship §1/§3/§3.5 and Acceptance 1 consistent once branch-end reviewed_sha is read as the latest before push."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8d9b4ad3189c565a92887a5e73b707e702e6c5db",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_build_station_text.py:140",
+          "text": "issue (blocking): wave-end:1-03 unfixed — the helper uses rindex and checks only ordering; an early call plus a late call still passes.",
+          "fix": "Require exactly one review call in the last-wave paragraph; add a two-call negative synthetic."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:365",
+          "text": "nitpick: guard still scans every line to the first status:; the added synthetic puts the real status first.",
+          "fix": "Restrict parsing to the leading metadata block; add a decoy outside it."
+        }
+      ],
+      "notes": [
+        "wave-end:1-01 fixed (last wave defers review past §6/§6.5, one closing round recorded branch-end); wave-end:1-02 fixed (write-plan reserves W<n>-memory, both templates, build fallback)."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "8d9b4ad3189c565a92887a5e73b707e702e6c5db",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:359-368",
+          "text": "nitpick: the guard function itself was not edited; the added self-test checks a decoy after the real line only.",
+          "fix": "Stop scanning at the end of the leading frontmatter block; add a decoy-before test."
+        }
+      ],
+      "notes": [
+        "wave-end:1-02 fixed; codex's 1-01 and 1-03 fixes confirmed with no regression (122 passed, 2 skipped; probes 23)."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "c2a5a82ebf6369dae15e8570925e9d69e551cfb1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-03 fixed — exactly one affirmative review-call sentence after §6 and §6.5, two-call synthetic rejected; guard nit fixed — both guards stop at the first blank line with a body-level decoy test."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "c2a5a82ebf6369dae15e8570925e9d69e551cfb1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_probes_language_policy.py:362-375",
+          "text": "nitpick: partially fixed — a body-level decoy after a blank line no longer flips the guard, but a fenced status: closed line placed before the real status line inside the leading block still does (the adversary's own documented boundary).",
+          "fix": "Optional: require the block's status: line to be unique or anchor to known field order."
+        }
+      ],
+      "notes": [
+        "Nothing else moved; 123 passed, 2 skipped; probes 23."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "eb6c323f59236e6696df7bf4686aa0d97e29e994",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md:12",
+          "text": "issue (blocking): Acceptance 1 is reported as only partly achieved; the required final two-commit log is unobservable before ship, so the acceptance interface says the ground truth is not met.",
+          "fix": "Return the proof design to decision point 1: revise Acceptance 1 to an invariant observable before the review-only commit, or redesign the close sequence."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/skills/write-plan/SKILL.md:383",
+          "text": "issue (blocking): the Shape contract says all ids are W<n>-<nn>, then reserves W<n>-memory; build's older-plan fallback would append a duplicate when an equivalent task (this branch's W2-02) exists.",
+          "fix": "Declare W<n>-memory the named exception; make §6.5 reuse an existing equivalent id; pin both."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md:14",
+          "text": "issue (blocking): the report's commit count for git log c2a5a82e..HEAD is not reproducible (seven claimed incl. the excluded bound; six at the tested commit, twelve at HEAD).",
+          "fix": "Pin the command to the exact tested commit and reproduce the output."
+        },
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md:97",
+          "text": "nitpick (non-blocking): identifiers appear in narrative and table label cells.",
+          "fix": "Move paths/function names to evidence cells."
+        }
+      ],
+      "notes": [
+        "27 rules; memory-store integrity clean; manifests synced; templates identical; wikilinks resolve; 1.3.1 stamps agree; W2-02 dispatch commit is an ancestor of its work. Pytest not run (read-only sandbox)."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "eb6c323f59236e6696df7bf4686aa0d97e29e994",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A — engineering change",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "loom-code/CHANGELOG.md:15-16",
+          "text": "nitpick (non-blocking): the [1.3.1] entry says §7 records the memory step's scope as branch-end; §7 records the closing review round's scope.",
+          "fix": "Reword to the closing review round."
+        }
+      ],
+      "notes": [
+        "Verified against git objects: 13 commits after c2a5a82e classify as wave-2 work / records / this round's artifacts; W2-02 dispatch record precedes its work; 27 rules; 1.3.1 everywhere; graduated copies differ by path lines + one rename; memory wikilinks resolve; package suite 1402 passed run by the reader. Process note: fix-round work started before both verdicts were collected."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "d5e57b1e474816610a1b7be389c81cdc027dff76",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md:3",
+          "text": "nitpick (non-blocking): identifiers remain in the opening narrative and the decided-for-you prose names W1-04.",
+          "fix": "Move them to an evidence field; describe the task in words."
+        }
+      ],
+      "notes": [
+        "branch-end-01 fixed (Acceptance 1 split at decision point 1, report marks the PR proof pending); branch-end-02 fixed (W<n>-memory the named exception; reuse before append; pinned); branch-end-03 fixed (range pinned to 46ad0b7a, seven lines, bound excluded)."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "d5e57b1e474816610a1b7be389c81cdc027dff76",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "CHANGELOG nit fixed (22b3a203); the four codex-raised fixes re-verified with no regression; package suite 1407 passed."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "notes": [
+        "report-identifiers nit fixed (48c1e8e0)."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "PASS",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "N/A",
+        "correctness": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Only the report commit and the dispatch record moved since d5e57b1e."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-close-ms-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": []
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-close-ms-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A — no measured number",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "One line: confirmed → closed 2026-09-05 — PR #792; PR matches; the close asks the user nothing."
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "4e3805f8",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "see docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md",
+      "sha": "de38277aa2dfcd772d455f0eb490cacc54338e0b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py -q",
+      "sha": "932a3e82db92c70b8261ac2ac7169862b3817174",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py -q",
+      "sha": "932a3e82db92c70b8261ac2ac7169862b3817174",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "a478f7d2 (pre-reorder tree = 46ad0b7a)",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md",
+      "sha": "46ad0b7a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py -q",
+      "sha": "da6ac94041c2a66493dedd93952c7a73e39c724f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py -q",
+      "sha": "da6ac94041c2a66493dedd93952c7a73e39c724f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py -q",
+      "sha": "da6ac94041c2a66493dedd93952c7a73e39c724f",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_memory_step.py loom-code/scripts/test_probes_memory_step_wave_end.py -q",
+      "sha": "da6ac94041c2a66493dedd93952c7a73e39c724f",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_memory_step.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_memory_step.py loom-code/scripts/test_probes_memory_step_wave_end.py -q",
+      "sha": "1c03a7fc818f36e64208e36bf52a587700dbe2b9",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_memory_step.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/evidence/probes/test_abuse_memory_step_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_memory_step.py loom-code/scripts/test_probes_memory_step_wave_end.py -q",
+      "sha": "7d7cc694117d24865649fd329f545c15e7e2e891",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_memory_step.py"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是——探針畢業與記憶庫條目改到最後一個 wave 結束、branch-end 審查之前做，審查看到的就是最終的樹，之後只剩關閉 intent 那一行；散文釘的「肯定句＋無否定詞＋正反自測」規則寫進 adversary 契約與 implementer 的基線；build 站對 `Task:` 尾標的檢查給出可複製的命令、wave 結束合併後跑一次。不加 checker 規則。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這兩個 change 要不要都用 Codex 當第二位讀者？",
+      "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "你要的五件事：1a 做到（記憶步驟在收尾審查前、無審後修正）、1b 出貨時在 PR 內文看、2–5 做到；對既有資料沒動；我替你決定的 8 項已列——這是你要的嗎？OK 就走現行規則的關閉流程，推上去開 PR。",
+      "type": "done"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/skills/build/SKILL.md:274 (§5 last-wave review call before §6.5)",
+      "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "raised_by": "rev-we1-ms-codex",
+      "resolved": "closed by 50fb1049 — build §5 last wave defers the review call past §6 and §6.5, one closing round recorded scope: branch-end (§7); confirmed rev-we1-ms-codex round 2, no regression per rev-we1-ms-sonnet"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/skills/build/SKILL.md:343 / loom-code/skills/write-plan/SKILL.md (no reserved memory task)",
+      "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "raised_by": "rev-we1-ms-codex, rev-we1-ms-sonnet",
+      "resolved": "closed by 2d23dd0f — write-plan Shape bullet reserves W<n>-memory; plan template + Codex mirror; build §6.5 fallback for older plans; confirmed both readers round 2"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/test_build_station_text.py:80",
+      "origin_sha": "da8697d50d87ceef61ab7ec18d5ec55ff353923d",
+      "raised_by": "rev-we1-ms-codex",
+      "resolved": "closed by ea0f82c1 + fbd6f202^ (exactly one affirmative review-call sentence after §6/§6.5, two-call synthetic rejected); confirmed rev-we1-ms-codex round 3"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "blind-run-report.md:12 / intent Acceptance 1",
+      "origin_sha": "eb6c323f59236e6696df7bf4686aa0d97e29e994",
+      "raised_by": "rev-be-ms-codex",
+      "resolved": "closed by 99d5e4d9 — Acceptance 1 split at decision point 1 (user re-confirmed 2026-09-05) into 1a (observable in the blind run) and 1b (shown in the PR body at ship); report reworded a8025a82"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/skills/write-plan/SKILL.md:383 / build §6.5 fallback",
+      "origin_sha": "eb6c323f59236e6696df7bf4686aa0d97e29e994",
+      "raised_by": "rev-be-ms-codex",
+      "resolved": "closed by f572b276 — W<n>-memory named the exception; §6.5 reuses an equivalent existing task id, appends only when absent; pins added"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "blind-run-report.md:14",
+      "origin_sha": "eb6c323f59236e6696df7bf4686aa0d97e29e994",
+      "raised_by": "rev-be-ms-codex",
+      "resolved": "closed by a8025a82 — log pinned to the tested commit 46ad0b7a, full output pasted, count corrected"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T12:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T12:25:00+08:00",
+      "fresh_context": true,
+      "note": "sequenced before W1-01: the six ship pins re-target to the build section this task writes"
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T12:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T12:50:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T13:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T13:20:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; fixes its own probe (f): log.split(NUL) fallback never runs"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T14:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "br-we1-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T14:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T14:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T14:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T15:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T16:10:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T16:10:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T16:40:00+08:00",
+      "fresh_context": false,
+      "note": "round-2 residue: order check counts affirmative review-call sentences (exactly one); guard scans the leading metadata block"
+    },
+    {
+      "task": "wave-end:1 round 3",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T16:42:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; adjudicates wave-end:1-03 and the guard nit"
+    },
+    {
+      "task": "wave-end:1 round 3",
+      "role": "reviewer",
+      "agent_id": "rev-we1-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T16:45:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; adjudicates its guard nit"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T17:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T17:40:00+08:00",
+      "fresh_context": false,
+      "note": "the plan's memory task: two probe files graduated as byte copies (path lines only), one store entry, index regenerated — before the closing review round, per build §6.5"
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T17:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T17:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T18:45:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T18:45:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "impl-fix-be-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T19:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-memstep",
+      "model": "sonnet",
+      "started": "2026-09-05T19:05:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; fixes its own report (count reproducibility, identifiers in prose)"
+    },
+    {
+      "task": "branch-end round 5",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T20:10:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "branch-end round 5",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T20:10:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "branch-end round 6",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T20:40:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms the report nit"
+    },
+    {
+      "task": "branch-end round 6",
+      "role": "reviewer",
+      "agent_id": "rev-be-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T20:40:00+08:00",
+      "fresh_context": false,
+      "note": "resumed; confirms nothing else moved"
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close-ms-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T21:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "close-intent",
+      "role": "reviewer",
+      "agent_id": "rev-close-ms-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T21:40:00+08:00",
+      "fresh_context": true
+    }
+  ],
+  "second_vendor": "codex",
+  "notes": [
+    "Round 1 wave-end:1: NEEDS_REVISION (codex fatal on §5/§6.5 sequencing; both readers on the unreserved memory task). The guard position-blind nit is fixed inside the fix round with the same agent.",
+    "wave-end:1 outcome after three rounds: PASS_WITH_NOTES. Remaining nit (sonnet round 3): a fenced status: closed line placed before the real status line inside the leading metadata block would still flip the graduated guard — an intent file that opens with a fenced block before its metadata is not an intent, so the boundary is accepted and recorded; folded at ship if wording is revisited. reviewed_sha advanced to c2a5a82e.",
+    "Branch-end adversary (class 5) found the W2-02 dispatch-record commit landed after the W2-02 work commit. Fixed before the readers ran by cherry-picking the six unpushed commits in the corrected order (dispatch record first); trees identical to the pre-reorder tip (backup ref backup/memstep-pre-reorder, local only). Shas of the blind-run report and probe commits changed; the report's tested-sha line is refreshed by its author.",
+    "branch-end round 1: NEEDS_REVISION (codex) / PASS (sonnet). The fatal was an acceptance-wording problem, taken back to decision point 1 and re-confirmed; nits (report identifiers a8025a82; CHANGELOG attribution 22b3a203) fixed inside the fix round; the branch-end probe was re-scoped by its author (da6ac940) so fix rounds inside the closing checkpoint are not counted as post-review fixes.",
+    "branch-end outcome after three rounds: PASS (both readers). No open nits: the report-identifiers nit and the CHANGELOG nit were folded inside the fix rounds, so ship has no nit batch. Cost: plan→branch-end PASS ≈ 8.5h, 3 wave-end rounds + 3 branch-end rounds, 24 dispatch entries.",
+    "Ship, memory step: nothing left to store; the closing round's own adversarial probe file (evidence/probes/test_abuse_memory_step_branch_end.py) is by construction created after the memory step and is NOT graduated in this change — it stays evidence, recorded in probes[] and re-run by the push gate. Graduating closing-round probes without a post-review commit is a follow-up for the sibling checker intent (agent-decided).",
+    "Round numbers: branch-end rounds renumbered 4–6 (they continue the change's round count; the checker scores the highest round number across the record, so per-checkpoint numbering restarting at 1 made it score the wave-end round 3 verdicts). The 1.3.1 review SKILL text says rounds continue; recorded here for the sibling checker intent's attention.",
+    "close-intent round (two fresh readers): the status line only, PR #792; every CI job's check rehearsed at the close commit. reviewed_sha = the close commit."
+  ]
+}

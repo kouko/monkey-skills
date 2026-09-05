@@ -5,6 +5,36 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] — 2026-09-05 — memory step before the closing checkpoint; prose-pin rule; Task-trailer commands
+
+`docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/`.
+
+1. `build/SKILL.md` gains a §6.5 memory step — probe graduation and
+   `docs/loom/memory/` entries — that runs before the plan's single
+   closing review round; §5's last wave now defers the review call
+   past package tests and the memory step, and §7 records the closing
+   review round's scope as branch-end (once per plan, not per wave).
+2. `ship/SKILL.md`'s §3 keeps the trailer loop, the `questions[]`
+   carry-forward, and the escape hatch; its six pins that used to
+   describe the pre-checkpoint memory work are re-targeted to build's
+   new §6.5, since that work now happens there instead.
+3. `write-plan/SKILL.md` reserves a `W<n>-memory` task in every plan's
+   Shape bullet and the plan template; the Codex mirror carries the
+   same reservation.
+4. `build/SKILL.md` §4 and §5 gain copyable commands for the `Task:`
+   trailer check the orchestrator runs after a wave integrates.
+5. `agents/adversary.md` and `references/engineering-baseline.md` state
+   a prose-pin rule — a pinned sentence must use an affirmative verb,
+   carry no negation, and ship with a synthetic self-test proving both
+   the pinned and the violating case — pinned by the new
+   `test_prose_pin_rule_text.py`.
+6. The branch-scope probes graduated from `2026-09-03-artifact-language-policy`
+   now skip once that intent's leading metadata block reads closed,
+   instead of running forever against a shipped change.
+7. `loom_checker.py --list-rules` is unchanged at 27 lines — no checker
+   rule was added or changed; every clause above is contract prose
+   enforced by the reviewer and the probes, not by the checker.
+
 ## [1.3.0] — 2026-09-05 — internal artifacts in English, three checkable templates
 
 `docs/loom/2026-09-03-artifact-language-policy/`.
