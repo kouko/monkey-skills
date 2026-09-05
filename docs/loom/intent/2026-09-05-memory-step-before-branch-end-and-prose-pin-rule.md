@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改站文字（ship、build）與兩份 agent 契約，加對應的釘測試；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-03-artifact-language-policy/review.json, docs/loom/2026-09-04-codex-hook-trust-covers-every-definition-and-worktree/review.json, docs/loom/2026-09-04-positioning-paragraph-cap-redesign/review.json, docs/loom/memory/a-close-commit-sits-directly-under-a-checkpoint-so-any-late-fix-buys-its-own-round.md, docs/loom/memory/a-prose-pin-must-require-an-affirmative-un-negated-sentence.md]
-status: confirmed 2026-09-05
+status: closed 2026-09-05 — PR #792
 
 ## Problem
 最近三個 change（#789、#790、#791）都在 branch-end 審查通過**之後**才做 ship 站的記憶步驟：探針畢業成永久測試、寫 `docs/loom/memory/` 條目。這些一定會產生新的 commit，而關閉 intent 的 commit 形狀規則要求最後三個 commit 長成固定樣子，於是每次都逼出一輪雙讀者確認、再重做關閉 commit。#791 為此重做關閉三次，收尾花的時間（約 6 小時）比實際改東西（約 4 小時）還多。這是流程排序的問題，不是誰做錯。
