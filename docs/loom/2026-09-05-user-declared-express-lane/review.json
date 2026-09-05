@@ -4,7 +4,117 @@
   "vendors": [
     "anthropic"
   ],
-  "verdicts": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "PASS_WITH_NOTES",
+        "deletion-first": "PASS_WITH_NOTES",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1037",
+          "text": "issue (blocking): the grammar accepts a bare `lane: express|gate-only|full` with no dated user attribution; Acceptance 1 says a declaration carries date and name like a switch; push never recomputes the schema, and gate-only has no reader to apply the lens.",
+          "fix": "require `— declared <date> by <name>` on the declaration form; push fails closed (full) on a declaration that fails the schema; adversarial case"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3210",
+          "text": "issue (blocking): the test-path exemption in `_lane_forcing_paths` runs before gate/skill kinds, so `hooks/tests/x.py` or `skills/x/tests/SKILL.md` enter express/gate-only.",
+          "fix": "gate/skill kinds before the test/CI exemption; adversarial cases"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1133",
+          "text": "issue (blocking): `from wave <n>` and a bare declaration both reduce to from_round None and go through record-deferral; the wave semantics is undefined in code and text.",
+          "fix": "define `from wave <n>` (applies to rounds recorded after the declaring commit), keep the unit in the parsed detail, pin a prior-wave → branch-end round-1 case"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/build/SKILL.md:275",
+          "text": "issue (blocking): build tells every DECLARED express/gate-only change to skip wave-end checkpoints; only the EFFECTIVE lane (after the forbidden-type recompute) may skip.",
+          "fix": "say effective lane; require the recompute before routing; pin"
+        }
+      ],
+      "notes": [
+        "manifest is the primary type source; _evidence_masked_kind adds a path-rewriting interpretation; a renamed SKILL.md escapes the glob (pre-existing)",
+        "zero-verdict push rules walk safely: package tests and ≥3 probes still required",
+        "read-only sandbox could not start pytest",
+        "deletion-first: express as small-lane policy plus a checkpoint override; gate-only as floors rather than a procedural branch; ship at 3497/3500 — extract the gate-only paragraph"
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "PRINCIPLES.md:9",
+          "text": "issue (blocking): Non-negotiable 2 fixes the floor at one reviewer and a blind run omitted only when every Acceptance line is mechanical; gate-only (zero readers, blind run always skipped) contradicts the ratified constitution, which this delta did not amend.",
+          "fix": "amend PRINCIPLES.md (ratified by the user) to name the user-declared gate-only floor, or keep one reader / the blind-run condition in gate-only"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/lenses.md:88",
+          "text": "issue: the lens sentence flags 'missing by <user name>' without saying whether a bare ① declaration counts, so a reviewer cannot tell a legitimate declaration from an injected one.",
+          "fix": "scope the clause per form (resolved together with -01 once declarations carry attribution)"
+        }
+      ],
+      "notes": [
+        "ran the lane tests (22), both probe files (11+15) and five station-text files (121) — all green",
+        "forbidden types come from manifest artifact_types via _artifact_type_for; a SKILL.md renamed away from that filename escapes the glob (pre-existing)",
+        "zero-verdict push rules confirmed tolerant; package run and ≥3 probes unconditional for gate-only"
+      ]
+    }
+  ],
   "probes": [
     {
       "kind": "package-tests",
@@ -88,7 +198,56 @@
     }
   ],
   "questions": [],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/scripts/loom_checker.py:1037",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): the grammar accepts a bare `lane: express|gate-only|full` with no dated user attribution; Acceptance 1 says a declaration carries date and name like a switch; push never recomputes the schema, and gate-only has no reader to apply the lens."
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/scripts/loom_checker.py:3210",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): the test-path exemption in `_lane_forcing_paths` runs before gate/skill kinds, so `hooks/tests/x.py` or `skills/x/tests/SKILL.md` enter express/gate-only."
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/loom_checker.py:1133",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): `from wave <n>` and a bare declaration both reduce to from_round None and go through record-deferral; the wave semantics is undefined in code and text."
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/skills/build/SKILL.md:275",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "important",
+      "text": "issue (blocking): build tells every DECLARED express/gate-only change to skip wave-end checkpoints; only the EFFECTIVE lane (after the forbidden-type recompute) may skip."
+    },
+    {
+      "id": "wave-end:1-05",
+      "anchor": "PRINCIPLES.md:9",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-sonnet",
+      "severity": "fatal",
+      "text": "issue (blocking): Non-negotiable 2 fixes the floor at one reviewer and a blind run omitted only when every Acceptance line is mechanical; gate-only (zero readers, blind run always skipped) contradicts the ratified constitution, which this delta did not amend."
+    },
+    {
+      "id": "wave-end:1-06",
+      "anchor": "loom-code/skills/review/references/lenses.md:88",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-sonnet",
+      "severity": "important",
+      "text": "issue: the lens sentence flags 'missing by <user name>' without saying whether a bare ① declaration counts, so a reviewer cannot tell a legitimate declaration from an injected one."
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
@@ -207,11 +366,29 @@
       "started": "2026-09-05T20:45:09+0800",
       "fresh_context": true,
       "note": "before the readers are dispatched: the wave-end adversary's two fatals and three importants (evidence glob shadows skill/gate paths in artifact_types; push never runs the lane schema/reason checks and a bare lane: line has no round deferral; explicit revert to full rejected; gate-only owes no adversarial probe on a pure-docs delta; lane-switch pin lacks the negation matcher) — its six RED probes are the failing tests"
+    },
+    {
+      "task": "fix:wave-end:1-r2",
+      "role": "adversary",
+      "agent_id": "adv-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T21:34:45+0800",
+      "fresh_context": false,
+      "note": "resumed: RED probes for -01 (bare declaration blocked; schema-failing declaration falls back to full at push), -02 (tests-segment gate/skill paths), -03 (from wave <n> honoured at the next scope's round 1); adversary-first for the checker fixes"
+    },
+    {
+      "task": "fix:wave-end:1-r2",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T21:34:45+0800",
+      "fresh_context": false,
+      "note": "resumed after the probes: -01/-02/-03 in the checker and templates; -04 build sentence + ship gate-only paragraph extraction; -06 lens clause. -05 (PRINCIPLES) waits for the user's ratification"
     }
   ],
   "cost": {
-    "rounds": 0,
-    "dispatches": 14,
+    "rounds": 1,
+    "dispatches": 16,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
