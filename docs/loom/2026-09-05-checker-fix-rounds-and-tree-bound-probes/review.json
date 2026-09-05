@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+  "reviewed_sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -586,6 +586,50 @@
       "notes": [
         "confirmation: only the frontmatter description (lines 3–4) trimmed 427→378 characters, same step order; 41 passed on test_ship_pr_body.py + test_ship_station_text.py"
       ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-close-chk-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "docs+user-judgment-leak",
+      "verdict": "PASS",
+      "sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "the delta is exactly one status line: confirmed 2026-09-05 → closed 2026-09-05 — PR #793, nothing else"
+      ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "rev-close-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "N/A"
+      },
+      "findings": [],
+      "notes": [
+        "delta verified as the one status line; PR #793 checked live (open, base main); PR-number grammar consistent with Acceptance 6 and plan Risk 3"
+      ]
     }
   ],
   "probes": [
@@ -624,7 +668,7 @@
     {
       "kind": "package-tests",
       "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
-      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+      "sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
       "result": "pass",
       "artifact": "",
       "scope": "branch-end"
@@ -632,7 +676,7 @@
     {
       "kind": "blind-run",
       "command": "see the report — clean clone, Acceptance 1–6 walked with the branch's own checker; Acceptance 5 re-verified at 10cba457",
-      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+      "sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md",
       "scope": "branch-end"
@@ -640,7 +684,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_branch_end.py -q",
-      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+      "sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_branch_end.py",
       "scope": "branch-end"
@@ -648,7 +692,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest loom-code/scripts/test_probes_checker_semantics.py -q",
-      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+      "sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_checker_semantics.py",
       "scope": "branch-end"
@@ -656,7 +700,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest loom-code/scripts/test_probes_checker_semantics_wave_end.py -q",
-      "sha": "627a1a2c9d125a495f210dbc155364a49ca81384",
+      "sha": "4135c58efd06ac2ef07dbff668a58f9e627ef3c6",
       "result": "pass",
       "artifact": "loom-code/scripts/test_probes_checker_semantics_wave_end.py",
       "scope": "branch-end"
