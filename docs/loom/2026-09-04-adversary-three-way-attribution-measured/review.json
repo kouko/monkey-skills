@@ -48,6 +48,22 @@
       "model": "sonnet",
       "started": "2026-09-05T17:04:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-6f03",
+      "model": "sonnet",
+      "started": "2026-09-05T17:22:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "blind-we1-a1d4",
+      "model": "sonnet",
+      "started": "2026-09-05T17:22:00+08:00",
+      "fresh_context": true
     }
   ]
 }
