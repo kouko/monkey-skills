@@ -14,6 +14,7 @@ from pathlib import Path
 CHECKER = Path(__file__).with_name("loom_checker.py")
 
 EXPECTED_RULE_IDS = [
+    "contract.charter-complete",
     "contract.requires",
     "intake.after-task-budget",
     "intake.confirmed",
@@ -129,8 +130,8 @@ def test_hooks_probe_is_gone() -> None:
     assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
 
 
-def test_the_rule_population_is_twenty_seven() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 27
+def test_the_rule_population_is_twenty_eight() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 28
 
 
 # --- contract --require (spec G) -------------------------------------------

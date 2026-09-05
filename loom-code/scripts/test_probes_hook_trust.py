@@ -56,7 +56,7 @@ MARKER_REL = Path(".codex/hooks/.loom-hook-fired")
 # Pinned in this probe as a guard (Acceptance case 7's "simpler" option) —
 # re-verify with `python3 loom-code/scripts/loom_checker.py --list-rules |
 # wc -l` if a later change legitimately adds/removes a rule.
-LIST_RULES_LINE_COUNT = 27
+LIST_RULES_LINE_COUNT = 28
 
 
 def run(*args: str, cwd: Path | None = None, env: dict | None = None) -> subprocess.CompletedProcess:

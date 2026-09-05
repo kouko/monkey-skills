@@ -49,4 +49,4 @@ def test_loom_checker_lists_27_rules():
         text=True,
     )
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 27, f"expected 27 rule lines, got {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 28, f"expected 28 rule lines, got {len(lines)}:\n{result.stdout}"

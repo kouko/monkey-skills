@@ -65,6 +65,12 @@ RULES: list[tuple[str, str]] = [
         "the same major, and a minor at or above the required one.",
     ),
     (
+        "contract.charter-complete",
+        "Every artifact in the contract manifest carries a complete `charter:` block -- "
+        "non-empty answers/readers/must/must_not/edits_after, a must_not goes_to naming "
+        "another artifact in the table, and a signoff naming a real station.",
+    ),
+    (
         "intake.confirmed",
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
         "with a date the calendar has; `closed <date> — PR #<N>` or `closed <date> — branch <name>` "
@@ -4690,6 +4696,146 @@ def find_standing_doc(repo: Path, name: str) -> Path | None:
     return None
 
 
+CHARTER_HEADER = "| artifact | must | must not → goes to | sign-off | edits after |\n"
+CHARTER_SEPARATOR = "| --- | --- | --- | --- | --- |\n"
+
+
+def _charter_join(values) -> str:
+    if not isinstance(values, list) or not values:
+        return ""
+    return "; ".join(str(v) for v in values)
+
+
+def check_charter_row(
+    name: str, charter: dict, all_names: list[str], stations: set[str]
+) -> tuple[list[tuple[str, str]], tuple[str, str, str, str, str]]:
+    """Recompute every column of one charter row against the rules the
+    `contract.charter-complete` description promises: non-empty answers/
+    readers/must/must_not/edits_after, every must_not item naming a kind
+    and a goes_to that is ANOTHER artifact in the table, and a signoff
+    naming a real station."""
+    failures: list[tuple[str, str]] = []
+
+    answers = charter.get("answers")
+    if not isinstance(answers, str) or not answers.strip():
+        failures.append(("contract.charter-complete", f"{name}.answers is empty."))
+
+    readers = charter.get("readers")
+    if not isinstance(readers, list) or not readers:
+        failures.append(("contract.charter-complete", f"{name}.readers is empty."))
+
+    must = charter.get("must")
+    if not isinstance(must, list) or not must:
+        failures.append(("contract.charter-complete", f"{name}.must is empty."))
+
+    must_not = charter.get("must_not")
+    if not isinstance(must_not, list) or not must_not:
+        failures.append(("contract.charter-complete", f"{name}.must_not is empty."))
+    else:
+        for item in must_not:
+            if not isinstance(item, dict) or not str(item.get("kind") or "").strip():
+                failures.append(
+                    ("contract.charter-complete", f"{name}.must_not has an entry with no kind.")
+                )
+                continue
+            goes_to = str(item.get("goes_to") or "").strip()
+            if not goes_to:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.must_not entry {item['kind']!r} names no goes_to.",
+                ))
+            elif goes_to == name:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.must_not entry goes_to names itself ({name!r}); "
+                    "it must name another artifact in the table.",
+                ))
+            elif goes_to not in all_names:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.must_not entry goes_to {goes_to!r} names an artifact "
+                    "absent from the table.",
+                ))
+
+    signoff = charter.get("signoff")
+    if not isinstance(signoff, str) or not signoff.strip():
+        failures.append(("contract.charter-complete", f"{name}.signoff is empty."))
+    elif signoff not in stations:
+        failures.append((
+            "contract.charter-complete",
+            f"{name}.signoff names unknown station {signoff!r}.",
+        ))
+
+    edits_after = charter.get("edits_after")
+    if not isinstance(edits_after, list) or not edits_after:
+        failures.append(("contract.charter-complete", f"{name}.edits_after is empty."))
+
+    must_not_cell = "; ".join(
+        f"{item.get('kind', '?')} → {item.get('goes_to', '?')}"
+        for item in must_not if isinstance(item, dict)
+    ) if isinstance(must_not, list) else ""
+    row = (
+        name,
+        _charter_join(must),
+        must_not_cell,
+        str(signoff) if isinstance(signoff, str) and signoff.strip() else "",
+        _charter_join(edits_after),
+    )
+    return failures, row
+
+
+def render_charter_table(rows: list[tuple[str, str, str, str, str]]) -> str:
+    lines = [CHARTER_HEADER, CHARTER_SEPARATOR]
+    for row in rows:
+        lines.append("| " + " | ".join(row) + " |\n")
+    return "".join(lines)
+
+
+def cmd_charter(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py charter [--manifest PATH]` -- the human view of
+    `artifacts.<name>.charter` (manifest.yaml is the checker-read SSOT;
+    this renders it). Prints one markdown row per artifact in manifest
+    order and recomputes `contract.charter-complete` over every row."""
+    manifest_path = MANIFEST_PATH
+    rest = list(args)
+    while rest:
+        token = rest.pop(0)
+        if token == "--manifest":
+            if not rest:
+                raise UsageError("--manifest needs a path.")
+            manifest_path = Path(rest.pop(0))
+        else:
+            raise UsageError(f"unexpected argument {token!r}.")
+    if not manifest_path.is_file():
+        raise UsageError(f"no contract manifest at {manifest_path}")
+
+    manifest = load_manifest(manifest_path)
+    artifacts = manifest.get("artifacts") or {}
+    stations = {
+        s["name"] for s in manifest.get("stations", []) if isinstance(s, dict) and s.get("name")
+    }
+    all_names = list(artifacts.keys())
+
+    failures: list[tuple[str, str]] = []
+    rows: list[tuple[str, str, str, str, str]] = []
+    for name in all_names:
+        entry = artifacts.get(name) or {}
+        charter = entry.get("charter")
+        if not isinstance(charter, dict):
+            failures.append((
+                "contract.charter-complete",
+                f"{name} has no charter block (`charter:` is missing entirely).",
+            ))
+            rows.append((name, "", "", "", ""))
+            continue
+        row_failures, row = check_charter_row(name, charter, all_names, stations)
+        failures.extend(row_failures)
+        rows.append(row)
+
+    out.write(render_charter_table(rows))
+    return report(failures, err)
+
+
 REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")
 
 
@@ -4747,6 +4893,7 @@ COMMANDS = {
     "push": cmd_push,
     "standing": cmd_standing,
     "contract": cmd_contract,
+    "charter": cmd_charter,
 }
 
 

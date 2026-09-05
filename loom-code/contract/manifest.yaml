@@ -72,10 +72,35 @@ actions:             # executable steps inside a station; not skills (§3)
     owner: maintain
     summary: "an alert or incident becomes evidence on the matching open intent or a new intent with originator maintenance-loop; every incident becomes an eval in mechanisms.yaml."
 
+# charter: the single copy of "what this artifact answers, who reads it,
+# what must/must-not live in it, who signs it off, what edits it after" —
+# stations, templates and agent contracts cite it by path (loom-code
+# contract charter <name>), they do not restate it (W0-01).
 artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sections
   intent:
     path: docs/loom/intent/<change-id>.md
     template: intent.md
+    charter:
+      answers: "why this change exists and how the user will know it is done"
+      readers: ["user at decision point 1", "every later station"]
+      must:
+        - "Problem in the user's words"
+        - "Proposed outcome"
+        - "Acceptance lines each provable by a blind run"
+        - "Constraints"
+        - "Out of scope"
+        - "Open questions"
+      must_not:
+        - {kind: "requirement-level behaviour", goes_to: spec}
+        - {kind: "task split or file lists",     goes_to: plan}
+        - {kind: "design rationale",             goes_to: spec}
+        - {kind: "build or review history",      goes_to: review}
+        - {kind: "lessons",                      goes_to: memory}
+      signoff: capture-intent
+      edits_after:
+        - "ship flips the status line to closed"
+        - "maintain appends an evidence path"
+        - "any other change starts a new intent"
     fields:
       - {name: originator,   kind: frontmatter, required: true}
       - {name: kind,         kind: frontmatter, required: true, values: [product, engineering]}
@@ -94,6 +119,24 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
   spec:
     path: docs/loom/<change-id>/spec.md
     template: spec-minimal.md
+    charter:
+      answers: "what the system must visibly do"
+      readers: ["user at decision point 2 (product)", "reviewers", "implementers"]
+      must:
+        - "REQ lines one per Acceptance"
+        - "Design decision marked user- or agent-decided"
+        - "Alternatives considered"
+        - "Current state evidence"
+        - "UI flows"
+      must_not:
+        - {kind: "the intent restated", goes_to: intent}
+        - {kind: "task ordering",       goes_to: plan}
+        - {kind: "review findings",     goes_to: review}
+        - {kind: "lessons",             goes_to: memory}
+      signoff: write-spec
+      edits_after:
+        - "a changed REQ re-runs decision point 2 and recomputes confirmed-behavior"
+        - "the spec sha in every later verdict names the new text"
     fields:
       - {name: intent,             kind: frontmatter, required: true, grammar: "<change-id>@<sha>"}
       - {name: confirmed-behavior, kind: frontmatter, required: false, grammar: "<date> @<spec-blob-sha7>", note: "required when kind: product; the sha is `git hash-object` over the spec WITHOUT this line, i.e. the file as the user saw it, so a spec rewritten after decision point 2 no longer matches"}
@@ -105,6 +148,27 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
   plan:
     path: docs/loom/<change-id>/plan.md
     template: plan.md
+    charter:
+      answers: "how the work is split, ordered and dispatched"
+      readers: ["build orchestrator", "implementer (one task each)", "reviewers"]
+      must:
+        - "Current State Evidence as path plus anchor when no spec exists"
+        - "Task DAG with Files, Test and Risk one line each"
+        - "Questions asked verbatim"
+        - "plan-wide Risks"
+      must_not:
+        - {kind: "behaviour or REQ restatement", goes_to: spec}
+        - {kind: "scenario lists inside Test",    goes_to: spec}
+        - {kind: "design rationale",              goes_to: spec}
+        - {kind: "build or review diary",         goes_to: review}
+        - {kind: "lessons",                       goes_to: memory}
+        - {kind: "landed commit shas",            goes_to: dispatch}
+      signoff: write-plan
+      edits_after:
+        - "a task line gains a claimed or blocked mark"
+        - "the W<n>-memory task is appended"
+        - "a task with no Task trailer in git is replaced after a spec change"
+        - "a Questions asked line is appended"
     fields:
       - {name: intent, kind: frontmatter, required: true}
       - {name: spec,   kind: frontmatter, required: false}
@@ -114,6 +178,30 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
   review:
     path: docs/loom/<change-id>/review.json
     template: review.json
+    charter:
+      answers: "what was checked, by whom, and with what result"
+      readers: ["ship", "the push rules", "the next review round"]
+      must:
+        - "reviewed_sha"
+        - "scope"
+        - "vendors"
+        - "verdicts"
+        - "probes"
+        - "open_findings"
+        - "dispatch"
+        - "questions"
+        - "cost"
+        - "second_vendor when KICKOFF says ask"
+      must_not:
+        - {kind: "design reasoning", goes_to: spec}
+        - {kind: "fix narrative",    goes_to: dispatch}
+        - {kind: "lessons",          goes_to: memory}
+      signoff: review
+      edits_after:
+        - "verdicts, probes, open_findings and dispatch gain entries"
+        - "reviewed_sha, scope and cost are replaced"
+        - "an open finding is resolved or dismissed in place"
+        - "questions is written once"
     fields:
       - {name: reviewed_sha,  kind: json, required: true}
       - {name: scope,         kind: json, required: true}
@@ -132,6 +220,84 @@ artifacts:           # per-change (§2a); fields are frontmatter keys or H2 sect
       # field is optional and read only when KICKOFF declares `ask`).
       # push.second-vendor-honoured reads it instead of KICKOFF-DEFAULTS when
       # the KICKOFF value is `ask`, and never requires it in the small lane.
+
+  blind-run-report:
+    path: docs/loom/<change-id>/blind-run-report.md
+    template: null
+    fields: []
+    charter:
+      answers: "whether each Acceptance line worked, in the user's words"
+      readers: ["user at decision point 3"]
+      must:
+        - "one line per Acceptance"
+        - "Review summary"
+        - "Questions I asked you"
+        - "What this did to existing data"
+        - "I decided for you"
+      must_not:
+        - {kind: "diff commentary", goes_to: dispatch}
+        - {kind: "design rationale", goes_to: spec}
+        - {kind: "internal ids",     goes_to: review}
+      signoff: ship
+      edits_after:
+        - "a later round rewrites the whole report from review.json"
+  memory:
+    path: docs/loom/memory/<slug>.md
+    template: memory-README.md
+    fields: []
+    charter:
+      answers: "what this repository learned that outlives the change"
+      readers: ["future changes", "git-memory recall"]
+      must:
+        - "one lesson per entry in the store README format"
+        - "the trigger"
+        - "the correct path"
+      must_not:
+        - {kind: "change narrative", goes_to: review}
+        - {kind: "restated diff",    goes_to: dispatch}
+        - {kind: "task lists",       goes_to: plan}
+      signoff: build
+      edits_after:
+        - "entries are appended"
+        - "a superseded entry gains a pointer to its replacement"
+        - "the index is regenerated"
+  kickoff-defaults:
+    path: docs/loom/KICKOFF-DEFAULTS.md
+    template: KICKOFF-DEFAULTS.md
+    fields: []
+    charter:
+      answers: "what this repository decided once for every change"
+      readers: ["checker", "every station"]
+      must:
+        - "one line per key with value, reason and date"
+      must_not:
+        - {kind: "per-change decisions", goes_to: review}
+        - {kind: "lessons",              goes_to: memory}
+      signoff: capture-intent
+      edits_after:
+        - "a line is replaced with a new value, reason and date"
+        - "a key is removed only with a dated reason line"
+  dispatch:
+    path: "docs/loom/<change-id>/review.json#dispatch"
+    template: null
+    fields: []
+    charter:
+      answers: "who did what, fresh-context or not, and when"
+      readers: ["push rules", "reviewers"]
+      must:
+        - "task"
+        - "role"
+        - "agent_id"
+        - "model"
+        - "started"
+        - "fresh_context"
+      must_not:
+        - {kind: "outcomes or verdicts", goes_to: review}
+        - {kind: "narrative",            goes_to: review}
+      signoff: build
+      edits_after:
+        - "entries are appended"
+        - "an existing entry is never edited"
 
 standing_docs:       # not per-change (§2a, §8)
   - {name: PRINCIPLES.md,       tool: product-principles, ratified_by: required, reject_when: "kind: product and missing"}

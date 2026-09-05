@@ -453,4 +453,4 @@ def test_list_rules_line_count_pinned_at_27() -> None:
     result = run_checker("--list-rules", cwd=REPO_ROOT)
     assert result.returncode == 0, result.stderr
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 27, f"expected 27 rules, got {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 28, f"expected 28 rules, got {len(lines)}:\n{result.stdout}"
