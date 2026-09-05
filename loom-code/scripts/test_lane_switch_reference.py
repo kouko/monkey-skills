@@ -136,6 +136,31 @@ def test_from_wave_and_declared_timing_pin_is_affirmative() -> None:
     )
 
 
+def test_push_provenance_pin_is_affirmative() -> None:
+    """`push` grants `express` over a raw-full recompute only when the
+    deciding commit's message states the `lane:` line verbatim
+    (wave-end:1-r3) -- pinned affirmatively (no negation token)."""
+    text = _text()
+    start = text.index("## The switch-line grammar")
+    end = text.index("## Recording the answer")
+    flat = " ".join(text[start:end].split())
+    hits = [
+        s for s in re.split(r"(?<=[.!?])\s+", flat)
+        if "express" in s.lower()
+        and "deciding commit" in s.lower()
+        and "verbatim" in s.lower()
+    ]
+    assert hits, (
+        "lane-switch.md has no sentence stating that granting express "
+        "over a raw-full recompute requires the deciding commit's message "
+        "to state the lane: line verbatim"
+    )
+    negated = [s for s in hits if NEGATION_RE.search(s)]
+    assert not negated, (
+        f"the push-provenance sentence carries a negation token: {negated!r}"
+    )
+
+
 def test_questions_entry_type_consequence() -> None:
     text = _text()
     start = text.index("## Recording the answer")

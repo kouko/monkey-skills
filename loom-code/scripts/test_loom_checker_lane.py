@@ -13,6 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 import loom_checker
 from test_loom_checker_intent import (  # noqa: E402
     blocked_rules,
@@ -247,12 +249,10 @@ def test_effective_lane_recomputed_small_promoted_to_gate_only(tmp_path: Path) -
     test used to pin."""
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff1"
-    _write_intent(
-        repo, change_id,
-        lane_lines=("lane: gate-only — declared 2026-09-05 by kouko",),
-    )
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "loom-code/scripts").mkdir(parents=True, exist_ok=True)
     (repo / "loom-code/scripts/test_foo.py").write_text("def test_x(): pass\n", encoding="utf-8")
     reviewed_sha = _commit_all(repo, "test(loom-code): add a test file")
@@ -269,11 +269,10 @@ def test_effective_lane_recomputed_small_stays_small_for_express(tmp_path: Path)
     only `gate-only` gets promoted out of `small`."""
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff1b"
-    _write_intent(
-        repo, change_id, lane_lines=("lane: express — declared 2026-09-05 by kouko",),
-    )
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "loom-code/scripts").mkdir(parents=True, exist_ok=True)
     (repo / "loom-code/scripts/test_foo.py").write_text("def test_x(): pass\n", encoding="utf-8")
     reviewed_sha = _commit_all(repo, "test(loom-code): add a test file")
@@ -305,11 +304,10 @@ def test_effective_lane_express_needs_no_gate_path(tmp_path: Path) -> None:
     matters to gate-only."""
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff3"
-    _write_intent(
-        repo, change_id, lane_lines=("lane: express — declared 2026-09-05 by kouko",),
-    )
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "loom-code/skills/example").mkdir(parents=True, exist_ok=True)
     (repo / "loom-code/skills/example/SKILL.md").write_text(
         "---\nname: example\n---\nbody\n", encoding="utf-8"
@@ -349,11 +347,10 @@ def test_effective_lane_gate_only_needs_raw_small_standing_doc_blocks(
     is exactly what the ratification reverses."""
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff4"
-    _write_intent(
-        repo, change_id, lane_lines=("lane: gate-only — declared 2026-09-05 by kouko",),
-    )
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
     (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
     _write_standing_doc(repo)
@@ -372,11 +369,10 @@ def test_effective_lane_gate_only_blocked_by_skill_path(tmp_path: Path) -> None:
     non-test-code changed."""
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff5"
-    _write_intent(
-        repo, change_id, lane_lines=("lane: gate-only — declared 2026-09-05 by kouko",),
-    )
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "loom-code/skills/example").mkdir(parents=True, exist_ok=True)
     (repo / "loom-code/skills/example/SKILL.md").write_text(
         "---\nname: example\n---\nbody\n", encoding="utf-8"
@@ -393,12 +389,10 @@ def test_effective_lane_switch_applies_only_strictly_after_from_round(tmp_path: 
     to round 2 itself -- the pre-switch full lane still governs round 2."""
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff6"
-    _write_intent(
-        repo, change_id,
-        lane_lines=("lane: express — switched 2026-09-05 by kouko, from round 2",),
-    )
+    lane_line = "lane: express — switched 2026-09-05 by kouko, from round 2"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
     (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
     _write_standing_doc(repo)
@@ -408,6 +402,81 @@ def test_effective_lane_switch_applies_only_strictly_after_from_round(tmp_path: 
     assert lane_after == "express"
     lane_at, _ = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 2)
     assert lane_at == "full"
+
+
+# =============================================================================
+# Provenance (wave-end:1-r3): the deciding commit for the `lane:` line must
+# carry that exact line, verbatim, in its own message -- the same discipline
+# `check_lane_reason` already enforces for the separate `intent` subcommand,
+# now also verified by `effective_lane_detail` itself before honouring the
+# declaration at push. RED at HEAD (before the fix): a declaration whose
+# commit message never states the line is currently honoured anyway.
+# =============================================================================
+
+
+def test_effective_lane_declaration_ignored_when_commit_omits_it(tmp_path: Path) -> None:
+    """A dated `lane: express` declaration whose deciding commit's message
+    never states the line must be ignored -- the effective lane falls
+    back to the raw recompute (a SKILL.md path forces `full`)."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff12"
+    _write_intent(
+        repo, change_id, lane_lines=("lane: express — declared 2026-09-05 by kouko",),
+    )
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")  # omits the line
+    (repo / "loom-code/skills/example").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/skills/example/SKILL.md").write_text(
+        "---\nname: example\n---\nbody\n", encoding="utf-8"
+    )
+    reviewed_sha = _commit_all(repo, "docs(loom-code): a skill delta")
+
+    lane, reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "full"
+    assert "not stated" in reason
+
+
+def test_effective_lane_declaration_honoured_when_commit_states_it(tmp_path: Path) -> None:
+    """The mirror: the same declaration, but the deciding commit's message
+    carries the line verbatim -- honoured, express stays eligible."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff13"
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
+    (repo / "loom-code/skills/example").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/skills/example/SKILL.md").write_text(
+        "---\nname: example\n---\nbody\n", encoding="utf-8"
+    )
+    reviewed_sha = _commit_all(repo, "docs(loom-code): a skill delta")
+
+    lane, _reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "express"
+
+
+def test_effective_lane_declaration_ignored_when_no_deciding_commit_found(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fail closed: when `deciding_commit` cannot find a commit that
+    changed the `lane:` line at all, the declaration is ignored the same
+    way -- never trusted as if it needed no provenance."""
+    repo = make_repo(tmp_path)
+    change_id = "2026-09-05-eff14"
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
+    git(repo, "add", f"docs/loom/intent/{change_id}.md")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
+    (repo / "loom-code/skills/example").mkdir(parents=True, exist_ok=True)
+    (repo / "loom-code/skills/example/SKILL.md").write_text(
+        "---\nname: example\n---\nbody\n", encoding="utf-8"
+    )
+    reviewed_sha = _commit_all(repo, "docs(loom-code): a skill delta")
+
+    monkeypatch.setattr(loom_checker, "deciding_commit", lambda *a, **k: None)
+    lane, reason = loom_checker.effective_lane_detail(repo, reviewed_sha, change_id, 1)
+    assert lane == "full"
+    assert "not stated" in reason
 
 
 # =============================================================================
@@ -429,11 +498,10 @@ def test_check_verdicts_gate_only_floor_zero_passes_with_no_verdicts(tmp_path: P
     `lane: gate-only` declaration waives the reader floor to 0."""
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff7"
-    _write_intent(
-        repo, change_id, lane_lines=("lane: gate-only — declared 2026-09-05 by kouko",),
-    )
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
     (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
     reviewed_sha = _commit_all(repo, "docs: a note")
@@ -446,11 +514,10 @@ def test_check_verdicts_gate_only_floor_zero_passes_with_no_verdicts(tmp_path: P
 def test_check_verdicts_express_floor_one_passes_with_one_reader(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     change_id = "2026-09-05-eff8"
-    _write_intent(
-        repo, change_id, lane_lines=("lane: express — declared 2026-09-05 by kouko",),
-    )
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    _write_intent(repo, change_id, lane_lines=(lane_line,))
     git(repo, "add", f"docs/loom/intent/{change_id}.md")
-    git(repo, "commit", "-q", "-m", "docs(loom): add the intent")
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     (repo / "docs/notes.md").parent.mkdir(parents=True, exist_ok=True)
     (repo / "docs/notes.md").write_text("notes\n", encoding="utf-8")
     reviewed_sha = _commit_all(repo, "docs: a note")

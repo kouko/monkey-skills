@@ -227,10 +227,18 @@ def test_push_declared_express_lane_docs_skill_delta_single_reader_passes(
     tmp_path: Path,
 ) -> None:
     """A `lane: express` intent, a docs+skill delta, one reader at
-    branch-end -- `push` must exit 0 once the declared lane is honoured."""
+    branch-end -- `push` must exit 0 once the declared lane is honoured.
+    Written directly (not via `_commit_intent`, whose plain "add the
+    intent" message never states the line) because `push` now verifies
+    the deciding commit's message carries the `lane:` line verbatim
+    (provenance check, wave-end:1-r3) before honouring a declaration."""
     repo = _seed_branch(tmp_path)
     change_id = "2026-09-05-lane-a"
-    _commit_intent(repo, change_id, lane_line="lane: express — declared 2026-09-05 by kouko")
+    lane_line = "lane: express — declared 2026-09-05 by kouko"
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    _write(repo, intent_rel, _lane_intent_text(change_id, lane_line=lane_line))
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     _write_kickoff(repo)
     _write(repo, "docs/notes.md", "some notes\n")
     _write(repo, "loom-code/skills/example/SKILL.md", "---\nname: example\n---\nbody\n")
@@ -344,7 +352,14 @@ def test_push_declared_gate_only_lane_pure_docs_delta_zero_verdicts_passes(
     git(repo, "commit", "-q", "-m", "seed")
     git(repo, "checkout", "-q", "-b", "work")
     change_id = "2026-09-05-lane-c"
-    _commit_intent(repo, change_id, lane_line="lane: gate-only — declared 2026-09-05 by kouko")
+    # Written directly (not via `_commit_intent`) so the deciding commit's
+    # message states the `lane:` line verbatim -- push's provenance check
+    # (wave-end:1-r3) would otherwise ignore the declaration.
+    lane_line = "lane: gate-only — declared 2026-09-05 by kouko"
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    _write(repo, intent_rel, _lane_intent_text(change_id, lane_line=lane_line))
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): add the intent\n\n{lane_line}")
     _write(repo, "docs/notes.md", "some notes, no code or skill touched\n")
     _write_evidence(repo)
     git(repo, "add", "-A")

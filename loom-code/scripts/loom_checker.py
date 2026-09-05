@@ -186,17 +186,22 @@ RULES: list[tuple[str, str]] = [
         "push.verdicts-ge-2",
         "The latest round of the checkpoint's own scope carries at least as many distinct "
         "fresh-context reviewers as the change's lane requires -- two distinct in the full "
-        "lane, one in the small lane, one in the express lane, zero in the gate-only lane -- "
-        "where a bare (non-switch-suffixed) `lane:` declaration takes effect starting the "
-        "round strictly after the last round already recorded for the change, never the "
-        "round that introduces it, exactly like an explicit switch's `from round <n>` would; "
-        "where a later round of that scope may also count a non-returning previous-round "
-        "reviewer whose earlier passing verdict still stands, provided every path the fix "
-        "touched sits inside the anchor of an open finding raised by a reviewer who did return "
-        "AND every reviewer named in that prior round has a dispatch[] entry as reviewer, "
-        "blind-runner or adversary in some round -- a single undispatched name anywhere in "
-        "that round poisons the whole round for standing, so no one from it stands -- and "
-        "blocks when any verdict in the latest round is not passing.",
+        "lane, one in the small lane, one in the express lane, zero in the gate-only lane, "
+        "with gate-only granted only when the raw recompute is already the small lane "
+        "(a raw full for any reason at all, standing document included, is never eligible); "
+        "a declared or switched `lane:` value that would otherwise widen the floor beyond a "
+        "raw full recompute (granting express) is honoured only when the commit that last "
+        "changed the `lane:` line states that exact line, verbatim, in its own message, else "
+        "it is ignored and the raw full recompute governs instead; a `from wave <n>` switch "
+        "or a plain declared value applies to any (scope, round) not already recorded before "
+        "the declaration, and a `from round <n>` switch applies to every round numbered "
+        "strictly greater than n; where a later round of that scope may also count a "
+        "non-returning previous-round reviewer whose earlier passing verdict still stands, "
+        "provided every path the fix touched sits inside the anchor of an open finding raised "
+        "by a reviewer who did return AND every reviewer named in that prior round has a "
+        "dispatch[] entry as reviewer, blind-runner or adversary in some round -- a single "
+        "undispatched name anywhere in that round poisons the whole round for standing, so no "
+        "one from it stands -- and blocks when any verdict in the latest round is not passing.",
     ),
     (
         "spec.req-grammar",
@@ -1156,6 +1161,50 @@ def declared_lane(repo: Path, change_id: str) -> tuple[str, str, int | None, str
     if default in ("full", "express", "gate-only"):
         return default, "kickoff", None, None
     return "full", "default", None, None
+
+
+def _lane_declaration_stated_by_its_commit(repo: Path, change_id: str) -> tuple[bool, str]:
+    """Does the commit that last changed the intent's `lane:` line carry
+    that exact line, verbatim, in its own message? (wave-end:1-r3)
+
+    Only `effective_lane_detail` calls this, and only when `declared_lane`
+    already found a schema-valid, intent-origin declaration -- `push`
+    never wired `check_lane_reason` itself in (finding 2, 029925d0: doing
+    so retroactively re-derives history that predates the checker knowing
+    to require it, breaking existing green fixtures), but a declaration
+    honoured at push without ANY provenance check at all is the same gap
+    from the other direction. `deciding_commit`/`_decides_in_frontmatter`
+    (the same mechanism `check_lane_reason` and `check_needs_design_
+    reason` use) find the commit; its message must contain `lane: <raw>`
+    verbatim, squeezed the same way `check_lane_reason` squeezes it.
+
+    Returns `(True, sha7)` when the line is stated, `(False, detail)`
+    otherwise -- `detail` is the short sha when a deciding commit was
+    found but its message omits the line, or a literal explanation when
+    no deciding commit could be found at all (fail closed either way:
+    both are "not stated")."""
+    manifest = load_manifest()
+    intent_path = artifact_path(manifest, "intent", change_id, repo)
+    if not intent_path.is_file():
+        return False, "no intent file"
+    front, _sections = parse_document(read_text(intent_path))
+    raw = front.get("lane", "").strip()
+    if not raw:
+        return True, ""
+    try:
+        relative = intent_path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        return False, "intent path is outside the repo"
+    sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
+    if sha is None:
+        return False, "no commit decides the `lane:` line"
+    message = git_maybe(repo, "show", "-s", "--format=%B", sha)
+    if message is None:
+        return False, sha[:7]
+    line = f"lane: {raw}"
+    if _squeeze(line) not in _squeeze(message):
+        return False, sha[:7]
+    return True, sha[:7]
 
 
 TEMPLATES_GLOB = "**/templates/**"
@@ -3318,7 +3367,21 @@ def effective_lane_detail(
       already-small delta leaves it `small`, whose floor is the same 1
       express would have given it).
     - a declared (or default) `full` always stays `full`, whatever the raw
-      recompute said."""
+      recompute said.
+
+    Provenance (wave-end:1-r3): granting `express` on top of a raw `full`
+    recompute is the one step that WIDENS the floor away from what the
+    recompute alone would set it to (raw `small` already carries a floor
+    of 1, the same `express` would give it; a raw-`full`-forced `gate-
+    only` is already rejected outright by the small-lane-classes rule
+    above, before provenance ever matters). That is the point checked:
+    an intent-origin declaration is honoured only when the commit that
+    last changed the `lane:` line states that exact line, verbatim, in
+    its own message (`_lane_declaration_stated_by_its_commit`) -- a
+    declaration that reached this schema-valid but never confirmed by
+    its own deciding commit (or whose deciding commit cannot be found at
+    all) is ignored outright right there, falling back to `full` with a
+    reason naming the commit."""
     manifest = load_manifest()
     raw_lane, raw_reason = change_lane_detail(repo, reviewed_id)
     declared, origin, from_round, unit = (
@@ -3351,6 +3414,10 @@ def effective_lane_detail(
         return "full", raw_reason
     if declared == "gate-only":
         return "full", f"gate-only needs a small-lane delta: {raw_reason}"
+    if origin == "intent" and change_id is not None:
+        stated, detail = _lane_declaration_stated_by_its_commit(repo, change_id)
+        if not stated:
+            return "full", f"lane declaration not stated by its commit {detail}"
     hard, _skill = _lane_forcing_paths(repo, reviewed_id, manifest)
     if hard:
         return "full", f"declared `lane: {declared}` ({origin}) but {hard[0]}"
