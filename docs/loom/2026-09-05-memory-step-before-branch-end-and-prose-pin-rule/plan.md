@@ -27,7 +27,7 @@ intent: 2026-09-05-memory-step-before-branch-end-and-prose-pin-rule@d8850558
 - Data: `loom-code/agents/adversary.md:53-56` names the three-part probe shape
   and English docstrings, nothing about how to pin prose; body 556 words of
   a 600 cap (`test_reviewer_agent_single_contract.py` `AGENT_CAPS`).
-  `loom-code/references/engineering-baseline.md:130-150` §5 "Working
+  `loom-code/references/engineering-baseline.md:130-148` §5 "Working
   discipline" is a numbered list of terse rules; 1280 words of a 1500 cap
   (`test_engineering_baseline_reference.py` `WORD_CAP`).
 - Boundary: `loom_checker.py --list-rules` prints 27 lines; `push.dispatch-covers-tasks`
