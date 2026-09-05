@@ -13,9 +13,15 @@ in an earlier round is not re-opened by re-reading unrelated history.
 
 ## Resume, do not replace, the reader
 
-Each of this round's reviewers, blind-runner and adversary is **resumed**
-for the next round — the same agent, its own context, not a fresh one.
-Dispatch it with:
+The readers who raised the still-open findings are **resumed** for the
+next round — the same agent, its own context, not a fresh one. A reader
+who raised none keeps its previous PASS standing when every path the fix
+touched sits inside the anchors of the returning readers' findings;
+when the fix reached outside those anchors, that reader is resumed too,
+and the floor is the whole previous round (`push.verdicts-ge-2`
+recomputes this from `open_findings[].anchor` and the fix delta, and a
+standing reader must appear in `dispatch[]` as a reviewing role).
+Dispatch a resumed reader with:
 
 ```
 ### Your previous findings

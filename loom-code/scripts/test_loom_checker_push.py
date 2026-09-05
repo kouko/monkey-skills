@@ -894,6 +894,143 @@ def test_manifest_intent_path_drift_fails_closed(tmp_path: Path) -> None:
     assert any("docs/loom/intent/<change-id>.md" in msg for _, msg in failures)
 
 
+# --- push.review-only-head: the close line rides in the review-only
+# commit itself (W1-03) -------------------------------------------------
+
+
+def _review_only_close_commit(repo: Path, intent_rel: str, *, kind: str = "PR",
+                              identifier: str = "999", date: str = "2026-09-03",
+                              extra_line: bool = False,
+                              third_file: str | None = None) -> str:
+    """Replace the review-only HEAD (built by `_seed_intent`) with one that
+    ALSO carries the close line: review.json plus the intent file's status
+    line flipping to a closed form -- the new combined shape (spec REQ-1,
+    W1-03). `third_file`, when given, rides along as a THIRD touched path
+    -- still must block."""
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    descriptor = f"PR #{identifier}" if kind == "PR" else f"branch {identifier}"
+    text = re.sub(r"status: .*\n", f"status: closed {date} — {descriptor}\n", text)
+    if extra_line:
+        text = text.replace("## Problem\nx\n", "## Problem\ny\n")
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    paths = [REVIEW, intent_rel]
+    if third_file is not None:
+        (repo / third_file).parent.mkdir(parents=True, exist_ok=True)
+        (repo / third_file).write_text("x\n", encoding="utf-8")
+        paths.append(third_file)
+    git(repo, "add", *paths)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_review_only_head_with_pr_form_status_line_passes(tmp_path: Path) -> None:
+    """The review-only commit touches review.json AND the intent file, but
+    the intent file's whole diff is its `status:` line flipping to the PR
+    closed form -- must PASS, not BLOCK on a second touched path."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, kind="PR", identifier="999")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.review-only-head" not in blocked_rules(result)
+
+
+def test_review_only_head_with_branch_form_status_line_passes(tmp_path: Path) -> None:
+    """Same shape, but the closed form names a branch instead of a PR."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, kind="branch", identifier="ship-it")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.review-only-head" not in blocked_rules(result)
+
+
+def test_review_only_head_with_another_intent_line_changed_is_blocked(tmp_path: Path) -> None:
+    """Same shape, but an UNRELATED intent body line changes alongside the
+    status flip -- the close-line exemption stays scoped to the status
+    line alone and must still BLOCK."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, extra_line=True)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_review_only_head_with_a_third_file_is_blocked(tmp_path: Path) -> None:
+    """Same shape, but a THIRD file rides in the same commit -- still
+    blocks; the exemption is exactly {review.json, this change's intent}."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    _review_only_close_commit(repo, intent_rel, third_file="docs/loom/notes.md")
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.review-only-head" in blocked_rules(result)
+    assert "docs/loom/notes.md" in result.stderr
+
+
+def test_the_old_separate_close_commit_shape_still_passes_with_branch_form(tmp_path: Path) -> None:
+    """The OLD shape -- a close commit of its own under a review-only
+    commit -- must keep passing, now also with the branch form."""
+    repo = build_repo(tmp_path)
+    intent_rel = _seed_intent(repo)
+    close_sha = _close_commit_with_kind(repo, intent_rel, kind="branch", identifier="ship-it")
+    _checkpoint_after(repo, close_sha)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def _close_commit_with_kind(repo: Path, intent_rel: str, *, kind: str,
+                            identifier: str, date: str = "2026-09-03") -> str:
+    """Like `_close_commit`, but the closed form is chosen by `kind`
+    ('PR' or 'branch') rather than always the PR form."""
+    text = (repo / intent_rel).read_text(encoding="utf-8")
+    descriptor = f"PR #{identifier}" if kind == "PR" else f"branch {identifier}"
+    text = re.sub(r"status: .*\n", f"status: closed {date} — {descriptor}\n", text)
+    (repo / intent_rel).write_text(text, encoding="utf-8")
+    git(repo, "add", intent_rel)
+    git(repo, "commit", "-q", "-m", f"docs(loom): close intent {CHANGE}")
+    return git(repo, "rev-parse", "HEAD")
+
+
+# --- intake.confirmed: both closed forms are terminal (W1-03) --------------
+
+
+def _intent_only_repo(tmp_path: Path, status: str, change_id: str = CHANGE) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    intent_rel = f"docs/loom/intent/{change_id}.md"
+    (repo / intent_rel).parent.mkdir(parents=True, exist_ok=True)
+    (repo / intent_rel).write_text(
+        f"# {change_id}\nstatus: {status}\n\n## Problem\nx\n", encoding="utf-8"
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "seed")
+    return repo
+
+
+def test_intake_write_plan_blocks_the_pr_closed_form_as_terminal(tmp_path: Path) -> None:
+    repo = _intent_only_repo(tmp_path, "closed 2026-09-03 — PR #999")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "closed (PR #999)" in result.stderr
+    assert "start a new intent" in result.stderr
+
+
+def test_intake_write_plan_blocks_the_branch_closed_form_as_terminal(tmp_path: Path) -> None:
+    repo = _intent_only_repo(tmp_path, "closed 2026-09-05 — branch ship-it")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "closed (branch ship-it)" in result.stderr
+    assert "start a new intent" in result.stderr
+
+
 # --- push.reviewed-sha -----------------------------------------------------
 
 
@@ -923,6 +1060,119 @@ def test_amending_the_code_commit_invalidates_the_review(tmp_path: Path) -> None
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.reviewed-sha" in blocked_rules(result)
+
+
+# --- push.reviewed-sha: content-tree bound (W1-02) -------------------------
+
+
+def test_reviewed_sha_message_only_code_commit_rewrite_passes(tmp_path: Path) -> None:
+    """reviewed_sha / message_only_code_commit_rewrite / passes
+    Attack: `git commit --amend` rewrites the code commit's MESSAGE only
+    (a trailer added, no file touched) after the checkpoint was already
+    recorded against the original sha, then the review-only commit is
+    replayed on top of the amended one -- same tree throughout, a brand
+    new commit id. RED before W1-02: `reviewed_id != parent` compared
+    exact commit ids and blocked even though nothing a reviewer looked at
+    moved. GREEN after: `same_reviewed_content` falls back to
+    `content_tree_id`, and a message-only rewrite's tree never moves."""
+    repo = build_repo(tmp_path)
+    original_code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "checkout", "-q", original_code_sha)
+    git(repo, "commit", "-q", "--amend", "-m", "feat: a (message rewritten)\n\nTask: T1")
+    new_code_sha = git(repo, "rev-parse", "HEAD")
+    git(repo, "rebase", "-q", "--onto", new_code_sha, original_code_sha, "work")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_reviewed_sha_review_only_commit_stacked_between_verdict_and_head_passes(
+    tmp_path: Path,
+) -> None:
+    """reviewed_sha / review_only_commit_stacked / passes
+    Attack: every verdict is recorded against the CODE commit, but the
+    pushed review-only HEAD's `reviewed_sha` names a SEPARATE review-only
+    commit stacked one level higher on that same code commit -- its tree,
+    minus this change's own review.json, is byte-identical to the code
+    commit's. RED before W1-02: `verdict_id != reviewed_id` compared exact
+    commit ids. GREEN after: content matches once review.json is set
+    aside."""
+    repo = build_repo(tmp_path)
+    code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "reset", "-q", "--hard", code_sha)
+
+    round_a = review_body(code_sha)
+    write_review(repo, round_a)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round A")
+    review_y = git(repo, "rev-parse", "HEAD")
+
+    round_b = review_body(review_y)
+    round_b["verdicts"] = round_a["verdicts"]  # still sha'd to code_sha, not review_y
+    write_review(repo, round_b)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round B")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_reviewed_sha_extra_file_change_between_verdict_and_head_still_blocks(
+    tmp_path: Path,
+) -> None:
+    """reviewed_sha / extra_file_change_between / still_blocks
+    Attack: same shape as the pass case above, but the intermediate
+    review-only commit ALSO carries an unrelated file change (`b.py`) --
+    a genuine content difference, not just review.json. Regression pin:
+    `content_tree_id` excludes ONLY this change's review.json, so a real
+    file difference must still block."""
+    repo = build_repo(tmp_path)
+    code_sha = git(repo, "rev-parse", "HEAD~1")
+    git(repo, "reset", "-q", "--hard", code_sha)
+
+    round_a = review_body(code_sha)
+    write_review(repo, round_a)
+    (repo / "b.py").write_text("value = 2\n", encoding="utf-8")
+    git(repo, "add", REVIEW, "b.py")
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round A + b.py")
+    review_y = git(repo, "rev-parse", "HEAD")
+
+    round_b = review_body(review_y)
+    round_b["verdicts"] = round_a["verdicts"]
+    write_review(repo, round_b)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review round B")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_reviewed_sha_recorded_verdict_sha_not_resolving_still_blocks_with_existing_message(
+    tmp_path: Path,
+) -> None:
+    """reviewed_sha / recorded_verdict_sha_not_resolving / still_blocks
+    Attack: a verdict records a `sha` that names no commit at all. W1-02
+    never touches this branch (the message names no "commit"/"content"
+    word to update) -- pinned so a future edit cannot silently change it."""
+    repo = build_repo(tmp_path)
+    parent = git(repo, "rev-parse", "HEAD~1")
+    recommit_review(
+        repo,
+        rebuild(
+            repo,
+            verdicts=[
+                {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS", "sha": parent},
+                {"reviewer": "agent-blind", "vendor": "anthropic", "model": "m",
+                 "verdict": "PASS_WITH_NOTES", "sha": "abcdef1234567"},
+            ],
+        ),
+    )
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "does not resolve to a commit" in result.stderr
 
 
 # --- push.open-findings-closed --------------------------------------------
@@ -1129,7 +1379,7 @@ def test_an_adversarial_probe_against_another_sha_does_not_count(tmp_path: Path)
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
     assert "push.probes-adversarial" in blocked_rules(result)
-    assert "not the reviewed commit" in result.stderr
+    assert "not the reviewed content" in result.stderr
 
 
 def test_a_docs_only_change_owes_no_adversarial_probe(tmp_path: Path) -> None:
@@ -1215,6 +1465,582 @@ def test_a_needs_revision_latest_round_blocks(tmp_path: Path) -> None:
         ),
     )
     assert "push.verdicts-ge-2" in blocked_rules(run_checker("push", cwd=repo))
+
+
+# --- W1-01: a fix round needs only the raising reader ----------------------
+#
+# These build their own two-commit branch (a code commit, then a fix
+# commit) rather than reusing `build_repo`/`recommit_review`, because the
+# scenario needs a real second review-only checkpoint on top of a real fix
+# commit -- the shape `latest_round`/`check_verdicts` actually recompute
+# from, not two review bodies layered over the same parent.
+
+FIX_ROUND_DISPATCH = [
+    {"task": "T1", "role": "implementer", "agent_id": "agent-imp", "model": "m",
+     "started": "2026-09-05T09:00:00Z", "fresh_context": True},
+    {"task": "T1", "role": "reviewer", "agent_id": "rev-a", "model": "m",
+     "started": "2026-09-05T09:10:00Z", "fresh_context": True},
+    {"task": "T1", "role": "reviewer", "agent_id": "rev-b", "model": "m",
+     "started": "2026-09-05T09:11:00Z", "fresh_context": True},
+    {"task": "T1", "role": "reviewer", "agent_id": "rev-c", "model": "m",
+     "started": "2026-09-05T09:12:00Z", "fresh_context": True},
+]
+
+
+def _fix_round_body(reviewed_sha: str, *, scope: str, verdicts: list[dict],
+                    open_findings: list[dict]) -> dict:
+    return {
+        "reviewed_sha": reviewed_sha,
+        "scope": scope,
+        "vendors": ["anthropic"],
+        "verdicts": verdicts,
+        "probes": [
+            {"kind": "package-tests", "command": PASSING_COMMAND, "sha": reviewed_sha,
+             "result": "pass", "artifact": "evidence/tests.txt"},
+        ],
+        "open_findings": open_findings,
+        "dispatch": FIX_ROUND_DISPATCH,
+    }
+
+
+def _init_fix_round_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    git(repo, "add", "seed.txt")
+    git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "checkout", "-q", "-b", "work")
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text(
+        f"# Kickoff Defaults\n\n- package-tests: {PASSING_COMMAND}"
+        " — the fixture's whole suite (2026-09-05)\n",
+        encoding="utf-8",
+    )
+    (repo / "evidence").mkdir(parents=True, exist_ok=True)
+    (repo / "evidence/tests.txt").write_text("all passed\n", encoding="utf-8")
+    return repo
+
+
+def _commit_fix_round_review(repo: Path, body: dict) -> str:
+    write_review(repo, body)
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_first_round_of_a_checkpoint_still_needs_the_lane_floor(tmp_path: Path) -> None:
+    """A checkpoint's first round (no earlier round of the same scope) keeps
+    the plain reviewer-count floor, even when the round already carries
+    `scope` and `open_findings` -- the fix-round exemption never applies to
+    round 1."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+    body = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def _build_fix_round_scenario(tmp_path: Path, *, touch_outside_anchor: bool) -> Path:
+    """Round 1: `rev-a` and `rev-b` both review; `rev-a` raises a finding
+    anchored at `notes/F.md:1`, `rev-b` passes clean. The fix commit
+    resolves it; round 2 carries only `rev-a`'s confirming PASS.
+    `touch_outside_anchor` decides whether the fix commit also edits
+    `notes/G.md`, a file no open finding names."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    if touch_outside_anchor:
+        (repo / "notes/G.md").write_text("# G\nunrelated\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=round1["verdicts"] + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a",
+             "resolved": f"fixed in {fix_sha[:8]}; confirmed rev-a round 2"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    return repo
+
+
+def test_a_fix_round_counts_a_standing_pass_inside_the_anchor(tmp_path: Path) -> None:
+    """Round 2 carries only `rev-a`'s (the raising reader's) PASS, and the
+    fix delta touches only `notes/F.md`, the file the finding anchors.
+    `rev-b`'s round-1 PASS stands, so the full-lane floor of 2 is met and
+    the push is not blocked."""
+    repo = _build_fix_round_scenario(tmp_path, touch_outside_anchor=False)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.verdicts-ge-2" not in blocked_rules(result)
+
+
+def test_a_fix_round_with_a_path_outside_the_anchors_still_blocks(tmp_path: Path) -> None:
+    """Same round-2-single-reader shape, but the fix commit also touches
+    `notes/G.md`, a file no open finding names -- the standing-PASS
+    exemption must never cover a delta that leaves the finding's own
+    files, so the floor of 2 distinct readers still applies."""
+    repo = _build_fix_round_scenario(tmp_path, touch_outside_anchor=True)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_a_fix_delta_touching_another_changes_review_json_still_blocks(
+    tmp_path: Path,
+) -> None:
+    """Round 2 carries only the raising reader's (`rev-a`) confirming PASS,
+    same shape as the standing-PASS scenario, but the fix commit touches
+    `notes/F.md` (inside the finding's own anchor) AND
+    `docs/loom/other-change/review.json` -- a REAL changed path, but it
+    belongs to a different change entirely, not to the change actually
+    being pushed (`2026-09-02-a`). Excluding every `docs/loom/*/review.json`
+    path from the fix-delta listing (rather than only this change's own)
+    would set that other change's file aside for free and let `rev-b`'s
+    round-1 PASS stand; scoped correctly to this change's own review.json
+    only, `docs/loom/other-change/review.json` is an ordinary out-of-anchor
+    path and the full-lane floor of 2 still applies."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    other_review = repo / "docs/loom/other-change/review.json"
+    other_review.parent.mkdir(parents=True, exist_ok=True)
+    other_review.write_text('{"reviewed_sha": "deadbee"}\n', encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=round1["verdicts"] + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a",
+             "resolved": f"fixed in {fix_sha[:8]}; confirmed rev-a round 2"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_ghost_verdict_earlier_round_cannot_stand(tmp_path: Path) -> None:
+    """A `ghost` PASS with no dispatch[] entry at all is planted in round 1
+    alongside the two real reviewers (rev-a raises F-1, rev-b passes
+    clean). Round 2 carries only rev-a's confirming PASS, with the fix
+    delta confined to notes/F.md -- exactly the anchor rev-a raised, the
+    same shape that lets a real co-reviewer stand. `ghost` has no
+    dispatch[] entry as reviewer/blind-runner/adversary in any round, so
+    it poisons round 1 for standing purposes: nobody from that round --
+    not even the legitimately dispatched rev-b -- can stand on it, and the
+    full-lane floor of 2 falls back to a plain headcount of 1 (rev-a
+    alone), which blocks."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+            {"reviewer": "ghost", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=round1["verdicts"] + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha, "raised_by": "rev-a",
+             "resolved": f"fixed in {fix_sha[:8]}"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_dispatched_non_returning_reviewer_still_stands(tmp_path: Path) -> None:
+    """Regression: with no ghost anywhere, `rev-b` -- a genuinely dispatched
+    reviewer (FIX_ROUND_DISPATCH names it as `reviewer`) who passed clean in
+    round 1 and never raised anything -- does not need to return in round 2
+    when the fix delta stays inside the anchor of the finding the
+    returning reader (rev-a) raised. The round-poisoning check this task
+    adds must not punish a clean round: `rev-b` still stands, the
+    full-lane floor of 2 is met by headcount 1 (rev-a) + standing 1
+    (rev-b), and the push is not blocked."""
+    repo = _build_fix_round_scenario(tmp_path, touch_outside_anchor=False)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.verdicts-ge-2" not in blocked_rules(result)
+
+
+def test_an_anchor_quote_containing_a_comma_authorizes_only_its_own_path(
+    tmp_path: Path,
+) -> None:
+    """A finding's anchor uses the documented `path :: verbatim quote` form,
+    and the quoted text itself contains a comma:
+    `notes/F.md :: quoted clause, notes/other.md`. Round 2 brings back only
+    the raising reader (rev-a), and the fix delta touches `notes/F.md`
+    (inside the anchor) AND `notes/other.md` (a real changed path with no
+    relation to the finding at all). Splitting the anchor on every comma
+    would misread the quote's own comma as a second authorized path and
+    let `notes/other.md` ride along for free; parsed correctly, only
+    `notes/F.md` is ever authorized, so the out-of-anchor change to
+    `notes/other.md` still costs the full-lane floor of 2 and the push
+    blocks."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md :: quoted clause, notes/other.md",
+                           "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md :: quoted clause, notes/other.md",
+             "origin_sha": code_sha, "raised_by": "rev-a"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    (repo / "notes/other.md").write_text("# unrelated\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=round1["verdicts"] + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md :: quoted clause, notes/other.md",
+             "origin_sha": code_sha, "raised_by": "rev-a",
+             "resolved": f"fixed in {fix_sha[:8]}; confirmed rev-a round 2"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_round_scoring_uses_the_checkpoints_own_scope(tmp_path: Path) -> None:
+    """A wave-end checkpoint reached round 3 with only one reviewer (a
+    single-reader fix round the wave-end checkpoint itself already
+    accepted); the branch-end checkpoint that follows starts its own round
+    1 with two reviewers. Without per-scope round selection, `latest_round`
+    would pick the globally-highest round number (the wave-end's round 3,
+    one reviewer) and block the branch-end push that actually has two."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    wave_sha = git(repo, "rev-parse", "HEAD")
+    wave_verdicts = [
+        {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+         "scope": "wave-end:1", "round": 3, "verdict": "PASS", "dimension_scores": {},
+         "sha": wave_sha, "findings": []},
+    ]
+    wave_body = _fix_round_body(
+        wave_sha, scope="wave-end:1", verdicts=wave_verdicts, open_findings=[],
+    )
+    _commit_fix_round_review(repo, wave_body)
+
+    (repo / "notes/H.md").write_text("# H\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add H\n\nTask: T1")
+    branch_sha = git(repo, "rev-parse", "HEAD")
+    # review.json accumulates every round of the change: the wave-end
+    # round stays in `verdicts[]` alongside the new branch-end round.
+    branch_body = _fix_round_body(
+        branch_sha,
+        scope="branch-end",
+        verdicts=wave_verdicts + [
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "branch-end", "round": 1, "verdict": "PASS", "dimension_scores": {},
+             "sha": branch_sha, "findings": []},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "branch-end", "round": 1, "verdict": "PASS", "dimension_scores": {},
+             "sha": branch_sha, "findings": []},
+        ],
+        open_findings=[],
+    )
+    _commit_fix_round_review(repo, branch_body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+    assert "push.verdicts-ge-2" not in blocked_rules(result)
+
+
+def test_a_multi_name_raised_by_requires_every_named_reviewer_to_return(tmp_path: Path) -> None:
+    """A finding's `raised_by` names two reviewers, comma-separated
+    (`"rev-a, rev-b"`). Round 2 brings back only the third, uninvolved
+    reviewer `rev-c` -- `rev-a` and `rev-b` are both still required, so
+    neither of their round-1 PASSes may stand and the floor of 2 is not
+    met even though a reviewer did return."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    round1 = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "NEEDS_REVISION", "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+            {"reviewer": "rev-c", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 1, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha,
+             "raised_by": "rev-a, rev-b"},
+        ],
+    )
+    _commit_fix_round_review(repo, round1)
+
+    (repo / "notes/F.md").write_text("# F\nv2 fixed\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "fix: address finding\n\nTask: T1")
+    fix_sha = git(repo, "rev-parse", "HEAD")
+
+    round2 = _fix_round_body(
+        fix_sha,
+        scope="checkpoint",
+        verdicts=[
+            {"reviewer": "rev-c", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 2, "verdict": "PASS", "dimension_scores": {}, "sha": fix_sha, "findings": []},
+        ],
+        open_findings=[
+            {"id": "F-1", "anchor": "notes/F.md:1", "origin_sha": code_sha,
+             "raised_by": "rev-a, rev-b",
+             "resolved": f"fixed in {fix_sha[:8]}"},
+        ],
+    )
+    _commit_fix_round_review(repo, round2)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+
+
+def test_an_unscoped_legacy_round_never_outranks_a_scoped_current_round(
+    tmp_path: Path,
+) -> None:
+    """Two unscoped (legacy-shape, no `scope` key) verdicts from an older
+    round 3 sit in `verdicts[]` next to two scope-`"checkpoint"` verdicts
+    from the current round 1, one of which is NEEDS_REVISION. The current
+    checkpoint's own `scope` is `"checkpoint"`. Since round numbers restart
+    per checkpoint, scoring by round number alone would pick the unscoped
+    round 3 (both PASS) and let the push through -- hiding the current
+    round 1's own NEEDS_REVISION. Explicitly-scoped entries must be scored
+    in preference to unscoped legacy ones whenever any exist, so round 1
+    is what gets scored and the not-passing verdict blocks the push."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    dispatch = FIX_ROUND_DISPATCH + [
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-x", "model": "m",
+         "started": "2026-09-05T09:13:00Z", "fresh_context": True},
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-y", "model": "m",
+         "started": "2026-09-05T09:14:00Z", "fresh_context": True},
+    ]
+    body = _fix_round_body(
+        code_sha,
+        scope="checkpoint",
+        verdicts=[
+            # Unscoped legacy round 3 -- both PASS.
+            {"reviewer": "rev-x", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 3, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+            {"reviewer": "rev-y", "vendor": "anthropic", "model": "m", "lens": "code",
+             "round": 3, "verdict": "PASS", "dimension_scores": {}, "sha": code_sha, "findings": []},
+            # Explicitly scoped current round 1 -- one NEEDS_REVISION.
+            {"reviewer": "rev-a", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "checkpoint", "round": 1, "verdict": "NEEDS_REVISION",
+             "dimension_scores": {}, "sha": code_sha,
+             "findings": [{"severity": "important", "dimension": "correctness",
+                           "anchor": "notes/F.md:1", "text": "wrong", "fix": "fix it"}]},
+            {"reviewer": "rev-b", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "checkpoint", "round": 1, "verdict": "PASS",
+             "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[],
+    )
+    body["dispatch"] = dispatch
+    _commit_fix_round_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
+    assert "rev-a=NEEDS_REVISION" in result.stderr
+
+
+def test_a_brand_new_scope_with_no_matching_verdict_scores_nothing(tmp_path: Path) -> None:
+    """The current checkpoint's own top-level scope is `"branch-end"`, and
+    `verdicts[]` holds only two entries from a DIFFERENT, earlier scope
+    (`"wave-end:1"`, round 3, both PASS, two distinct reviewers -- enough
+    to meet the full-lane floor on their own) -- no entry names
+    `"branch-end"` and no entry is unscoped legacy shape either. Falling
+    through to the unfiltered list on an empty legacy fallback would let
+    that stale wave-end round satisfy the branch-end checkpoint's reviewer
+    floor and pass; a brand-new checkpoint must instead start with zero
+    scored verdicts, so the floor is unmet and the push blocks."""
+    repo = _init_fix_round_repo(tmp_path)
+    (repo / "notes").mkdir(parents=True, exist_ok=True)
+    (repo / "notes/F.md").write_text("# F\nv1\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "feat: add F\n\nTask: T1")
+    code_sha = git(repo, "rev-parse", "HEAD")
+
+    dispatch = FIX_ROUND_DISPATCH + [
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-x", "model": "m",
+         "started": "2026-09-05T09:13:00Z", "fresh_context": True},
+        {"task": "T1", "role": "reviewer", "agent_id": "rev-y", "model": "m",
+         "started": "2026-09-05T09:14:00Z", "fresh_context": True},
+    ]
+    body = _fix_round_body(
+        code_sha,
+        scope="branch-end",
+        verdicts=[
+            {"reviewer": "rev-x", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "wave-end:1", "round": 3, "verdict": "PASS",
+             "dimension_scores": {}, "sha": code_sha, "findings": []},
+            {"reviewer": "rev-y", "vendor": "anthropic", "model": "m", "lens": "code",
+             "scope": "wave-end:1", "round": 3, "verdict": "PASS",
+             "dimension_scores": {}, "sha": code_sha, "findings": []},
+        ],
+        open_findings=[],
+    )
+    body["dispatch"] = dispatch
+    _commit_fix_round_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "push.verdicts-ge-2" in blocked_rules(result)
 
 
 # --- push.reviewer-ne-implementer, read from review.json `dispatch[]` ------
@@ -1620,13 +2446,19 @@ def test_every_verdict_sha_equal_to_reviewed_sha_passes(tmp_path: Path) -> None:
 
 
 def test_a_spec_scoped_verdict_missing_sha_still_blocks(tmp_path: Path) -> None:
-    """No scope is exempt from push.reviewed-sha, `scope: spec` included."""
+    """No scope is exempt from push.reviewed-sha, `scope: spec` included.
+    The record's own top-level `scope` must match (`"spec"`) so these
+    verdicts are the explicitly-scoped entries `scored_verdicts` actually
+    picks -- since checker fix wave-end:1-02, a verdict naming a scope the
+    record's own top-level line does not name is out of scope entirely,
+    never scored by fallback."""
     repo = build_repo(tmp_path)
     parent = git(repo, "rev-parse", "HEAD~1")
     recommit_review(
         repo,
         rebuild(
             repo,
+            scope="spec",
             verdicts=[
                 {"reviewer": "agent-rev", "vendor": "anthropic", "model": "m",
                  "scope": "spec", "verdict": "PASS", "sha": parent},
@@ -1644,9 +2476,13 @@ def test_a_spec_scoped_verdict_missing_sha_still_blocks(tmp_path: Path) -> None:
 
 
 def test_a_probe_for_another_commit_blocks(tmp_path: Path) -> None:
+    """`main` (the seed commit) has genuinely different content from the
+    reviewed commit -- unlike naming this same change's own prior
+    review-only commit (W1-02: that now matches on content, since the two
+    trees differ only by review.json)."""
     repo = build_repo(tmp_path)
     body = rebuild(repo)
-    body["probes"][0]["sha"] = git(repo, "rev-parse", "HEAD")
+    body["probes"][0]["sha"] = git(repo, "rev-parse", "main")
     recommit_review(repo, body)
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1

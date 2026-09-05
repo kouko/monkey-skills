@@ -322,6 +322,11 @@ confirmed by the reader who raised it in one line — no new round.
 
 ## 7. Write the record
 
+Round numbers continue across a change's checkpoints rather than
+restarting at each one — a branch-end round following wave-end rounds
+1–3 is round 4 — because the checker scores the highest round within the
+checkpoint's own scope.
+
 Every finding `text`, review note and dispatch note in `review.json` is
 written in English, and each finding `text` opens with a Conventional
 Comments label (`praise`, `nitpick`, `suggestion`, `issue`, `todo`,
@@ -431,6 +436,11 @@ resuming the same reader with its own previous findings, no probe re-run,
 rebuttal-to-dismissed, and the third-round design re-look — is
 `references/fix-rounds.md`; hand reviewers that path on every round after
 the first.
+
+A fix round resumes the reader(s) who raised the still-open findings; a
+reader who raised none keeps its previous PASS standing when every path
+the fix touched is inside the anchors of the returning reader's findings,
+otherwise it is resumed too (`push.verdicts-ge-2` recomputes this).
 
 ## Lenses at a glance
 

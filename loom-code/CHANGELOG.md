@@ -5,6 +5,52 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-09-06 — fix rounds by the raising reader, tree-bound records, the close line rides in the review-only commit
+
+`docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/`.
+
+1. `push.verdicts-ge-2` now scores rounds per scope — a verdict that
+   explicitly names the current checkpoint's scope is counted for that
+   checkpoint only, and an unmatched scope scores nothing, so a
+   wave-end round no longer outranks the branch-end round that follows
+   it. A fix round needs only the reader(s) who raised the still-open
+   findings when every path the fix delta touches (this change's own
+   `review.json` excluded) sits inside one of their findings' anchors;
+   a standing reviewer must be a dispatched reviewing role, so a prior
+   round carrying an undispatched name stands for nobody. Anchor
+   parsing now looks for the ` :: ` quote separator before ever
+   splitting on commas, so an anchor names exactly one path.
+2. `push.probes-package-tests`, `push.probes-adversarial` and
+   `push.reviewed-sha` now bind a record to the reviewed content tree
+   — the commit's `ls-tree` listing with this change's own
+   `review.json` removed — instead of the exact commit id, with an
+   exact-id fast path kept for the common case. A review-only commit
+   stacked on top, or a message-only history rewrite, changes the
+   commit id without changing the reviewed content, so neither forces
+   a needless re-run; another change's `review.json` is ordinary
+   content and stays inside the comparison.
+3. `push.review-only-head` now also accepts a HEAD that touches
+   `review.json` plus this change's own intent file, when the intent's
+   entire diff is its sole status line flipping to a closed form.
+   `intake.confirmed` treats `closed <date> — branch <name>` as
+   terminal, the same way it already treats a PR reference; the old
+   separate close-commit shape still passes under either closed form.
+4. Station text: review §7 keeps round numbers running across
+   checkpoints instead of restarting each one; §8a's fix rounds resume
+   the reader(s) who raised the still-open findings. Ship §6 can close
+   the branch in one review-only commit carrying a `## Closing log`
+   section in the PR body, with no separate close round required.
+5. No checker rule was added or removed — `--list-rules` stays at 27.
+   Six rule descriptions are reworded to state the semantics above
+   (`push.verdicts-ge-2`, `push.probes-package-tests`,
+   `push.probes-adversarial`, `push.reviewed-sha`,
+   `push.review-only-head`, `intake.confirmed`).
+6. Two pre-existing regression pins whose fixtures happened to match on
+   content under the new tree-bound comparison are retargeted to
+   `main`'s genuinely different content instead. `1978cfa1`'s sentence
+   splitter helper is renamed so it no longer shadows the graduated
+   sentence-cap probes' own helper of the same name (`272aa375`).
+
 ## [1.3.1] — 2026-09-05 — memory step before the closing checkpoint; prose-pin rule; Task-trailer commands
 
 `docs/loom/2026-09-05-memory-step-before-branch-end-and-prose-pin-rule/`.
