@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-adversary.md sha256 58d8c71595e11dd177cfb2bbd857af42cc7d9d17858f3f3d51b4af3a1da5d11d
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 9 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:06:16.134284+08:00
+# prompt-sha256: d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d
+
+**(a)** My boundary: I attack the change to produce failing probes on real conditions — boundary states, hostile input, forgotten state, edge-case logic; I don't reconcile counts across documents (spec/plan/intent/changelog) or walk Acceptance-line-by-line against the blind-run report — those belong to the reviewer and the blind-runner respectively.
+
+1. other — cross-document count reconciliation (plan vs review.json) is the reviewer's lens, not an attack on the change
+2. mine — stale ref is exactly the "forgotten state" class I'm chartered to probe; the probe only surviving on a fresh clone is a genuine boundary finding
+3. mine — a probe's own artifact spelling/count is explicitly mine to raise
+4. other — checking the report's claim against a specific Acceptance line is the blind-runner's job
+5. other — documentation/process completeness is the reviewer's lens, not an attack
+6. mine — this is a genuine boundary/logic discrepancy (ancestor-check semantics) surfaced by adversarial testing
+7. other — cross-document count (CHANGELOG vs intent) is the reviewer's lens
+8. implementer — missing unit test for the happy path is a coverage gap in what was shipped, not an attack I ran; that's on whoever wrote the function without a failing-test-first commit

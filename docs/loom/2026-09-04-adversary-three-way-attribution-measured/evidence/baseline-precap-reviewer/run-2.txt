@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 2 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:08:14.680991+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+(a) I judge by reading and citing evidence — checking artifacts, findings, and probes' `command`/`artifact` fields — while I never execute anything myself; any claim that depends on actually running a probe or reproducing environment-dependent behavior belongs to the adversary, not me.
+
+1. mine — plan-vs-review.json record-count mismatch is a reconciliation/omission finding a reviewer raises by reading both documents.
+2. other — confirming the probe only passes on a fresh clone requires actually running it under different repo states, which is adversarial execution, not something I verify by reading.
+3. mine — spotting that `./probe.py` and `probe.py` are being double-counted as separate artifacts is visible from reading `review.json`'s `probes[]` list, no execution needed.
+4. mine — reconciling the report's "works" claim against Acceptance 6's byte-identical requirement is an overclaim/contradiction check, squarely reviewer territory.
+5. mine — a missing "when to re-run" instruction is an omission finding from reading the prose.
+6. mine — spotting that two git-ancestry checks disagree is a correctness defect visible from reading the code, not from running it.
+7. mine — CHANGELOG vs intent item-count mismatch is an omission/inconsistency finding from reading both documents.
+8. mine — noting the happy path lacks a unit test is the `tests` dimension read from the test files themselves, no execution required.

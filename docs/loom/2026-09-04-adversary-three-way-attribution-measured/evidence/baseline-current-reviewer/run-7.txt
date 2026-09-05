@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)
+# contract: loom-code/agents/reviewer.md sha256 476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 7 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:19:01.728930+08:00
+# prompt-sha256: 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51
+
+(a) My boundary: I render a PASS/PASS_WITH_NOTES/NEEDS_REVISION verdict by reconciling the artifact against ground truth and checking that recorded probes are actually reproducible — I never write or normalize probes (that's the adversary) and never fix or write missing tests (that's the implementer).
+
+1. mine — plan-vs-artifact count mismatch is a contradiction/overclaim reconciliation, squarely the reviewer's job.
+2. mine — a probe that only passes on a fresh clone is "a recorded pass nobody can reproduce," which the `tests` dimension exists to catch.
+3. other — normalizing a probe's own artifact path/count belongs to the adversary, not the reviewer.
+4. mine — report claiming "works" against an unmet Acceptance line is exactly the overclaim direction of reconciliation the reviewer owns.
+5. mine — an omission in the docs (missing guidance on when to re-run) is a `docs`-lens finding.
+6. mine — a correctness bug in the merge-base logic is a `correctness` finding to raise (not to fix).
+7. mine — CHANGELOG vs intent count mismatch is a contradiction between documents, reviewer's reconciliation job.
+8. implementer — a missing unit test for the happy path is the implementer's RED to write; I may only name the gap, not own writing it.

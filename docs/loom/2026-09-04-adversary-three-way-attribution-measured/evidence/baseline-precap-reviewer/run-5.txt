@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 5 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:10:28.539659+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**(a)** I judge by *reading* the delta, the ground truth, and the `probes[]` metadata (command + artifact, never result) to render dimension_scores and findings — I never write, run, or re-run a probe or walk the intent's Acceptance lines end-to-end against a live build, which is the adversary's (probe authorship/execution) and the blind-runner's (Acceptance-line walk / blind-run-report) territory respectively.
+
+1. mine — reconciling record counts between plan.md and review.json is exactly the omission/contradiction reconciliation the contract puts on me.
+2. mine — a probe whose command only passes under an unstated precondition (fresh clone) is the "recorded pass nobody can reproduce" failure the `tests` dimension exists to catch from reading `command`/`artifact`.
+3. mine — I read the `artifact` field of every probe entry; a path-string collision (`./probe.py` vs `probe.py`) inflating the count is caught the same way as the count reconciliation in #1.
+4. other — validating the blind-run report's claim ("works") against Acceptance 6's actual bar (byte-identical) is the blind-runner's acceptance-line walk, not one of my lens dimensions.
+5. mine — a docs `omission`: the graduation paragraph is missing required guidance.
+6. mine — a code-lens `correctness` bug in the merge-base logic is squarely a reviewer finding.
+7. mine — a docs `omission`/reconciliation: CHANGELOG and intent disagree on item count.
+8. mine — missing unit-test coverage on a happy path is the `tests` dimension; writing the test afterward is the implementer's job, but raising the gap is mine.

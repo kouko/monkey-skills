@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 8 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:12:23.333290+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**(a)** My boundary: I judge by reading the artifact, the ground truth, and cited probe records for contradiction/omission/overclaim — I never execute anything myself; running probes or boundary/environment cases to surface hidden failures is the adversary's job, and writing fixes or tests is the implementer's.
+
+1. mine — plan-vs-review.json record count is a document inconsistency, my reconciliation duty.
+2. other — surfacing that the probe only passes under a stale-vs-fresh repo state requires actually running it in both conditions, which is adversarial/boundary testing, not reading.
+3. mine — `./probe.py` vs `probe.py` double-counted as artifacts is caught by reading `probes[]` entries under the tests dimension, no execution needed.
+4. mine — the report's "works" claim contradicting Acceptance 6's byte-identical requirement is a textual overclaim I reconcile without needing to run the comparison myself.
+5. mine — a missing "when to re-run" instruction is an omission finding in prose.
+6. other — proving `--is-ancestor` accepts what a first-parent walk rejects is a boundary case that must be executed to demonstrate, so it's the adversary's.
+7. mine — CHANGELOG-vs-intent count mismatch is a document inconsistency.
+8. mine — flagging a missing unit test is my tests-dimension finding; writing the test itself would be the implementer's.

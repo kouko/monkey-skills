@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-adversary.md sha256 58d8c71595e11dd177cfb2bbd857af42cc7d9d17858f3f3d51b4af3a1da5d11d
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 6 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:05:20.930891+08:00
+# prompt-sha256: d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d
+
+**(a)** My boundary: I attack behaviour with executable abuse/boundary/hostile cases and mutation-style probes over the change itself — I do not judge document consistency, design intent, or acceptance-criteria bookkeeping, which belongs to the reviewer (and blind-runner for the report-vs-acceptance walk).
+
+1. other — plan-vs-review.json record-count mismatch is a cross-document count, explicitly the reviewer's per the contract.
+2. mine — stale-state/forgotten-state boundary case (probe only valid on a fresh clone) is exactly the class of boundary I own.
+3. mine — a probe's own artifact path spelling/count is mine to raise per the contract.
+4. other — grading the blind-run report against an Acceptance line is the blind-runner's job, not an attack on the change.
+5. other — a documentation-completeness gap in prose is a design/process judgment, the reviewer's lens.
+6. mine — `--is-ancestor` vs first-parent-walk divergence is a hostile/edge-input boundary case on the change's logic.
+7. other — CHANGELOG-vs-intent item-count mismatch is a cross-document count, the reviewer's.
+8. implementer — a missing happy-path unit test is a coverage gap the implementer should have written; it isn't an abuse/boundary case for me to manufacture.

@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 9 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:12:58.018587+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**(a)** My boundary: I judge by reading and reconciling what already exists — documents, code, and the `probes[]` entries' `command`/`artifact` fields — while the adversary is the one who actually executes mutation/fuzz/abuse-and-boundary cases to produce those probe results in the first place; I never run new probes myself.
+
+1. mine — cross-document reconciliation (plan vs review.json count mismatch) is exactly the reconciliation check I own.
+2. other — surfacing that a probe's pass depends on git state (fresh clone vs stale origin/main) requires actually running it under varied conditions, which is the adversary's boundary-case work.
+3. mine — checking probe artifact identity/dedup is part of reading `probes[]`'s `command`/`artifact` fields for the `tests` dimension.
+4. mine — reconciling the report's claim against the intent's Acceptance line is the overclaim check I own.
+5. mine — a docs omission dimension finding, found by reading the artifact whole.
+6. other — demonstrating that two ancestry checks diverge on a real side-branch commit requires executing both against constructed git state, an adversarial boundary case.
+7. mine — reconciliation between CHANGELOG and intent counts.
+8. mine — the `tests` dimension covers missing coverage on the happy path, found by reading the test files.

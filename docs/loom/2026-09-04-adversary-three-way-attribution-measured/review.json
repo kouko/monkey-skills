@@ -1,0 +1,1115 @@
+{
+  "reviewed_sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic",
+    "openai"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet-3b8e",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "NEEDS_REVISION",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+          "text": "issue (blocking): run_once passes the prompt as the positional value after -p; every real contract starts with YAML frontmatter `---`, which claude's option parser rejects as an unknown option before any network call (reproduced directly against the real binary). The tool cannot obtain a real cold-read answer against either real contract.",
+          "fix": "deliver the prompt in a form that cannot be parsed as an option (stdin), add a regression test whose prompt begins with ---, re-verify with a real --runs 2 call before any baseline"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+          "text": "issue: the claude -p invocation carries no grounding citation for how the positional prompt is parsed; the assumption is wrong for content starting with ---",
+          "fix": "grounding comment near run_once citing the exact claude --help behaviour relied on, plus a test at the parser boundary"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+          "text": "issue: a non-zero claude return code is folded into the body and recorded status ok, identical to a real answer — the mechanism that hid the fatal bug from summary.json",
+          "fix": "record the returncode; status ok only when 0, else error; surface it in summary.json runs[]"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/coldread_role_split.py:275,279",
+          "text": "issue: --out naming an existing file and a missing --contract path crash uncaught instead of the module's error/exit-2 convention",
+          "fix": "validate then return 2, same pattern as --runs and the missing binary"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/coldread_role_split.py:98-99",
+          "text": "issue: n_items = len(items) silently scores a non-contiguous fixture's highest item as always wrong",
+          "fix": "validate item numbers are exactly 1..len(items) at load, or index by actual n"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/coldread_role_split.py:302,327-332",
+          "text": "nitpick: the claude argv list is built twice in main",
+          "fix": "build once, pass to _redacted_argv"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/coldread_role_split.py:141-153",
+          "text": "nitpick: systematic fires on one wrong answer at --runs 1",
+          "fix": "minimum n or a docstring caveat"
+        }
+      ],
+      "notes": "reproduced the --- parsing failure against the real claude binary; ran the module tests and four probe files (46 passed), not the full suite"
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-91c0",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:186",
+          "text": "issue (blocking): passing the inline prompt directly after -p makes both real contracts fail because their leading --- is parsed as an option, so the runner produces no attribution measurements",
+          "fix": "use a supported stdin/end-of-options form that preserves the prompt verbatim; add a subprocess-facing regression test with a frontmatter contract"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:250",
+          "text": "issue (blocking): every non-zero claude exit is assigned status ok; auth or CLI failures can be scored as evidence and drive the wave-2 wording decision",
+          "fix": "persist the return code, mark non-zero as error, exclude failed invocations from conclusions or fail the batch"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:239",
+          "text": "issue (blocking): --resume accepts any existing run file without verifying contract, fixture, model, prompt hash or N, then writes a summary carrying the current inputs' hashes; stale transcripts can be attributed to a different experiment",
+          "fix": "validate every resumed header against the current hashes, model, prompt hash and N; reject mismatches with exit 2; regression tests"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:186",
+          "text": "issue (blocking): the external claude CLI surface is used without a grounding citation for the positional prompt, --model, --output-format, or the asserted lack of a seed flag",
+          "fix": "checked-in captured help evidence or a maintained citation supporting the exact invocation and the no-seed claim"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:8",
+          "text": "issue: the checkpoint's probes array is empty, so the adversary probes this round relies on are not inspectable",
+          "fix": "record each probe with its exact command and artifact in probes[]"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/coldread_role_split.py:212",
+          "text": "nitpick: main exceeds the 100-line threshold and combines validation, loading, execution, resume, scoring and serialization",
+          "fix": "extract cohesive helpers"
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/blind-run-report.md:1",
+          "text": "nitpick: the blind-run report is written in Chinese, contrary to the English-language shape rule",
+          "fix": "translate"
+        }
+      ],
+      "notes": "tests could not be run in the read-only sandbox (no usable temp dir)"
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet-3b8e",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "16f0706854eb9c00ea1fd1a2a358750aed1f5f43",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS",
+        "external-surface-grounding": "PASS_WITH_NOTES",
+        "deliberate-simplification": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES"
+      },
+      "previous_findings": [
+        {
+          "id": "wave-end:1-01",
+          "status": "fixed",
+          "evidence": "da494abf"
+        },
+        {
+          "id": "wave-end:1-04",
+          "status": "fixed",
+          "evidence": "92bbd127"
+        },
+        {
+          "id": "wave-end:1-02",
+          "status": "fixed",
+          "evidence": "4a262c95"
+        },
+        {
+          "id": "wave-end:1-06",
+          "status": "fixed",
+          "evidence": "5537360a"
+        },
+        {
+          "id": "wave-end:1-07",
+          "status": "fixed",
+          "evidence": "087fd7d5"
+        },
+        {
+          "id": "wave-end:1-08",
+          "status": "fixed",
+          "evidence": "ebb1afab"
+        }
+      ],
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/coldread_role_split.py:229-238",
+          "text": "issue (incorrect-fact): the grounding docstring claims the cited --help capture supports three facts but the stdin-read behaviour is not in that text; it is empirically true, not documented there",
+          "fix": "cite a second evidence piece (a redacted transcript of the piped invocation) or narrow the claim"
+        }
+      ],
+      "notes": "re-ran the module tests and probe files: 62 passed; verified stdin delivery against the real claude binary"
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-91c0",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "16f0706854eb9c00ea1fd1a2a358750aed1f5f43",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION"
+      },
+      "previous_findings": [
+        {
+          "id": "wave-end:1-01",
+          "status": "fixed",
+          "evidence": "da494abf"
+        },
+        {
+          "id": "wave-end:1-02",
+          "status": "unfixed",
+          "evidence": "loom-code/scripts/coldread_role_split.py:450-475 — non-zero output is marked error but remains in responses and is still scored"
+        },
+        {
+          "id": "wave-end:1-03",
+          "status": "fixed",
+          "evidence": "ff07b375"
+        },
+        {
+          "id": "wave-end:1-04",
+          "status": "fixed",
+          "evidence": "92bbd127"
+        },
+        {
+          "id": "wave-end:1-05",
+          "status": "fixed",
+          "evidence": "170d26bd"
+        },
+        {
+          "id": "nit-main-length",
+          "status": "unfixed",
+          "evidence": "main remains 149 lines"
+        },
+        {
+          "id": "nit-report-language",
+          "status": "dismissed",
+          "evidence": "intent 2026-09-03-artifact-language-policy — the blind-run report is a user-language artifact"
+        }
+      ],
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/coldread_role_split.py:476",
+          "text": "issue (blocking): successful resumed runs have status resumed, so failed_runs counts every validated resumed transcript as a failure",
+          "fix": "count only error and timeout as failed; regression case asserting validated resumed runs do not increment failed_runs"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-sonnet-3b8e",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS",
+        "external-surface-grounding": "PASS",
+        "incorrect-fact": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "wave-end:1-02",
+          "status": "fixed",
+          "evidence": "d53373ea — loom-code/scripts/coldread_role_split.py:492-497 scored_bodies filter; invariant probe green"
+        },
+        {
+          "id": "wave-end:1-09",
+          "status": "fixed",
+          "evidence": "d53373ea — failed_runs counts error and timeout only"
+        },
+        {
+          "id": "nit-docstring-stdin",
+          "status": "fixed",
+          "evidence": "d53373ea — run_once docstring separates the --help facts from the empirical stdin observation"
+        }
+      ],
+      "findings": [],
+      "notes": "ran the module tests and probe directory: 77 passed; did not re-run the full package suite (implementer reported 1499 passed at e6e75845)"
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-codex-91c0",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe",
+      "dimension_scores": {
+        "correctness": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "wave-end:1-02",
+          "status": "fixed",
+          "evidence": "d53373ea / loom-code/scripts/coldread_role_split.py:534-567"
+        },
+        {
+          "id": "wave-end:1-09",
+          "status": "fixed",
+          "evidence": "e6e75845 / loom-code/scripts/coldread_role_split.py:491-495,534-542"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-0f4a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "security": "N/A — no injection/authn/secrets surface in the delta",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface; the claude -p citation lives in wave 1",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "loom-code/CHANGELOG.md:8",
+          "text": "nitpick: [1.4.1] dated 2026-09-05 sits above the pre-existing [1.4.0] dated 2026-09-06, a visible chronology inversion",
+          "fix": "correct the pre-existing 1.4.0 date to its merge date"
+        }
+      ],
+      "notes": "ran the package suite (1560 passed) and the graduated probes (61 passed) itself; did not re-derive baselines.md from the raw transcripts"
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-7e21",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "N/A — no applicable PRINCIPLES.md identified",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py:153 (the reader anchored the not-yet-graduated copy path)",
+          "text": "issue (blocking): the branch-end probe calls the external git show CLI without the grounding citation required for external CLI surfaces",
+          "fix": "adjacent citation to git documentation for git show <object>:<path>"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:404",
+          "text": "issue (blocking): probes[] ends with wave-end:1 records although branch-end adversary and blind-run artifacts were committed",
+          "fix": "add branch-end adversarial, blind-run and package-test probe entries"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:401",
+          "text": "issue (blocking): both package-test probe records have an empty artifact field",
+          "fix": "name a concrete artifact"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:51",
+          "text": "issue (blocking): the plan names `python3 loom-code/scripts/loom_checker.py memory` as the store-integrity check but the sub-command does not exist (exit 2); the branch-end probe asserts that the invalid command keeps failing",
+          "fix": "replace with `python3 scripts/check_loom_memory_integrity.py --check`; make the probe positive"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/CHANGELOG.md:8",
+          "text": "issue (blocking): 1.4.1 dated 2026-09-05 precedes the 1.4.0 entry dated 2026-09-06",
+          "fix": "correct one date so order agrees"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-0f4a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "docs+code",
+      "verdict": "PASS",
+      "sha": "75f132617e3badb2188091a030dbbdef3054f4b1",
+      "dimension_scores": {
+        "incorrect-fact": "PASS",
+        "correctness": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "nit-changelog-chronology",
+          "status": "fixed",
+          "evidence": "origin/main 43e32034 had corrected the 1.4.0 date; the rebase carried it; no inversion at HEAD"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-7e21",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "75f132617e3badb2188091a030dbbdef3054f4b1",
+      "dimension_scores": {
+        "incorrect-fact": "PASS_WITH_NOTES"
+      },
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "fixed",
+          "evidence": "3a93e3f8"
+        },
+        {
+          "id": "branch-end-02",
+          "status": "fixed",
+          "evidence": "review.json probes[] branch-end entries"
+        },
+        {
+          "id": "branch-end-03",
+          "status": "dismissed",
+          "evidence": "package-test artifact is intentionally empty in the review station's worked record; push.probes-package-tests re-runs the repository-owned command without reading artifact"
+        },
+        {
+          "id": "branch-end-04",
+          "status": "fixed",
+          "evidence": "4a21968f, 3a93e3f8"
+        },
+        {
+          "id": "branch-end-05",
+          "status": "fixed",
+          "evidence": "4a21968f / CHANGELOG.md:58"
+        }
+      ],
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:45",
+          "text": "issue (blocking): the rebase changed the delivered bump to 1.5.0→1.5.1 and renamed its probe, but W2-03 still specifies 1.4.0→1.4.1 and test_changelog_carries_1_4_1.py",
+          "fix": "update W2-03 to name 1.5.1 and the renamed probe"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-7e21",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "docs+code",
+      "verdict": "PASS",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "dimension_scores": {
+        "incorrect-fact": "PASS"
+      },
+      "previous_findings": [
+        {
+          "id": "branch-end-06",
+          "status": "fixed",
+          "evidence": "57d4fdf1 / plan.md:45"
+        }
+      ],
+      "findings": [],
+      "notes": "the sonnet reader's round-5 PASS stands: the only fix since (57d4fdf1) touched plan.md:45-46, inside this reader's branch-end-06 anchor"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "5fb3de89dc2b1690334834489837f5ea59f61ec7",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py -q",
+      "sha": "a00f24044211064691b9645151dcd259eec91016",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py",
+      "note": "pre-implementation RED for W1-02; passes since 0b9e5d61"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py -q",
+      "sha": "8199ddd6",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py",
+      "note": "pre-implementation RED for W1-03; passes since 5fb3de89"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py -q",
+      "sha": "0630f37a05e4013232ce8f9d4ac47c0b1e651a8a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py",
+      "note": "probes pin the current (defective) behaviour for findings 02, 06, 07, 08; they are rewritten to the fixed behaviour in the fix round"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "python3 loom-code/scripts/coldread_role_split.py --contract loom-code/agents/adversary.md --fixture docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json --role adversary --runs 2 --out <scratch> + python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_fixture_items_verbatim_prior_list.py -q + python3 -m pytest loom-code/scripts/test_coldread_role_split.py -q + python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "eb9bd60272a1eb9346db817e5cfe7f2e4650b58c",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py -q",
+      "sha": "99bc4df974e91fd9df48814c1f57adfb8cb0c0a2",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py",
+      "note": "fix-round RED for findings 01/03/04; passes since ebb1afab"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py -q",
+      "sha": "8db7da33ba4110dc233a8d43912e2ad46f302593",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py",
+      "note": "round-3 RED for findings 02/09 under the design re-look semantics; passes since e6e75845"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "2f12bcf5",
+      "result": "pass",
+      "artifact": "",
+      "note": "1499 passed, 3 skipped, 1 xfailed — run by the orchestrator before the round-3 dispatch"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py -q",
+      "sha": "fab8a795d99ee162a30204115e9bcd9162ba2dee",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py",
+      "note": "17 evidence-integrity checks over the four baselines, README, intent, graduated copies and arm-B precondition"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "git worktree add <clean> de2531c9 + python3 loom-code/scripts/coldread_role_split.py --contract loom-code/agents/adversary.md --fixture docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json --role adversary --runs 10 --out <scratch> + python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_fixture_items_verbatim_prior_list.py -q + python3 -m pytest loom-code/scripts/test_coldread_role_split.py -q + python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto + python3 loom-code/scripts/loom_checker.py --list-rules | wc -l",
+      "sha": "de2531c9360af002a4986a42fb0c055839873dc1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/blind-run-report.md",
+      "note": "fresh 10-run: three-way 77/80, systematic [], failed_runs 0"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "ab2ca8f574df5fdc4565a804072ee8d7e5dfbefe",
+      "result": "pass",
+      "artifact": "",
+      "note": "1560 passed, 3 skipped, 1 xfailed — run by the orchestrator after the memory step; artifact is empty by the review station's own worked record for package-tests"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "",
+      "note": "1645 passed, 5 skipped, 1 xfailed; then 182 passed, 1 skipped — the KICKOFF package-tests line changed on main with 1.5.0; run at the reviewed content after the rebase"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_scoring.py",
+      "note": "16 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_runner.py",
+      "note": "11 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1.py",
+      "note": "11 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_wave1_fix.py",
+      "note": "6 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_run_status.py",
+      "note": "10 passed at the reviewed content (re-run after the rebase)"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py -q",
+      "sha": "fea61f66a17c53639779785b7e72ffc26ecf1589",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py",
+      "note": "17 passed at the reviewed content (re-run after the rebase)"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "(the restatement for this intent was asked and answered yes in the session that wrote it, the same session as PR #789; verbatim text not recorded in this change's store)",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？多花幾分鐘與額度（答：要）",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告逐條呈現（驗收 1–4 皆 works；既有資料未動；我幫你決定的事：契約內容塞進對話、無亂數種子、失敗呼叫不計分、≥50% 才算規律、走「寫進說明文件」這條路、README 段落用中文、讀者側規律記待辦、一則報告語言意見撤銷；報告後補記：rebase 到 1.5.0、版本改 1.5.1、基線綁量測快照、#794 兩個測試改跳過、一則 package-tests artifact 意見撤銷）。這樣 OK 嗎？（答：ok）",
+      "type": "done"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/scripts/coldread_role_split.py:198-206",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-sonnet-3b8e, rev-we1-codex-91c0, blind-we1-a1d4",
+      "severity": "fatal",
+      "text": "prompt beginning with --- is rejected by claude -p as an option; deliver via stdin",
+      "resolved": "closed by da494abf — prompt on stdin; confirmed by both readers in round 2"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/scripts/coldread_role_split.py:250",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0, rev-we1-sonnet-3b8e, adv-we1-6f03",
+      "severity": "fatal",
+      "text": "non-zero claude exit recorded as status ok — round 2: sonnet fixed (4a262c95), codex unfixed: an error run is marked but still scored into n and the item counts; stays open (no averaging)",
+      "resolved": "closed by d53373ea — failed runs never enter n (design re-look semantics); both readers round 3"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/coldread_role_split.py:239",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0",
+      "severity": "fatal",
+      "text": "--resume does not validate resumed headers against current contract/fixture/prompt hash, model and N",
+      "resolved": "closed by ff07b375 — resumed headers validated; codex round 2"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/scripts/coldread_role_split.py:186",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0, rev-we1-sonnet-3b8e",
+      "severity": "fatal",
+      "text": "claude CLI invocation and no-seed claim have no grounding evidence",
+      "resolved": "closed by 92bbd127 — evidence/claude-p-help-2026-09-05.txt cited; both readers round 2"
+    },
+    {
+      "id": "wave-end:1-05",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:8",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-codex-91c0",
+      "severity": "important",
+      "text": "probes[] empty at dispatch time",
+      "resolved": "closed by this round's record commit — probes[] now carries package-tests, three adversarial probes and the blind run"
+    },
+    {
+      "id": "wave-end:1-06",
+      "anchor": "loom-code/scripts/coldread_role_split.py:275,279",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-sonnet-3b8e, adv-we1-6f03",
+      "severity": "important",
+      "text": "--out existing file and missing --contract crash uncaught",
+      "resolved": "closed by 5537360a — sonnet round 2"
+    },
+    {
+      "id": "wave-end:1-07",
+      "anchor": "loom-code/scripts/coldread_role_split.py:98-99",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "rev-we1-sonnet-3b8e, adv-we1-6f03",
+      "severity": "important",
+      "text": "n_items = len(items) mis-scores a non-contiguous fixture",
+      "resolved": "closed by 087fd7d5 — sonnet round 2"
+    },
+    {
+      "id": "wave-end:1-08",
+      "anchor": "loom-code/scripts/coldread_role_split.py:141-153",
+      "origin_sha": "f4fa9f16b19f6668c5562bce902d63a5f88ba11f",
+      "raised_by": "adv-we1-6f03",
+      "severity": "important",
+      "text": "systematic fires on one wrong answer at n=1 (sonnet scored it nit; adversary important; opened at the higher severity)",
+      "resolved": "closed by ebb1afab — sonnet round 2"
+    },
+    {
+      "id": "wave-end:1-09",
+      "anchor": "loom-code/scripts/coldread_role_split.py:476",
+      "origin_sha": "16f0706854eb9c00ea1fd1a2a358750aed1f5f43",
+      "raised_by": "rev-we1-codex-91c0",
+      "severity": "fatal",
+      "text": "failed_runs counts validated resumed runs (status resumed) as failures",
+      "resolved": "closed by d53373ea/e6e75845 — failed_runs counts error and timeout only; both readers round 3"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py:153",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "fatal",
+      "text": "git show call without a grounding citation",
+      "resolved": "closed by 3a93e3f8 — git-show(1)/gitrevisions(7) citation; codex round 5"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:404",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "branch-end probes absent from probes[]",
+      "resolved": "closed by this round's record commit — adversarial, blind-run and package-tests entries for branch-end added"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/review.json:401",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "package-tests probe artifact is empty",
+      "dismissed": "package-test artifact is intentionally empty in the review station's worked record (review SKILL §5); push.probes-package-tests re-runs the repository-owned command and reads no artifact by rev-be-codex-7e21"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:51",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "plan names a non-existent checker sub-command for the memory integrity check; the branch-end probe pins the wrong command failing",
+      "resolved": "closed by 4a21968f (plan) and 3a93e3f8 (positive memory-integrity probe); codex round 5"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/CHANGELOG.md:8",
+      "origin_sha": "5fd61045e92df6cde9afdb7a269145629fe99d3b",
+      "raised_by": "rev-be-codex-7e21, rev-be-sonnet-0f4a",
+      "severity": "important",
+      "text": "1.4.0 entry carries 2026-09-06, a day after 1.4.1; the 1.4.0 merge date is 2026-09-05",
+      "resolved": "closed by 4a21968f and origin/main 43e32034 (1.4.0 date corrected to 2026-09-05); both readers round 5"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/plan.md:45",
+      "origin_sha": "75f132617e3badb2188091a030dbbdef3054f4b1",
+      "raised_by": "rev-be-codex-7e21",
+      "severity": "important",
+      "text": "plan W2-03 still names the 1.4.1 bump and the 1_4_1 probe after the rebase moved the bump to 1.5.1",
+      "resolved": "closed by 57d4fdf1 — plan W2-03 names 1.5.1 and the renamed probe; codex round 6"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-7c2e",
+      "model": "sonnet",
+      "started": "2026-09-05T16:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "adversary",
+      "agent_id": "adv-w1-02-5b19",
+      "model": "sonnet",
+      "started": "2026-09-05T16:46:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-9e41",
+      "model": "sonnet",
+      "started": "2026-09-05T16:52:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "adversary",
+      "agent_id": "adv-w1-03-2d77",
+      "model": "sonnet",
+      "started": "2026-09-05T16:58:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-c3a8",
+      "model": "sonnet",
+      "started": "2026-09-05T17:04:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-6f03",
+      "model": "sonnet",
+      "started": "2026-09-05T17:22:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "blind-we1-a1d4",
+      "model": "sonnet",
+      "started": "2026-09-05T17:22:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet-3b8e",
+      "model": "sonnet",
+      "started": "2026-09-05T17:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex-91c0",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T17:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1-fix",
+      "role": "adversary",
+      "agent_id": "adv-we1fix-8d2c",
+      "model": "sonnet",
+      "started": "2026-09-05T18:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1-fix",
+      "role": "implementer",
+      "agent_id": "impl-we1fix-4e70",
+      "model": "sonnet",
+      "started": "2026-09-05T18:14:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet-3b8e",
+      "model": "sonnet",
+      "started": "2026-09-05T18:40:00+08:00",
+      "fresh_context": false,
+      "note": "round 2 — resumed reader, fix delta 170d26bd..d7b3a2bb"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex-91c0",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T18:40:00+08:00",
+      "fresh_context": false,
+      "note": "round 2 — resumed reader, fix delta 170d26bd..d7b3a2bb"
+    },
+    {
+      "task": "wave-end:1-fix",
+      "role": "reviewer",
+      "agent_id": "design-relook-we1-opus",
+      "model": "opus",
+      "started": "2026-09-05T18:58:00+08:00",
+      "fresh_context": true,
+      "note": "third-round design re-look per fix-rounds.md; output in evidence/design-relook-run-status-2026-09-05.md"
+    },
+    {
+      "task": "wave-end:1-fix",
+      "role": "adversary",
+      "agent_id": "adv-we1fix3-1a9b",
+      "model": "sonnet",
+      "started": "2026-09-05T19:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1-fix",
+      "role": "implementer",
+      "agent_id": "impl-we1fix3-7b55",
+      "model": "sonnet",
+      "started": "2026-09-05T19:12:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet-3b8e",
+      "model": "sonnet",
+      "started": "2026-09-05T19:40:00+08:00",
+      "fresh_context": false,
+      "note": "round 3 — resumed reader, fix delta 2866b900..2f12bcf5"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex-91c0",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T19:40:00+08:00",
+      "fresh_context": false,
+      "note": "round 3 — resumed reader, fix delta 2866b900..2f12bcf5"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-d4c9",
+      "model": "sonnet",
+      "started": "2026-09-05T19:55:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-02",
+      "role": "implementer",
+      "agent_id": "impl-w2-02-a8e2",
+      "model": "sonnet",
+      "started": "2026-09-05T20:50:00+08:00",
+      "fresh_context": true,
+      "note": "arm B — baseline-current-adversary systematic == []"
+    },
+    {
+      "task": "W2-03",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-05T21:05:00+08:00",
+      "fresh_context": false,
+      "note": "mechanical version bump taken by the orchestrator"
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-05T21:25:00+08:00",
+      "fresh_context": false,
+      "note": "memory step: probe graduation and store entries, per build §6.5"
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-5c71",
+      "model": "sonnet",
+      "started": "2026-09-05T21:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-be-e2f8",
+      "model": "sonnet",
+      "started": "2026-09-05T21:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-0f4a",
+      "model": "sonnet",
+      "started": "2026-09-05T22:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-7e21",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T22:05:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-05T23:05:00+08:00",
+      "fresh_context": false,
+      "note": "post-rebase fix: the measured 'current' contracts are committed as contract-measured-<role>.md snapshots (1.5.0 edited the agent files after measurement); probes compare against the snapshot"
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-05T23:05:00+08:00",
+      "fresh_context": false,
+      "note": "graduate the branch-end probe copy after its rebase fix"
+    },
+    {
+      "task": "branch-end-fix",
+      "role": "implementer",
+      "agent_id": "impl-befix-ci-2c9d",
+      "model": "sonnet",
+      "started": "2026-09-05T23:05:00+08:00",
+      "fresh_context": true,
+      "note": "two graduated probes from PR #794 fail in any clone without that change's local branch; CI on main is red at 43e32034 — minimal skip-when-unreachable fix following the repo's own precedent"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-0f4a",
+      "model": "sonnet",
+      "started": "2026-09-05T23:30:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 — resumed reader; fix delta 938525cb..HEAD plus the rebase onto 1.5.0"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-7e21",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T23:30:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 — resumed reader; fix delta 938525cb..HEAD plus the rebase onto 1.5.0"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-7e21",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-05T23:55:00+08:00",
+      "fresh_context": false,
+      "note": "round 6 — resumed reader on the plan.md fix 75f13261..HEAD; the sonnet round-5 PASS stands (fix inside this reader's anchor)"
+    }
+  ],
+  "second_vendor": "codex",
+  "round_notes": {
+    "wave-end:1": "round 1 NEEDS_REVISION x2. Nits not opened: main length, argv built twice, test-name shape. Codex nit on the blind-run report language is set aside by the orchestrator: loom 1.0 requires the blind-run report in the user's language (concept-model; intent 2026-09-03-artifact-language-policy Acceptance 1 lists it as user-language), so no change. The orchestrator verified stdin delivery survives a leading --- while `--` end-of-options drops the prompt (one haiku call each, 2026-09-05). | round 2: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION — 02 held open, 09 opened; codex accepted the report-language dismissal. Round 3 follows the fix-rounds third-round rule: design re-look before any further fix. | round 3: PASS x2 after the design re-look (evidence/design-relook-run-status-2026-09-05.md); reviewed_sha -> da2fecfa.",
+    "branch-end": "round 4: sonnet PASS_WITH_NOTES, codex NEEDS_REVISION. Rebuttal for branch-end-03 goes to the resumed codex reader: the review station's own worked record shows package-tests with artifact \"\", and push.probes-package-tests compares the command, not an artifact. | round 5 (after the rebase onto 1.5.0): sonnet PASS, codex PASS_WITH_NOTES; branch-end-03 dismissed by codex; branch-end-06 opened on stale plan text and fixed by 57d4fdf1 after the verdicts, so reviewed_sha does not move here and round 6 reads that one-file delta. | round 6: codex PASS on the one-file delta; sonnet's round-5 PASS stands; reviewed_sha -> fea61f66."
+  }
+}

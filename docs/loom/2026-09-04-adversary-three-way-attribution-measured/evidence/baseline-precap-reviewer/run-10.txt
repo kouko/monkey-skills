@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 10 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:13:20.143459+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+(a) I score the delta against ground truth using only evidence already on record — including citing a probe's `command`/`artifact` from `review.json` — and never execute anything myself; discovering that a probe only passes under specific runtime conditions (e.g. a fresh clone) requires actually running it, which is the adversary's job, not mine.
+
+1. mine — reconciliation between plan.md and review.json is exactly the omission/contradiction check reviewers make.
+2. other — confirming the probe's pass depends on stale-vs-fresh `origin/main` requires re-running it, which is adversary/probe-execution territory, not something I do from the record.
+3. mine — spotting `./probe.py` and `probe.py` double-counted is readable straight from `review.json`'s `probes[]` list, no execution needed.
+4. mine — reconciling the blind-run report's claim against Acceptance 6 is the overclaim check reviewers own.
+5. mine — a missing "when to re-run" instruction is an omission finding in the prose itself.
+6. mine — a correctness bug in the merge-base logic is a `correctness` dimension finding (implementer wrote it, but flagging it is my job, not theirs).
+7. mine — CHANGELOG vs intent item-count mismatch is the inconsistency dimension.
+8. mine — an untested happy path is a `tests` dimension finding I can make just by reading the diff and test files.

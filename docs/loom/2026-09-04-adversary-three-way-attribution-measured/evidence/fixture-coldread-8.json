@@ -1,0 +1,45 @@
+{
+  "items": [
+    {
+      "n": 1,
+      "text": "plan says 23 records, review.json has 126",
+      "expected": "reviewer"
+    },
+    {
+      "n": 2,
+      "text": "stale origin/main short-circuits the candidate loop — probe passes on a fresh clone only",
+      "expected": "adversary"
+    },
+    {
+      "n": 3,
+      "text": "./probe.py and probe.py counted as two artifacts",
+      "expected": "adversary"
+    },
+    {
+      "n": 4,
+      "text": "report says 'works' but Acceptance 6 requires byte-identical files",
+      "expected": "reviewer"
+    },
+    {
+      "n": 5,
+      "text": "graduation paragraph never says when to re-run branch-end",
+      "expected": "reviewer"
+    },
+    {
+      "n": 6,
+      "text": "merge-base --is-ancestor accepts a side-branch commit that first-parent walk rejects",
+      "expected": "adversary"
+    },
+    {
+      "n": 7,
+      "text": "CHANGELOG lists 7 items, intent has 8",
+      "expected": "reviewer"
+    },
+    {
+      "n": 8,
+      "text": "the new function's happy path has no unit test",
+      "expected": "implementer"
+    }
+  ],
+  "source": "docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-findings-list.txt"
+}

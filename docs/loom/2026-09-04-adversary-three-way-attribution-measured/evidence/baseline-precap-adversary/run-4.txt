@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-adversary.md sha256 58d8c71595e11dd177cfb2bbd857af42cc7d9d17858f3f3d51b4af3a1da5d11d
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 4 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:04:48.644281+08:00
+# prompt-sha256: d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d
+
+**(a)** As adversary I own executable abuse/boundary/mutation probes against the change itself; the reviewer owns design judgment and cross-document consistency (spec vs plan vs intent vs changelog counts), and the blind-runner owns walking each Acceptance line against the report's claims.
+
+1. other — cross-document count (plan vs review.json) is the reviewer's cross-doc consistency check, not mine
+2. mine — stale-state boundary case (probe only valid under a specific git state) is exactly the adversarial boundary/state class
+3. mine — a probe's own artifact path/count is mine to raise per the contract
+4. other — checking the report's claim against a specific Acceptance line is the blind-runner's job
+5. other — missing guidance on when to re-run a station is a documentation/design completeness gap, the reviewer's lens
+6. mine — inconsistent boundary behavior between two ancestry-check mechanisms is an adversarial boundary case
+7. other — cross-document count (CHANGELOG vs intent) is the reviewer's
+8. implementer — a missing happy-path unit test is basic coverage the implementer should have written, not an adversarial abuse/boundary case

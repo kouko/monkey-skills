@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 1 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:07:49.246581+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**(a)** As reviewer I judge by reading the artifact, the ground truth, and the already-recorded `probes[]` entries (their `command`/`artifact`, never their `result`) — I never write or re-run a probe myself, so any finding that can only be surfaced by actually executing something under a new condition belongs to the adversary, not to me.
+
+1. mine — plan vs. review.json record-count mismatch is a static document reconciliation (inconsistency), no execution needed.
+2. other — surfacing that the probe's pass depends on repo state (stale vs. fresh clone) requires actually running it under different conditions, which is adversarial/execution territory, not reading.
+3. mine — spotting `./probe.py` vs `probe.py` double-counted as two artifacts is reading the `probes[]` list itself, squarely the `tests`-dimension check.
+4. mine — comparing the blind-run report's claim ("works") against the intent's Acceptance 6 text is a reconciliation/overclaim check done by reading, not running.
+5. mine — a paragraph never stating when to re-run is a plain omission finding from reading the prose.
+6. other — showing `--is-ancestor` accepts what a first-parent walk rejects requires constructing and running the git scenario, an adversarial boundary case.
+7. mine — CHANGELOG count vs. intent count is a static cross-document comparison (inconsistency/omission).
+8. mine — confirming the happy path lacks a unit test is done by reading the test files against the diff, within the `tests` dimension's remit.

@@ -1,0 +1,171 @@
+{
+  "argv": [
+    "--contract",
+    "loom-code/agents/reviewer.md",
+    "--fixture",
+    "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json",
+    "--role",
+    "reviewer",
+    "--runs",
+    "10",
+    "--out",
+    "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/baseline-current-reviewer"
+  ],
+  "command_template": "# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)",
+  "attempted_runs": 10,
+  "failed_runs": 0,
+  "complete": true,
+  "model": "sonnet",
+  "seed": null,
+  "seed_note": "claude -p exposes no seed flag",
+  "contract": {
+    "path": "loom-code/agents/reviewer.md",
+    "sha256": "476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763"
+  },
+  "fixture": {
+    "path": "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json",
+    "sha256": "ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a"
+  },
+  "contract_delivery": "inline",
+  "systematic_min_n": 3,
+  "role": "reviewer",
+  "runs": [
+    {
+      "i": 1,
+      "file": "run-1.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 2,
+      "file": "run-2.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 3,
+      "file": "run-3.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 4,
+      "file": "run-4.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 5,
+      "file": "run-5.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 6,
+      "file": "run-6.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 7,
+      "file": "run-7.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 8,
+      "file": "run-8.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 9,
+      "file": "run-9.txt",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "i": 10,
+      "file": "run-10.txt",
+      "status": "ok",
+      "returncode": 0
+    }
+  ],
+  "n": 10,
+  "items": {
+    "1": {
+      "expected": "mine",
+      "counts": {
+        "mine": 10
+      },
+      "wrong": 0,
+      "dominant_wrong": null
+    },
+    "2": {
+      "expected": "other",
+      "counts": {
+        "mine": 6,
+        "other": 4
+      },
+      "wrong": 6,
+      "dominant_wrong": "mine"
+    },
+    "3": {
+      "expected": "other",
+      "counts": {
+        "other": 10
+      },
+      "wrong": 0,
+      "dominant_wrong": null
+    },
+    "4": {
+      "expected": "mine",
+      "counts": {
+        "mine": 10
+      },
+      "wrong": 0,
+      "dominant_wrong": null
+    },
+    "5": {
+      "expected": "mine",
+      "counts": {
+        "mine": 10
+      },
+      "wrong": 0,
+      "dominant_wrong": null
+    },
+    "6": {
+      "expected": "other",
+      "counts": {
+        "mine": 8,
+        "other": 2
+      },
+      "wrong": 8,
+      "dominant_wrong": "mine"
+    },
+    "7": {
+      "expected": "mine",
+      "counts": {
+        "mine": 10
+      },
+      "wrong": 0,
+      "dominant_wrong": null
+    },
+    "8": {
+      "expected": "implementer",
+      "counts": {
+        "implementer": 10
+      },
+      "wrong": 0,
+      "dominant_wrong": null
+    }
+  },
+  "own_not_own_correct": 66,
+  "own_not_own_total": 80,
+  "three_way_correct": 66,
+  "three_way_total": 80,
+  "systematic": [
+    2,
+    6
+  ]
+}

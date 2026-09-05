@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)
+# contract: loom-code/agents/reviewer.md sha256 476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 9 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:19:57.408355+08:00
+# prompt-sha256: 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51
+
+**(a)** I judge by reading the artifact, ground truth, and recorded probe citations to render a verdict — I never write, run, or normalize a probe myself; discovering a probe's true behavior under varied conditions and normalizing its artifact identity belongs to the adversary, and writing the missing test itself belongs to the implementer.
+
+1. mine — reconciliation between plan and review.json is a contradiction/omission check I own.
+2. other — establishing that the probe only passes under a specific environment condition (stale vs fresh clone) requires actively re-running it under variant conditions, which is adversarial work, not reading the recorded command/artifact.
+3. other — probe artifact path/count normalization is explicitly the adversary's to normalise, not mine.
+4. mine — overclaim of the report against the intent's Acceptance line is a reconciliation finding I own.
+5. mine — an omission in the artifact's own prose (missing guidance) is mine to raise.
+6. other — surfacing a git-semantics edge case where one check accepts what another rejects is a boundary/adversarial probe, not something I derive from reading.
+7. mine — inconsistency between CHANGELOG and intent counts is a reconciliation finding I own.
+8. implementer — a missing unit test is the implementer's RED to write; I may only name the gap, not own the finding as mine to fix.

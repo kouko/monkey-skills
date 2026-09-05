@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只加冷讀量測工具與 evidence 語料、視結果改一段契約文字；沒有使用者讀或輸入的介面
 evidence: [docs/loom/2026-09-04-reviewer-and-adversary-positioning/blind-run-report.md, docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-adversary.txt, docs/loom/2026-09-04-reviewer-and-adversary-positioning/evidence/coldread-findings-list.txt]
-status: confirmed 2026-09-04
+status: closed 2026-09-05 — branch adversary-three-way-attribution-measured
 
 ## Problem
 2026-09-04-reviewer-and-adversary-positioning 用同一份 8 條混合 finding 清單冷讀三輪：只讀對抗者契約的 agent 在「是不是我的」這條軸上 8/8，但「不是我的那些是讀者的還是實作者的」三輪分別 7/8、7/8、6/8，從沒全對——第三輪把「報告誇大」「文件漏寫」判給實作者，其實是讀者的對帳工作。這在現行流程裡不掉 finding（讀者獨立派出、自己會認領），所以 #787 判為不擋；但它是一個**沒量過的**性質：每輪只跑一次，錯的條目每輪不同，看不出是措辭問題、模型雜訊、還是清單本身模糊。第二輪修正也證明「再補一句」會讓對抗者在「該讓給誰」上更保守而不是更準。要把三方歸屬變成契約的保證，得先有分佈，不是再一次的單點。字數帽重設計（2026-09-04-positioning-paragraph-cap-redesign）會在對抗者段補一句三方歸屬並明講不當驗收——本 intent 是接在它之後、把那句話的效果量出來的那一步。
@@ -31,3 +31,22 @@ status: confirmed 2026-09-04
 
 ## Open questions
 - none
+
+## Measurement record
+2026-09-05，N=10、`--model sonnet`（腳本預設），契約整份用 stdin 內嵌
+傳入，固定 fixture
+`docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json`。
+四份分佈（own/not-own 與三方歸屬在這份 fixture 上數字相同，見
+evidence/baselines.md 的說明）：
+
+- pre-cap adversary — own/not-own 80/80、三方 80/80、systematic []
+- pre-cap reviewer — own/not-own 52/80、三方 52/80、systematic [3, 8]
+- current adversary — own/not-own 79/80、三方 79/80、systematic []
+- current reviewer — own/not-own 66/80、三方 66/80、systematic [2, 6]
+
+對抗者側最差的一條是第 3 條，current 契約 10 輪中錯 1 輪（標成
+other），遠低於 50% 的系統性門檻；pre-cap 契約在同一條上是 0/10
+全對。結論：量過、不是措辭問題——對抗者契約現行那句三方歸屬不再
+改一次。讀者側 52/80→66/80、且改後第 2、6 條
+（6/10、8/10，都判成「mine」）是新出現的系統性誤判，這屬於讀者契約
+本身，記為待辦、不在本 change 範圍內處理。

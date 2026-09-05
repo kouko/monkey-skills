@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)
+# contract: loom-code/agents/reviewer.md sha256 476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 2 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:17:16.574101+08:00
+# prompt-sha256: 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51
+
+**(a)** Boundary: I render a verdict by reading and reconciling artifacts against ground truth (intent/spec/plan) and checking probes' commands/artifacts for legitimacy without running anything myself, whereas the adversary actively runs/normalizes probes and hunts boundary-case failures through execution.
+
+1. mine — reconciling the plan's claimed record count against the actual review.json count is exactly the reconciliation (overclaim) check I own.
+2. other — surfacing that a probe only passes under a specific environmental condition (fresh clone) requires exercising the probe under varying conditions, which is the adversary's boundary/edge-case territory.
+3. other — the contract explicitly assigns a probe's own artifact/path normalization to the adversary.
+4. mine — this is a report-vs-acceptance-criteria overclaim, squarely my reconciliation duty.
+5. mine — an omission finding on the docs dimension (missing guidance on when to re-run).
+6. other — discovering that a git boundary condition (side-branch vs first-parent) breaks the check is an adversarial boundary-case probe, not a static reconciliation read.
+7. mine — omission/inconsistency between CHANGELOG and intent, my reconciliation duty.
+8. implementer — a missing unit test is explicitly the implementer's RED to write; I may only name the gap, not own the finding as mine to fix.

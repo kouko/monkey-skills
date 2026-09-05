@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)
+# contract: loom-code/agents/reviewer.md sha256 476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 6 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:18:38.531442+08:00
+# prompt-sha256: 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51
+
+(a) I render verdicts on whether the delivered artifact and its own claims reconcile with the intent/spec/plan, via anchored findings — I never write, run, or normalize probes; that execution and artifact-normalization work belongs to the adversary, while writing the missing tests themselves belongs to the implementer.
+
+1. mine — reconciling the plan's stated record count against what review.json actually recorded is exactly the omission/overclaim/contradiction check I own.
+2. other — a probe's environment-sensitivity (passes only on a fresh clone) is the adversary's job to normalize, not mine to execute or fix.
+3. other — a probe's own artifact path/count is the adversary's to normalize per the contract.
+4. mine — this is a direct overclaim: the report's claim doesn't match the intent's Acceptance line, which is my reconciliation duty.
+5. mine — a docs omission (missing guidance) falls under my omission dimension.
+6. mine — a correctness/logic bug in the actual code is squarely my correctness dimension.
+7. mine — a count mismatch between CHANGELOG and intent is a reconciliation/omission finding.
+8. implementer — a missing unit test is the implementer's RED to write; I may only name the gap, not own fixing it.
