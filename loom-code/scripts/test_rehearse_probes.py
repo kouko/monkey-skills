@@ -330,9 +330,14 @@ def test_parseJunit_realReport_reconstructsNodeidsFromClassnameWhenFileAttrAbsen
 
 NESTED_MARKER_PROBE = """\
 import os
+from pathlib import Path
 
 def test_marker_is_set_inside_the_rehearsal_clone():
-    assert os.environ.get("REHEARSE_PROBES_NESTED") == "1"
+    marker = os.environ.get("REHEARSE_PROBES_NESTED")
+    assert marker is not None
+    marker_path = Path(marker)
+    assert marker_path.is_absolute(), marker
+    assert marker_path.resolve() == Path.cwd().resolve()
 """
 
 

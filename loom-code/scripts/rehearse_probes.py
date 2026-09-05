@@ -320,8 +320,12 @@ def main(argv: list[str] | None = None) -> int:
 
     # Mark the clone's pytest as nested: a graduated probe that itself clones
     # the repository and runs the probe files reads this and skips, so a
-    # rehearsal never re-enters itself from inside its own clone.
-    env = {**os.environ, NESTED_ENV: "1"}
+    # rehearsal never re-enters itself from inside its own clone. The
+    # marker's VALUE is the clone's own absolute path (not a bare "1"), so
+    # a reader checks it applies here specifically -- a same-named marker
+    # left over from an unrelated shell or CI job carries a different path
+    # and is ignored rather than causing a silent skip.
+    env = {**os.environ, NESTED_ENV: str(clone_dir)}
     try:
         proc = subprocess.run(
             cmd, cwd=str(clone_dir), capture_output=True, text=True,
