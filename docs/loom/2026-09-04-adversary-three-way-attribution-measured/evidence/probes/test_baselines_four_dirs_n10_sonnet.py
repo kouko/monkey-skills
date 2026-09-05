@@ -7,10 +7,14 @@ For each of the four baseline directories (precap/current x
 adversary/reviewer): `summary.json` exists with `n == 10`,
 `model == "sonnet"`, `complete is True`, `attempted_runs == 10`,
 `failed_runs == 0`; ten `run-<i>.txt` files exist whose first line
-starts with `# command:`. The "current" summaries' `contract.sha256`
-must equal sha256 of the checked-in agent file at HEAD; the "precap"
-summaries' `contract.sha256` must equal sha256 of the committed
-`contract-precap-<role>.md` copy.
+starts with `# command:`. Every summary's `contract.sha256` must equal
+sha256 of the committed copy of the text that was measured:
+`contract-precap-<role>.md` (the agent file at 4ab5224d, before the
+sentence-cap change) and `contract-measured-<role>.md` (the agent file
+at db7d44f9, loom-code 1.4.0, the "current" text when the baselines
+ran). The live agent file is not the reference: loom-code 1.5.0 edited
+two sentences outside the positioning paragraph after the measurement,
+and a baseline is evidence about the text it was run on.
 
 Fails today because none of the four baseline directories exist.
 """
@@ -38,8 +42,8 @@ EVIDENCE_DIR = REPO_ROOT / "docs" / "loom" / CID / "evidence"
 _CASES = [
     ("baseline-precap-adversary", EVIDENCE_DIR / "contract-precap-adversary.md"),
     ("baseline-precap-reviewer", EVIDENCE_DIR / "contract-precap-reviewer.md"),
-    ("baseline-current-adversary", REPO_ROOT / "loom-code" / "agents" / "adversary.md"),
-    ("baseline-current-reviewer", REPO_ROOT / "loom-code" / "agents" / "reviewer.md"),
+    ("baseline-current-adversary", EVIDENCE_DIR / "contract-measured-adversary.md"),
+    ("baseline-current-reviewer", EVIDENCE_DIR / "contract-measured-reviewer.md"),
 ]
 
 

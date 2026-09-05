@@ -175,8 +175,18 @@ def test_run_headers_carry_status_ok_model_sonnet_and_correct_prompt_hash(dirnam
     itself already says."""
     summary = _load_summary(dirname)
     role = summary["role"]
-    contract_path = REPO_ROOT / summary["contract"]["path"]
+    # The "current" baselines were run on the agent files as of loom-code
+    # 1.4.0 (db7d44f9); 1.5.0 edited those files afterwards, so the text
+    # to recompute against is the committed measured snapshot, not the
+    # live file the summary's `contract.path` names.
+    if dirname.startswith("baseline-current-"):
+        contract_path = EVIDENCE_DIR / f"contract-measured-{role}.md"
+    else:
+        contract_path = REPO_ROOT / summary["contract"]["path"]
     contract_text = contract_path.read_text(encoding="utf-8")
+    assert hashlib.sha256(contract_path.read_bytes()).hexdigest() == summary["contract"]["sha256"], (
+        f"{dirname}: the summary's contract hash is not the hash of {contract_path.name}"
+    )
     expected_prompt = m.build_prompt(contract_text, FIXTURE, role)
     expected_hash = hashlib.sha256(expected_prompt.encode("utf-8")).hexdigest()
 
@@ -237,23 +247,34 @@ def test_readme_paragraph_numbers_agree_with_current_adversary_summary() -> None
     assert current["systematic"] == [], "README claims no systematic item current, but summary disagrees"
 
 
-def test_arm_b_taken_adversary_contract_byte_unchanged_since_da2fecfa() -> None:
+def _positioning_paragraph(text: str) -> str:
+    """The `You own ...` paragraph of an agent contract: the blank-line
+    delimited block whose first line starts with `You own`."""
+    for block in text.split("\n\n"):
+        if block.lstrip().startswith("You own"):
+            return block.strip()
+    raise AssertionError("no `You own` paragraph found")
+
+
+def test_arm_b_taken_adversary_positioning_paragraph_unchanged_since_measurement() -> None:
     """The intent's `## Measurement record` concludes arm B (leave the
     wording alone) because `baseline-current-adversary`'s `systematic`
     list is empty. This checks the mechanical precondition for arm B —
-    `systematic == []` — and, independently, that `loom-code/agents/
-    adversary.md` is byte-identical to its content at `da2fecfa` (the
-    wave-2 delta's starting point), i.e. arm A's contract rewrite did
-    not sneak in anyway."""
+    `systematic == []` — and, independently, that the positioning
+    paragraph of `loom-code/agents/adversary.md` at HEAD is identical to
+    the paragraph in `contract-measured-adversary.md`, the text the
+    baseline was run on (the agent file at db7d44f9). The whole file is
+    not compared: loom-code 1.5.0 edited two sentences elsewhere in the
+    contract after the measurement, and arm B only promises that the
+    attribution wording was left alone."""
     summary = _load_summary("baseline-current-adversary")
     assert summary["systematic"] == [], "arm B's mechanical precondition (systematic == []) does not hold"
 
-    current = (REPO_ROOT / "loom-code" / "agents" / "adversary.md").read_bytes()
-    at_da2fecfa = subprocess.run(
-        ["git", "show", "da2fecfa9e06e0dd491a616adf9c696fbc0b1ffe:loom-code/agents/adversary.md"],
-        cwd=REPO_ROOT, capture_output=True, check=True,
-    ).stdout
-    assert current == at_da2fecfa, "adversary.md changed since da2fecfa despite arm B being taken"
+    current = (REPO_ROOT / "loom-code" / "agents" / "adversary.md").read_text(encoding="utf-8")
+    measured = (EVIDENCE_DIR / "contract-measured-adversary.md").read_text(encoding="utf-8")
+    assert _positioning_paragraph(current) == _positioning_paragraph(measured), (
+        "the adversary positioning paragraph changed after the measurement despite arm B"
+    )
 
 
 def test_memory_step_store_integrity_check_exits_zero() -> None:

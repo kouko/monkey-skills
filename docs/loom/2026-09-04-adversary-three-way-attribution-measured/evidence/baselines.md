@@ -7,6 +7,16 @@ script's default), and `--runs 10`. Every batch is `complete: true`
 Numbers below are recomputed directly from each `summary.json`, never
 by hand.
 
+
+> "current" means the contract text as of loom-code 1.4.0 (commit
+> db7d44f9), the text these baselines were run on; it is committed
+> verbatim as `contract-measured-adversary.md` / `contract-measured-reviewer.md`
+> and each summary's `contract.sha256` matches that copy. loom-code 1.5.0
+> (merged 2026-09-05, after the measurement) edited two sentences of each
+> agent file outside the positioning paragraph; the positioning paragraph
+> at HEAD is unchanged from the measured text (pinned by the branch-end
+> probe).
+
 ## Exact command lines
 
 ```
