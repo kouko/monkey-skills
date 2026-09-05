@@ -406,6 +406,65 @@
       "confirmation": "The nit batch records the dismissed fatal finding, keeps every skip statement consistent with the embedded transcripts, and changes nothing beyond the report and review dispatch bookkeeping.",
       "findings": [],
       "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6"
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-codex-47d0",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "570c77644b5b566c992110d114b6e95722932709",
+      "resumed": true,
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
+      "confirmation": "The rebase preserves the change's runtime substance and synchronizes the six version stamps, CHANGELOG entry, budget exception and executable probes at 1.6.1, but leaves one stale probe path in the plan and one harmless duplicate helper.",
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/plan.md:33",
+          "text": "issue: the W2-02 Files list still names test_changelog_carries_1_5_2.py; the probe was renamed to _1_6_1 in the rebase.",
+          "fix": "Point the Files entry at test_changelog_carries_1_6_1.py."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_build_station_text.py:364",
+          "text": "nitpick: the hand-merged file defines _has_negation twice with identical semantics; the second shadows the first.",
+          "fix": "Delete the second import and definition."
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-sonnet-e81a",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "570c77644b5b566c992110d114b6e95722932709",
+      "resumed": true,
+      "confirmation": "The rebase changed no substance (rehearse_probes.py and the §6.5 gate paragraph byte-identical to pre-rebase b312c210; stamps move cleanly to 1.6.1; CHANGELOG entry above 1.6.0); one stale path and one stale constant the version-move commit missed.",
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/plan.md:33",
+          "text": "issue: the W2-02 Files list still names test_changelog_carries_1_5_2.py; the probe was renamed to _1_6_1 in the rebase.",
+          "fix": "Point the Files entry at test_changelog_carries_1_6_1.py."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/evidence/probes/test_abuse_branch_end.py:403",
+          "text": "nitpick: PREVIOUS_VERSION stayed 1.5.1 after the version move to 1.6.1; the revert guard no longer checks against the real prior version 1.6.0.",
+          "fix": "Set PREVIOUS_VERSION = \"1.6.0\"."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_build_station_text.py:364",
+          "text": "nitpick: the hand-merged file defines _has_negation twice with identical semantics; the second shadows the first.",
+          "fix": "Delete the second import and definition."
+        }
+      ]
     }
   ],
   "probes": [
@@ -693,6 +752,15 @@
       "raised_by": "rev-be-sonnet-e81a",
       "severity": "important",
       "resolved": "440e5a36, d5f9dc8f — entry aligned with the shipped marker semantics; confirmed by rev-be-sonnet-e81a round 4",
+      "dismissed": ""
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-05-graduated-probes-independent-of-local-history/plan.md:33",
+      "origin_sha": "570c77644b5b566c992110d114b6e95722932709",
+      "raised_by": "rev-be-codex-47d0",
+      "severity": "important",
+      "resolved": "b0a22014 — plan W2-02 Files entry names test_changelog_carries_1_6_1.py (raised by both readers)",
       "dismissed": ""
     }
   ],
@@ -1007,11 +1075,35 @@
       "started": "2026-09-06T07:39:12+08:00",
       "fresh_context": false,
       "note": "round-7: plan W2-02 path and PREVIOUS_VERSION after the rebase"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-e81a",
+      "model": "sonnet",
+      "started": "2026-09-06T07:40:17+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 8,
+      "note": "confirmation of the round-7 fixes"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-47d0",
+      "model": "codex",
+      "vendor": "openai",
+      "started": "2026-09-06T07:40:17+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 8,
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
+      "note": "confirmation of the round-7 fixes"
     }
   ],
   "cost": {
-    "rounds": 6,
-    "dispatches": 33,
+    "rounds": 7,
+    "dispatches": 35,
     "cap_changes": [],
     "hours_plan_to_pr": 6.9
   },
@@ -1075,6 +1167,16 @@
       "notes": [
         "Nit-batch confirmation round (ship §3.5): 446ea5d4 lists the dismissed fatal finding in the blind-run report; the Codex round-2 nit (stale one-skip sentence) was already resolved by the re-capture. Both readers confirm; reviewed_sha moves to the dispatch commit 2eaba052 (HEAD^ of this record, whose content tree equals the nit-batch commit).",
         "Probes and package tests re-run at the nit-batch content (2eaba052): the push gate binds probes to the reviewed content tree, which the report edit changed."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "outcome": "PASS_WITH_NOTES",
+      "notes": [
+        "Rebase-confirmation round after main moved to loom-code 1.6.0 (#797): both readers confirm the substance unchanged and the version move complete. One shared important (plan path) fixed in b0a22014; the two nits (duplicate _has_negation, PREVIOUS_VERSION) fixed as code in 3049b9e3 and b774968f under their owning tasks rather than folded into ship's docs-only nit batch.",
+        "rebase.updateRefs=true on this machine moved the backup ref along with the rebase; the true pre-rebase tip is b312c210 and the ref was repointed there mid-round (the Anthropic reader was told; the Codex reader's confirmation did not depend on the comparison).",
+        "Rehearsal at the rebased tree: FAILED (0), SKIPPED (2) — the nesting guard and main's own version-pinned coldread probe (`plugin has moved past 1.5.1`), neither history-class."
       ]
     }
   ]
