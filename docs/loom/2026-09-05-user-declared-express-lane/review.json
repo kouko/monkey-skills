@@ -213,7 +213,7 @@
     {
       "kind": "package-tests",
       "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "scripts/run_package_tests.py",
       "scope": "wave-end:1"
@@ -221,7 +221,7 @@
     {
       "kind": "blind-run",
       "command": "see the report — clean tree at d31484fa, Acceptance 1–7; 2–4 re-verified at 029925d0",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
       "scope": "wave-end:1"
@@ -229,7 +229,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py",
       "scope": "wave-end:1"
@@ -237,7 +237,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k evidence_glob -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -245,7 +245,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k deferral -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -253,7 +253,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k lane_full_explicit_revert -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -261,7 +261,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k zero_adversarial_probes -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -269,7 +269,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k lane_switch_forbidden_reason_pin -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -277,7 +277,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k recomputed_small_overrides -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -285,7 +285,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k list_rules_prints_exactly_twenty_seven -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -293,7 +293,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k undated_bare_lane_declaration -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -301,7 +301,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k tests_segment -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -309,7 +309,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k from_wave_switch -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -317,7 +317,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k declared_gate_only_overrides_recomputed_small -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -325,7 +325,7 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k standing_doc_touch_now_blocked -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
@@ -333,7 +333,15 @@
     {
       "kind": "adversarial",
       "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k gateonly_dated_declaration_nontest_code -q",
-      "sha": "9655401eb0b9c82f711ef96ef10a4ec6a2d17f19",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k deciding_commit_omits_it -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
       "scope": "wave-end:1"
