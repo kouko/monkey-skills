@@ -17,8 +17,8 @@ REPO = Path(__file__).resolve().parents[1]
 KICKOFF = REPO / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
 
 EXPECTED_COMMAND = (
-    "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ "
-    "loom-design/scripts/ -q -n auto"
+    "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ "
+    ".claude/hooks/ -q -n auto -- loom-design/scripts/ -q"
 )
 
 

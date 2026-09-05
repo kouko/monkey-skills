@@ -75,6 +75,9 @@ def test_kickoff_and_ci_run_the_same_parallel_command() -> None:
     def tokens(command: str, exclude: set[str]) -> list[str]:
         return [tok for tok in command.split() if tok not in exclude]
 
-    kickoff_tokens = tokens(kickoff_command, {"-q", "loom-design/scripts/"})
-    ci_tokens = tokens(ci_command, {"-v"})
+    # KICKOFF drives the runner script (one pytest session per `--` group);
+    # the first group is the same argv CI's loom-code job passes to pytest.
+    first_group = kickoff_command.split(" -- ")[0]
+    kickoff_tokens = tokens(first_group, {"-q", "scripts/run_package_tests.py"})
+    ci_tokens = tokens(ci_command, {"-v", "-m", "pytest"})
     assert kickoff_tokens == ci_tokens
