@@ -68,17 +68,26 @@ Only the `plan file` line differs between the two dispatches; every other
 line is byte-identical. Each run is a fresh-context agent with no memory
 of the other run or of this harness document.
 
-## Result slots (filled by the orchestrator after dispatching both runs)
+## Results (filled by the orchestrator, 2026-09-06)
 
-### Run A — original plan (`evidence/ab-plan-original.md`, "Task 7")
-- status: _(pending)_
-- NEEDS_CONTEXT count: _(pending)_
-- questions asked (verbatim): _(pending)_
+Two pairs were run, not one: the harness asked for one run per arm, and a second pair was added after the first so a single-sample verdict would not stand alone. Pair 1 clones carried the sample repo's full history (both arms could read the real landing commit); pair 2 forbade reading git history. Each run's status report is saved verbatim beside this file.
 
-### Run B — charter plan (`evidence/ab-plan-charter.md`, "T7")
-- status: _(pending)_
-- NEEDS_CONTEXT count: _(pending)_
-- questions asked (verbatim): _(pending)_
+| run | plan | status | NEEDS_CONTEXT count | report |
+|---|---|---|---|---|
+| A1 | original (4,633 words) | DONE | 2 | `ab-run-a1-original.md` |
+| B1 | charter (941 words) | NEEDS_CONTEXT | 3 | `ab-run-b1-charter.md` |
+| A2 | original | DONE_WITH_CONCERNS | 2 | `ab-run-a2-original.md` |
+| B2 | charter | DONE_WITH_CONCERNS | 4 | `ab-run-b2-charter.md` |
+
+Questions asked, by arm (verbatim ids point into the saved reports):
+- Original, both runs: whether line 75 needs its type/default restated rather than a hex swap (A1-1, implied A2); whether to annotate in place with a dated note and which date (A1-2, A2-1, A2-2).
+- Charter, both runs: the two above (B1-2, B1-3, B2-3, B2-4) PLUS the design rationale — the design-log's species-neutral convention versus the plan's literal "hinoki" wording (B1-1) — and, in B2, two plan-text artefacts: "four design-log checks" not matching the script (B2-1) and the absent package-suite clause (B2-2).
+
+## Verdict against the comparison rule
+
+Acceptance 4 is NOT met on this sample: the charter version's count (3, then 4) exceeds the original's (2, then 2) in both pairs. The excess is not random: the one question unique to the charter arm in every run is the design rationale the charter's `must_not` column routes to the spec — and this engineering change, like the sample's, has no spec. The remaining excess in B2 comes from Test-line text the rewrite carried over from the original ("four design-log checks"), which the original's surrounding prose had made harmless and the compressed line did not.
+
+What the numbers do not say: the charter plan is 80% shorter and every question the charter arm asked is answerable from a one-line design note; the original arm's lower count came from rationale paragraphs the charter forbids in a plan. The decision the numbers force is where that rationale lives for an engineering change — see the memory entry an-engineering-change-without-a-spec-leaves-interface-detail-with-no-persistent-home — not whether to keep the caps.
 
 ## Comparison rule (Acceptance 4)
 
