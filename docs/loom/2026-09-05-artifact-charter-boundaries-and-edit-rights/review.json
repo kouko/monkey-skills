@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "241817bcc72600a52ab87a2ea93e54e88230b8d2",
-  "scope": "wave-end:1",
+  "scope": "wave-end:2",
   "vendors": [
     "anthropic",
     "openai"
@@ -754,6 +754,91 @@
         }
       ],
       "notes": "reran test_review_round_append_only.py (11) and the package command (1692/182); mirror identical except the stamp."
+    },
+    {
+      "round": 10,
+      "scope": "wave-end:2",
+      "reviewer": "rev-we2-codex-n6q2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "standards_version": "lenses.md@a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:2309",
+          "text": "issue (blocking): the replace-set branch permits reviewed_sha to change from a scalar into a two-item list whenever reviewed-sha-scope-cost-replaced is enabled, so review-edits accepts appending a second value to a replace-only node.",
+          "fix": "validate the declared type of each replace-set field before allowing replacement; permanent regression test."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/agents/implementer.md:42",
+          "text": "issue (blocking): W2-03 narrowed a valid commit scope from a kebab-case plugin or module name to a module name only; a cold implementer can reject plugin-family scopes such as loom.",
+          "fix": "restore 'plugin or module name' within the cap."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/agents/adversary.md",
+          "text": "nitpick (non-blocking): adversary.md sits at exactly its 600-word cap.",
+          "fix": "headroom or a note."
+        }
+      ],
+      "notes": "static review; removing 'Three is the floor' did not weaken the minimum (at-least-three and the stopping-at-three trap remain)."
+    },
+    {
+      "round": 10,
+      "scope": "wave-end:2",
+      "reviewer": "rev-we2-a-n6q2",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "standards_version": "lenses.md@a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "N/A — no measured claim in the prose delta",
+        "deletion-first": "PASS",
+        "user-judgment-leak": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A — no ratified PRINCIPLES.md"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/agents/implementer.md:31",
+          "text": "issue (blocking): the commit-scope rule lost the plugin-name half ('the kebab-case module name'); the repo's own commits use the bare plugin-family scope loom; the adversary probe test_implementer_commit_scope_qualifier_dropped_and_unguarded records it.",
+          "fix": "restore 'the kebab-case plugin or module name' and pin it with a test."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/agents/reviewer.md:55-59",
+          "text": "issue (blocking): the user-judgment-leak paragraph's settlement threshold changed from lenses.md's 'zero obligation' to 'free' and dropped the classes (b)/(e) citation; the two canonical copies now disagree for a free-account case.",
+          "fix": "make reviewer.md verbatim-consistent with lenses.md ('zero obligation', citation or pointer restored); prose-pin test that the two copies agree."
+        }
+      ],
+      "notes": "ran the package command (1716/182) and the probe file (11 passed, 1 failed by design); the reviewed_sha list gap is real but loom_checker.py is outside this delta; 'Three is the floor.' survives in adversary.md's Traps section."
     }
   ],
   "probes": [
@@ -1900,6 +1985,118 @@
       "result": "pass",
       "artifact": "",
       "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_gate_omission_sentence_negated_rewrite_caught_by_matcher",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_reviewer_language_exception_clause_negated_rewrite_caught_by_matcher",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_charter_command_cited_by_write_plan_resolves_with_no_arguments",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_charter_command_stray_argument_fails_closed_not_silently_ignored",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_plan_edits_command_absent_change_id_fails_closed_not_crash",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_review_edits_command_absent_change_id_fails_closed_not_crash",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_charter_and_plan_edits_agree_the_real_change_id_resolves",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_codex_mirror_divergence_from_w2_01_edit_is_actually_caught",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_plan_omission_gate_block_stays_inside_cap_oracle_flags_one_past_it",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_agent_contract_one_word_past_its_cap_fails_the_shipped_check[path0-600-600]",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_agent_contract_one_word_past_its_cap_fails_the_shipped_check[path1-600-599]",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py -q -k test_implementer_commit_scope_qualifier_dropped_and_unguarded",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_wave_end_2.py",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "blind-run",
+      "command": "python3 loom-code/scripts/loom_checker.py charter|plan|plan-edits|review-edits; codex exec --sandbox read-only (2x cold reader); python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/blind-run-report.md",
+      "scope": "wave-end:2"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "result": "pass",
+      "artifact": "",
+      "scope": "wave-end:2"
     }
   ],
   "questions": [
@@ -2114,6 +2311,38 @@
       "severity": "fatal",
       "text": "issue (blocking): vendors moved into REVIEW_ACCRETING_ARRAYS and rides on the four arrays' allow_gain; a round appending a second vendor between stamped commits passes; the rule's text says byte-equal and the charter names no id for vendors.",
       "resolved": "resolved by 241817bc — vendors gated by its own policy id (rev-we1-a-j2k5, round 9)"
+    },
+    {
+      "id": "wave-end:2-01",
+      "anchor": "loom-code/scripts/loom_checker.py:2309",
+      "origin_sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "raised_by": "rev-we2-codex-n6q2",
+      "severity": "fatal",
+      "text": "issue (blocking): the replace-set branch permits reviewed_sha to change from a scalar into a two-item list whenever reviewed-sha-scope-cost-replaced is enabled, so review-edits accepts appending a second value to a replace-only node."
+    },
+    {
+      "id": "wave-end:2-02",
+      "anchor": "loom-code/agents/implementer.md:42",
+      "origin_sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "raised_by": "rev-we2-codex-n6q2",
+      "severity": "important",
+      "text": "issue (blocking): W2-03 narrowed a valid commit scope from a kebab-case plugin or module name to a module name only; a cold implementer can reject plugin-family scopes such as loom."
+    },
+    {
+      "id": "wave-end:2-03",
+      "anchor": "loom-code/agents/implementer.md:31",
+      "origin_sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "raised_by": "rev-we2-a-n6q2",
+      "severity": "important",
+      "text": "issue (blocking): the commit-scope rule lost the plugin-name half ('the kebab-case module name'); the repo's own commits use the bare plugin-family scope loom; the adversary probe test_implementer_commit_scope_qualifier_dropped_and_unguarded records it."
+    },
+    {
+      "id": "wave-end:2-04",
+      "anchor": "loom-code/agents/reviewer.md:55-59",
+      "origin_sha": "a708b2c3f9a038f5b98229a3dd6f7f39d9a6418c",
+      "raised_by": "rev-we2-a-n6q2",
+      "severity": "important",
+      "text": "issue (blocking): the user-judgment-leak paragraph's settlement threshold changed from lenses.md's 'zero obligation' to 'free' and dropped the classes (b)/(e) citation; the two canonical copies now disagree for a free-account case."
     }
   ],
   "dispatch": [
@@ -2399,7 +2628,7 @@
     }
   ],
   "cost": {
-    "rounds": 9,
+    "rounds": 10,
     "dispatches": 35,
     "cap_changes": [],
     "hours_plan_to_pr": null
