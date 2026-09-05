@@ -7,7 +7,15 @@
   "verdicts": [],
   "probes": [],
   "questions": [],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/scripts/loom_checker.py:_standing_reviewers",
+      "origin_sha": "c63de876b94be35f82b79dde9e7567b22598dd80",
+      "raised_by": "adv-we1-chk",
+      "resolved": "closed by 2d02f759 — standing reviewers must be dispatched reviewing roles; a prior round with an undispatched name stands for nobody; unit tests + the adversary's probe green"
+    }
+  ],
   "dispatch": [
     {
       "task": "W0-01",
@@ -75,6 +83,22 @@
       "started": "2026-09-06T02:05:00+08:00",
       "fresh_context": true,
       "note": "adversary fatal fixed before the readers run: standing reviewers must be dispatched reviewers"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-chk-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-06T02:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-chk-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-06T02:40:00+08:00",
+      "fresh_context": true
     }
   ]
 }
