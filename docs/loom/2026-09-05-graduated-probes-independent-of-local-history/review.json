@@ -276,11 +276,20 @@
       "started": "2026-09-05T23:56:36+08:00",
       "fresh_context": true,
       "note": "fix round for the wave-end:1 adversary findings (probes 434c6e7d)"
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-fix2-a7e3",
+      "model": "sonnet",
+      "started": "2026-09-06T00:08:34+08:00",
+      "fresh_context": true,
+      "note": "fix round 2 for wave-end:1 findings 01, 02 (codex); also W1-02's probe"
     }
   ],
   "cost": {
     "rounds": 1,
-    "dispatches": 8,
+    "dispatches": 9,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
