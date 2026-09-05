@@ -398,11 +398,29 @@
       "model": "fable",
       "started": "2026-09-06T00:38:37+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-06T00:54:40+08:00",
+      "fresh_context": false,
+      "note": "recursion guard: the graduated clone-and-run probe re-entered the rehearsal from inside the clone (found at the memory step)"
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-06T00:54:40+08:00",
+      "fresh_context": false,
+      "note": "same fix, probe side"
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 14,
+    "dispatches": 16,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
