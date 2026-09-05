@@ -16,11 +16,43 @@
       "model": "sonnet",
       "started": "2026-09-05T19:30:49+0800",
       "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 1,
+    "dispatches": 5,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
