@@ -314,3 +314,58 @@ def test_review_edits_vendors_gains_entry_with_policy_removed_blocks(tmp_path: P
     assert result.returncode == 1
     assert "review.round-append-only" in blocked_rule_ids(result)
     assert "vendors" in result.stderr
+
+
+def test_review_edits_reviewed_sha_replaced_by_list_blocks_even_with_policy(tmp_path: Path) -> None:
+    """wave-end:2-01: the replace-set policy allows `reviewed_sha` to take a
+    NEW value, never a new TYPE. Swapping the string for a two-item list
+    between two committed rounds must block naming "replace-set type
+    changed", even though `reviewed-sha-scope-cost-replaced` is enabled."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["reviewed_sha"] = ["1111111a", "2222222b"]
+    write_and_commit(
+        repo, doc2, "chore(loom): checkpoint review — quietly retype reviewed_sha"
+    )
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+    assert "replace-set type changed" in result.stderr
+    assert "reviewed_sha" in result.stderr
+
+
+def test_review_edits_cost_replaced_by_list_blocks_even_with_policy(tmp_path: Path) -> None:
+    """wave-end:2-01: `cost` must stay a mapping across a replace; swapping
+    it for a list between two committed rounds blocks the same way, even
+    with the replace policy enabled."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["cost"] = ["rounds", 1]
+    write_and_commit(
+        repo, doc2, "chore(loom): checkpoint review — quietly retype cost"
+    )
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+    assert "replace-set type changed" in result.stderr
+    assert "cost" in result.stderr
+
+
+def test_review_edits_reviewed_sha_string_to_string_replacement_passes(tmp_path: Path) -> None:
+    """A same-type replacement (string to string) is exactly what the
+    replace-set policy is for -- it must still pass once the type guard
+    lands, not just before it."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["reviewed_sha"] = "2222222b"
+    write_and_commit(
+        repo, doc2, "chore(loom): checkpoint review — move reviewed_sha forward"
+    )
+    result = run_review_edits(repo)
+    assert result.returncode == 0, result.stderr
