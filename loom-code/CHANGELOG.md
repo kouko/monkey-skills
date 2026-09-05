@@ -7,6 +7,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [1.5.0] — 2026-09-05 — review sees complexity and process cost
 
+budget-exception: 1.5.0 — one contract field registered (artifact:review.cost): the process-cost record the intent's outcome 3 asks for; it replaces the per-change cost notes that lived only in the orchestrator's memory.
+
 `docs/loom/2026-09-05-review-sees-complexity-and-process-cost/`.
 
 1. `deletion-first` now reaches the docs and skill lenses: `lenses.md`
