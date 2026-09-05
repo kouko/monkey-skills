@@ -274,3 +274,43 @@ def test_review_edits_reviewed_sha_changed_with_replace_policy_removed_blocks(tm
 if __name__ == "__main__":
     import pytest
     raise SystemExit(pytest.main([__file__, "-v"]))
+
+
+def test_review_edits_vendors_gains_entry_with_policy_passes(tmp_path: Path) -> None:
+    """A second vendor joining at a later round is an accretion the review
+    charter names by its own id (`vendors-gain-entries`): with the id
+    declared, a round whose vendors list grows by one entry passes."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    doc["vendors"] = ["anthropic"]
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["vendors"] = ["anthropic", "openai"]
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — round 2 adds a vendor")
+    result = run_review_edits(repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_review_edits_vendors_gains_entry_with_policy_removed_blocks(tmp_path: Path) -> None:
+    """Drop the `vendors-gain-entries` id from the real manifest for the
+    duration of the run: a vendors list that grows between two rounds then
+    blocks, so vendors rides on its own allowance and never on the four
+    other arrays' id."""
+    manifest_path = CHECKER.parent.parent / "contract" / "manifest.yaml"
+    original = manifest_path.read_text(encoding="utf-8")
+    line = next(l for l in original.splitlines(keepends=True) if "id: vendors-gain-entries" in l)
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    doc["vendors"] = ["anthropic"]
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["vendors"] = ["anthropic", "openai"]
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — round 2 adds a vendor")
+    try:
+        manifest_path.write_text(original.replace(line, ""), encoding="utf-8")
+        result = run_review_edits(repo)
+    finally:
+        manifest_path.write_text(original, encoding="utf-8")
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+    assert "vendors" in result.stderr

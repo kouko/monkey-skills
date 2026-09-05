@@ -238,7 +238,7 @@ RULES: list[tuple[str, str]] = [
         "entry may additionally gain exactly one of resolved/dismissed in place); "
         "reviewed_sha, scope and cost are replaced freely; questions moves from empty to "
         "non-empty exactly once and second_vendor is set exactly once, then both are "
-        "immutable; vendors carries no allowance and must stay byte-equal; no top-level key "
+        "immutable; vendors gains entries only under its own policy id and is otherwise byte-equal; no top-level key "
         "is ever removed and no key outside the template plus second_vendor and charter is "
         "ever added. A round with no `charter` key is skipped entirely. An unsupported policy "
         "id on the manifest's review row fails closed.",
@@ -2333,6 +2333,7 @@ def check_plan_edits_after_commit_at(manifest, repo: Path, change_id: str) -> li
 # `IMPLEMENTED_EDITS_AFTER_IDS` above.
 IMPLEMENTED_REVIEW_EDITS_AFTER_IDS = {
     "verdicts-probes-findings-dispatch-gain-entries",
+    "vendors-gain-entries",
     "reviewed-sha-scope-cost-replaced",
     "open-finding-resolved-or-dismissed-in-place",
     "questions-written-once",
@@ -2447,6 +2448,7 @@ def _compare_review_round(
         return []
 
     allow_gain = "verdicts-probes-findings-dispatch-gain-entries" in enabled_ids
+    allow_vendor_gain = "vendors-gain-entries" in enabled_ids
     allow_resolve = "open-finding-resolved-or-dismissed-in-place" in enabled_ids
     allow_replace = "reviewed-sha-scope-cost-replaced" in enabled_ids
     allow_questions_fill = "questions-written-once" in enabled_ids
@@ -2499,7 +2501,8 @@ def _compare_review_round(
                     failures.append(_review_block(f"{label}.{key}[{index}]", "evidence tampering"))
                     continue
                 failures.append(_review_block(f"{label}.{key}[{index}]", "earlier round rewritten"))
-            if len(l_list) > len(e_list) and not allow_gain:
+            gain_allowed = allow_vendor_gain if key == "vendors" else allow_gain
+            if len(l_list) > len(e_list) and not gain_allowed:
                 failures.append(
                     _review_block(f"{label}.{key}", "gained entries with no charter allowance")
                 )

@@ -204,6 +204,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {id: open-finding-resolved-or-dismissed-in-place,     text: "an open finding is resolved or dismissed in place"}
         - {id: questions-written-once,                          text: "questions is written once"}
         - {id: second-vendor-set-once,                          text: "second_vendor is set once"}
+        - {id: vendors-gain-entries,                            text: "vendors gains entries"}
     fields:
       - {name: reviewed_sha,  kind: json, required: true}
       - {name: scope,         kind: json, required: true}
