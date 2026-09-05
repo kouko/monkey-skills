@@ -1,0 +1,1092 @@
+{
+  "reviewed_sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+  "scope": "branch-end",
+  "vendors": [
+    "anthropic"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "PASS_WITH_NOTES",
+        "deletion-first": "PASS_WITH_NOTES",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1037",
+          "text": "issue (blocking): the grammar accepts a bare `lane: express|gate-only|full` with no dated user attribution; Acceptance 1 says a declaration carries date and name like a switch; push never recomputes the schema, and gate-only has no reader to apply the lens.",
+          "fix": "require `— declared <date> by <name>` on the declaration form; push fails closed (full) on a declaration that fails the schema; adversarial case"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3210",
+          "text": "issue (blocking): the test-path exemption in `_lane_forcing_paths` runs before gate/skill kinds, so `hooks/tests/x.py` or `skills/x/tests/SKILL.md` enter express/gate-only.",
+          "fix": "gate/skill kinds before the test/CI exemption; adversarial cases"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1133",
+          "text": "issue (blocking): `from wave <n>` and a bare declaration both reduce to from_round None and go through record-deferral; the wave semantics is undefined in code and text.",
+          "fix": "define `from wave <n>` (applies to rounds recorded after the declaring commit), keep the unit in the parsed detail, pin a prior-wave → branch-end round-1 case"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/build/SKILL.md:275",
+          "text": "issue (blocking): build tells every DECLARED express/gate-only change to skip wave-end checkpoints; only the EFFECTIVE lane (after the forbidden-type recompute) may skip.",
+          "fix": "say effective lane; require the recompute before routing; pin"
+        }
+      ],
+      "notes": [
+        "manifest is the primary type source; _evidence_masked_kind adds a path-rewriting interpretation; a renamed SKILL.md escapes the glob (pre-existing)",
+        "zero-verdict push rules walk safely: package tests and ≥3 probes still required",
+        "read-only sandbox could not start pytest",
+        "deletion-first: express as small-lane policy plus a checkpoint override; gate-only as floors rather than a procedural branch; ship at 3497/3500 — extract the gate-only paragraph"
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "PASS_WITH_NOTES"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "PRINCIPLES.md:9",
+          "text": "issue (blocking): Non-negotiable 2 fixes the floor at one reviewer and a blind run omitted only when every Acceptance line is mechanical; gate-only (zero readers, blind run always skipped) contradicts the ratified constitution, which this delta did not amend.",
+          "fix": "amend PRINCIPLES.md (ratified by the user) to name the user-declared gate-only floor, or keep one reader / the blind-run condition in gate-only"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/lenses.md:88",
+          "text": "issue: the lens sentence flags 'missing by <user name>' without saying whether a bare ① declaration counts, so a reviewer cannot tell a legitimate declaration from an injected one.",
+          "fix": "scope the clause per form (resolved together with -01 once declarations carry attribution)"
+        }
+      ],
+      "notes": [
+        "ran the lane tests (22), both probe files (11+15) and five station-text files (121) — all green",
+        "forbidden types come from manifest artifact_types via _artifact_type_for; a SKILL.md renamed away from that filename escapes the glob (pre-existing)",
+        "zero-verdict push rules confirmed tolerant; package run and ≥3 probes unconditional for gate-only"
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3bbb0dcac1eabec1262360156ed7bd336437d1be",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1149",
+          "text": "issue (blocking): wave-end:1-01: unfixed — push rejects bare declarations but honours a dated declaration without running the provenance check; an agent can omit the commit-message line, skip the `intent` command and obtain the lighter lane.",
+          "fix": "push ignores or blocks a declaration whose deciding commit does not carry the identical lane: line; pin the dated-but-unlinked case"
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3227",
+          "text": "wave-end:1-02: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3329",
+          "text": "wave-end:1-03: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/build/SKILL.md:275",
+          "text": "wave-end:1-04: fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "no new finding outside the fix delta",
+        "read-only sandbox could not start pytest"
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "3bbb0dcac1eabec1262360156ed7bd336437d1be",
+      "resumed": true,
+      "dimension_scores": {
+        "principles-conformance": "PASS",
+        "ambiguity": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "PRINCIPLES.md:9",
+          "text": "wave-end:1-05: fixed — ratified sentence present; effective_lane_detail honours gate-only only on a raw-small delta",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/lenses.md:88",
+          "text": "wave-end:1-06: fixed — every valid lane: line carries by <user name>",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "ran test_loom_checker_lane.py (24), both probe files (11+23)",
+        "the other reader's -01..-04 fixes broke nothing visible; ship still 3,497 words"
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "d4abdeb328beff8bfc6e116efa798e88f35f6dc1",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3393",
+          "text": "wave-end:1-01: fixed — every intent-origin declaration verified through _lane_declaration_stated_by_its_commit",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "design re-look: continue fixing was correct — the remaining defect was a bounded push-side provenance check; the ratified lane design did not require reopening",
+        "covers express, gate-only and switches back to full, including missing deciding commits",
+        "read-only sandbox: recorded test results not independently re-run"
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "d4abdeb328beff8bfc6e116efa798e88f35f6dc1",
+      "resumed": true,
+      "dimension_scores": {
+        "principles-conformance": "PASS",
+        "correctness": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "design re-look: round 3 on the same checkpoint; the remaining finding was a bounded mechanical gap, the ratified shape (gate-only = small with the floor waived, dated by <name> on every declaration, record-keyed timing) unchanged — continuing to fix was right",
+        "nothing from round 2 broken; ran the lane tests (28) and both probe files (11+26)"
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+docs+skill",
+      "verdict": "NEEDS_REVISION",
+      "sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "NEEDS_REVISION",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md :: probes[] blind-run entry",
+          "text": "issue (blocking): the blind-run probe's command is prose and names no artifact argument; it cannot be re-run or inspected.",
+          "fix": "an executable command naming the report path that verifies the recorded report"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py:46",
+          "text": "issue (blocking): catching every ModuleNotFoundError makes sibling selection a fallback that can swallow a missing transitive dependency and import the other copy.",
+          "fix": "select the sibling deterministically from this file's stem; import only that name"
+        }
+      ],
+      "notes": [
+        "the two memory entries pass deletion-first independently; links resolve",
+        "graduated pairs differ only at the parents line",
+        "read-only sandbox: the five focused test files could not be collected"
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "dimension_scores": {
+        "security": "N/A",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "N/A",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py :: \"Scope: … HEAD 56062fc7\"",
+          "text": "issue (non-blocking): the module docstring pins a HEAD sha that later commits moved past.",
+          "fix": "say 'HEAD at authoring time' or drop the sha"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_probes_lanes_wave_end.py:27-28",
+          "text": "issue (non-blocking): the parents[] depth-table comment describes the evidence location only; the graduated copy sits at another depth.",
+          "fix": "reword the shared comment location-agnostically (kept byte-identical)"
+        }
+      ],
+      "notes": [
+        "ran the three probe files (71), the two graduated copies (37), memory integrity, --list-rules, the five word caps and 3 ship-§4 commands; the dispatch arithmetic 9 = 3 + 2 + 4 reproduced from git log",
+        "blind-run probes as prose are what the checker treats as non-executed kinds; the other reader disagrees — recorded, not averaged"
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "d6aead7c893a40d1cf866959b5839e2f077360d0",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/review.json:380",
+          "text": "branch-end-01: fixed — executable blind-run commands naming the report",
+          "fix": ""
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py:47",
+          "text": "branch-end-02: fixed — sibling chosen from the file's stem, no exception-driven fallback",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_probes_lanes_wave_end.py:30",
+          "text": "parents comment nit: fixed",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4",
+          "text": "moving-HEAD docstring nit: unfixed at this sha (fixed at 0d3ca919, confirmed by its raiser in round 6)",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "no new findings; probes not rerun in the read-only sandbox"
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "d6aead7c893a40d1cf866959b5839e2f077360d0",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4-5",
+          "text": "nit 1 (moving HEAD): unfixed at this sha",
+          "fix": ""
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_probes_lanes_wave_end.py:30",
+          "text": "nit 2 (parents comment): fixed",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "the other reader's fixes broke nothing; stem-based selection keeps the byte-copy invariant; 63 passed"
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "0d3ca91918744a0c923be40dc3d69e118c46bc7c",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4-5",
+          "text": "nit 1: fixed — HEAD named as the authoring-time sha",
+          "fix": ""
+        }
+      ],
+      "notes": [
+        "0d3ca919 touches only the docstring; rev-be-lane-codex stands (push.verdicts-ge-2)"
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "resumed": true,
+      "dimension_scores": {
+        "tests": "PASS",
+        "deletion-first": "PASS",
+        "architecture": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "e3d1fb35: the dispatch-batching probe recomputes waves, rounds and mid-flight fixes instead of pinning a count (it went red when round 5 was recorded — the memory entry's own lesson); one test rerun green; rev-be-lane-codex stands"
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "rev-be-lane-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+docs+skill",
+      "verdict": "PASS",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "resumed": true,
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py:4",
+          "text": "nit (moving HEAD): fixed — authoring-time HEAD named; the dispatch-budget probe recomputes its populations and asserts only the inequality",
+          "fix": ""
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "scripts/run_package_tests.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "blind-run",
+      "command": "grep -c '^### [1-7]' docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k evidence_glob -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k deferral -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k lane_full_explicit_revert -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k zero_adversarial_probes -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k lane_switch_forbidden_reason_pin -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k recomputed_small_overrides -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k list_rules_prints_exactly_twenty_seven -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k undated_bare_lane_declaration -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k tests_segment -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k from_wave_switch -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k declared_gate_only_overrides_recomputed_small -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k standing_doc_touch_now_blocked -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k gateonly_dated_declaration_nontest_code -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -k deciding_commit_omits_it -q",
+      "sha": "cc1a4ee597d667f787e719bbe2138fe5384e8b92",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "wave-end:1"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "scripts/run_package_tests.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "grep -c '^### [1-7]' docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lane_declaration.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'graduated_probe' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'memory' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'push_gateonly or push_express' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'word_cap' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'dispatch_batching' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'ship_section4' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'list_rules or verdicts_ge_2' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k 'codex_mirror' -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py -k dispatch_batching -q",
+      "sha": "e3d1fb35664a85751f45db335377dce61de7fda5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_branch_end.py",
+      "scope": "branch-end"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是：車道變成你能宣告的事，三格——full／express／gate-only……做完後你可以：在 ① 宣告，或做到一半說「切換模式」……對嗎？",
+      "type": "what",
+      "answer": "對"
+    },
+    {
+      "decision_point": 1,
+      "text": "不可逆的門：沒有。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這個 change 自己改 checker，走 full。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？",
+      "type": "what",
+      "answer": "用 Codex"
+    },
+    {
+      "decision_point": 1,
+      "text": "PRINCIPLES.md 第 2 條牴觸 gate-only（零讀者、不盲跑）：A 修憲章一句並把 gate-only 縮到 small 車道類別／B 保留一位讀者／C 拿掉 gate-only？",
+      "type": "consequence",
+      "answer": "A"
+    },
+    {
+      "decision_point": 1,
+      "text": "憲章那一句（gate-only 零讀者、不盲跑，只限 small 類別，push 閘照跑）——批准？",
+      "type": "consequence",
+      "answer": "批准"
+    },
+    {
+      "decision_point": 3,
+      "text": "Acceptance 1–7 walked in the blind-run report (dated declarations; express one reader; gate-only = small with the floor waived, ratified; record-keyed switch timing; cold-read three-option prompt; station text pinned; 27 rules, suite green); no older records touched; PRINCIPLES.md amended by your ratification. OK?",
+      "type": "done",
+      "answer": "OK"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-code/scripts/loom_checker.py:1037",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): the grammar accepts a bare `lane: express|gate-only|full` with no dated user attribution; Acceptance 1 says a declaration carries date and name like a switch; push never recomputes the schema, and gate-only has no reader to apply the lens.",
+      "resolved": "closed by d0ffc2ec (dated declarations) + 727a566d + cc1a4ee5 (push verifies every declaration's provenance); codex fixed (round 3)"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/scripts/loom_checker.py:3210",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): the test-path exemption in `_lane_forcing_paths` runs before gate/skill kinds, so `hooks/tests/x.py` or `skills/x/tests/SKILL.md` enter express/gate-only.",
+      "resolved": "closed by d0ffc2ec — manifest kinds before the tests exemption; codex fixed (round 2)"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/loom_checker.py:1133",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "fatal",
+      "text": "issue (blocking): `from wave <n>` and a bare declaration both reduce to from_round None and go through record-deferral; the wave semantics is undefined in code and text.",
+      "resolved": "closed by d0ffc2ec + c24de521 — from-wave/declaration keyed to recorded (scope, round) pairs; codex fixed (round 2)"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/skills/build/SKILL.md:275",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-codex",
+      "severity": "important",
+      "text": "issue (blocking): build tells every DECLARED express/gate-only change to skip wave-end checkpoints; only the EFFECTIVE lane (after the forbidden-type recompute) may skip.",
+      "resolved": "closed by 5ff35feb — build routes on the effective lane; ship material extracted; codex fixed (round 2)"
+    },
+    {
+      "id": "wave-end:1-05",
+      "anchor": "PRINCIPLES.md:9",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-sonnet",
+      "severity": "fatal",
+      "text": "issue (blocking): Non-negotiable 2 fixes the floor at one reviewer and a blind run omitted only when every Acceptance line is mechanical; gate-only (zero readers, blind run always skipped) contradicts the ratified constitution, which this delta did not amend.",
+      "resolved": "closed by 56a4dc4c (PRINCIPLES.md ratified by kouko 2026-09-05) + d0ffc2ec + 19b8c4e8 — gate-only is the small lane with floor 0; sonnet fixed (round 2)"
+    },
+    {
+      "id": "wave-end:1-06",
+      "anchor": "loom-code/skills/review/references/lenses.md:88",
+      "origin_sha": "34745e1674622b02fab48d81651b1ff1a29280e0",
+      "raised_by": "rev-we1-lane-sonnet",
+      "severity": "important",
+      "text": "issue: the lens sentence flags 'missing by <user name>' without saying whether a bare ① declaration counts, so a reviewer cannot tell a legitimate declaration from an injected one.",
+      "resolved": "closed by d0ffc2ec — lens clause per form; sonnet fixed (round 2)"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-05-user-declared-express-lane/blind-run-report.md :: probes[] blind-run entry",
+      "origin_sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "raised_by": "rev-be-lane-codex",
+      "severity": "important",
+      "text": "issue (blocking): the blind-run probe's command is prose and names no artifact argument; it cannot be re-run or inspected.",
+      "resolved": "closed in the round-4 record commit — both blind-run records carry an executable command naming the report (seven Acceptance sections counted); codex to confirm (round 5)"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-05-user-declared-express-lane/evidence/probes/test_abuse_lanes_wave_end.py:46",
+      "origin_sha": "c4e58aaf4019a09a6bc679a1e25acd37d708f9ac",
+      "raised_by": "rev-be-lane-codex",
+      "severity": "important",
+      "text": "issue (blocking): catching every ModuleNotFoundError makes sibling selection a fallback that can swallow a missing transitive dependency and import the other copy.",
+      "resolved": "closed by d6aead7c — sibling selected from the file's stem; both readers fixed (round 5)"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:30:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T19:31:14+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "fix:probes-main-red",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T19:40:38+0800",
+      "fresh_context": false,
+      "note": "main's loom-code CI is red after #794: the graduated probe test_probes_complexity_wave_end.py greps for that change's intent-confirmation commit by subject, which the squash merge erased; the probe (evidence original + graduated byte copy) now skips when the commit is absent, the pattern the language-policy probes use"
+    },
+    {
+      "task": "fix:W1-03",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T20:16:07+0800",
+      "fresh_context": false,
+      "note": "integration: W1-03's placeholder test asserted default-lane is NOT yet in manifest.yaml and its grammar test skipped on the same boundary; W1-01 has landed, so the test flips to assert the key is declared and the two skips go"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "br-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-lane-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-lane-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true,
+      "vendor": "anthropic"
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T20:29:19+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T20:29:19+0800",
+      "fresh_context": false,
+      "note": "record written with the wave; the step runs after W2-01 and the wave-end round, before the closing round"
+    },
+    {
+      "task": "fix:wave-end:1",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T20:45:09+0800",
+      "fresh_context": true,
+      "note": "before the readers are dispatched: the wave-end adversary's two fatals and three importants (evidence glob shadows skill/gate paths in artifact_types; push never runs the lane schema/reason checks and a bare lane: line has no round deferral; explicit revert to full rejected; gate-only owes no adversarial probe on a pure-docs delta; lane-switch pin lacks the negation matcher) — its six RED probes are the failing tests"
+    },
+    {
+      "task": "fix:wave-end:1-r2",
+      "role": "adversary",
+      "agent_id": "adv-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T21:34:45+0800",
+      "fresh_context": false,
+      "note": "resumed: RED probes for -01 (bare declaration blocked; schema-failing declaration falls back to full at push), -02 (tests-segment gate/skill paths), -03 (from wave <n> honoured at the next scope's round 1); adversary-first for the checker fixes"
+    },
+    {
+      "task": "fix:wave-end:1-r2",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T21:34:45+0800",
+      "fresh_context": false,
+      "note": "resumed after the probes: -01/-02/-03 in the checker and templates; -04 build sentence + ship gate-only paragraph extraction; -06 lens clause. -05 (PRINCIPLES) waits for the user's ratification"
+    },
+    {
+      "task": "fix:wave-end:1-r2",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T22:21:46+0800",
+      "fresh_context": false,
+      "note": "review §1's declared-lane paragraph: one clause stating gate-only applies only when the recompute says small (the ratified shape); the implementer's batch covered the checker, templates, references, build and ship"
+    },
+    {
+      "task": "fix:wave-end:1-r3",
+      "role": "adversary",
+      "agent_id": "adv-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T22:33:26+0800",
+      "fresh_context": false,
+      "note": "resumed: RED probe — push ignores a dated declaration whose deciding commit did not state the line"
+    },
+    {
+      "task": "fix:wave-end:1-r3",
+      "role": "implementer",
+      "agent_id": "impl-fix-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T22:33:26+0800",
+      "fresh_context": false,
+      "note": "design re-look: continue fixing — round 3 on this checkpoint; the one open finding (-01) is a missing provenance check at push, a bounded addition to effective_lane_detail; the lane shape itself (gate-only = small with floor 0, dated declarations, record-keyed timing) is settled and ratified"
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-lane-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-lane-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true,
+      "vendor": "anthropic"
+    },
+    {
+      "task": "fix:branch-end-r5",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T23:59:32+0800",
+      "fresh_context": false,
+      "note": "round-4 fixes: blind-run probe commands executable (record commit); sibling module selected from the file's stem in the wave-end probe and its graduated copy; the two nits (docstring HEAD sha, parents comment) folded in"
+    }
+  ],
+  "cost": {
+    "rounds": 7,
+    "dispatches": 24,
+    "cap_changes": [],
+    "hours_plan_to_pr": 10.5
+  },
+  "second_vendor": "codex"
+}

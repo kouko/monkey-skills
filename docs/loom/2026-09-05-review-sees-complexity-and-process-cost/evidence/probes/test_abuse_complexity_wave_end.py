@@ -82,12 +82,27 @@ def _load_module(name: str, path: Path):
 
 
 def _confirm_intent_sha() -> str:
+    """Locate the intent-confirmation commit by subject. That commit lived
+    only on 2026-09-05-review-sees-complexity-and-process-cost's own local
+    development branch and was squash-merged (PR #794, loom-code 1.5.0,
+    merge commit 43e32034) -- it is absent from every other clone's
+    history, including CI on main. Callers that depend on it skip rather
+    than fail when it is not found, following the precedent in
+    test_probes_positioning.py / test_probes_positioning_branch_end.py
+    (pytest.skip when a probe's host precondition is absent)."""
     out = subprocess.run(
         ["git", "log", "--all", "--format=%H",
          "--grep=^docs(loom): intent 2026-09-05-review-sees-complexity-and-process-cost confirmed$"],
         cwd=str(REPO), capture_output=True, text=True, check=True,
     ).stdout.strip().splitlines()
-    assert out, "cannot locate the intent-confirmation commit by subject"
+    if not out:
+        pytest.skip(
+            "intent-confirmation commit for "
+            "2026-09-05-review-sees-complexity-and-process-cost is not in "
+            "this clone's history (it lived on the change's local branch "
+            "and was squash-merged); this probe replays that change's own "
+            "dispatch history and has nothing to read here"
+        )
     return out[0]
 
 
@@ -204,7 +219,9 @@ def test_every_w1_implementer_started_precedes_its_first_task_commit() -> None:
     immediately before) the first commit carrying that task's `Task:`
     trailer. Before the fix, all five carried `started:
     2026-09-06T10:30:00+08:00` -- a full calendar day AFTER their own
-    `Task:` commits (2026-09-05)."""
+    `Task:` commits (2026-09-05). Bound to this change's own branch
+    history via `_confirm_intent_sha()`: skips (not fails) on any clone
+    that lacks that branch's squash-merged intent-confirmation commit."""
     assert REVIEW_JSON.is_file(), f"{REVIEW_JSON} does not exist on this branch"
     doc = json.loads(REVIEW_JSON.read_text(encoding="utf-8"))
     confirm_sha = _confirm_intent_sha()
@@ -582,7 +599,9 @@ def test_dispatch_commit_count_within_waves_plus_rounds_bound() -> None:
     + review rounds so far), recomputed from git and review.json at
     whatever round this actually runs in -- never a number frozen at the
     round this test was written in, which the very next round would
-    outgrow."""
+    outgrow. Bound to this change's own branch history via
+    `_confirm_intent_sha()`: skips (not fails) on any clone that lacks
+    that branch's squash-merged intent-confirmation commit."""
     confirm_sha = _confirm_intent_sha()
     subjects = subprocess.run(
         ["git", "log", "--format=%s", f"{confirm_sha}..HEAD"],

@@ -131,6 +131,18 @@ not the §6 artifact-type table's classification (a file relocated under
 `tests/` is therefore a reviewer's job to notice in the diff, not the
 lane recompute's.
 
+A user may also declare `express` or `gate-only` for the whole change, or
+switch into either mid-build; the recompute above still runs first and a
+gate-typed path anywhere in the delta always forces `full`. The three
+declared lanes are `full`, keeping two or more readers and every run;
+`express`, keeping one reader and skipping the wave-end checkpoint; and
+`gate-only`, keeping zero readers and only the probes and package tests as
+evidence. Gate-only applies only when the recompute above says `small`; a
+delta the recompute calls `full` for any reason keeps its declaration
+ignored, and the reason names the path (PRINCIPLES.md non-negotiable 2).
+`references/lane-switch.md` carries the three-option prompt for
+presenting a switch, and the grammar of the switch line itself.
+
 | Lane | Checkpoint |
 |---|---|
 | `small` | one fresh-context reviewer, package tests, adversarial probes; the blind run runs only when an Acceptance line of the intent is not mechanical — cannot be settled by "run the command, compare the number" |
@@ -149,7 +161,10 @@ reviewers: **two or more, in one message so they run concurrently and
 cannot see each other's findings, in the full lane**; **exactly one, in
 the small lane** (§1). One reviewer in the full lane is not a review: it
 is an opinion with nothing to disagree with, and `push.verdicts-ge-2`
-refuses the push below the lane's floor.
+refuses the push below the lane's floor. Reader floors are full two,
+small one, express one, and gate-only zero — the checker's
+`push.verdicts-ge-2` recomputes each floor from the effective lane every
+round.
 <!-- /gate -->
 
 This round's adversary, blind-runner and reviewer `dispatch[]` entries are
@@ -234,6 +249,11 @@ not restate it here.
 - **skill**: a cold agent performs one real task using only the `SKILL.md`,
   and reports where it had to guess.
 
+**By lane.** Express triggers the blind run only for an Acceptance line
+that resists a mechanical check, matching the small lane's trigger; every
+mechanical line skips it. Gate-only skips the blind run always, relying
+on probes and package tests alone as its evidence.
+
 The result is `docs/loom/<change-id>/blind-run-report.md`, written to the
 structure in `references/blind-run-report.md` — per Acceptance line: how it
 was tried, what happened, the evidence; then the fixed line about what the
@@ -246,7 +266,8 @@ agent decided on the user's behalf, including every dismissal of severity
 
 Dispatch `agents/adversary.md` — again never an implementer of this change.
 The dispatch carries that contract's own `## Traps` section verbatim; do
-not restate it here.
+not restate it here. Express and gate-only run the adversary once, at
+branch-end, keeping the probe floor of three regardless of lane.
 
 - **code**: if the repo declares mutation or fuzz tooling, run it. If it
   declares none, the adversary **writes at least three executable abuse or

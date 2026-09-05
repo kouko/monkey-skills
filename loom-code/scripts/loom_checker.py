@@ -97,7 +97,7 @@ RULES: list[tuple[str, str]] = [
     (
         "intent.needs-design-reason",
         "The needs-design line carries a reason and appears verbatim in the message of the "
-        "commit that last changed the intent's status or needs-design line.",
+        "commit that last changed the intent's status, needs-design or lane line.",
     ),
     (
         "intent.needs-design-recompute",
@@ -135,7 +135,8 @@ RULES: list[tuple[str, str]] = [
     ),
     (
         "push.probes-adversarial",
-        "A change carrying a code / spec / skill / gate artifact records at least three "
+        "A change carrying a code / spec / skill / gate artifact, OR whose effective lane "
+        "is express or gate-only regardless of artifact type, records at least three "
         "adversarial probe records against the reviewed content -- the reviewed commit, "
         "or any commit whose tree matches it once this change's own review.json is set "
         "aside; a file referenced by several records is executed once, and every record "
@@ -184,8 +185,17 @@ RULES: list[tuple[str, str]] = [
     (
         "push.verdicts-ge-2",
         "The latest round of the checkpoint's own scope carries at least as many distinct "
-        "fresh-context reviewers as the change's lane requires -- one in the small lane, two "
-        "distinct in the full lane -- where a later round of that scope may also count a "
+        "fresh-context reviewers as the change's lane requires -- two distinct in the full "
+        "lane, one in the small lane, one in the express lane, zero in the gate-only lane, "
+        "with gate-only granted only when the raw recompute is already the small lane "
+        "(a raw full for any reason at all, standing document included, is never eligible); "
+        "any declared or switched `lane:` value at all -- express, gate-only, or a switch "
+        "back to full -- is honoured only when the commit that last changed the `lane:` line "
+        "states that exact line, verbatim, in its own message, else it is ignored and the "
+        "raw recompute governs instead (small stays small, full stays full); a `from wave <n>` "
+        "switch or a plain declared value applies to any (scope, round) not already recorded "
+        "before the declaration, and a `from round <n>` switch applies to every round numbered "
+        "strictly greater than n; where a later round of that scope may also count a "
         "non-returning previous-round reviewer whose earlier passing verdict still stands, "
         "provided every path the fix touched sits inside the anchor of an open finding raised "
         "by a reviewer who did return AND every reviewer named in that prior round has a "
@@ -680,6 +690,8 @@ def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_intent_schema(manifest, front, sections)
     failures += check_map_exists(repo, front)
     failures += check_product_no_identifiers(front, sections)
+    failures += check_lane_schema(front)
+    failures += check_lane_reason(front, commit_msg, repo, path, out)
 
     reason_failures, needs_design = check_needs_design_reason(
         front, commit_msg, repo, path, out
@@ -807,9 +819,14 @@ NEEDS_DESIGN_GRAMMAR = re.compile(r"^(yes|no)\s*(?:—|–|--)\s*(\S.*)$")
 FRONTMATTER_DECISION = ("status:", "needs-design:")
 
 
-def deciding_commit(repo: Path, relative: str) -> str | None:
+def deciding_commit(
+    repo: Path, relative: str, prefixes: tuple[str, ...] = FRONTMATTER_DECISION
+) -> str | None:
     """The newest commit that CHANGED the intent's `status:` or
-    `needs-design:` line -- the one that decided something.
+    `needs-design:` line -- the one that decided something. `prefixes`
+    generalizes this to another frontmatter line with the same discipline
+    (the `lane:` switch line reuses it below) without touching the
+    needs-design/status callers, which keep the default.
 
     Reading the newest touching commit instead made every later edit to the
     intent body (a new open question, an evidence path) owe the needs-design
@@ -818,7 +835,7 @@ def deciding_commit(repo: Path, relative: str) -> str | None:
     for sha in git_text(repo, "log", "--format=%H", "--", relative).splitlines():
         if not sha.strip():
             continue
-        if _decides_in_frontmatter(repo, sha, relative):
+        if _decides_in_frontmatter(repo, sha, relative, prefixes=prefixes):
             return sha
     return None
 
@@ -836,10 +853,12 @@ def frontmatter_end(text: str) -> int:
     return len(text.splitlines()) + 1
 
 
-def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
-    """Did this commit change a `status:`/`needs-design:` line that lived in
-    the intent's FRONT MATTER? A quoted or fenced copy in the body is an
-    example, not a decision (W2 re-review)."""
+def _decides_in_frontmatter(
+    repo: Path, sha: str, relative: str, prefixes: tuple[str, ...] = FRONTMATTER_DECISION
+) -> bool:
+    """Did this commit change a `status:`/`needs-design:` line (or another
+    `prefixes` line) that lived in the intent's FRONT MATTER? A quoted or
+    fenced copy in the body is an example, not a decision (W2 re-review)."""
     diff = git_text(repo, "show", "--format=", "--unified=0", sha, "--", relative)
     after = frontmatter_end(git_maybe(repo, "show", f"{sha}:{relative}") or "")
     before = frontmatter_end(git_maybe(repo, "show", f"{sha}^:{relative}") or "")
@@ -852,10 +871,10 @@ def _decides_in_frontmatter(repo: Path, sha: str, relative: str) -> bool:
             continue
         marker, body = line[:1], line[1:]
         if marker == "+":
-            decisive = body.lstrip().startswith(FRONTMATTER_DECISION) and new_line < after
+            decisive = body.lstrip().startswith(prefixes) and new_line < after
             new_line += 1
         elif marker == "-":
-            decisive = body.lstrip().startswith(FRONTMATTER_DECISION) and old_line < before
+            decisive = body.lstrip().startswith(prefixes) and old_line < before
             old_line += 1
         else:
             old_line += 1
@@ -1003,6 +1022,189 @@ def check_needs_design_reason(
             verdict,
         )
     return [], verdict
+
+
+LANE_LINE_PREFIX = ("lane:",)
+
+# `lane: express` / `lane: gate-only` / `lane: full`, but NEVER bare: every
+# legal value carries dated user attribution, either the DECLARED suffix
+# `— declared <YYYY-MM-DD> by <name>` (day-one, no round/wave reference) or
+# the SWITCH suffix `— switched <YYYY-MM-DD> by <name>, from <wave
+# <n>|round <n>>` (mid-flight). Intent Acceptance 1 says it in so many
+# words: "宣告或切換都帶日期與人" -- declaring, not only switching, carries
+# date and person (wave-end:1 adversary finding 1-01) -- so a BARE `lane:
+# express`, with no suffix at all, is not a legal value; `by <name>` is
+# mandatory in both suffixes (plan Risk: the checker cannot tell a user
+# from an agent, so requiring `by <name>` is the only machine-checkable
+# trace that someone is named), and either suffix missing it, or missing
+# the date, fails the whole match rather than silently matching just the
+# bare name -- a truncated line is rejected instead of read as if nothing
+# had been declared. `full` is legal in both suffix forms (the intent's
+# own Proposed outcome point 1 says reverting to `full` is "隨時可以，同樣
+# 一行", always possible with the same kind of line).
+LANE_GRAMMAR = re.compile(
+    r"^(?P<name>express|gate-only|full)\s*(?:—|–|--)\s*"
+    r"(?:"
+    r"declared\s+(?P<declared_date>\d{4}-\d{2}-\d{2})\s+by\s+(?P<declared_by>[^,]+?)"
+    r"|"
+    r"switched\s+(?P<date>\d{4}-\d{2}-\d{2})\s+by\s+(?P<by>[^,]+?)\s*,\s*from\s+"
+    r"(?P<unit>wave|round)\s+(?P<n>\d+)"
+    r")"
+    r"\s*$"
+)
+
+
+def check_lane_schema(front) -> list[tuple[str, str]]:
+    """`lane:` is optional, but when present it must carry dated user
+    attribution -- the declared suffix `— declared <YYYY-MM-DD> by <name>`
+    or the switch suffix `— switched <YYYY-MM-DD> by <name>, from <wave
+    <n>|round <n>>`, both WITH `by <name>` -- a bare `lane: express` (no
+    suffix at all), or a suffix that omits who wrote it, is unrecoverable
+    and blocks here rather than being silently accepted as a plain
+    declaration."""
+    raw = front.get("lane", "").strip()
+    if not raw or LANE_GRAMMAR.match(raw):
+        return []
+    return [
+        (
+            "intent.schema",
+            f"`lane: {raw}` does not match the declared grammar `express | "
+            "gate-only | full — declared <YYYY-MM-DD> by <name>` or the switch "
+            "grammar `<name> — switched <YYYY-MM-DD> by <name>, from <wave "
+            "<n>|round <n>>` -- a bare lane name with no dated attribution is "
+            "not a legal value.",
+        )
+    ]
+
+
+def check_lane_reason(
+    front, commit_msg: Path | None, repo: Path, path: Path, out=sys.stdout
+) -> list[tuple[str, str]]:
+    """The `lane:` line, declared or switched, must appear verbatim in the
+    message of the commit that last changed it -- the same discipline
+    `check_needs_design_reason` applies to `status:`/`needs-design:`,
+    reused here (`deciding_commit`/`_decides_in_frontmatter` take a
+    `prefixes` argument for exactly this) since only the user may write
+    this line and its provenance matters the same way."""
+    raw = front.get("lane", "").strip()
+    if not raw:
+        return []
+    sha = relative = None
+    if commit_msg is not None:
+        if not commit_msg.is_file():
+            raise UsageError(f"no commit message file at {commit_msg}")
+        message, source = read_text(commit_msg), str(commit_msg)
+    else:
+        relative = path.resolve().relative_to(repo.resolve()).as_posix()
+        sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
+        if sha is None:
+            message, source = "", f"{relative} (no commit has decided it yet)"
+        else:
+            message = git_text(repo, "show", "-s", "--format=%B", sha)
+            source = f"commit {sha[:7]}, which last changed lane"
+    line = f"lane: {raw}"
+    if _squeeze(line) not in _squeeze(message):
+        if sha is not None and relative is not None:
+            note = _squash_note(repo, relative, sha)
+            if note is not None:
+                out.write(note + "\n")
+                return []
+        return [
+            (
+                "intent.needs-design-reason",
+                f"the commit message ({source}) does not carry the line `{line}`.",
+            )
+        ]
+    return []
+
+
+def declared_lane(repo: Path, change_id: str) -> tuple[str, str, int | None, str | None]:
+    """`(lane, origin, from_round, unit)` -- the lane the intent declares
+    for `change_id`, or the repo default in its silence.
+
+    `lane` is one of `full`/`express`/`gate-only`. `origin` is `"intent"`
+    when the intent's own `lane:` line decided it, `"kickoff"` when
+    KICKOFF-DEFAULTS' `default-lane` decided it because the intent carries
+    no `lane:` line, or `"default"` when neither exists (full).
+    `parse_document` already keeps only the LAST `lane:` line (it
+    overwrites the frontmatter dict on each match), so "the last line
+    wins" needs no extra logic here. `unit` is `"round"`/`"wave"` for a
+    switch suffix, or `None` for the declared (day-one) suffix -- kept
+    alongside `from_round` so `effective_lane_detail` can tell a `from
+    round <n>` switch (continuous-numbering comparison) apart from a
+    `from wave <n>` switch or a plain declaration (both use `_earlier_
+    lane_pairs` instead, wave-end:1 adversary finding 3). `from_round` is
+    the round number named by a `from round <n>` switch suffix only; a
+    `from wave <n>` suffix and a plain declared suffix both yield `None`
+    (there is no round number to compare against inside a wave, or at
+    all, for a day-one declaration).
+
+    This re-runs `check_lane_schema` itself and fails CLOSED: a `lane:`
+    line that would not pass the intent-time schema gate (most commonly a
+    BARE name with no dated-attribution suffix at all, wave-end:1
+    adversary finding 1-01) is never honoured here either, even if it
+    somehow reached a commit without going through that gate -- it falls
+    through to the repo default exactly as if no `lane:` line existed."""
+    manifest = load_manifest()
+    intent_path = artifact_path(manifest, "intent", change_id, repo)
+    front: dict[str, str] = {}
+    if intent_path.is_file():
+        front, _sections = parse_document(read_text(intent_path))
+    raw = front.get("lane", "").strip()
+    if raw and not check_lane_schema(front):
+        match = LANE_GRAMMAR.match(raw)
+        if match:
+            unit, number = match.group("unit"), match.group("n")
+            from_round = int(number) if unit == "round" and number else None
+            return match.group("name"), "intent", from_round, unit
+    default = kickoff_defaults(repo).get("default-lane", "").strip()
+    if default in ("full", "express", "gate-only"):
+        return default, "kickoff", None, None
+    return "full", "default", None, None
+
+
+def _lane_declaration_stated_by_its_commit(repo: Path, change_id: str) -> tuple[bool, str]:
+    """Does the commit that last changed the intent's `lane:` line carry
+    that exact line, verbatim, in its own message? (wave-end:1-r3)
+
+    Only `effective_lane_detail` calls this, and only when `declared_lane`
+    already found a schema-valid, intent-origin declaration -- `push`
+    never wired `check_lane_reason` itself in (finding 2, 029925d0: doing
+    so retroactively re-derives history that predates the checker knowing
+    to require it, breaking existing green fixtures), but a declaration
+    honoured at push without ANY provenance check at all is the same gap
+    from the other direction. `deciding_commit`/`_decides_in_frontmatter`
+    (the same mechanism `check_lane_reason` and `check_needs_design_
+    reason` use) find the commit; its message must contain `lane: <raw>`
+    verbatim, squeezed the same way `check_lane_reason` squeezes it.
+
+    Returns `(True, sha7)` when the line is stated, `(False, detail)`
+    otherwise -- `detail` is the short sha when a deciding commit was
+    found but its message omits the line, or a literal explanation when
+    no deciding commit could be found at all (fail closed either way:
+    both are "not stated")."""
+    manifest = load_manifest()
+    intent_path = artifact_path(manifest, "intent", change_id, repo)
+    if not intent_path.is_file():
+        return False, "no intent file"
+    front, _sections = parse_document(read_text(intent_path))
+    raw = front.get("lane", "").strip()
+    if not raw:
+        return True, ""
+    try:
+        relative = intent_path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        return False, "intent path is outside the repo"
+    sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
+    if sha is None:
+        return False, "no commit decides the `lane:` line"
+    message = git_maybe(repo, "show", "-s", "--format=%B", sha)
+    if message is None:
+        return False, sha[:7]
+    line = f"lane: {raw}"
+    if _squeeze(line) not in _squeeze(message):
+        return False, sha[:7]
+    return True, sha[:7]
 
 
 TEMPLATES_GLOB = "**/templates/**"
@@ -2981,6 +3183,252 @@ def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
     )
 
 
+def _evidence_masked_kind(manifest, path: str) -> str | None:
+    """`_artifact_type_for` walks `manifest.yaml`'s `artifact_types` in
+    order and stops at the first match; `**/evidence/**` sits ahead of
+    `**/SKILL.md`/`**/agents/*.md`/`**/hooks/**`/`**/scripts/check_*`, so a
+    skill or gate file with an `evidence` directory segment ANYWHERE in
+    its path -- not only inside this change's own store folder -- is
+    classified `evidence` no matter what the file actually is (wave-end:1
+    adversary finding 1: `loom-code/skills/x/evidence/SKILL.md`,
+    `loom-code/scripts/evidence/check_y.py`).
+
+    This does not reorder the manifest or change `_artifact_type_for`'s
+    answer -- every OTHER consumer of that function (adversarial-probe
+    typing, trailer duty, `artifact_types()`) keeps reading these paths as
+    `evidence`, exactly as documented. It answers a narrower question for
+    `_lane_forcing_paths` alone: dropping ONE path segment literally named
+    `evidence`, would what is left match a `gate` or `skill` glob? A `gate`
+    hit wins over a `skill` hit (gate forbids both express and gate-only;
+    skill only narrows gate-only), so this returns `"gate"` the moment one
+    is found and otherwise the last `"skill"` hit, or `None`."""
+    segments = path.split("/")
+    found_skill = None
+    for index, segment in enumerate(segments):
+        if segment != "evidence":
+            continue
+        candidate = "/".join(segments[:index] + segments[index + 1:])
+        if not candidate:
+            continue
+        kind = _artifact_type_for(manifest, candidate)
+        if kind == "gate":
+            return "gate"
+        if kind == "skill":
+            found_skill = "skill"
+    return found_skill
+
+
+def _lane_forcing_paths(
+    repo: Path, reviewed_id: str | None, manifest,
+) -> tuple[list[str], list[str]]:
+    """`(hard, skill)` -- every reason `change_lane_detail` would force
+    `full` for, walked to the END of the delta rather than stopping at the
+    first hit (`change_lane_detail` only needs one reason; the declared-
+    lane eligibility below needs to know if a `skill`-typed path is the
+    ONLY reason, since that is the one case `gate-only` excludes but
+    `express` does not).
+
+    `hard` names paths (or the multi-plugin count) that force `full`
+    whatever a declared lane says: a declared interface surface, more than
+    one plugin directory, or non-test code (the manifest's `code`/`gate`
+    §6 types) -- this is what the plan calls a "gate-typed path". `skill`
+    names `SKILL.md`/`loom-code/agents/*.md` paths (§6 type `skill`) --
+    these force `gate-only` back to `full` (its own eligibility excludes
+    them) but never block `express`. A `standing` document (PRINCIPLES.md,
+    DESIGN.md, `docs/loom/KICKOFF-DEFAULTS.md`) forces neither: the
+    express/gate-only eligibility text names only a gate path and a
+    skill/agent-contract path, so a standing-doc-only delta -- including
+    the very KICKOFF-DEFAULTS.md commit that declares a `default-lane:` --
+    never blocks a declared lane (adversary probe (i)). An `evidence`-typed
+    path that `_evidence_masked_kind` shows is really a skill or gate file
+    one directory deeper is treated as that real type instead of being
+    skipped (adversary finding 1)."""
+    remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
+    hard: list[str] = []
+    plugin_dirs = {
+        top for path in remaining
+        if (top := _top_level_plugin_dir(path)) is not None
+    }
+    if len(plugin_dirs) > 1:
+        hard.append(
+            f"touches {len(plugin_dirs)} plugin directories "
+            f"({', '.join(sorted(plugin_dirs))}); the small lane allows at most one."
+        )
+    surfaces, _origin = interface_surfaces(repo, manifest)
+    surface_patterns = [glob_to_regex(glob) for glob in surfaces]
+    skill: list[str] = []
+    for path in remaining:
+        if any(pattern.match(path) for pattern in surface_patterns):
+            hard.append(f"{path} is a declared interface surface.")
+            continue
+        kind = _artifact_type_for(manifest, path)
+        if kind == "evidence":
+            masked = _evidence_masked_kind(manifest, path)
+            if masked == "gate":
+                hard.append(
+                    f"{path} is gate-typed once its `evidence` directory "
+                    "segment is set aside."
+                )
+                continue
+            if masked == "skill":
+                skill.append(path)
+                continue
+        # gate/skill kinds are decided BEFORE the tests/CI-path exemption
+        # below (wave-end:1 adversary finding wave-end:1-02): a genuine
+        # gate or skill file that also happens to sit under a `tests/`
+        # path segment (`loom-code/hooks/tests/push.py`,
+        # `loom-code/skills/example/tests/SKILL.md`) must still force the
+        # lane its OWN type demands -- checking the tests/CI exemption
+        # first would wave it through as small-lane-safe, exactly the
+        # class of bug `_evidence_masked_kind` closed for `evidence/`.
+        if kind == "gate":
+            hard.append(f"{path} is gate-typed")
+            continue
+        if kind == "skill":
+            skill.append(path)
+            continue
+        if kind in SMALL_LANE_ARTIFACT_TYPES:
+            continue
+        if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
+            continue
+        if kind == "standing":
+            continue
+        hard.append(
+            f"{path} is non-test code" if kind == "code"
+            else f"{path} is {kind or 'unclassified'}-typed"
+        )
+    return hard, skill
+
+
+def effective_lane_detail(
+    repo: Path, reviewed_id: str | None, change_id: str | None, round_number: int,
+    earlier_pairs: frozenset[tuple[str, int]] = frozenset(),
+    current_scope: str = "",
+) -> tuple[str, str]:
+    """`(lane, reason)` -- the lane `check_verdicts`' floor actually uses
+    (plan W1-02, ratified follow-up PRINCIPLES.md 56a4dc4c / intent
+    48114098).
+
+    Recompute first: `change_lane_detail`'s own `small`/`full` call
+    always runs first, and the declaration's TIMING is always checked
+    before its content -- a declaration or switch not yet in force must
+    never promote anything, whatever the raw recompute says.
+
+    Two DIFFERENT timing checks, picked by `unit` (wave-end:1 adversary
+    finding 3 -- the two must not share one mechanism, or one of them
+    over- or under-blocks):
+
+    - `unit == "round"` (an explicit `from round <n>` switch): plain
+      numeric comparison in continuous numbering -- `round_number > n`.
+      When it is not strictly after, the pre-switch `full` lane still
+      governs THIS round (there is no way to recover a lane older than
+      the switch from the grammar, so the safe fallback is `full`, not
+      whatever came before).
+    - `unit == "wave"` (a `from wave <n>` switch) OR `unit is None` (a
+      plain declared suffix, no round/wave reference at all): NEITHER
+      carries a round number to compare against, and a plain numeric
+      "block every round from here on once any history exists" reading
+      (what an earlier round of this fix tried) over-blocks forever,
+      never letting a later checkpoint's fresh rounds -- or even later
+      rounds of the SAME checkpoint -- pick up the new lane once any
+      review history exists anywhere. The correct check is membership:
+      `earlier_pairs` (from `_earlier_lane_pairs` -- the real historical
+      `(scope, round)` pairs at the declaring commit's tree when that can
+      be read, else every pair the CURRENT review already carries except
+      the one being decided, fail closed) names every pair that existed
+      BEFORE the declaration; the declared lane applies to any `(scope,
+      round)` NOT in that set. Only the one round genuinely already in
+      flight when the switch landed -- or, for a plain declared suffix,
+      no round at all in the true day-one case -- stays under the old
+      lane.
+
+    Provenance (wave-end:1-r3, made unconditional after a follow-up
+    adversary probe pinned the gate-only direction too -- an earlier
+    version of this check applied only to granting `express`, reasoning
+    that only that step widens the floor past the raw recompute; that
+    reasoning missed that an unstated `gate-only` declaration on a raw
+    `small` delta still drops a real floor of 1 to 0, the more dangerous
+    direction of the two): EVERY intent-origin declaration -- `express`,
+    `gate-only`, or a switch back to `full` -- is honoured only when the
+    commit that last changed the `lane:` line states that exact line,
+    verbatim, in its own message (`_lane_declaration_stated_by_its_
+    commit`, the same mechanism `check_lane_reason`/`check_needs_design_
+    reason` use). A declaration that reached this schema-valid but never
+    confirmed by its own deciding commit (or whose deciding commit cannot
+    be found at all) is ignored outright, BEFORE the timing check and
+    before the raw/declared combination below ever run -- the lane is
+    simply the raw recompute, with a reason naming the commit.
+
+    Once provenance and timing both clear, the RAW recompute and the
+    declaration combine differently per declared value:
+
+    - `gate-only` is the small lane with the reader floor waived, not a
+      separate, narrower thing: it is eligible ONLY when the raw recompute
+      is already `small` (floor 0 replaces small's floor 1) -- a raw
+      `full`, for ANY reason at all (a standing document, a second plugin
+      directory, non-test code, a gate/skill/agent-contract path, a
+      declared interface surface), means the declaration is ignored
+      outright and the delta falls back to `full`. This never consults
+      `_lane_forcing_paths` -- a path that would make `_lane_forcing_paths`
+      call something `hard` already made the RAW recompute `full` first
+      (the same manifest §6 types), and a skill/agent-contract path
+      likewise never reaches raw `small` (skill is not one of `change_
+      lane_detail`'s small-lane types), so the old separate skill-path
+      exclusion is now unreachable dead weight, superseded by this.
+    - `express` is UNCHANGED from before the gate-only/small ratification:
+      eligible whenever the raw recompute is `full` and `_lane_forcing_
+      paths` found no hard (gate-typed) reason -- a standing document
+      stays soft for express specifically (`_lane_forcing_paths`' own
+      `kind == "standing"` exemption), and a raw `small` recompute means
+      express was never reachable in the first place (declaring `express`
+      on an already-small delta leaves it `small`, whose floor is the
+      same 1 express would have given it).
+    - a declared (or default) `full` always stays `full`, whatever the raw
+      recompute said."""
+    manifest = load_manifest()
+    raw_lane, raw_reason = change_lane_detail(repo, reviewed_id)
+    declared, origin, from_round, unit = (
+        declared_lane(repo, change_id) if change_id else ("full", "default", None, None)
+    )
+    if origin == "intent" and change_id is not None:
+        stated, detail = _lane_declaration_stated_by_its_commit(repo, change_id)
+        if not stated:
+            return raw_lane, f"lane declaration not stated by its commit {detail}"
+    if unit == "round":
+        if from_round is not None and not (round_number > from_round):
+            return "full", (
+                f"declared `lane: {declared}` switches from round {from_round}, but "
+                f"round {round_number} is not strictly after it -- the pre-switch "
+                "full lane still applies."
+            )
+    elif origin == "intent" and (current_scope, round_number) in earlier_pairs:
+        return "full", (
+            f"declared `lane: {declared}` ({origin}) but round {round_number} of "
+            f"scope {current_scope!r} was already on the board before the "
+            "declaration -- the pre-declaration full lane still applies to it."
+        )
+
+    if raw_lane == "small":
+        if declared == "gate-only":
+            return "gate-only", (
+                f"raw recompute is small; declared `lane: gate-only` ({origin}) "
+                "waives the reader floor -- gate-only is the small lane with "
+                "reviewers waived."
+            )
+        return "small", raw_reason
+
+    if declared == "full":
+        return "full", raw_reason
+    if declared == "gate-only":
+        return "full", f"gate-only needs a small-lane delta: {raw_reason}"
+    hard, _skill = _lane_forcing_paths(repo, reviewed_id, manifest)
+    if hard:
+        return "full", f"declared `lane: {declared}` ({origin}) but {hard[0]}"
+    return "express", (
+        f"declared `lane: express` ({origin}); no gate-typed path in the delta."
+    )
+
+
 def change_lane(repo: Path, reviewed_id: str | None) -> str:
     """`"small"` or `"full"` -- see `change_lane_detail` for the reason."""
     lane, _reason = change_lane_detail(repo, reviewed_id)
@@ -2992,7 +3440,19 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
     """Same discipline as the package-tests rule: the record says which
     commit was attacked and what to type, and the checker types it itself.
     An adversarial case that only ran in the adversary's head is not
-    evidence, and one that no longer passes is not a regression eval."""
+    evidence, and one that no longer passes is not a regression eval.
+
+    The floor is normally owed only when the delta's own §6 types
+    intersect `ADVERSARIAL_TYPES` (code/spec/skill/gate) -- but every one
+    of those types either forces `full` on its own (code, spec, gate are
+    `_lane_forcing_paths`-hard) or is excluded from `gate-only` outright
+    (skill), so a delta actually eligible for `express`/`gate-only` -- by
+    definition, none of those types -- could never owe the floor at all.
+    The intent (Proposed outcome points 2-3) states it unconditionally for
+    both of those lanes ("仍有 ≥3 探針", always at least 3 probes, even
+    with zero readers on the board), so this recomputes the effective lane
+    once more here and keeps the floor live regardless of `kinds` for
+    `express`/`gate-only` (wave-end:1 adversary finding 4)."""
     try:
         manifest = load_manifest()
         changed = changed_paths(repo)
@@ -3006,7 +3466,19 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
     changed = {path for path in changed if not is_review.match(path)}
 
     kinds = artifact_types(manifest, changed) & ADVERSARIAL_TYPES
-    if not kinds:
+    round_number, _scoped = scored_verdicts(review)
+    current_scope = str(review.get("scope", "")).strip()
+    try:
+        earlier_pairs = _earlier_lane_pairs(
+            repo, review, change_id, current_scope, round_number
+        )
+        lane, _lane_reason = effective_lane_detail(
+            repo, reviewed_id, change_id, round_number, earlier_pairs, current_scope
+        )
+    except (UsageError, OSError, KeyError):
+        lane = "full"
+    lane_unconditional = lane in ("express", "gate-only")
+    if not kinds and not lane_unconditional:
         return []
 
     usable = 0
@@ -3116,10 +3588,15 @@ def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
     if usable >= ADVERSARIAL_FLOOR:
         return []
     detail = "; ".join(reasons) if reasons else "none recorded"
+    owed = (
+        f"touches {', '.join(sorted(kinds))}, which needs"
+        if kinds
+        else f"is declared `{lane}`, whose floor is unconditionally"
+    )
     return [
         (
             "push.probes-adversarial",
-            f"this change touches {', '.join(sorted(kinds))}, which needs "
+            f"this change {owed} "
             f"{ADVERSARIAL_FLOOR} adversarial probes; {usable} are usable ({detail}).",
         )
     ]
@@ -3676,6 +4153,74 @@ def scored_verdicts(review) -> tuple[int, list[dict]]:
     return latest_round(usable_verdicts(review), scope or None)
 
 
+def _review_verdict_pairs(review) -> set[tuple[str, int]]:
+    """Every `(scope, round)` pair `review["verdicts"]` records, read
+    straight off the entries -- no filtering, no "latest round" scoping."""
+    pairs = set()
+    for entry in review.get("verdicts", []):
+        if isinstance(entry, dict):
+            round_value, scope_value = entry.get("round"), entry.get("scope")
+            if isinstance(round_value, int) and isinstance(scope_value, str):
+                pairs.add((scope_value, round_value))
+    return pairs
+
+
+def _earlier_lane_pairs(
+    repo: Path, review, change_id: str | None, current_scope: str, round_number: int,
+) -> frozenset[tuple[str, int]]:
+    """`(scope, round)` pairs that count as "review history that predates
+    a bare `lane:` declaration" -- keyed to the pair, not the bare round
+    number, because round numbers RESTART at every new checkpoint
+    (`latest_round`'s own docstring, the memory-step gotcha): a plain
+    `round < round_number` comparison is blind to a declaration that lands
+    on round 1 of a brand-new checkpoint right after an earlier checkpoint
+    already ran real rounds (wave-end:1 adversary follow-up on finding 2).
+
+    Preferred source: `review.json`'s own content AT THE TREE of the
+    commit that last changed the intent's `lane:` line -- `deciding_
+    commit`, the same mechanism `check_needs_design_reason` uses -- read
+    via `git show <sha>:<review-path>`. That is the actual historical
+    record of what had already been reviewed when the line was written,
+    and every `(scope, round)` pair it carries counts as earlier,
+    regardless of what the CURRENT review.json goes on to record later.
+
+    That historical read is often unresolvable: no commit ever decided
+    the line, the file did not exist yet at that tree (review.json is
+    frequently committed once, at the very end, rather than incrementally
+    per round), or its content is not the shape expected. Any of those
+    fails CLOSED: it falls back to every `(scope, round)` pair the
+    CURRENT review.json's own `verdicts[]` already carries, other than
+    the one being decided right now -- so a bare declaration is honoured
+    immediately only when NO other round, of any scope, has ever been
+    recorded for this change at all; the moment any has, the declaration
+    defers to the next round exactly like an explicit `from round <n>`
+    switch would."""
+    if change_id is not None:
+        try:
+            manifest = load_manifest()
+            intent_path = artifact_path(manifest, "intent", change_id, repo)
+            relative = intent_path.resolve().relative_to(repo.resolve()).as_posix()
+            sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
+            if sha is not None:
+                review_rel = manifest["artifacts"]["review"]["path"].replace(
+                    "<change-id>", change_id
+                )
+                raw = git_maybe(repo, "show", f"{sha}:{review_rel}")
+                if raw is not None:
+                    try:
+                        historical = json.loads(raw)
+                    except json.JSONDecodeError:
+                        historical = None
+                    if isinstance(historical, dict):
+                        return frozenset(_review_verdict_pairs(historical))
+        except (UsageError, OSError, KeyError, ValueError):
+            pass
+    # Fail closed: no resolvable historical tree -- use the current
+    # review's own record of every OTHER round, of any scope.
+    current = (current_scope, round_number)
+    return frozenset(_review_verdict_pairs(review) - {current})
+
+
 def _split_names(raw) -> list[str]:
     return [name.strip() for name in str(raw or "").split(",") if name.strip()]
 
@@ -3805,30 +4350,44 @@ def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
     return standing
 
 
+LANE_VERDICT_FLOOR = {"full": 2, "small": 1, "express": 1, "gate-only": 0}
+
+
 def check_verdicts(repo: Path, review, reviewed_id: str | None,
                     dispatch_reviewers: set[str],
                     change_id: str | None = None) -> list[tuple[str, str]]:
-    """The reviewer-count floor, lane-dependent since W0-02: a small-lane
-    change (plan risk 3: "its message now names the lane") needs one
-    fresh-context verdict, a full-lane change still needs two. A fix round
-    of the same scope may also count a non-returning previous-round
-    reviewer whose earlier PASS still stands (see `_standing_reviewers`) --
-    but only when that reviewer is itself a dispatched reviewer
-    (`dispatch_reviewers`, from `parse_dispatch`); a name with no
-    dispatch[] entry at all can never stand, however old its ghost PASS.
-    `change_id` (the change actually being pushed) is threaded through to
-    `_standing_reviewers` so its fix-delta exclusion sets aside only THIS
-    change's own review.json, never another change's."""
+    """The reviewer-count floor, lane-dependent since W0-02 and lane-aware
+    since W1-02: `full` 2 / `small` 1 / `express` 1 / `gate-only` 0
+    (`effective_lane_detail` -- recompute first, then the declared lane's
+    own eligibility, then the switch's `from_round` timing). A `gate-only`
+    round with a floor of 0 may carry no verdicts at all and still count
+    as the latest passing round -- `push.reviewed-sha`, `push.review-only-
+    head` and `push.open-findings-closed` already tolerate an empty
+    `verdicts[]` for their own scope (they never require a NON-empty
+    round; see their own docstrings), so this floor is the only place a
+    zero-verdict round needed a decision at all. A fix round of the same
+    scope may also count a non-returning previous-round reviewer whose
+    earlier PASS still stands (see `_standing_reviewers`) -- but only when
+    that reviewer is itself a dispatched reviewer (`dispatch_reviewers`,
+    from `parse_dispatch`); a name with no dispatch[] entry at all can
+    never stand, however old its ghost PASS. `change_id` (the change
+    actually being pushed) is threaded through to `_standing_reviewers` so
+    its fix-delta exclusion sets aside only THIS change's own review.json,
+    never another change's, and to `effective_lane_detail` so it can read
+    THIS change's own declared lane."""
     round_number, verdicts = scored_verdicts(review)
     reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
     scope = str(review.get("scope", "")).strip()
     reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts,
                                       dispatch_reviewers, change_id)
     try:
-        lane, lane_reason = change_lane_detail(repo, reviewed_id)
+        earlier_pairs = _earlier_lane_pairs(repo, review, change_id, scope, round_number)
+        lane, lane_reason = effective_lane_detail(
+            repo, reviewed_id, change_id, round_number, earlier_pairs, scope
+        )
     except (UsageError, OSError, KeyError) as exc:
         lane, lane_reason = "full", f"cannot recompute the change lane: {exc}"
-    floor = 1 if lane == "small" else 2
+    floor = LANE_VERDICT_FLOOR.get(lane, 2)
     failures = []
     if len(reviewers) < floor:
         detail = f" ({lane_reason})" if lane == "full" else ""

@@ -25,6 +25,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 SHIP_SKILL_MD = REPO / "loom-code/skills/ship/SKILL.md"
 BUILD_SKILL_MD = REPO / "loom-code/skills/build/SKILL.md"
+BLIND_RUN_REPORT_REFERENCE = REPO / "loom-code/skills/review/references/blind-run-report.md"
 
 from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
 
@@ -380,4 +381,74 @@ def test_matcher_push_checklist_mirrors_sentence_affirmative_accepted() -> None:
     assert "mirrors" in sentence.lower()
     assert "loom-code-ci.yml" in sentence.lower()
     assert "jobs" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+# --- W1-04: lane PR line, gate-only ③ pointer -------------------------------
+
+
+def test_pr_body_template_carries_lane_line() -> None:
+    """The `## Review` section of the PR-body template carries the literal
+    `lane: <name>（第 N 輪起）` line — the format string a checkpoint round
+    fills in, not prose, so it is exempt from the English-only station-text
+    policy the same way `needs-design:` is."""
+    template = _pr_body_template()
+    section = template.split("## Review", 1)[1]
+    assert "lane: <name>（第 N 輪起）" in section
+
+
+def test_decision_point_3_points_at_gateonly_replacement_material() -> None:
+    """Ship's step 2 (decision point ③) is at the file's word cap
+    (3,497/3,500), so the affirmative sentence naming gate-only's
+    replacement material -- a one-page probe-and-package-test result, in
+    place of the blind-run report -- lives in
+    `references/blind-run-report.md`'s own "Gate-only's replacement
+    material" section instead; ship/SKILL.md itself carries only the one
+    pointer sentence naming that section. The pointer never spells out
+    the literal path `references/blind-run-report.md` -- that exact
+    substring, anywhere in a SKILL.md, is read by `test_ship_pr_body.py`'s
+    `test_referenced_paths_exist` as a same-skill reference and would
+    wrongly demand `loom-code/skills/ship/references/blind-run-report.md`,
+    which does not exist (the file lives under review's own `references/`
+    instead)."""
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    section = text.split("## 2. Decision point", 1)[1].split("## 3. Memory", 1)[0]
+    assert "Gate-only's replacement material" in section
+    assert "blind-run-report.md" in section
+    assert "references/blind-run-report.md" not in section
+
+    reference = BLIND_RUN_REPORT_REFERENCE.read_text(encoding="utf-8")
+    ref_section = reference.split("## Gate-only's replacement material", 1)[1]
+    ref_section = ref_section.split("## What makes a report unusable", 1)[0]
+    hits = [
+        s for s in _sentences(ref_section)
+        if "gate-only" in s.lower()
+        and "probe" in s.lower()
+        and "package-test" in s.lower()
+        and "blind-run-report.md" in s
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "references/blind-run-report.md's gate-only section has no "
+        "affirmative sentence naming the one-page probe-and-package-test "
+        "result"
+    )
+
+
+def test_matcher_gateonly_sentence_negated_rejected() -> None:
+    sentence = (
+        "Gate-only does not present the review station's blind-run report "
+        "at decision point 3, never showing it."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_gateonly_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Gate-only presents the one-page probe-and-package-test result "
+        "there instead, shaped in `references/blind-run-report.md`."
+    )
+    assert "gate-only" in sentence.lower()
+    assert "probe" in sentence.lower()
+    assert "blind-run-report.md" in sentence
     assert not _has_negation(sentence)

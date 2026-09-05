@@ -104,6 +104,9 @@ diff:
   mechanism produced it.
 - **Open questions**: everything the run left uncertain.
 
+Gate-only's ③ material lives in review's blind-run-report.md, under its own
+"Gate-only's replacement material" section, replacing this paragraph here.
+
 Then wait. Three answers are possible:
 
 | Answer | Where it goes |
@@ -300,6 +303,7 @@ checked, the blind-run report for what was observed:
 tried, what happened, the evidence>
 
 ## Review
+lane: <name>（第 N 輪起）
 Rounds: <n>. Reviewers: <agent ids and models from verdicts[]>.
 Vendors: <vendors[]>, plus any `fallback` a round recorded.
 Findings: <n> raised, <n> resolved, <n> dismissed (each dismissal with its

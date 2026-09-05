@@ -58,6 +58,14 @@ none: "Nothing.">
 
 ---
 
+## Gate-only's replacement material
+
+Gate-only presents the one-page probe-and-package-test result at decision
+point ③ instead of a blind-run report, shaped by this same
+`references/blind-run-report.md` structure — every adversarial probe
+named, what ran and what it proved, plus the package-test command's own
+recorded result.
+
 ## What makes a report unusable
 
 - An Acceptance line reported as "works" with no evidence anyone can look

@@ -5,6 +5,36 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] — 2026-09-05 — user-declared express and gate-only lanes
+
+budget-exception: 1.6.0 — one contract field registered (artifact:intent.lane): the user-facing `lane:` frontmatter field this change adds to the intent artifact; no checker rule was added alongside it.
+
+`docs/loom/2026-09-05-user-declared-express-lane/`.
+
+1. Three declared lanes — full, express, gate-only — replace the two the
+   checker previously recomputed on its own. An intent's `lane:`
+   frontmatter field carries the switch grammar (`express | gate-only |
+   <name> — switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>`);
+   only the user is ever allowed to write it, never an agent, and a
+   recomputed full lane always wins over a declared lighter one.
+   `KICKOFF` gains a `default-lane` key for the lane an intent gets when
+   it declares no `lane:` line of its own.
+2. The checker's lane computation carries `declared_lane` and
+   `effective_lane_detail` alongside the existing recomputed lane;
+   reviewer floors are 2 (full), 1 (express), 1 (gate-only), 0 for a
+   fourth, unnamed case. Gate deltas always require the full lane
+   regardless of the declared one; the gate-only lane additionally
+   forbids touching skill and agent-contract paths. A mid-change switch
+   applies only to the rounds after the round or wave it names.
+3. `intent.needs-design-reason`'s mechanism gains the switch-line rule
+   as a sibling clause. Station text: review §1–§4 carry the three-lane
+   paragraphs, a new `references/lane-switch.md` presents the
+   three-option prompt when a declared lane and a recomputed floor
+   disagree, build's no-checkpoint sentence and ship's PR line both name
+   the declared lane, and the user-judgment-leak lens gained a sentence
+   covering an agent-authored `lane:` line.
+4. No checker rule was added or removed — `--list-rules` stays at 27.
+
 ## [1.5.1] — 2026-09-05 — cold-read role-split measurement script; adversary three-way attribution baselined at N=10
 
 `docs/loom/2026-09-04-adversary-three-way-attribution-measured/`.

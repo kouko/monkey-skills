@@ -357,3 +357,59 @@ def test_matcher_perwave_sentence_affirmative_accepted() -> None:
     assert "committed once" in sentence.lower()
     assert "first dispatch" in sentence.lower()
     assert not _has_negation(sentence)
+
+
+# --- W1-04: no wave-end checkpoint under express/gate-only; switch pointer --
+
+from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
+
+
+def _has_negation(sentence: str) -> bool:
+    return bool(_NEGATION_RE.search(sentence))
+
+
+def _wave_end_sentences() -> list[str]:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 5. Wave end", 1)[1].split("## 6. Package tests", 1)[0]
+    flat = " ".join(section.split())
+    return [p for p in re.split(r"(?<=[.!?])\s+", flat) if p.strip()]
+
+
+def test_wave_end_no_checkpoint_under_express_gateonly() -> None:
+    hits = [
+        s for s in _wave_end_sentences()
+        if "express" in s.lower()
+        and "gate-only" in s.lower()
+        and "closes the plan" in s.lower()
+        and "wave-end" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "build/SKILL.md §5 has no affirmative sentence stating express/"
+        "gate-only skip the wave-end checkpoint"
+    )
+
+
+def test_wave_end_points_at_lane_switch_reference() -> None:
+    section = "".join(_wave_end_sentences())
+    assert "lane-switch.md" in section
+
+
+def test_matcher_wave_end_sentence_negated_rejected() -> None:
+    sentence = (
+        "Express and gate-only never call a wave-end checkpoint, "
+        "cannot reach the round that closes the plan without one."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_wave_end_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "Express and gate-only route straight to the round that closes "
+        "the plan, skipping every wave-end checkpoint before it."
+    )
+    assert "express" in sentence.lower()
+    assert "gate-only" in sentence.lower()
+    assert "closes the plan" in sentence.lower()
+    assert "wave-end" in sentence.lower()
+    assert not _has_negation(sentence)
