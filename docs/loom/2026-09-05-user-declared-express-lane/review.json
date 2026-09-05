@@ -630,11 +630,45 @@
       "started": "2026-09-05T22:33:26+0800",
       "fresh_context": false,
       "note": "design re-look: continue fixing — round 3 on this checkpoint; the one open finding (-01) is a missing provenance check at push, a bounded addition to effective_lane_detail; the lane shape itself (gate-only = small with floor 0, dated declarations, record-keyed timing) is settled and ratified"
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-lane-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-lane-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T23:15:55+0800",
+      "fresh_context": true,
+      "vendor": "anthropic"
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 19,
+    "dispatches": 23,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
