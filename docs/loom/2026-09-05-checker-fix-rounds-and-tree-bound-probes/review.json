@@ -157,6 +157,130 @@
       "notes": [
         "wave-end:1-02, -03, -04 and the plan nit all verified fixed against the reviewed commit; checker suites 164 passed."
       ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md :: \"Each of this round's reviewers, blind-runner and adversary is **resumed** for the next round\"",
+          "text": "issue (blocking): fix-rounds.md still resumes every reader, contradicting review §8a and push.verdicts-ge-2 (anchor-scoped standing PASS).",
+          "fix": "rewrite the resume paragraph to resume only the readers with still-open findings and state the standing condition"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md :: \"the checker still accepts that older shape; this station no longer produces it.\"",
+          "text": "issue (blocking): ship §6 gives a cold agent no fallback for a checker older than 1.4.0 (a Codex scaffold copy, an older install; this branch itself per plan Risk 3) — the old separate-close procedure was deleted without a version-sensitive branch.",
+          "fix": "add a --list-rules preflight on push.review-only-head; on an older checker use the separate close commit + own branch-end round + review-only commit + second push"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md :: \"這在推送前要不要修好、由誰修，我沒有替你決定\"",
+          "text": "issue (blocking): the open-questions section still lists the graduated-file name collision as undecided although Acceptance 5 records it fixed at 10cba457 and re-verified.",
+          "fix": "drop or rewrite the stale bullet"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_review_station_text.py:533",
+          "text": "nitpick: prose-pin matcher self-tests cover only rejected negated examples; rule 8 also requires an accepted affirmative example.",
+          "fix": "add synthetic affirmative self-tests"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/test_ship_station_text.py:218",
+          "text": "nitpick: same — ship matcher self-tests lack the affirmative example.",
+          "fix": "add synthetic affirmative self-tests"
+        }
+      ],
+      "notes": [
+        "read-only sandbox: focused pytest could not start (no writable tmp); static inspection plus recorded evidence",
+        "graduated copies match originals apart from the path line; memory description matches its index line; 1.4.0 stamps agree; codex mirror differs only by its stamp line"
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "N/A",
+        "user-judgment-leak": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "tests": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "security": "N/A",
+        "architecture": "N/A",
+        "refactoring": "N/A",
+        "external-surface-grounding": "N/A",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "N/A",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md :: \"the checker still accepts that older shape; this station no longer produces it.\"",
+          "text": "issue (blocking): ship §6 gives a cold agent no fallback for a checker older than 1.4.0 (a Codex scaffold copy, an older install; this branch itself per plan Risk 3) — the old separate-close procedure was deleted without a version-sensitive branch.",
+          "fix": "add a --list-rules preflight on push.review-only-head; on an older checker use the separate close commit + own branch-end round + review-only commit + second push"
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/references/fix-rounds.md :: \"Each of this round's reviewers, blind-runner and adversary is **resumed** for the next round\"",
+          "text": "issue (blocking): fix-rounds.md still resumes every reader, contradicting review §8a and push.verdicts-ge-2 (anchor-scoped standing PASS).",
+          "fix": "rewrite the resume paragraph to resume only the readers with still-open findings and state the standing condition"
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md :: \"這在推送前要不要修好、由誰修，我沒有替你決定\"",
+          "text": "issue (blocking): the open-questions section still lists the graduated-file name collision as undecided although Acceptance 5 records it fixed at 10cba457 and re-verified.",
+          "fix": "drop or rewrite the stale bullet"
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/skills/ship/SKILL.md:3",
+          "text": "nitpick: the frontmatter description orders 'verifies the merge and closes the intent' although §6 now closes the intent inside the review-only commit before the push.",
+          "fix": "reorder the description"
+        }
+      ],
+      "notes": [
+        "ran test_review_station_text.py + test_ship_station_text.py (33) and the branch-end probe file (16) myself; package suite taken from the blind-run report",
+        "the working tree carried uncommitted edits to the four files at review time; scored strictly against 4ea90c1a"
+      ]
     }
   ],
   "probes": [
@@ -287,6 +411,30 @@
       "severity": "important",
       "text": "issue (name collision): both graduated probe files defined test_list_rules_line_count_pinned_at_27 with different bodies",
       "resolved": "closed by 10cba457 — renamed to test_list_rules_line_count_pinned_at_27_wave_end in the evidence original and its graduated copy; adv-be-chk re-ran its probe file green at 10cba457; br-be-chk re-verified Acceptance 5 (49a2cbdc)"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/skills/review/references/fix-rounds.md :: \"Each of this round's reviewers, blind-runner and adversary is **resumed** for the next round\"",
+      "origin_sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
+      "raised_by": "rev-be-chk-codex, rev-be-chk-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): fix-rounds.md still resumes every reader, contradicting review §8a and push.verdicts-ge-2 (anchor-scoped standing PASS)."
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/skills/ship/SKILL.md :: \"the checker still accepts that older shape; this station no longer produces it.\"",
+      "origin_sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
+      "raised_by": "rev-be-chk-codex, rev-be-chk-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): ship §6 gives a cold agent no fallback for a checker older than 1.4.0 (a Codex scaffold copy, an older install; this branch itself per plan Risk 3) — the old separate-close procedure was deleted without a version-sensitive branch."
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md :: \"這在推送前要不要修好、由誰修，我沒有替你決定\"",
+      "origin_sha": "4ea90c1a6acae8d5dea0b215ffc49ee85cec2a36",
+      "raised_by": "rev-be-chk-codex, rev-be-chk-sonnet",
+      "severity": "important",
+      "text": "issue (blocking): the open-questions section still lists the graduated-file name collision as undecided although Acceptance 5 records it fixed at 10cba457 and re-verified."
     }
   ],
   "dispatch": [
@@ -459,6 +607,15 @@
       "started": "2026-09-06T06:40:00+08:00",
       "fresh_context": true,
       "vendor": "anthropic"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T07:05:00+08:00",
+      "fresh_context": false,
+      "note": "round-3 fix: fix-rounds.md resume paragraph, ship §6 preflight + fallback, ship description order, affirmative self-tests; the report bullet is fixed by br-be-chk (its own artifact)"
     }
   ],
   "second_vendor": "codex",
