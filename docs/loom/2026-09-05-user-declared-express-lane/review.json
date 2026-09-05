@@ -384,11 +384,20 @@
       "started": "2026-09-05T21:34:45+0800",
       "fresh_context": false,
       "note": "resumed after the probes: -01/-02/-03 in the checker and templates; -04 build sentence + ship gate-only paragraph extraction; -06 lens clause. -05 (PRINCIPLES) waits for the user's ratification"
+    },
+    {
+      "task": "fix:wave-end:1-r2",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-05T22:21:46+0800",
+      "fresh_context": false,
+      "note": "review §1's declared-lane paragraph: one clause stating gate-only applies only when the recompute says small (the ratified shape); the implementer's batch covered the checker, templates, references, build and ship"
     }
   ],
   "cost": {
     "rounds": 1,
-    "dispatches": 16,
+    "dispatches": 17,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
