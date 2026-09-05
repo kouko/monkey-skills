@@ -191,6 +191,46 @@
       "sha": "2d02f759ad32ee6fb4d8812782fbcf8fb360b5c5",
       "result": "pass",
       "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics.py"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "result": "pass",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see the report — clean clone, Acceptance 1–6 walked with the branch's own checker; Acceptance 5 re-verified at 10cba457",
+      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_branch_end.py -q",
+      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_branch_end.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_checker_semantics.py -q",
+      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_checker_semantics.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_checker_semantics_wave_end.py -q",
+      "sha": "49a2cbdc0376b79f1e58c31a02a7e76390e7016a",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_checker_semantics_wave_end.py",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -238,6 +278,15 @@
       "origin_sha": "16cead86304e42e60f0d4e7b7f3aa6daa38ec243",
       "raised_by": "rev-we1-chk-sonnet",
       "resolved": "closed by 76bc9b49 — exclusion names this change's review.json only; regression test"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/test_probes_checker_semantics_wave_end.py:759",
+      "origin_sha": "04013a30c38fb2bdcdcfbbc5df22344306af3baa",
+      "raised_by": "adv-be-chk",
+      "severity": "important",
+      "text": "issue (name collision): both graduated probe files defined test_list_rules_line_count_pinned_at_27 with different bodies",
+      "resolved": "closed by 10cba457 — renamed to test_list_rules_line_count_pinned_at_27_wave_end in the evidence original and its graduated copy; adv-be-chk re-ran its probe file green at 10cba457; br-be-chk re-verified Acceptance 5 (49a2cbdc)"
     }
   ],
   "dispatch": [
@@ -392,6 +441,24 @@
       "model": "sonnet",
       "started": "2026-09-06T06:05:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-chk-codex",
+      "model": "gpt-5-codex",
+      "started": "2026-09-06T06:40:00+08:00",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-chk-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-06T06:40:00+08:00",
+      "fresh_context": true,
+      "vendor": "anthropic"
     }
   ],
   "second_vendor": "codex",
