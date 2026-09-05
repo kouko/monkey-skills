@@ -663,6 +663,15 @@
       "started": "2026-09-05T20:50:00+08:00",
       "fresh_context": true,
       "note": "arm B — baseline-current-adversary systematic == []"
+    },
+    {
+      "task": "W2-03",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-05T21:05:00+08:00",
+      "fresh_context": false,
+      "note": "mechanical version bump taken by the orchestrator"
     }
   ],
   "second_vendor": "codex",
