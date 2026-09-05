@@ -756,7 +756,7 @@ def test_intake_confirmed_empty_branch_name_not_matched_as_closed(tmp_path: Path
 # ============================================================================
 
 
-def test_list_rules_line_count_pinned_at_27(tmp_path: Path) -> None:
+def test_list_rules_line_count_pinned_at_27_wave_end(tmp_path: Path) -> None:
     """GREEN (regression pin): this branch's three commits recompute four
     existing rules and reword three descriptions; it adds and removes no
     rule id, so `--list-rules` must still emit exactly 27 lines."""
