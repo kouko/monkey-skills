@@ -27,6 +27,12 @@ from collections import Counter
 
 _LABEL_TOKENS = ("mine", "other", "implementer")
 
+# "systematic" names a pattern across repeated runs; below this many runs
+# there are not enough data points to call anything a pattern, so the
+# field is always empty (see `score`'s docstring and the `systematic`
+# loop below).
+SYSTEMATIC_MIN_N = 3
+
 # Matches an optional leading markdown bullet/bold marker, an item number,
 # one of `.` `)` `:` as the number/label separator, then the label token
 # (tolerating a trailing possessive and markdown emphasis around it).
@@ -108,7 +114,10 @@ def score(responses: list[str], fixture: dict, role: str) -> dict:
     `fixture` must carry an "items" list of {n, expected} (KeyError
     otherwise). Item `n` values must be exactly 1..len(items)
     (`ValueError` otherwise — see `_validate_fixture_items`). "unparsed"
-    is never counted as correct in either tally.
+    is never counted as correct in either tally. "systematic" never
+    fires below `SYSTEMATIC_MIN_N` (3) runs: "systematic" names a
+    pattern across repeated runs, and fewer than 3 data points cannot
+    establish one, however uniformly wrong they are.
     """
     if role not in _ROLE_OTHER:
         raise ValueError(f"unknown role: {role!r}")
@@ -160,7 +169,7 @@ def score(responses: list[str], fixture: dict, role: str) -> dict:
     systematic = []
     for item_n in sorted(expected_by_n):
         info = items_out[str(item_n)]
-        if n == 0:
+        if n < SYSTEMATIC_MIN_N:
             continue
         wrong_rate = info["wrong"] / n
         dominant_wrong = info["dominant_wrong"]
@@ -482,6 +491,7 @@ def main(argv: list[str] | None = None) -> int:
         "fixture": {"path": args.fixture, "sha256": fixture_hash},
         "contract_delivery": "inline",
         "failed_runs": failed_runs,
+        "systematic_min_n": SYSTEMATIC_MIN_N,
         "role": args.role,
         "runs": runs_summary,
         **result,

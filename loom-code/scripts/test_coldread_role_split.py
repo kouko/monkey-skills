@@ -468,3 +468,34 @@ def test_main_noncontiguous_fixture_exits_two_at_load(tmp_path, monkeypatch, cap
     assert rc == 2
     err = capsys.readouterr().err
     assert "error:" in err
+
+
+def test_systematic_never_fires_below_floor_of_three(tmp_path, monkeypatch):
+    """finding 08: `systematic` must stay empty below
+    `SYSTEMATIC_MIN_N` (3) runs, even when every run so far is wrong,
+    and must fire once the floor is reached; `summary.json` carries
+    `systematic_min_n == 3`."""
+    fixture = {"items": [{"n": 1, "text": "a", "expected": "reviewer"}]}
+    result_one = score(["1. other -- wrong"], fixture, "reviewer")
+    assert result_one["systematic"] == []
+    result_two = score(["1. other -- wrong", "1. other -- wrong"], fixture, "reviewer")
+    assert result_two["systematic"] == []
+    result_three = score(
+        ["1. other -- wrong", "1. other -- wrong", "1. other -- wrong"], fixture, "reviewer"
+    )
+    assert result_three["systematic"] == [1]
+
+    def fake_run(argv, **kwargs):
+        return coldread_role_split.subprocess.CompletedProcess(argv, 0, stdout="1. other -- x", stderr="")
+
+    monkeypatch.setattr(coldread_role_split.subprocess, "run", fake_run)
+    monkeypatch.setattr(coldread_role_split.shutil, "which", lambda name: "/usr/bin/claude")
+    contract = _write_cli_contract(tmp_path)
+    fixture_path = tmp_path / "fixture.json"
+    fixture_path.write_text(_json.dumps(fixture), encoding="utf-8")
+    out = tmp_path / "out"
+    rc = main(_cli_argv(contract, fixture_path, out, runs="1", role="reviewer"))
+    assert rc == 0
+    summary = _json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    assert summary["systematic_min_n"] == 3
+    assert summary["systematic"] == []
