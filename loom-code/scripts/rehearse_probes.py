@@ -129,16 +129,28 @@ def _validate_repo(repo: Path):
     return Path(toplevel), ""
 
 
-def _validate_test_path(raw: str, repo_root: Path) -> bool:
+def _relativize_test_path(raw: str, repo_root: Path) -> str | None:
+    """Return `raw` as a path relative to `repo_root` (posix form), or None
+    when it escapes the repository.
+
+    Every accepted path -- absolute or relative -- is turned into a
+    repo-relative string before it reaches pytest's argv: an absolute path
+    inside the repo, forwarded verbatim, would still resolve against the
+    caller's own working tree (pytest resolves an absolute argument without
+    consulting `cwd`), which is exactly the uncommitted-edit leak the
+    CI-shaped clone exists to close. A relative string is looked up inside
+    whatever `cwd` pytest runs with -- the clone -- so it can never name
+    anything outside it.
+    """
     candidate = Path(raw)
     if not candidate.is_absolute():
         candidate = repo_root / candidate
     try:
         resolved = candidate.resolve()
-        resolved.relative_to(repo_root.resolve())
+        rel = resolved.relative_to(repo_root.resolve())
     except (OSError, ValueError):
-        return False
-    return True
+        return None
+    return rel.as_posix()
 
 
 def _default_paths(repo_root: Path) -> list[str]:
@@ -213,11 +225,14 @@ def main(argv: list[str] | None = None) -> int:
     if repo_root is None:
         return _fail(error)
 
+    paths: list[str] = []
     for raw in args.paths:
-        if not _validate_test_path(raw, repo_root):
+        rel = _relativize_test_path(raw, repo_root)
+        if rel is None:
             return _fail(f"test path escapes the repository: {raw}")
-
-    paths = list(args.paths) if args.paths else _default_paths(repo_root)
+        paths.append(rel)
+    if not args.paths:
+        paths = _default_paths(repo_root)
 
     # `delete=False` (Python 3.12+) keeps the directory past this
     # TemporaryDirectory object's lifetime for `--keep`: without it, the
