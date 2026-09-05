@@ -66,11 +66,45 @@
       "started": "2026-09-05T20:16:07+0800",
       "fresh_context": false,
       "note": "integration: W1-03's placeholder test asserted default-lane is NOT yet in manifest.yaml and its grammar test skipped on the same boundary; W1-01 has landed, so the test flips to assert the key is declared and the two skips go"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "adversary",
+      "agent_id": "adv-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "blind-runner",
+      "agent_id": "br-we1-lane",
+      "model": "sonnet",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-lane-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true,
+      "vendor": "openai"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-lane-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-05T20:28:19+0800",
+      "fresh_context": true,
+      "vendor": "anthropic"
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 7,
+    "dispatches": 11,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
