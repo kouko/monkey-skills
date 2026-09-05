@@ -861,11 +861,35 @@
       "resumed": true,
       "round": 5,
       "note": "standing confirmation; started taken from the git clock of the amended round-5 record commit"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sonnet-e81a",
+      "model": "sonnet",
+      "started": "2026-09-06T02:00:07+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 6,
+      "note": "nit-batch confirmation (ship §3.5)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-codex-47d0",
+      "model": "codex",
+      "vendor": "openai",
+      "started": "2026-09-06T02:00:07+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 6,
+      "codex_session_id": "01a0729e-e6fb-7601-ac0b-22c25a4b0dd6",
+      "note": "nit-batch confirmation (ship §3.5)"
     }
   ],
   "cost": {
     "rounds": 5,
-    "dispatches": 27,
+    "dispatches": 29,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
