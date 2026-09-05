@@ -179,10 +179,45 @@ def _clone_ci_shaped(repo_root: Path, dest: Path) -> str:
     return head_sha
 
 
-def _parse_junit(path: Path) -> tuple[list[str], list[tuple[str, str]]]:
+def _classname_to_nodeid_prefix(classname: str, repo_root: Path | None) -> str:
+    """Rebuild the `<file>::<Class>` prefix a nodeid needs from a junit
+    `classname` attribute, when this pytest's junit output carries no `file`
+    attribute of its own.
+
+    `classname` is dotted module segments, optionally followed by one dotted
+    class-name segment -- both encoded the same way, so the two cannot be
+    told apart from the string alone (a class inside a test module becomes
+    an extra segment, same as a directory would). When `repo_root` is
+    given, each prefix length is tried, longest first, against the actual
+    clone on disk: the longest prefix whose `.py` file exists there is the
+    module path, and whatever segments remain are class names, emitted as
+    `::Class` parts. Absent a usable `repo_root` (or when no prefix
+    resolves to a real file -- absent/malformed input, a repo-less test),
+    the whole classname is treated as the module path, unchanged from
+    before this split existed.
+    """
+    parts = classname.split(".")
+    if repo_root is not None:
+        for k in range(len(parts), 0, -1):
+            module_path = "/".join(parts[:k]) + ".py"
+            if (repo_root / module_path).is_file():
+                remainder = "".join(f"::{seg}" for seg in parts[k:])
+                return f"{module_path}{remainder}"
+    return f"{classname.replace('.', '/')}.py" if classname else ""
+
+
+def _parse_junit(
+    path: Path, repo_root: Path | None = None,
+) -> tuple[list[str], list[tuple[str, str]]]:
     """Read FAILED nodeids and (nodeid, reason) SKIPPED pairs from a junit
     XML report. Absent or malformed input yields two empty lists rather
-    than raising -- the raw pytest text is still in the report either way."""
+    than raising -- the raw pytest text is still in the report either way.
+
+    `repo_root` -- the clone's own root, still on disk while this is called
+    -- lets a `classname` that also carries a test class name be split at
+    the real module boundary instead of being spliced whole into a
+    fabricated path; see `_classname_to_nodeid_prefix`.
+    """
     failed: list[str] = []
     skipped: list[tuple[str, str]] = []
     if not path.is_file():
@@ -194,11 +229,8 @@ def _parse_junit(path: Path) -> tuple[list[str], list[tuple[str, str]]]:
     for testcase in root.iter("testcase"):
         file_attr = testcase.get("file")
         if not file_attr:
-            # No `file` attribute in this pytest's junit output: `classname`
-            # is the dotted module path with no extension (e.g.
-            # "tests.test_x" for "tests/test_x.py") -- reverse it.
             classname = testcase.get("classname", "")
-            file_attr = f"{classname.replace('.', '/')}.py" if classname else ""
+            file_attr = _classname_to_nodeid_prefix(classname, repo_root)
         name = testcase.get("name", "")
         nodeid = f"{file_attr}::{name}" if file_attr else name
         if testcase.find("failure") is not None or testcase.find("error") is not None:
@@ -290,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
             tmp_ctx.cleanup()
         return 2
 
-    failed, skipped = _parse_junit(junit_path)
+    failed, skipped = _parse_junit(junit_path, clone_dir)
 
     report = [f"Rehearsed {head_sha} ({repo_root})", ""]
     report.append(f"FAILED ({len(failed)})")
