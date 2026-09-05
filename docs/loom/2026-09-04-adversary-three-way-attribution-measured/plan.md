@@ -48,7 +48,7 @@ Two waves, two checkpoints (wave 1 end; wave 2 end doubles as branch end). No `a
 
 **W2-memory Memory step — graduated probes and store entries**  after: W2-03
 - Files: graduated copies of the probes that outlive this change — `loom-code/scripts/test_probes_coldread_role_split.py` (from `evidence/probes/`: the fixture-verbatim check rewritten to read the fixture and the prior list by repo-relative path, the baseline-shape check, and whichever of the W2-02 probes applies) — plus one `docs/loom/memory/` entry each for: the "systematic vs noise" rule as numbers (≥50% wrong, same wrong label ≥50%, N=10), the inline-contract delivery decision, and the `claude -p` no-seed fact.
-- Test: `python3 loom-code/scripts/loom_checker.py memory` (the store integrity check) exits 0 and `python3 -m pytest loom-code/scripts/test_probes_coldread_role_split.py -q` passes.
+- Test: `python3 scripts/check_loom_memory_integrity.py --check` (the store integrity check, run from the repo root) exits 0 and `python3 -m pytest loom-code/scripts/test_probes_coldread_*.py -q` passes. (Corrected at branch-end: the plan first named a `loom_checker.py memory` sub-command that does not exist, and the graduated copies are one file per probe, not one combined file.)
 - Risk: graduated probes that read `docs/loom/...` only work in this repo; that is the established convention for graduated probes here. Implementer is the orchestrator itself (`fresh_context: false`), dispatch entry written before the work.
 
 ## Questions asked
