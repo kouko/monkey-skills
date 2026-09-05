@@ -361,12 +361,6 @@ def test_matcher_perwave_sentence_affirmative_accepted() -> None:
 
 # --- W1-04: no wave-end checkpoint under express/gate-only; switch pointer --
 
-from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
-
-
-def _has_negation(sentence: str) -> bool:
-    return bool(_NEGATION_RE.search(sentence))
-
 
 def _wave_end_sentences() -> list[str]:
     text = BUILD_SKILL.read_text(encoding="utf-8")
