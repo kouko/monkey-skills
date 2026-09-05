@@ -59,7 +59,7 @@ Wave 3 — evidence for the human acceptance lines, mirror, release.
 - Risk: agent-decided — sample is a kumiko plan (already cited in this repo's docs); the dbt project's plan is not copied here.
 
 **W3-02 Codex mirror, version 1.6.0, changelog**  after: W2-01, W2-02, W2-03
-- Files: `.codex/hooks/loom_checker.py`, `.codex/hooks/contract/**`, `loom-code/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `loom-code/CHANGELOG.md`, `loom-code/README*.md`
+- Files: `.codex/hooks/loom_checker.py`, `.codex/hooks/contract/**`, `loom-code/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `loom-code/CHANGELOG.md`, `loom-code/README*.md`, `loom-code/scripts/test_probes_complexity_wave_end.py`
 - Test: `test_codex_mirror_matches_checker.py` passes; `test_mirror_stamp_version_matches_plugin_manifest` passes at 1.6.0; package tests green.
 - Risk: agent-decided — minor bump: new rules and a new contract section, no removed field.
 
