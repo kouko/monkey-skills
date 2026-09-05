@@ -111,19 +111,14 @@ def test_this_repos_kickoff_defaults_declares_default_lane_full() -> None:
     ), line
 
 
-def test_default_lane_not_yet_declared_in_manifest_kickoff_defaults() -> None:
-    """Documents the W1-01 boundary: this task deliberately does not add
-    `default-lane` to manifest.yaml's `kickoff_defaults` (that field
-    declaration belongs to W1-01). If this ever starts failing because
-    W1-01 landed the key, the skip below in
-    test_kickoff_defaults_grammar.py context should be revisited too."""
+def test_default_lane_declared_in_manifest_kickoff_defaults() -> None:
+    """W1-01 declares `default-lane` in manifest.yaml's `kickoff_defaults`
+    with the three lane values; the templates and this repo's KICKOFF rely
+    on that declaration."""
     manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
-    names = {entry["name"] for entry in manifest.get("kickoff_defaults", [])}
-    assert "default-lane" not in names, (
-        "manifest.yaml already declares default-lane -- W1-01 has landed; "
-        "the pytest.skip in test_kickoff_defaults_grammar.py naming W1-01 "
-        "should be revisited"
-    )
+    entries = {entry["name"]: entry for entry in manifest.get("kickoff_defaults", [])}
+    assert "default-lane" in entries
+    assert entries["default-lane"]["grammar"] == "full | express | gate-only"
 
 
 def test_codex_mirror_templates_match_loom_code_originals() -> None:
