@@ -1,0 +1,208 @@
+"""Permanent tests for the `review.round-append-only` rule and its
+`loom_checker.py review-edits <change-id>` sub-command (W1-03).
+
+These are written independently of the adversary's RED probes at
+docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/
+probes/test_abuse_review_edits.py -- same interface, different fixtures --
+so the rule stays covered once that evidence file is archived.
+"""
+from __future__ import annotations
+
+import copy
+import json
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+CHECKER = Path(__file__).resolve().parent / "loom_checker.py"
+CHANGE_ID = "2099-03-03-permanent-review-edits-check"
+
+
+def git(repo: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args], capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+
+def run_review_edits(repo: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(CHECKER), "review-edits", CHANGE_ID],
+        capture_output=True, text=True, cwd=str(repo),
+    )
+
+
+def review_path(repo: Path) -> Path:
+    return repo / "docs" / "loom" / CHANGE_ID / "review.json"
+
+
+def base_review_doc(*, charter: str | None = "1.0") -> dict[str, Any]:
+    doc: dict[str, Any] = {
+        "reviewed_sha": "1111111a",
+        "scope": "wave-end:1",
+        "vendors": ["anthropic"],
+        "verdicts": [
+            {
+                "reviewer": "r1", "vendor": "anthropic", "model": "sonnet",
+                "lens": "code", "scope": "wave-end:1", "round": 1,
+                "verdict": "PASS", "dimension_scores": {"tests": 5}, "findings": [],
+                "sha": "1111111a",
+            }
+        ],
+        "probes": [
+            {
+                "kind": "package-tests", "command": "pytest -q",
+                "sha": "1111111a", "result": "pass", "artifact": "tests/test_z.py",
+            }
+        ],
+        "questions": [],
+        "open_findings": [
+            {"id": "g1", "anchor": "z.py:1", "origin_sha": "1111111a", "raised_by": "r1"}
+        ],
+        "dispatch": [
+            {
+                "task": "W1", "role": "implementer", "agent_id": "i1",
+                "model": "sonnet", "started": "2026-01-01T00:00:00Z", "fresh_context": True,
+            }
+        ],
+        "cost": {"rounds": 1, "dispatches": 1, "cap_changes": [], "hours_plan_to_pr": None},
+    }
+    if charter is not None:
+        doc["charter"] = charter
+    return doc
+
+
+def init_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "perm@example.com")
+    git(repo, "config", "user.name", "Permanent")
+    return repo
+
+
+def write_and_commit(repo: Path, doc: dict[str, Any], message: str) -> str:
+    path = review_path(repo)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", message)
+    return git(repo, "rev-parse", "HEAD")
+
+
+def blocked_rule_ids(result: subprocess.CompletedProcess) -> set[str]:
+    return {
+        line.split(":", 1)[0].removeprefix("BLOCK ").strip()
+        for line in result.stderr.splitlines()
+        if line.startswith("BLOCK ")
+    }
+
+
+def test_review_edits_missing_file_exits_two_with_no_data_read(tmp_path: Path) -> None:
+    """A change-id with no review.json at all exits 2 -- never a silent 0
+    or a rule BLOCK on data that does not exist."""
+    repo = init_repo(tmp_path)
+    git(repo, "commit", "-q", "--allow-empty", "-m", "chore: empty seed")
+    result = run_review_edits(repo)
+    assert result.returncode == 2
+
+
+def test_review_edits_second_round_appends_only_exits_zero(tmp_path: Path) -> None:
+    """A second round that appends one new verdict, probe, open finding
+    and dispatch entry -- every earlier entry byte-for-byte unchanged --
+    passes clean."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["verdicts"].append({
+        "reviewer": "r2", "vendor": "anthropic", "model": "opus",
+        "lens": "code", "scope": "wave-end:1", "round": 2,
+        "verdict": "PASS", "dimension_scores": {"tests": 5}, "findings": [],
+        "sha": "2222222b",
+    })
+    doc2["probes"].append({
+        "kind": "adversarial", "command": "pytest -q -k y", "sha": "2222222b",
+        "result": "pass", "artifact": "tests/test_y_abuse.py",
+    })
+    doc2["open_findings"].append(
+        {"id": "g2", "anchor": "z.py:9", "origin_sha": "2222222b", "raised_by": "r2"}
+    )
+    doc2["dispatch"].append({
+        "task": "W2", "role": "reviewer", "agent_id": "r2",
+        "model": "opus", "started": "2026-01-02T00:00:00Z", "fresh_context": True,
+    })
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — round 2")
+    result = run_review_edits(repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_review_edits_ungrandfathered_verdict_flip_blocks_naming_rewrite(tmp_path: Path) -> None:
+    """Once charter-stamped, flipping an earlier verdict's own `verdict`
+    value is not an append -- must block naming "earlier round
+    rewritten"."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    doc["verdicts"][0]["verdict"] = "NEEDS_REVISION"
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["verdicts"][0]["verdict"] = "PASS"
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — quiet flip")
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+    assert "earlier round rewritten" in result.stderr
+
+
+def test_review_edits_no_charter_stamp_skips_a_rewritten_verdict(tmp_path: Path) -> None:
+    """A pre-charter round (no top-level `charter` key) is skipped
+    entirely -- grandfathered even when an earlier verdict is rewritten."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc(charter=None)
+    doc["verdicts"][0]["verdict"] = "NEEDS_REVISION"
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — pre-charter round")
+    doc2 = copy.deepcopy(doc)
+    doc2["verdicts"][0]["verdict"] = "PASS"
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — quiet flip, no charter")
+    result = run_review_edits(repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_review_edits_working_tree_edit_after_commit_blocks(tmp_path: Path) -> None:
+    """An uncommitted working-tree rewrite of an earlier open finding's
+    `anchor` (not its resolved/dismissed key) is checked the same as a
+    committed pair and must block."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["open_findings"][0]["anchor"] = "z.py:999"
+    review_path(repo).write_text(json.dumps(doc2, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+
+
+def test_review_edits_second_vendor_set_once_then_immutable(tmp_path: Path) -> None:
+    """`second_vendor` moving from absent to a value passes once; a
+    further commit changing it again must block."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["second_vendor"] = "codex"
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — record second vendor")
+    result = run_review_edits(repo)
+    assert result.returncode == 0, result.stderr
+
+    doc3 = copy.deepcopy(doc2)
+    doc3["second_vendor"] = "gemini"
+    write_and_commit(repo, doc3, "chore(loom): checkpoint review — quietly swap second vendor")
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+
+
+if __name__ == "__main__":
+    import pytest
+    raise SystemExit(pytest.main([__file__, "-v"]))

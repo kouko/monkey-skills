@@ -231,6 +231,19 @@ RULES: list[tuple[str, str]] = [
         "one from it stands -- and blocks when any verdict in the latest round is not passing.",
     ),
     (
+        "review.round-append-only",
+        "Once a review.json round carries a top-level `charter` key, a later round may only "
+        "accrete per the charter's `edits_after` policy ids: verdicts, probes, open_findings "
+        "and dispatch gain entries with every pre-existing entry byte-equal (an open_findings "
+        "entry may additionally gain exactly one of resolved/dismissed in place); "
+        "reviewed_sha, scope and cost are replaced freely; questions moves from empty to "
+        "non-empty exactly once and second_vendor is set exactly once, then both are "
+        "immutable; vendors carries no allowance and must stay byte-equal; no top-level key "
+        "is ever removed and no key outside the template plus second_vendor and charter is "
+        "ever added. A round with no `charter` key is skipped entirely. An unsupported policy "
+        "id on the manifest's review row fails closed.",
+    ),
+    (
         "spec.req-grammar",
         "Every Requirements entry reads `REQ-<n> — <name>` with n contiguous from 1, "
         "unique, and points at an Acceptance number the intent actually carries.",
@@ -2312,6 +2325,248 @@ def check_plan_edits_after_commit_at(manifest, repo: Path, change_id: str) -> li
     return check_plan_edits_after_commit(repo, plan_path, change_id, manifest)
 
 
+# --- review.round-append-only (W1-03) ---------------------------------------
+
+# The review charter's `edits_after` policy ids this rule actually
+# implements, recomputed against `manifest.artifacts.review.charter.
+# edits_after` at every run -- same fail-closed shape as
+# `IMPLEMENTED_EDITS_AFTER_IDS` above.
+IMPLEMENTED_REVIEW_EDITS_AFTER_IDS = {
+    "verdicts-probes-findings-dispatch-gain-entries",
+    "reviewed-sha-scope-cost-replaced",
+    "open-finding-resolved-or-dismissed-in-place",
+    "questions-written-once",
+    "second-vendor-set-once",
+}
+
+REVIEW_ACCRETING_ARRAYS = ("verdicts", "probes", "open_findings", "dispatch")
+OPEN_FINDING_MOVABLE_KEYS = ("resolved", "dismissed")
+
+
+def _review_edits_after_ids(manifest) -> list[str]:
+    """The `id`s declared on `artifacts.review.charter.edits_after`, in
+    manifest order -- same shape as `_plan_edits_after_ids`."""
+    entries = (
+        (manifest.get("artifacts") or {}).get("review", {}).get("charter", {}).get("edits_after")
+        or []
+    )
+    return [
+        str(entry["id"]).strip()
+        for entry in entries
+        if isinstance(entry, dict) and str(entry.get("id", "")).strip()
+    ]
+
+
+def _review_json_history(repo: Path, review_rel: str, head: str = "HEAD") -> list[str]:
+    """Every commit reachable from `head` that touches `review_rel`, oldest
+    first -- the first entry is the commit that created the file."""
+    log = git_maybe(repo, "log", "--reverse", "--format=%H", head, "--", review_rel)
+    if not log:
+        return []
+    return log.splitlines()
+
+
+def _review_doc_at(repo: Path, sha: str, review_rel: str) -> dict | None:
+    raw = git_maybe(repo, "show", f"{sha}:{review_rel}")
+    if raw is None:
+        return None
+    try:
+        doc = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    return doc if isinstance(doc, dict) else None
+
+
+def _review_block(path_label: str, detail: str, goes_to: str = "review") -> tuple[str, str]:
+    return ("review.round-append-only", f"{path_label} {detail}; goes to {goes_to}")
+
+
+def _review_norm(value) -> str:
+    return json.dumps(value, sort_keys=True)
+
+
+def _open_finding_gained_resolution_only(earlier, later) -> bool:
+    """True when `later` differs from `earlier` only by gaining exactly one
+    of `resolved`/`dismissed` (absent in `earlier`, present in `later`),
+    every other key on the entry unchanged."""
+    if not isinstance(earlier, dict) or not isinstance(later, dict):
+        return False
+    other_keys = (set(earlier) | set(later)) - set(OPEN_FINDING_MOVABLE_KEYS)
+    if any(earlier.get(key) != later.get(key) for key in other_keys):
+        return False
+    gained = [key for key in OPEN_FINDING_MOVABLE_KEYS if key not in earlier and key in later]
+    changed_existing = [
+        key for key in OPEN_FINDING_MOVABLE_KEYS
+        if key in earlier and earlier.get(key) != later.get(key)
+    ]
+    return len(gained) == 1 and not changed_existing
+
+
+def _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier_doc: dict, later_doc: dict) -> bool:
+    """True when the only difference between two verdict entries is `sha`,
+    and that `sha` tracked the top-level `reviewed_sha` on both sides --
+    `push.reviewed-sha` requires every verdict's `sha` to equal the current
+    `reviewed_sha`, so an earlier verdict's `sha` moves in lockstep when
+    `reviewed_sha` is replaced (reviewed-sha-scope-cost-replaced), never on
+    its own."""
+    if not isinstance(e_entry, dict) or not isinstance(l_entry, dict):
+        return False
+    if set(e_entry) != set(l_entry):
+        return False
+    diffs = [key for key in e_entry if e_entry.get(key) != l_entry.get(key)]
+    if diffs != ["sha"]:
+        return False
+    return (
+        e_entry.get("sha") == earlier_doc.get("reviewed_sha")
+        and l_entry.get("sha") == later_doc.get("reviewed_sha")
+    )
+
+
+def _probe_only_result_changed(earlier, later) -> bool:
+    if not isinstance(earlier, dict) or not isinstance(later, dict):
+        return False
+    if set(earlier) != set(later):
+        return False
+    diffs = [key for key in earlier if earlier.get(key) != later.get(key)]
+    return diffs == ["result"]
+
+
+def _compare_review_round(
+    earlier: dict, later: dict, enabled_ids: set[str], known_top_level_keys: set[str], label: str,
+) -> list[tuple[str, str]]:
+    """One consecutive pair of review.json rounds: `earlier` may only
+    differ from `later` per the charter's enabled policy ids -- skipped
+    entirely when `earlier` carries no top-level `charter` key
+    (grandfathering)."""
+    if "charter" not in earlier:
+        return []
+
+    allow_gain = "verdicts-probes-findings-dispatch-gain-entries" in enabled_ids
+    allow_resolve = "open-finding-resolved-or-dismissed-in-place" in enabled_ids
+    allow_replace = "reviewed-sha-scope-cost-replaced" in enabled_ids
+    allow_questions_fill = "questions-written-once" in enabled_ids
+    allow_second_vendor_set = "second-vendor-set-once" in enabled_ids
+
+    failures: list[tuple[str, str]] = []
+
+    earlier_keys, later_keys = set(earlier), set(later)
+    for key in sorted(earlier_keys - later_keys):
+        failures.append(_review_block(f"{label}.{key}", "key removed"))
+    for key in sorted(later_keys - earlier_keys):
+        if key not in known_top_level_keys:
+            failures.append(_review_block(f"{label}.{key}", "unknown key added"))
+
+    for arr_name in REVIEW_ACCRETING_ARRAYS:
+        e_list, l_list = earlier.get(arr_name), later.get(arr_name)
+        if not isinstance(e_list, list) or not isinstance(l_list, list):
+            continue
+        if len(l_list) < len(e_list):
+            failures.append(_review_block(f"{label}.{arr_name}", "earlier round rewritten"))
+            continue
+        for index, e_entry in enumerate(e_list):
+            l_entry = l_list[index]
+            if _review_norm(e_entry) == _review_norm(l_entry):
+                continue
+            if (
+                arr_name == "open_findings"
+                and allow_resolve
+                and _open_finding_gained_resolution_only(e_entry, l_entry)
+            ):
+                continue
+            if (
+                arr_name == "verdicts"
+                and allow_replace
+                and _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier, later)
+            ):
+                continue
+            if arr_name == "probes" and _probe_only_result_changed(e_entry, l_entry):
+                failures.append(_review_block(f"{label}.{arr_name}[{index}]", "evidence tampering"))
+                continue
+            failures.append(_review_block(f"{label}.{arr_name}[{index}]", "earlier round rewritten"))
+        if len(l_list) > len(e_list) and not allow_gain:
+            failures.append(
+                _review_block(f"{label}.{arr_name}", "gained entries with no charter allowance")
+            )
+
+    if (
+        "vendors" in earlier
+        and "vendors" in later
+        and _review_norm(earlier["vendors"]) != _review_norm(later["vendors"])
+    ):
+        failures.append(_review_block(f"{label}.vendors", "replaced"))
+
+    if "questions" in earlier or "questions" in later:
+        e_q, l_q = earlier.get("questions", []), later.get("questions", [])
+        if _review_norm(e_q) != _review_norm(l_q):
+            if not (allow_questions_fill and not e_q and l_q):
+                failures.append(_review_block(f"{label}.questions", "changed"))
+
+    if "second_vendor" in earlier or "second_vendor" in later:
+        e_sv, l_sv = earlier.get("second_vendor"), later.get("second_vendor")
+        if e_sv != l_sv:
+            if not (allow_second_vendor_set and e_sv is None and l_sv is not None):
+                failures.append(_review_block(f"{label}.second_vendor", "changed"))
+
+    return failures
+
+
+def check_review_round_append_only(
+    repo: Path, review_path: Path, change_id: str, manifest,
+) -> list[tuple[str, str]]:
+    """Recomputed per-round charter enforcement on a charter-stamped
+    review.json (W1-03): once a round carries a top-level `charter` key,
+    only the charter's `edits_after` policy ids let a later round differ
+    from it -- everything else blocks, naming what changed. An id with no
+    matching branch in `IMPLEMENTED_REVIEW_EDITS_AFTER_IDS` fails closed,
+    mirroring `check_plan_edits_after_commit`."""
+    ids = _review_edits_after_ids(manifest)
+    unsupported = [pid for pid in ids if pid not in IMPLEMENTED_REVIEW_EDITS_AFTER_IDS]
+    if unsupported:
+        return [
+            ("review.round-append-only", f"unsupported policy id {pid!r}.")
+            for pid in unsupported
+        ]
+    enabled_ids = set(ids)
+    known_top_level_keys = set(review_container_types(manifest)) | {"second_vendor", "charter"}
+
+    review_rel = review_path.relative_to(repo).as_posix()
+    history = _review_json_history(repo, review_rel)
+    if not history:
+        return []
+
+    docs: list[dict] = []
+    for sha in history:
+        doc = _review_doc_at(repo, sha, review_rel)
+        if doc is not None:
+            docs.append(doc)
+
+    failures: list[tuple[str, str]] = []
+    for earlier, later in zip(docs, docs[1:]):
+        failures += _compare_review_round(earlier, later, enabled_ids, known_top_level_keys, review_rel)
+
+    if review_path.is_file() and docs:
+        try:
+            working_doc = json.loads(read_text(review_path))
+        except json.JSONDecodeError:
+            working_doc = None
+        if isinstance(working_doc, dict) and _review_norm(docs[-1]) != _review_norm(working_doc):
+            failures += _compare_review_round(
+                docs[-1], working_doc, enabled_ids, known_top_level_keys, review_rel
+            )
+
+    return failures
+
+
+def check_review_round_append_only_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+    """Same rule, applied to a change's own `review.json` when it exists --
+    skipped silently when there is no review.json yet (push's shape,
+    mirroring `check_plan_edits_after_commit_at`)."""
+    review_path = artifact_path(manifest, "review", change_id, repo)
+    if not review_path.is_file():
+        return []
+    return check_review_round_append_only(repo, review_path, change_id, manifest)
+
+
 SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
 
 
@@ -2703,6 +2958,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if change_id:
         failures += check_plan_field_caps_at(manifest, repo, change_id)
         failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
+        failures += check_review_round_append_only_at(manifest, repo, change_id)
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
 
@@ -5472,6 +5728,25 @@ def cmd_plan_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return report(check_plan_edits_after_commit(repo, plan_path, change_id, manifest), err)
 
 
+def cmd_review_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py review-edits <change-id>` -- runs
+    `review.round-append-only` against that change's own `review.json`.
+    Exit 2 when the review file is missing (there is nothing to check,
+    and never a silent 0 or 1), mirroring `cmd_plan_edits`."""
+    if not args:
+        raise UsageError("review-edits needs a change-id.")
+    if len(args) > 1:
+        raise UsageError(f"unexpected argument {args[1]!r}.")
+    change_id = args[0]
+    manifest = load_manifest()
+    repo = repo_root(Path.cwd())
+    review_path = artifact_path(manifest, "review", change_id, repo)
+    if not review_path.is_file():
+        err.write(f"no review file at {review_path} for change {change_id!r}.\n")
+        return 2
+    return report(check_review_round_append_only(repo, review_path, change_id, manifest), err)
+
+
 REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")
 
 
@@ -5532,6 +5807,7 @@ COMMANDS = {
     "charter": cmd_charter,
     "plan": cmd_plan,
     "plan-edits": cmd_plan_edits,
+    "review-edits": cmd_review_edits,
 }
 
 

@@ -408,10 +408,12 @@ def test_plan_edits_missing_plan_file_exits_2(tmp_path: Path) -> None:
 def test_list_rules_gains_plan_edits_after_commit_at_thirty(tmp_path: Path) -> None:
     """`--list-rules` must grow to exactly 30 rules and name the new one --
     the rule table is the SSOT this repo's CLAUDE.md points at; a silent
-    count drift here is itself a regression."""
+    count drift here is itself a regression. (Count bumped to 31 for
+    W1-03's review.round-append-only, authorised by that task's own
+    dispatch instructions.)"""
     result = run_checker("--list-rules", cwd=REPO)
     assert result.returncode == 0, result.stderr
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 30, f"expected 30 rules, got {len(lines)}"
+    assert len(lines) == 31, f"expected 31 rules, got {len(lines)}"
     ids = {line.split("\t", 1)[0] for line in lines}
     assert "plan.edits-after-commit" in ids

@@ -763,7 +763,7 @@ def test_list_rules_line_count_pinned_at_27_wave_end(tmp_path: Path) -> None:
     result = run_checker("--list-rules", cwd=REPO_ROOT)
     assert result.returncode == 0, result.stderr
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 30, f"expected 30 rules, got {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 31, f"expected 31 rules, got {len(lines)}:\n{result.stdout}"
 
 
 def test_list_rules_descriptions_name_new_semantics_of_three_rules(tmp_path: Path) -> None:

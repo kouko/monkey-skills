@@ -39,6 +39,7 @@ EXPECTED_RULE_IDS = [
     "push.reviewer-ne-implementer",
     "push.second-vendor-honoured",
     "push.verdicts-ge-2",
+    "review.round-append-only",
     "spec.req-grammar",
     "spec.ui-flows-recompute",
     "standing.product-principles-reject",
@@ -107,7 +108,7 @@ def test_every_rule_id_is_area_dot_name() -> None:
     for line in run_checker("--list-rules").stdout.splitlines():
         rule_id = line.split("\t")[0]
         area, _, name = rule_id.partition(".")
-        assert area in {"contract", "intent", "intake", "plan", "push", "spec", "standing"}, rule_id
+        assert area in {"contract", "intent", "intake", "plan", "push", "review", "spec", "standing"}, rule_id
         assert name and "." not in name, rule_id
 
 
@@ -133,7 +134,7 @@ def test_hooks_probe_is_gone() -> None:
 
 
 def test_the_rule_population_is_twenty_eight() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 30
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 31
 
 
 # --- contract --require (spec G) -------------------------------------------

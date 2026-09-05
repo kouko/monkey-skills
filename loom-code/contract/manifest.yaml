@@ -203,6 +203,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {id: reviewed-sha-scope-cost-replaced,                text: "reviewed_sha, scope and cost are replaced"}
         - {id: open-finding-resolved-or-dismissed-in-place,     text: "an open finding is resolved or dismissed in place"}
         - {id: questions-written-once,                          text: "questions is written once"}
+        - {id: second-vendor-set-once,                          text: "second_vendor is set once"}
     fields:
       - {name: reviewed_sha,  kind: json, required: true}
       - {name: scope,         kind: json, required: true}
@@ -213,6 +214,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}
       - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
       - {name: cost,          kind: json, required: false, grammar: "rounds: <int>, dispatches: <int>, cap_changes: [<str>], hours_plan_to_pr: <float> | null", note: "process-cost record for this change (W1-05); the review station (W1-02) is what populates and updates it at every checkpoint, so an older or in-flight review.json may not carry it yet"}
+      - {name: charter,       kind: json, required: false, note: "review.json's own charter-round stamp (W1-03); a round with no charter key is pre-charter and review.round-append-only skips it entirely"}
       # second_vendor (W0-02, optional top-level field, grammar "<cli> | none"):
       # the per-change answer to KICKOFF's `second-vendor: ask`, recorded once
       # at decision point ①. Not in `fields:` above -- unlike every field

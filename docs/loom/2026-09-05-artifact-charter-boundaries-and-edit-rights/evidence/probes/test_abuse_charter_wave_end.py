@@ -384,11 +384,13 @@ def test_list_rules_count_is_exactly_29_and_charter_id_is_unique() -> None:
     W1-02's own dispatch packet), and `contract.charter-complete` is the
     only rule id starting with `contract.charter` -- it does not collide
     with any existing `contract.*` prefix (only `contract.requires` shares
-    the family, and the two ids differ after the dot)."""
+    the family, and the two ids differ after the dot). (Count updated
+    again to 31 for W1-03's review.round-append-only, same
+    authorisation shape.)"""
     result = _run("--list-rules")
     assert result.returncode == 0
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 30, f"expected exactly 30 rules, got {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 31, f"expected exactly 31 rules, got {len(lines)}:\n{result.stdout}"
     rule_ids = [line.split("\t", 1)[0] for line in lines]
     assert rule_ids.count("contract.charter-complete") == 1
     charter_prefixed = [rid for rid in rule_ids if rid.startswith("contract.charter")]

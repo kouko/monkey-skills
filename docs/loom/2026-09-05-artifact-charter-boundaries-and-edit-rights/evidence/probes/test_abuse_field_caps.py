@@ -350,11 +350,13 @@ def test_list_rules_count_is_twenty_nine_and_names_plan_field_caps() -> None:
     the rule table is the SSOT other stations trust, so a rule that runs
     but never registers here is invisible to anyone auditing the rule
     set. (Count updated 30 for W1-02, authorised by that task's own
-    dispatch packet -- see the implementer's commit body.)"""
+    dispatch packet -- see the implementer's commit body. Count updated
+    again to 31 for W1-03's review.round-append-only, same authorisation
+    shape.)"""
     result = _run("--list-rules")
     assert result.returncode == 0, f"--list-rules should exit 0; got {result.returncode}"
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(lines) == 30, f"expected 30 rule lines, got {len(lines)}:\n{result.stdout}"
+    assert len(lines) == 31, f"expected 31 rule lines, got {len(lines)}:\n{result.stdout}"
     assert any(line.startswith("plan.field-caps") for line in lines), (
         f"plan.field-caps missing from --list-rules:\n{result.stdout}"
     )

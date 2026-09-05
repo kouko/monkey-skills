@@ -134,7 +134,7 @@ def test_KickoffDefaults_checkerParse_ruleCountStable() -> None:
     )
     assert result.returncode == 0, result.stderr
     rule_lines = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(rule_lines) == 30
+    assert len(rule_lines) == 31
 
     intake_result = subprocess.run(
         [
