@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "f8338ce96dff20947bb967cb1f4f4b000e85c170",
+  "reviewed_sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
   "scope": "after-task:W1-02",
   "vendors": [
     "anthropic",
@@ -389,6 +389,120 @@
         }
       ],
       "notes": "package suite re-run: 1673 passed, 5 skipped, 1 xfailed / 182 passed, 1 skipped; mirror identical except the stamp; adversary's two nits accepted as nits."
+    },
+    {
+      "round": 5,
+      "scope": "after-task:W1-02",
+      "reviewer": "rev-at102-codex-g7c3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "0f1561336baf68182788bac9b2c5d648cee9f00d",
+      "standards_version": "lenses.md@0f1561336baf68182788bac9b2c5d648cee9f00d",
+      "dimension_scores": {
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION",
+        "cross-task-coherence": "PASS",
+        "inconsistency": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1775",
+          "text": "issue (blocking): the bare-hex alternative treats ordinary words made only from hexadecimal letters, such as defaced, as landed shas, so an unauthorised task titled defaced output is routed to dispatch instead of spec.",
+          "fix": "recognise only the explicit landed: <sha> annotation; regression test for a hex-looking word."
+        }
+      ],
+      "previous_findings": [
+        {
+          "id": "after-task:W1-02-01",
+          "status": "fixed",
+          "evidence": "0f156133"
+        },
+        {
+          "id": "after-task:W1-02-02",
+          "status": "fixed",
+          "evidence": "0f156133"
+        },
+        {
+          "id": "after-task:W1-02-03",
+          "status": "fixed",
+          "evidence": "0f156133"
+        },
+        {
+          "id": "after-task:W1-02-04",
+          "status": "fixed",
+          "evidence": "0f156133"
+        }
+      ],
+      "notes": "language-nit rebuttal accepted: the ratified policy keeps the blind-run report in the user's language; probes not rerun per the fix-round procedure."
+    },
+    {
+      "round": 5,
+      "scope": "after-task:W1-02",
+      "reviewer": "rev-at102-a-g7c3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "PASS",
+      "sha": "0f1561336baf68182788bac9b2c5d648cee9f00d",
+      "standards_version": "lenses.md@0f1561336baf68182788bac9b2c5d648cee9f00d",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "architecture": "PASS",
+        "cross-task-coherence": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "after-task:W1-02-05",
+          "status": "fixed",
+          "evidence": "0f156133"
+        },
+        {
+          "id": "after-task:W1-02-06",
+          "status": "fixed",
+          "evidence": "0f156133"
+        },
+        {
+          "id": "after-task:W1-02-07",
+          "status": "fixed",
+          "evidence": "0f156133"
+        },
+        {
+          "id": "after-task:W1-02-08",
+          "status": "fixed",
+          "evidence": "0f156133"
+        }
+      ],
+      "notes": "re-ran test_plan_edits_after_commit.py (17), the round-4 probe file (11) and the package suite (1680/182); language nit withdrawn after reading the policy intent."
+    },
+    {
+      "round": 6,
+      "scope": "after-task:W1-02",
+      "reviewer": "rev-at102-codex-g7c3",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "standards_version": "lenses.md@c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "after-task:W1-02-09",
+          "status": "fixed",
+          "evidence": "c0a6c140; test_new_task_titled_with_hex_word_reports_goes_to_spec"
+        }
+      ],
+      "notes": "static inspection only; the regression test was not executed in the read-only sandbox (the orchestrator ran the package suite at this tree: 1681 passed)."
     }
   ],
   "probes": [
@@ -935,6 +1049,102 @@
       "result": "pass",
       "artifact": "",
       "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_removed_task_id_substring_of_renamed_sibling_hides_removal_block",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_two_new_memory_tasks_with_different_ids_both_bypass_mention_check",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_memory_task_inserted_mid_wave_bypasses_position_check",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_task_trailer_on_merge_commit_message_marks_task_landed",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_head_at_plan_commit_itself_reports_no_edits",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_working_tree_crlf_plan_does_not_cause_false_block",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_nested_parens_in_blocked_mark_on_landed_task_causes_false_block",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_plan_commit_subject_trailing_whitespace_still_finds_plan_commit",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_rule_runs_correctly_from_nested_cwd",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_blocked_rules_helper_parses_block_line_affirmatively",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py -q -k test_blocked_rules_helper_rejects_non_block_line",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_plan_edits_after_task.py",
+      "scope": "after-task:W1-02"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "c0a6c140935f4f43d39d624108d3ff10ffe5abc7",
+      "result": "pass",
+      "artifact": "",
+      "scope": "after-task:W1-02"
     }
   ],
   "questions": [
@@ -1039,7 +1249,8 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-codex-g7c3",
       "severity": "fatal",
-      "text": "issue (blocking): task authorisation uses raw substring matching, so a commit mentioning W1-10 also authorises removal or alteration of W1-1."
+      "text": "issue (blocking): task authorisation uses raw substring matching, so a commit mentioning W1-10 also authorises removal or alteration of W1-1.",
+      "resolved": "resolved by 0f156133 — test_removed_task_id_substring_of_renamed_sibling_still_blocks (rev-at102-codex-g7c3, round 5)"
     },
     {
       "id": "after-task:W1-02-02",
@@ -1047,7 +1258,8 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-codex-g7c3",
       "severity": "fatal",
-      "text": "issue (blocking): the mark regex stops at the first closing parenthesis, so a charter-legal blocked(waiting (see #42)) falsely blocks a landed task."
+      "text": "issue (blocking): the mark regex stops at the first closing parenthesis, so a charter-legal blocked(waiting (see #42)) falsely blocks a landed task.",
+      "resolved": "resolved by 0f156133 — test_nested_parens_in_blocked_mark_on_landed_task_does_not_false_block (rev-at102-codex-g7c3, round 5)"
     },
     {
       "id": "after-task:W1-02-03",
@@ -1055,7 +1267,8 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-codex-g7c3",
       "severity": "fatal",
-      "text": "issue (blocking): the rule checks only for a charter stamp and hard-codes its allow-list; it does not recompute policy from artifacts.plan.charter.edits_after — a second drift surface."
+      "text": "issue (blocking): the rule checks only for a charter stamp and hard-codes its allow-list; it does not recompute policy from artifacts.plan.charter.edits_after — a second drift surface.",
+      "resolved": "resolved by 0f156133 — test_implemented_edits_after_ids_match_manifest_plan_ids (rev-at102-codex-g7c3, round 5)"
     },
     {
       "id": "after-task:W1-02-04",
@@ -1063,7 +1276,8 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-codex-g7c3",
       "severity": "fatal",
-      "text": "issue (blocking): an appended task carrying landed(<sha>) is routed to spec, although the charter sends landed commit shas to dispatch."
+      "text": "issue (blocking): an appended task carrying landed(<sha>) is routed to spec, although the charter sends landed commit shas to dispatch.",
+      "resolved": "resolved by 0f156133 — test_new_task_carrying_landed_sha_annotation_reports_goes_to_dispatch (rev-at102-codex-g7c3, round 5)"
     },
     {
       "id": "after-task:W1-02-05",
@@ -1071,7 +1285,8 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-a-g7c3",
       "severity": "fatal",
-      "text": "issue (blocking): mentioned() tests task_id in message, a raw substring check; removing W1-1 while the message names only W1-10 passes silently — the adversary probe test_removed_task_id_substring_of_renamed_sibling_hides_removal_block fails."
+      "text": "issue (blocking): mentioned() tests task_id in message, a raw substring check; removing W1-1 while the message names only W1-10 passes silently — the adversary probe test_removed_task_id_substring_of_renamed_sibling_hides_removal_block fails.",
+      "resolved": "resolved by 0f156133 — whole-token mentions (rev-at102-a-g7c3, round 5)"
     },
     {
       "id": "after-task:W1-02-06",
@@ -1079,7 +1294,8 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-a-g7c3",
       "severity": "important",
-      "text": "issue (blocking): MARK_STRIP's [^)]* stops at the first ), so a blocked() mark with a nested parenthetical leaves a stray ) and a landed task is falsely blocked — probe test_nested_parens_in_blocked_mark_on_landed_task_causes_false_block fails."
+      "text": "issue (blocking): MARK_STRIP's [^)]* stops at the first ), so a blocked() mark with a nested parenthetical leaves a stray ) and a landed task is falsely blocked — probe test_nested_parens_in_blocked_mark_on_landed_task_causes_false_block fails.",
+      "resolved": "resolved by 0f156133 — balanced mark strip, unbalanced mark blocks (rev-at102-a-g7c3, round 5)"
     },
     {
       "id": "after-task:W1-02-07",
@@ -1087,7 +1303,8 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-a-g7c3",
       "severity": "important",
-      "text": "issue: the added branch always reports goes to spec; a new task carrying landed: <sha> must go to dispatch per the charter's must_not; reproduced in a scratch repo and flagged by the blind run."
+      "text": "issue: the added branch always reports goes to spec; a new task carrying landed: <sha> must go to dispatch per the charter's must_not; reproduced in a scratch repo and flagged by the blind run.",
+      "resolved": "resolved by 0f156133 — goes to dispatch for a landed sha (rev-at102-a-g7c3, round 5)"
     },
     {
       "id": "after-task:W1-02-08",
@@ -1095,7 +1312,17 @@
       "origin_sha": "38206b79d6d8c01f0e3cafbe9e4ee4a0758ae4b0",
       "raised_by": "rev-at102-a-g7c3",
       "severity": "important",
-      "text": "issue: check_plan_edits_after_commit never reads the charter's edits_after; five allow-categories are hand-written branches with no test tying them to the charter cell — the second drift surface the intent's Constraint 1 forbids."
+      "text": "issue: check_plan_edits_after_commit never reads the charter's edits_after; five allow-categories are hand-written branches with no test tying them to the charter cell — the second drift surface the intent's Constraint 1 forbids.",
+      "resolved": "resolved by 0f156133 — edits_after ids recomputed from the manifest, branch set pinned (rev-at102-a-g7c3, round 5)"
+    },
+    {
+      "id": "after-task:W1-02-09",
+      "anchor": "loom-code/scripts/loom_checker.py:1775",
+      "origin_sha": "0f1561336baf68182788bac9b2c5d648cee9f00d",
+      "raised_by": "rev-at102-codex-g7c3",
+      "severity": "fatal",
+      "text": "issue (blocking): the bare-hex alternative treats ordinary words made only from hexadecimal letters, such as defaced, as landed shas, so an unauthorised task titled defaced output is routed to dispatch instead of spec.",
+      "resolved": "resolved by c0a6c140 — test_new_task_titled_with_hex_word_reports_goes_to_spec (rev-at102-codex-g7c3, round 6)"
     }
   ],
   "dispatch": [
@@ -1277,7 +1504,7 @@
     }
   ],
   "cost": {
-    "rounds": 4,
+    "rounds": 6,
     "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
