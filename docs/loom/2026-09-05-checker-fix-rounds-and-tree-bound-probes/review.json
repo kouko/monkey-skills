@@ -1,12 +1,161 @@
 {
   "reviewed_sha": "3528388c817c704df5f327a70993d1f0579b4d94",
-  "scope": "",
+  "scope": "wave-end:1",
   "vendors": [
-    "anthropic"
+    "anthropic",
+    "openai"
   ],
-  "verdicts": [],
-  "probes": [],
-  "questions": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-chk-codex",
+      "vendor": "openai",
+      "model": "codex-cli 0.151.0",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "16cead86304e42e60f0d4e7b7f3aa6daa38ec243",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:436",
+          "text": "issue (blocking): unscoped legacy verdicts remain eligible even when the current checkpoint has explicitly scoped verdicts; an older unscoped round 3 outranks a current scoped round 1 and can hide its NEEDS_REVISION.",
+          "fix": "Score only explicitly matching entries when any exist; fall back to unscoped only when none match; regression test."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:3661",
+          "text": "issue (blocking): splitting an anchor on every comma misparses the `path :: verbatim quote` form when the quote contains a comma, authorising a path named inside the quote.",
+          "fix": "Parse ` :: ` first; everything after it is quote text; regression test."
+        }
+      ],
+      "notes": [
+        "Standing-round poison rule conservative but acceptable; content-tree identity sound (mode, type, blob, path; only this change's review.json excluded; fails closed on unresolved shas). Tests not run (read-only sandbox); both findings reproduced as pure-function checks."
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "16cead86304e42e60f0d4e7b7f3aa6daa38ec243",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS_WITH_NOTES",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:438-450",
+          "text": "issue: the per-scope filter falls back to the unfiltered list when no verdict carries the scope — a brand-new checkpoint — so a stale wave-end round satisfies the branch-end floor before any reader looked.",
+          "fix": "Return (0, []) when the scope has no verdicts; unit test."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "security",
+          "anchor": "loom-code/scripts/loom_checker.py:3661",
+          "text": "issue: _anchor_paths splits on commas before the ` :: ` separator; a filename inside the quote's prose becomes an authorised path — the intent's non-negotiable safety line, with zero coverage.",
+          "fix": "Partition on ` :: ` first; comma-split only the path part; unit test with a comma in the quote."
+        },
+        {
+          "severity": "important",
+          "dimension": "cross-task-coherence",
+          "anchor": "loom-code/scripts/loom_checker.py:3765",
+          "text": "issue: the fix-delta exclusion uses the bare change-id-agnostic review.json regex, exempting any change's record from the anchor check, contradicting content_tree_id's this-change-only scoping.",
+          "fix": "Thread change_id in and exclude docs/loom/{change_id}/review.json only; unit test."
+        },
+        {
+          "severity": "nit",
+          "dimension": "docs.incorrect-fact",
+          "anchor": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/plan.md :: four rule descriptions change wording",
+          "text": "nitpick: six descriptions change, not four.",
+          "fix": "Say six, or name them."
+        }
+      ],
+      "notes": [
+        "Read the reviewed sha via git show because the working tree had moved (a fix implementer was already running); checker suites 180 passed at HEAD."
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto",
+      "sha": "b0eb3403",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "wave-end:1",
+      "command": "see docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md",
+      "sha": "edc121759d30591f758c1baafdd8cb2e39e73855",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_wave_end.py -q",
+      "sha": "2d02f759ad32ee6fb4d8812782fbcf8fb360b5c5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics_wave_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics.py -q",
+      "sha": "2d02f759ad32ee6fb4d8812782fbcf8fb360b5c5",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-05-checker-fix-rounds-and-tree-bound-probes/evidence/probes/test_abuse_checker_semantics.py"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是——checker 三條既有規則改重算方式：修正輪只要「提了還開著的 finding 的讀者」回來確認（前提：修正只碰那些 finding 錨定的檔案，否則仍要兩位）；探針、整包測試、verdict 的紀錄改成比「樹的內容（排除 review.json）」而不是 commit sha。規則數不變。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這兩個 change 要不要都用 Codex 當第二位讀者？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "甲案：關閉 intent 那一行與 review-only 同一個 commit、關閉文法接受分支名、ship 拿掉關閉輪——照甲走嗎？",
+      "type": "what"
+    }
+  ],
   "open_findings": [
     {
       "id": "wave-end:1-01",
@@ -14,6 +163,27 @@
       "origin_sha": "c63de876b94be35f82b79dde9e7567b22598dd80",
       "raised_by": "adv-we1-chk",
       "resolved": "closed by 2d02f759 — standing reviewers must be dispatched reviewing roles; a prior round with an undispatched name stands for nobody; unit tests + the adversary's probe green"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-code/scripts/loom_checker.py:436-450 (latest_round scope filter)",
+      "origin_sha": "16cead86304e42e60f0d4e7b7f3aa6daa38ec243",
+      "raised_by": "rev-we1-chk-codex, rev-we1-chk-sonnet",
+      "resolved": "closed by 800973ac — explicitly scoped verdicts win; a scope with no verdicts scores nothing (0, []); two regression tests"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "loom-code/scripts/loom_checker.py:3661 (_anchor_paths)",
+      "origin_sha": "16cead86304e42e60f0d4e7b7f3aa6daa38ec243",
+      "raised_by": "rev-we1-chk-codex, rev-we1-chk-sonnet",
+      "resolved": "closed by 2437f792 — ` :: ` parsed first, comma splitting dropped (undocumented syntax), one path per anchor; regression test with a comma in the quote"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-code/scripts/loom_checker.py:3765 (fix-delta review.json exclusion)",
+      "origin_sha": "16cead86304e42e60f0d4e7b7f3aa6daa38ec243",
+      "raised_by": "rev-we1-chk-sonnet",
+      "resolved": "closed by 76bc9b49 — exclusion names this change's review.json only; regression test"
     }
   ],
   "dispatch": [
@@ -108,6 +278,28 @@
       "started": "2026-09-06T03:20:00+08:00",
       "fresh_context": true,
       "note": "codex round-1 fatals: scoped-vs-unscoped round selection; anchor comma split vs :: quote form"
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-chk-codex",
+      "model": "codex-cli 0.151.0",
+      "started": "2026-09-06T04:20:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
+    },
+    {
+      "task": "wave-end:1 round 2",
+      "role": "reviewer",
+      "agent_id": "rev-we1-chk-sonnet",
+      "model": "sonnet",
+      "started": "2026-09-06T04:20:00+08:00",
+      "fresh_context": false,
+      "note": "resumed round-1 reader"
     }
+  ],
+  "second_vendor": "codex",
+  "notes": [
+    "wave-end:1 round 1: NEEDS_REVISION from both readers (two shared fatals on the new verdicts-ge-2 semantics, one important); the adversary's fatal (ghost standing reviewer) had been fixed before the readers ran (2d02f759). Fix commits landed before round 2; plan nit fixed (040e7eff)."
   ]
 }
