@@ -399,6 +399,76 @@
       "notes": [
         "38 passed on the two station-text test files; nothing outside the fix delta broke"
       ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "skill+docs+code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8365e1f4153ad26ef36e7f768eeb81e93e5a4b0a",
+      "resumed": true,
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "N/A",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md:186",
+          "text": "issue (blocking): branch-end-03: unfixed — the preflight text still appears after the amend instructions (lines 154–180) have told the agent to amend both files; 'Before that amend' placed afterwards does not put the decision before the executable instruction.",
+          "fix": "move the preflight and its branch decision above the amend instructions, make the staging command conditional, and make the test assert the ordering"
+        }
+      ],
+      "notes": [
+        "reader's own verdict line read PASS_WITH_NOTES with an important finding unfixed; recorded as NEEDS_REVISION by consequence",
+        "15 passed on test_ship_station_text.py; the test checked section membership, not ordering"
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-chk-sonnet",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "skill",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8365e1f4153ad26ef36e7f768eeb81e93e5a4b0a",
+      "resumed": true,
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/ship/SKILL.md:163-168",
+          "text": "issue: branch-end-03: unfixed — a runnable fenced `git add … docs/loom/intent/<change-id>.md` block still precedes the preflight in §3's reading order with no gating language; a literal executor touches the intent file before the version check.",
+          "fix": "move the git add block after the preflight paragraph, or gate it explicitly"
+        }
+      ],
+      "notes": [
+        "15 passed on test_ship_station_text.py"
+      ]
     }
   ],
   "probes": [
@@ -745,6 +815,15 @@
       "started": "2026-09-06T07:40:00+08:00",
       "fresh_context": false,
       "note": "round-4 fix: preflight moved from ship §6 into §3 before the close-line amend; §6 keeps the fallback; ship test retargeted"
+    },
+    {
+      "task": "fix:branch-end",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable",
+      "model": "fable",
+      "started": "2026-09-06T08:05:00+08:00",
+      "fresh_context": false,
+      "note": "round-5 fix — third round on branch-end-03: design re-look done by the orchestrator (highest tier available): the finding is reading-order, the shape (preflight → conditional amend → fallback in §6) is right; preflight paragraph moved above 'Amending is allowed', staging command annotated conditional, test asserts preflight index < amend index"
     }
   ],
   "second_vendor": "codex",
