@@ -22,7 +22,11 @@ def split_groups(argv: list[str]) -> list[list[str]]:
 
 
 def main(argv: list[str]) -> int:
-    for group in split_groups(argv):
+    groups = split_groups(argv)
+    if not groups:
+        print("run_package_tests: no path group given", file=sys.stderr)
+        return 2
+    for group in groups:
         code = subprocess.call([sys.executable, "-m", "pytest", *group])
         if code != 0:
             return code

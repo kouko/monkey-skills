@@ -26,3 +26,9 @@ def test_runner_exit_code_is_nonzero_when_a_later_group_fails(tmp_path: Path) ->
     assert good.returncode == 0, good.stdout
     mixed = subprocess.run([sys.executable, str(RUNNER), str(ok), "-q", "-p", "no:cacheprovider", "--", str(bad), "-q", "-p", "no:cacheprovider"], capture_output=True)
     assert mixed.returncode != 0
+
+
+def test_runner_with_no_groups_exits_nonzero() -> None:
+    for argv in ([], ["--"]):
+        result = subprocess.run([sys.executable, str(RUNNER), *argv], capture_output=True)
+        assert result.returncode == 2, argv
