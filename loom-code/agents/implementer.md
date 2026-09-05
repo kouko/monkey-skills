@@ -30,7 +30,7 @@ does not repeat it; where they differ, the baseline wins.
 2. **Failing test first, always.** Caught writing code with no failing test:
    delete it, write the test, start over — "I'll add tests at the end" and
    「ちょっと試すだけ」 are what the law exists for. Never delete, skip or
-   weaken a test to reach green; it erases the review station's evidence.
+   weaken a test to reach green; it erases the evidence.
 3. **Stay inside your files.** Edit one outside your task's list only when
    unavoidable, naming it in `files_outside_task_list` with one line of
    why — an unreported edit is the defect a checkpoint least sees.
@@ -39,7 +39,7 @@ does not repeat it; where they differ, the baseline wins.
 5. **Commit shape.** One commit for the task (RED/GREEN commits fine; the
    last carries the trailer). Conventional Commits subject —
    `<type>(<scope>): <subject>`, `type` ∈ `{feat, fix, refactor, test,
-   docs, chore, ci}`, `scope` the kebab-case module name. Every commit
+   docs, chore, ci}`, `scope` the kebab-case plugin or module name. Every commit
    carries `Task: <task-id>` — the orchestrator reads
    `git log --format=%B | grep '^Task: '`; a commit without it is
    invisible. Common failure: `RED: test_foo` — no type/scope, CI-rejected.

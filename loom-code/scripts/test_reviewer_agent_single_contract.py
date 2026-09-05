@@ -302,12 +302,18 @@ LOAD_BEARING = [
     ("blind-run-report.md", "對你既有的資料做了什麼"),
     ("blind-run-report.md", "I decided for you"),
     ("adversarial.md", "at least three"),
+    ("implementer.md", "kebab-case plugin or module name"),
 ]
 
 
 @pytest.mark.parametrize("filename,fact", LOAD_BEARING)
 def test_load_bearing_facts_are_stated(filename, fact):
-    path = SKILL if filename == "SKILL.md" else SKILL_DIR / "references" / filename
+    if filename == "SKILL.md":
+        path = SKILL
+    elif filename == "implementer.md":
+        path = AGENTS / filename
+    else:
+        path = SKILL_DIR / "references" / filename
     assert fact in read(path), (
         f"{path.relative_to(REPO)} no longer states {fact!r}; without it the "
         "cold reader has to guess."
