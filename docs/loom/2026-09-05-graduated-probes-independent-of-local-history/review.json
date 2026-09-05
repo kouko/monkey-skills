@@ -285,11 +285,33 @@
       "started": "2026-09-06T00:08:34+08:00",
       "fresh_context": true,
       "note": "fix round 2 for wave-end:1 findings 01, 02 (codex); also W1-02's probe"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-sonnet-2c9f",
+      "model": "sonnet",
+      "started": "2026-09-06T00:23:31+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 2
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-codex-b804",
+      "model": "codex",
+      "vendor": "openai",
+      "started": "2026-09-06T00:23:31+08:00",
+      "fresh_context": true,
+      "resumed": true,
+      "round": 2,
+      "codex_session_id": "01a0724f-3077-7c50-8edc-51a655eff3c3"
     }
   ],
   "cost": {
     "rounds": 1,
-    "dispatches": 9,
+    "dispatches": 11,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
