@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)
+# contract: loom-code/agents/reviewer.md sha256 476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 3 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:17:28.001144+08:00
+# prompt-sha256: 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51
+
+(a) The reviewer judges what's delivered against ground truth and never authors or executes probes itself — probe authorship/execution belongs to the adversary (or a gap belongs to the implementer to fix), so anything about a probe's own artifact/count is "other," while a mismatch between what's claimed and what's true (in plans, reports, docs, or code) is "mine."
+
+1. mine — plan-vs-review.json record count is a plan/artifact reconciliation mismatch, a contradiction finding
+2. mine — probe validity (stale base short-circuits the loop) is exactly the "recorded pass nobody can reproduce" failure the tests dimension exists to catch
+3. other — a probe's own artifact/count normalization belongs to the adversary
+4. mine — report overclaiming vs. Acceptance criteria is the omission/overclaim reconciliation check
+5. mine — a documentation gap (missing guidance on when to re-run) is a docs/omission finding
+6. mine — a logic defect in the probe's acceptance check that lets a bad candidate through is a correctness/tests finding on what the probe actually verifies
+7. mine — CHANGELOG-vs-intent count mismatch is a contradiction/omission reconciliation finding
+8. implementer — a missing unit test for new code is the implementer's RED to write, though I may still name the gap

@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 6 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:11:14.270182+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**(a)** I score and reconcile the artifact, the plan, and the intent against each other using only what's already recorded (including probes' `command`/`artifact`, never their `result`) — I never write, run, or design a probe or abuse/boundary case, which is the adversary's job.
+
+1. mine — plan-vs-review.json count mismatch is exactly the reconciliation duty ("does what was delivered match what the plan... promised").
+2. mine — a probe passing only under a stale-clone precondition is a shell-builtin-style false pass; the tests dimension explicitly requires flagging a probe whose command exits 0 for unrelated reasons.
+3. mine — this is scrutiny of the recorded `probes[]` artifact field (duplicate-counted path), which the tests dimension reads, not something I'd need to run to catch.
+4. mine — "report says works but doesn't meet Acceptance 6" is a textbook overclaim, explicitly called out as part of my reconciliation duty.
+5. mine — a docs-dimension omission (missing operational detail) I catch by reading the artifact whole.
+6. other — this is discovering a logic bypass via an alternate input (side-branch commit), i.e. red-teaming/edge-case execution, which belongs to the adversary, not to score-only review.
+7. mine — CHANGELOG-vs-intent count mismatch is reconciliation between two documents, my job.
+8. mine — a coverage gap on the happy path is caught by reading the changed function plus its tests, which the tests dimension covers even without running anything new.

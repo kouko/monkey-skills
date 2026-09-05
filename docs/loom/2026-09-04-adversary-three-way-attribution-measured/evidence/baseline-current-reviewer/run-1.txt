@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)
+# contract: loom-code/agents/reviewer.md sha256 476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 1 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:16:47.783600+08:00
+# prompt-sha256: 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51
+
+**(a)** As reviewer I score and reconcile against ground truth but never write, run, or normalize a probe's own artifacts, and I only name (never author) a missing test — that boundary sits with the adversary (probe authorship/normalization) and the implementer (writing the RED test / fixing the code) respectively.
+
+1. mine — reconciling plan vs. review.json record counts is exactly the omission/contradiction reconciliation the reviewer owns.
+2. mine — a probe whose command only passes under a stale-origin precondition is invalid evidence; the `tests` dimension requires me to catch and flag this from the probe's `command`/`artifact`.
+3. other — normalizing a probe's own artifact path/count (`./probe.py` vs `probe.py`) is explicitly the adversary's job.
+4. mine — an overclaim ("works") against an Acceptance line is the report-vs-ground-truth reconciliation I own.
+5. mine — an omission in prose (when to re-run branch-end) is a docs-dimension finding.
+6. mine — a correctness discrepancy in the code's own logic (`--is-ancestor` vs. first-parent walk) is a `correctness` finding I raise, even though fixing it is not mine to do.
+7. mine — CHANGELOG vs. intent count mismatch is the same reconciliation duty as #1.
+8. implementer — an unwritten unit test for the happy path is the implementer's RED to write; I may only name the gap, not own it.

@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 4 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:09:23.815311+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**(a) Boundary:** I reconcile what the artifact and its ground truth (intent, plan, spec, and the probes' recorded `command`/`artifact`) say against each other and produce a verdict, while the adversary and blind-runner generate new evidence by actually executing things — the adversary constructing failing/boundary cases, the blind-runner building and running in a clean environment — which I read but never reproduce myself.
+
+1. mine — plan-vs-review.json record-count is a contradiction between two ground-truth documents, my reconciliation duty
+2. other — surfacing that the probe only passes on a fresh clone requires running it under different environment states, which is blind-runner's clean-build territory, not something I re-execute
+3. mine — counting `./probe.py` and `probe.py` as distinct artifacts is a probes[] text inconsistency I catch by reading `command`/`artifact`, no execution needed
+4. mine — "works" vs Acceptance 6's byte-identical requirement is an overclaim, exactly the reconciliation I own
+5. mine — an omission in the graduation paragraph, a docs-dimension finding
+6. other — exposing the `--is-ancestor` vs first-parent-walk gap needs constructing a side-branch boundary case and running it, the adversary's executable abuse-case job
+7. mine — CHANGELOG (7) vs intent (8) is a contradiction between two documents, my reconciliation duty
+8. mine — missing unit test on the happy path is a `tests`-dimension finding I score from reading the code, not something requiring me to execute anything

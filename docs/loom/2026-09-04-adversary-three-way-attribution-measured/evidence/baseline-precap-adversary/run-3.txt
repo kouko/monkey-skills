@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-adversary.md sha256 58d8c71595e11dd177cfb2bbd857af42cc7d9d17858f3f3d51b4af3a1da5d11d
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 3 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:04:32.125458+08:00
+# prompt-sha256: d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d
+
+**(a)** My boundary: I attack what already exists — boundary, hostile, and adversarial conditions on the artifact in front of me — while the reviewer judges design quality and reconciles counts/claims across separate documents.
+
+1. other — cross-document count reconciliation (plan vs review.json) is the reviewer's lens, not an attack I ran
+2. mine — a stale-state/boundary condition that breaks the change is exactly the adversarial probe class
+3. mine — a probe's own artifact path/count (script counted twice) is mine to get right, per the contract
+4. other — checking the report's claim against an Acceptance line is the blind-runner's walkthrough, not an attack
+5. other — judging whether the process prose is complete/clear is a design-quality call, the reviewer's job
+6. mine — an edge case where two ancestry checks diverge is a boundary case I should have probed and reported
+7. other — cross-document count reconciliation (CHANGELOG vs intent) is the reviewer's lens
+8. implementer — missing happy-path unit test is a basic coverage gap the code's author owed, not an abuse/boundary case I construct

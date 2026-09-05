@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51)
+# contract: loom-code/agents/reviewer.md sha256 476468f9896db78437010c71875b98909665d4cb86f8597c8e98d0ebcf1f4763
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 4 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:17:48.719751+08:00
+# prompt-sha256: 69058cb7a9783b72ed4ba3e28e7b713bdfb11b45ca5b92c98abad1f5a534fb51
+
+**Boundary**: I reconcile documents and claims against ground truth by reading and citing evidence, while the adversary owns writing and normalizing probes (their commands, artifacts, and reproducibility) and the implementer owns writing the missing code/tests those probes or my findings expose.
+
+1. mine — reconciling plan.md's record count against review.json is a doc-vs-doc inconsistency check, which is my reconciliation job.
+2. other — this is about a probe's own reproducibility/environment sensitivity, which the adversary must normalize, not me.
+3. other — a probe's own artifact/path counting is explicitly the adversary's to normalize, never mine.
+4. mine — reconciling the report's claim ("works") against the intent's Acceptance line is exactly the overclaim check I own.
+5. mine — a missing operational instruction in the graduation paragraph is a docs-omission finding I score directly.
+6. mine — this is a correctness discrepancy I can surface by reading the two logic paths, not something requiring me to run or write a probe.
+7. mine — reconciling CHANGELOG count against intent count is a doc-vs-doc omission I own.
+8. implementer — an unwritten unit test for the happy path is the implementer's RED to write; I may only name the gap, not claim it as mine to fix or probe.

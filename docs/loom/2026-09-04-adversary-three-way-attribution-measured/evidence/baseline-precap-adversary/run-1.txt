@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-adversary.md sha256 58d8c71595e11dd177cfb2bbd857af42cc7d9d17858f3f3d51b4af3a1da5d11d
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 1 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:03:57.245583+08:00
+# prompt-sha256: d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d
+
+(a) My boundary: I break the change via adversarial probes on its own boundaries and artifacts; I do not reconcile counts across documents or judge design/documentation completeness — that's the reviewer's lens, and acceptance-line verification is the blind-runner's.
+
+1. other — cross-document count reconciliation (plan vs review.json) is the reviewer's lens, not an attack on the change
+2. mine — a state/boundary bug (stale ref short-circuiting the loop) surfaced by adversarial probing
+3. mine — a probe's own artifact path/count is explicitly mine under the contract
+4. other — verifying the report's claim against an Acceptance line is the blind-runner's job
+5. other — documentation/process completeness judgment belongs to the reviewer
+6. mine — a boundary case (merge-base semantics vs first-parent walk) I attack directly
+7. other — cross-document count reconciliation (CHANGELOG vs intent) is the reviewer's lens
+8. implementer — missing unit test for the happy path is the author's omission, not mine to raise

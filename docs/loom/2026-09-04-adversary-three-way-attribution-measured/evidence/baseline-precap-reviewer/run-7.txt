@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 7 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:11:46.402417+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**Boundary:** I judge the delivered artifact against ground truth via inspection and cited probe records — the adversary is who writes and runs new probes/abuse cases, and the implementer is who writes the code and its tests; producing or fixing either is not mine.
+
+1. mine — plan-vs-review.json count mismatch is exactly the reconciliation/omission check I own across documents.
+2. mine — a probe whose pass depends on an untested precondition (fresh clone) is my `tests` dimension: reading a recorded probe's command for reproducibility, not running a new one.
+3. mine — inconsistent artifact naming inside `probes[]` is inspection of the recorded probe list, part of `tests`.
+4. other — checking the blind-run report's claim against an Acceptance line is the blind-runner's/ship acceptance job, not one of my lens dimensions.
+5. mine — an omission in the prose (missing operational guidance) is a straightforward `docs`-lens omission finding.
+6. mine — a logic discrepancy visible by reading the diff is my `correctness` dimension; I don't need to run it to spot it.
+7. mine — CHANGELOG-vs-intent count mismatch is reconciliation, same as #1.
+8. mine — missing unit test on a changed function is my `tests` dimension to flag; writing the test itself would be the implementer's.

@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-adversary.md sha256 58d8c71595e11dd177cfb2bbd857af42cc7d9d17858f3f3d51b4af3a1da5d11d
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 8 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:05:51.029314+08:00
+# prompt-sha256: d44f5a7069c6fc44a77f60e83e0be767635078353ca4a327a9f932ab2b5cf46d
+
+(a) My boundary: I attack what the change does with adversarial probes — boundary/hostile/state cases and my own probes' artifact identity — I don't judge cross-document consistency, blind-run acceptance fidelity, or missing-but-non-adversarial test coverage; those belong to the reviewer, blind-runner, or implementer respectively.
+
+1. other — cross-document count discrepancy (plan vs review.json) is the reviewer's cross-document check, not mine.
+2. mine — stale-state boundary condition breaking the candidate loop is exactly the forgotten-state/boundary class I probe.
+3. mine — a probe's own artifact spelling/count (`./probe.py` vs `probe.py`) is mine to get right under the contract.
+4. other — report-vs-acceptance fidelity ("works" vs byte-identical) is the blind-runner's job of walking Acceptance lines against the artifact.
+5. other — a documentation-completeness/design gap (when to re-run branch-end) is the reviewer's design lens, not an attack.
+6. mine — `--is-ancestor` accepting a side-branch commit that a first-parent walk rejects is a hostile/boundary-input case for me to probe and record.
+7. other — cross-document count discrepancy (CHANGELOG vs intent) is the reviewer's to raise.
+8. implementer — missing happy-path unit test is a coverage gap the author should have written, not an adversarial boundary case.

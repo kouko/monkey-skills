@@ -1,0 +1,19 @@
+# command: /Users/kouko/.local/bin/claude -p --model sonnet --output-format text  (prompt on stdin, sha256 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320)
+# contract: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/contract-precap-reviewer.md sha256 314197ed54f00ac9dc210611bdf250365807a6ee422398224a739aa888ac4aa7
+# fixture: docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/fixture-coldread-8.json sha256 ea970693aed2d31d2002951491dc38720c007e5ae84089c0976fdfdd2d4fd46a
+# run: 3 of 10
+# model: sonnet
+# status: ok
+# timestamp: 2026-09-05T18:08:43.411339+08:00
+# prompt-sha256: 7f2b91c4617ced7dd48fbbfd0fb49fe019e79d73d52a3c804401953c3febb320
+
+**(a)** I'm the reviewer — I judge by reading the artifact and ground truth and produce verdict + findings without modifying anything or running anything myself, whereas the adversary (and blind-runner) actually execute probes, boundary/mutation cases, and clean-environment acceptance walks; findings that depend on having *run* something under a specific condition belong to them, not me.
+
+1. mine — reconciling plan's stated count against review.json's actual count is exactly the reconciliation duty (omission/overclaim/contradiction between documents) this contract assigns me.
+2. other — this requires actually re-running the probe under a stale vs. fresh clone to observe the behavior difference; that's adversarial/execution work, not something I read my way into.
+3. mine — this is the `tests` dimension's job of reading `probes[]` entries' `artifact` fields for validity, explicitly mine to check (never re-running, just reading).
+4. mine — checking the blind-run report's claim ("works") against the intent's Acceptance line is the omission/overclaim reconciliation I own.
+5. mine — a docs-lens omission finding (missing guidance on when to re-run), squarely in my dimension set.
+6. other — surfacing that two ancestry checks diverge on a side-branch commit requires constructing and running that boundary case, which is adversarial red-teaming, not reading.
+7. mine — CHANGELOG-vs-intent count mismatch is the same reconciliation duty as #1 and #7.
+8. implementer — a missing unit test for new code is a gap in what was delivered; identifying it is fine as a finding, but "who it belongs to" in the sense of whose omission it is traces to the implementer, not to a verification role's job split (this one reads as directed at the code's author, unlike 1/3/4/5/7 which are checks I run over documents).
