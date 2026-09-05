@@ -25,6 +25,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 SHIP_SKILL_MD = REPO / "loom-code/skills/ship/SKILL.md"
 BUILD_SKILL_MD = REPO / "loom-code/skills/build/SKILL.md"
+BLIND_RUN_REPORT_REFERENCE = REPO / "loom-code/skills/review/references/blind-run-report.md"
 
 from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
 
@@ -396,15 +397,31 @@ def test_pr_body_template_carries_lane_line() -> None:
     assert "lane: <name>（第 N 輪起）" in section
 
 
-def test_decision_point_3_names_gateonly_probe_and_test_result() -> None:
-    """Ship's step 2 (decision point ③) carries an affirmative sentence
-    naming gate-only's replacement material: a one-page probe-and-package-
-    test result, in place of the blind-run report, pointed at
-    `references/blind-run-report.md`."""
+def test_decision_point_3_points_at_gateonly_replacement_material() -> None:
+    """Ship's step 2 (decision point ③) is at the file's word cap
+    (3,497/3,500), so the affirmative sentence naming gate-only's
+    replacement material -- a one-page probe-and-package-test result, in
+    place of the blind-run report -- lives in
+    `references/blind-run-report.md`'s own "Gate-only's replacement
+    material" section instead; ship/SKILL.md itself carries only the one
+    pointer sentence naming that section. The pointer never spells out
+    the literal path `references/blind-run-report.md` -- that exact
+    substring, anywhere in a SKILL.md, is read by `test_ship_pr_body.py`'s
+    `test_referenced_paths_exist` as a same-skill reference and would
+    wrongly demand `loom-code/skills/ship/references/blind-run-report.md`,
+    which does not exist (the file lives under review's own `references/`
+    instead)."""
     text = SHIP_SKILL_MD.read_text(encoding="utf-8")
     section = text.split("## 2. Decision point", 1)[1].split("## 3. Memory", 1)[0]
+    assert "Gate-only's replacement material" in section
+    assert "blind-run-report.md" in section
+    assert "references/blind-run-report.md" not in section
+
+    reference = BLIND_RUN_REPORT_REFERENCE.read_text(encoding="utf-8")
+    ref_section = reference.split("## Gate-only's replacement material", 1)[1]
+    ref_section = ref_section.split("## What makes a report unusable", 1)[0]
     hits = [
-        s for s in _sentences(section)
+        s for s in _sentences(ref_section)
         if "gate-only" in s.lower()
         and "probe" in s.lower()
         and "package-test" in s.lower()
@@ -412,8 +429,9 @@ def test_decision_point_3_names_gateonly_probe_and_test_result() -> None:
         and not _has_negation(s)
     ]
     assert hits, (
-        "ship/SKILL.md decision point ③ has no affirmative sentence naming "
-        "gate-only's one-page probe-and-package-test result"
+        "references/blind-run-report.md's gate-only section has no "
+        "affirmative sentence naming the one-page probe-and-package-test "
+        "result"
     )
 
 

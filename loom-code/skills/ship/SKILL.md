@@ -104,9 +104,8 @@ diff:
   mechanism produced it.
 - **Open questions**: everything the run left uncertain.
 
-Gate-only presents the one-page probe-and-package-test result there
-instead, shaped by the review station's own `blind-run-report.md`, under
-its `references/`.
+Gate-only's ③ material lives in review's blind-run-report.md, under its own
+"Gate-only's replacement material" section, replacing this paragraph here.
 
 Then wait. Three answers are possible:
 
