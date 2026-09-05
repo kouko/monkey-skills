@@ -1,13 +1,16 @@
 """Adversarial probes for wave-end:1 of
-2026-09-05-review-sees-complexity-and-process-cost.
+2026-09-05-review-sees-complexity-and-process-cost -- retargeted after the
+fix round (`fix:wave-end:1`) at HEAD `baf36c70` to assert the CORRECT
+invariant for each finding: green on the fixed tree, red on the tree before
+that fix round (`e586f195`, the adversary's first probe commit).
 
-Scope: the delta between the intent-confirmation commit
-(subject "docs(loom): intent 2026-09-05-review-sees-complexity-and-process-cost
-confirmed") and the tip of this branch at the time this file was written
-(subject "chore(loom): dispatch review wave-end:1 -- adversary, blind-runner,
-two readers in one record commit"). Commits are located by subject/trailer,
-never by a hardcoded sha -- `git log --grep` below is how a clean checkout
-finds the same range this file was written against.
+Scope: the range from the intent-confirmation commit (subject
+"docs(loom): intent 2026-09-05-review-sees-complexity-and-process-cost
+confirmed") to HEAD. Commits are located by subject/trailer, never by a
+hardcoded sha, except where a test needs to name the specific pre-fix
+commit it regresses against (`e586f195`, the adversary's own prior probe
+commit, cited by sha because it is this file's own history, not a station
+artifact).
 
 Each test is independently re-runnable: `python3 -m pytest
 docs/loom/2026-09-05-review-sees-complexity-and-process-cost/evidence/probes/test_abuse_complexity_wave_end.py -q`
@@ -33,10 +36,13 @@ REPO = Path(
 
 REVIEW_JSON = REPO / "docs" / "loom" / "2026-09-05-review-sees-complexity-and-process-cost" / "review.json"
 TEMPLATE = REPO / "loom-code" / "contract" / "templates" / "review.json"
+CODEX_TEMPLATE = REPO / ".codex" / "hooks" / "contract" / "templates" / "review.json"
 RUNNER = REPO / "scripts" / "run_package_tests.py"
 SHIP_SKILL = REPO / "loom-code" / "skills" / "ship" / "SKILL.md"
 BUILD_SKILL = REPO / "loom-code" / "skills" / "build" / "SKILL.md"
 CHECKER = REPO / "loom-code" / "scripts" / "loom_checker.py"
+PROSE_PIN = REPO / "loom-code" / "scripts" / "prose_pin.py"
+MECHANISMS = REPO / "docs" / "loom" / "evidence" / "mechanisms.yaml"
 
 NEGATION_MODULE_PATHS = {
     "review_station": REPO / "loom-code" / "scripts" / "test_review_station_text.py",
@@ -77,56 +83,91 @@ def _confirm_intent_sha() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Class 3 (cost schema): the review.json template declares `cost` TWICE
+# Fixed: the review.json template (and its Codex mirror) declare `cost`
+# exactly once each; before the fix round they carried it twice
+# (fixed by commit 0dc680c1, "one cost block in the review.json template").
 # ---------------------------------------------------------------------------
 
-def test_review_json_template_duplicate_cost_key_shadows_first_value() -> None:
-    """The template contract/templates/review.json contains the literal key
-    `"cost"` twice as a top-level JSON object member (once near the head with
-    `hours_plan_to_pr: 0`, once near the tail -- next to `dispatch` -- with
-    `hours_plan_to_pr: null`). JSON object literals with a duplicate key are
-    not rejected by Python's `json.loads`; the second occurrence silently
-    wins and the first is dead text that no reader or diff tool flags,
-    because a textual grep for `"cost"` still finds "it" (there are two).
-    This is a real defect in the artifact under review, not a hypothetical:
-    it is reproduced here by counting literal occurrences of the top-level
-    key in the file text."""
-    text = TEMPLATE.read_text(encoding="utf-8")
-    # Only count '"cost":' at low indentation (2 spaces), i.e. top-level
-    # object members, not any nested key that happens to be named cost.
+@pytest.mark.parametrize("template_path", [TEMPLATE, CODEX_TEMPLATE], ids=["loom-code", "codex-mirror"])
+def test_review_json_template_declares_cost_exactly_once(template_path: Path) -> None:
+    """FIXED (0dc680c1): both `contract/templates/review.json` and its Codex
+    mirror under `.codex/hooks/contract/templates/review.json` carry the
+    top-level `"cost"` key exactly once. Before the fix, the loom-code
+    template carried it twice (a dead `hours_plan_to_pr: 0` block silently
+    shadowed by json.loads picking the second occurrence) -- the adversary's
+    prior probe commit (e586f195) has this test asserting the same
+    invariant and failing on that earlier tree."""
+    assert template_path.is_file(), f"{template_path} does not exist"
+    text = template_path.read_text(encoding="utf-8")
     top_level_hits = re.findall(r'^\s{2}"cost":', text, re.MULTILINE)
     assert len(top_level_hits) == 1, (
-        f"contract/templates/review.json declares the top-level `cost` key "
-        f"{len(top_level_hits)} times (expected 1) -- one occurrence is a "
-        "dead value silently shadowed by json.loads, invisible to a plain "
-        "grep for the key name"
+        f"{template_path.relative_to(REPO)} declares the top-level `cost` "
+        f"key {len(top_level_hits)} times (expected exactly 1)"
     )
 
 
-def test_review_json_template_parses_to_the_second_costs_hours_value() -> None:
-    """Self-test pinning what the duplicate actually does at parse time: the
-    live document resolves to the SECOND `cost` object's `hours_plan_to_pr`
-    (null), silently discarding the first object's `hours_plan_to_pr: 0`."""
+def test_review_json_template_cost_block_parses_to_declared_shape() -> None:
+    """FIXED (0dc680c1): with the duplicate gone, the template's single
+    `cost` object parses to the declared null-hours shape (nothing shadows
+    it anymore)."""
     doc = json.loads(TEMPLATE.read_text(encoding="utf-8"))
-    assert doc["cost"]["hours_plan_to_pr"] is None, (
-        "expected the parsed document to keep the LAST cost object's value "
-        "(null) -- if this changes, the duplicate-key shadowing behavior "
-        "this probe documents has changed shape and needs re-review"
+    assert doc["cost"] == {
+        "rounds": 0, "dispatches": 0, "cap_changes": [], "hours_plan_to_pr": None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Fixed: `artifact:review.cost` is registered in the mechanisms ledger, with
+# a working eval -- fixed alongside the duplicate-key fix (0dc680c1) and its
+# CHANGELOG budget-exception line (0274d550).
+# ---------------------------------------------------------------------------
+
+def test_mechanisms_yaml_registers_artifact_review_cost() -> None:
+    """FIXED (0dc680c1 + 0274d550): `docs/loom/evidence/mechanisms.yaml`
+    registers `artifact:review.cost` in the `contract` class, with an
+    `eval:` that names a real, collectible pytest node id. Before the fix
+    round this id was absent -- the `cost` field the review.json template
+    carries had no mechanism-population entry at all."""
+    assert MECHANISMS.is_file()
+    text = MECHANISMS.read_text(encoding="utf-8")
+    m = re.search(
+        r'-\s*\{id:\s*"artifact:review\.cost",\s*class:\s*(\S+),\s*eval:\s*"([^"]+)"',
+        text,
+    )
+    assert m, "docs/loom/evidence/mechanisms.yaml has no artifact:review.cost entry"
+    assert m.group(1).rstrip(",") == "contract", (
+        f"artifact:review.cost is class {m.group(1)!r}, expected contract"
+    )
+    eval_ref = m.group(2)
+    assert "::" in eval_ref, f"eval {eval_ref!r} does not name a test node id"
+    node_path, node_name = eval_ref.split("::", 1)
+    node_file = REPO / node_path
+    assert node_file.is_file(), f"eval target {node_path} does not exist"
+    collected = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", eval_ref],
+        cwd=str(REPO), capture_output=True, text=True,
+    )
+    assert collected.returncode == 0 and node_name in collected.stdout, (
+        f"eval {eval_ref!r} does not collect: {collected.stdout}{collected.stderr}"
     )
 
 
 # ---------------------------------------------------------------------------
-# Class: forge an artifact the gate trusts -- dispatch[] `started` timestamps
+# Fixed: dispatch[] `started` timestamps now precede the first commit
+# carrying each task's `Task:` trailer (0dc680c1 / 639180ea, "dispatch
+# started timestamps corrected to their record commits").
 # ---------------------------------------------------------------------------
 
-def test_dispatch_started_timestamp_accepted_even_when_impossible() -> None:
-    """`push.reviewer-ne-implementer` (loom_checker.parse_dispatch /
-    check_reviewer_ne_implementer) requires every dispatch[] entry to carry a
-    non-empty `started` field (DISPATCH_KEYS), but never checks that value
-    against git history. A forged review.json whose reviewer 'started'
-    (1999) before its implementer 'started' (2099) -- an impossible
-    ordering -- is accepted with zero findings. Reproduced by calling the
-    actual checker functions, not by reading the code."""
+def test_dispatch_started_timestamp_accepted_when_impossible_still_documents_gap() -> None:
+    """Unfixed by design, and stated as a note rather than a finding per the
+    coordinator: `push.reviewer-ne-implementer` (loom_checker.parse_dispatch
+    / check_reviewer_ne_implementer) still only checks that `started` is
+    non-empty -- it never cross-checks the value against git. A forged
+    review.json with an impossible ordering (reviewer 'started' in 1999,
+    implementer 'started' in 2099) is still accepted with zero findings.
+    Kept here as a live record of that gap, not a regression: the fix round
+    corrected the RECORD's own timestamps (next test), and left the checker
+    unchanged, out of this change's scope (no checker rule added)."""
     sys.path.insert(0, str(CHECKER.parent))
     import loom_checker as lc  # noqa: E402
 
@@ -143,87 +184,114 @@ def test_dispatch_started_timestamp_accepted_even_when_impossible() -> None:
     assert err is None
     findings = lc.check_reviewer_ne_implementer(forged, implementers, reviewers, err)
     assert findings == [], (
-        "expected the checker to accept the forged dispatch record (this is "
-        "the hole, not the fix): got findings instead, meaning the checker "
-        "now validates `started` against something -- re-review this probe"
+        "expected the checker to still accept the forged dispatch record "
+        "(this remains an accepted, out-of-scope gap, not a regression)"
     )
 
 
-def test_this_changes_own_reviewjson_started_timestamps_postdate_their_commits() -> None:
-    """The dispatch[] entries this very change wrote for W1-01..W1-05 record
-    `started: 2026-09-06T10:30:00+08:00` -- a full calendar day AFTER the
-    commit that carries `Task: W1-01` (2026-09-05, per `git log --format=%ci`
-    on the range from the intent-confirmation commit). A dispatch record
-    whose `started` field postdates the work it claims to have started is
-    not evidence of ordering; it is exactly the unchecked field the
-    previous probe shows the gate never verifies. This is read from THIS
-    branch's own real review.json, not a synthetic example."""
+def test_every_w1_implementer_started_precedes_its_first_task_commit() -> None:
+    """FIXED (639180ea): every W1-01..W1-05 implementer dispatch entry's
+    `started` timestamp now precedes (or equals the record-commit instant
+    immediately before) the first commit carrying that task's `Task:`
+    trailer. Before the fix, all five carried `started:
+    2026-09-06T10:30:00+08:00` -- a full calendar day AFTER their own
+    `Task:` commits (2026-09-05)."""
     assert REVIEW_JSON.is_file(), f"{REVIEW_JSON} does not exist on this branch"
     doc = json.loads(REVIEW_JSON.read_text(encoding="utf-8"))
-    started_for_w1_01 = next(
-        (e["started"] for e in doc.get("dispatch", [])
-         if e.get("task") == "W1-01" and e.get("role") == "implementer"),
-        None,
-    )
-    assert started_for_w1_01 is not None, "no W1-01 implementer dispatch entry found"
+    confirm_sha = _confirm_intent_sha()
+    checked = 0
+    for task in ("W1-01", "W1-02", "W1-03", "W1-04", "W1-05"):
+        started = next(
+            (e["started"] for e in doc.get("dispatch", [])
+             if e.get("task") == task and e.get("role") == "implementer"),
+            None,
+        )
+        assert started is not None, f"no {task} implementer dispatch entry found"
 
-    commit_iso = subprocess.run(
-        ["git", "log", "--format=%cI", "--grep=^Task: W1-01$",
-         f"{_confirm_intent_sha()}..HEAD"],
-        cwd=str(REPO), capture_output=True, text=True, check=True,
-    ).stdout.strip().splitlines()
-    assert commit_iso, "no commit on this range carries 'Task: W1-01'"
-    commit_time = commit_iso[0]
+        commit_iso = subprocess.run(
+            ["git", "log", "--format=%cI", f"--grep=^Task: {task}$",
+             f"{confirm_sha}..HEAD"],
+            cwd=str(REPO), capture_output=True, text=True, check=True,
+        ).stdout.strip().splitlines()
+        assert commit_iso, f"no commit on this range carries 'Task: {task}'"
+        # git log lists newest first; the FIRST commit carrying the trailer
+        # is the last line here.
+        first_commit_time = commit_iso[-1]
 
-    # ISO-8601 strings with the same UTC-offset format sort lexically the
-    # same as chronologically for this repo's timestamps (both +08:00).
-    assert started_for_w1_01 > commit_time, (
-        f"expected to reproduce the anomaly (started {started_for_w1_01!r} "
-        f"after commit {commit_time!r}); if this now sorts the other way, "
-        "the anomaly this probe documents has been fixed -- re-review "
-        "whether it still needs recording as a finding"
-    )
+        assert started <= first_commit_time, (
+            f"{task}: started {started!r} does not precede its first "
+            f"Task-trailer commit {first_commit_time!r}"
+        )
+        checked += 1
+    assert checked == 5
 
 
 # ---------------------------------------------------------------------------
-# Class 1 (prose pins): the shared negation regex has a hole -- "cannot",
-# "without", "nothing" evade it in all five modules that copy it verbatim.
+# Fixed: the shared negation matcher (loom-code/scripts/prose_pin.py) now
+# catches "cannot"/"without"/"neither"/"nobody"/"nor" (54c675c9);
+# "none"/"nothing" deliberately excluded per the coordinator (used as
+# quantifiers in two pinned affirmative sentences).
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("module_name", sorted(NEGATION_MODULE_PATHS))
-def test_shared_negation_matcher_misses_cannot_without_nothing(module_name: str) -> None:
-    """`_NEGATION_RE = re.compile(r"\\b(?:not|never|no)\\b|n't", re.IGNORECASE)`
-    is copy-pasted verbatim into five test modules that each pin a sentence
-    of prose. None of the five catch "cannot" (word-boundary "not" never
-    appears -- "cannot" has no boundary before "not"), "without", or
-    "nothing" as negation. A hostile rewrite using any of those three words
-    passes `_has_negation() == False`, i.e. is accepted as 'affirmative'."""
-    path = NEGATION_MODULE_PATHS[module_name]
-    mod = _load_module(module_name, path)
-    has_negation = getattr(mod, "_has_negation")
-    for hostile_sentence in (
-        "This cannot be undone once committed.",
-        "It is done without exception, always.",
-        "Nothing changes the outcome here.",
-    ):
-        assert has_negation(hostile_sentence) is False, (
-            f"{module_name}._has_negation unexpectedly caught a negation "
-            f"word in {hostile_sentence!r} -- the hole this probe documents "
-            "may have been closed; re-review"
+def test_prose_pin_module_exists_and_is_the_single_source() -> None:
+    """FIXED (54c675c9): `loom-code/scripts/prose_pin.py` exists and exports
+    `NEGATION_RE`/`has_negation`; the five station-text test modules import
+    `NEGATION_RE` from it rather than each carrying a private literal."""
+    assert PROSE_PIN.is_file()
+    mod = _load_module("prose_pin_module", PROSE_PIN)
+    assert hasattr(mod, "NEGATION_RE")
+    assert hasattr(mod, "has_negation")
+    for name, path in NEGATION_MODULE_PATHS.items():
+        text = path.read_text(encoding="utf-8")
+        assert "from prose_pin import" in text, (
+            f"{name} ({path.relative_to(REPO)}) does not import the shared "
+            "prose_pin matcher"
         )
 
 
-def test_hostile_rewrite_of_build_stations_pinned_sentence_still_matches() -> None:
-    """End-to-end version of the negation-matcher hole against a REAL pinned
-    sentence: `test_build_station_text.py`'s
-    `test_dispatch_record_commits_once_per_wave_not_per_record` requires a
-    sentence naming "appended once", "committed once" and "first dispatch"
-    with no negation. A sentence using "cannot" to state the exact OPPOSITE
-    of the rule -- implementer records CANNOT be appended/committed as
-    described -- still satisfies that test's own filter, because "cannot"
-    evades `_has_negation`. If this sentence replaced the real one in
-    build/SKILL.md, the pinned test would keep passing while the prose it
-    pins says the opposite thing."""
+@pytest.mark.parametrize("module_name", sorted(NEGATION_MODULE_PATHS))
+def test_shared_negation_matcher_now_catches_cannot_and_without(module_name: str) -> None:
+    """FIXED (54c675c9): all five station-text modules now reject "cannot"
+    and "without" as negation -- previously (e586f195's probe) all five
+    returned False (no negation detected) for both words."""
+    path = NEGATION_MODULE_PATHS[module_name]
+    mod = _load_module(module_name, path)
+    has_negation = getattr(mod, "_has_negation")
+    for negated_word_sentence in (
+        "This cannot be undone once committed.",
+        "It is done without exception, always.",
+    ):
+        assert has_negation(negated_word_sentence) is True, (
+            f"{module_name}._has_negation still misses a negation word in "
+            f"{negated_word_sentence!r}"
+        )
+
+
+def test_shared_negation_matcher_deliberately_still_permits_none_and_nothing() -> None:
+    """Documents the coordinator's explicit design choice, not a hole: `none`
+    and `nothing` stay OUT of the widened matcher because two pinned
+    affirmative sentences use them as quantifiers ("a reader who raised
+    none keeps its previous PASS"; "that one intent line, nothing more").
+    Widening to catch them would break those two legitimate pins, so this
+    probe pins the deliberate exclusion rather than treating it as a
+    finding."""
+    mod = _load_module("prose_pin_module", PROSE_PIN)
+    for still_permitted in (
+        "A reader who raised none keeps its previous PASS.",
+        "That one intent line, nothing more.",
+    ):
+        assert mod.has_negation(still_permitted) is False, (
+            f"expected {still_permitted!r} to still read as negation-free "
+            "(none/nothing are deliberately excluded quantifier words)"
+        )
+
+
+def test_hostile_rewrite_of_build_stations_pinned_sentence_now_rejected() -> None:
+    """FIXED (54c675c9): the end-to-end hostile rewrite of build/SKILL.md's
+    real pinned sentence ("appended once"/"committed once"/"first
+    dispatch") using "cannot" to state the OPPOSITE of the rule no longer
+    matches the pinned-sentence filter -- e586f195's probe showed it did,
+    before the shared matcher widened."""
     mod = _load_module("build_station", NEGATION_MODULE_PATHS["build_station"])
     hostile_paragraph = (
         "This wave sadly cannot have its implementer records appended once "
@@ -238,27 +306,45 @@ def test_hostile_rewrite_of_build_stations_pinned_sentence_still_matches() -> No
         and "first dispatch" in s.lower()
         and not mod._has_negation(s)
     ]
+    assert hits == [], (
+        f"expected the hostile 'cannot' rewrite to be rejected now that the "
+        f"shared matcher catches it; still matched: {hits}"
+    )
+
+
+def test_build_stations_real_pinned_sentence_still_accepted() -> None:
+    """Regression guard alongside the previous test: the widened matcher
+    must still accept the REAL (non-hostile) pinned sentence in
+    build/SKILL.md -- a wider negation regex that also ate legitimate
+    affirmative text would trade one hole for another."""
+    sys.path.insert(0, str(REPO / "loom-code" / "scripts"))
+    from prose_pin import has_negation  # noqa: E402
+    mod = _load_module("build_station", NEGATION_MODULE_PATHS["build_station"])
+    paragraph = mod._perwave_commit_paragraph()
+    flat = " ".join(paragraph.split())
+    hits = [
+        s for s in mod._flat_sentences(flat)
+        if "appended once" in s.lower()
+        and "committed once" in s.lower()
+        and "first dispatch" in s.lower()
+        and not has_negation(s)
+    ]
     assert hits, (
-        "expected the hostile negated-via-'cannot' rewrite to still match "
-        "the pinned-sentence filter (that is the hole); if it no longer "
-        "matches, the negation matcher used by test_build_station_text.py "
-        "has been hardened -- re-review whether the shared regex changed"
+        "the real (non-hostile) pinned sentence in build/SKILL.md §3 no "
+        "longer matches its own test's filter after the matcher widened"
     )
 
 
 # ---------------------------------------------------------------------------
-# Class 6: ship's §4 pre-push checklist claims to mirror CI "command for
-# command" -- the doc-citations line does not reproduce the CI invocation.
+# Fixed: ship's §4 doc-citations checklist line now carries the full
+# `git ls-files | grep | xargs` pipeline (2e0491c8).
 # ---------------------------------------------------------------------------
 
-def test_ship_checklist_doc_citations_line_is_not_the_ci_command() -> None:
-    """ship/SKILL.md §4 says the checklist "mirrors
-    `.github/workflows/loom-code-ci.yml`'s jobs, command for command, so a
-    red line here is red there too." The CI job pipes a filtered
-    `git ls-files` list through `xargs` into `check_doc_citations.py`; the
-    checklist's line is the bare `python3 loom-code/scripts/check_doc_citations.py`
-    with a trailing comment pointing at the workflow step, and no actual
-    file arguments. These are not the same command."""
+def test_ship_checklist_doc_citations_line_carries_the_ci_pipeline() -> None:
+    """FIXED (2e0491c8): the checklist line for doc-citations now IS the
+    full `git ls-files '*.md' | grep -E ... | xargs python3
+    loom-code/scripts/check_doc_citations.py` pipeline, matching the CI
+    job's actual command rather than a bare invocation with a comment."""
     section = text_after_heading(SHIP_SKILL, "## 4. Push")
     checklist_block = section.split("```", 2)[1]
     doc_citation_lines = [
@@ -267,41 +353,33 @@ def test_ship_checklist_doc_citations_line_is_not_the_ci_command() -> None:
     ]
     assert doc_citation_lines, "no check_doc_citations.py line in ship's §4 checklist"
     line = doc_citation_lines[0]
-    assert "git ls-files" not in line and "xargs" not in line, (
-        "the checklist line does not carry the file-selection pipeline the "
-        "CI job actually runs"
+    assert "git ls-files" in line and "xargs" in line, (
+        f"checklist line still lacks the CI file-selection pipeline: {line!r}"
     )
 
 
-def test_ship_checklist_doc_citations_line_run_verbatim_exits_nonzero() -> None:
-    """Reproduced: copying the checklist's printed line and running it
-    verbatim (stripped of its trailing `#` comment, as a user would type it)
-    exits 2 (argparse usage error) regardless of the repository's actual
-    citation health -- it can never reflect "red there too" because it
-    never runs the check at all."""
+def test_ship_checklist_doc_citations_line_run_verbatim_exits_zero() -> None:
+    """FIXED (2e0491c8): copying the checklist's printed line and running it
+    verbatim now exits 0 on this tree -- before the fix it always exited 2
+    (a bare invocation with no file arguments), regardless of repo health."""
     section = text_after_heading(SHIP_SKILL, "## 4. Push")
     checklist_block = section.split("```", 2)[1]
     line = next(
         line for line in checklist_block.splitlines()
         if "check_doc_citations.py" in line
     )
-    command = line.split("#", 1)[0].strip()
     result = subprocess.run(
-        command.split(), cwd=str(REPO), capture_output=True, text=True,
+        line, cwd=str(REPO), shell=True, capture_output=True, text=True,
     )
-    assert result.returncode != 0, (
-        f"expected the bare checklist line {command!r} to fail with a "
-        f"usage error regardless of repo health; got exit "
-        f"{result.returncode} -- re-review whether the script's default "
-        "argument handling changed"
+    assert result.returncode == 0, (
+        f"expected the checklist's own printed pipeline to exit 0; got "
+        f"{result.returncode}: stdout={result.stdout!r} stderr={result.stderr!r}"
     )
 
 
-def test_ci_workflow_doc_citations_step_does_pass_on_this_tree() -> None:
-    """Control case: the ACTUAL CI command (with its file-selection
-    pipeline) exits 0 on this tree, confirming the checklist's failure mode
-    above is specific to the checklist's line, not to the repo's citation
-    health."""
+def test_ci_workflow_doc_citations_step_still_passes_on_this_tree() -> None:
+    """Control case, unchanged: the ACTUAL CI command exits 0 on this tree
+    (confirms the previous test's green is not a repo-health accident)."""
     result = subprocess.run(
         "git ls-files '*.md' | grep -E "
         r"'^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)' "
@@ -315,45 +393,54 @@ def test_ci_workflow_doc_citations_step_does_pass_on_this_tree() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Class 4: scripts/run_package_tests.py -- empty/absent argv, `--`-only argv
+# Fixed: scripts/run_package_tests.py refuses zero groups with exit 2
+# (0dc680c1).
 # ---------------------------------------------------------------------------
 
-def test_runner_empty_argv_exits_zero_having_run_nothing() -> None:
-    """Empty and absent input: invoking the runner with NO arguments exits
-    0 -- success -- while running zero pytest sessions. A truncated or
-    mistyped KICKOFF-DEFAULTS command (e.g. a shell-quoting accident that
-    drops every path argument) would silently "pass" the package-tests
-    probe rather than failing loudly."""
+def test_runner_empty_argv_exits_nonzero_refusing_zero_groups() -> None:
+    """FIXED (0dc680c1): invoking the runner with NO arguments now exits 2
+    with a stderr message -- before the fix it silently exited 0 having
+    run zero pytest sessions."""
     result = subprocess.run(
         [sys.executable, str(RUNNER)], cwd=str(REPO), capture_output=True, text=True,
     )
-    assert result.returncode == 0, "expected the boundary case to reproduce as exit 0"
-    assert result.stdout.strip() == "" and result.stderr.strip() == "", (
-        "expected no pytest output at all, confirming zero sessions ran"
+    assert result.returncode == 2, (
+        f"expected exit 2 refusing zero groups; got {result.returncode}"
     )
+    assert result.stderr.strip(), "expected a stderr message explaining the refusal"
 
 
-def test_runner_dashdash_only_argv_exits_zero_having_run_nothing() -> None:
-    """Boundary one step past empty: an argv consisting only of `--` (every
-    group empty after splitting) also exits 0 with no session run -- the
-    same silent-success hole as the fully empty case, reached a different
+def test_runner_dashdash_only_argv_exits_nonzero_refusing_zero_groups() -> None:
+    """FIXED (0dc680c1): an argv of only `--` (every group empty after
+    splitting) also now exits 2 -- the same silent-success hole
+    (test_runner_empty_argv...) reached a different way, closed the same
     way."""
     result = subprocess.run(
         [sys.executable, str(RUNNER), "--"], cwd=str(REPO), capture_output=True, text=True,
     )
-    assert result.returncode == 0
-    assert result.stdout.strip() == "" and result.stderr.strip() == ""
+    assert result.returncode == 2
+    assert result.stderr.strip()
+
+
+def test_runner_still_runs_a_real_nonempty_group_and_exits_zero() -> None:
+    """Regression guard: the zero-groups refusal must not have broken the
+    ordinary one-group case."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        (tmp_path / "test_ok.py").write_text("def test_ok():\n    assert True\n")
+        result = subprocess.run(
+            [sys.executable, str(RUNNER), str(tmp_path), "-q", "-p", "no:cacheprovider"],
+            cwd=str(REPO), capture_output=True, text=True,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_runner_failing_first_group_shortcircuits_second_group() -> None:
-    """Wrong call order / failure of a dependency, combined: when the first
-    `--`-separated group fails, the runner returns immediately -- the
-    second group's pytest session never runs at all (not merely its result
-    being masked). Held: this matches the module's own docstring claim
-    ("Two sessions, one exit code") rather than breaking it, but it means a
-    red loom-code group hides whether the loom-design group would ALSO have
-    been red or green -- recorded as a finding, not a break, since the
-    runner never claimed to run both regardless of failure."""
+    """Unchanged (not part of this fix round, per the coordinator): when the
+    first `--`-separated group fails, the runner returns immediately -- the
+    second group's pytest session never runs. Kept as a live record, not a
+    regression: the runner's own docstring never claimed otherwise."""
     import tempfile
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -376,44 +463,26 @@ def test_runner_failing_first_group_shortcircuits_second_group() -> None:
         assert result.returncode != 0
         assert not marker.exists(), (
             "expected the second group to NOT have run after the first "
-            "group failed -- if it now runs, the runner's short-circuit "
-            "behaviour has changed and this finding is stale"
+            "group failed"
         )
 
 
 # ---------------------------------------------------------------------------
-# Class 1 (prose pins): gate-block reordering in review/SKILL.md keeps both
-# <!-- gate: ... --> ... <!-- /gate --> pairs intact with their original ids.
-# Held: attempted, did not break.
+# Held (unchanged, no break found): gate-block reordering, word caps,
+# dispatch commit-count bound.
 # ---------------------------------------------------------------------------
 
 def test_review_skill_gate_blocks_remain_paired_and_named_after_reorder() -> None:
-    """W1-02 moved the `review.reviewer-not-implementer` gate block's prose
-    (splitting the old single block into an ungated sentence plus a
-    narrower gated remainder). Held: both `<!-- gate: ... -->` /
-    `<!-- /gate -->` pairs the file declares are still balanced and the two
-    ids this delta touches (`review.two-fresh-reviewers`,
-    `review.reviewer-not-implementer`) are both still present exactly
-    once each."""
+    """Held: both `<!-- gate: ... -->` / `<!-- /gate -->` pairs the file
+    declares are still balanced, and the two ids the W1-02 §2 reorder
+    touched are each still present exactly once."""
     text = (REPO / "loom-code" / "skills" / "review" / "SKILL.md").read_text(encoding="utf-8")
     opens = re.findall(r"<!--\s*gate:\s*([A-Za-z0-9._-]+)\s*-->", text)
     closes = len(re.findall(r"<!--\s*/gate\s*-->", text))
-    assert len(opens) == closes, (
-        f"{len(opens)} gate-open markers vs {closes} gate-close markers -- "
-        "reordering left an orphaned gate block"
-    )
+    assert len(opens) == closes
     for gate_id in ("review.two-fresh-reviewers", "review.reviewer-not-implementer"):
-        assert opens.count(gate_id) == 1, (
-            f"gate id {gate_id!r} appears {opens.count(gate_id)} times "
-            "(expected exactly 1) after the §2 reorder"
-        )
+        assert opens.count(gate_id) == 1
 
-
-# ---------------------------------------------------------------------------
-# Class 2 (word caps): measure every touched file's cap the same way the
-# pinned test measures it, and confirm adversary.md's reported "exactly 600"
-# claim. Held: attempted, all within cap.
-# ---------------------------------------------------------------------------
 
 def _body_of(text: str) -> str:
     match = re.match(r"^---\n.*?\n---\n", text, re.DOTALL)
@@ -421,59 +490,42 @@ def _body_of(text: str) -> str:
 
 
 def test_word_caps_hold_for_every_touched_station_file() -> None:
-    """Held: independently recomputes every cap named in the plan/scope
-    (reviewer.md 1460, adversary.md 600, review/SKILL.md 4500,
-    ship/SKILL.md 3500) using the same body-extraction rule
-    `test_reviewer_agent_single_contract.py` uses (strip a leading YAML
-    frontmatter block, then count words), plus build/SKILL.md's own
-    soft-cap test (whole file, 3750). None of the five is over cap on this
-    tree; adversary.md is confirmed at exactly 600."""
+    """Held: reviewer.md 1460, adversary.md exactly 600, review/SKILL.md
+    4500, ship/SKILL.md 3500, build/SKILL.md whole-file 3750 -- all within
+    cap on this tree."""
     reviewer_md = REPO / "loom-code" / "agents" / "reviewer.md"
     adversary_md = REPO / "loom-code" / "agents" / "adversary.md"
     review_skill = REPO / "loom-code" / "skills" / "review" / "SKILL.md"
-    ship_skill = SHIP_SKILL
-    build_skill = BUILD_SKILL
 
     reviewer_words = len(_body_of(reviewer_md.read_text(encoding="utf-8")).split())
     adversary_words = len(_body_of(adversary_md.read_text(encoding="utf-8")).split())
     review_skill_words = len(_body_of(review_skill.read_text(encoding="utf-8")).split())
-    ship_skill_words = len(_body_of(ship_skill.read_text(encoding="utf-8")).split())
-    build_skill_words = len(build_skill.read_text(encoding="utf-8").split())
+    ship_skill_words = len(_body_of(SHIP_SKILL.read_text(encoding="utf-8")).split())
+    build_skill_words = len(BUILD_SKILL.read_text(encoding="utf-8").split())
 
-    assert reviewer_words <= 1460, f"reviewer.md body is {reviewer_words} words"
-    assert adversary_words == 600, (
-        f"adversary.md body is {adversary_words} words, expected exactly 600 "
-        "as reported in the scope"
-    )
-    assert review_skill_words <= 4500, f"review/SKILL.md body is {review_skill_words} words"
-    assert ship_skill_words <= 3500, f"ship/SKILL.md body is {ship_skill_words} words"
-    assert build_skill_words <= 3750, f"build/SKILL.md whole file is {build_skill_words} words"
+    assert reviewer_words <= 1460
+    assert adversary_words == 600
+    assert review_skill_words <= 4500
+    assert ship_skill_words <= 3500
+    assert build_skill_words <= 3750
 
-
-# ---------------------------------------------------------------------------
-# Class 5: dispatch-batching claim -- commit count bound from Acceptance 6.
-# Held: attempted, the bound currently holds at wave-end:1.
-# ---------------------------------------------------------------------------
 
 def test_dispatch_commit_count_within_waves_plus_rounds_bound() -> None:
-    """Held: Acceptance 6 says the number of `chore(loom): dispatch`-subject
-    commits on the branch must stay <= (waves so far) + (review rounds so
-    far). At wave-end:1 there are 2 waves (W1, W2/fix-wave) and 1 review
-    round (wave-end:1 round 1) so far, bound = 3; counts the actual
-    dispatch-subject commits on the range and confirms it does not exceed
-    that bound."""
+    """Held: Acceptance 6's bound (dispatch-subject commits <= waves so far
+    + review rounds so far). At this fix round there are 2 waves (W1,
+    W2/fix-wave) and 2 review-station rounds so far (wave-end:1 round 1,
+    and the fix round's own dispatch), bound = 4."""
     subjects = subprocess.run(
         ["git", "log", "--format=%s", f"{_confirm_intent_sha()}..HEAD"],
         cwd=str(REPO), capture_output=True, text=True, check=True,
     ).stdout.splitlines()
     dispatch_commits = [s for s in subjects if s.startswith("chore(loom): dispatch")]
-    waves_so_far = 2  # W1 wave, W2/fix-wave wave (per plan.md's Task DAG)
-    rounds_so_far = 1  # wave-end:1, round 1
+    waves_so_far = 2
+    rounds_so_far = 2
     bound = waves_so_far + rounds_so_far
     assert len(dispatch_commits) <= bound, (
         f"{len(dispatch_commits)} dispatch-subject commits exceed the bound "
-        f"{bound} (2 waves + 1 round) -- the per-wave/per-round batching "
-        f"claim is violated: {dispatch_commits}"
+        f"{bound}: {dispatch_commits}"
     )
 
 
