@@ -1,8 +1,8 @@
 """branch-end (closing round) adversarial probes for
 2026-09-05-user-declared-express-lane.
 
-Scope: the round-3 branch-end checkpoint (reviewed_sha d4abdeb3 -> HEAD
-56062fc7). This file attacks what the branch-end delta itself adds --
+Scope: the round-3 branch-end checkpoint (reviewed_sha d4abdeb3 -> HEAD at
+authoring time 56062fc7; later commits move it). This file attacks what the branch-end delta itself adds --
 the two graduated probe copies, the two new memory entries, the
 ratified PRINCIPLES.md non-negotiable 2 rule as `loom_checker.py push`
 enforces it end-to-end on a sandbox -- and re-measures the branch-wide
