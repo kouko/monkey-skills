@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "130b4ca1691de465be71df163f620d761abef5fa",
-  "scope": "spec",
+  "scope": "branch-end",
   "vendors": [
     "openai",
     "anthropic"
@@ -506,11 +506,43 @@
       "model": "gpt-6-astra",
       "started": "2026-09-06T17:36:52+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "branch-end-adversary-gpt6",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T18:39:05+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "branch-end-blind-gpt6",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T18:39:05+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T18:39:05+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T18:39:05+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 16,
+    "dispatches": 20,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
