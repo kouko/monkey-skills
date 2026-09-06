@@ -232,6 +232,83 @@ def list_repo_files(repo_root: Path) -> list[str]:
     return files
 
 
+# Suffix-match index (W1-02, 2026-09-07): the three call sites below all
+# ran `[f for f in repo_files if f.endswith("/" + cited_path)]` over the
+# WHOLE repo-wide file list per citation — 18.1M `endswith` calls on this
+# repo, ~1.6s of a 2.99s run (see plan). Any file matching `.../<cited_path>`
+# necessarily shares `cited_path`'s FINAL `/`-separated segment (its
+# basename), so a match can only ever come from the bucket of files with
+# that same basename; `_suffix_candidates` prunes to that bucket via an
+# index before re-running the identical `endswith` check on the (usually
+# tiny) pruned set — the verdict (zero/one/multiple matches) is unchanged,
+# only the number of `endswith` calls shrinks.
+#
+# The index is memoized per `repo_files` LIST OBJECT (keyed by `id`) and
+# invalidated whenever that object's length changes since the index was
+# built. `id()`-only memoization is fragile in general (a garbage-collected
+# list's id can be reused by an unrelated new list), but combined with the
+# length check it is sufficient here: `repo_files` lists live only for the
+# duration of one `main()` run (see `list_repo_files` / `snapshot_repo_files`
+# callers), and the one caller that mutates a list in place after resolving
+# against it (a test) grows its length, which this check catches — see
+# `test_resolve_cited_path_repo_files_mutated_after_call_uses_latest_list`.
+_suffix_index_cache: dict[int, tuple[int, dict[str, list[str]]]] = {}
+
+# Same memoization shape as `_suffix_index_cache` above, for the exact-match
+# `cited_path in repo_files` membership test `_resolve_snapshot_cited_path`
+# runs before falling back to the suffix scan: that was also an O(n) linear
+# scan per call and, once the suffix scan is index-pruned, dominates the
+# call's cost. A `set` gives the same membership semantics in O(1).
+_repo_files_set_cache: dict[int, tuple[int, set[str]]] = {}
+
+
+def _repo_files_set(repo_files: list[str]) -> set[str]:
+    """Return a `set` of `repo_files`, memoized like `_basename_index`."""
+    cache_key = id(repo_files)
+    cached = _repo_files_set_cache.get(cache_key)
+    if cached is not None and cached[0] == len(repo_files):
+        return cached[1]
+    files_set = set(repo_files)
+    _repo_files_set_cache[cache_key] = (len(repo_files), files_set)
+    return files_set
+
+
+def _basename(path: str) -> str:
+    """Return `path`'s final `/`-separated segment (possibly empty)."""
+    return path.rsplit("/", 1)[-1]
+
+
+def _basename_index(repo_files: list[str]) -> dict[str, list[str]]:
+    """Return a `basename -> paths` index for `repo_files`, memoized.
+
+    Rebuilds when `repo_files` is a new list object (different `id`) or
+    when the previously-indexed object's length has since changed (an
+    in-place mutation) — see the cache's module comment above.
+    """
+    cache_key = id(repo_files)
+    cached = _suffix_index_cache.get(cache_key)
+    if cached is not None and cached[0] == len(repo_files):
+        return cached[1]
+    index: dict[str, list[str]] = {}
+    for f in repo_files:
+        index.setdefault(_basename(f), []).append(f)
+    _suffix_index_cache[cache_key] = (len(repo_files), index)
+    return index
+
+
+def _suffix_candidates(repo_files: list[str], cited_path: str) -> list[str]:
+    """Return the `repo_files` entries ending with `/<cited_path>`.
+
+    Same result set as the linear scan
+    `[f for f in repo_files if f.endswith("/" + cited_path)]`, pruned
+    first to the basename-matching bucket of `_basename_index` — see the
+    cache comment above for why that pruning cannot drop a real match.
+    """
+    index = _basename_index(repo_files)
+    candidates = index.get(_basename(cited_path), [])
+    return [f for f in candidates if f.endswith("/" + cited_path)]
+
+
 def resolve_cited_path(
     repo_root: Path, cited_path: str, repo_files: list[str]
 ) -> Path | None:
@@ -245,7 +322,7 @@ def resolve_cited_path(
     direct = repo_root / cited_path
     if direct.is_file():
         return direct
-    matches = [f for f in repo_files if f.endswith("/" + cited_path)]
+    matches = _suffix_candidates(repo_files, cited_path)
     if len(matches) == 1:
         return repo_root / matches[0]
     return None
@@ -280,7 +357,7 @@ def _is_explicit_path_citation_with_no_match(
         return False
     if "<" in cited_path or ">" in cited_path:
         return False
-    matches = [f for f in repo_files if f.endswith("/" + cited_path)]
+    matches = _suffix_candidates(repo_files, cited_path)
     return len(matches) == 0
 
 
@@ -509,9 +586,9 @@ def _read_snapshot_file(repo_root: Path, reviewed_sha: str, path: str) -> str:
 
 
 def _resolve_snapshot_cited_path(cited_path: str, repo_files: list[str]) -> str | None:
-    if cited_path in repo_files:
+    if cited_path in _repo_files_set(repo_files):
         return cited_path
-    matches = [path for path in repo_files if path.endswith("/" + cited_path)]
+    matches = _suffix_candidates(repo_files, cited_path)
     return matches[0] if len(matches) == 1 else None
 
 
