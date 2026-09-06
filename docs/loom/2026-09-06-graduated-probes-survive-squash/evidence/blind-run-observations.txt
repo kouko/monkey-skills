@@ -1,0 +1,94 @@
+Blind-run observations
+Date: 2026-09-07
+HEAD: 7bd989fe
+
+Clean-copy setup
+Command: git worktree add /private/tmp/claude-501/-Users-kouko--herdr-worktrees-monkey-skills-slim-plan-doc/a3ef9505-ef2a-4404-9a08-591052bff074/scratchpad/blind-run-wt HEAD
+Exit: 128
+Output: fatal: could not create directory of '/Users/kouko/GitHub/monkey-skills/.git/worktrees/blind-run-wt': Operation not permitted
+Observation: the sandbox makes the shared repository's worktree metadata read-only. The blind-runner contract permits a fresh clone as the clean-copy fallback.
+Fallback command: git clone --no-hardlinks . <clean-copy> && git -C <clean-copy> checkout --detach 7bd989fe
+Result: clean detached checkout, no changes.
+
+Acceptance 1
+Command: python3 loom-code/scripts/rehearse_probes.py loom-code/scripts/test_probes_charter_wave_end_2.py
+First run exit: 1
+First run: both CI-shaped and squashed-shaped runs stopped because the clean-copy shell selected Python 3.14 without pytest.
+Retry environment: PATH=/Users/kouko/.conda/envs/dbt-redshift/bin:$PATH (the project Python already active in the original repo; pytest 9.0.3)
+Retry exit: 0
+CI-shaped output:
+  FAILED (0)
+  SKIPPED (1)
+  SKIPPED test_implementer_commit_scope_qualifier_dropped_and_unguarded: origin/main does not resolve here; the pre-branch text has no anchor
+  11 passed, 1 skipped in 1.05s
+Squashed-shaped output:
+  FAILED (0)
+  SKIPPED (0)
+  12 passed in 1.03s
+Named acceptance test: test_charter_and_plan_edits_agree_the_real_change_id_resolves passed in both shapes (not named among failures or skips).
+Limitation: a real merge to main was not authorized or attempted; this reproduces its one-commit shape only.
+
+Acceptance 2
+Fixture setup: throwaway repository with main at d4141a7, a local bare origin, origin/main, and feature/plan-dependent-probe. The requested local `git push -u origin main` was blocked by the host's project-wide push gate; `git -C <bare-origin> fetch <fixture-repo> main:main` plus a local fetch created the equivalent offline ref topology without touching any external repository.
+Plan-dependent probe commit: ec53149 docs(loom): plan synthetic-change
+Command: python3 <clean-copy>/loom-code/scripts/rehearse_probes.py test_plan_history.py --repo .
+Exit: 1
+CI-shaped output: FAILED (0), SKIPPED (0), 1 passed in 0.16s
+Squashed-shaped output: FAILED (1), test_plan_history.py::test_plan_history_contains_own_plan_commit
+Reason: AssertionError: the probe depends on its own plan commit subject; squashed git log contained only `squashed shape (rehearse_probes.py)` and `initial main`.
+Dependency removed: test now checks that README.md exists; commit 49e5cf0 test: remove own-history dependency.
+Second rehearsal exit: 0
+CI-shaped output: FAILED (0), SKIPPED (0), 1 passed in 0.14s
+Squashed-shaped output: FAILED (0), SKIPPED (0), 1 passed in 0.11s
+
+Acceptance 3
+Shipped change command: python3 loom-code/scripts/loom_checker.py plan-edits 2026-09-05-artifact-charter-boundaries-and-edit-rights
+Exit: 0
+Stdout: plan.edits-after-commit: NOT APPLICABLE -- 2026-09-05-artifact-charter-boundaries-and-edit-rights was closed (branch slim-plan-doc) and its plan commit is absent; the edits-after-commit question no longer applies.
+Stderr: empty
+Current in-flight change command: python3 loom-code/scripts/loom_checker.py plan-edits 2026-09-06-graduated-probes-survive-squash
+Exit: 0
+Stdout/stderr: empty (its sign-off commit exists and the plan has not changed).
+Throwaway in-flight fixture: confirmed intent and plan committed under an ordinary subject, with no `docs(loom): plan 2099-03-03-inflight-check` sign-off commit.
+Command: python3 <clean-copy>/loom-code/scripts/loom_checker.py plan-edits 2099-03-03-inflight-check
+Exit: 1
+Stderr: BLOCK plan.edits-after-commit: no plan commit found
+
+Acceptance 4
+Rule sentence read inside the graduation gate: The same run then rehearses a second shape, the branch squashed to one commit off its trunk, so a probe that passes only because it still sees one of this branch's own commits goes red here rather than after the squash merge lands.
+Pin command: python3 -m pytest loom-code/scripts/test_build_station_text.py -q -k squashed_rehearsal_shape
+Intact sentence exit: 0
+Output: 1 passed, 30 deselected in 0.12s
+Mutation: temporarily removed that full sentence in the clean copy using apply_patch.
+Missing sentence exit: 1
+Failure: test_graduation_paragraph_names_the_squashed_rehearsal_shape -- AssertionError: the graduation paragraph never names the squashed rehearsal shape; a cold reader cannot learn it runs two shapes
+Restore: host blocked `git checkout -- <file>` despite the user's explicit procedure, so the exact sentence was restored with apply_patch. `git diff --exit-code` passed and the clean copy returned to a clean detached HEAD.
+
+Acceptance 5
+Command: python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q
+Environment: project Python 3.12.11, pytest 9.0.3
+Exit: 1
+Totals before stop: 1 failed, 2088 passed, 1 skipped, 1 xfailed in 140.27s. The `--then` suite did not run because the first suite failed.
+Only failure: test_rehearseProbes_underPython311_doesNotRaiseTypeErrorOnTheTempfileDeleteKeyword
+Reason: its nested `uv run --python 3.11 --with pytest` could not write `/Users/kouko/.cache/uv` under the sandbox (Operation not permitted).
+Targeted retry with UV_CACHE_DIR=<writable scratch cache>: still exit 1 because the empty writable cache required fetching pytest from pypi.org and network/DNS is unavailable in the sandbox.
+Word-count command: python3 -c "print(len(open('loom-code/skills/build/SKILL.md',encoding='utf-8').read().split()))"
+Output: 3278
+Cap: 3750
+
+Language/template audit
+Plan: operative task, test, and risk prose is English; the recorded user question remains in the user's language. Evidence id: plan.md.
+Spec: not applicable; needs-design is no. Evidence id: intent.md:4.
+Review findings: all six finding texts begin with the Conventional Comments label `issue`, with decorations where applicable. Evidence ids: verdict-1-finding-1 through verdict-5-finding-1.
+Evidence: probe modules and captured observation record are English. Evidence ids: test_abuse_plan_edits_shipped.py, test_abuse_squashed_rehearsal.py, blind-run-observations.txt.
+Test docstrings: English. Evidence ids: test_plan_edits_shipped_change.py, test_rehearse_probes.py, test_build_station_text.py.
+Test names: change-added probe/test names use the three-part `test_<unit>_<state>_<expected>` shape. Evidence ids: test_plan_edits_closed_intent_missing_commit_reports_not_applicable, test_squashedShape_probeNeedingBranchOnlyCommit_failsInProcessWhileCiShapedStaysGreen, test_graduation_paragraph_names_the_squashed_rehearsal_shape.
+Commit messages: English. Evidence ids: 7d34f10f, 002fdaf1, 34614272, a627d620.
+
+Decision audit
+All four open findings are resolved: w1-amnesty-too-wide, w1-plan-unreadable-intent, w1-squashed-ref-deletion, w1-git-citation.
+Dismissed findings of severity important or worse: none.
+
+Cleanup
+`git worktree remove --force <clean-copy>` reported that the fallback clone was not a registered worktree. Recursive deletion commands were blocked by the host safety gate, so the clean copy and fixture were moved to the scratchpad's `.blind-run-trash/`; both requested working paths are absent and the operation is recoverable.
+Final original-checkout status: only blind-run-report.md and evidence/blind-run-observations.txt are untracked.
