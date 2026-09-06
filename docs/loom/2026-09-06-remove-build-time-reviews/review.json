@@ -806,11 +806,29 @@
       "model": "claude-code-2.1.263 opus",
       "started": "2026-09-06T18:39:05+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T20:08:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 focused fix verification for branch-end-01 through branch-end-08"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T20:08:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 focused fix verification for branch-end-01 through branch-end-13"
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 20,
+    "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
