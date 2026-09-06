@@ -898,7 +898,12 @@ def test_claude_second_vendor_adapter_is_no_tools_and_extracts_result() -> None:
     assert "self-contained prompt file" in section
     assert "without truncation" in section
     assert "git diff --no-ext-diff <reviewed_sha>..HEAD" in section
-    assert "reviewer contract and selected lens" in section
+    assert "reviewer contract, selected lens" in section
+    assert "full current bytes of every changed prose" in section
+    assert "configuration, template, and source file" in section
+    assert "every direct caller and dependency" in section
+    assert "every source they require the reviewer to read" in section
+    assert "unresolved caller/dependency" in section
 
 
 def test_reader_floor_sentence_names_all_four_lanes() -> None:

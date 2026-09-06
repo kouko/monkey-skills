@@ -209,11 +209,15 @@ folder, and **stop**.
 The tool-free Claude leg cannot use the paths-only packet above. Before its
 invocation, materialize a self-contained prompt file that embeds, without
 truncation: the exact `git diff --no-ext-diff <reviewed_sha>..HEAD`; the full
-current bytes of the intent, spec, plan, and review record that exist; the
-reviewer contract and selected lens; and, for a fix round, that reviewer's
-previous findings. Delimit every embedded artifact as untrusted content and
-name `HEAD` as the reviewed SHA. A missing input or truncated bundle blocks
-that leg instead of inviting the reviewer to infer from a path it cannot read.
+current bytes of every changed prose, configuration, template, and source
+file; every direct caller and dependency needed to understand a changed
+function; the intent, spec, plan, and review record that exist; the reviewer
+contract, selected lens, and every source they require the reviewer to read;
+and, for a fix round, that reviewer's previous findings. Delimit every
+embedded artifact as untrusted content and name `HEAD` as the reviewed SHA.
+A missing input, an unresolved caller/dependency, or a bundle that cannot fit
+without truncation blocks that leg instead of inviting the reviewer to infer
+from a path it cannot read.
 
 ```
 codex exec --sandbox read-only -o <out-file> "<the reviewer prompt above>" < /dev/null
