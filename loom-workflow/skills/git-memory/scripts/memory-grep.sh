@@ -76,8 +76,9 @@ VERIFY_STRICT_REF=''
 
 # Extraction includes Related: (relationship context). Verify does NOT —
 # the memory-worthy predicate is the three keys Decision/Learning/Gotcha
-# only (a Related:-only commit captured no actual memory).
-TRAILER_KEYS_REGEX='^(Decision|Learning|Gotcha|Related):'
+# only (a Related:-only commit captured no actual memory). Extraction's
+# own key set lives in extract_commits_ndjson's jq pass, case-sensitive
+# there too (matching the git format's key= case-insensitive match).
 VERIFY_KEYS_REGEX='^(Decision|Learning|Gotcha):'
 MEMORY_HEADING_REGEX='^## Memory[[:space:]]*$'
 
@@ -363,170 +364,173 @@ if [ -n "$MATCH" ] && ! jq -n --arg m "$MATCH" '"" | test($m; "i")' >/dev/null 2
   exit 1
 fi
 
-# ─── commit trailer extraction (Layer 2 — git's own parser) ────────
+# ─── commit trailer extraction + supersession index (one git pass) ─
 #
-# Emits NDJSON (one object per line) for each memory-worthy commit:
-#   {sha, date, subject, decision:[...], learning:[...], gotcha:[...], related:[...]}
+# One `git log` call (plus one more, for the allowed-SHA set, when
+# --path narrows the display) replaces the old per-commit subprocess
+# loops (one `git log -1` + one `git interpret-trailers` + one `grep`
+# per commit, twice over — once for extraction, once for the
+# supersession scan). git's own trailer parser is still the source of
+# truth: `%(trailers:key=…,unfold)` is the same parser
+# `git interpret-trailers --parse --unfold` used, exposed as a format
+# placeholder instead of a second process per commit.
+#
+# Record separator: git's `-z` (NUL between commits) with git's own
+# `%x1F` between fields — a commit message cannot contain NUL, and
+# `%x1F` in a subject is the same assumption the old code accepted
+# (field metadata used %x1F too, see history). This file never spells
+# out a raw NUL or 0x1F byte: jq builds both at runtime via
+# `[N] | implode`, so the separators survive any editor/encoding.
+#
+# `%(trailers:key=…)` matches keys CASE-INSENSITIVELY (unlike the old
+# `grep -E '^(Decision|…):'`), so the jq stage below re-filters each
+# trailer line with the same case-sensitive key set the old code used
+# — a `decision:`/`DECISION:` line stays excluded exactly as before.
+#
+# --path narrows which commits are DISPLAYED only. It does NOT narrow
+# the supersession scan (full history, always), so a superseding commit
+# outside the pathspec still retires a shown record.
+#
+# Emits NDJSON (one object per line), same shape as before:
+#   {decision:[...], learning:[...], gotcha:[...], related:[...],
+#    sha, date, subject, superseded, superseded_by}
 
 extract_commits_ndjson() {
-  # --path narrows which commits are DISPLAYED. It is intentionally NOT
-  # applied to build_supersession_index (which scans full history), so a
-  # superseding commit outside the pathspec still retires a shown record.
-  # Collect SHAs first (bash-3.2 + set -u safe: no empty-array expansion).
-  local shas
+  local all_records path_shas sup_entries rc
+
+  # git's -z output is NUL-delimited; a bash `$(...)` command
+  # substitution silently drops embedded NUL bytes (bash-3.2 and bash-5
+  # both do this), so the raw stream is piped STRAIGHT into jq below —
+  # never captured into a bash variable first.
+  #
+  # `all_records=$(git ... | jq ...)` is a nested command substitution
+  # inside a function that is ITSELF invoked via command substitution
+  # (`commit_records=$(extract_commits_ndjson)` below) — under that
+  # nesting, bash's `set -e` does not propagate a failing FIRST command
+  # of the pipe (git) when the LAST command (jq) succeeds, even with
+  # `pipefail` (a bash quirk with function-in-command-substitution, not
+  # present at top level). The old script's fatal-exit-128 behavior on a
+  # zero-commit repo (git log fails; nothing captures it) must survive
+  # byte-identically, so the subshell explicitly re-exits with git's own
+  # PIPESTATUS on failure, and the caller checks $? right after.
+
+  # One jq pass turns the raw -z/%x1F stream into one JSON array: every
+  # commit in range, trailer lines grouped by key (still case-preserving
+  # — the case-sensitive re-filter happens per key below).
+  all_records=$(
+    git -C "$REPO" log --since="$SINCE" --no-merges -z --date=short \
+      --format='%h%x1F%ad%x1F%s%x1F%(trailers:key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold)' \
+      | jq -R -s -c '
+    ([0] | implode) as $NUL
+    | ([31] | implode) as $FS
+    | (split($NUL)) as $r0
+    | ($r0 | if (length>0 and .[-1]=="") then .[:-1] else . end) as $recs
+    | ("(?s)^(?<sha>[^" + $FS + "]*)" + $FS + "(?<date>[^" + $FS + "]*)" + $FS + "(?<subject>[^" + $FS + "]*)" + $FS + "(?<trailers>.*)$") as $re
+    | [ $recs[] | select(length>0)
+        | capture($re) as $c
+        | ($c.trailers // "" | split("\n") | map(select(length>0))) as $lines
+        | {
+            sha: $c.sha, date: $c.date, subject: $c.subject,
+            decision:   [ $lines[] | select(test("^Decision: "))   | sub("^Decision: ";"")   ],
+            learning:   [ $lines[] | select(test("^Learning: "))   | sub("^Learning: ";"")   ],
+            gotcha:     [ $lines[] | select(test("^Gotcha: "))     | sub("^Gotcha: ";"")     ],
+            related:    [ $lines[] | select(test("^Related: "))    | sub("^Related: ";"")    ],
+            supersedes: [ $lines[] | select(test("^Supersedes: ")) | sub("^Supersedes: ";"") ]
+          }
+      ]
+  '
+    git_rc="${PIPESTATUS[0]}"
+    [ "$git_rc" -ne 0 ] && exit "$git_rc"
+    true
+  )
+  rc=$?
+  [ "$rc" -ne 0 ] && exit "$rc"
+
   if [ -n "$PATHSPEC" ]; then
-    shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%H' -- "$PATHSPEC")
+    path_shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%h' -- "$PATHSPEC")
   else
-    shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%H')
+    path_shas=''
   fi
-  printf '%s\n' "$shas" \
-    | while read -r full_sha; do
-        [ -z "$full_sha" ] && continue
 
-        # Extract trailer lines via git's own parser, filtered to our keys.
-        local trailer_lines
-        trailer_lines=$(
-          git -C "$REPO" log -1 --format='%B' "$full_sha" \
-            | git interpret-trailers --parse --unfold 2>/dev/null \
-            | grep -E "$TRAILER_KEYS_REGEX" \
-            || true
-        )
+  # Supersession map: {token, by_label} per Supersedes: target, built
+  # from the SAME unfiltered all_records (never path-narrowed) — a
+  # forward-pointer authoring convention is trusted, not enforced, same
+  # as the old code. token is "pr:<N>" or "sha:<hex>", normalize_ref's
+  # old semantics (a bare "#N" anywhere -> pr; 7-40 hex chars -> sha).
+  sup_entries=$(printf '%s' "$all_records" | jq -c '
+    [ .[]
+      | . as $rec
+      | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $pr
+      | ($rec.sha + (if $pr != null then " (PR #" + $pr + ")" else "" end)) as $by_label
+      | $rec.supersedes[] as $val
+      | (
+          if ($val | test("#[0-9]+")) then
+            "pr:" + ($val | capture("^.*#(?<n>[0-9]+).*$").n)
+          elif ($val | test("^[0-9a-fA-F]{7,40}$")) then
+            "sha:" + ($val | ascii_downcase)
+          else null end
+        ) as $token
+      | select($token != null)
+      | {token: $token, by_label: $by_label}
+    ]
+  ')
 
-        # No memory trailers → skip this commit entirely.
-        [ -z "$trailer_lines" ] && continue
+  # Final pass: memory-worthy filter (Decision/Learning/Gotcha/Related
+  # non-empty; Supersedes-only is NOT memory-worthy, same as before),
+  # optional --path narrowing, then liveness lookup (PR number from the
+  # record's own "(#N)" subject first, else SHA-prefix match either
+  # direction — same order lookup_superseded used, "first match" being
+  # the first entry in sup_entries' array order, which is newest-first
+  # like the old token<TAB>by_label table scan). Not --history and
+  # superseded -> dropped; otherwise annotated. Field order matches the
+  # old annotate_commits output exactly (decision/learning/gotcha/
+  # related/sha/date/subject/superseded/superseded_by).
+  # path_active distinguishes "no --path given" (null $pset, no
+  # filtering) from "--path given but it matched zero commits" (an
+  # empty $pset array, filtering everything out) — both leave
+  # path_shas as an empty bash string, so the string alone can't tell
+  # them apart.
+  local path_active=0
+  [ -n "$PATHSPEC" ] && path_active=1
 
-        # Group trailer lines by key into {decision, learning, gotcha, related} arrays.
-        local trailers_obj
-        trailers_obj=$(
-          printf '%s\n' "$trailer_lines" \
-            | jq -R -n '
-                [inputs | capture("^(?<k>[^:]+): (?<v>.*)$")
-                        | {key: (.k | ascii_downcase), value: .v}]
-                | group_by(.key)
-                | map({(.[0].key): map(.value)})
-                | add // {}
-                | {decision: (.decision // []),
-                   learning: (.learning // []),
-                   gotcha:   (.gotcha   // []),
-                   related:  (.related  // [])}
-              '
-        )
-
-        # Metadata for header. Use %x1F as local separator — we control these fields
-        # (short-sha is hex, date is YYYY-MM-DD, subject can contain any char
-        # except 0x1F in practice).
-        local meta sha_short date subject
-        meta=$(git -C "$REPO" log -1 --format='%h%x1F%ad%x1F%s' --date=short "$full_sha")
-        sha_short=${meta%%$'\x1F'*}
-        meta=${meta#*$'\x1F'}
-        date=${meta%%$'\x1F'*}
-        subject=${meta#*$'\x1F'}
-
-        jq -nc \
-          --arg sha "$sha_short" \
-          --arg date "$date" \
-          --arg subject "$subject" \
-          --argjson trailers "$trailers_obj" \
-          '$trailers + {sha: $sha, date: $date, subject: $subject}'
-      done
-}
-
-# ─── supersession index (Supersedes: trailer → liveness) ───────────
-#
-# Append-only substrate: an earlier decision can't be edited, so the
-# replacement commit carries a backward-pointing `Supersedes:` trailer
-# (by `PR #N` or by SHA). Liveness is COMPUTED, never stored — a record
-# is superseded iff some later commit names it. bash-3.2-safe: no
-# associative arrays; the map is a `token<TAB>by_label` text table.
-
-# normalize_ref <value> → "pr:<N>" | "sha:<hex>" | "" (unrecognized)
-normalize_ref() {
-  local v="$1"
-  if printf '%s' "$v" | grep -qE '#[0-9]+'; then
-    printf 'pr:%s' "$(printf '%s' "$v" | sed -n 's/.*#\([0-9][0-9]*\).*/\1/p')"
-  elif printf '%s' "$v" | grep -qiE '^[0-9a-f]{7,40}$'; then
-    printf 'sha:%s' "$(printf '%s' "$v" | tr 'A-Z' 'a-z')"
-  fi
-}
-
-# Emit one `token<TAB>by_label` line per Supersedes: target. Scans ALL
-# commits in range (not just memory-worthy ones) so a Supersedes-only
-# commit still registers. Note: a superseding commit OUTSIDE the --since
-# window won't be seen — widen --since to resurface old supersessions.
-# The map is order-free; "later-supersedes-earlier" is guaranteed by the
-# backward-pointer authoring convention, not enforced here (a forward or
-# self-referential Supersedes: would mis-hide a live record).
-build_supersession_index() {
-  git -C "$REPO" log --since="$SINCE" --no-merges --format='%H' \
-    | while read -r sha; do
-        [ -z "$sha" ] && continue
-        local sup_lines
-        sup_lines=$(
-          git -C "$REPO" log -1 --format='%B' "$sha" \
-            | git interpret-trailers --parse --unfold 2>/dev/null \
-            | grep -E '^Supersedes:' || true
-        )
-        [ -z "$sup_lines" ] && continue
-        local by_label by_pr
-        by_label=$(git -C "$REPO" log -1 --format='%h' "$sha")
-        by_pr=$(git -C "$REPO" log -1 --format='%s' "$sha" \
-          | sed -n 's/.*(#\([0-9][0-9]*\)).*/\1/p')
-        [ -n "$by_pr" ] && by_label="$by_label (PR #$by_pr)"
-        printf '%s\n' "$sup_lines" | while IFS= read -r line; do
-          local val token
-          val=$(printf '%s' "${line#Supersedes:}" | sed 's/^ *//; s/ *$//')
-          token=$(normalize_ref "$val")
-          [ -n "$token" ] && printf '%s\t%s\n' "$token" "$by_label"
-        done
-      done
-}
-
-# lookup_superseded <short_sha> <subject> → by_label if superseded, else ""
-# Matches by PR number (from the subject's "(#N)") or by SHA prefix.
-lookup_superseded() {
-  local short="$1" subject="$2" pr
-  pr=$(printf '%s' "$subject" | sed -n 's/.*(#\([0-9][0-9]*\)).*/\1/p')
-  if [ -n "$pr" ]; then
-    local hit
-    hit=$(printf '%s\n' "$SUPERSEDE_MAP" \
-      | awk -F'\t' -v p="pr:$pr" '$1==p {print $2; exit}')
-    [ -n "$hit" ] && { printf '%s' "$hit"; return; }
-  fi
-  printf '%s\n' "$SUPERSEDE_MAP" \
-    | awk -F'\t' -v s="$short" '
-        $1 ~ /^sha:/ {
-          tok = substr($1, 5)
-          if (index(tok, s) == 1 || index(s, tok) == 1) { print $2; exit }
-        }'
-}
-
-# Annotate NDJSON commit records with {superseded, superseded_by} and,
-# unless --history, drop the superseded ones. Single filtering point for
-# both plain and json output.
-annotate_commits() {
-  while IFS= read -r rec; do
-    [ -z "$rec" ] && continue
-    local sha subject by
-    sha=$(printf '%s' "$rec" | jq -r '.sha')
-    subject=$(printf '%s' "$rec" | jq -r '.subject')
-    by=$(lookup_superseded "$sha" "$subject")
-    if [ -n "$by" ]; then
-      [ "$INCLUDE_HISTORY" = 0 ] && continue
-      printf '%s' "$rec" | jq -c --arg by "$by" \
-        '. + {superseded: true, superseded_by: $by}'
-    else
-      printf '%s' "$rec" | jq -c '. + {superseded: false, superseded_by: null}'
-    fi
-  done
+  printf '%s' "$all_records" | jq -c --argjson sup "$sup_entries" --arg pathset "$path_shas" --argjson path_active "$path_active" --argjson history "$INCLUDE_HISTORY" '
+    . as $all
+    | (if $path_active == 1 then ($pathset | split("\n") | map(select(length>0))) else null end) as $pset
+    | $all[]
+    | select((.decision|length)>0 or (.learning|length)>0 or (.gotcha|length)>0 or (.related|length)>0)
+    | . as $rec
+    | select($pset == null or ($pset | index($rec.sha)) != null)
+    | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $subj_pr
+    | ( if $subj_pr != null then
+          ($sup | map(select(.token == ("pr:" + $subj_pr))) | (.[0].by_label // null))
+        else null end
+      ) as $by_from_pr
+    | ( if $by_from_pr != null then $by_from_pr
+        else
+          ($sup
+            | map(select(.token | startswith("sha:")))
+            | map(select((.token[4:]) as $t | ($t | startswith($rec.sha)) or ($rec.sha | startswith($t))))
+            | (.[0].by_label // null))
+        end
+      ) as $by
+    | if $by != null then
+        (if ($history == 1) then
+          {decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related,
+           sha: $rec.sha, date: $rec.date, subject: $rec.subject,
+           superseded: true, superseded_by: $by}
+         else empty end)
+      else
+        {decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related,
+         sha: $rec.sha, date: $rec.date, subject: $rec.subject,
+         superseded: false, superseded_by: null}
+      end
+  '
 }
 
 commit_records=''
 COMMIT_DROPPED=0
 if [ "$INCLUDE_COMMIT" = 1 ]; then
-  SUPERSEDE_MAP=$(build_supersession_index)
   commit_records=$(extract_commits_ndjson)
-  [ -n "$commit_records" ] && \
-    commit_records=$(printf '%s\n' "$commit_records" | annotate_commits)
 
   # --match topic filter, applied AFTER liveness annotation so it narrows
   # the view only. Searchable text = subject + all trailer values.
