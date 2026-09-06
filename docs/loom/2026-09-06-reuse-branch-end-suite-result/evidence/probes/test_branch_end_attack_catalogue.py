@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import re
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -89,9 +88,10 @@ def test_hook_crossrepo_held(tmp_path: Path) -> None:
     repo, _ = repository(selected)
     unrelated = tmp_path / "caller"
     unrelated.mkdir()
+    head = fixture.git(repo, "rev-parse", "HEAD")
     payload = {
         "cwd": str(unrelated),
-        "tool_input": {"command": f"git -C {shlex.quote(str(repo))} push origin {fixture.git(repo, 'rev-parse', 'HEAD')}:refs/heads/work"},
+        "tool_input": {"command": permanent.immutable_push_command(repo, head, external=True)},
     }
     result = subprocess.run(
         [sys.executable, str(fixture.CHECKER), "push", "--hook"],

@@ -28,7 +28,7 @@ ROOT = next(
     if (parent / "loom-code" / "skills" / "ship" / "SKILL.md").exists()
 )
 BASELINE = "9d009c49e02a52c4838dba30a88501e0bbe79ab0"
-CANDIDATE = "c0a93c6fff392769a95192b7f31838c30d95b489"
+CANDIDATE = "b197c123fb1c0cc513fc56b3262f15aefd845b82"
 SAMPLES = 7
 WORK_SECONDS = "0.080"
 CHANGE = "2026-09-02-a"
@@ -60,6 +60,7 @@ class Observation:
     elapsed_seconds: float
     verdict: str
     refspec: str
+    push_command: str
 
 
 def run(*args: str, cwd: Path, **kwargs) -> subprocess.CompletedProcess:
@@ -212,6 +213,28 @@ def package_invocations(log: Path) -> tuple[PackageInvocation, ...]:
     )
 
 
+def quote_all_shell_token(token: str) -> str:
+    """Render one observed argv token with no shell expansion position."""
+    return "'" + token.replace("'", "'\"'\"'") + "'"
+
+
+def canonical_push_command(repo: Path, refspec: str) -> str:
+    trusted = shutil.which("git")
+    assert trusted is not None
+    tokens = [
+        str(Path(trusted).resolve()),
+        "-C",
+        str(repo.resolve()),
+        "push",
+        "--no-follow-tags",
+        "--recurse-submodules=no",
+        "-u",
+        "origin",
+        refspec,
+    ]
+    return " ".join(quote_all_shell_token(token) for token in tokens)
+
+
 def replay(revision: str, fixture: Path, template: Path, plugin: Path) -> Observation:
     """Run the specified real entrypoints and stop before network transfer."""
     fixture.mkdir(parents=True)
@@ -229,10 +252,11 @@ def replay(revision: str, fixture: Path, template: Path, plugin: Path) -> Observ
     head = git(repo, "rev-parse", "HEAD")
     branch = git(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
     refspec = f"{head}:refs/heads/{branch}"
+    push_command = canonical_push_command(repo, refspec)
     payload = json.dumps(
         {
             "tool_name": "Bash", "cwd": str(repo),
-            "tool_input": {"command": f"git push -u origin {refspec}"},
+            "tool_input": {"command": push_command},
         }
     )
 
@@ -271,6 +295,7 @@ def replay(revision: str, fixture: Path, template: Path, plugin: Path) -> Observ
         elapsed_seconds=elapsed,
         verdict=verdict,
         refspec=refspec,
+        push_command=push_command,
     )
 
 
@@ -314,6 +339,21 @@ def test_revisions_execute_versioned_real_gate_entrypoints(tmp_path: Path) -> No
     assert baseline.fixture_head == candidate.fixture_head
     assert baseline.refspec == f"{baseline.fixture_head}:refs/heads/work"
     assert candidate.refspec == f"{candidate.fixture_head}:refs/heads/work"
+    candidate_tokens = shlex.split(candidate.push_command)
+    assert candidate.push_command == " ".join(
+        quote_all_shell_token(token) for token in candidate_tokens
+    )
+    assert candidate_tokens == [
+        str(Path(shutil.which("git")).resolve()),
+        "-C",
+        str((tmp_path / "candidate/repo").resolve()),
+        "push",
+        "--no-follow-tags",
+        "--recurse-submodules=no",
+        "-u",
+        "origin",
+        candidate.refspec,
+    ]
 
 
 def test_candidate_one_call_faster_same_verdict(tmp_path: Path) -> None:
