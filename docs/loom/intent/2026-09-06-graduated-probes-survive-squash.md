@@ -2,7 +2,7 @@
 originator: kouko
 kind: engineering
 needs-design: no — 只動 loom-code 的檢查腳本、排練腳本與測試，沒有任何使用者讀或輸入的介面改變
-status: confirmed 2026-09-06
+status: closed 2026-09-07 — branch graduated-probes-survive-squash
 
 ## Problem
 畢業探針（change 結束時從 `evidence/probes/` 複製進 `loom-code/scripts/test_probes_*.py` 的常設測試）在分支上全綠，squash 合併之後在 main 上紅。今天 main 就有一支：`test_probes_charter_wave_end_2.py::test_charter_and_plan_edits_agree_the_real_change_id_resolves`，它請 checker 檢查「自己這個 change 的 plan 定稿後有沒有被亂改」，而 checker 是靠 `docs(loom): plan <change-id>` 這個 commit 訊息找基準點的——squash 把那顆 commit 壓掉了，於是它回 `BLOCK plan.edits-after-commit: no plan commit found`，測試就紅。

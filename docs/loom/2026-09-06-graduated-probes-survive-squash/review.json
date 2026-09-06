@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+  "reviewed_sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
   "scope": "branch-end",
   "vendors": [
     "codex"
@@ -452,6 +452,36 @@
         }
       ],
       "sha": "130c75dee74efe9e05499a5378408c7a0149f31b"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + skill",
+      "scope": "branch-end",
+      "round": 7,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "naming": "PASS"
+      },
+      "findings": [],
+      "confirmation": "The nit batch renames all eight affected top-level probes to lowercase three-part names in both path-only-different copies; the other two wording/record edits change no behavior, and only the four authorized files changed.",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 7,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "inconsistency": "PASS"
+      },
+      "findings": [],
+      "confirmation": "The revised gate sentence now matches the strict-between trunk condition, fixes my wording nit, and the other three files contain only probe renames and report-record wording; nothing behavioral or outside those four files changed.",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac"
     }
   ],
   "probes": [
@@ -777,6 +807,62 @@
       "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
       "artifact": "",
       "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -789,6 +875,11 @@
       "decision_point": 1,
       "type": "what",
       "text": "這次要不要用 Codex 當第二位讀者？（答：好，用 Codex）"
+    },
+    {
+      "decision_point": 3,
+      "text": "決策點③ — 盲跑報告逐條讀過（五條 Acceptance：2、3、4 可以；1、5 部分，原因各為未真正合併到 main、沙箱無法重跑整包而由沙箱外紀錄與 push 閘補上；對抗案例 26/26 通過；既有資料未動；替你決定的事項與審閱者 A 自行撤回的一條發現皆已列出）— 這是你要的嗎？（答：go）",
+      "type": "done"
     }
   ],
   "open_findings": [
@@ -1127,10 +1218,10 @@
     }
   ],
   "cost": {
-    "rounds": 6,
-    "dispatches": 25,
+    "rounds": 7,
+    "dispatches": 27,
     "cap_changes": [],
-    "hours_plan_to_pr": 13.9
+    "hours_plan_to_pr": 18.5
   },
   "charter": "1.0",
   "second_vendor": "codex"
