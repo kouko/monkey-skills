@@ -32,6 +32,7 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import locale
 import re
 import subprocess
 import sys
@@ -44,9 +45,20 @@ import map_store  # noqa: E402
 _OUT_OF_SCOPE_ID = re.compile(r"^(?P<id>F-\d+)\s*:")
 
 
-def _run_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+def _run_git(
+    args: list[str],
+    cwd: Path,
+    *,
+    stdin: bytes | None = None,
+    binary: bool = False,
+) -> subprocess.CompletedProcess:
+    if binary:
+        return subprocess.run(
+            ["git", *args], cwd=cwd, capture_output=True, text=False, input=stdin
+        )
+    input_text = stdin.decode() if stdin is not None else None
     return subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True
+        ["git", *args], cwd=cwd, capture_output=True, text=True, input=input_text
     )
 
 
@@ -107,31 +119,93 @@ def read_base_map_text(repo_root: Path, base_ref: str, map_md_path: Path) -> str
     return result.stdout
 
 
+_LS_TREE_BLOB_ENTRY = re.compile(r"^\d+ blob ([0-9a-f]+)\t(.*)$")
+
+
 def read_base_graduated_ids(
     repo_root: Path, base_ref: str, map_md_path: Path
 ) -> set[str]:
-    """Read immutable fog-graduation relations from base Ticket blobs."""
+    """Read immutable fog-graduation relations from base Ticket blobs.
+
+    Costs exactly two git spawns regardless of ticket count: one
+    `ls-tree -r` to enumerate blobs under tickets/, one `cat-file
+    --batch` fed every candidate blob's sha over stdin — replacing the
+    old one-`git show`-per-ticket loop.
+
+    Deliberately preserved quirk: `ls-tree` is parsed WITHOUT `-z`,
+    and the `.md` suffix test runs on the path exactly as git prints
+    it (same as the old `--name-only` loop). A non-ASCII ticket
+    filename comes back C-quoted (e.g. `"...\\346\\227\\245.md"` with
+    a trailing `"`), so `name.endswith(".md")` is False and that
+    ticket's `graduated-from` is silently dropped — a pre-existing bug
+    this change is not scoped to fix (a follow-up intent will)."""
     tickets = map_md_path.parent / "tickets"
     relative = tickets.resolve(strict=False).relative_to(repo_root.resolve())
     listing = _run_git(
-        ["ls-tree", "-r", "--name-only", base_ref, "--", relative.as_posix()],
+        ["ls-tree", "-r", base_ref, "--", relative.as_posix()],
         repo_root,
     )
     if listing.returncode != 0:
         raise map_store.SchemaViolation(
             f"cannot enumerate base Ticket history at {base_ref!r}"
         )
-    graduated: set[str] = set()
-    for name in listing.stdout.splitlines():
+
+    entries: list[tuple[str, str]] = []
+    for line in listing.stdout.splitlines():
+        match = _LS_TREE_BLOB_ENTRY.match(line)
+        if not match:
+            continue
+        sha, name = match.group(1), match.group(2)
         if not name.endswith(".md"):
             continue
-        blob = _run_git(["show", f"{base_ref}:{name}"], repo_root)
-        if blob.returncode != 0:
+        entries.append((sha, name))
+
+    if not entries:
+        return set()
+
+    stdin_bytes = "".join(f"{sha}\n" for sha, _ in entries).encode()
+    batch = _run_git(
+        ["cat-file", "--batch"], repo_root, stdin=stdin_bytes, binary=True
+    )
+    if batch.returncode != 0:
+        raise map_store.SchemaViolation(
+            f"cannot read base Ticket history at {base_ref!r}"
+        )
+
+    # `cat-file --batch` reports each object's <size> in BYTES, so this
+    # call runs `_run_git` in binary mode (`text=False`) and every
+    # index/slice below happens in raw bytes — never in a `str`, where
+    # `text=True` decoding would already have both (a) collapsed
+    # multi-byte (CJK) characters to fewer code points than bytes, and
+    # (b) applied universal-newline translation (`\r\n`/`\r` -> `\n`)
+    # that a later re-encode cannot undo. Each blob's raw bytes are cut
+    # out first, THEN decoded individually — with the same encoding and
+    # the same newline translation `_run_git`'s `text=True` mode (used
+    # by the old per-ticket `git show` loop) applied — so
+    # `parse_frontmatter` receives byte-for-byte the same text either
+    # way.
+    encoding = locale.getpreferredencoding(False)
+    raw = batch.stdout
+    graduated: set[str] = set()
+    pos = 0
+    for sha, name in entries:
+        newline = raw.index(b"\n", pos)
+        header = raw[pos:newline].decode(encoding)
+        pos = newline + 1
+        parts = header.split(" ")
+        if len(parts) == 2 and parts[1] == "missing":
             raise map_store.SchemaViolation(
                 f"cannot read base Ticket history {name!r} at {base_ref!r}"
             )
+        # header format: "<sha> <type> <size>"
+        content_size = int(parts[2])
+        content_bytes = raw[pos : pos + content_size]
+        pos += content_size + 1  # trailing newline after the content
+        content = content_bytes.decode(encoding).replace("\r\n", "\n").replace(
+            "\r", "\n"
+        )
         try:
-            fields, _ = map_store.parse_frontmatter(blob.stdout)
+            fields, _ = map_store.parse_frontmatter(content)
         except map_store.SchemaViolation as exc:
             raise map_store.SchemaViolation(
                 f"base Ticket history {name!r} fails to parse: {exc}"
