@@ -261,6 +261,78 @@
       "notes": [
         "Re-derived Acceptance 2 independently: diffed the pre-rewrite script against HEAD on this repo's real history; fe9218d7's five memory lines are the only difference in either unfiltered mode. Reproduced the pre-existing empty-repo exit 128 on both scripts. Ran 57 pytest tests and all seven shell suites in this checkout."
       ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-codex",
+      "vendor": "codex",
+      "model": "gpt-5-codex",
+      "lens": "code + docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "e62652ef8c0dec9701c1be29ebef230b35a81fdb",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:518",
+          "text": "issue (blocking): the capability probe runs git commit-tree in the target repository, writing an unreachable commit object on every invocation. A read-only retrieval command now mutates the repository it reads, contradicting the blind-run report's statement that the tool writes nothing, and it also bypasses detection when the object database is read-only or uses the SHA-256 object format. Reproduced by the orchestrator on a clean fixture: object count 3 before, 4 after, git fsck --unreachable lists the orphan.",
+          "fix": "Decide capability without writing anything into the target repository - a sentinel trailer key no commit can carry, a temporary alternate object database, or a probe run outside the target - and pin the object count before and after a run, plus the bare, shallow, empty, read-only and SHA-256 shapes."
+        }
+      ],
+      "notes": [
+        "branch-end-01..05 all confirmed fixed; the fix for -01 introduced the new fatal above."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-claude",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code + docs",
+      "verdict": "PASS",
+      "sha": "e62652ef8c0dec9701c1be29ebef230b35a81fdb",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Reproduced the substring false-positive against the pre-fix script and confirmed it is closed. Tested the empty, bare, shallow and SHA-256 repository shapes itself: on SHA-256 the commit-tree probe fails against the SHA-1 empty-tree constant and the guard degrades to unguarded extraction, judged the right failure direction and practically unreachable because a SHA-256-capable git is strictly newer than the git the guard exists for. Re-derived the narrowed Acceptance 2 exception end to end from the report's own recipe. Confirmed cost.dispatches follows the array-population rule across three consecutive snapshots. Did not notice the object write the other reader found."
+      ]
     }
   ],
   "probes": [
@@ -596,30 +668,41 @@
       "id": "branch-end-01",
       "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:517",
       "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
-      "raised_by": "rev-be-mg-codex"
+      "raised_by": "rev-be-mg-codex",
+      "resolved": "closed by 76190760 - the probe moved off repository content onto a synthetic object; confirmed fixed by both readers in round 4, and it raised the new finding branch-end-06"
     },
     {
       "id": "branch-end-02",
       "anchor": "docs/loom/intent/2026-09-06-memory-grep-single-pass.md:35",
       "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
-      "raised_by": "rev-be-mg-codex"
+      "raised_by": "rev-be-mg-codex",
+      "resolved": "closed by 50b904e5 and e62652ef - the exception names fe9218d7 alone and no longer pins a population that grows; confirmed by both readers in round 4"
     },
     {
       "id": "branch-end-03",
       "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:18",
       "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
-      "raised_by": "rev-be-mg-codex"
+      "raised_by": "rev-be-mg-codex",
+      "resolved": "closed by e62652ef - every Acceptance line names a runnable command or committed artifact, with the full recipe for the Acceptance 2 claim; confirmed by rev-be-mg-codex round 4"
     },
     {
       "id": "branch-end-04",
       "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:69",
       "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
-      "raised_by": "rev-be-mg-codex"
+      "raised_by": "rev-be-mg-codex",
+      "resolved": "closed by e62652ef - the report states the true timeline and makes no claim about the round that had not returned; confirmed by both readers in round 4"
     },
     {
       "id": "branch-end-05",
       "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/review.json:554",
       "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "raised_by": "rev-be-mg-codex",
+      "resolved": "closed by 1ba1bd4e - cost recomputed from the arrays; rev-be-mg-claude verified the rule holds across three consecutive snapshots"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:518",
+      "origin_sha": "e62652ef8c0dec9701c1be29ebef230b35a81fdb",
       "raised_by": "rev-be-mg-codex"
     }
   ],
@@ -807,7 +890,7 @@
     }
   ],
   "cost": {
-    "rounds": 3,
+    "rounds": 4,
     "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
