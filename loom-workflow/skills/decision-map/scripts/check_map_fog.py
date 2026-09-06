@@ -56,10 +56,9 @@ def _run_git(
         return subprocess.run(
             ["git", *args], cwd=cwd, capture_output=True, text=False, input=stdin
         )
-    input_text = stdin.decode() if stdin is not None else None
-    return subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True, input=input_text
-    )
+    # Text mode never receives `stdin` — the only caller that pipes input
+    # (the `cat-file --batch` reader below) always passes `binary=True`.
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True)
 
 
 def _is_git_repo(repo_root: Path) -> bool:
@@ -172,6 +171,17 @@ def read_base_graduated_ids(
             f"cannot read base Ticket history at {base_ref!r}"
         )
 
+    # Batch output grammar (verified against `git --version` 2.50.1, run
+    # on this machine 2026-09-07): official docs, "BATCH OUTPUT" section —
+    # https://git-scm.com/docs/git-cat-file#_batch_output — for each
+    # requested object git prints either the info-and-content line
+    # `<oid> SP <type> SP <size> LF`, followed by the object's `<size>`
+    # bytes of content and a trailing LF, or, for a missing object, the
+    # single line `<object> SP missing LF`. The parse below reads exactly
+    # that grammar: a header line ending at the first `\n`, `<size>` bytes
+    # of content immediately after it, one more `\n`, then the next
+    # header — for every requested sha in request order.
+    #
     # `cat-file --batch` reports each object's <size> in BYTES, so this
     # call runs `_run_git` in binary mode (`text=False`) and every
     # index/slice below happens in raw bytes — never in a `str`, where
@@ -197,8 +207,20 @@ def read_base_graduated_ids(
             raise map_store.SchemaViolation(
                 f"cannot read base Ticket history {name!r} at {base_ref!r}"
             )
-        # header format: "<sha> <type> <size>"
-        content_size = int(parts[2])
+        # header format: "<sha> <type> <size>" (BATCH OUTPUT, cited above)
+        # — any other shape is not a git protocol response this reader
+        # understands, so it fails the same way a missing object does
+        # rather than raising a raw IndexError/ValueError.
+        if len(parts) != 3:
+            raise map_store.SchemaViolation(
+                f"cannot read base Ticket history {name!r} at {base_ref!r}"
+            )
+        try:
+            content_size = int(parts[2])
+        except ValueError:
+            raise map_store.SchemaViolation(
+                f"cannot read base Ticket history {name!r} at {base_ref!r}"
+            ) from None
         content_bytes = raw[pos : pos + content_size]
         pos += content_size + 1  # trailing newline after the content
         content = content_bytes.decode(encoding).replace("\r\n", "\n").replace(

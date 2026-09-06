@@ -166,6 +166,52 @@ def test_multibyte_content_does_not_corrupt_batch_blob_boundaries(
     assert result == {"F-2", "F-3"}
 
 
+def test_malformed_batch_header_raises_schema_violation(tmp_path: Path) -> None:
+    """Branch-end-02: a `cat-file --batch` header that is not the
+    documented `<oid> SP <type> SP <size>` shape (BATCH OUTPUT —
+    https://git-scm.com/docs/git-cat-file#_batch_output, cited in
+    `check_map_fog.py`) must raise `SchemaViolation` with the same
+    message text the missing-object branch uses, not a raw
+    IndexError/ValueError from indexing or int()-ing a malformed
+    header's fields."""
+    repo_root = tmp_path / "repo"
+    _init_repo(repo_root)
+    map_dir = _map_dir(repo_root)
+    _write(map_dir / "MAP.md", "hello\n")
+    _write(map_dir / "tickets" / "bad.md", "---\ngraduated-from: F-1\n---\nbody\n")
+    base_ref = _commit(repo_root, "one ticket")
+
+    original = check_map_fog._run_git
+
+    def fake(
+        args: list[str], cwd: Path, *a: object, **kw: object
+    ) -> subprocess.CompletedProcess[bytes]:
+        result = original(args, cwd, *a, **kw)
+        if args[:2] == ["cat-file", "--batch"]:
+            # Drop the header's <size> field, leaving only "<sha> blob"
+            # (2 fields, second is not "missing" -- neither branch the
+            # pre-fix code handled without an unguarded parts[2]/int()).
+            newline = result.stdout.index(b"\n")
+            sha = result.stdout[:newline].split(b" ")[0]
+            result.stdout = sha + b" blob" + result.stdout[newline:]
+        return result
+
+    check_map_fog._run_git = fake
+    try:
+        try:
+            check_map_fog.read_base_graduated_ids(
+                repo_root, base_ref, map_dir / "MAP.md"
+            )
+            raise AssertionError("expected SchemaViolation")
+        except map_store.SchemaViolation as exc:
+            assert str(exc) == (
+                "cannot read base Ticket history "
+                f"'docs/loom/maps/wayfinder/tickets/bad.md' at {base_ref!r}"
+            )
+    finally:
+        check_map_fog._run_git = original
+
+
 def test_crlf_content_does_not_corrupt_batch_blob_boundaries(tmp_path: Path) -> None:
     """`subprocess.run(text=True)` applies universal-newline
     translation (`\\r\\n` -> `\\n`, lone `\\r` -> `\\n`) on the way in.
