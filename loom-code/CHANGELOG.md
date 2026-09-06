@@ -7,6 +7,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [1.7.0] — 2026-09-06 — artifact charter, four recomputed rules, Codex mirror
 
+budget-exception: 1.7.0 — six mechanisms registered for the artifact charter, the point of the change: four checker rules (`contract.charter-complete`, `plan.field-caps`, `plan.edits-after-commit`, `review.round-append-only`), one contract field (`artifact:review.charter`, the stamp that scopes the review rule to charter-era records) and one prose gate (`charter.plan-omission-narrow`, the narrowed omission definition reviewers apply to plans). Each is recomputed at push; none replaces an existing mechanism.
+
 `docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/`.
 
 1. The artifact charter names, for each tracked artifact, which fields a
