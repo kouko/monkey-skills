@@ -206,7 +206,7 @@ non-interactively — for Codex, first run `--trusted`: any definition
 reading `never` means print the BLOCK lines, ask for `/hooks` in that
 folder, and **stop**.
 
-The tool-free Claude leg cannot use the paths-only packet above. Before its
+The tool-free Claude leg cannot use the paths-only input list above. Before its
 invocation, materialize a self-contained prompt file that embeds, without
 truncation: the exact `git diff --no-ext-diff <reviewed_sha>..HEAD`; the full
 current bytes of every changed prose, configuration, template, and source
