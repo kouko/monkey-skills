@@ -972,11 +972,19 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T03:18:20+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:8-evidence",
+      "role": "implementer",
+      "agent_id": "fix-measurement-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T06:17:47+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 7,
-    "dispatches": 27,
+    "dispatches": 28,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
