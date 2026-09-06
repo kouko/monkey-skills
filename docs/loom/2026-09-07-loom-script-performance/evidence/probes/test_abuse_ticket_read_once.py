@@ -148,17 +148,19 @@ def test_update_blockers_locked_n_tickets_read_ticket_count_equals_n(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The public update-blockers entry point on a 6-ticket valid map
-    must call read_ticket exactly N times.
+    must call read_ticket exactly 2N + 1 times, not today's 4N + 1.
 
-    RED today, and worse than the plan's own "2N" estimate: measured
-    4N + 1 = 25 for N=6 (1 for require_ticket_mutable's own read, N
-    for the blocked-by graph pass, N for the status pass, then a
-    *nested* map_store.validate() call inside _require_valid_store
-    that alone re-reads every ticket 2N more times). A fix that only
-    dedupes validate()'s own 2N->N does not by itself bring this call
-    site down to N; _update_blockers_locked's own two N-length passes
-    (graph, statuses) must also share one read. Recorded as a finding,
-    not silently re-derived.
+    Fact correction (plan amendment dfbdfdf9): the original N estimate
+    here did not account for the *nested* map_store.validate() call
+    inside _require_valid_store, which by design still performs its
+    own N-read pass over the same ticket set and is explicitly kept
+    out of scope for this task (its public signature is not changed to
+    accept a pre-read set). Measured today: 4N + 1 = 25 for N=6 (1 for
+    require_ticket_mutable's own read, N for the blocked-by graph
+    pass, N for the status pass, then validate()'s own 2N). After
+    _update_blockers_locked's graph/statuses passes collapse into one
+    shared read, and validate()'s own 2N collapses to N, the correct
+    floor for this call site is 2N + 1 = 13 for N=6, not N.
     """
     n = 6
     map_dir = _valid_map_n_tickets(tmp_path, n)
@@ -175,7 +177,7 @@ def test_update_blockers_locked_n_tickets_read_ticket_count_equals_n(
         map_dir, "t0", ["t1"], operation_id="op-1", expected_revision=rev
     )
     assert result.applied is True
-    assert len(calls) == n
+    assert len(calls) == 2 * n + 1
 
 
 # --- 2. error precedence --------------------------------------------------
