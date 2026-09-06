@@ -1,7 +1,7 @@
 ---
 name: build
 description: |
-  Turns a committed plan.md into commits — one fresh-context implementer per task under the engineering baseline, a dispatch record for every dispatch, and the wave-end computation that decides when the review station runs. Use when a plan exists and implementation is ready to start, and to resume a half-built plan.
+  Turns a committed plan.md into commits — one fresh-context implementer per task under the engineering baseline, a dispatch record for every dispatch, and task plus integration tests before one branch-end review. Use when a plan exists and implementation is ready to start, and to resume a half-built plan.
 version: 1.0.0
 ---
 
@@ -10,14 +10,15 @@ version: 1.0.0
 `build` is where quality is produced; every station after it only checks
 what this one made. It reads a committed `plan.md`, walks its Task DAG wave
 by wave, and dispatches one fresh-context `loom-code:implementer` per task.
-It writes no verdicts and reviews nothing itself: reviewing is
-`loom-code:review`'s job, and this station's only duty toward it is to call
-it at the right moment with the right scope (concept-model §6 — the writer
-is never the verifier).
+It writes no verdicts and reviews nothing itself. During Build, quality is
+checked by each task's positive and negative or boundary cases, followed by
+integration tests at dependency boundaries. Formal review belongs to
+`loom-code:review` and runs once, at branch end, after every task and the
+package suite pass (concept-model §6 — the writer is never the verifier).
 
-Between checkpoints there is no review at all. That is deliberate and it is
-the station's known boundary: a wave that goes wrong is caught at its end,
-not inside it. The wave size is the dial — default at most six tasks.
+A wave is a scheduling and integration boundary, not a review checkpoint.
+The default remains at most six tasks so failures stay local enough to
+diagnose without interrupting implementation for repeated formal reviews.
 
 ## 0. Contract check and where you are
 
@@ -122,9 +123,9 @@ in `dispatch[]` (the adversary's `started` precedes the implementer's)
 and a reviewer can read it there; no push rule refuses an
 implementer-first task. The **small lane** (the checker's `change_lane`
 recompute — a plan whose tasks touch only tests, docs, or CI config)
-skips this: the implementer goes first as usual, and the adversary
-attacks at the checkpoint instead, scoping the up-front cost to the lane
-that carries the risk.
+skips this: the implementer goes first as usual, and the adversary attacks
+at branch end instead, scoping the up-front cost to the lane that carries
+the risk.
 
 Dispatch `loom-code:implementer` (contract: `agents/implementer.md`). Pass
 **paths, never file contents** — the implementer reads them itself:
@@ -243,55 +244,38 @@ Reviewer, blind-runner and adversary entries are appended the same way by
    decision the user cannot check is not a decision to interrupt them with
    (concept-model §4); one they could have checked and never saw is worse,
    which is why the report lists them all.
-5. <!-- gate: build.after-task-review-before-next-task -->
-   If the plan marks the task `review: after-task`, call
-   `loom-code:review` **now**, with scope = that task, and wait for its
-   verdict before dispatching any further task. "After the task" means
-   before the next one starts, not at the end of the wave: the point of the
-   marker is that the following tasks build on reviewed ground. On
-   `NEEDS_REVISION`, fix the findings and re-run that checkpoint; fix
-   rounds do not count against the checkpoint budget. This checkpoint is
-   its own — the wave still ends with the wave-end checkpoint of step 5,
-   which reviews the delta after this one plus cross-task coherence.
+5. <!-- gate: build.task-tests-before-dependent-task -->
+   Run the task's named test cases from the plan: its positive case and its
+   negative or boundary case. Both must pass on the integrated task commit
+   before any dependent task starts. A failure returns to the implementer;
+   record the exact command and result in the wave report. This is
+   mechanical verification, not a formal review dispatch.
+
+   A legacy plan may still carry `review: after-task`. Keep the marker
+   readable when resuming that plan, but treat it as inert: it has no Build
+   runtime dispatch effect. The task tests above are what allow its
+   dependents to advance.
    <!-- /gate -->
 
 ## 5. Wave end
 
-When every task of the wave has returned and every worktree is integrated:
+When every task of the wave has returned and every worktree is integrated,
+check every wave commit for its `Task:` trailer:
 
 ```
-git diff --stat <reviewed_sha>..HEAD
-```
-
-`reviewed_sha` comes from `review.json`. Then check every wave commit
-for the same `Task:` trailer, over `<reviewed_sha>..HEAD`:
-
-```
-for c in $(git rev-list <reviewed_sha>..HEAD --no-merges); do
+git log --format='%H %s%n%b' <wave-base>..HEAD
+for c in $(git rev-list <wave-base>..HEAD --no-merges); do
   git diff-tree --no-commit-id --name-only -r "$c" | grep -qv '^docs/' \
     && { git log -1 --format=%B "$c" | grep -q '^Task: ' || echo "no Task trailer: $c"; }
 done
 ```
 
-A commit this loop prints does not enter the checkpoint — re-commit it
-with its trailer first.
-
-Express and gate-only route straight to the round that closes the plan,
-skipping every wave-end checkpoint before it, once the lane the checker
-recomputes for the delta (review §1) confirms one of them still holds. A
-forcing path in the delta recomputes the lane back to full for that
-round, and full still calls the wave-end checkpoint. When the user asks
-to change lane mid-build, read review's `references/lane-switch.md` for
-the three-option consequence prompt before switching.
-
-Otherwise, call `loom-code:review` (scope = this wave) when **either** of
-these holds:
-
-- the unreviewed delta exceeds **8 files** or **400 lines**;
-- any task in this wave was marked `review: after-task`.
-
-Otherwise continue to the next wave and let the delta accumulate — a small
-wave does not buy a checkpoint.
+A commit this loop prints blocks the next wave until its trailer is fixed.
+Run the integration tests named for this dependency boundary and fix any
+failure before dependent work advances. Every lane follows this rule, and
+there is no formal review at wave end. Delta size and a legacy
+`review: after-task` marker do not dispatch `loom-code:review`; lanes affect
+the branch-end review shape only.
 
 **Last wave of the plan.** Do not call `loom-code:review` here. Instead
 continue in order to §6 (package tests), then §6.5 (the memory step), and
@@ -300,15 +284,11 @@ plan — §7 names how that single closing round is recorded, so the
 reviewers read a tree with tests green and nothing left to graduate or
 store.
 
-Count checkpoints as you go: **at most 5 per plan**. Rounds that re-review
-after a `NEEDS_REVISION` are not counted; they are the same checkpoint
-finishing. If the plan would need a sixth, that is a plan too deep for one
-change — stop and report it rather than skipping a checkpoint.
-
 ## 6. Package tests
 
-The `package-tests` action, run at wave end **before** calling the review
-station, so the reviewers read a tree whose tests are known green:
+The `package-tests` action runs once after all tasks and dependency-boundary
+integration tests pass, before the branch-end review, so reviewers read a
+tree whose tests are known green:
 
 1. If `docs/loom/KICKOFF-DEFAULTS.md` carries a `package-tests:` line, that
    command is the command. No detection, no substitute.
@@ -320,8 +300,8 @@ station, so the reviewers read a tree whose tests are known green:
    `python3 -m pytest -q`. `*.test.js` files → `npx jest`.
 4. Nothing at all — do **not** ask the user, and do not invent a command
    that exits 0. Write `- package-tests: none — <why>` into
-   `docs/loom/KICKOFF-DEFAULTS.md`, say so in the wave report, and the
-   review station records the gap on the checkpoint. The push gate reads
+   `docs/loom/KICKOFF-DEFAULTS.md`, say so in the build report, and the
+   review station records the gap at branch end. The push gate reads
    that same line and asks for no run; what it will not accept is silence.
 
 Whatever the source, the command that goes into the probe is the command
@@ -329,17 +309,17 @@ above, byte for byte: `push.probes-package-tests` compares the recorded
 command against this repo's own and refuses anything else, because a
 command that exits 0 for another reason is not a test run.
 
-Run it from the integrated tree, and hand the command and its result to the
-review station — the probe entry in `review.json` is written there, and the
+Run it from the fully integrated tree, and hand the command and its result to
+the review station — the probe entry in `review.json` is written there, and the
 checker re-runs the command itself on a clean tree at push time
 (`push.probes-package-tests`), so a result nobody actually produced is
-found. If the suite is red, fix it before the checkpoint; a checkpoint on a
-red tree wastes two reviewers.
+found. If the suite is red, fix it before branch-end review; reviewing a red
+tree wastes the branch-end reviewers.
 
-## 6.5 Memory step — before the plan's final checkpoint
+## 6.5 Memory step — before the branch-end review
 
 The order is: §6 package tests, then this memory step, then §5's single
-closing call to `loom-code:review` — never after it. When the last wave's
+branch-end call to `loom-code:review` — never after it. When the last wave's
 tasks are integrated and package tests are green, do this station's
 memory work now, not later: a commit that lands after that round always
 costs a confirmation round and a re-created close commit, so this step
@@ -385,16 +365,16 @@ untracked files.
 
 ## 7. Hand-off
 
-The closing round §5 calls for the last wave is recorded `scope:
+The single closing round §5 calls for after the last wave is recorded `scope:
 branch-end` — the same value ship's §1 exemption reads, so hand-off finds
 nothing left to re-review.
 
-After the last wave's checkpoint returns `PASS` or `PASS_WITH_NOTES`, hand
+After the branch-end review returns `PASS` or `PASS_WITH_NOTES`, hand
 to `loom-code:ship` with the change id. `ship` runs the push (the checker
 gates it), the pull request, and decision point ③ — the
 user's acceptance, read off the blind-run report rather than the diff.
 
-If the last checkpoint is `NEEDS_REVISION`, you are not finished: close its
+If the branch-end review is `NEEDS_REVISION`, you are not finished: close its
 findings and re-run it. `build` never hands a change to `ship` on an open
 finding.
 

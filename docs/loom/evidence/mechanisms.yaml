@@ -284,9 +284,9 @@ mechanisms:
   - id: "build.no-dispatch-without-a-record"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
-  - id: "build.after-task-review-before-next-task"
+  - id: "build.task-tests-before-dependent-task"
     class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
+    eval: "loom-code/scripts/test_build_station_text.py::test_step4_requires_paired_cases_before_dependents_advance"
   - id: "build.rehearsal-before-graduation"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md"  # executable twin: loom-code/scripts/test_build_station_text.py::test_rehearsal_paragraph_is_a_registered_prose_gate

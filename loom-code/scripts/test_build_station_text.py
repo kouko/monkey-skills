@@ -6,7 +6,7 @@ Acceptance #9: the paragraph in loom-code/skills/build/SKILL.md `## 2`
 that opens with the adversary-first sentence must name both the `code`
 and `gate` artifact types for the full lane, and must say the small lane
 (the checker's `change_lane` recompute) keeps the implementer first with
-the adversary attacking at the checkpoint instead.
+the adversary attacking at branch end instead.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def test_small_lane_keeps_implementer_first() -> None:
     paragraph = _dispatch_order_paragraph()
     assert "small lane" in paragraph
     assert "change_lane" in paragraph
-    assert "checkpoint" in paragraph
+    assert "branch end" in paragraph or "branch-end" in paragraph
 
 
 def test_paragraph_states_the_reason() -> None:
@@ -103,7 +103,7 @@ def test_memorysection_names_graduation_and_memory_store() -> None:
     assert "docs/loom/memory/" in body
 
 
-def test_step4and5_fencedblocks_name_git_log_and_task_trailer() -> None:
+def test_step4and5_name_task_trailer_verification() -> None:
     text = BUILD_SKILL.read_text(encoding="utf-8")
     for heading in ("## 4. After each task returns", "## 5. Wave end"):
         section = text.split(heading, 1)[1]
@@ -115,11 +115,25 @@ def test_step4and5_fencedblocks_name_git_log_and_task_trailer() -> None:
         )
 
 
-def test_step5_names_reviewed_sha_dot_dot_head() -> None:
+def test_step4_requires_paired_cases_before_dependents_advance() -> None:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    section = text.split("## 4. After each task returns", 1)[1]
+    section = re.split(r"\n## ", section, 1)[0]
+    flat = " ".join(section.split()).lower()
+    assert "positive" in flat
+    assert "negative" in flat or "boundary" in flat
+    assert "dependent task" in flat
+
+
+def test_step5_keeps_integration_checks_without_formal_review() -> None:
     text = BUILD_SKILL.read_text(encoding="utf-8")
     section = text.split("## 5. Wave end", 1)[1]
     section = re.split(r"\n## ", section, 1)[0]
-    assert "<reviewed_sha>..HEAD" in section
+    flat = " ".join(section.split()).lower()
+    assert "integration" in flat
+    assert "no formal review" in flat
+    assert "review: after-task" in flat
+    assert "legacy" in flat
 
 
 # --- wave-end:1-03: last-wave sequencing (package tests -> memory step ----
@@ -133,8 +147,8 @@ def _last_wave_paragraph() -> str:
     marker = "**Last wave of the plan.**"
     assert marker in section, "no last-wave paragraph in build's §5"
     tail = section.split(marker, 1)[1]
-    para_end = tail.index("\n\n")
-    return marker + tail[:para_end]
+    para_end = tail.find("\n\n")
+    return marker + (tail if para_end == -1 else tail[:para_end])
 
 
 _NEGATED_CALL = re.compile(r"\b(?:not|never|no)\b|n't")
@@ -359,7 +373,7 @@ def test_matcher_perwave_sentence_affirmative_accepted() -> None:
     assert not _has_negation(sentence)
 
 
-# --- W1-04: no wave-end checkpoint under express/gate-only; switch pointer --
+# --- W1-02: no wave-end checkpoint in any lane -----------------------------
 
 
 def _wave_end_sentences() -> list[str]:
@@ -369,44 +383,12 @@ def _wave_end_sentences() -> list[str]:
     return [p for p in re.split(r"(?<=[.!?])\s+", flat) if p.strip()]
 
 
-def test_wave_end_no_checkpoint_under_express_gateonly() -> None:
-    hits = [
-        s for s in _wave_end_sentences()
-        if "express" in s.lower()
-        and "gate-only" in s.lower()
-        and "closes the plan" in s.lower()
-        and "wave-end" in s.lower()
-        and not _has_negation(s)
-    ]
-    assert hits, (
-        "build/SKILL.md §5 has no affirmative sentence stating express/"
-        "gate-only skip the wave-end checkpoint"
-    )
-
-
-def test_wave_end_points_at_lane_switch_reference() -> None:
-    section = "".join(_wave_end_sentences())
-    assert "lane-switch.md" in section
-
-
-def test_matcher_wave_end_sentence_negated_rejected() -> None:
-    sentence = (
-        "Express and gate-only never call a wave-end checkpoint, "
-        "cannot reach the round that closes the plan without one."
-    )
-    assert _has_negation(sentence)
-
-
-def test_matcher_wave_end_sentence_affirmative_accepted() -> None:
-    sentence = (
-        "Express and gate-only route straight to the round that closes "
-        "the plan, skipping every wave-end checkpoint before it."
-    )
-    assert "express" in sentence.lower()
-    assert "gate-only" in sentence.lower()
-    assert "closes the plan" in sentence.lower()
-    assert "wave-end" in sentence.lower()
-    assert not _has_negation(sentence)
+def test_wave_end_never_dispatches_formal_review_in_any_lane() -> None:
+    section = " ".join(_wave_end_sentences()).lower()
+    assert "every lane" in section
+    assert "no formal review" in section
+    assert "express" not in section
+    assert "gate-only" not in section
 
 
 def _probe_graduation_paragraph() -> str:
