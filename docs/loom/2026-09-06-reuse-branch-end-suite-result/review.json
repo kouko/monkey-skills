@@ -313,6 +313,139 @@
         "Focused pytest execution was attempted without the complete package suite, but the read-only environment provided no writable temporary directory; recorded historical test results were therefore not treated as independently verified.",
         "The deletion-first ownership simplification and repository-neutral command resolution are otherwise coherent; the release-boundary escape and invalid timing oracle prevent acceptance."
       ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "status": "fixed",
+          "evidence": "c0a93c6f requires the literal full current object ID and current refs/heads destination, validates that same object, and the permanent local-remote case proves delayed HEAD movement cannot replace the published object."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "status": "fixed",
+          "evidence": "d13956e4 extracts both revisions' versioned checker and hook packages and replays baseline explicit checker plus hook against candidate hook-only on one accepted fixture."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+          "status": "fixed",
+          "evidence": "The report now discloses the detached-writer counterexample and states the narrower immutable-publication guarantee."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59",
+          "status": "fixed",
+          "evidence": "The report states its counting method and distinguishes 46 definitions from 36 unique names."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+          "status": "unfixed",
+          "evidence": "The Traditional Chinese UI-flow wording remains a non-blocking artifact-language nit so this fix does not alter the confirmed specification fingerprint."
+        }
+      ],
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:11",
+          "text": "nitpick (non-blocking): The evidence list names the retired test_ship_issues_named_branch_without_explicit_checker_preflight test instead of its current immutable-refspec name.",
+          "fix": "Update the evidence pointer to test_ship_issues_immutable_refspec_without_explicit_checker_preflight."
+        }
+      ],
+      "notes": [
+        "All prior blocking findings are fixed; the specification-language nit and stale evidence reference do not block this round.",
+        "No recorded probes or package suites were rerun under the fix-round procedure."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "status": "fixed",
+          "evidence": "The prescribed literal push binds the current full object ID to the current refs/heads destination and validates that same object; a new shell-expansion bypass is recorded separately."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:140",
+          "status": "fixed",
+          "evidence": "The change-specific cases now require mutable-source rejection and the reusable delayed cases are permanently graduated."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "status": "fixed",
+          "evidence": "The replacement harness executes the versioned real entry points and measures their actual return codes and instrumented package invocations."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51",
+          "status": "fixed",
+          "evidence": "The report discloses detached-writer behavior and limits its guarantee to immutable publication rather than process containment."
+        }
+      ],
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "security",
+          "anchor": "loom-code/scripts/loom_checker.py:3249",
+          "text": "issue (blocking): The immutable-refspec parser treats the first positional token as an opaque remote without proving it remains one runtime argument. Shell expansion can turn that token into a remote and an additional mutable refspec, publishing an unreviewed commit alongside the reviewed object.",
+          "fix": "Reject shell expansion, substitution, and glob syntax in every accepted push argument and require an argv-stable literal remote plus the single exact refspec, or execute the verified push from trusted argv. Add a permanent local-bare-remote regression proving no additional mutable ref can be published."
+        }
+      ],
+      "notes": [
+        "The immutable full-object strategy is sufficient for the prescribed literal push; process containment is not required for that path.",
+        "No recorded probes were rerun; the new finding comes from direct control-flow analysis of the fix delta."
+      ]
     }
   ],
   "probes": [
@@ -355,6 +488,14 @@
       "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
       "result": "deferred-to-hook",
       "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:6",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
     }
   ],
   "questions": [
@@ -468,26 +609,33 @@
       "anchor": "loom-code/scripts/loom_checker.py:3315",
       "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
       "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
-      "resolved": ""
+      "resolved": "fixed by 9798b435 and c0a93c6f — immutable-source regressions and checker binding prevent delayed HEAD movement from changing the published object"
     },
     {
       "id": "branch-end-02",
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
       "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
       "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
-      "resolved": ""
+      "resolved": "fixed by d13956e4 — both revisions' real versioned checker and hook paths are measured on one accepted fixture"
     },
     {
       "id": "branch-end-03",
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
       "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
       "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
-      "resolved": ""
+      "resolved": "fixed by d13956e4 — the report discloses the counterexample and states only the proven immutable-publication guarantee"
     },
     {
       "id": "branch-end-04",
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:140",
       "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-b-codex-cli",
+      "resolved": "fixed by 9798b435 and c0a93c6f — the unsafe-success case is graduated permanently and now proves immutable local-remote publication"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/scripts/loom_checker.py:3249",
+      "origin_sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
       "raised_by": "branch-end-reader-b-codex-cli",
       "resolved": ""
     }
@@ -647,7 +795,7 @@
     }
   ],
   "cost": {
-    "rounds": 5,
+    "rounds": 6,
     "dispatches": 19,
     "cap_changes": [],
     "hours_plan_to_pr": null
