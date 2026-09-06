@@ -17,6 +17,17 @@ loom-workflow/skills/git-memory/scripts/memory-grep.sh --no-pr >/dev/null`:
 minimum git version (see the script header) even though its command-line
 surface is unchanged — hence a minor bump, not a patch.
 
+Branch-end fix (same 4.1.0): a git that does not expand the
+`%(trailers:key=...)` --format placeholder no longer silently drops
+every commit's memory trailers. `extract_commits_ndjson` now runs a
+one-time capability probe before extraction; a git that understands the
+key-less `%(trailers:unfold)` placeholder but not `key=` gets a
+transparent fallback (still one git-log call, no exit-code change); a
+git that understands neither now exits 3 (external dependency missing)
+with a message naming the missing capability, instead of exiting 0 and
+printing "(none in range)" over real trailers. Exit code 3's documented
+meaning is extended to cover this case — see the script header.
+
 ## [4.0.1] — 2026-09-03 — Status grammar
 
 No code change. Bumped only because this plugin's prose describes the
