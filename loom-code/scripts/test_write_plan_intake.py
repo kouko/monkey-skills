@@ -179,8 +179,8 @@ LOAD_BEARING = [
     ("SKILL.md", "reads or types into"),                     # needs-design (a)
     ("SKILL.md", "multi-state or multi-object"),             # needs-design (b)
     ("SKILL.md", "intent.needs-design-recompute"),           # who has the last word on `no`
-    ("SKILL.md", "Budget **2 per plan**"),                   # after-task budget
-    ("SKILL.md", "at most 5 checkpoints during build"),      # the cap is on checkpoints
+    ("SKILL.md", "positive and negative or boundary case"), # readiness replacement
+    ("SKILL.md", "pre-build-review"),                       # risk declaration
     ("SKILL.md", "contract.requires"),                       # step 0's rule id
     ("SKILL.md", "/hooks"),                                  # Codex first contact
     ("SKILL.md", "codex_scaffold.py --self-test"),

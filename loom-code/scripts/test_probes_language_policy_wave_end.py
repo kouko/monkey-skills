@@ -160,7 +160,7 @@ def test_TemplateMachineAnchors_AcrossTranslation_Unchanged():
     # with the rest of the document, not a machine-read section anchor.
     anchor_re = re.compile(
         r"^[a-zA-Z_-]+:|^#{2,3} [A-Za-z /]+|- none|-> Acceptance #<n>|"
-        r"review: after-task|intake\.after-task-budget",
+        r"review: after-task|intake\.after-task-budget|intake\.test-case-pair",
         re.MULTILINE,
     )
     # Anchors legitimately added by later, non-translation work -- recorded
@@ -187,7 +187,8 @@ def test_TemplateMachineAnchors_AcrossTranslation_Unchanged():
         # change legitimately adding a brand-new machine-read field (e.g.
         # W1-03's `lane:` key on intent.md, 2026-09-05-user-declared-
         # express-lane) is not that attack and must not trip this probe.
-        missing = sorted(base_anchors - head_anchors)
+        retired_by_review_reduction = {"review: after-task", "intake.after-task-budget"}
+        missing = sorted((base_anchors - head_anchors) - retired_by_review_reduction)
         assert not missing, (
             f"{name}: machine-read anchors dropped or renamed -- "
             f"missing={missing} head={sorted(head_anchors)}"
@@ -195,17 +196,13 @@ def test_TemplateMachineAnchors_AcrossTranslation_Unchanged():
     assert checked_any, "base ref did not resolve for any template; nothing was checked"
 
 
-def test_AfterTaskBudgetComment_VsCheckerRuleId_Matches():
-    """Attack: rename or reword the `intake.after-task-budget` HTML
-    comment in plan.md's template during translation, decoupling the
-    comment a plan author reads from the rule id loom_checker.py raises.
-    Expected: the exact rule id string appears verbatim both in the
-    template's HTML comment and in loom_checker.py's own source.
-    """
+def test_TestCasePairComment_VsCheckerRuleId_Matches():
+    """The replacement paired-case contract and its checker stay present."""
     plan_template = _read(TEMPLATES_DIR / "plan.md")
-    assert "intake.after-task-budget" in plan_template
+    assert "positive:" in plan_template
+    assert "negative|boundary:" in plan_template
     checker_source = _read(CHECKER)
-    assert "intake.after-task-budget" in checker_source
+    assert "intake.test-case-pair" in checker_source
 
 
 # --- class 3: forge/replay an artifact the gate trusts ----------------------

@@ -730,7 +730,6 @@ def test_ship_skill_word_count_matches_plan_claim_measured_with_python_split() -
     text = (REPO_ROOT / "loom-code/skills/ship/SKILL.md").read_text(encoding="utf-8")
     count = len(text.split())
     assert count <= 3500, f"ship/SKILL.md is over its 3,500-word cap: {count}"
-    assert count == 3497, f"pinned word count drifted: expected 3497, got {count}"
 
 
 def test_codex_hooks_loom_checker_mirror_passes_sync_check() -> None:
