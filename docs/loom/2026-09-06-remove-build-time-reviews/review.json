@@ -896,11 +896,29 @@
       "started": "2026-09-06T21:02:00+08:00",
       "fresh_context": false,
       "note": "round 5 continuation because bundle blocking semantics changed"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T21:16:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 continuation for deleted vocabulary repair"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T21:16:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 continuation for deleted vocabulary repair"
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 30,
+    "dispatches": 32,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
