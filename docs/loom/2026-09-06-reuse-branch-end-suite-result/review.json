@@ -824,11 +824,27 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T02:59:58+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:7",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T03:09:52+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:7",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T03:09:52+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 6,
-    "dispatches": 23,
+    "dispatches": 25,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
