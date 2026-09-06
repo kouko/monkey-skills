@@ -808,11 +808,19 @@
       "model": "gpt-6-astra",
       "started": "2026-09-07T02:29:44+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:7",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T02:40:54+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 6,
-    "dispatches": 21,
+    "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
