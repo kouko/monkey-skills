@@ -474,50 +474,70 @@ fi
 extract_commits_ndjson() {
   local all_records path_shas sup_entries rc
   local trailers_keyfilter trailers_format probe_out probe_rc
+  local probe_sha
 
-  # ─── one-time capability probe (branch-end fix, W1-02) ────────────
-  # Cheap: a single `git log -1` with no ref pinned, so it needs neither
-  # the repo to have any commits nor any trailers to exist. A probe
-  # that itself FAILS (empty repo, or a git that rejects the
-  # placeholder outright) is inconclusive here, not a literal-echo
-  # finding — it is left to the real extraction git-log call below,
-  # which already fails loudly via its own PIPESTATUS re-exit in that
-  # case. Only a probe that SUCCEEDS while echoing the placeholder back
-  # as literal, UNEXPANDED text is the failure mode this guards: fall
-  # back to the key-less `unfold` placeholder, still one single
-  # git-log call, and let the jq stage's existing case-sensitive key
-  # re-filter recover the real trailers.
+  # ─── one-time capability probe (branch-end fix, W1-02; fatal-substring
+  # fix, closing-review round) ────────────────────────────────────────
+  # The probe used to run against the repo's own HEAD and compare by
+  # SUBSTRING (`grep -qF`): any real trailer VALUE that happens to quote
+  # the placeholder text verbatim (this repo's own commits, changelog and
+  # memory entries do exactly that) could satisfy the substring check on
+  # a fully capable git, wrongly concluding the placeholder went
+  # unexpanded. Repository content must never be able to reach this
+  # decision at all, so the probe runs against a SYNTHETIC commit object
+  # this call creates on the fly — the well-known empty tree plus one
+  # commit message with no trailers of its own — never against HEAD or
+  # any ref. On a capable git, filtering that message's (zero) trailers
+  # always expands to the empty string; an incapable git still echoes
+  # the placeholder back as literal, non-empty text regardless of which
+  # commit it is pointed at. Exact-emptiness is then the only comparison
+  # needed — no need for exact-vs-substring string equality on real
+  # content, since real content never enters the comparison.
   #
-  # The check matches the EXACT placeholder text just attempted (not a
-  # loose "%(trailers" substring): probing against the repo's real HEAD
-  # means an actual trailer VALUE could legitimately contain "%(trailers"
-  # as hostile-but-real content (e.g. a Decision: line quoting jq/git
-  # syntax) — that must not be mistaken for a git that failed to expand
-  # the placeholder. An exact match on the full attempted placeholder
-  # string is what an unexpanded echo actually produces (git's `%%` ->
-  # literal `%`, and the untouched `(...)` that follows is not itself a
-  # placeholder token), so it stays specific to the real failure mode.
+  # (Rejected: exact string equality between probe_out and the attempted
+  # placeholder, still run against HEAD — smaller diff from the old
+  # code, but a single trailer value can be crafted to equal the *whole*
+  # probe output too, e.g. one trailer with no message before or after
+  # it; a probe that structurally cannot see any commit-message content
+  # closes that off entirely rather than narrowing it.)
+  #
+  # If creating the synthetic object itself fails (unwritable object
+  # database, unusual repo state — e.g. a SHA-256 repo, where the
+  # constant below names a SHA-1 empty tree that does not exist), the
+  # probe is inconclusive here, not a literal-echo finding — left to the
+  # real extraction git-log call below, which already fails loudly via
+  # its own PIPESTATUS re-exit.
+  #
+  # The empty tree's hash is a well-known git constant (the SHA-1 of the
+  # empty tree object's fixed byte content) — one `commit-tree` call is
+  # enough; git accepts it as a tree-ish and materializes it on demand,
+  # it needs no separate `hash-object -w` write first (kept the git-call
+  # budget in plan.md W1-02 Risk: <=4 total for the common fast path).
   trailers_keyfilter='key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold'
   trailers_format="%(trailers:${trailers_keyfilter})"
-  probe_rc=0
-  probe_out=$(git -C "$REPO" log -1 --format="$trailers_format" 2>/dev/null) || probe_rc=$?
-  if [ "$probe_rc" -eq 0 ] && printf '%s' "$probe_out" | grep -qF -- "$trailers_format"; then
-    trailers_format='%(trailers:unfold)'
-
-    # ─── second probe: does THIS git understand %(trailers:unfold) at
-    # all? (`%(trailers)`/`unfold` predate `key=`, so a git that fails
-    # the first probe usually understands the fallback — but a git old
-    # enough to understand neither placeholder would echo the fallback
-    # back as literal text too, one band further down the same silent-
-    # empty-digest failure mode the finding named. One more `git log -1`
-    # here, and ONLY on this already-incompatible path — the common
-    # (key=-capable) path never pays this second call.
+  probe_sha=$(git -C "$REPO" commit-tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904 \
+    -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
+  if [ -n "$probe_sha" ]; then
     probe_rc=0
-    probe_out=$(git -C "$REPO" log -1 --format="$trailers_format" 2>/dev/null) || probe_rc=$?
-    if [ "$probe_rc" -eq 0 ] && printf '%s' "$probe_out" | grep -qF -- "$trailers_format"; then
-      echo "memory-grep.sh: this git does not support the %(trailers:...) --format placeholder (neither the key= filter nor plain unfold) that commit-trailer extraction depends on." >&2
-      echo "Upgrade git to at least the version this script's header states as the assumed minimum (git 2.22+, unverified further) and retry." >&2
-      exit 3
+    probe_out=$(git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
+    if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
+      trailers_format='%(trailers:unfold)'
+
+      # ─── second probe: does THIS git understand %(trailers:unfold) at
+      # all? (`%(trailers)`/`unfold` predate `key=`, so a git that fails
+      # the first probe usually understands the fallback — but a git old
+      # enough to understand neither placeholder would echo the fallback
+      # back as literal text too, one band further down the same silent-
+      # empty-digest failure mode the finding named. One more `git log -1`
+      # here, and ONLY on this already-incompatible path — the common
+      # (key=-capable) path never pays this second call.
+      probe_rc=0
+      probe_out=$(git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
+      if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
+        echo "memory-grep.sh: this git does not support the %(trailers:...) --format placeholder (neither the key= filter nor plain unfold) that commit-trailer extraction depends on." >&2
+        echo "Upgrade git to at least the version this script's header states as the assumed minimum (git 2.22+, unverified further) and retry." >&2
+        exit 3
+      fi
     fi
   fi
 
