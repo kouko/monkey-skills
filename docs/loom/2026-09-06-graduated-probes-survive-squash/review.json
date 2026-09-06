@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "83d129c9",
+  "reviewed_sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
   "scope": "branch-end",
   "vendors": [
     "codex"
@@ -341,6 +341,117 @@
         }
       ],
       "sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + skill",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/rehearse_probes.py:283",
+          "status": "fixed",
+          "note": "_trunk_precondition_problem now rejects divergent and stale trunk inputs before constructing the squashed shape."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "status": "dismissed",
+          "note": "dismissed: §7 writes each round's probes after its readers return, and the supplied round-6 record evidence binds reproducible commands to 130c75de without rewriting the truthful earlier execution SHAs — by rev-be-a-q3n7"
+        },
+        {
+          "anchor": "loom-code/skills/build/SKILL.md:345",
+          "status": "fixed",
+          "note": "The registered gate now states the ancestry and trunk-ref preconditions and the required rebase or fetch response."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py:206",
+          "status": "unfixed",
+          "note": "The camelCase probe names remain; this is a non-blocking nit for ship to fold."
+        }
+      ],
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/skills/build/SKILL.md:349",
+          "text": "nitpick (non-blocking): The gate says the remote-tracking ref must agree with the local ref, but `_trunk_precondition_problem` intentionally permits some unequal shapes, including a local ref equal to HEAD and a remote ref ahead of a stale local ref.",
+          "fix": "Replace “agreeing with the local one” with wording that matches the implemented condition: the remote ref must not lag a distinct local trunk already contained in HEAD."
+        }
+      ],
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:2400",
+          "status": "fixed",
+          "note": "_frontmatter_line_count requires exactly one status line before the shipped-change amnesty can apply."
+        },
+        {
+          "anchor": "loom-code/scripts/rehearse_probes.py:230",
+          "status": "fixed",
+          "note": "_trunk_precondition_problem now rejects divergent trunks and stale origin refs before constructing the squashed shape."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "status": "fixed",
+          "note": "The record now carries the branch-end adversarial, blind-run, and package-test entries with commands, artifacts, scope, and SHA bindings."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md:57",
+          "status": "fixed",
+          "note": "The refreshed report identifies the three former adversarial failures, their fixes, and the remaining current-HEAD package-test limitation."
+        }
+      ],
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b"
     }
   ],
   "probes": [
@@ -602,6 +713,70 @@
       "result": "2089 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
       "artifact": "",
       "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "",
+      "sha": "ebc3ddc22b158522323e9d023c659b884693aadf",
+      "result": "line 1: partly, line 2: works, line 3: works, line 4: works, line 5: partly; adversarial re-runs: test_planedits_duplicatestatus_blocks: pass, test_rehearsal_trunkbehindmergebase_failsloudly: pass, test_rehearsal_trunkaheadofbranch_failsloudly: pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -649,67 +824,78 @@
       "id": "branch-end-01",
       "anchor": "loom-code/scripts/rehearse_probes.py:283",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "rev-be-a-q3n7"
+      "raised_by": "rev-be-a-q3n7",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (ancestry); test_squashedShape_trunkAheadAndDivergent_refusesNamingAncestry; probe test_rehearsal_trunkaheadofbranch_failsloudly passes"
     },
     {
       "id": "branch-end-02",
       "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "rev-be-a-q3n7"
+      "raised_by": "rev-be-a-q3n7",
+      "dismissed": "§7 writes each round's probes after its readers return, and the supplied round-6 record evidence binds reproducible commands to 130c75de without rewriting the truthful earlier execution SHAs — by rev-be-a-q3n7"
     },
     {
       "id": "branch-end-03",
       "anchor": "loom-code/skills/build/SKILL.md:345",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "rev-be-a-q3n7"
+      "raised_by": "rev-be-a-q3n7",
+      "resolved": "closed by 93a43823 -- ancestry precondition sentence inside the gate; test_graduation_paragraph_states_the_trunk_ancestry_precondition"
     },
     {
       "id": "branch-end-04",
       "anchor": "loom-code/scripts/loom_checker.py:2400",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "rev-be-b-x6p1"
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by 3b0ef50c -- _frontmatter_line_count guard; test_duplicate_status_lines_committed_still_blocks; probe test_planedits_duplicatestatus_blocks passes"
     },
     {
       "id": "branch-end-05",
       "anchor": "loom-code/scripts/rehearse_probes.py:230",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "rev-be-b-x6p1"
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (same-name trunk consistency); test_squashedShape_originMainBehindLocalMain_refusesNamingFetch; probe test_rehearsal_trunkbehindmergebase_failsloudly passes"
     },
     {
       "id": "branch-end-06",
       "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "rev-be-b-x6p1"
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by e5ec1d35 -- round 5 recorded the 26 adversarial, blind-run and package-tests probes with scope branch-end"
     },
     {
       "id": "branch-end-07",
       "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md:57",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "rev-be-b-x6p1"
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by 130c75de -- report refreshed at ebc3ddc2 with the adversarial-case block and the fix-round decisions"
     },
     {
       "id": "branch-end-08",
       "anchor": "loom-code/scripts/loom_checker.py:2400",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "adv-be-r5k2"
+      "raised_by": "adv-be-r5k2",
+      "resolved": "closed by 3b0ef50c -- _frontmatter_line_count guard; test_duplicate_status_lines_committed_still_blocks; probe test_planedits_duplicatestatus_blocks passes"
     },
     {
       "id": "branch-end-09",
       "anchor": "loom-code/scripts/rehearse_probes.py:230",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "adv-be-r5k2"
+      "raised_by": "adv-be-r5k2",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (same-name trunk consistency); test_squashedShape_originMainBehindLocalMain_refusesNamingFetch; probe test_rehearsal_trunkbehindmergebase_failsloudly passes"
     },
     {
       "id": "branch-end-10",
       "anchor": "loom-code/scripts/rehearse_probes.py:283",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "adv-be-r5k2"
+      "raised_by": "adv-be-r5k2",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (ancestry); test_squashedShape_trunkAheadAndDivergent_refusesNamingAncestry; probe test_rehearsal_trunkaheadofbranch_failsloudly passes"
     },
     {
       "id": "branch-end-11",
       "anchor": "Acceptance line 5",
       "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
-      "raised_by": "br-be-t8m4"
+      "raised_by": "br-be-t8m4",
+      "resolved": "closed by the round-5 package-tests probe -- 2089 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped at 3d3422f7, run outside the sandbox"
     }
   ],
   "dispatch": [
@@ -923,10 +1109,10 @@
     }
   ],
   "cost": {
-    "rounds": 5,
-    "dispatches": 19,
+    "rounds": 6,
+    "dispatches": 25,
     "cap_changes": [],
-    "hours_plan_to_pr": 13.4
+    "hours_plan_to_pr": 13.9
   },
   "charter": "1.0",
   "second_vendor": "codex"
