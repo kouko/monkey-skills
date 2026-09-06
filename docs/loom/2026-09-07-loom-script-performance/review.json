@@ -3,7 +3,8 @@
   "scope": "branch-end",
   "vendors": [
     "anthropic",
-    "codex"
+    "codex",
+    "openai"
   ],
   "second_vendor": "codex",
   "verdicts": [
@@ -612,11 +613,29 @@
       "started": "2026-09-07T06:16:15+0800",
       "fresh_context": false,
       "note": "round 3 — resumed reader for branch-end-01 only"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sp-a",
+      "model": "opus",
+      "started": "2026-09-07T06:19:38+0800",
+      "fresh_context": false,
+      "note": "round 4 — resumed standing reader; delta outside prior anchors (intent, plan line restore, memory)"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sp-codex",
+      "model": "codex exec (gpt-5.6-sol)",
+      "started": "2026-09-07T06:19:38+0800",
+      "fresh_context": false,
+      "note": "round 4 — resumed reader; vendor recorded as openai (the CLI's vendor)"
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 22,
+    "dispatches": 24,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
