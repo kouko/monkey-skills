@@ -28,8 +28,9 @@ an executable contract-manifest check.
    enforcement, review-only HEAD, and Ship blocking gates.
 5. `intake.test-case-pair` replaces `intake.after-task-budget`, and
    `build.task-tests-before-dependent-task` replaces the per-task review
-   prose gate. The mechanism count rises by one only because the spec risk
-   declaration is a new contract field.
+   prose gate. The checker-rule population therefore remains 31; the total
+   mechanism count rises by one only because the spec risk declaration is a
+   new contract field.
 
 ## [1.7.0] — 2026-09-06 — artifact charter, four recomputed rules, Codex mirror
 

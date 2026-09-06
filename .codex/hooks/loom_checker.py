@@ -1816,7 +1816,8 @@ def sha_agrees(recorded: str, current: str) -> bool:
 TASK_LINE = re.compile(
     r"^(?:[-*+]\s+)?\*\*(?P<id>[A-Za-z0-9][A-Za-z0-9._-]*)[^*]*\*\*(?P<rest>.*)$"
 )
-TASK_ACCEPTANCE = re.compile(r"(?:^|\s)acceptance:\s*([0-9][0-9, ]*)\s*$", re.IGNORECASE)
+TASK_ACCEPTANCE = re.compile(r"(?:^|\s)acceptance:\s*(.*?)\s*$", re.IGNORECASE)
+VALID_ACCEPTANCE_REFS = re.compile(r"[0-9]{1,9}(?:\s*,\s*[0-9]{1,9})*")
 TEST_CASE = re.compile(
     r"(?:^|[.;]\s*)A(?P<number>\d+)\s+positive:\s*(?P<positive>[^;]+?)\s*;\s*"
     r"(?P<kind>negative|boundary):\s*(?P<opposite>.+?)"
@@ -1830,26 +1831,32 @@ def check_test_case_pairs(
 ) -> list[tuple[str, str]]:
     """A new plan owns every Acceptance line and pairs both sides of its tests.
 
-    Plans authored before this contract remain byte-compatible. A plan opts
-    into the new grammar by carrying at least one `acceptance:` task marker;
-    the new template always does. A completely old
-    task grammar therefore remains readable during migration instead of being
-    rewritten merely to satisfy a newer checker."""
+    Plans authored before this contract remain byte-compatible only when they
+    have no charter stamp and already exist in Git history. A new plan cannot
+    self-exempt by deleting its ownership markers or its charter line."""
     plan_path = artifact_path(manifest, "plan", change_id, repo)
     if not plan_path.is_file():
         return []
     plan_text = read_text(plan_path)
-    _front, plan_sections = parse_document(plan_text)
+    front, plan_sections = parse_document(plan_text)
     task_dag = plan_sections.get("Task DAG", "")
     headers = [
         match
         for raw_line in task_dag.splitlines()
         if (match := TASK_LINE.match(raw_line.strip()))
     ]
-    if not any(TASK_ACCEPTANCE.search(match.group("rest")) for match in headers):
+    relative_plan = plan_path.relative_to(repo).as_posix()
+    committed_before_intake = bool(
+        git_maybe(repo, "log", "-1", "--format=%H", "--", relative_plan)
+    )
+    if "charter" not in front and committed_before_intake:
         return []
 
     failures: list[tuple[str, str]] = []
+    if not headers:
+        failures.append(
+            ("intake.test-case-pair", "a newly authored plan requires at least one task.")
+        )
     acceptance_numbers = {
         int(match.group(1))
         for raw_line in intent_sections.get("Acceptance", "").splitlines()
@@ -1875,15 +1882,16 @@ def check_test_case_pairs(
                 ("intake.test-case-pair", f"{task_id} carries no `acceptance: <numbers>` marker.")
             )
             continue
-        raw_references = [value.strip() for value in marker.group(1).split(",")]
-        if any(not value for value in raw_references):
+        raw_marker = marker.group(1).strip()
+        if not VALID_ACCEPTANCE_REFS.fullmatch(raw_marker):
             failures.append(
                 (
                     "intake.test-case-pair",
-                    f"{task_id} carries an empty Acceptance reference.",
+                    f"{task_id} carries malformed Acceptance references.",
                 )
             )
             continue
+        raw_references = [value.strip() for value in raw_marker.split(",")]
         references = [int(value) for value in raw_references]
         nonexistent = sorted(set(references) - acceptance_numbers)
         if nonexistent:
@@ -1898,7 +1906,8 @@ def check_test_case_pairs(
         cases = {
             int(match.group("number")): match
             for match in TEST_CASE.finditer(str(fields.get(task_id, {}).get("Test") or ""))
-            if match.group("positive").strip() and match.group("opposite").strip()
+            if any(ch.isalnum() for ch in match.group("positive"))
+            and any(ch.isalnum() for ch in match.group("opposite"))
         }
         missing_cases = sorted(set(references) - set(cases))
         if missing_cases:
@@ -2803,10 +2812,26 @@ def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> lis
                 f"{', '.join(failed)}.",
             )
         ]
-    has_combined_lens = any(
-        str(entry.get("lens", "")).strip().lower() == "spec+adversarial"
+    implementers = {
+        str(entry.get("agent_id", "")).strip()
+        for entry in review.get("dispatch", [])
+        if str(entry.get("role", "")).strip() == "implementer"
+    }
+    reviewer_dispatches = {
+        str(entry.get("agent_id", "")).strip()
+        for entry in review.get("dispatch", [])
+        if str(entry.get("role", "")).strip() == "reviewer"
+        and entry.get("fresh_context") is True
+    }
+    combined_reviewers = {
+        str(entry.get("reviewer", "")).strip()
         for entry in verdicts
-    )
+        if str(entry.get("lens", "")).strip().lower() == "spec+adversarial"
+    }
+    independent_combined_reviewers = (
+        combined_reviewers & reviewer_dispatches
+    ) - implementers
+    has_combined_lens = bool(independent_combined_reviewers)
     has_legacy_floor = len(reviewers) >= 2 and any(
         is_spec_adversarial_probe(probe) for probe in review.get("probes", [])
     )

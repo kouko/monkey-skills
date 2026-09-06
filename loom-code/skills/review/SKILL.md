@@ -208,13 +208,18 @@ folder, and **stop**.
 
 ```
 codex exec --sandbox read-only -o <out-file> "<the reviewer prompt above>" < /dev/null
-claude -p --output-format json < <prompt-file> > <out-file>
+claude -p --tools "" --output-format json < <prompt-file> > <envelope-file>
 ```
 
 When the selected second vendor is Claude, use `claude` for one independent
 branch-end reviewer leg and record vendor `anthropic`; the other leg remains
-on the primary host. A required spec review still has only its one combined
-reviewer unless the user's selection explicitly applies to that scope.
+on the primary host. The command above was verified against Claude Code
+2.1.263's `--help`: `--tools ""` prevents an accidental tool/permission
+loop, and the verdict YAML is the string in the JSON envelope's `result`
+field, not the envelope itself. Reject a missing/non-string `result` as a
+non-conforming reviewer response. A required spec review still has only its
+one combined reviewer unless the user's selection explicitly applies to that
+scope.
 
 Before dispatching to that tool, check it is actually there:
 

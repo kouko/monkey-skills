@@ -1,129 +1,64 @@
-# 縮減實作途中審閱 — 實際試用結果
+# 縮減實作途中審閱 — 盲跑報告
 
-於 2026-09-06，在 `64edb744` 的乾淨專案副本中試用。
+第一輪盲跑以乾淨副本 `64edb744` 執行，找出 readiness 繞過、規格自審、計畫欄位超限、replay oracle 誤配及乾淨環境缺少 `wcwidth`。修正輪在同一 branch-end checkpoint 針對這些項目補強，沒有把第一輪失敗改寫成成功。
 
 ## 你要求的每一項結果
 
-### 1. 實作前會阻擋不完整的正向／負向案例與未決問題
-- **怎麼試**：冷啟動建立兩個任務，依序移除負向案例、清空正向案例、填入不存在或無人負責的驗收編號，並留下未決問題。
-- **發生什麼**：正常格式全部正確阻擋；但移除所有驗收標記、替標記加句點或留下空任務表時會被誤認為舊計畫而放行。
-- **證據**：`test_branch_end_adversary_gpt6.py` 的 readiness 案例；盲跑觀察紀錄。
-- **判定**：部分符合 — 正常錯誤會擋，但存在可重現的格式繞過。
+### 1. 實作前保護完整的正向與負向案例
+- **結果**：符合。新 plan 沒有 task、移除全部 `acceptance:`、使用標點或惡意編號、缺少正向或負向／邊界案例，以及留下未決問題，都會受控阻擋。
+- **證據**：`test_new_plan_accepts_positive_and_negative_pair` 與 `test_branch_end_adversary_gpt6.py` 的 readiness 案例；修正後對抗檔 11/11 通過。
 
-### 2. 一般規格略過正式審閱，高風險規格只做一次獨立合併審閱
-- **怎麼試**：分別建立不需審閱與必須審閱的規格，並嘗試缺少紀錄及由實作者自己偽造通過紀錄。
-- **發生什麼**：缺少必要審閱會阻擋；但偽造的實作者自審紀錄仍被放行。
-- **證據**：`test_review_selfreview_rejected`、`test_review_missingdependency_rejected`。
-- **判定**：部分符合 — 風險分流存在，但獨立性尚未在入口被保護。
+### 2. 規格審閱依風險啟動且必須獨立
+- **結果**：符合。低風險宣告可略過正式規格審閱；高風險宣告要求一位 fresh-context 的 `spec+adversarial` reviewer，且同一 agent 若同時是 implementer 會被阻擋；沒有新欄位的舊規格仍沿用原本兩位 reader 加 spec adversarial probe。
+- **證據**：`test_spec_lowrisk_accepted`、`test_spec_legacy_required`、`test_required_spec_rejects_combined_self_review`。
 
-### 3. 實作途中只跑測試，不自動派 after-task 或 wave-end 審閱
-- **怎麼試**：冷讀建置說明、檢查派工紀錄與歷史 replay 事件。
-- **發生什麼**：任務與 wave 只以測試作為前進條件，候選 replay 沒有任何中途正式審閱派工。
-- **證據**：`test_build_never_dispatches_after_task_or_wave_review`；candidate replay 事件。
-- **判定**：符合。
+### 3. Build 途中不自動派 after-task 或 wave-end 正式審閱
+- **結果**：符合。任務與 dependency boundary 只以測試作為前進條件；legacy `review: after-task` 保持可讀但不觸發派工。
+- **證據**：`test_wave_end_never_dispatches_formal_review_in_any_lane` 與 candidate replay 的 0 次 Build-time review dispatch。
 
-### 4. 高風險任務仍先產生可執行攻擊案例
-- **怎麼試**：檢查實際派工順序，並由獨立攻擊者在實作者之外產生及執行邊界案例。
-- **發生什麼**：高風險 gate 任務先有獨立攻擊案例；本輪又新增 11 個可重跑案例，成功重現 3 類阻擋問題。
-- **證據**：`test_full_lane_code_and_gate_tasks_require_adversary_first`；本輪對抗結果。
-- **判定**：符合。
+### 4. 高風險任務仍採 adversary-first
+- **結果**：符合。full lane 的 code 或 gate 任務仍先由獨立 adversary 產生可執行 RED，再交給 implementer。
+- **證據**：`test_full_lane_adversary_first_covers_code_and_gate` 及 W0-01 → W0-02 dispatch 順序。
 
-### 5. 所有任務完成後才做唯一一次完整 branch-end review
-- **怎麼試**：完整套件通過後才啟動本輪盲跑、對抗與兩家模型審閱，並嘗試執行出貨檢查。
-- **發生什麼**：流程順序正確；但本輪仍在進行且已發現阻擋問題，所以尚不能通過出貨。
-- **證據**：本輪派工紀錄與出貨檢查結果。
-- **判定**：尚未完成 — 必須先修正本輪 findings。
+### 5. 所有工作完成後才進入唯一一次 branch-end review
+- **結果**：流程符合，checkpoint 尚在修正複核中。第一輪 Codex 與 Claude 都回傳 `NEEDS_REVISION`，因此 Ship 正確停住；本報告沒有宣稱最終已通過。
+- **證據**：review round 4、13 個 open findings，以及修正後待續的同一 checkpoint。
 
-### 6. 其他風險分級、紀錄與出貨保護保持不變
-- **怎麼試**：重跑各 lane、鏡像、版本、review-only 與既有 Ship 契約測試。
-- **發生什麼**：相關永久測試通過；但交付計畫有兩個 Files 清單超過既有上限，尚未能通過最終檢查。
-- **證據**：完整套件 2018 + 183 passed；`plan.field-caps` 的兩筆阻擋。
-- **判定**：部分符合 — 行為回歸測試通過，交付紀錄仍需修正。
+### 6. 其他 lane、紀錄與 Ship 保護維持
+- **結果**：符合目前可機械驗證的部分。full/small/express/gate-only 的 branch-end 差異仍在；manifest 與 Codex scaffold 已同步；plan 的 Files 清單已降到上限內。
+- **證據**：相關 station tests、`check_mechanisms.py --baseline origin/main` 與 scaffold self-test 均通過。
 
-### 7. 真實多任務 replay 會縮短等待且保留品質發現
-- **怎麼試**：重算 7 個 patch 雜湊、兩棵最終 tree、基準時間區間與兩家模型結果。
-- **發生什麼**：最終 tree 相同，建置中審閱派工 2→0，等待 1086→0 秒；但一筆 hidden-oracle 對應把「舊的固定兩位 reviewer 文案」誤寫成「Codex mirror 過期」，兩者不是同一根因。
-- **證據**：replay 比較與盲跑觀察紀錄。
-- **判定**：部分符合 — 時間與測試結果可重算，oracle 對應必須更正。
+### 7. 真實多任務 replay 的等待縮減且不誇大
+- **結果**：符合。相同的六個 task patch 產生相同 final tree；Build-time 正式審閱 2→0，已知等待 1,086→0 秒。這只是結構性等待縮減，不是整體交付時間保證。
+- **證據**：兩棵 tree 都是 `e6201f8f13d18a36ccd5362204ee1c5d7d5aa2b7`；comparison 已把 canonical target 早已修掉的 two-reader 文案 oracle 改列為 inapplicable，不再拿 stale mirror 冒充同一根因。
 
-## 產品流程試用
+## 乾淨環境結果
 
-### 一般規格準備完成
-- **怎麼試**：建立完整、明確標為不需預先審閱的規格與成對案例計畫。
-- **發生什麼**：入口允許直接進入建置。
-- **證據**：`test_spec_lowrisk_accepted`。
-- **判定**：符合。
+第一輪盲跑依 README 建立新 venv 時，套件安裝成功，但 `wcwidth` 沒有列在 `requirements-dev.txt`，因此得到 2 failed、2016 passed；第二個失敗是 nested rehearsal 重複同一個根因。第一輪也因乾淨 worktree 的三個 Codex hook 尚未受信任而無法真正啟動完整 Build，沒有把直接 checker 操作冒充完整工作流。
 
-### 高風險規格準備完成
-- **怎麼試**：建立標為必須審閱的規格，分別不附紀錄及附自審偽造紀錄。
-- **發生什麼**：缺紀錄會擋，自審偽造仍會過。
-- **證據**：required-review 與 self-review 案例。
-- **判定**：部分符合。
+修正後以 `uv run --isolated --with-requirements requirements-dev.txt` 建立隔離依賴環境，執行 KICKOFF 指定的完整 package command，結果為：
+- loom-code / scripts / hooks：2021 passed、2 skipped、1 xfailed。
+- loom-design：183 passed、1 skipped。
+- branch-end adversarial probe：11 passed。
 
-### 舊規格沒有新欄位
-- **怎麼試**：以舊格式規格搭配舊的兩位審閱紀錄執行入口檢查。
-- **發生什麼**：舊紀錄仍可讀並通過。
-- **證據**：`test_spec_legacy_required`。
-- **判定**：符合。
+## Review summary
 
-### 任務完成且測試通過
-- **怎麼試**：冷讀建置契約並檢查新候選 replay 的事件。
-- **發生什麼**：不等待中途審閱，直接進入下一個可執行任務。
-- **證據**：candidate replay 事件。
-- **判定**：符合。
+- 第一輪有效找出並保留所有重要問題，沒有駁回 important 或 fatal finding。
+- readiness、reviewer independence、runtime contract、Claude CLI adapter、replay oracle、mechanism eval、plan cap、release probes與乾淨依賴已修正。
+- 最終是否可 Ship 仍由同一組 Codex／Claude reviewer 複核及 review-only HEAD gate 決定。
 
-### 任務測試或整合檢查失敗
-- **怎麼試**：檢查依賴任務的前進條件與正／負向案例測試。
-- **發生什麼**：失敗會阻擋相依任務。
-- **證據**：`test_build_blocks_dependent_tasks_until_cases_pass`。
-- **判定**：符合。
+## Questions I asked you
 
-### 高風險任務尚未開始
-- **怎麼試**：核對先有對抗派工、再有實作者派工的實際紀錄。
-- **發生什麼**：獨立攻擊者先建立失敗案例，沒有產生 review verdict。
-- **證據**：W0-01 與 W0-02 派工順序。
-- **判定**：符合。
+1. 確認保留正負向測試、移除 Build 途中正式審閱、保留 branch-end review。
+2. 確認 Claude 作為第二家模型 reviewer。
+3. 兩次確認規格行為後開始實作。
 
-### 使用者途中明確要求臨時檢查
-- **怎麼試**：冷讀新建置契約的例外說明。
-- **發生什麼**：仍允許臨時診斷，但不會自動排程。
-- **證據**：建置契約文字。
-- **判定**：符合。
+## What this did to existing data
 
-### 舊計畫含 after-task 標記
-- **怎麼試**：以舊格式標記執行相容性測試。
-- **發生什麼**：檔案仍可讀，新 runtime 不因此派審。
-- **證據**：legacy marker 永久測試。
-- **判定**：符合。
+沒有讀寫個人資料。變更只涉及 repository 內的 Loom 程式、測試、契約、版本鏡像與審查證據；舊 spec 與舊 plan 採相容讀取，不批次改寫。
 
-### 全部任務與套件測試完成
-- **怎麼試**：先跑完整套件，再啟動本輪 branch-end review。
-- **發生什麼**：本輪是建置後唯一一次正式審閱，已攔下阻擋問題。
-- **證據**：本輪派工紀錄。
-- **判定**：符合流程；結果尚未通過。
+## I decided for you
 
-### branch-end review 發現問題
-- **怎麼試**：保留對抗者實際重現的失敗案例。
-- **發生什麼**：流程停在修正輪，沒有進入出貨。
-- **證據**：3 個 important findings。
-- **判定**：符合。
-
-### branch-end review 通過
-- **怎麼試**：嘗試出貨前檢查。
-- **發生什麼**：因本輪尚未通過，正確地不能完成出貨。
-- **證據**：目前沒有 branch-end PASS。
-- **判定**：尚未完成。
-
-## 對你既有的資料做了什麼
-
-沒有讀寫你的個人資料。這次只修改專案內的流程、測試、說明與證據；既有舊計畫不被改寫，舊的 `review: after-task` 標記仍可讀，但新 runtime 不會因它自動派審。
-
-## 我替你做的決定
-
-- **新舊計畫相容方式** — 選擇保留舊格式並讓新格式接受更嚴格入口檢查，因為強迫遷移進行中的工作會改變既有語意；之後若改成明確格式版本，需更新計畫契約。
-- **重播計時範圍** — 只把正式審閱等待列為結構性節省，不把無法獨立取得的修正時間算入，避免誇大總交付加速。
-- **重要 findings 的駁回** — 沒有；目前所有 important findings 都保持開啟。
-
-## 我不確定你是否想要的事
-
-沒有新的產品選擇需要你決定；目前未完成項目都是已確認規格下的實作缺陷。
+- 舊 plan 只有在沒有 charter 且已存在 Git 歷史時才走 legacy 相容路徑，避免新 plan 靠刪欄位自行豁免。
+- Claude reviewer adapter 固定禁用工具、要求 JSON，並只接受 envelope 的字串 `result`，降低非互動呼叫的不穩定性。
+- replay 只計可重算的正式審閱等待；缺少 defect-fix 時間時不推估整體加速。

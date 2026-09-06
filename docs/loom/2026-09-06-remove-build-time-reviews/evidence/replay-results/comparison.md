@@ -48,12 +48,12 @@ The oracle was opened only after both verdicts were recorded.
 | Dot-directories counted as plugins | Inapplicable after later replay task fixed it | `test_loom_checker_push.py:2355-2371` preserves the regression case. |
 | Change-folder exclusion omitted `spec.md` | Inapplicable after later replay task fixed it | `loom_checker.py:2493-2501` explicitly includes `spec.md`; `test_loom_checker_push.py:2375-2384` exercises it. |
 | Reviewer floor contradicted ratified principles | Rediscovered at the same policy boundary | Both reviewers found paths that could receive the small-lane floor despite belonging to full-lane categories. |
-| Published verdict rule claimed a fixed two-reader floor | Rediscovered as a cross-host publication defect | Both reviewers found the committed Codex checker/manifest mirror stale relative to the canonical lane rules. |
+| Published verdict rule claimed a fixed two-reader floor | Inapplicable: the canonical replay target already carries the lane-aware wording | `loom-code/scripts/loom_checker.py:176` names one reviewer for small and two for full; the stale Codex mirror finding is a different publication defect and is not credited as rediscovery. |
 
-The endpoint review therefore retained coverage of the two oracle concerns
-still relevant to the completed target. The other two were already removed by
-later fixed task patches, with executable regression evidence present before
-branch-end review.
+The endpoint review therefore rediscovered the one oracle concern still
+relevant to the completed target. The other three were already removed by
+later fixed task patches or canonical wording, with executable or line-level
+evidence present before branch-end review.
 
 ## Fixture corrections made before execution
 

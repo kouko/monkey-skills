@@ -192,6 +192,7 @@ def write_review(
     probes: list[dict] | None = None,
     reviewed_sha: str | None = None,
     spec_sha: bool = True,
+    dispatch: list[dict] | None = None,
 ) -> None:
     path = repo / "docs/loom" / change / "review.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -214,6 +215,7 @@ def write_review(
                 "verdicts": verdicts,
                 "probes": [ADVERSARIAL] if probes is None else probes,
                 "open_findings": [],
+                "dispatch": [] if dispatch is None else dispatch,
             }
         ),
         encoding="utf-8",
@@ -358,9 +360,50 @@ def test_required_spec_accepts_one_combined_reviewer_without_probe(tmp_path: Pat
         repo,
         [dict(verdict("a", "PASS", 1), lens="spec+adversarial")],
         probes=[],
+        dispatch=[
+            {
+                "task": "spec",
+                "role": "reviewer",
+                "agent_id": "a",
+                "model": "m",
+                "started": "2026-09-06",
+                "fresh_context": True,
+            }
+        ],
     )
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+def test_required_spec_rejects_combined_self_review(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo, pre_build_review="pre-build-review: required — public contract")
+    write_review(
+        repo,
+        [dict(verdict("same-agent", "PASS", 1), lens="spec+adversarial")],
+        probes=[],
+        dispatch=[
+            {
+                "task": "spec",
+                "role": "implementer",
+                "agent_id": "same-agent",
+                "model": "m",
+                "started": "2026-09-06",
+                "fresh_context": True,
+            },
+            {
+                "task": "spec",
+                "role": "reviewer",
+                "agent_id": "same-agent",
+                "model": "m",
+                "started": "2026-09-06",
+                "fresh_context": True,
+            },
+        ],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.spec-pass" in blocked_rules(result)
 
 
 def test_required_spec_rejects_a_plain_single_reader(tmp_path: Path) -> None:
@@ -498,6 +541,40 @@ def test_new_plan_rejects_unresolved_open_questions(tmp_path: Path) -> None:
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
     assert "intake.test-case-pair" in blocked_rules(result)
     assert "Open questions" in result.stderr
+
+
+def test_new_plan_cannot_self_exempt_by_removing_charter_and_acceptance(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, open_questions="- none")
+    write_plan(
+        repo,
+        "**W0-01 First**  after: —\n"
+        "- Files: `first.py`\n"
+        "- Test: works.\n"
+        "- Risk: fixture.\n",
+    )
+    plan = repo / "docs/loom" / CHANGE / "plan.md"
+    plan.write_text(plan.read_text().replace("charter: 1.0\n", ""))
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.test-case-pair" in blocked_rules(result)
+
+
+def test_committed_pre_charter_plan_keeps_legacy_task_grammar(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, open_questions="- none")
+    write_plan(
+        repo,
+        "**W0-01 Legacy task**  after: —\n"
+        "- Files: `first.py`\n"
+        "- Test: run the legacy check.\n"
+        "- Risk: fixture.\n",
+    )
+    plan = repo / "docs/loom" / CHANGE / "plan.md"
+    plan.write_text(plan.read_text().replace("charter: 1.0\n", ""))
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "legacy plan")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
 
 
 def test_missing_spec_file_is_blocked(tmp_path: Path) -> None:

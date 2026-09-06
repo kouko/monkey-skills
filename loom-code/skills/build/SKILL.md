@@ -280,7 +280,7 @@ the branch-end review shape only.
 **Last wave of the plan.** Do not call `loom-code:review` here. Instead
 continue in order to §6 (package tests), then §6.5 (the memory step), and
 only then call `loom-code:review` once, for the round that closes the
-plan — §7 names how that single closing round is recorded, so the
+plan. Section 7 names how that single closing round is recorded, so the
 reviewers read a tree with tests green and nothing left to graduate or
 store.
 

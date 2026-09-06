@@ -64,7 +64,7 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "mutation / fuzz / abuse cases for code, red-team for spec, gate-attack catalogue for skills; results land in review.json."
   - name: checkpoint
     owner: review
-    summary: "wave end when unreviewed delta > 8 files or 400 lines, branch end always, after-task tasks (budget 2 per plan, more with a reason line); ≤5 checkpoints during build, fix rounds not counted; reviewed_sha advances only on PASS / PASS_WITH_NOTES."
+    summary: "one branch-end review after Build package tests and memory work; no automatic after-task or wave-end formal review; fix rounds continue that checkpoint until PASS / PASS_WITH_NOTES, when reviewed_sha advances."
   - name: memory
     owner: ship
     summary: "git-memory trailers on the commit plus docs/loom/memory/ entries (templates/memory-README.md) before push."

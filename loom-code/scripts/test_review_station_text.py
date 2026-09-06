@@ -890,6 +890,13 @@ def test_claude_is_named_as_the_selected_second_vendor() -> None:
     assert "claude" in section
 
 
+def test_claude_second_vendor_adapter_is_no_tools_and_extracts_result() -> None:
+    section = " ".join(_section_2_read().split())
+    assert 'claude -p --tools "" --output-format json' in section
+    assert "Claude Code 2.1.263" in section
+    assert "JSON envelope's `result`" in section
+
+
 def test_reader_floor_sentence_names_all_four_lanes() -> None:
     hits = [
         s for s in _flat_sentences(_section_2_read())
