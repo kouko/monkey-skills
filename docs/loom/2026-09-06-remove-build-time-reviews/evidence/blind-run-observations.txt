@@ -1,0 +1,95 @@
+SETUP: fresh worktree 64edb744c0b76b9dea601b8cf2beadca9a3798df; initial git status empty; contract and scaffold self-test pass; README uv setup succeeds; hook trust all 3 never.
+VALID PLAN
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+missing-negative rc=1
+BLOCK intake.test-case-pair: W0-01 lacks a non-empty positive plus negative or boundary pair for Acceptance: 1.
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+empty-positive rc=1
+BLOCK intake.test-case-pair: W0-01 lacks a non-empty positive plus negative or boundary pair for Acceptance: 1.
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+nonexistent-reference rc=1
+BLOCK intake.test-case-pair: W0-02 references nonexistent Acceptance lines: 9.
+BLOCK intake.test-case-pair: W0-02 lacks a non-empty positive plus negative or boundary pair for Acceptance: 9.
+BLOCK intake.test-case-pair: intent Acceptance lines are owned by no task: 2.
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+uncovered-acceptance rc=1
+BLOCK intake.test-case-pair: W0-02 lacks a non-empty positive plus negative or boundary pair for Acceptance: 1.
+BLOCK intake.test-case-pair: intent Acceptance lines are owned by no task: 2.
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+missing-risk rc=1
+BLOCK intake.spec-pass: no review.json at docs/loom/2026-09-06-blind-readiness/review.json; the spec was never reviewed.
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+required-no-review rc=1
+BLOCK intake.spec-pass: no review.json at docs/loom/2026-09-06-blind-readiness/review.json; the spec was never reviewed.
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+open-question rc=1
+BLOCK intake.test-case-pair: a newly authored plan requires intent Open questions to be exactly `- none`.
+interface-surfaces (manifest default (KICKOFF-DEFAULTS adds nothing new)): **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** (non-code paths under **/templates/** excluded)
+
+
+SHIP REJECTION
+
+
+DELIVERED PLAN CHECK
+BLOCK plan.field-caps: W2-01.Files 9 entries, cap 8
+BLOCK plan.field-caps: W2-memory.Files 12 entries, cap 8
+
+
+PACKAGE SETUP AND RUN (captured output excerpts)
+Command: uv venv .venv && uv pip install --python .venv/bin/python -r requirements-dev.txt
+Result: exit 0, CPython 3.13.5, 10 packages installed; wcwidth absent.
+Command: source .venv/bin/activate && python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto
+Result: exit 1
+FAILED loom-code/scripts/test_probes_positioning.py::test_readme_diagram_regenerates_from_its_embedded_payload
+FAILED loom-code/scripts/test_probes_rehearsal_no_history_class_skips_on_main.py::test_no_history_class_skips_on_main
+First causal error: ModuleNotFoundError: No module named 'wcwidth'
+2 failed, 2016 passed, 2 skipped, 1 xfailed, 8 warnings in 83.08s (0:01:23)
+The second failure is a nested clone repeating the first failure.
+No dependency repair was applied.
+
+COLD SKILL USE
+The runner read the shipped write-plan, write-spec, build, review, and ship contracts.
+Actual Build entry attempted: contract --require 1.0 succeeded; scaffold --self-test succeeded.
+codex_scaffold.py --trusted returned exit 2 with 3 of 3 definitions never in the clean worktree.
+No hook authorization was changed. No implementer, reviewer, or adversary was dispatched by this runner.
+Direct checker CLI exercises above are isolated acceptance operations, not a successful full Build run.
+The temporary readiness documents were removed via apply_patch after exercises; git status --porcelain was empty again.
+
+REPLAY VERIFICATION
+Seven fixture patch SHA-256 values were recomputed and matched replay-fixture.yaml.
+Runtime files at 6bca3513 and 64edb744 are identical apart from permanent tests.
+Historical baseline interval 2026-09-04T00:40:07+08:00 to 00:58:13+08:00 = 1086 seconds.
+Recorded target tree hashes match: e6201f8f13d18a36ccd5362204ee1c5d7d5aa2b7.
+The replay was NOT rerun by this blind runner.
+Historical finding in docs/loom/2026-09-03-small-change-lane/review.json:
+  anchor loom-code/scripts/loom_checker.py:171-174
+  text RULES catalog text for push.verdicts-ge-2 still says at least two
+Actual recorded replay target 37cd6da17912b706cab8e514e1c5f0155b21ef9f, canonical checker lines 176-179:
+  "push.verdicts-ge-2",
+  "The latest review round carries at least as many distinct fresh-context reviewers as "
+  "the change's lane requires -- one in the small lane, two distinct in the full lane -- "
+  "and blocks when any verdict in that round is not passing."
+Thus that exact historical defect is already absent from the canonical target.
+comparison.md line 51 instead labels a stale Codex mirror as rediscovery of that defect.
+The report should establish inapplicability of the exact historical root cause, not substitute a different defect.
+
+REVIEW STATE
+At 64edb744 the recorded verdicts cover spec rounds 1-3 only; no branch-end outcome exists yet.
+Dismissed important-or-worse findings: none in current review.json.
+Actual source-review contract is fresh reviewers after blind/adversarial evidence; present report cannot prove later reviewers or Ship success.
+Full-lane adversary/implementer timing exists historically in dispatch entries, but was not generated in this cold run.
+Ship/fix-round/lane-switch contracts retain their baseline behavior except removal of intermediate-review exemption and summary wording.
