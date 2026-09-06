@@ -37,7 +37,6 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -89,10 +88,11 @@ def commit_file(repo: Path, relpath: str, text: str, message: str) -> Path:
     return path
 
 
-def run_script(*args: str) -> subprocess.CompletedProcess:
+def run_script(*args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(SCRIPT), *args],
         capture_output=True, text=True, timeout=TIMEOUT,
+        env={**os.environ, **(env or {})},
     )
 
 
@@ -237,7 +237,8 @@ def test_squashedShape_probeNeedingBranchOnlyCommit_isReportedFailedWithReason(
 # --------------------------------------------------------------------------
 # 3: the source repository is never mutated or left with clones behind by
 # running the squashed shape -- refs and HEAD are bit-identical before and
-# after, and no rehearsal directory survives in the temp root.
+# after, and no rehearsal directory survives in a temp root only this run
+# writes to.
 # --------------------------------------------------------------------------
 
 def test_squashedShape_run_leavesSourceRepoAndTempRootUntouched(tmp_path: Path) -> None:
@@ -246,24 +247,25 @@ def test_squashedShape_run_leavesSourceRepoAndTempRootUntouched(tmp_path: Path) 
 
     before_head = _git_ok(repo, "rev-parse", "HEAD")
     before_refs = _git_ok(repo, "show-ref")
-    before_tmp = {
-        p for p in Path(tempfile.gettempdir()).iterdir() if p.name.startswith("rehearse-probes-")
-    }
+    # A temp root private to this test: the script's `tempfile.mkdtemp`
+    # honours TMPDIR, so every clone it makes lands here and nowhere else.
+    # Diffing the shared system temp root instead races under xdist --
+    # every sibling in this file spawns the same script, and one of them
+    # creating or deleting its own `rehearse-probes-*` dir mid-run reads
+    # as this run's leak (or hides one).
+    tmp_root = tmp_path / "tmproot"
+    tmp_root.mkdir()
 
-    proc = run_script("tests/test_green.py", "--repo", str(repo))
+    proc = run_script("tests/test_green.py", "--repo", str(repo), env={"TMPDIR": str(tmp_root)})
     assert proc.returncode == 0, f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
 
     after_head = _git_ok(repo, "rev-parse", "HEAD")
     after_refs = _git_ok(repo, "show-ref")
-    after_tmp = {
-        p for p in Path(tempfile.gettempdir()).iterdir() if p.name.startswith("rehearse-probes-")
-    }
+    leftover = sorted(p.name for p in tmp_root.iterdir() if p.name.startswith("rehearse-probes-"))
 
     assert before_head == after_head, "the source repository's HEAD moved"
     assert before_refs == after_refs, "the source repository's refs changed"
-    assert after_tmp == before_tmp, (
-        f"the squashed shape's clone was not cleaned up: {after_tmp - before_tmp}"
-    )
+    assert not leftover, f"the squashed shape's clone was not cleaned up: {leftover}"
 
 
 # --------------------------------------------------------------------------
