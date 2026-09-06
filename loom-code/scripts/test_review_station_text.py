@@ -902,8 +902,42 @@ def test_claude_second_vendor_adapter_is_no_tools_and_extracts_result() -> None:
     assert "full current bytes of every changed prose" in section
     assert "configuration, template, and source file" in section
     assert "every direct caller and dependency" in section
-    assert "every source they require the reviewer to read" in section
-    assert "unresolved caller/dependency" in section
+    assert "every source that contract or lens requires" in section
+
+
+def _claude_bundle_block_sentence(text: str) -> str:
+    hits = [
+        sentence
+        for sentence in _flat_sentences(text)
+        if "blocks that leg" in sentence
+        and "incomplete input set" in sentence
+        and "unresolved caller/dependency" in sentence
+        and "oversized bundle" in sentence
+    ]
+    assert len(hits) == 1
+    return hits[0]
+
+
+def test_claude_bundle_incomplete_inputs_block_affirmatively() -> None:
+    sentence = _claude_bundle_block_sentence(_section_2_read())
+    assert "unavailable-CLI fallback" in sentence
+    assert not _has_negation(sentence)
+
+
+def test_claude_bundle_block_matcher_rejects_negated_sentence() -> None:
+    sentence = (
+        "An incomplete input set, an unresolved caller/dependency, or an "
+        "oversized bundle never blocks that leg."
+    )
+    assert _has_negation(sentence)
+
+
+def test_claude_bundle_block_matcher_accepts_affirmative_sentence() -> None:
+    sentence = (
+        "An incomplete input set, an unresolved caller/dependency, or an "
+        "oversized bundle blocks that leg."
+    )
+    assert not _has_negation(sentence)
 
 
 def test_reader_floor_sentence_names_all_four_lanes() -> None:
