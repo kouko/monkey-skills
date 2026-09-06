@@ -240,6 +240,57 @@ def test_shell_quotedalias_publishesonlypinned(tmp_path):
     assert result["refs"] == {"refs/heads/work": head}, repr(result)
 
 
+def absolute_function_setup():
+    """Model an inherited function without replacing the trusted command builtin."""
+    return (f"function {GIT}() {{ command {quote_all(GIT)} "
+            '"$@" ' + quote_all("extra:refs/heads/extra") + "; }")
+
+
+@pytest.mark.parametrize("shell", [BASH, ZSH], ids=["bash", "zsh"])
+def test_shell_absolutefunction_rejected(tmp_path, shell):
+    """Quoting an absolute executable does not suppress a same-named function."""
+    if shell is None:
+        pytest.skip("the requested shell is unavailable")
+    repo, remote, head, extra = scene(tmp_path)
+    command = render(canonical_tokens(repo, head))
+    result = exact_shell_replay(repo, remote, command, shell=shell,
+                               preamble=absolute_function_setup())
+    if result["hook_rc"] == 0:
+        assert result["suites"] == 1 and result["shell_rc"] == 0, repr(result)
+        assert result["refs"] == {"refs/heads/work": head, "refs/heads/extra": extra}, repr(result)
+    rejected(result)
+
+
+@pytest.mark.parametrize("shell", [BASH, ZSH], ids=["bash", "zsh"])
+def test_shell_commandbuiltin_publishesonlypinned(tmp_path, shell):
+    """The supported shell's standard command builtin bypasses the Git function."""
+    if shell is None:
+        pytest.skip("the requested shell is unavailable")
+    repo, remote, head, _ = scene(tmp_path)
+    command = render(["command", *canonical_tokens(repo, head)])
+    result = exact_shell_replay(repo, remote, command, shell=shell,
+                               preamble=absolute_function_setup())
+    assert result["hook_rc"] == 0 and result["suites"] == 1 and result["shell_rc"] == 0, repr(result)
+    assert result["refs"] == {"refs/heads/work": head}, repr(result)
+
+
+@pytest.mark.parametrize("shell", [BASH, ZSH], ids=["bash", "zsh"])
+def test_shell_builtinoracle_publishesonlypinned(tmp_path, shell):
+    """A shell-only local control proves the proposed prefix bypasses the function."""
+    if shell is None:
+        pytest.skip("the requested shell is unavailable")
+    repo, remote, head, _ = scene(tmp_path)
+    command = render(["command", *canonical_tokens(repo, head)])
+    env = dict(os.environ)
+    env.pop("BASH_ENV", None)
+    env.pop("ENV", None)
+    result = subprocess.run([shell, "-f"], input=absolute_function_setup() + "\n" + command + "\n",
+                            cwd=repo, env=env, capture_output=True, text=True, timeout=15)
+    assert result.returncode == 0, result.stderr
+    assert refs(remote) == {"refs/heads/work": head}
+    assert suites(repo) == 0, "the shell-only oracle must not pretend to run the hook"
+
+
 @pytest.mark.parametrize("quotation", ["unquoted", "executable-only", "arguments-only", "remote-unquoted", "double-quotes", "tabs"])
 def test_shell_partialquotes_rejected(tmp_path, quotation):
     """Only the exact quote-all spelling closes every alias-expansion position."""
