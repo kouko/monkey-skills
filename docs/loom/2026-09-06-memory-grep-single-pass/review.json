@@ -778,11 +778,29 @@
       "model": "sonnet",
       "started": "2026-09-06T11:05:33+0800",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-mg-claude",
+      "model": "sonnet",
+      "started": "2026-09-06T11:26:01+0800",
+      "fresh_context": false,
+      "note": "round 4 confirmation — same reader resumed"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-mg-codex",
+      "model": "gpt-5-codex",
+      "started": "2026-09-06T11:26:01+0800",
+      "fresh_context": false,
+      "note": "round 4 confirmation — same reader resumed"
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 19,
+    "dispatches": 21,
     "cap_changes": [],
     "hours_plan_to_pr": null
   }
