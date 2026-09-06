@@ -155,6 +155,108 @@
         "The adversary's mutation probe asserting the stale result is acceptable characterization evidence; its sibling pins the fixed strong-reference contract.",
         "Graduated copies differ from the evidence probes only in the parents[] line."
       ]
+    },
+    {
+      "reviewer": "rev-be-sp-codex",
+      "vendor": "codex",
+      "model": "codex exec (gpt-5.6-sol)",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "NEEDS_REVISION",
+      "sha": "ab3d94e6a923f7372de917aef3ec2f42672f4309",
+      "dimension_scores": {},
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "unfixed",
+          "reason": "issue (blocking): The confirmed Acceptance 2 bound remains unmet; planner provenance and decision point 3 do not replace user approval to amend it."
+        },
+        {
+          "id": "branch-end-02",
+          "status": "fixed",
+          "reason": "praise (non-blocking): The official git batch-output citation now grounds the implemented protocol and verified Git version."
+        },
+        {
+          "id": "branch-end-03",
+          "status": "dismissed",
+          "reason": "note (non-blocking): The clauses describe named test cases in the required template shape, and landed plan lines cannot now be rewritten under the charter."
+        },
+        {
+          "id": "branch-end-04",
+          "status": "dismissed",
+          "reason": "note (non-blocking): The sentence prioritizes deterministic CI assertions without weakening the blind run's literal evaluation of the acceptance bound."
+        },
+        {
+          "id": "nit CHANGELOG.md:18",
+          "status": "fixed",
+          "reason": "praise (non-blocking): The changelog now identifies the 3,383-file population, commit, measurement method, and machine conditions."
+        }
+      ]
+    },
+    {
+      "reviewer": "rev-be-sp-a",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "sha": "ab3d94e6a923f7372de917aef3ec2f42672f4309",
+      "dimension_scores": {},
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "branch-end-05",
+          "status": "fixed",
+          "reason": "ae9f2320 moved import traceback into the except ImportError branch in script and mirror; re-measured 15.6-17.0 ms importtime self-sum vs 24-26 ms at base; neither yaml nor traceback in the trace."
+        },
+        {
+          "id": "nit check_doc_citations.py:274",
+          "status": "fixed",
+          "reason": "_repo_files_set and its cache deleted; exact-match derived from the basename bucket."
+        },
+        {
+          "id": "nit check_doc_citations.py:265",
+          "status": "fixed",
+          "reason": "eviction deleted, single-slot cache; _CACHE_MAX_ENTRIES = 1 and the dict shape survive only as probe-compatibility residue."
+        },
+        {
+          "id": "nit check_map_fog.py:59",
+          "status": "fixed",
+          "reason": "dead text-mode stdin branch removed."
+        },
+        {
+          "id": "nit check_map_fog.py:201",
+          "status": "fixed",
+          "reason": "malformed header raises the same SchemaViolation text; test added (4 -> 5)."
+        },
+        {
+          "id": "nit CHANGELOG.md:15",
+          "status": "fixed",
+          "reason": "entry states the net ~22.0 -> ~15.4 ms with method and load."
+        },
+        {
+          "id": "nit CHANGELOG.md:18",
+          "status": "fixed",
+          "reason": "population named by commit and command; both wall and in-process numbers; states the 0.4 s bound was not met."
+        },
+        {
+          "id": "nit plan.md:49",
+          "status": "dismissed",
+          "reason": "landed task; the plan charter forbids amending a landed line — by rev-be-sp-a."
+        },
+        {
+          "id": "nit blind-run-report.md:19",
+          "status": "dismissed",
+          "reason": "decision point 3 owns it; byte-equivalence holds and b0d80a4d states the shortfall plainly — by rev-be-sp-a."
+        }
+      ],
+      "notes": [
+        "Independently re-verified ab3d94e6 vs 4e158201 over all 3,383 tracked md files: stdout, stderr and exit code identical; 345 tests pass across the touched suites.",
+        "Single-slot index rebuilds per call when a run spans two repo roots; correctness unaffected, no caller does it."
+      ]
     }
   ],
   "probes": [
@@ -263,7 +365,8 @@
       "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
       "raised_by": "rev-be-sp-codex",
       "severity": "fatal",
-      "text": "cat-file --batch protocol has no grounding citation"
+      "text": "cat-file --batch protocol has no grounding citation",
+      "resolved": "resolved by 443e114a — git-cat-file batch-output citation with verified git version; confirmed fixed by rev-be-sp-codex round 2"
     },
     {
       "id": "branch-end-03",
@@ -271,7 +374,8 @@
       "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
       "raised_by": "rev-be-sp-codex",
       "severity": "important",
-      "text": "plan Test lines carry scenario clauses the charter assigns to the spec"
+      "text": "plan Test lines carry scenario clauses the charter assigns to the spec",
+      "dismissed": "landed plan lines cannot be rewritten under the charter; clauses are the template's named test cases — by rev-be-sp-codex"
     },
     {
       "id": "branch-end-04",
@@ -279,7 +383,8 @@
       "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
       "raised_by": "rev-be-sp-codex",
       "severity": "important",
-      "text": "plan Risks #1 calls the 0.4 s bound secondary, contradicting the intent"
+      "text": "plan Risks #1 calls the 0.4 s bound secondary, contradicting the intent",
+      "dismissed": "the sentence prioritises deterministic CI assertions without weakening the blind run's literal evaluation — by rev-be-sp-codex"
     },
     {
       "id": "branch-end-05",
@@ -287,7 +392,8 @@
       "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
       "raised_by": "rev-be-sp-a",
       "severity": "important",
-      "text": "module-scope `import traceback` re-adds ~3.5 ms to the hook fast path"
+      "text": "module-scope `import traceback` re-adds ~3.5 ms to the hook fast path",
+      "resolved": "resolved by ae9f2320 — import traceback moved into the except branch; confirmed fixed by rev-be-sp-a round 2"
     }
   ],
   "dispatch": [
@@ -455,7 +561,7 @@
     }
   ],
   "cost": {
-    "rounds": 1,
+    "rounds": 2,
     "dispatches": 20,
     "cap_changes": [],
     "hours_plan_to_pr": null
