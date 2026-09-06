@@ -1,13 +1,326 @@
 {
   "reviewed_sha": "4e45d6de1214d164ce9ebe18bcd30bf7f4499a1e",
-  "scope": "",
+  "scope": "wave-end:1",
   "vendors": [
     "anthropic",
     "codex"
   ],
   "second_vendor": "codex",
-  "verdicts": [],
-  "probes": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-mg-codex",
+      "vendor": "codex",
+      "model": "gpt-5-codex",
+      "lens": "code + docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:403",
+          "text": "issue (blocking): a commit subject containing byte 0x1F breaks the new record parser -- the record is silently dropped, where the old implementation rendered it. No fixture or probe covers a hostile subject (only trailer values).",
+          "fix": "Frame fields with NUL, or use an encoding injective for every non-NUL byte; add an old-versus-new regression case whose subject contains 0x1F."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "external-surface-grounding",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:402",
+          "text": "issue (blocking): the correctness-critical use of git's %(trailers:key=...,unfold) has no grounding citation for its filtering, case-matching and unfolding semantics.",
+          "fix": "Cite the official git pretty-formats and interpret-trailers documentation supporting the claimed equivalence (key=, unfold, trailer-only)."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py:182",
+          "text": "issue (blocking): the hostile-separator probe claims the raw 0x1E/0x1F value survives verbatim but asserts only the words 'quoted' and 'backslash'; deleting both separator bytes would still pass.",
+          "fix": "Assert exact equality with the hostile value in json and plain, and add a subject-side 0x1F case."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:161",
+          "text": "issue (blocking): the repaired perf fixture is never verified to contain 300 parsed records and 20 effective supersessions; every assertion discards stdout, so it can regress to zero live records while the counts stay green.",
+          "fix": "Assert the record counts through --format=json --history before measuring."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:231",
+          "text": "issue (blocking): whole-second timestamps do not enforce the stated two-second bound (a ~3 s run can report 2), and runner load can fail CI while the constant-process contract holds.",
+          "fix": "Measure with a monotonic sub-second clock; state the CI tolerance separately; keep subprocess counts as the deterministic gate."
+        },
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:403",
+          "text": "nitpick (non-blocking): three substantial jq programs were flattened onto single physical lines to accommodate the adversary shim's counting defect, reducing reviewability.",
+          "fix": "Repair the adversary shim the way the perf suite's shim was repaired, then bring the jq programs back to multiline form."
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-mg-claude",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS_WITH_NOTES",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS_WITH_NOTES",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "architecture",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:442",
+          "text": "issue: the four jq templates at :403/:422/:442/:531 (up to 1421 characters on one physical line) were flattened because the adversary probe's jq shim logs the whole argument list, miscounting a multi-line jq argument as several invocations. This is a test-tooling defect dictating production code shape; this same branch already proves the correct fix in test-memory-grep-perf.sh's shim, which logs a fixed one-line marker.",
+          "fix": "Change the probe shim to a fixed marker, then reformat the four jq programs across multiple indented lines and re-run both the perf suite and the probe file."
+        },
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:9",
+          "text": "nitpick: the top-of-file Parsing strategy comment still describes only interpret-trailers and does not mention that extraction now uses %(trailers:key=...,unfold).",
+          "fix": "Add one sentence pointing to the detailed comment block."
+        }
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_mixed_case_trailer_key_excluded",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_path_scope_external_supersession_retires_record",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_hostile_separator_value_stays_structurally_valid",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_trailer_followed_by_stray_line_excluded",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_folded_continuation_joined_single_space",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_subprocess_count_bounded",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_wall_clock_bounded",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_brand_new_repo_crashes_with_undocumented_exit",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_zero_memory_commits_shows_none_in_range",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_match_no_hit_shows_no_memory_matches_line",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_path_no_hit_shows_no_memory_touched_line",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_top_cap_shows_exact_suppression_line",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_verify_mode_non_memory_commit_exits_four",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_verify_mode_unresolvable_ref_exits_two",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_preflight_git_repo_check_precedes_jq_check",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_plain_and_json_jq_invocation_count_bounded_and_constant",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_plain_exact_byte_layout_matches_fixture_built_expectation",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_hostile_jq_syntax_trailer_value_survives_verbatim",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_trailer_value_resembling_record_header_does_not_split_layout",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_plain_empty_groups_omitted_json_arrays_present",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_top_history_match_combined_counts_superseded_toward_cap",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_json_top_level_shape_key_order_and_null_vs_string",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "bash loom-workflow/tests/test-memory-grep-equivalence.sh",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "loom-workflow/tests/test-memory-grep-equivalence.sh"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "wave-end:1",
+      "command": "bash loom-workflow/tests/test-memory-grep-perf.sh",
+      "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "result": "pass",
+      "artifact": "loom-workflow/tests/test-memory-grep-perf.sh"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -20,7 +333,44 @@
       "type": "what"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "wave-end:1-01",
+      "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:403",
+      "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "raised_by": "rev-we1-mg-codex"
+    },
+    {
+      "id": "wave-end:1-02",
+      "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:402",
+      "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "raised_by": "rev-we1-mg-codex"
+    },
+    {
+      "id": "wave-end:1-03",
+      "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py:182",
+      "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "raised_by": "rev-we1-mg-codex"
+    },
+    {
+      "id": "wave-end:1-04",
+      "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:161",
+      "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "raised_by": "rev-we1-mg-codex"
+    },
+    {
+      "id": "wave-end:1-05",
+      "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:231",
+      "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "raised_by": "rev-we1-mg-codex"
+    },
+    {
+      "id": "wave-end:1-06",
+      "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:442",
+      "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+      "raised_by": "rev-we1-mg-claude"
+    }
+  ],
   "dispatch": [
     {
       "task": "W1-01",
@@ -89,8 +439,8 @@
     }
   ],
   "cost": {
-    "rounds": 0,
-    "dispatches": 0,
+    "rounds": 1,
+    "dispatches": 8,
     "cap_changes": [],
     "hours_plan_to_pr": null
   }
