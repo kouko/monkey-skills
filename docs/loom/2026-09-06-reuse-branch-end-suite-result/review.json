@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "bdede55d5f8cf602d47577066596aa3e15dd3a1a",
+  "reviewed_sha": "9bbf92dfbcb275adad2ee8e75165e9d04079e1d1",
   "scope": "spec",
   "vendors": [
     "openai"
@@ -149,6 +149,35 @@
         "spec-03 fixed: spec.md:23, :36, and :59 explicitly preserve the existing mechanically validated review-only and intent-status-only close shapes while invalidating other tracked-content changes.",
         "spec-04 fixed: spec.md:8 and :37 require pre/post execution HEAD and working-tree validation; :52 correctly identifies its absence from the current implementation. Design re-look: continue with the corrected design. HEAD matches; this verdict covers the specification fixes only, with no probes, blind run, implementation verification, or file modifications."
       ]
+    },
+    {
+      "round": 4,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "PASS",
+      "sha": "9bbf92dfbcb275adad2ee8e75165e9d04079e1d1",
+      "spec_sha": "aed53de",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "PASS",
+        "design-conformance": "N/A — DESIGN.md is absent; the previously verified waiver remains applicable.",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "HEAD matches. Excluding confirmed-behavior produces hash aed53de787edb5a5d63ca36e78340a944b5bcca3, matching the corrected metadata at spec.md:3.",
+        "The sole spec change since bdede55d is the confirmed-behavior hash. No visible behaviour changed; all prior dimension assessments remain standing.",
+        "The requested spec_sha records the confirmation-content hash; the full spec blob shown by Git is cf6d6440. No files were modified."
+      ]
     }
   ],
   "probes": [],
@@ -281,7 +310,7 @@
     }
   ],
   "cost": {
-    "rounds": 3,
+    "rounds": 4,
     "dispatches": 5,
     "cap_changes": [],
     "hours_plan_to_pr": null
