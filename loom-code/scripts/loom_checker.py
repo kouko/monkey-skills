@@ -3243,10 +3243,12 @@ def canonical_git_push(
         return None, None, f"the Git push command has malformed quoting: {exc}"
     if command != render_quote_all(tokens):
         return None, None, "the entire Git push command must use canonical quote-all rendering"
-    if not tokens or tokens[0] != trusted_git or not Path(tokens[0]).is_absolute():
+    if len(tokens) < 2 or tokens[0] != "command":
+        return None, None, "the Git push must begin with the standard command builtin"
+    if tokens[1] != trusted_git or not Path(tokens[1]).is_absolute():
         return None, None, f"the Git executable must be the trusted absolute path {trusted_git!r}"
 
-    index = 1
+    index = 2
     selected = Path(fallback)
     if index < len(tokens) and tokens[index] == "-C":
         if index + 1 >= len(tokens) or not Path(tokens[index + 1]).is_absolute():
@@ -3320,9 +3322,15 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     malformed_canonical_push = False
     if not push_shaped:
         # A malformed quote can defeat the permissive recogniser, but not a
-        # command that visibly starts with the canonical trusted executable.
+        # command that visibly starts with the canonical command trust root
+        # and trusted executable.
         trusted = shutil.which("git")
-        trusted_prefix = quote_all_shell_token(str(Path(trusted).resolve())) if trusted else ""
+        trusted_prefix = (
+            f"{quote_all_shell_token('command')} "
+            f"{quote_all_shell_token(str(Path(trusted).resolve()))}"
+            if trusted
+            else ""
+        )
         malformed_canonical_push = bool(
             trusted_prefix
             and command.startswith(trusted_prefix)

@@ -243,7 +243,7 @@ The supported host's local push hook is the sole owner: its deterministic
 push checker runs the resolved complete package-test command exactly once and
 re-runs recorded adversarial probes. Never invoke it as a separate preflight.
 
-Resolve the four values with read-only commands:
+Resolve values with read-only commands:
 
 ```
 python3 -c 'import shutil; from pathlib import Path; print(Path(shutil.which("git")).resolve())'
@@ -252,20 +252,24 @@ git rev-parse HEAD
 git symbolic-ref --quiet --short HEAD
 ```
 
-Replace the placeholders with observed literals. Render every token as `"'" +
-token.replace("'", "'\"'\"'") + "'"` and join with one ASCII space; the actual
-command must contain no variables, substitutions, or other shell syntax:
+Substitute observed literals. Render each token as `"'" +
+token.replace("'", "'\"'\"'") + "'"` and join with one ASCII space. Use no
+variables, substitutions, or other shell syntax:
 
 ```
-'<absolute-trusted-git>' '-C' '<absolute-selected-repository>' 'push' '--no-follow-tags' '--recurse-submodules=no' '-u' 'origin' '<full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>'
+'command' '<absolute-trusted-git>' '-C' '<absolute-selected-repository>' 'push' '--no-follow-tags' '--recurse-submodules=no' '-u' 'origin' '<full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>'
 ```
 
-The source is the full 40-character object id—not `HEAD`, a branch name, an
-abbreviation, or a shell variable—and the destination is
-`refs/heads/<current-symbolic-branch>`. Fixed flags prevent configured tag or
+The standard `command` builtin is the supported-shell trust root: it suppresses
+aliases and bypasses absolute-executable functions. A malicious `command`
+replacement is outside this guarantee.
+
+Use the full 40-character object id as source—not `HEAD`, branch,
+abbreviation, or variable—and `refs/heads/<current-symbolic-branch>` as
+destination. Fixed flags prevent tag or
 submodule publication.
 
-The hook validates that source in the selected repository and may take minutes.
+The hook validates that source in the selected repository; it may take minutes.
 Exit 0 releases the push. Exit 1 prints `BLOCK <rule.id>: <reason>` on stderr;
 **print that line verbatim and stop.** Do not re-run with flags, use
 `--no-verify`, or adjust `review.json`: every rule recomputes its fact.
@@ -273,7 +277,7 @@ Exit 0 releases the push. Exit 1 prints `BLOCK <rule.id>: <reason>` on stderr;
 | BLOCK | What is actually wrong | Go back to |
 |---|---|---|
 | `push.review-only-head` | HEAD touches more than `review.json` | `loom-code:review` — a new checkpoint |
-| `push.reviewed-sha` | branch moved, or push is not the canonical quote-all command binding its current full object id and branch | `loom-code:review` |
+| `push.reviewed-sha` | branch moved, or push is not the canonical quote-all `command` form binding its current full object id and branch | `loom-code:review` |
 | `push.review-schema` | `review.json` lost a declared key | `loom-code:review` |
 | `push.open-findings-closed` | a finding is neither resolved nor dismissed | `loom-code:build` for the fix, then `loom-code:review` |
 | `push.probes-package-tests` | the recorded command fails in the hook, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |

@@ -367,7 +367,7 @@ def test_ship_issues_canonical_immutable_refspec_without_explicit_checker_prefli
     """Ship emits an immutable source without separately invoking the
     deterministic checker first."""
     section = _section_4_push()
-    assert "'<absolute-trusted-git>' '-C' '<absolute-selected-repository>' 'push'" in section
+    assert "'command' '<absolute-trusted-git>' '-C' '<absolute-selected-repository>' 'push'" in section
     assert "'--no-follow-tags' '--recurse-submodules=no' '-u' 'origin'" in section
     assert "'<full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>'" in section
     assert "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py push" not in section
@@ -381,7 +381,7 @@ def test_ship_push_uses_immutable_full_head_refspec() -> None:
     assert "git rev-parse HEAD" in section
     assert "git symbolic-ref --quiet --short HEAD" in section
     assert "40-character object id" in " ".join(section.split())
-    assert "not `HEAD`, a branch name, an abbreviation, or a shell variable" in " ".join(section.split())
+    assert "not `HEAD`, branch, abbreviation, or variable" in " ".join(section.split())
     assert "git push -u origin <branch>" not in section
 
 
@@ -390,8 +390,11 @@ def test_ship_push_requires_quote_all_literal_command_and_fixed_containment_flag
     flat = " ".join(section.split())
     assert "token.replace(\"'\", \"'\\\"'\\\"'\")" in flat
     assert "join with one ASCII space" in flat
-    assert "must contain no variables, substitutions, or other shell syntax" in flat
-    assert "configured tag or submodule publication" in flat
+    assert "Use no variables, substitutions, or other shell syntax" in flat
+    assert "prevent tag or submodule publication" in flat
+    assert "standard `command` builtin is the supported-shell trust root" in flat
+    assert "bypasses absolute-executable functions" in flat
+    assert "A malicious `command` replacement is outside this guarantee" in flat
 
 
 def test_ship_push_checklist_mirrors_nonpackage_workflow_jobs() -> None:

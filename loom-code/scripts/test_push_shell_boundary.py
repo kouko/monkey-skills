@@ -105,7 +105,7 @@ def test_shell_wordsplit_rejected(tmp_path, fixed):
     """An opaque remote token cannot expand into an extra mutable refspec."""
     repo, remote, head, extra = scene(tmp_path)
     flags = FIXED if fixed else "-u"
-    command = (render([GIT, "push", *flags.split()]) + " $R " + quote_all(f"{head}:refs/heads/work")) if fixed else f"{GIT} push {flags} $R {head}:refs/heads/work"
+    command = (render(["command", GIT, "push", *flags.split()]) + " $R " + quote_all(f"{head}:refs/heads/work")) if fixed else f"{GIT} push {flags} $R {head}:refs/heads/work"
     result = exact_shell_replay(repo, remote, command, environment={"R": "origin extra:refs/heads/extra"})
     if result["hook_rc"] == 0:
         assert result["shell_rc"] == 0, result
@@ -127,7 +127,7 @@ def test_shell_expansion_rejected(tmp_path, remote_token, fixed):
     """Expansion spellings and quoted or escaped decoys are outside the allowlist."""
     repo, remote, head, _ = scene(tmp_path)
     flags = FIXED if fixed else "-u"
-    command = (render([GIT, "push", *flags.split()]) + " " + remote_token + " " + quote_all(f"{head}:refs/heads/work")) if fixed else f"{GIT} push {flags} {remote_token} {head}:refs/heads/work"
+    command = (render(["command", GIT, "push", *flags.split()]) + " " + remote_token + " " + quote_all(f"{head}:refs/heads/work")) if fixed else f"{GIT} push {flags} {remote_token} {head}:refs/heads/work"
     rejected(exact_shell_replay(repo, remote, command, environment={"R": "origin"}))
 
 
@@ -147,12 +147,12 @@ def test_shell_commandshape_rejected(tmp_path, attack, fixed):
     fake = fake_dir / "git"
     fake.write_text(f"#!/bin/sh\nexec {shlex.quote(GIT)} push origin extra:refs/heads/extra\n")
     fake.chmod(0o755)
-    command = render(canonical_tokens(repo, head)) if fixed else f"{GIT} {tail}"
+    command = render(["command", *canonical_tokens(repo, head)]) if fixed else f"{GIT} {tail}"
     shell = BASH
     if attack == "path-assignment":
         command = f"PATH={shlex.quote(str(fake_dir))}:$PATH git {tail}"
     elif attack == "fake-git":
-        command = render([str(fake), *canonical_tokens(repo, head)[1:]]) if fixed else f"{shlex.quote(str(fake))} {tail}"
+        command = render(["command", str(fake), *canonical_tokens(repo, head)[1:]]) if fixed else f"{shlex.quote(str(fake))} {tail}"
     elif attack == "function":
         command = f"git() {{ {GIT} push origin extra:refs/heads/extra; }}; git {tail}"
     elif attack == "global-alias":
@@ -177,11 +177,11 @@ def test_shell_commandshape_rejected(tmp_path, attack, fixed):
     elif attack == "bad-quote":
         command += " '"
     elif attack == "global-option":
-        command = render([GIT, "-c", "push.followTags=true", *canonical_tokens(repo, head)[1:]]) if fixed else f"{GIT} -c push.followTags=true {tail}"
+        command = render(["command", GIT, "-c", "push.followTags=true", *canonical_tokens(repo, head)[1:]]) if fixed else f"{GIT} -c push.followTags=true {tail}"
     elif attack == "push-option":
-        command = render([GIT, "push", "--force", *canonical_tokens(repo, head)[2:]]) if fixed else f"{GIT} push --force {flags} origin {head}:refs/heads/work"
+        command = render(["command", GIT, "push", "--force", *canonical_tokens(repo, head)[2:]]) if fixed else f"{GIT} push --force {flags} origin {head}:refs/heads/work"
     elif attack == "bare-git":
-        command = render(["git", *canonical_tokens(repo, head)[1:]]) if fixed else f"git {tail}"
+        command = render(["command", "git", *canonical_tokens(repo, head)[1:]]) if fixed else f"git {tail}"
     rejected(exact_shell_replay(repo, remote, command, shell=shell))
 
 
@@ -191,7 +191,7 @@ def test_shell_literal_publishesonlypinned(tmp_path, external):
     repo, remote, head, _ = scene(tmp_path)
     fixture.git(repo, "config", "push.followTags", "true")
     fixture.git(repo, "tag", "-am", "private local tag", "local-only", head)
-    command = render(canonical_tokens(repo, head, external=external))
+    command = render(["command", *canonical_tokens(repo, head, external=external)])
     result = exact_shell_replay(repo, remote, command)
     assert result["hook_rc"] == 0 and result["shell_rc"] == 0 and result["suites"] == 1, result
     assert result["refs"] == {"refs/heads/work": head}, result
@@ -229,7 +229,7 @@ def test_shell_quotedalias_publishesonlypinned(tmp_path):
     if not ZSH:
         pytest.skip("zsh global aliases are not available on this host")
     repo, remote, head, _ = scene(tmp_path)
-    command = render(canonical_tokens(repo, head, external=True))
+    command = render(["command", *canonical_tokens(repo, head, external=True)])
     setup = "\n".join([
         "alias -g origin='origin extra:refs/heads/extra'",
         f"alias {shlex.quote(GIT)}='false'",
@@ -295,7 +295,7 @@ def test_shell_builtinoracle_publishesonlypinned(tmp_path, shell):
 def test_shell_partialquotes_rejected(tmp_path, quotation):
     """Only the exact quote-all spelling closes every alias-expansion position."""
     repo, remote, head, _ = scene(tmp_path)
-    tokens = canonical_tokens(repo, head)
+    tokens = ["command", *canonical_tokens(repo, head)]
     if quotation == "unquoted":
         command = " ".join(tokens)
     elif quotation == "executable-only":
@@ -348,7 +348,7 @@ def test_shell_implicitsubmodule_contained(tmp_path, fixed):
     # resolve to its own unpublished commit instead of failing as unknown.
     fixture.git(dependency, "branch", head, unpublished)
     flags = FIXED if fixed else "-u"
-    command = render(canonical_tokens(repo, head)) if fixed else f"{GIT} push {flags} origin {head}:refs/heads/work"
+    command = render(["command", *canonical_tokens(repo, head)]) if fixed else f"{GIT} push {flags} origin {head}:refs/heads/work"
     result = exact_shell_replay(repo, remote, command)
     child_after = fixture.git(child_remote, "rev-parse", "refs/heads/work")
     result["child_changed"] = child_after != initial
@@ -373,7 +373,7 @@ def test_snapshot_validatedhead_rejected(tmp_path, monkeypatch, fixed):
         return original(args, out, err)
     monkeypatch.setattr(loom_checker, "_cmd_push", move_before_snapshot)
     flags = FIXED if fixed else "-u"
-    command = render(canonical_tokens(repo, head)) if fixed else f"{GIT} push {flags} origin {head}:refs/heads/work"
+    command = render(["command", *canonical_tokens(repo, head)]) if fixed else f"{GIT} push {flags} origin {head}:refs/heads/work"
     monkeypatch.setattr(loom_checker, "read_hook_payload", lambda: {"cwd": str(repo), "tool_input": {"command": command}})
     monkeypatch.chdir(repo)
     output, errors = io.StringIO(), io.StringIO()

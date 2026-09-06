@@ -2246,7 +2246,7 @@ def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
     head = git(repo, "rev-parse", "HEAD")
     trusted_git = str(Path(shutil.which("git")).resolve())
     command = loom_checker.render_quote_all([
-        trusted_git, "push", "--no-follow-tags", "--recurse-submodules=no",
+        "command", trusted_git, "push", "--no-follow-tags", "--recurse-submodules=no",
         "-u", "origin", f"{head}:refs/heads/work",
     ])
     result = run_hook({"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo)}, cwd=tmp_path)
@@ -2300,7 +2300,7 @@ def test_hook_mode_honours_git_dash_c_over_payload_cwd(tmp_path: Path) -> None:
     head = git(target, "rev-parse", "HEAD")
     trusted_git = str(Path(shutil.which("git")).resolve())
     command = loom_checker.render_quote_all([
-        trusted_git, "-C", str(target), "push", "--no-follow-tags",
+        "command", trusted_git, "-C", str(target), "push", "--no-follow-tags",
         "--recurse-submodules=no", "-u", "origin",
         f"{head}:refs/heads/work",
     ])

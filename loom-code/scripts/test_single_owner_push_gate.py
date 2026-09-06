@@ -32,7 +32,7 @@ def quote_all(tokens):
 
 def immutable_push_command(repo, head, *, external=False):
     return quote_all([
-        TRUSTED_GIT, *(["-C", str(repo)] if external else []), "push",
+        "command", TRUSTED_GIT, *(["-C", str(repo)] if external else []), "push",
         "--no-follow-tags", "--recurse-submodules=no", "-u", "origin",
         f"{head}:refs/heads/work",
     ])
