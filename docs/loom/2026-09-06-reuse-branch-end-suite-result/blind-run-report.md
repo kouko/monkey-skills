@@ -6,17 +6,17 @@
 
 ### 1. 完整 branch-end review 與使用者接受完成後，支援的本機 host hook 在實際 push transition 內執行 repository 完整測試唯一一次；成功才允許 network push，Ship 不再另外預跑同一 checker。
 
-- **如何驗證**：從發布動作開始重播同一個已接受版本，分別觀察舊流程與新流程實際啟動完整測試的次數；另外確認發布動作不再先行執行同一檢查，且缺少支援的本機攔截時會停止。
-- **發生了什麼**：新流程的七次樣本每次都只啟動一次完整測試並作出放行決定；舊流程每次啟動兩次。發布流程沒有額外預跑，缺少或未啟用本機攔截時會阻擋。
-- **Evidence**：`test_revisions_observe_different_execution_owners`、`test_candidate_one_call_faster_same_verdict`、`test_ship_issues_named_branch_without_explicit_checker_preflight`、`test_ship_supported_host_hook_is_sole_package_suite_owner`、`test_ship_missing_or_inactive_supported_host_hook_blocks`；輸出：`2 passed in 2.59s`、`8 passed, 1 warning in 0.07s`
-- **Verdict**：works — 完整測試只有本機推送檢查這一個執行者。
+- **如何驗證**：把舊版與含安全修正的新版本 checker、hook 定義及完整 contract package 分別從 Git 取出，在同一個已接受 checkpoint 上執行舊版的明確 preflight 加 hook，以及新版的 hook-only 路徑；另用臨時本機 bare remote 驗證 hook 放行後真正發布的物件。
+- **發生了什麼**：新版七次樣本每次都由真實 hook 啟動完整測試一次並放行；舊版每次由真實 preflight 與 hook 各啟動一次。先前的反例證明 detached writer 可在 hook 回傳後移動本機 HEAD；`c0a93c6f` 沒有宣稱阻止這類後續寫入，而是要求 push 使用已驗證的完整 SHA，因此本機測試確認 remote 收到的是驗證過的物件，不是稍後產生的 commit。
+- **Evidence**：`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`、`test_refspec_exacthead_accepted`、`test_gate_immutable_pinsreviewed`、`test_ship_issues_named_branch_without_explicit_checker_preflight`、`test_ship_supported_host_hook_is_sole_package_suite_owner`、`test_ship_missing_or_inactive_supported_host_hook_blocks`；量測 probe：`2 passed in 28.26s`
+- **Verdict**：works — 完整測試在新版 Ship 路徑只有 hook 這一個執行者，且發布來源綁定已驗證物件；這不是 process-containment 保證。
 
 ### 2. push checker 仍從 Git 重新確認 branch-end checkpoint、reviewed commit 與 Loom 允許的 review-only／intent-close 紀錄；它只相信當次實際觀察到的完整測試 exit code，不相信 agent 寫入的歷史結果。
 
-- **如何驗證**：用可放行、版本指向錯誤、偽造成功紀錄、額外內容修改及允許的結案紀錄逐一嘗試；每次都讓本機檢查實際執行當下命令。
-- **發生了什麼**：正確且未變動的版本獲准；錯誤版本、偽造紀錄與額外內容都被阻擋；既有的純結案紀錄仍可通過。歷史上寫成成功但當次退出失敗的案例被阻擋。
-- **Evidence**：`test_a_probe_command_that_exits_one_blocks_despite_result_pass`、`test_reviewed_sha_pointing_elsewhere_is_blocked`、`test_review_only_head_with_branch_form_status_line_passes`、`test_review_only_head_with_a_third_file_is_blocked`、`test_ship_push_review_only_head_admits_close_shape`；輸出包含於 `17 passed in 21.43s` 與 `8 passed, 1 warning in 0.07s`
-- **Verdict**：works — 放行依據是當次觀察與版本內容，不是先前寫下的結果。
+- **如何驗證**：用可放行、版本指向錯誤、可變或錯誤 refspec、偽造成功紀錄、額外內容修改及允許的結案紀錄逐一嘗試；每次都讓本機檢查實際執行當下命令。
+- **發生了什麼**：正確 checkpoint 配合完整目前 SHA 與完整目前 branch destination 獲准；可變、縮寫、錯誤或刪除 refspec 在任何 suite 執行前被阻擋。偽造紀錄與額外內容也被阻擋，既有純結案紀錄仍可通過，歷史上寫成成功但當次退出失敗的案例仍被阻擋。
+- **Evidence**：`test_refspec_mutablesource_rejected`、`test_refspec_exacthead_accepted`、`test_a_probe_command_that_exits_one_blocks_despite_result_pass`、`test_reviewed_sha_pointing_elsewhere_is_blocked`、`test_review_only_head_with_a_third_file_is_blocked`、`test_ship_push_review_only_head_admits_close_shape`
+- **Verdict**：works — 放行依據是當次 gate 觀察與綁定的版本物件，不是先前寫下的結果或 push 當下可變的 branch 名稱。
 
 ### 3. 這個行為不依賴程式語言、框架、副檔名或 Monkey Skills 專用的原始碼路徑，採用 Loom 且安裝支援 host hook 的其他 repository 也能使用。
 
@@ -34,36 +34,36 @@
 
 ### 5. 完整測試失敗後，若修正會修改 tracked repository 內容，就回到 Build 並重新完成完整 branch-end review；若只修復本機環境且 Git 內容完全不變，可保留 checkpoint 並重試 push gate。
 
-- **如何驗證**：讓測試或最後一個攻擊案例在成功退出前修改已追蹤、暫存、未追蹤內容或移動版本，再以完全未變動的同一版本連續重試兩次。
-- **發生了什麼**：任何內容或版本變動都被阻擋並指示重新完成製作與審查；完全未變動的版本可連續重試並獲准，沒有消耗一次性憑證。
-- **Evidence**：`test_push_packageheadmove_rejected`、`test_push_lastadversarymutation_rejected`、`test_push_firstadversarymutation_rejected`、`test_push_packagetrackedmutation_rejected`、`test_push_unchangedrepeat_released`、`test_push_existingguard_preserved`；輸出：`19 passed in 25.41s`
-- **Verdict**：works — 是否需要重做審查由版本內容有沒有改變決定。
+- **如何驗證**：讓測試或攻擊案例在 checker 回傳前修改已追蹤、暫存、未追蹤內容或移動版本；另重播 detached writer 在 hook 回傳後才移動 HEAD 的既知反例，並以本機 bare remote 觀察實際發布物件；最後以未變動版本連續重試兩次。
+- **發生了什麼**：同步發生的內容或版本變動都被阻擋並要求回到 Build／review；完全未變動的版本可重試。舊版反例確實能在 hook 成功後改動本機 repository，所以先前「任何變動都被 gate 阻擋」的說法是錯的；`c0a93c6f` 改以 immutable refspec 使這個後置變動無法取代已驗證的發布物件。
+- **Evidence**：`test_push_packageheadmove_rejected`、`test_push_lastadversarymutation_rejected`、`test_push_firstadversarymutation_rejected`、`test_push_packagetrackedmutation_rejected`、`test_push_unchangedrepeat_released`、`test_gate_concurrent_reproduced`、`test_gate_immutable_pinsreviewed`
+- **Verdict**：works — tracked 修正仍使 checkpoint 失效；環境修復且 Git 不變可重試；對 hook 回傳後的 detached writer，保證是「不發布未驗證 commit」，不是「阻止本機 mutation」。
 
 ### 6. 實作途中以同一個已接受 checkpoint 重播從 Ship Push step 到本機 gate 阻擋或釋放 network push 的相同範圍，記錄 baseline 與 candidate 實際完整測試次數及 monotonic 等待秒數；candidate 恰好執行一次、少於 baseline、發布 verdict 相同且實測等待下降。
 
-- **如何驗證**：對相同固定案例交替執行七組舊版與新版重播，以單調時鐘量測完整邊界，並以實際追加紀錄計算呼叫次數；流程在可能向外傳送前停止。
-- **發生了什麼**：舊版共執行十四次，新版共執行七次；每組是二次對一次，兩者全部判定放行。舊版等待中位數為 0.240689416 秒，新版為 0.138872000 秒，下降 0.101817416 秒，約 42.3%。
-- **Evidence**：`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`test_candidate_one_call_faster_same_verdict`；輸出：`2 passed in 2.59s`
+- **如何驗證**：從 Git 取出兩個版本的真實 checker bundle 與 hook 定義，在同一個已接受 checkpoint 上交替執行七組；由 repository 宣告的 package command 以 monotonic clock 自行記錄每次執行時間，外層再量測直到真實 hook verdict，流程在 network transfer 前停止。
+- **發生了什麼**：舊版實際走 preflight 加 hook，共執行十四次；新版實際走 hook-only，共執行七次。兩者全部由真實 gate 判定放行。舊版完整邊界中位數為 2.121336084 秒，新版為 1.154450250 秒，下降 0.966885834 秒，約 45.6%。
+- **Evidence**：`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`；輸出：`2 passed in 28.26s`
 - **Verdict**：works — 固定案例的實測次數減半，判定不變且等待下降。
 
 ## Review summary
 
-六條驗收全部可重現。功能上沒有阻擋或重要問題；英文規則稽核發現一項不影響執行的文字一致性問題。
+六條驗收目前都有可執行證據。前一輪發現的 detached-writer 發布風險已由 `c0a93c6f` 的 immutable source 修正，虛構 verdict 的量測也已換成真實版本入口；是否關閉 findings 仍由原 reviewer 在本輪複查決定。英文規則稽核另有一項不影響執行的文字一致性問題。
 
 | 可讀標籤 | 英文規則結果 | Evidence |
 |---|---|---|
 | 計畫 | 部分符合；工作拆分與風險為英文，逐字保留的使用者問題為繁體中文 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/plan.md:33` |
 | 規格 | 部分符合；需求與設計決定為英文，操作流程為繁體中文；七條需求皆使用規定格式 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:7`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58`、`REQ-1`–`REQ-7` |
-| 審查發現 | 符合；文字為英文且皆以允許的評論標籤開頭 | `review.json` 的八項 findings；標籤皆為 `issue (blocking)` |
+| 審查發現 | 符合；文字為英文且以允許的評論標籤開頭 | `review.json` 的 findings |
 | 驗證證據 | 符合；量測說明、程式說明與案例說明皆為英文 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py` |
-| 測試名稱 | 符合；新增案例均使用三段式名稱 | `test_<unit>_<state>_<expected>`；32 個新增名稱經結構檢查皆符合 |
-| 提交訊息 | 符合；本次變更的 27 則提交訊息皆為英文 | `git log --format='%h%x09%s' 4e158201..2591f9dd` |
+| 測試名稱 | 符合；新增案例均使用三段式名稱 | 對 `git diff --unified=0 4e158201 -- '*.py'` 的新增行套用 `^+def (test_[A-Za-z0-9_]+)\(`：46 個 test definitions、36 個 unique names；10 個重複名稱來自 evidence probe 與 graduated probe 的成對案例 |
+| 提交訊息 | 符合；本次變更的 commit subjects 為英文 | `git log --format='%h%x09%s' 4e158201..HEAD` |
 
-非阻擋發現：規格的操作流程不是英文。若要完全符合規則，將該段翻成英文，同時保留已確認的行為不變。
+非阻擋發現：規格的操作流程不是英文。本輪不修改已確認的 `spec.md`，以免改變使用者已確認的 fingerprint；此 nit 留待 checkpoint 流程處理。
 
 ## 對你既有的資料做了什麼
 
-驗證只在乾淨副本與臨時建立的專案中讀取既有版本與設定，沒有接觸或遷移你的個人資料，也沒有發出真正的推送。若完整測試在實際使用時改動專案內容，檢查會阻擋推送但不替你復原，因此沒有自動備份；原有檔案格式沒有改變。
+驗證只在乾淨副本與臨時建立的專案中讀取既有版本與設定，沒有接觸或遷移你的個人資料，也沒有向外部或 network remote 推送。immutable-source 攻擊案例會把 synthetic commit 推到臨時本機 bare remote。checker 回傳前發生的 repository mutation 會阻擋；detached writer 若在回傳後才動作，仍可能改變本機內容，但 `c0a93c6f` 綁定的已驗證 SHA 不會被它替換成發布來源。流程不替你復原或備份這類本機變動，原有檔案格式沒有改變。
 
 ## 我替你決定的事
 
