@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -64,7 +65,13 @@ def test_hook_selectedrepomutation_rejected(tmp_path):
     unrelated = tmp_path / "unrelated"
     unrelated.mkdir()
     before = fixture.git(repo, "rev-parse", "HEAD")
-    payload = {"cwd": str(unrelated), "tool_input": {"command": f"git -C {shlex.quote(str(repo))} push origin work"}}
+    trusted_git = str(Path(shutil.which("git")).resolve())
+    command = fixture.loom_checker.render_quote_all([
+        "command", trusted_git, "-C", str(repo), "push", "--no-follow-tags",
+        "--recurse-submodules=no", "-u", "--no-verify", "origin",
+        f"{before}:refs/heads/work",
+    ])
+    payload = {"cwd": str(unrelated), "tool_input": {"command": command}}
     result = subprocess.run([sys.executable, str(fixture.CHECKER), "push", "--hook"], input=json.dumps(payload), capture_output=True, text=True, cwd=unrelated)
     assert fixture.git(repo, "rev-parse", "HEAD") != before, "attack did not move target HEAD"
     assert not list(unrelated.iterdir()), "wrong repository was modified"
