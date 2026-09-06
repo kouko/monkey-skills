@@ -335,18 +335,23 @@ def test_read_base_graduated_ids_cat_file_missing_blob_marker_raises_schema_viol
                 stderr="",
             )
         # any other spawn stands in for the blob-reading call
-        # (cat-file --batch or equivalent), reporting the blob as
-        # missing inline per git's documented format. Reads the blob
-        # sha list back out of whatever stdin-carrying argument the
-        # production call used, instead of re-hardcoding it, so this
-        # double stays correct regardless of how that plumbing works.
-        stdin_text = kw.get("stdin") or (a[0] if a else "")
-        first_sha = stdin_text.strip().splitlines()[0]
+        # (cat-file --batch or equivalent, run with binary=True),
+        # reporting the blob as missing inline per git's documented
+        # format. Reads the blob sha list back out of whatever
+        # stdin-carrying argument the production call used, instead of
+        # re-hardcoding it, so this double stays correct regardless of
+        # how that plumbing works. Returns BYTES stdout — the
+        # production reader now runs this call in binary mode
+        # (`binary=True`) and indexes/slices raw bytes, never `str`.
+        stdin_bytes = kw.get("stdin") or (a[0] if a else b"")
+        if isinstance(stdin_bytes, str):
+            stdin_bytes = stdin_bytes.encode()
+        first_sha = stdin_bytes.decode().strip().splitlines()[0]
         return subprocess.CompletedProcess(
             args=args,
             returncode=0,
-            stdout=f"{first_sha} missing\n",
-            stderr="",
+            stdout=f"{first_sha} missing\n".encode(),
+            stderr=b"",
         )
 
     check_map_fog._run_git = fake
