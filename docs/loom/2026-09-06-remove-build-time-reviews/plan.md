@@ -31,7 +31,7 @@ charter: 1.0
 - Risk: agent-decided — special-case only spec scope; branch-end reviewer, adversary, blind, fix-round, and second-vendor contracts remain unchanged.
 
 **W2-01 Synchronize public contracts, versions, and mirrors**  after: W1-03  acceptance: 6
-- Files: `loom-code/.claude-plugin/plugin.json`, `loom-code/.codex-plugin/plugin.json`, `loom-code/CHANGELOG.md`, `loom-design/.claude-plugin/plugin.json`, `loom-design/.codex-plugin/plugin.json`, `loom-design/CHANGELOG.md`, `.claude-plugin/marketplace.json`, `README.md`, `.codex/hooks/**`
+- Files: `loom-code/{.claude-plugin,.codex-plugin,CHANGELOG.md}`, `loom-design/{.claude-plugin,.codex-plugin,CHANGELOG.md}`, `.claude-plugin/marketplace.json`, `README.md`, `.codex/hooks/**`
 - Test: A6 positive: manifests-and-mirror-sync; negative: old-checkpoint-prose-absent.
 - Risk: agent-decided — bump only changed plugins and regenerate mirrors after source settles; preserve unrelated plugin versions.
 
@@ -41,7 +41,7 @@ charter: 1.0
 - Risk: agent-decided — fixed patches prevent regenerated-code drift; report unavailable runtime or model as UNGRADABLE, never as a speed win.
 
 **W2-memory Memory step — graduated probes and store entries**  after: W2-02  acceptance: none
-- Files: `loom-code/scripts/test_probes_review_reduction.py`, `loom-code/scripts/test_probes_charter_release_1_6_0.py`, `loom-code/scripts/test_probes_language_policy_wave_end.py`, `loom-code/scripts/test_probes_memory_step.py`, `loom-code/scripts/test_probes_memory_step_wave_end.py`, `loom-code/scripts/test_probes_positioning_branch_end.py`, `loom-code/scripts/test_probes_rehearsal_changelog_carries_1_6_1.py`, `loom-code/scripts/test_probes_lanes_wave_end.py`, `loom-code/scripts/test_probes_rehearsal_no_history_class_skips_on_main.py`, `loom-code/scripts/test_write_plan_intake.py`, `scripts/test_loom_plugin_install_layout.py`, `docs/loom/memory/**`
+- Files: `loom-code/scripts/test_probes_*.py`, `loom-code/scripts/test_write_plan_intake.py`, `scripts/test_loom_plugin_install_layout.py`, `requirements-dev.txt`, `docs/loom/memory/**`
 - Test: positive: graduated-probes-pass; negative: memory-integrity-detects-drift.
 - Risk: agent-decided — graduate only unique executable probes and file only durable lessons earned by implementation.
 
