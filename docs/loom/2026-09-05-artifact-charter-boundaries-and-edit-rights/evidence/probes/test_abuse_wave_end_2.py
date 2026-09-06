@@ -33,8 +33,10 @@ Re-run any one test from the repo root:
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -231,11 +233,13 @@ def test_codex_mirror_divergence_from_w2_01_edit_is_actually_caught() -> None:
     """W2-01 added the same `edits_after` comment block to BOTH
     loom-code/contract/templates/plan.md and its .codex/hooks mirror in the
     same commit. Reproduce the attack of only landing it on one side: patch
-    the loom-code copy in place, leave the mirror untouched, and run the
-    shipped byte-comparison test node from
-    test_probes_language_policy_branch_end.py against the real repo tree --
-    it must fail, not silently pass a stale mirror through. The file is
-    restored in `finally` regardless of outcome."""
+    the loom-code copy, leave the mirror untouched, and run the shipped
+    byte-comparison test node from test_probes_language_policy_branch_end.py
+    against that tree -- it must fail, not silently pass a stale mirror
+    through. The mutation happens in a scratch copy of the three files the
+    node reads, laid out at the same relative paths, never in the
+    repository tree: an in-place patch-and-restore raced the real mirror
+    test under xdist and produced a phantom failure in the package suite."""
     original = read(LOOM_PLAN_TEMPLATE)
     assert original == read(CODEX_PLAN_TEMPLATE), (
         "the two template copies are not byte-equal before the probe even "
@@ -246,16 +250,22 @@ def test_codex_mirror_divergence_from_w2_01_edit_is_actually_caught() -> None:
         "Landed tasks stay exactly as they are.",
     )
     assert mutated != original, "the probe's target sentence is not present verbatim to mutate"
+    scratch = Path(tempfile.mkdtemp(prefix="adv_charter_mirror_"))
     try:
-        LOOM_PLAN_TEMPLATE.write_text(mutated, encoding="utf-8")
+        for rel in ("loom-code/contract/templates", ".codex/hooks/contract/templates"):
+            shutil.copytree(REPO / rel, scratch / rel)
+        (scratch / "loom-code/contract/templates/plan.md").write_text(mutated, encoding="utf-8")
+        test_copy = scratch / LANGUAGE_POLICY_BRANCH_END.relative_to(REPO)
+        test_copy.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(LANGUAGE_POLICY_BRANCH_END, test_copy)
         result = subprocess.run(
             [sys.executable, "-m", "pytest",
-             str(LANGUAGE_POLICY_BRANCH_END), "-q",
+             str(test_copy), "-q", "-p", "no:cacheprovider",
              "-k", "codex_mirror or mirror"],
-            capture_output=True, text=True, cwd=str(REPO),
+            capture_output=True, text=True, cwd=str(scratch),
         )
     finally:
-        LOOM_PLAN_TEMPLATE.write_text(original, encoding="utf-8")
+        shutil.rmtree(scratch, ignore_errors=True)
     assert result.returncode != 0, (
         "the codex-mirror byte-equality suite did not fail when only the "
         f"loom-code copy was patched:\n{result.stdout}{result.stderr}"
@@ -342,8 +352,25 @@ def _text_at(rev: str, path: Path) -> str:
     return result.stdout
 
 
+def _pre_branch_base() -> str:
+    """The trunk commit this branch grew from -- `origin/main` first, as CI
+    sees it; skip when it does not resolve, since a literal sha would bind
+    the probe to one local history and go red on every rebase."""
+    trunk = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", "origin/main"],
+        capture_output=True, text=True, cwd=str(REPO),
+    )
+    if trunk.returncode != 0:
+        pytest.skip("origin/main does not resolve here; the pre-branch text has no anchor")
+    base = subprocess.run(
+        ["git", "merge-base", "HEAD", "origin/main"],
+        capture_output=True, text=True, cwd=str(REPO), check=True,
+    )
+    return base.stdout.strip()
+
+
 def test_implementer_commit_scope_qualifier_dropped_and_unguarded() -> None:
-    """Before this branch (241817bc), implementer.md said commit `scope` is
+    """Before this branch (at the merge-base with origin/main), implementer.md said commit `scope` is
     'the kebab-case plugin OR module name' -- the repo's own git history
     (`chore(loom): ...`) uses the bare plugin family name 'loom' as a scope,
     not a module name. W2-03's compression pass rewrote this to 'the
@@ -354,7 +381,7 @@ def test_implementer_commit_scope_qualifier_dropped_and_unguarded() -> None:
     `loom` as invalid because it names no module.
 
     This probe FAILS on purpose -- it is the finding, not a false alarm."""
-    before = _text_at("241817bc", IMPLEMENTER_MD)
+    before = _text_at(_pre_branch_base(), IMPLEMENTER_MD)
     after = read(IMPLEMENTER_MD)
     assert "kebab-case plugin or module name" in before, (
         "the probe's premise (the fact existed pre-branch) does not hold; "
@@ -379,7 +406,7 @@ def test_implementer_commit_scope_qualifier_dropped_and_unguarded() -> None:
     assert "plugin" in scope_sentence, (
         f"implementer.md's commit-scope sentence no longer says a commit "
         f"scope may name the plugin (now: {scope_sentence!r}; before "
-        "241817bc: '`scope` the kebab-case plugin or module name.') while "
+        "pre-branch: '`scope` the kebab-case plugin or module name.') while "
         "the repo's own commits (`chore(loom): ...`) use exactly that "
         "plugin-level scope -- this is the dropped fact, recorded as a "
         "finding, not fixed here"

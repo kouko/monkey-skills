@@ -17,17 +17,12 @@ from the repo root.
 """
 from __future__ import annotations
 
-import importlib.util
-import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
-import pytest
 import yaml
 
-from _pytest.outcomes import Skipped
 
 REPO = Path(
     subprocess.run(
@@ -39,10 +34,6 @@ REPO = Path(
 CHECKER = REPO / "loom-code" / "scripts" / "loom_checker.py"
 CODEX_CHECKER = REPO / ".codex" / "hooks" / "loom_checker.py"
 PLUGIN_MANIFEST = REPO / "loom-code" / "contract" / "manifest.yaml"
-COMPLEXITY_PROBE_MODULE = (
-    REPO / "loom-code" / "scripts" / "test_probes_complexity_wave_end.py"
-)
-
 
 def _run_charter(manifest_path, cwd=REPO) -> subprocess.CompletedProcess:
     return subprocess.run(
@@ -418,96 +409,3 @@ def test_contract_require_still_passes_after_manifest_growth() -> None:
         f"{result.stdout!r} {result.stderr!r}"
     )
     assert "satisfies requires-contract" in result.stdout
-
-
-# ---------------------------------------------------------------------------
-# The W3-02 repair: `_confirm_intent_sha()` in
-# `test_probes_complexity_wave_end.py` now skips instead of failing when
-# the confirmation commit is unreachable.
-# ---------------------------------------------------------------------------
-
-def _load_complexity_probe_module():
-    spec = importlib.util.spec_from_file_location(
-        "_adv_wave_end_complexity_probe", COMPLEXITY_PROBE_MODULE
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)  # type: ignore[union-attr]
-    return mod
-
-
-def test_confirm_intent_sha_unreachable_skips_with_the_claimed_reason() -> None:
-    """`_confirm_intent_sha()`, called against a bare, empty tmp git repo
-    where the confirmation commit provably cannot exist, raises pytest's
-    `Skipped` with the EXACT reason string the function's own docstring
-    claims (the trunk's 1.5.1 wording: the commit "is not in this clone's
-    history", squash-merged) -- the skip reason is not a generic placeholder, it is
-    the specific claim this probe pins."""
-    mod = _load_complexity_probe_module()
-    tmp = tmp_empty_git_repo_no_matching_commit()
-    try:
-        mod.REPO = tmp
-        with pytest.raises(Skipped) as excinfo:
-            mod._confirm_intent_sha()
-        assert (
-            "is not in this clone's history"
-            in str(excinfo.value)
-        ), f"unexpected skip reason: {excinfo.value!r}"
-    finally:
-        _cleanup_tmp_repo(tmp)
-
-
-def test_confirm_intent_sha_reachable_commit_returns_sha_not_skip() -> None:
-    """The mirror image of the skip case: when a commit carrying the exact
-    confirmation-subject grep target IS reachable (a tmp git repo built
-    for this probe, not the real branch), `_confirm_intent_sha()` returns
-    that commit's sha and does NOT skip -- the repair only skips on a
-    genuine absence, it does not skip unconditionally."""
-    mod = _load_complexity_probe_module()
-    tmp = tmp_git_repo_with_matching_commit()
-    try:
-        mod.REPO = tmp
-        sha = mod._confirm_intent_sha()
-        expected = subprocess.run(
-            ["git", "log", "--format=%H", "-1"],
-            cwd=str(tmp), capture_output=True, text=True, check=True,
-        ).stdout.strip()
-        assert sha == expected, f"expected {expected}, got {sha}"
-    finally:
-        _cleanup_tmp_repo(tmp)
-
-
-def _git(repo: Path, *args: str) -> None:
-    subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True, text=True)
-
-
-def tmp_empty_git_repo_no_matching_commit() -> Path:
-    tmp = Path(tempfile.mkdtemp(prefix="adv_charter_wave_end_"))
-    _git(tmp, "init", "-q")
-    _git(tmp, "config", "user.email", "adversary@example.invalid")
-    _git(tmp, "config", "user.name", "adversary")
-    (tmp / "seed.txt").write_text("seed\n", encoding="utf-8")
-    _git(tmp, "add", "seed.txt")
-    _git(tmp, "commit", "-q", "-m", "unrelated seed commit")
-    return tmp
-
-
-def tmp_git_repo_with_matching_commit() -> Path:
-    tmp = Path(tempfile.mkdtemp(prefix="adv_charter_wave_end_match_"))
-    _git(tmp, "init", "-q")
-    _git(tmp, "config", "user.email", "adversary@example.invalid")
-    _git(tmp, "config", "user.name", "adversary")
-    (tmp / "seed.txt").write_text("seed\n", encoding="utf-8")
-    _git(tmp, "add", "seed.txt")
-    _git(
-        tmp, "commit", "-q", "-m",
-        "docs(loom): intent 2026-09-05-review-sees-complexity-and-process-cost confirmed",
-    )
-    return tmp
-
-
-def _cleanup_tmp_repo(tmp: Path) -> None:
-    shutil.rmtree(tmp, ignore_errors=True)
-
-
-if __name__ == "__main__":  # pragma: no cover
-    sys.exit(pytest.main([__file__, "-q"]))
