@@ -11,13 +11,23 @@ Patch. Three scripts run faster on the same inputs; behaviour, output,
 messages and exit codes are unchanged, so this is a patch bump, not a
 minor one.
 
-1. `loom_checker.py` moves `import yaml` inside `load_manifest()`. The
-   PreToolUse hook's non-push fast path no longer pays the ~8.7 ms yaml
-   import on every Bash tool call (measured with `python3 -X importtime`).
+1. `loom_checker.py` moves `import yaml` inside `load_manifest()`, and
+   (branch-end fix) moves `import traceback` off the same module scope
+   into `load_manifest`'s `except ImportError:` branch, where only a
+   missing `yaml` reaches it. Net: the PreToolUse hook's non-push fast
+   path drops from ~22.0 ms to ~15.4 ms (`python3 -X importtime`, sum of
+   the trace's self-time column, 3 runs each, this repo/macOS, load
+   average ~19-81 during measurement).
 2. `check_doc_citations.py` adds a basename index for the three
-   suffix-resolution sites. On this repo's 3,380 tracked markdown files:
-   ~1.66 s → ~0.79 s wall (single process, xargs form as CI runs it;
-   18.1M `endswith` calls eliminated). Output is byte-identical.
+   suffix-resolution sites, plus (branch-end fix) memoized
+   `find_repo_root`/`list_repo_files`/`is_file()`/target-text reads. On
+   this repo's 3,383 tracked markdown files at commit `ae9f2320`
+   (`git ls-files '*.md' | wc -l`): subprocess wall (xargs form, as CI
+   runs it) 1.75-2.28 s → 0.55-0.56 s; in-process `perf_counter` (less
+   noisy) 1.656-1.687 s → 0.436-0.497 s — this repo, macOS, load average
+   ~24-96 during measurement (the task's own acceptance bound is 0.4 s;
+   this machine's load makes the absolute numbers unreliable, so both
+   are reported alongside the ~3.2-3.6x ratio). Output is byte-identical.
 3. `hooks/session-start` scans the manifest with one awk instead of four.
    Injected text is byte-identical (sha256-pinned).
 
