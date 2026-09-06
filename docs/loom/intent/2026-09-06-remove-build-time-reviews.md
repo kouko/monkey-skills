@@ -2,7 +2,7 @@
 originator: kouko
 kind: product
 needs-design: yes — 審查觸發時機會改變，現有規格仍要求 after-task 與 wave-end checkpoint
-status: confirmed 2026-09-06
+status: closed 2026-09-06 — branch 2026-09-06-remove-build-time-reviews
 
 ## Problem
 Loom 目前不只在個別任務或 wave 後自動啟動正式審查，產品變更也在實作前固定執行多位審閱者、對抗審查與盲跑。即使最後仍要做一次完整分支結束審查，前面仍反覆等待審閱者、處理審查紀錄並重跑驗證，拖慢整體交付。
