@@ -12,9 +12,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import tempfile
 from pathlib import Path
-
-import pytest
 
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "loom-code/scripts/loom_checker.py").is_file())
@@ -118,14 +117,21 @@ def test_intake_foreigncwd_rejected(tmp_path):
     assert result.returncode == 1 and "intake.test-case-pair" in result.stderr
 
 
-@pytest.mark.parametrize("reference", ["1 2", "9" * 5000], ids=["missing-comma", "huge-number"])
-def test_readiness_hostile_rejected(tmp_path, reference):
+def assert_readiness_hostile_rejected(tmp_path, reference):
     """Malformed and huge numeric ownership must yield a controlled BLOCK, not crash."""
     repo, _, plan = fixture(tmp_path)
     plan.write_text(plan.read_text().replace("acceptance: 1", f"acceptance: {reference}"))
     result = run(repo)
     assert result.returncode == 1 and "BLOCK intake.test-case-pair" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_readiness_missing_comma_rejected(tmp_path):
+    assert_readiness_hostile_rejected(tmp_path, "1 2")
+
+
+def test_readiness_huge_number_rejected(tmp_path):
+    assert_readiness_hostile_rejected(tmp_path, "9" * 5000)
 
 
 def test_readiness_punctuationcase_rejected(tmp_path):
@@ -149,3 +155,18 @@ def test_review_missingdependency_rejected(tmp_path):
     repo, _, _ = fixture(tmp_path, "required — security contract")
     result = run(repo)
     assert result.returncode == 1 and "intake.spec-pass" in result.stderr
+
+
+if __name__ == "__main__":
+    cases = sorted(
+        (name, case)
+        for name, case in globals().items()
+        if name.startswith("test_") and callable(case)
+    )
+    with tempfile.TemporaryDirectory(prefix="loom-branch-end-adversary-") as raw:
+        root = Path(raw)
+        for name, case in cases:
+            case_root = root / name
+            case_root.mkdir()
+            case(case_root)
+    print(f"{len(cases)} adversarial cases passed")
