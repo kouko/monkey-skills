@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+  "reviewed_sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
   "scope": "branch-end",
   "vendors": [
     "codex"
@@ -482,6 +482,36 @@
       "findings": [],
       "confirmation": "The revised gate sentence now matches the strict-between trunk condition, fixes my wording nit, and the other three files contain only probe renames and report-record wording; nothing behavioral or outside those four files changed.",
       "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + skill",
+      "scope": "branch-end",
+      "round": 8,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "confirmation": "The two commits contain only the accurate 1.8.1 stamps/CHANGELOG and a stale test-pin correction that still strictly verifies the banner against plugin.json and the full mirror; no production behavior changed.",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 8,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "incorrect-fact": "PASS"
+      },
+      "findings": [],
+      "confirmation": "At f028d5f6, the post-confirmation changes are the accurate 1.8.1 version/manifest/README/hook-banner/CHANGELOG stamps plus a manifest-derived correction of the stale banner pin that preserves the full mirror assertion; no behavioral code changed.",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95"
     }
   ],
   "probes": [
@@ -863,6 +893,62 @@
       "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
       "artifact": "",
       "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -1236,10 +1322,10 @@
     }
   ],
   "cost": {
-    "rounds": 7,
-    "dispatches": 27,
+    "rounds": 8,
+    "dispatches": 29,
     "cap_changes": [],
-    "hours_plan_to_pr": 18.5
+    "hours_plan_to_pr": 19.0
   },
   "charter": "1.0",
   "second_vendor": "codex"
