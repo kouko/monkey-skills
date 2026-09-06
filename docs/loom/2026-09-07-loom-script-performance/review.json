@@ -563,11 +563,29 @@
       "started": "2026-09-07T03:01:25+0800",
       "fresh_context": false,
       "note": "fix round 2 — resumed via codex exec resume"
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-be-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T06:16:15+0800",
+      "fresh_context": false,
+      "note": "round 3 — report re-verified against the amended Acceptance 2"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sp-codex",
+      "model": "codex exec (gpt-5.6-sol)",
+      "started": "2026-09-07T06:16:15+0800",
+      "fresh_context": false,
+      "note": "round 3 — resumed reader for branch-end-01 only"
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 20,
+    "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
