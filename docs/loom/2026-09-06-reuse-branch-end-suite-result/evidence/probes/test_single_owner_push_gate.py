@@ -28,7 +28,7 @@ ROOT = next(
     if (parent / "loom-code" / "skills" / "ship" / "SKILL.md").exists()
 )
 BASELINE = "9d009c49e02a52c4838dba30a88501e0bbe79ab0"
-CANDIDATE = "b197c123fb1c0cc513fc56b3262f15aefd845b82"
+CANDIDATE = "f6e58b7269d1803feed2c2b29589109d33f17707"
 SAMPLES = 7
 WORK_SECONDS = "0.080"
 CHANGE = "2026-09-02-a"
@@ -222,6 +222,7 @@ def canonical_push_command(repo: Path, refspec: str) -> str:
     trusted = shutil.which("git")
     assert trusted is not None
     tokens = [
+        "command",
         str(Path(trusted).resolve()),
         "-C",
         str(repo.resolve()),
@@ -344,6 +345,7 @@ def test_revisions_execute_versioned_real_gate_entrypoints(tmp_path: Path) -> No
         quote_all_shell_token(token) for token in candidate_tokens
     )
     assert candidate_tokens == [
+        "command",
         str(Path(shutil.which("git")).resolve()),
         "-C",
         str((tmp_path / "candidate/repo").resolve()),
