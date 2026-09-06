@@ -222,13 +222,28 @@ def list_repo_files(repo_root: Path) -> list[str]:
     Walks the tree once, skipping `.git`. See module docstring for why
     `os.walk` (not `git ls-files`) and why over-inclusion is the safe
     direction for the suffix-match fallback below.
+
+    W1-02 (2026-09-07): builds each relative path with string ops on
+    `dirpath` instead of constructing a `Path` and calling `relative_to`
+    per file — `relative_to` alone cost 0.42s / 5,134 calls on this
+    repo's citation-check run (see the profile in the branch-end review).
+    `dirpath` is `os.fspath(repo_root)` itself for the root directory and
+    `os.fspath(repo_root) + os.sep + <subdirs>` for every descendant (how
+    `os.walk` builds it), so stripping the root prefix once per directory
+    and joining with `/` reproduces the exact same strings and the exact
+    same order as the old `Path.relative_to(...).as_posix()` call —
+    verified byte-for-byte in `test_check_doc_citations_index.py`.
     """
     files: list[str] = []
+    root_str = os.fspath(repo_root)
     for dirpath, dirnames, filenames in os.walk(repo_root):
         dirnames[:] = [d for d in dirnames if d != ".git"]
+        if dirpath == root_str:
+            rel_dir = ""
+        else:
+            rel_dir = dirpath[len(root_str) + 1 :].replace(os.sep, "/")
         for filename in filenames:
-            rel = (Path(dirpath) / filename).relative_to(repo_root)
-            files.append(rel.as_posix())
+            files.append(f"{rel_dir}/{filename}" if rel_dir else filename)
     return files
 
 
@@ -243,53 +258,43 @@ def list_repo_files(repo_root: Path) -> list[str]:
 # tiny) pruned set — the verdict (zero/one/multiple matches) is unchanged,
 # only the number of `endswith` calls shrinks.
 #
-# The index is memoized per `repo_files` LIST OBJECT, keyed by `id()` but
-# validated against a STRONG REFERENCE to that same object (`cached_list is
-# repo_files`) plus its length at index-build time. The strong reference is
-# the load-bearing part: `id()`-only memoization is unsafe in general
-# because a garbage-collected list's id can be reused by an unrelated new
-# list of the same length, silently returning a foreign index — holding a
-# reference in the cache keeps the original list alive for as long as its
-# entry survives, so its id can never be handed to a different object while
-# the entry is live. The length check on top of that still catches the one
-# caller that mutates a list in place after resolving against it (a test)
-# by appending — see
+# The index is memoized against the single most-recently-indexed
+# `repo_files` LIST OBJECT, validated by a STRONG REFERENCE to that same
+# object (`cached[0] is repo_files`) plus its length at index-build time.
+# The strong reference is the load-bearing part: `id()`-only memoization is
+# unsafe in general because a garbage-collected list's id can be reused by
+# an unrelated new list of the same length, silently returning a foreign
+# index — holding a reference in the cache keeps the indexed list alive for
+# as long as the cache entry survives, so its id can never be handed to a
+# different object while the entry is live. The length check on top of
+# that still catches the one caller that mutates a list in place after
+# resolving against it (a test) by appending — see
 # `test_resolve_cited_path_repo_files_mutated_after_call_uses_latest_list`.
 # A same-length in-place mutation (replacing an element without changing
 # length) is NOT detected — that would need an O(n) per-call validation,
 # which would erase the whole point of the index. The production callers
 # (`list_repo_files` / `snapshot_repo_files` and their callers in `main`
 # and `check_doc`) treat `repo_files` as immutable after handing it in, so
-# this does not arise there; both caches are bounded to a handful of
-# entries since each run only ever indexes one list per repo root.
-_CACHE_MAX_ENTRIES = 8
+# this does not arise there.
+#
+# A single slot is enough: each run only ever indexes one list per repo
+# root, and multiple call sites within one document check share the exact
+# same `repo_files` object — a dict keyed by `id()` (round-2 shape) added
+# eviction bookkeeping for a multi-entry case this module never produces.
+#
+# `_CACHE_MAX_ENTRIES` names this cache's capacity (kept as a named
+# constant, not a magic `1`, for the branch-end adversarial probes —
+# `test_basename_index_gc_reused_id_never_reuses_or_returns_stale_result`
+# in both `docs/loom/2026-09-07-loom-script-performance/evidence/probes/
+# test_abuse_branch_end.py` and its graduated copy
+# `test_probes_script_perf_branch_end.py` — that size their own loops off
+# it and assert the strong-reference contract holds at any capacity). The
+# cache itself keeps its original name and `dict` shape (those probes call
+# `.clear()` on it directly) but only ever holds the one entry the single
+# fixed key `None` addresses — there is no second entry to evict.
+_CACHE_MAX_ENTRIES = 1
 
-_suffix_index_cache: dict[int, tuple[list[str], int, dict[str, list[str]]]] = {}
-
-# Same memoization shape as `_suffix_index_cache` above, for the exact-match
-# `cited_path in repo_files` membership test `_resolve_snapshot_cited_path`
-# runs before falling back to the suffix scan: that was also an O(n) linear
-# scan per call and, once the suffix scan is index-pruned, dominates the
-# call's cost. A `set` gives the same membership semantics in O(1).
-_repo_files_set_cache: dict[int, tuple[list[str], int, set[str]]] = {}
-
-
-def _evict_oldest_if_full(cache: dict) -> None:
-    """Keep the memoization caches small — see the module comment above."""
-    if len(cache) >= _CACHE_MAX_ENTRIES:
-        cache.pop(next(iter(cache)))
-
-
-def _repo_files_set(repo_files: list[str]) -> set[str]:
-    """Return a `set` of `repo_files`, memoized like `_basename_index`."""
-    cache_key = id(repo_files)
-    cached = _repo_files_set_cache.get(cache_key)
-    if cached is not None and cached[0] is repo_files and cached[1] == len(repo_files):
-        return cached[2]
-    files_set = set(repo_files)
-    _evict_oldest_if_full(_repo_files_set_cache)
-    _repo_files_set_cache[cache_key] = (repo_files, len(repo_files), files_set)
-    return files_set
+_suffix_index_cache: dict[None, tuple[list[str], int, dict[str, list[str]]]] = {}
 
 
 def _basename(path: str) -> str:
@@ -300,19 +305,22 @@ def _basename(path: str) -> str:
 def _basename_index(repo_files: list[str]) -> dict[str, list[str]]:
     """Return a `basename -> paths` index for `repo_files`, memoized.
 
-    Rebuilds when `repo_files` is a new list object (different `id`) or
-    when the previously-indexed object's length has since changed (an
-    in-place mutation) — see the cache's module comment above.
+    Rebuilds when `repo_files` is a different list object from the one
+    last indexed, or when that object's length has since changed (an
+    in-place mutation) — see the cache's module comment above. The
+    exact-match membership test (`cited_path in repo_files`) other callers
+    used to run as its own O(n) scan is now just a lookup into this same
+    index's basename bucket — any file whose relative path equals
+    `cited_path` necessarily shares `cited_path`'s basename, so a second,
+    independent cache for that test would be redundant.
     """
-    cache_key = id(repo_files)
-    cached = _suffix_index_cache.get(cache_key)
+    cached = _suffix_index_cache.get(None)
     if cached is not None and cached[0] is repo_files and cached[1] == len(repo_files):
         return cached[2]
     index: dict[str, list[str]] = {}
     for f in repo_files:
         index.setdefault(_basename(f), []).append(f)
-    _evict_oldest_if_full(_suffix_index_cache)
-    _suffix_index_cache[cache_key] = (repo_files, len(repo_files), index)
+    _suffix_index_cache[None] = (repo_files, len(repo_files), index)
     return index
 
 
@@ -329,6 +337,15 @@ def _suffix_candidates(repo_files: list[str], cited_path: str) -> list[str]:
     return [f for f in candidates if f.endswith("/" + cited_path)]
 
 
+# Memoizes `direct.is_file()` per `(repo_root, cited_path)` (W1-02,
+# 2026-09-07): the same citation recurs across many docs (`posix.stat`
+# cost 0.31s / 19,970 calls on this repo's profile), and this script never
+# writes to any file it inspects (module docstring) nor runs long enough
+# for the target tree to change under it, so the filesystem answer for a
+# given pair is stable for the life of one invocation.
+_is_file_cache: dict[tuple[str, str], bool] = {}
+
+
 def resolve_cited_path(
     repo_root: Path, cited_path: str, repo_files: list[str]
 ) -> Path | None:
@@ -339,9 +356,13 @@ def resolve_cited_path(
     ending with `cited_path`). Returns `None` (UNCHECKED) when the
     fallback finds zero or multiple candidates — see module docstring.
     """
-    direct = repo_root / cited_path
-    if direct.is_file():
-        return direct
+    cache_key = (os.fspath(repo_root), cited_path)
+    is_file = _is_file_cache.get(cache_key)
+    if is_file is None:
+        is_file = (repo_root / cited_path).is_file()
+        _is_file_cache[cache_key] = is_file
+    if is_file:
+        return repo_root / cited_path
     matches = _suffix_candidates(repo_files, cited_path)
     if len(matches) == 1:
         return repo_root / matches[0]
@@ -381,6 +402,27 @@ def _is_explicit_path_citation_with_no_match(
     return len(matches) == 0
 
 
+# Memoizes a resolved target file's text per path string (W1-02,
+# 2026-09-07): a citation can recur across many docs (the same
+# frequently-cited target — e.g. a CLAUDE.md or README — is read once per
+# citing doc without this), and this script never writes to any file it
+# inspects (module docstring) nor runs long enough for a target's content
+# to change under it. Only the `errors="replace"` read of a CITED target
+# is memoized here — a citing DOC is read exactly once regardless (`main`
+# calls `check_doc_report` once per doc argument), so caching that read
+# would add a cache lookup with no repeat to amortize it against.
+_target_text_cache: dict[str, str] = {}
+
+
+def _read_target_text(path: Path) -> str:
+    key = os.fspath(path)
+    text = _target_text_cache.get(key)
+    if text is None:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        _target_text_cache[key] = text
+    return text
+
+
 def check_citation(
     repo_root: Path,
     cited_path: str,
@@ -416,7 +458,7 @@ def check_citation(
         if _is_explicit_path_citation_with_no_match(cited_path, repo_files):
             return True, "file not found"
         return False, None
-    file_text = target.read_text(encoding="utf-8", errors="replace")
+    file_text = _read_target_text(target)
     # Primary check: the anchor (verbatim substring). When an anchor is
     # present and resolves in the target file, the citation is valid —
     # the line number is optional precision, and a stale out-of-bounds
@@ -535,7 +577,7 @@ def check_section_anchor(
         if target_path is None:
             return False, None
 
-    headings = parse_headings(target_path.read_text(encoding="utf-8", errors="replace"))
+    headings = parse_headings(_read_target_text(target_path))
     if not headings:
         return False, None
 
@@ -606,9 +648,18 @@ def _read_snapshot_file(repo_root: Path, reviewed_sha: str, path: str) -> str:
 
 
 def _resolve_snapshot_cited_path(cited_path: str, repo_files: list[str]) -> str | None:
-    if cited_path in _repo_files_set(repo_files):
+    """Resolve `cited_path` against `repo_files`, exact match first.
+
+    The exact-match test (`cited_path in repo_files`) used to be its own
+    O(n) linear scan (or a dedicated `set` cache); any file whose relative
+    path equals `cited_path` necessarily shares `cited_path`'s basename, so
+    the same `_basename_index` bucket `_suffix_candidates` already builds
+    also answers the exact-match question — no second cache needed.
+    """
+    candidates = _basename_index(repo_files).get(_basename(cited_path), [])
+    if cited_path in candidates:
         return cited_path
-    matches = _suffix_candidates(repo_files, cited_path)
+    matches = [f for f in candidates if f.endswith("/" + cited_path)]
     return matches[0] if len(matches) == 1 else None
 
 
@@ -766,13 +817,47 @@ def check_doc(
     ).findings
 
 
+# Memoized per resolved parent directory (W1-02, 2026-09-07): `main()`
+# calls `find_repo_root` once PER DOC when `--repo-root` is absent (the
+# default, and how CI invokes this script), and every doc under the same
+# directory walks the identical chain of `.git` existence checks to the
+# identical answer — 0.60s across 2,608 docs on this repo's profile. A
+# `doc_path`'s resolved parent directory is the cache key (not the doc
+# itself) so every doc sharing a directory reuses one walk.
+#
+# A second cache, keyed on the UNRESOLVED (as-given) parent path, sits in
+# front of it: `Path.resolve()` itself calls `os.path.realpath`, which
+# touches the filesystem once per path component (symlink checks) even
+# when nothing above needs re-walking — 0.152s / 3,383 calls in the same
+# profile. `git ls-files`-ordered input groups files by directory, so most
+# consecutive docs share their exact as-given parent string (698 distinct
+# directories across 3,383 docs on this repo); those repeats now skip
+# `resolve()` entirely. Two different as-given strings that happen to
+# resolve to the same real directory (e.g. a symlink, or `./x` vs `x`)
+# simply populate two raw-cache entries pointing at the one resolved-cache
+# entry — never a correctness difference, only a smaller cache hit rate
+# for that case.
+_repo_root_cache: dict[Path, Path] = {}
+_repo_root_raw_cache: dict[Path, Path] = {}
+
+
 def find_repo_root(doc_path: Path) -> Path:
     """Walk up from `doc_path` to the nearest `.git` dir; else cwd."""
+    raw_parent = doc_path.parent
+    cached = _repo_root_raw_cache.get(raw_parent)
+    if cached is not None:
+        return cached
     current = doc_path.resolve().parent
-    for parent in (current, *current.parents):
-        if (parent / ".git").exists():
-            return parent
-    return Path.cwd()
+    cached = _repo_root_cache.get(current)
+    if cached is None:
+        cached = Path.cwd()
+        for parent in (current, *current.parents):
+            if (parent / ".git").exists():
+                cached = parent
+                break
+        _repo_root_cache[current] = cached
+    _repo_root_raw_cache[raw_parent] = cached
+    return cached
 
 
 def main(argv: list[str] | None = None) -> int:
