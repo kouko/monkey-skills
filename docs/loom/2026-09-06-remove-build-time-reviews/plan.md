@@ -31,7 +31,7 @@ charter: 1.0
 - Risk: agent-decided — special-case only spec scope; branch-end reviewer, adversary, blind, fix-round, and second-vendor contracts remain unchanged.
 
 **W2-01 Synchronize public contracts, versions, and mirrors**  after: W1-03  acceptance: 6
-- Files: `loom-code/.claude-plugin/plugin.json`, `loom-code/.codex-plugin/plugin.json`, `loom-code/CHANGELOG.md`, `loom-design/.claude-plugin/plugin.json`, `loom-design/.codex-plugin/plugin.json`, `loom-design/CHANGELOG.md`, `README.md`, `.codex/hooks/**`
+- Files: `loom-code/.claude-plugin/plugin.json`, `loom-code/.codex-plugin/plugin.json`, `loom-code/CHANGELOG.md`, `loom-design/.claude-plugin/plugin.json`, `loom-design/.codex-plugin/plugin.json`, `loom-design/CHANGELOG.md`, `.claude-plugin/marketplace.json`, `README.md`, `.codex/hooks/**`
 - Test: A6 positive: manifests-and-mirror-sync; negative: old-checkpoint-prose-absent.
 - Risk: agent-decided — bump only changed plugins and regenerate mirrors after source settles; preserve unrelated plugin versions.
 
