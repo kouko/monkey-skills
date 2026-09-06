@@ -2205,6 +2205,18 @@ PUSH_SHAPED = (
     "xargs git push",
 )
 
+AMBIGUOUS_PUSH_SHAPED = {
+    "cd sub && git push",
+    "git -C /tmp/other push",
+    "git --git-dir=/tmp/x/.git --work-tree=/tmp/x push",
+    'eval "git push"',
+    'bash -c "git push"',
+    'sh -c "git push"',
+    'zsh -c "git push"',
+    'dash -c "git push"',
+    "xargs git push",
+}
+
 NOT_PUSH_SHAPED = (
     "ls -la",
     "git pushd",
@@ -2227,6 +2239,9 @@ def test_hook_mode_recognises_every_push_shape(tmp_path: Path) -> None:
         result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
         assert result.returncode == 2, (cmd, result.stdout, result.stderr)
         assert "push.review-only-head" in blocked_rules(result), cmd
+        assert ("ambiguous repository selection" in result.stderr) == (
+            cmd in AMBIGUOUS_PUSH_SHAPED
+        ), cmd
 
 
 def test_hook_mode_lets_non_push_shapes_through(tmp_path: Path) -> None:
@@ -2243,6 +2258,230 @@ def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     result = run_hook({"tool_name": "Bash", "tool_input": {"command": "git push"}, "cwd": str(repo)}, cwd=tmp_path)
     assert result.returncode == 0, result.stderr
+
+
+def test_hook_mode_honours_git_dash_c_over_payload_cwd(tmp_path: Path) -> None:
+    """The command's explicit Git directory is the repository being pushed.
+
+    Codex may report the saved checkout as payload cwd even when its command
+    tool runs against a worktree. A clean ``git -C <worktree> push`` must be
+    judged against that worktree, never an unrelated failing checkout.
+    """
+    target_root = tmp_path / "target"
+    unrelated_root = tmp_path / "unrelated"
+    target_root.mkdir()
+    unrelated_root.mkdir()
+    target = build_repo(target_root)
+    unrelated = build_repo(unrelated_root)
+    (unrelated / "after.py").write_text("changed = True\n", encoding="utf-8")
+    git(unrelated, "add", "after.py")
+    git(unrelated, "commit", "-q", "-m", "feat(x): unreviewed change")
+    command = f"git -C {target} push origin HEAD"
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(unrelated)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_hook_mode_honours_absolute_cd_for_gh_pr_over_payload_cwd(tmp_path: Path) -> None:
+    target_root = tmp_path / "target"
+    unrelated_root = tmp_path / "unrelated"
+    target_root.mkdir()
+    unrelated_root.mkdir()
+    target = build_repo(target_root)
+    unrelated = build_repo(unrelated_root)
+    (unrelated / "after.py").write_text("changed = True\n", encoding="utf-8")
+    git(unrelated, "add", "after.py")
+    git(unrelated, "commit", "-q", "-m", "feat(x): unreviewed change")
+    command = f"cd {target} && gh pr create --fill"
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(unrelated)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_hook_mode_blocks_pushes_to_distinct_git_dash_c_directories(tmp_path: Path) -> None:
+    (tmp_path / "first").mkdir()
+    (tmp_path / "second").mkdir()
+    first = build_repo(tmp_path / "first")
+    second = build_repo(tmp_path / "second")
+    command = f"git -C {first} push origin HEAD && git -C {second} push origin HEAD"
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(first)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+def test_hook_mode_blocks_relative_git_dash_c_when_payload_cwd_is_untrusted(tmp_path: Path) -> None:
+    (tmp_path / "payload").mkdir()
+    payload_root = build_repo(tmp_path / "payload")
+    command = "git -C ../target push origin HEAD"
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(payload_root)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "ambiguous repository selection" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "command_template",
+    [
+        "cd {target} && git push origin HEAD",
+        "bash -c 'git -C {target} push origin HEAD'",
+        "eval 'git -C {target} push origin HEAD'",
+    ],
+)
+def test_hook_mode_blocks_indirect_push_repository_selection(
+    tmp_path: Path, command_template: str
+) -> None:
+    (tmp_path / "payload").mkdir()
+    (tmp_path / "target").mkdir()
+    payload_root = build_repo(tmp_path / "payload")
+    target_root = build_repo(tmp_path / "target")
+    (target_root / "after.py").write_text("changed = True\n", encoding="utf-8")
+    git(target_root, "add", "after.py")
+    git(target_root, "commit", "-q", "-m", "feat(x): unreviewed change")
+    command = command_template.format(target=target_root)
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(payload_root)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.review-only-head" in blocked_rules(result)
+
+
+@pytest.mark.parametrize(
+    "directory_option",
+    [
+        "--git-dir=/tmp/other/.git",
+        "--work-tree=/tmp/other",
+        "-C=/tmp/other",
+    ],
+)
+def test_hook_mode_blocks_unsupported_git_directory_options(
+    tmp_path: Path, directory_option: str
+) -> None:
+    repo = build_repo(tmp_path)
+    command = f"git {directory_option} push origin HEAD"
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "ambiguous repository selection" in result.stderr
+
+
+@pytest.mark.parametrize("variable", ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"])
+@pytest.mark.parametrize(
+    "command_template",
+    [
+        "{variable}=/tmp/other git push origin HEAD",
+        "export {variable}=/tmp/other && git push origin HEAD",
+        "env -i {variable}=/tmp/other git push origin HEAD",
+    ],
+)
+def test_hook_mode_blocks_git_repository_environment_override(
+    tmp_path: Path, variable: str, command_template: str
+) -> None:
+    repo = build_repo(tmp_path)
+    command = command_template.format(variable=variable)
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "ambiguous repository selection" in result.stderr
+
+
+def test_hook_mode_blocks_gh_repo_environment_override(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": "GH_REPO=owner/repo gh pr create"},
+            "cwd": str(repo),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "ambiguous repository selection" in result.stderr
+
+
+def test_hook_mode_blocks_compact_env_chdir_before_push(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": "env -C/tmp git push origin HEAD"},
+            "cwd": str(repo),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "ambiguous repository selection" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "gh -R owner/repo pr create",
+        "gh --repo owner/repo pr create",
+        "gh -Rowner/repo pr create",
+        "gh pr -Rowner/repo create",
+        "gh -R pr pr create",
+    ],
+)
+def test_hook_mode_blocks_gh_repository_override_before_subcommand(
+    tmp_path: Path, command: str
+) -> None:
+    repo = build_repo(tmp_path)
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "ambiguous repository selection" in result.stderr
+
+
+def test_hook_mode_blocks_xargs_push_behind_another_prefix(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": "sudo xargs git push"},
+            "cwd": str(repo),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "ambiguous repository selection" in result.stderr
 
 
 def test_hook_mode_malformed_payload_fails_closed(tmp_path: Path) -> None:

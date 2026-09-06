@@ -190,7 +190,9 @@ RULES: list[tuple[str, str]] = [
         "`closed <date> — branch <name>`) -- any other intent-file edit riding along still blocks. "
         "When instead HEAD^ turns an intent's status to closed as a commit of its own, its shape "
         "is recomputed too: it must touch only that intent file, change exactly its status line, "
-        "and sit on a checkpoint whose own review.json vouches for HEAD^^^.",
+        "and sit on a checkpoint whose own review.json vouches for HEAD^^^. "
+        "Hook mode also uses this rule when it cannot prove that a publish command targets one "
+        "local repository.",
     ),
     (
         "push.reviewed-sha",
@@ -2995,6 +2997,9 @@ SEGMENT_SPLIT = re.compile(r"\|\||&&|[;\n|&]")
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # Options that swallow the next word, so it is a value and never the verb.
 GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
+GH_VALUE_OPTIONS = {"-R", "--repo", "--hostname"}
+GIT_REPOSITORY_ENV = {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GH_REPO"}
+ENV_VALUE_OPTIONS = {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}
 PREFIX_WORDS = {"sudo", "command", "env", "nohup", "time", "nice", "builtin", "exec", "xargs"}
 # `bash -c "git push"` / `sh -c` / `zsh -c` / `dash -c` hand the checker a
 # shell line as a single quoted argument -- shlex has already unquoted it, so
@@ -3012,15 +3017,23 @@ def _tokenise(segment: str) -> list[str]:
 def _strip_prefix(tokens: list[str]) -> list[str]:
     """Drop `VAR=…` assignments and wrapper words that precede the program."""
     index = 0
-    while index < len(tokens) and (
-        ASSIGNMENT.match(tokens[index]) or tokens[index] in PREFIX_WORDS
-    ):
+    while index < len(tokens):
+        if ASSIGNMENT.match(tokens[index]):
+            index += 1
+            continue
+        wrapper = Path(tokens[index]).name
+        if wrapper not in PREFIX_WORDS:
+            break
         index += 1
+        if wrapper == "env":
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                index += 2 if option in ENV_VALUE_OPTIONS else 1
     return tokens[index:]
 
 
-def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
-    """The first word that is neither an option nor an option's value."""
+def _subcommand_at(tokens: list[str], value_options: set[str]) -> tuple[int, str] | None:
+    """The position and value of the first non-option, non-value word."""
     index = 0
     while index < len(tokens):
         token = tokens[index]
@@ -3032,8 +3045,14 @@ def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
         if token.startswith("-"):
             index += 1
             continue
-        return token
+        return index, token
     return None
+
+
+def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
+    """The first word that is neither an option nor an option's value."""
+    found = _subcommand_at(tokens, value_options)
+    return found[1] if found else None
 
 
 def is_push_command(command: str) -> bool:
@@ -3059,11 +3078,128 @@ def is_push_command(command: str) -> bool:
                 return True
         elif program == "gh":
             rest = tokens[1:]
-            if _subcommand(rest, set()) == "pr":
-                after = rest[rest.index("pr") + 1:]
-                if _subcommand(after, set()) in {"create", "merge"}:
+            found = _subcommand_at(rest, GH_VALUE_OPTIONS)
+            if found and found[1] == "pr":
+                after = rest[found[0] + 1:]
+                if _subcommand(after, GH_VALUE_OPTIONS) in {"create", "merge"}:
                     return True
     return False
+
+
+def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
+    """Return the one unambiguous repository selected by every Git push.
+
+    The host-reported cwd is authoritative only when a push has no directory
+    override. An absolute ``-C`` anchors later relative ``-C`` options. A
+    relative first ``-C``, another directory-changing option, a missing or
+    invalid directory, or pushes selecting distinct repositories is unsafe
+    because the hook cannot prove which repository the shell will push.
+    """
+    selected_roots: set[str] = set()
+    shell_root: Path | None = None
+    repository_env_changed = False
+    for segment in SEGMENT_SPLIT.split(command):
+        raw_tokens = _tokenise(segment)
+        tokens = _strip_prefix(raw_tokens)
+        if not tokens:
+            continue
+        if any(Path(token).name == "env" for token in raw_tokens) and any(
+            token.startswith("-C")
+            or token == "--chdir"
+            or token.startswith("--chdir=")
+            for token in raw_tokens
+        ):
+            return None
+        segment_changes_repository_env = any(
+            ASSIGNMENT.match(token)
+            and token.split("=", 1)[0] in GIT_REPOSITORY_ENV
+            for token in raw_tokens
+        )
+        program = Path(tokens[0]).name.lstrip("(")
+        if program == "export" and any(
+            token.split("=", 1)[0] in GIT_REPOSITORY_ENV
+            for token in tokens[1:]
+        ):
+            segment_changes_repository_env = True
+        repository_env_changed = (
+            repository_env_changed or segment_changes_repository_env
+        )
+        if program in {"cd", "pushd"}:
+            directory_args = [
+                token for token in tokens[1:]
+                if token != "--" and not token.startswith("-")
+            ]
+            if len(directory_args) != 1:
+                return None
+            candidate = Path(directory_args[0])
+            if candidate.is_absolute():
+                shell_root = candidate
+            elif shell_root is not None:
+                shell_root = shell_root / candidate
+            else:
+                return None
+            if not shell_root.is_dir():
+                return None
+            continue
+        if program == "popd":
+            return None
+        if program == "eval" and is_push_command(" ".join(tokens[1:])):
+            return None
+        if program in SHELL_PROGRAMS and "-c" in tokens[1:]:
+            index = tokens.index("-c")
+            if index + 1 < len(tokens) and is_push_command(tokens[index + 1]):
+                return None
+        if any(Path(token).name == "xargs" for token in raw_tokens) and is_push_command(segment):
+            return None
+        if program == "gh" and is_push_command(segment):
+            if repository_env_changed or any(
+                token.startswith("-R")
+                or token == "--repo"
+                or token.startswith("--repo=")
+                for token in tokens[1:]
+            ):
+                return None
+            root = shell_root if shell_root is not None else Path(fallback)
+            selected_roots.add(str(root.resolve()))
+            continue
+        if program != "git" or _subcommand(tokens[1:], GIT_VALUE_OPTIONS) != "push":
+            continue
+        if repository_env_changed:
+            return None
+        selected = shell_root
+        index = 1
+        while index < len(tokens):
+            token = tokens[index]
+            if token == "-C":
+                if index + 1 >= len(tokens):
+                    return None
+                candidate = Path(tokens[index + 1])
+                if candidate.is_absolute():
+                    selected = candidate
+                elif selected is not None:
+                    selected = selected / candidate
+                else:
+                    return None
+                index += 2
+                continue
+            if token.startswith("-C") or token in {"--git-dir", "--work-tree"}:
+                return None
+            if token.startswith("--git-dir=") or token.startswith("--work-tree="):
+                return None
+            if token in GIT_VALUE_OPTIONS:
+                index += 2
+                continue
+            if token.startswith("-"):
+                index += 1
+                continue
+            break
+        root = selected if selected is not None else Path(fallback)
+        if not root.is_dir():
+            return None
+        selected_roots.add(str(root.resolve()))
+    if len(selected_roots) > 1:
+        return None
+    return next(iter(selected_roots)) if selected_roots else None
 
 
 def read_hook_payload(stdin=sys.stdin) -> dict | None:
@@ -3101,9 +3237,16 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     command = str((payload.get("tool_input") or {}).get("command", ""))
     if not is_push_command(command):
         return 0
-    cwd = payload.get("cwd")
-    if cwd:
-        os.chdir(cwd)
+    cwd = str(payload.get("cwd") or os.getcwd())
+    push_cwd = git_dash_c_push_cwd(command, cwd)
+    if push_cwd is None:
+        print(
+            "BLOCK push.review-only-head: ambiguous repository selection; "
+            "use one absolute git -C path, or cd to one absolute path first",
+            file=err,
+        )
+        return 2
+    os.chdir(push_cwd)
     rc = _cmd_push(rest, out, err)
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
