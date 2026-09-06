@@ -16,7 +16,7 @@ charter: 1.0
 - Risk: agent-decided — preserve legacy records while changing new-plan intake; keep existing rule IDs except the one-for-one budget replacement.
 
 **W1-01 Spec and plan authoring contracts**  after: W0-02  acceptance: 1,2
-- Files: `loom-code/skills/write-plan/**`, `loom-design/skills/write-spec/**`, `loom-code/scripts/test_station_text*.py`, `loom-design/tests/**`
+- Files: `loom-code/skills/write-plan/**`, `loom-design/skills/write-spec/**`, `loom-code/scripts/test_station_text*.py`, `loom-design/scripts/spec/**`
 - Test: A1 positive: compact-case-contract; negative: unresolved-question-block. A2 positive: declared-low-risk-skip; boundary: required-single-reader-no-blind.
 - Risk: agent-decided — keep scenario detail in specs and case IDs in capped plan lines; do not add a new user decision point.
 
