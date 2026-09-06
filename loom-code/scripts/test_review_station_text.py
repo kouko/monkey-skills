@@ -920,7 +920,8 @@ def _claude_bundle_block_sentence(text: str) -> str:
 
 def test_claude_bundle_incomplete_inputs_block_affirmatively() -> None:
     sentence = _claude_bundle_block_sentence(_section_2_read())
-    assert "unavailable-CLI fallback" in sentence
+    assert "checkpoint" in sentence
+    assert "until the complete input can be supplied" in sentence
     assert not _has_negation(sentence)
 
 
