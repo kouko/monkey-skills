@@ -2,6 +2,13 @@
 module-level import, so the non-push hook fast path (run on every Bash
 call) never pays its ~8.7ms import cost.
 
+Branch-end-05 (2026-09-07): the same fast path must also never pay for
+`traceback` -- W1-01 removed the module-level `yaml` import but added a
+module-level `import traceback` used only inside `load_manifest`'s
+`except ImportError:` branch (a missing `yaml`), which the non-push fast
+path never reaches. `traceback` is moved into that branch, same as
+`yaml` was.
+
 Run directly: `python3 -m pytest <this file> -v`.
 """
 
@@ -51,6 +58,14 @@ def test_hook_nonpush_no_yaml_import():
         assert not yaml_import_lines, (
             "expected no `yaml` import on the non-push hook fast path, found:\n"
             + "\n".join(yaml_import_lines)
+        )
+        traceback_import_lines = [
+            ln for ln in result.stderr.splitlines()
+            if ln.strip().split(" ")[-1] == "traceback"
+        ]
+        assert not traceback_import_lines, (
+            "expected no `traceback` import on the non-push hook fast path, found:\n"
+            + "\n".join(traceback_import_lines)
         )
 
 

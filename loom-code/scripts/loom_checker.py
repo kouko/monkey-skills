@@ -33,7 +33,6 @@ import re
 import shlex
 import subprocess
 import sys
-import traceback
 from datetime import date
 from pathlib import Path
 
@@ -329,6 +328,10 @@ def load_manifest(path: Path | None = None):
     try:
         import yaml  # lazy: the non-push hook fast path must never pay this import
     except ImportError:
+        import traceback  # lazy, same reason as `yaml` (branch-end-05):
+        # the non-push hook fast path never reaches this branch, so it
+        # must never pay `traceback`'s import cost either.
+
         # Restore the pre-lazy-import failure shape: a missing `yaml` used
         # to crash uncaught at module scope (exit 1, full traceback on
         # stderr). `main`'s catch-all `except Exception` would otherwise
