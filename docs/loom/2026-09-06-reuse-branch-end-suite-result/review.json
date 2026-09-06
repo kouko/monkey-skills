@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "9bbf92dfbcb275adad2ee8e75165e9d04079e1d1",
-  "scope": "spec",
+  "scope": "branch-end",
   "vendors": [
     "openai"
   ],
@@ -178,6 +178,141 @@
         "The sole spec change since bdede55d is the confirmed-behavior hash. No visible behaviour changed; all prior dimension assessments remain standing.",
         "The requested spec_sha records the confirmation-content hash; the full spec blob shown by Git is cf6d6440. No files were modified."
       ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "text": "issue (blocking): The final snapshot closes only the interval before the PreToolUse checker returns. A package command can launch a detached process that moves the branch or changes the tree after this comparison but before the intercepted named-branch push resolves its source; the committed adversarial case explicitly demonstrates the checker returning success before a delayed mutation.",
+          "fix": "Make the pushed source immutable across the hook-to-command boundary, for example by requiring and validating an explicit reviewed commit SHA refspec, or move the validation into an atomic push boundary that receives the exact refs. Add a delayed HEAD-moving attack proving that the network operation cannot publish a post-validation commit."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "text": "issue (blocking): The measurement does not replay either revision's real Ship-to-hook path. It searches Ship prose for one literal and directly runs a synthetic workload once or twice; it never invokes either revision's checker, hook adapter, checkpoint validation, adversarial probes, or release decision, and it constructs the verdict from those synthetic subprocess return codes.",
+          "fix": "Build the same accepted-checkpoint fixture for both revisions, execute the baseline explicit checker plus hook and the candidate hook through their versioned real entry points, instrument the declared package command, and measure the complete local boundary through the actual checker release or block result."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+          "text": "issue (blocking): The report says every repository mutation is blocked, but the branch-end attack catalogue records a deterministic counterexample in which the gate returns success and a detached writer then mutates the reviewed tree. This hides a release-safety gap from the user's acceptance material.",
+          "fix": "Report the detached-process counterexample as an unresolved limitation and mark Acceptance #1, #2, and #5 not yet satisfied until the hook-to-push race is closed."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59",
+          "text": "nitpick (non-blocking): The report claims 32 newly added test names, while the cumulative Python delta adds 40 test definitions representing 30 unique names because the graduated probe duplicates ten names.",
+          "fix": "State the counting method and replace 32 with the recomputed definition, unique-name, or collected-case count."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+          "text": "nitpick (non-blocking): The spec's UI-flow section is Traditional Chinese even though the repository's internal-artifact language rule requires English; the intent and blind-run report are exempt, but the spec is not.",
+          "fix": "Translate spec.md lines 58-71 into English without changing the confirmed behavior."
+        }
+      ],
+      "notes": [
+        "HEAD and merge-base were independently verified; the working tree was clean.",
+        "Every changed file and the relevant checker, hook, station, fixture, principles, and command-resolution paths were read directly.",
+        "Focused test execution was attempted but could not start because the read-only environment provided no writable temporary or uv cache directory; test-dependent scores therefore do not rely on recorded pass summaries."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "text": "issue (blocking): The final synchronous HEAD and porcelain snapshot does not contain detached descendants of a successful probe. The committed attack starts a detached writer, observes checker exit 0, and then observes the reviewed tree mutate, so the hook can release the network push before the final state boundary is actually stable.",
+          "fix": "Run package and adversarial commands inside an isolation boundary that cannot retain writers against the selected repository after the command returns, then verify that boundary has terminated before the final Git snapshot. Convert the detached-writer case into a permanent regression test requiring the checker to block."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:140",
+          "text": "issue (blocking): The new concurrent-mutation case treats the unsafe release as its expected passing result: it requires checker exit 0 and only afterward confirms mutation. This documents the defect but does not protect the intended fail-closed behavior, and the case has not been graduated into the permanent checker suite.",
+          "fix": "After fixing process containment, change this case to require a non-zero checker result with the relevant BLOCK rule, graduate it into loom-code/scripts, and record the graduated probe in review.json."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "text": "issue (blocking): The timing replay does not execute either revision's Ship-to-hook gate. It searches Ship prose for a literal and directly runs a synthetic workload once or twice, then derives release solely from those workload return codes. Consequently the reported local-gate verdict and elapsed boundary exclude checker validation, adversarial probes, repository state checks, and hook dispatch.",
+          "fix": "Replay an accepted temporary checkpoint through each revision's actual checker and hook entry point, instrument only the resolved package command for invocation counts, and measure monotonically from the simulated Ship push request through the real hook release or block result."
+        },
+        {
+          "severity": "important",
+          "dimension": "principles-conformance",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51",
+          "text": "issue (blocking): The report says there are no blocking or important functional problems even though the same HEAD adds an executable probe and commit message showing that a detached writer escapes the final check. This could cause the user to accept an unsafe push gate.",
+          "fix": "Report the detached-writer escape as blocking, change Acceptance 1 and 5 to not-working until the regression is fixed, and regenerate the summary only after the corrected permanent probe passes."
+        }
+      ],
+      "notes": [
+        "Exact HEAD and merge-base were independently verified; the worktree remained clean and no files were modified.",
+        "Focused pytest execution was attempted without the complete package suite, but the read-only environment provided no writable temporary directory; recorded historical test results were therefore not treated as independently verified.",
+        "The deletion-first ownership simplification and repository-neutral command resolution are otherwise coherent; the release-boundary escape and invalid timing oracle prevent acceptance."
+      ]
     }
   ],
   "probes": [
@@ -196,6 +331,30 @@
       "sha": "17417d19",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "result": "deferred-to-hook",
+      "artifact": ""
     }
   ],
   "questions": [
@@ -303,6 +462,34 @@
       "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
       "raised_by": "adv-w0-02-codex",
       "resolved": "fixed by b0d90f7b — Ship keeps non-package deterministic checks and no longer runs a pre-hook pytest suite"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/loom_checker.py:3315",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
+      "resolved": ""
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
+      "resolved": ""
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
+      "resolved": ""
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:140",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-b-codex-cli",
+      "resolved": ""
     }
   ],
   "dispatch": [
@@ -420,7 +607,7 @@
     }
   ],
   "cost": {
-    "rounds": 4,
+    "rounds": 5,
     "dispatches": 14,
     "cap_changes": [],
     "hours_plan_to_pr": null
