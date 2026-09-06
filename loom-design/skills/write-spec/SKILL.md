@@ -1,7 +1,7 @@
 ---
 name: write-spec
 description: |
-  Turn a confirmed intent into docs/loom/<change-id>/spec.md, confirm the visible behaviour with the user when the change is a product change, and hand the spec to loom-code's review station before any plan exists. Use when an intent says needs-design: yes and no spec exists yet, or when someone asks for a spec or a design of a change.
+  Turn a confirmed intent into docs/loom/<change-id>/spec.md, confirm visible product behaviour, declare whether pre-build review is required, and hand high-risk specs to one independent reviewer before planning. Use when an intent says needs-design: yes and no spec exists yet, or when someone asks for a spec or a design of a change.
 version: 1.0.0
 ---
 
@@ -13,7 +13,8 @@ An intent already exists and the user has already said yes to it. You turn
 it into one file — `docs/loom/<change-id>/spec.md` — that says what the
 change must do, what you decided and why, and, when there is an interface,
 what the user will see. For a product change you read two of its sections
-back to the user in plain words and get a yes. Then the machines review it.
+back to the user in plain words and get a yes. High-risk specs then get one
+independent pre-build review; routine specs proceed directly to planning.
 You never ask the user to grade the spec, and you never plan the work.
 
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
@@ -31,10 +32,10 @@ good way to produce them. The shapes below are not negotiable.
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read; a full-lane `code`- or `gate`-typed task is adversary-first, the adversary dispatched before the implementer | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | fresh-context reviewers, one in the small lane, two or more in the full lane (§1); no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | task and integration tests; writes `dispatch[]`; a full-lane `code`- or `gate`-typed task is adversary-first | no formal review during Build; one `branch-end` review after every task and package test passes |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` for branch end | fresh-context reviewers; one combined reviewer for a required spec, one in the small branch lane, two or more in the full branch lane; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | risk-triggered spec review; `branch-end` always runs |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
@@ -141,6 +142,12 @@ language, since it is spoken to them rather than read by a checker.
 
 - **`intent: <change-id>@<sha>`** — the sha of the commit that confirmed
   the intent, not of HEAD. It is the version of the ask this spec answers.
+- **`pre-build-review: required|not-required — <reason>`** — write
+  `required` when the change affects security or privacy, irreversible data,
+  a public contract, cross-system architecture, or materially ambiguous
+  requirements. Otherwise write `not-required`. This is agent-decided and
+  does not create another user stop; the branch-end reviewer recomputes risk
+  from the diff independently of this declaration.
 - **`## Requirements`** — `REQ-<n> — <name>`, then one sentence of
   obligation ending `→ Acceptance #<n>`. One requirement per Acceptance
   line, in that order; do not merge two. Each must be provable by someone
@@ -257,8 +264,8 @@ does not touch the user's existing data, and record
 exists, that piece of work stops and is reported as not done.
 
 <!-- gate: write-spec.product-visible-behaviour-confirmed-before-review -->
-**A product spec does not reach the review station before the user has
-confirmed its visible behaviour.** On "yes", write
+**A product spec does not reach a required review or planning before the
+user has confirmed its visible behaviour.** On "yes", write
 
 ```
 confirmed-behavior: <date> @<spec sha7>
@@ -280,33 +287,31 @@ to the contract's. The canonical carrier is the plan's `## Questions asked`
 section, from which the review station copies it into `questions[]` in
 `review.json`. So carry the list forward **verbatim in your hand-off
 message** in step 4, together with anything `capture-intent` handed you,
-and say it belongs in that section. The hand-off message is the only
-carrier at this point: the spec-scope checkpoint in step 4 happens before
-any plan exists, so the review station takes `questions[]` from this
-message. A hand-off that omits the list leaves that field empty with no way
-to reconstruct it.
+and say it belongs in that section. When review is required, its spec-scope
+record copies the list before a plan exists; when review is not required,
+`write-plan` carries it until the branch-end record is created.
 
-## Step 4 — Commit, review, hand off
+## Step 4 — Commit, conditionally review, hand off
 
 1. Commit the spec with the message `docs(loom): spec <change-id>`.
-2. Hand it to **`loom-code:review`** with scope `spec`, **pasting the
-   question list verbatim** — no plan exists yet, so this message is where
-   `questions[]` comes from. That lens is read plus adversarial: at least
-   two fresh-context reviewers on the read, and a red-team pass over the
-   spec itself. You are not one of them, and you do not review your own
-   file.
-3. **NEEDS_REVISION** — close each finding, commit, and send it round
-   again as a new round. Nothing about this is negotiable by argument: the
-   verdict moves when the file does.
-4. **PASS or PASS_WITH_NOTES** — the spec part of the next station's
-   intake is now satisfied, which you can see for yourself:
+2. If `pre-build-review: required`, hand it to **`loom-code:review`** with
+   scope `spec`, pasting the question list verbatim. Dispatch one
+   fresh-context reviewer whose lens is `spec+adversarial`; do not dispatch
+   a blind runner or a separate adversary. You are not the reviewer. If it
+   returns NEEDS_REVISION, close each finding, commit, and send only those
+   fixes back to that reviewer. If it passes, continue.
+3. If `pre-build-review: not-required`, do not create a formal spec review;
+   continue directly. This declaration never changes branch-end lane or
+   reviewer requirements.
+4. Confirm the next station's intake is satisfied:
 
    ```
    python3 <loom-code>/scripts/loom_checker.py intake write-plan <change-id>
    ```
 
-   `intake.spec-pass` reads the latest review round; for a product change
-   `intake.confirmed-behavior` reads the line step 3 wrote.
+   `intake.spec-pass` reads the risk declaration and, when required, the
+   latest spec round; for a product change `intake.confirmed-behavior` reads
+   the confirmation line.
 5. Hand the change to **`loom-code:write-plan`**, naming the change-id and
    pasting the question list. Say that decision point ② has happened and
    is not to be run again, and that the plan itself is agent-decided —

@@ -242,10 +242,26 @@ def test_intake_station_argument_is_this_station() -> None:
     assert "intake write-spec <change-id>" in _text()
 
 
-def test_hands_spec_to_review_with_the_spec_scope() -> None:
+def test_risk_triggered_spec_review_contract() -> None:
     text = _text()
     assert "loom-code:review" in text
     assert "loom-code:write-plan" in text
+    assert "pre-build-review: required|not-required — <reason>" in text
+    assert "spec+adversarial" in text
+    assert "do not dispatch\n   a blind runner or a separate adversary" in text
+    assert "If `pre-build-review: not-required`" in text
+
+
+def test_spec_risk_classes_are_explicit() -> None:
+    text = _text()
+    for risk in (
+        "security or privacy",
+        "irreversible data",
+        "public contract",
+        "cross-system architecture",
+        "materially ambiguous",
+    ):
+        assert risk in text
 
 
 def test_reference_files_exist_within_caps() -> None:
