@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "c9d1abb1",
+  "reviewed_sha": "83d129c9",
   "scope": "wave-end:1",
   "vendors": [
     "codex"
@@ -51,7 +51,7 @@
           "fix": "Make the implementation fail closed for an unreadable current intent so this recorded risk remains true."
         }
       ],
-      "sha": "c9d1abb1"
+      "sha": "83d129c9"
     },
     {
       "reviewer": "rev-w1-codex2",
@@ -87,10 +87,182 @@
           "fix": "Map local `main`/`master` selections to the corresponding `refs/remotes/origin/<name>` ref and update that ref to `new_sha`; add a divergent-feature/local-trunk regression test asserting it remains reachable in the squashed run."
         }
       ],
-      "sha": "c9d1abb1"
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 2,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_plan_edits_shipped_change.py:173",
+          "text": "issue (unfixed): The fix covers uncommitted, deleted, and malformed current intents, but still lacks the previously required regression case proving that an unreadable current intent blocks after historical closure.",
+          "fix": "Add a regression test that makes reading the current intent raise OSError after committing a historical closed status, then assert plan-edits returns the existing no-plan-commit BLOCK."
+        }
+      ],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 2,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 3,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_plan_edits_shipped_change.py:205",
+          "text": "issue (unfixed): The unreadable-intent regression checks only the plan.edits-after-commit rule ID, so it can pass for a different BLOCK reason and does not pin the required existing no-plan-commit BLOCK.",
+          "fix": "Add `assert \"no plan commit found\" in result.stderr` to `test_unreadable_intent_after_historical_closure_still_blocks`."
+        }
+      ],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 4,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 4,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "sha": "83d129c9"
     }
   ],
-  "probes": [],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "83d129c9",
+      "result": "2016 passed, 1 skipped, 1 xfailed; 182 passed, 1 skipped",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py -q -k test_plan_edits_closed_intent_missing_commit_reports_not_applicable",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py -q -k test_plan_edits_closed_intent_present_commit_tampered_still_blocks",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py -q -k test_squashedShape_probeNeedingBranchOnlyCommit_isReportedFailedWithReason",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py -q -k test_exitCode_squashedShapeRed_isNonzeroEvenThoughCiShapedShapeIsGreen",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -108,25 +280,29 @@
       "id": "w1-amnesty-too-wide",
       "anchor": "loom-code/scripts/loom_checker.py:2304",
       "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
-      "raised_by": "rev-w1-codex-h4n8"
+      "raised_by": "rev-w1-codex-h4n8",
+      "resolved": true
     },
     {
       "id": "w1-plan-unreadable-intent",
       "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/plan.md:45",
       "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
-      "raised_by": "rev-w1-codex-h4n8"
+      "raised_by": "rev-w1-codex-h4n8",
+      "resolved": true
     },
     {
       "id": "w1-squashed-ref-deletion",
       "anchor": "loom-code/scripts/rehearse_probes.py:280",
       "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
-      "raised_by": "rev-w1-codex2"
+      "raised_by": "rev-w1-codex2",
+      "resolved": true
     },
     {
       "id": "w1-git-citation",
       "anchor": "loom-code/scripts/rehearse_probes.py:273",
       "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
-      "raised_by": "rev-w1-codex-h4n8"
+      "raised_by": "rev-w1-codex-h4n8",
+      "resolved": true
     }
   ],
   "dispatch": [
@@ -193,6 +369,51 @@
       "model": "codex",
       "started": "2026-09-06T12:45:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex-h4n8",
+      "model": "codex",
+      "started": "2026-09-06T13:00:00+08:00",
+      "fresh_context": false,
+      "round": 2
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex2",
+      "model": "codex",
+      "started": "2026-09-06T13:00:00+08:00",
+      "fresh_context": false,
+      "round": 2
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex-h4n8",
+      "model": "codex",
+      "started": "2026-09-06T13:05:00+08:00",
+      "fresh_context": false,
+      "round": 3
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex-h4n8",
+      "model": "codex",
+      "started": "2026-09-06T13:10:00+08:00",
+      "fresh_context": false,
+      "round": 4
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex2",
+      "model": "codex",
+      "started": "2026-09-06T13:10:00+08:00",
+      "fresh_context": false,
+      "round": 4
     }
   ],
   "cost": {
