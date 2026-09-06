@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — engineering；會改的是 loom-code/contract/ 下的 .md 模板與說明、站 SKILL.md、agent 契約、checker 規則與測試；checker 的 interface-surface 重算把 templates/ 下的非程式檔排除，使用者讀或輸入的介面沒有改變
 evidence: [docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/]
-status: confirmed 2026-09-05
+status: closed 2026-09-06 — branch slim-plan-doc
 
 ## Problem
 loom 對每種文件只規定了「格式長什麼樣」，沒有規定「這份文件裝什麼、不裝什麼」以及「定稿之後誰能在什麼時候改哪一部分」，也沒有 checker 重算這兩件事。結果同一個模板的產物長度相差 18 倍，plan 在 build／review 期間被回頭寫成施工日誌，review.json 逐輪累積不清。
