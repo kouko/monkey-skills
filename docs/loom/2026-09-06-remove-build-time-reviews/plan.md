@@ -21,7 +21,7 @@ charter: 1.0
 - Risk: agent-decided — keep scenario detail in specs and case IDs in capped plan lines; do not add a new user decision point.
 
 **W1-02 Build keeps tests and removes automatic checkpoints**  after: W1-01  acceptance: 3,4
-- Files: `loom-code/skills/build/SKILL.md`, `loom-code/scripts/test_build*.py`, `loom-code/scripts/test_station_text*.py`
+- Files: `loom-code/skills/build/SKILL.md`, `loom-code/scripts/test_build*.py`, `loom-code/scripts/test_station_text*.py`, `docs/loom/evidence/mechanisms.yaml`
 - Test: A3 positive: task-tests-advance; negative: no-after-task-or-wave-dispatch. A4 positive: adversary-red-first; boundary: small-lane-implementer-first.
 - Risk: agent-decided — waves remain dependency boundaries; legacy review markers stay readable but have no new-runtime dispatch effect.
 
