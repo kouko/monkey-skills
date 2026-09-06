@@ -1,6 +1,6 @@
 # 縮減實作途中審閱 — 盲跑報告
 
-第一輪盲跑以乾淨副本 `64edb744` 執行，找出 readiness 繞過、規格自審、計畫欄位超限、replay oracle 誤配及乾淨環境缺少 `wcwidth`。修正輪在同一 branch-end checkpoint 針對這些項目補強，沒有把第一輪失敗改寫成成功。
+第一輪盲跑以乾淨副本 `64edb744` 執行，找出 readiness 繞過、規格自審、計畫欄位超限、replay oracle 誤配及乾淨環境缺少 `wcwidth`。修正輪在同一 branch-end checkpoint 針對這些項目補強，沒有把第一輪失敗改寫成成功。第一次 push gate 又找出 null finding 無法正常補證據、probe 記錄命令不精確、對抗檔不能直接執行及第二家模型答案未落盤；這些問題也在推送前修正。
 
 ## 你要求的每一項結果
 
@@ -21,8 +21,8 @@
 - **證據**：`test_full_lane_adversary_first_covers_code_and_gate` 及 W0-01 → W0-02 dispatch 順序。
 
 ### 5. 所有工作完成後才進入唯一一次 branch-end review
-- **結果**：符合。第一輪 Codex 與 Claude 都回傳 `NEEDS_REVISION`，Ship 因此停住；修正完成後，同一組 Codex 與 Claude reviewer 在 round 5 都回傳 `PASS`，才進入使用者驗收。
-- **證據**：review round 4 保留原始 findings；round 5 在相同最終 SHA 記錄兩家 reviewer 的通過結果，所有 finding 均已解決或由原 reviewer 駁回。
+- **結果**：符合。第一輪 Codex 與 Claude 都回傳 `NEEDS_REVISION`，Ship 因此停住；修正完成後，同一組 Codex 與 Claude reviewer 通過。第一次 push gate 找出的問題修正後，也重新由兩家 reviewer 通過。
+- **證據**：review 保留原始 findings、push gate 的阻擋與後續 fix rounds；最新一輪在相同最終 SHA 記錄兩家 reviewer 的通過結果，所有 finding 均已解決或由原 reviewer 駁回。
 
 ### 6. 其他 lane、紀錄與 Ship 保護維持
 - **結果**：符合目前可機械驗證的部分。full/small/express/gate-only 的 branch-end 差異仍在；manifest 與 Codex scaffold 已同步；plan 的 Files 清單已降到上限內。
@@ -37,14 +37,14 @@
 第一輪盲跑依 README 建立新 venv 時，套件安裝成功，但 `wcwidth` 沒有列在 `requirements-dev.txt`，因此得到 2 failed、2016 passed；第二個失敗是 nested rehearsal 重複同一個根因。第一輪也因乾淨 worktree 的三個 Codex hook 尚未受信任而無法真正啟動完整 Build，沒有把直接 checker 操作冒充完整工作流。
 
 修正後以 `uv run --isolated --with-requirements requirements-dev.txt` 建立隔離依賴環境，執行 KICKOFF 指定的完整 package command，結果為：
-- loom-code / scripts / hooks：2025 passed、2 skipped、1 xfailed。
+- loom-code / scripts / hooks：2028 passed、2 skipped、1 xfailed。
 - loom-design：183 passed、1 skipped。
 - branch-end adversarial probe：11 passed。
 
 ## Review summary
 
 - 第一輪有效找出並保留所有重要問題，沒有駁回 important 或 fatal finding。
-- readiness、reviewer independence、runtime contract、Claude CLI adapter、replay oracle、mechanism eval、plan cap、release probes與乾淨依賴已修正。
+- readiness、reviewer independence、runtime contract、Claude CLI adapter、replay oracle、mechanism eval、plan cap、release probes、乾淨依賴，以及 push gate 的 null finding 與直接執行 probe 問題已修正。
 - 同一組 Codex／Claude reviewer 最終均通過；是否完成仍由使用者依本報告驗收，之後才執行 push gate。
 
 ## Questions I asked you
@@ -62,3 +62,4 @@
 - 舊 plan 只有在沒有 charter 且已存在 Git 歷史時才走 legacy 相容路徑，避免新 plan 靠刪欄位自行豁免。
 - Claude reviewer adapter 固定禁用工具、要求 JSON，並只接受 envelope 的字串 `result`，降低非互動呼叫的不穩定性。
 - replay 只計可重算的正式審閱等待；缺少 defect-fix 時間時不推估整體加速。
+- `resolved: null` 與欄位不存在都視為尚未關閉；只能補上一種非空證據，已關閉的 finding 不得再改寫或補上另一種關閉方式。
