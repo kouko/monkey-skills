@@ -2485,19 +2485,23 @@ def _review_norm(value) -> str:
 
 def _open_finding_gained_resolution_only(earlier, later) -> bool:
     """True when `later` differs from `earlier` only by gaining exactly one
-    of `resolved`/`dismissed` (absent in `earlier`, present in `later`),
-    every other key on the entry unchanged."""
+    of `resolved`/`dismissed` (absent or null in `earlier`, populated in
+    `later`), every other key on the entry unchanged."""
     if not isinstance(earlier, dict) or not isinstance(later, dict):
         return False
     other_keys = (set(earlier) | set(later)) - set(OPEN_FINDING_MOVABLE_KEYS)
     if any(earlier.get(key) != later.get(key) for key in other_keys):
         return False
-    gained = [key for key in OPEN_FINDING_MOVABLE_KEYS if key not in earlier and key in later]
-    changed_existing = [
+    if any(bool(earlier.get(key)) for key in OPEN_FINDING_MOVABLE_KEYS):
+        return False
+    gained = [
         key for key in OPEN_FINDING_MOVABLE_KEYS
-        if key in earlier and earlier.get(key) != later.get(key)
+        if not earlier.get(key) and bool(later.get(key))
     ]
-    return len(gained) == 1 and not changed_existing
+    return (
+        len(gained) == 1
+        and sum(bool(later.get(key)) for key in OPEN_FINDING_MOVABLE_KEYS) == 1
+    )
 
 
 def _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier_doc: dict, later_doc: dict) -> bool:

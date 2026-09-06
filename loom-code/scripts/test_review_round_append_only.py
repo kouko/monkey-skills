@@ -158,6 +158,32 @@ def test_open_finding_null_resolution_can_gain_evidence(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
 
 
+def _assert_sequential_double_close_blocks(
+    tmp_path: Path, first_key: str, second_key: str
+) -> None:
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    doc["open_findings"][0][first_key] = "existing evidence by r1"
+    doc["open_findings"][0][second_key] = None
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — finding already closed")
+    doc2 = copy.deepcopy(doc)
+    doc2["open_findings"][0][second_key] = "later evidence by r2"
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — double close")
+
+    result = run_review_edits(repo)
+
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+
+
+def test_dismissed_finding_cannot_later_gain_resolution(tmp_path: Path) -> None:
+    _assert_sequential_double_close_blocks(tmp_path, "dismissed", "resolved")
+
+
+def test_resolved_finding_cannot_later_gain_dismissal(tmp_path: Path) -> None:
+    _assert_sequential_double_close_blocks(tmp_path, "resolved", "dismissed")
+
+
 def test_review_edits_ungrandfathered_verdict_flip_blocks_naming_rewrite(tmp_path: Path) -> None:
     """Once charter-stamped, flipping an earlier verdict's own `verdict`
     value is not an append -- must block naming "earlier round
