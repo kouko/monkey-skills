@@ -1363,10 +1363,19 @@ def _check_v3_clear_acceptance(doc: MapDocument) -> None:
         )
 
 
-def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
+def _check_tickets(
+    map_dir: Path, state: str, schema_version: int
+) -> list[TicketDocument]:
+    """Check every ticket once, returning the parsed documents (in the
+    same sorted-glob order they were read) so a caller — today
+    `validate`'s subsequent `_check_monotonic_relations` — can reuse
+    them instead of globbing and re-reading the same ticket set.
+    Read-then-check stays interleaved per ticket in sorted order, so
+    the first problem encountered still raises immediately and in the
+    same precedence as before this sharing was introduced."""
     tickets_dir = Path(map_dir) / "tickets"
     if not tickets_dir.is_dir():
-        return
+        return []
     valid_ticket_types = (
         V3_TICKET_TYPES if schema_version == 3 else V2_TICKET_TYPES
     )
@@ -1376,8 +1385,10 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
     blocked_by_graph: dict[str, list[str]] = {}
     statuses: dict[str, str] = {}
     non_closed: list[str] = []
+    tickets: list[TicketDocument] = []
     for ticket_path in sorted(tickets_dir.glob("*.md")):
         ticket = read_ticket(ticket_path)
+        tickets.append(ticket)
         if ticket.frontmatter.type not in valid_ticket_types:
             guidance = (
                 "; classify the ticket by its closure evidence as one of "
@@ -1456,6 +1467,7 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
         raise SchemaViolation(
             "clear map has non-closed ticket(s): " + ", ".join(non_closed)
         )
+    return tickets
 
 
 def _check_blocked_by(
@@ -1523,7 +1535,12 @@ def _check_blocked_by(
                 path.pop()
 
 
-def _check_monotonic_relations(map_dir: Path, doc: MapDocument) -> None:
+def _check_monotonic_relations(
+    doc: MapDocument, ticket_documents: list[TicketDocument]
+) -> None:
+    """Consume the ticket documents `_check_tickets` already read (in
+    the same sorted-glob order) instead of globbing and re-reading the
+    same ticket set."""
     if doc.frontmatter.schema_version != 3:
         return
     out_of_scope_ids = {
@@ -1533,8 +1550,8 @@ def _check_monotonic_relations(map_dir: Path, doc: MapDocument) -> None:
     }
     graduated: dict[str, list[str]] = {}
     closed_tickets: list[str] = []
-    for ticket_path in sorted((Path(map_dir) / "tickets").glob("*.md")):
-        ticket = read_ticket(ticket_path)
+    for ticket in ticket_documents:
+        ticket_path = ticket.path
         if ticket.frontmatter.graduated_from:
             graduated.setdefault(ticket.frontmatter.graduated_from, []).append(
                 ticket_path.name
@@ -1601,10 +1618,10 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
         _check_map_structure(doc)
         _check_destination_acceptance(doc, resolved_repo_root)
         _check_v3_clear_acceptance(doc)
-        _check_tickets(
+        tickets = _check_tickets(
             map_dir, doc.frontmatter.state, doc.frontmatter.schema_version
         )
-        _check_monotonic_relations(map_dir, doc)
+        _check_monotonic_relations(doc, tickets)
     except SchemaViolation as exc:
         return 2, str(exc)
     except MapStoreError as exc:

@@ -401,19 +401,17 @@ def _update_blockers_locked(
         map_store.require_ticket_mutable(map_dir, ticket_slug, "edit")
     except (map_store.MapStoreError, map_store.SchemaViolation) as exc:
         raise CloseTransactionError(str(exc)) from exc
-    graph = {
-        path.stem: map_store.read_ticket(path).frontmatter.blocked_by
+    siblings = {
+        path.stem: map_store.read_ticket(path)
         for path in sorted((map_dir / "tickets").glob("*.md"))
     }
+    graph = {stem: ticket.frontmatter.blocked_by for stem, ticket in siblings.items()}
     graph[ticket_slug] = blockers
     try:
         map_store._check_blocked_by(graph, map_dir / "tickets")
     except map_store.SchemaViolation as exc:
         raise CloseTransactionError(str(exc)) from exc
-    statuses = {
-        path.stem: map_store.read_ticket(path).frontmatter.status
-        for path in sorted((map_dir / "tickets").glob("*.md"))
-    }
+    statuses = {stem: ticket.frontmatter.status for stem, ticket in siblings.items()}
     if statuses.get(ticket_slug) == "claimed":
         unclosed = [slug for slug in blockers if statuses.get(slug) != "closed"]
         if unclosed:
