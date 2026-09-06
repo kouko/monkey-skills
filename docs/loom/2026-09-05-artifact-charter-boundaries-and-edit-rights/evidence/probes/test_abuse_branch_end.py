@@ -253,6 +253,53 @@ _ALLOWED_TOKEN = re.compile(
 )
 
 
+# A block the trunk retired from under a probe after graduation: loom-code
+# 1.6.1 (#796) removed `_confirm_intent_sha` from
+# test_probes_complexity_wave_end.py and its own residual-reference probe
+# refuses any graduated file that still names that helper. The evidence
+# original keeps the two probes that pinned it (the recorded probe commands
+# select them by name; they skip, stating the retirement) and the graduated
+# twin drops them. That one divergence is admitted here by stripping the
+# retired block from the evidence side before the diff: from the comment
+# header that opens it to the end of the file, plus the imports and the
+# module-path constant only that block used.
+RETIRED_BLOCKS: dict[str, tuple[str, tuple[str, ...], tuple[str, ...]]] = {
+    "test_abuse_charter_wave_end.py": (
+        "# The W3-02 repair: `_confirm_intent_sha()` in",
+        (
+            "import importlib.util",
+            "import shutil",
+            "import tempfile",
+            "import pytest",
+            "from _pytest.outcomes import Skipped",
+        ),
+        (
+            "COMPLEXITY_PROBE_MODULE = (",
+            '    REPO / "loom-code" / "scripts" / "test_probes_complexity_wave_end.py"',
+            ")",
+        ),
+    ),
+}
+
+
+def _strip_retired_block(original_name: str, lines: list[str]) -> list[str]:
+    if original_name not in RETIRED_BLOCKS:
+        return lines
+    header, imports, constant = RETIRED_BLOCKS[original_name]
+    try:
+        start = next(i for i, line in enumerate(lines) if line.startswith(header))
+    except StopIteration:
+        return lines
+    if start and lines[start - 1].startswith("# ----"):
+        start -= 1
+    kept = [line for line in lines[:start] if line not in imports]
+    width = len(constant)
+    for i in range(len(kept) - width + 1):
+        if tuple(kept[i:i + width]) == constant:
+            return kept[:i] + kept[i + width:]
+    return kept
+
+
 def _is_allowed_diff_line(line: str) -> bool:
     body = line[1:].strip()  # strip the leading +/- and surrounding whitespace
     return body == "" or bool(_ALLOWED_TOKEN.search(body))
@@ -264,7 +311,9 @@ def test_graduated_twins_diff_only_in_allowed_lines():
     their repo root via `git rev-parse --show-toplevel` need no path
     line at all), the REPO_ROOT parents[N] depth line, or the env/os
     threading lines the scratch-manifest patch needed once promoted next
-    to loom_checker.py. Any OTHER divergence means the promotion silently
+    to loom_checker.py, or a block the trunk retired after graduation
+    (RETIRED_BLOCKS, stripped from the evidence side first). Any OTHER
+    divergence means the promotion silently
     changed behaviour instead of only its location, and this test must
     name exactly which line broke the shape."""
     unexpected: list[str] = []
@@ -275,7 +324,9 @@ def test_graduated_twins_diff_only_in_allowed_lines():
         if not original.is_file() or not graduated.is_file():
             missing_pairs.append(f"{original_name} -> {graduated_name}")
             continue
-        original_lines = original.read_text(encoding="utf-8").splitlines()
+        original_lines = _strip_retired_block(
+            original_name, original.read_text(encoding="utf-8").splitlines()
+        )
         graduated_lines = graduated.read_text(encoding="utf-8").splitlines()
         diff = list(difflib.unified_diff(original_lines, graduated_lines, lineterm=""))
         for line in diff:
