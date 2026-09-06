@@ -1,0 +1,114 @@
+schema: loom-workflow-replay/v1
+source_change:
+  change_id: 2026-09-03-small-change-lane
+  reachable_merge_sha: 2df247b10a90bc1ce892c556bc32cb01b97e1d99
+  reachable_base_sha: b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0
+  plan: docs/loom/2026-09-03-small-change-lane/plan.md
+  review: docs/loom/2026-09-03-small-change-lane/review.json
+  cost: docs/loom/2026-09-03-small-change-lane/evidence/cost.md
+  pre_checkpoint_patch:
+    path: docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-pre-checkpoint.patch.gz
+    sha256: 2ecd708ebc70dc9b74550137a0b58940f9bfa50ce89f91914df2a2ebe9727900
+    excludes:
+      - docs/loom/2026-09-03-small-change-lane/review.json
+
+materialize:
+  - git worktree add <baseline-tree> b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0
+  - gzip -dc <fixture-dir>/replay-pre-checkpoint.patch.gz | git -C <baseline-tree> apply --index
+  - git worktree add <candidate-tree> b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0
+  - gzip -dc <fixture-dir>/replay-pre-checkpoint.patch.gz | git -C <candidate-tree> apply --index
+runtime:
+  baseline:
+    source_sha: 130b4ca1691de465be71df163f620d761abef5fa
+    loom_code_version: 1.7.0
+  candidate:
+    source_sha: <first-review-only-branch-end-commit-parent>
+  rule: >-
+    Load loom-code from source_sha as the external plugin runtime; do not use
+    the loom-code copy inside either replay target tree. If either runtime
+    cannot be loaded by exact SHA, report UNGRADABLE.
+
+fixed_task_order:
+  - W0-01
+  - W0-02
+  - W1-01
+  - W1-02
+  - W1-03
+  - W1-04
+permanent_commands:
+  - python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q
+  - python3 -m pytest loom-code/scripts/test_skill_word_caps.py -q
+  - python3 scripts/check_version_bump.py
+  - python3 scripts/sync_codex_manifests.py --check loom-code loom-design
+  - python3 loom-code/scripts/loom_checker.py --list-rules
+  - python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto
+
+actors:
+  orchestrator:
+    prompt_inputs:
+      - external-runtime:skills/build/SKILL.md
+      - docs/loom/2026-09-03-small-change-lane/plan.md
+      - this fixture except finding_oracle
+    rule: Apply the fixed task patch as task output; do not regenerate code.
+  branch_end_review:
+    reviewers:
+      - vendor: openai
+        model: gpt-6-astra
+        effort: high
+      - vendor: anthropic
+        cli_version: 2.1.263
+        model: opus
+        effort: high
+    prompt_inputs:
+      - external-runtime:agents/reviewer.md
+      - external-runtime:skills/review/references/lenses.md
+      - docs/loom/intent/2026-09-03-small-change-lane.md
+      - docs/loom/2026-09-03-small-change-lane/plan.md
+      - replay target diff
+    forbidden_input: finding_oracle
+    rule: >-
+      Use fresh contexts. Record runtime-reported full model identifiers; if
+      either pinned model is unavailable, report UNGRADABLE.
+
+metrics:
+  formal_build_review_dispatch: >-
+    dispatch[].role is reviewer, blind-runner, or adversary AND
+    dispatch[].task starts with after-task: or wave-end:
+  checkpoint_blocking_seconds: >-
+    seconds from the earliest matching dispatch.started through the commit
+    timestamp of that checkpoint's first passing review-only commit
+  defect_fix_seconds: >-
+    seconds from the first fix implementer dispatch after a matching
+    checkpoint through the last fix commit before its passing review-only
+    commit; report separately and do not subtract it from or add it to the
+    structural waiting claim
+  recorded_baseline:
+    formal_build_review_dispatches: 2
+    checkpoint_blocking_seconds: 1086
+    interval: 2026-09-04T00:40:07+08:00/2026-09-04T00:58:13+08:00
+  candidate_required:
+    formal_build_review_dispatches: 0
+    checkpoint_blocking_seconds: 0
+
+finding_oracle:
+  visibility: orchestrator-after-verdicts-only
+  equivalence: same root cause, regardless of wording; severity must be important or fatal
+  findings:
+    - id: historical-after-task-01
+      root_cause: dot-directories were counted as plugin directories
+    - id: historical-after-task-02
+      root_cause: change-folder record exclusion omitted spec.md
+    - id: historical-after-task-03
+      root_cause: the lane reviewer floor contradicted the then-ratified principles
+    - id: historical-after-task-04
+      root_cause: the published verdict-rule description still claimed a fixed two-reader floor
+
+results:
+  directory: docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-results
+  required_files:
+    - baseline-events.json
+    - candidate-events.json
+    - permanent-tests.txt
+    - branch-end-codex.yaml
+    - branch-end-claude.yaml
+    - comparison.md

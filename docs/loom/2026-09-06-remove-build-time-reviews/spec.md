@@ -1,22 +1,22 @@
 # Remove automatic reviews during Build — spec
 intent: 2026-09-06-remove-build-time-reviews@d6a8829a
-confirmed-behavior: 2026-09-06 @77c179b
+confirmed-behavior: 2026-09-06 @e9799bf
 
 ## Requirements
 REQ-1 — No automatic formal review during Build
   WHILE Build is active, including final-task and final-wave closure, the Loom flow shall not automatically invoke an `after-task` or `wave-end` formal review; every required task-scoped test and integration check shall pass before that task is complete or a dependent task begins, and the sole automatic transition to formal review shall be the closing `branch-end` review after package tests pass → Acceptance #1
 
 REQ-2 — Positive and negative protection remains before implementation
-  BEFORE a task implementation begins, the plan shall trace every Acceptance behaviour the task owns to at least one positive case and one negative or boundary case; the implementer shall execute those cases in the task's test-first cycle and they shall pass before task completion. WHEN the effective full-lane risk policy classifies a task as `code` or `gate`, a fresh-context adversary shall additionally author an abuse case before the implementer is dispatched; the implementation may not remove, skip, invert, or weaken any of these cases → Acceptance #2
+  The Loom flow shall require each task's existing `Test:` line to name at least one `positive:` case and one `negative:` or `boundary:` case for every Acceptance behaviour that task owns; the implementer shall execute those cases in the task's test-first cycle and they shall pass before task completion. The existing `intake.after-task-budget` checker rule shall be replaced, not supplemented, by `intake.test-case-pair`, which blocks a plan whose task omits either marker, keeping the mechanism population flat. WHEN the effective full-lane risk policy classifies a task as `code` or `gate`, a fresh-context adversary shall additionally author an abuse case before the implementer is dispatched; the implementation may not remove, skip, invert, or weaken any of these cases → Acceptance #2
 
 REQ-3 — Branch-end review remains mandatory
   WHEN every planned task and the package tests are complete, the Loom flow shall run exactly one closing `branch-end` review with the reviewer count, blind run, adversarial verification, and fix rounds required by the effective lane; Ship shall remain blocked until that checkpoint reaches its lane-defined passing verdict with no unresolved blocking finding → Acceptance #3
 
 REQ-4 — All other review and shipping contracts remain unchanged
-  Relative to loom-code 1.7.0 at `130b4ca1691de465be71df163f620d761abef5fa`, the Loom flow shall preserve the mechanical effective-lane selection and every declared mode (`full`, `small`, `express`, `gate-only`), including each mode's branch-end reviewer floor, blind-run trigger, adversarial pass, package-test evidence, fix-round behaviour, and stop condition. It shall also preserve reviewer-implementer separation, the versioned `review.json` record, evidence freshness, the blind-run report, the review-only HEAD requirement, and every Ship blocking rule not specific to `after-task` or `wave-end` review → Acceptance #4
+  Relative to loom-code 1.7.0 at `130b4ca1691de465be71df163f620d761abef5fa`, the Loom flow shall preserve the effective-lane outcomes (`full`, `small`, `express`, `gate-only`) and the declaration grammar that admits only user-declared `full`, `express`, or `gate-only` while `small` and `full` remain mechanically recomputed. It shall preserve each effective lane's branch-end reviewer floor, blind-run trigger, adversarial pass, package-test evidence, fix-round behaviour, and stop condition, plus reviewer-implementer separation, the versioned `review.json` record, evidence freshness, the blind-run report, the review-only HEAD requirement, and every Ship blocking rule not specific to `after-task` or `wave-end` review → Acceptance #4
 
 REQ-5 — The deletion is measured on a real multi-task change
-  WHEN the committed `2026-09-03-small-change-lane` change is replayed from its plan commit `6a2910e7` through its last planned-task commit `8bd5fc7e`, compare the baseline runtime `130b4ca1` with the candidate's first review-only branch-end commit on the same machine and checkout inputs. Count a formal-review dispatch only when `dispatch[].role` is `reviewer`, `blind-runner`, or `adversary` and `dispatch[].task` begins `after-task:` or `wave-end:`; measure checkpoint blocking from the first such dispatch timestamp through its passing checkpoint commit, and report defect-fix time separately. Both runs shall execute the exact Test commands named by the fixed plan, retain raw command output and timestamps, and present every important-or-worse baseline intermediate finding to the branch-end readers as a fixed oracle. The candidate shall have zero Build-time formal-review dispatches and zero Build-time checkpoint blocking, the permanent-test outcomes shall match, and each oracle finding shall be independently rediscovered at branch end or explicitly shown inapplicable with evidence → Acceptance #5
+  WHEN the self-contained `evidence/replay-fixture.yaml` and its pinned pre-checkpoint patch replay the real merged `2026-09-03-small-change-lane` change, compare the recorded loom-code 1.7.0 baseline with the candidate's first review-only branch-end commit using the fixture's exact checkout recipe, permanent commands, model inputs, event predicates, clocks, and hidden finding oracle. The candidate shall have zero Build-time formal-review dispatches and zero Build-time checkpoint blocking, the permanent-test outcomes shall match, and each oracle finding shall be independently rediscovered at branch end or explicitly shown inapplicable with evidence; raw commands, output, timestamps, runtime-reported model identifiers, and defect-fix time shall be retained at the fixture's declared result paths, and any unavailable pinned input makes the measurement `UNGRADABLE` rather than a speed claim → Acceptance #5
 
 ## Design decision
 - user-decided — Remove only automatically triggered after-task and wave-end formal reviews; do not redesign the wider verification model until this deletion is measured.
@@ -38,12 +38,12 @@ REQ-5 — The deletion is measured on a real multi-task change
 - Remove waves entirely — rejected because waves still express dependency and parallel integration order.
 
 ## Current state evidence
-- Forward: `loom-code/skills/build/SKILL.md` at `Step 5` invokes review immediately for a task marked `review: after-task`.
-- Reverse: `loom-code/skills/write-plan/SKILL.md` at `Step 5 — Write the plan` emits the `review: after-task` task grammar and budgets intermediate checkpoints.
-- Error: `loom-code/skills/build/SKILL.md` at `Step 6 — close the wave` computes file and line thresholds and invokes wave-end review before later work continues.
+- Forward: `loom-code/skills/build/SKILL.md` §4 item 5, gate `build.after-task-review-before-next-task`, invokes review immediately for a task marked `review: after-task`.
+- Reverse: `loom-code/skills/write-plan/SKILL.md` at `Step 5 — Write the plan` emits the `review: after-task` task grammar and budgets intermediate checkpoints; each task currently has one capped `Test:` line whose first failing test is a starting point, not a case-pair contract.
+- Error: `loom-code/skills/build/SKILL.md` `## 5. Wave end` computes the 8-file / 400-line threshold and the after-task wave trigger before later work continues.
 - Data: `loom-code/contract/manifest.yaml` at the `checkpoint` mechanism and plan `Task DAG` field declares after-task, wave-end, and branch-end scopes in one contract.
-- Boundary: `loom-code/skills/review/SKILL.md` at `Which slice this checkpoint owns` distinguishes after-task and wave-end scopes from branch-end; this change deletes the first two automatic callers but retains branch-end behavior.
-- Replay: `docs/loom/2026-09-03-small-change-lane/plan.md` pins the task graph and permanent Test commands; its `review.json` records two `after-task:W0-02` reviewer dispatches and their important findings, while `evidence/cost.md` records the checkpoint as 18 elapsed minutes.
+- Boundary: `loom-code/skills/review/SKILL.md` `## 1. Scope and artifact type` distinguishes `after-task:<id>` and `wave-end:<n>` from `branch-end`; this change deletes the first two automatic callers but retains branch-end behavior.
+- Replay: `docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-fixture.yaml` pins a clean-checkout recipe, exact commands and event oracle around a committed patch of the historical pre-checkpoint tree; the source change's reachable `review.json` records two `after-task:W0-02` reviewer dispatches and `evidence/cost.md` records 18 minutes.
 
 ## UI flows
 ### Plan and Build
