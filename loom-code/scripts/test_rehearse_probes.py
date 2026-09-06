@@ -350,3 +350,84 @@ def test_cloneRun_carriesTheNestedMarker_soCloneAndRunProbesCanSkip(
     out = capsys.readouterr().out
     assert code == 0, out
     assert "FAILED (0)" in out, out
+
+
+# --------------------------------------------------------------------------
+# squashed shape (plan task W1-02) -- the adversary's
+# `docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/
+# test_abuse_squashed_rehearsal.py` is the attack catalogue and is not
+# duplicated here; these companions drive the same scenario in-process via
+# `rehearse_probes.main([...])` and add `_resolve_trunk_sha` white-box
+# coverage the adversary's file, which only ever sees the script from the
+# outside, does not exercise directly.
+# --------------------------------------------------------------------------
+
+def test_resolveTrunkSha_noOriginAndNonTrunkBranch_returnsNone(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path, trunk="develop")
+    assert rehearse_probes._resolve_trunk_sha(repo) == (None, None)
+
+
+def test_resolveTrunkSha_originAheadOfLocalMain_returnsOriginSha(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path, trunk="main")
+    bare = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True, capture_output=True)
+    _git_ok(repo, "remote", "add", "origin", str(bare))
+    _git_ok(repo, "push", "-q", "origin", "main")
+    origin_sha = _git_ok(repo, "rev-parse", "origin/main")
+
+    commit_file(repo, "tests/test_ahead.py", "def test_ok():\n    assert True\n", "ahead of origin")
+
+    sha, ref = rehearse_probes._resolve_trunk_sha(repo)
+    assert (sha, ref) == (origin_sha, "origin/main")
+    assert sha != _git_ok(repo, "rev-parse", "HEAD")
+
+
+BRANCH_ONLY_COMMIT_PROBE = _HEADER + '''
+
+def test_branchOnlyCommitProbe_findsIntermediateCommitSubject_bySubjectGrep():
+    log = _git("log", "--oneline", "--all", "--grep=intermediate branch work", "--format=%H")
+    assert log.stdout.strip() != "", (
+        "the commit subject 'intermediate branch work' is not reachable -- "
+        "this probe depends on a commit that only exists before the branch "
+        "is squashed to one commit off its trunk"
+    )
+'''
+
+
+def test_squashedShape_probeNeedingBranchOnlyCommit_failsInProcessWhileCiShapedStaysGreen(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = make_repo(tmp_path, trunk="main")
+    bare = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True, capture_output=True)
+    _git_ok(repo, "remote", "add", "origin", str(bare))
+    _git_ok(repo, "push", "-q", "origin", "main")
+
+    commit_file(repo, "src/marker.txt", "intermediate\n", "intermediate branch work")
+    commit_file(
+        repo, "tests/test_branch_only.py", BRANCH_ONLY_COMMIT_PROBE, "add branch-only probe"
+    )
+
+    code = rehearse_probes.main(["tests/test_branch_only.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code != 0, out
+    assert "test_branch_only.py" in out, out
+    assert "SQUASHED SHAPE" in out, out
+    # the CI-shaped section (printed first, before "SQUASHED SHAPE") stays
+    # green -- only the squashed shape loses the branch-only commit
+    ci_shaped_section = out.split("SQUASHED SHAPE", 1)[0]
+    assert "FAILED (0)" in ci_shaped_section, out
+
+
+def test_squashedShape_nothingToSquash_skipsAndStaysGreen(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = make_repo(tmp_path, trunk="main")
+    commit_file(repo, "tests/test_green.py", "def test_ok():\n    assert True\n", "green")
+
+    code = rehearse_probes.main(["tests/test_green.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert "FAILED (0)" in out, out
+    assert "SQUASHED SHAPE: skipped" in out, out
+    assert "nothing to squash" in out, out

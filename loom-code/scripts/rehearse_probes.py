@@ -46,6 +46,30 @@ Design choices the plan marks agent-decided:
   gated on `--keep`, never a shell `rm -rf`. Not `TemporaryDirectory`'s
   `delete=False` keyword: that is Python 3.12+ only, and CI runs this
   script under Python 3.11.
+
+A second shape runs in the same invocation (plan task W1-02): the branch
+squashed to one commit on top of its trunk, so a probe that only passes
+because it can still see one of the branch's individual commits -- the
+way a squash-merge to `main` would remove it -- goes red here before
+graduation instead of after the squash merge lands. Design choices:
+
+- The trunk commit is resolved from `--repo` itself, before anything is
+  cloned, trying `origin/main`, `origin/master`, local `main`, local
+  `master` in that order -- the same trunk names `_clone_ci_shaped`
+  already prunes, so a repository with no divergent trunk (HEAD already
+  is the trunk, or no candidate ref resolves at all) squashes nothing
+  and says so instead of guessing.
+- The squash reuses the CI-shaped clone already on disk -- `reset --soft`
+  onto the trunk commit followed by one `commit --allow-empty` -- rather
+  than cloning `--repo` a second time, per the plan's own risk line: the
+  existing CI-shaped check above keeps running unchanged, and the second
+  shape only costs one extra reset/commit pair, not a second clone.
+- The trunk commit is still reachable inside the CI-shaped clone with no
+  ref naming it (`_clone_ci_shaped` prunes local `main`/`master`) because
+  it is an ancestor of the branch that clone already copied; `reset
+  --soft <sha>` needs no ref, only the object.
+- No new opt-in flag: both shapes always run, and the script exits
+  non-zero if either one is red.
 """
 from __future__ import annotations
 
@@ -58,6 +82,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 NESTED_ENV = "REHEARSE_PROBES_NESTED"
+SHAPE_ENV = "REHEARSE_PROBES_SHAPE"
 from pathlib import Path
 
 from git_exec import run_git  # sibling module (no __init__.py, no conftest)
@@ -183,6 +208,121 @@ def _clone_ci_shaped(repo_root: Path, dest: Path) -> str:
         # a missing ref is expected and not an error -- check=False (the default)
         run_git(dest, "update-ref", "-d", f"refs/heads/{trunk}", timeout=GIT_TIMEOUT)
     return head_sha
+
+
+def _resolve_trunk_sha(repo_root: Path) -> tuple[str | None, str | None]:
+    """Return (sha, ref) for the trunk commit the branch checked out in
+    `repo_root` should be squashed onto, or (None, None) when no candidate
+    ref resolves at all.
+
+    Tries `origin/main`, `origin/master`, local `main`, local `master` in
+    that order, on `repo_root` itself -- read-only, before any clone
+    exists -- so the branch's own configured upstream (the real trunk
+    this branch diverged from) is what gets used, not the clone-local
+    `origin` remote `_clone_ci_shaped` gives every clone regardless of
+    `--repo`'s own remote configuration. Returning the same sha as the
+    branch's own HEAD is a valid answer (it means "nothing to squash");
+    callers compare it against `head_sha` themselves. `ref` is handed back
+    so `_squash_clone_onto_trunk` can update the same-named ref inside the
+    clone after squashing, instead of leaving it pointing at pre-squash
+    history.
+    """
+    for ref in ("origin/main", "origin/master", "main", "master"):
+        sha = run_git(repo_root, "rev-parse", "--verify", "--quiet", ref, timeout=GIT_TIMEOUT)
+        if sha:
+            return sha, ref
+    return None, None
+
+
+def _squash_clone_onto_trunk(clone_dir: Path, trunk_sha: str, trunk_ref: str) -> None:
+    """Collapse everything in `clone_dir` since `trunk_sha` into one new
+    commit on top of it, in place.
+
+    No second `git clone` of the source repository: `reset --soft` moves
+    the clone's detached HEAD to `trunk_sha` without touching the index,
+    so the following `commit` captures the whole diff between the trunk
+    and the branch tip as a single new commit -- collapsing away any
+    commit that only exists between the two, the same way a squash merge
+    to the trunk would. `trunk_sha` need not be named by any ref inside
+    `clone_dir` (`_clone_ci_shaped` prunes local `main`/`master`); it only
+    needs to be an object already in the clone's history, which it is,
+    being an ancestor of the branch `_clone_ci_shaped` cloned.
+
+    `clone_dir`'s own `origin` remote-tracking refs (e.g. `origin/main`,
+    always present because `_clone_ci_shaped` clones from `repo_root`
+    itself) still point at the branch's full, unsquashed history after the
+    commit above -- `git log --all`, or any other ref walk a probe runs,
+    would still see it. Every `refs/remotes/origin/*` ref other than
+    `trunk_ref` is deleted outright; `trunk_ref` itself, when it is one of
+    those (`origin/main`/`origin/master`), is updated to the new squashed
+    commit instead of deleted, so a probe asserting that ref specifically
+    resolves (a property of the CI-shaped clone this same script also
+    produces) keeps seeing it resolve -- to the squashed commit now, the
+    way a real `origin/main` would read once the squash merge lands.
+
+    Raises subprocess.CalledProcessError / OSError / TimeoutExpired on any
+    git failure; callers turn that into a script-level error, same as
+    `_clone_ci_shaped`.
+    """
+    run_git(
+        clone_dir, "config", "user.email", "rehearse-probes@example.invalid",
+        timeout=GIT_TIMEOUT, check=True,
+    )
+    run_git(clone_dir, "config", "user.name", "rehearse-probes", timeout=GIT_TIMEOUT, check=True)
+    run_git(clone_dir, "config", "commit.gpgsign", "false", timeout=GIT_TIMEOUT, check=True)
+    run_git(clone_dir, "reset", "-q", "--soft", trunk_sha, timeout=GIT_TIMEOUT, check=True)
+    run_git(
+        clone_dir, "commit", "-q", "--allow-empty", "-m",
+        "squashed shape (rehearse_probes.py)", timeout=GIT_TIMEOUT, check=True,
+    )
+    new_sha = run_git(clone_dir, "rev-parse", "HEAD", timeout=GIT_TIMEOUT, check=True)
+
+    trunk_remote_ref = f"refs/remotes/{trunk_ref}" if trunk_ref.startswith("origin/") else None
+    existing_origin_refs = run_git(
+        clone_dir, "for-each-ref", "--format=%(refname)", "refs/remotes/origin",
+        timeout=GIT_TIMEOUT,
+    ) or ""
+    for refname in existing_origin_refs.splitlines():
+        if refname == trunk_remote_ref:
+            continue
+        run_git(clone_dir, "update-ref", "-d", refname, timeout=GIT_TIMEOUT)
+    if trunk_remote_ref is not None:
+        run_git(
+            clone_dir, "update-ref", trunk_remote_ref, new_sha, timeout=GIT_TIMEOUT, check=True,
+        )
+
+
+def _run_pytest_in_clone(
+    clone_dir: Path, paths: list[str], junit_path: Path, shape: str,
+) -> tuple[subprocess.CompletedProcess | None, str]:
+    """Run pytest for `paths` inside `clone_dir`, writing junit XML to
+    `junit_path`. Returns (proc, "") normally, or (None, message) when
+    pytest itself timed out -- callers turn that into a script-level
+    error the same way both shapes always have.
+
+    `NESTED_ENV` is set to `clone_dir` on every call -- CI-shaped and
+    squashed alike -- so a probe that itself knows how to invoke this
+    script sees the nesting guard inside whichever shape runs it and
+    never opens a second recursion path. `SHAPE_ENV` (`shape`, either
+    `"ci-shaped"` or `"squashed"`) lets a probe that has to assert
+    something true of one shape only -- an exact HEAD sha only the
+    unsquashed history can carry, say -- tell which shape it is running
+    in instead of asserting a fact that is only ever true for one of them.
+    """
+    cmd = [
+        sys.executable, "-m", "pytest", *paths,
+        "-q", "-rs", "-p", "no:cacheprovider",
+        "--junit-xml", str(junit_path),
+    ]
+    env = {**os.environ, NESTED_ENV: str(clone_dir), SHAPE_ENV: shape}
+    try:
+        proc = subprocess.run(
+            cmd, cwd=str(clone_dir), capture_output=True, text=True,
+            timeout=PYTEST_TIMEOUT, env=env,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return None, f"pytest timed out inside the rehearsal clone: {exc}"
+    return proc, ""
 
 
 def _classname_to_nodeid_prefix(classname: str, repo_root: Path | None) -> str:
@@ -312,27 +452,9 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     junit_path = clone_dir / ".rehearsal-junit.xml"
-    cmd = [
-        sys.executable, "-m", "pytest", *paths,
-        "-q", "-rs", "-p", "no:cacheprovider",
-        "--junit-xml", str(junit_path),
-    ]
-
-    # Mark the clone's pytest as nested: a graduated probe that itself clones
-    # the repository and runs the probe files reads this and skips, so a
-    # rehearsal never re-enters itself from inside its own clone. The
-    # marker's VALUE is the clone's own absolute path (not a bare "1"), so
-    # a reader checks it applies here specifically -- a same-named marker
-    # left over from an unrelated shell or CI job carries a different path
-    # and is ignored rather than causing a silent skip.
-    env = {**os.environ, NESTED_ENV: str(clone_dir)}
-    try:
-        proc = subprocess.run(
-            cmd, cwd=str(clone_dir), capture_output=True, text=True,
-            timeout=PYTEST_TIMEOUT, env=env,
-        )
-    except subprocess.TimeoutExpired as exc:
-        print(f"pytest timed out inside the rehearsal clone: {exc}", file=sys.stderr)
+    proc, timeout_error = _run_pytest_in_clone(clone_dir, paths, junit_path, "ci-shaped")
+    if proc is None:
+        print(timeout_error, file=sys.stderr)
         if not args.keep:
             shutil.rmtree(clone_dir, ignore_errors=True)
         return 2
@@ -349,6 +471,64 @@ def main(argv: list[str] | None = None) -> int:
         report.append(proc.stdout.rstrip("\n"))
     if proc.stderr:
         report.append(proc.stderr.rstrip("\n"))
+
+    final_code = proc.returncode
+
+    # Squashed shape (plan task W1-02): squash the same clone in place onto
+    # its trunk and rehearse the same paths there again. `trunk_sha` is
+    # read from `repo_root` (the source, untouched) -- never from the
+    # clone, whose own `origin` always points back at `repo_root` itself
+    # regardless of what `repo_root`'s own remotes look like.
+    trunk_sha, trunk_ref = _resolve_trunk_sha(repo_root)
+    if trunk_sha is None:
+        report.append("")
+        report.append(
+            "SQUASHED SHAPE: skipped -- no trunk ref (origin/main, "
+            "origin/master, main, master) resolves in this repository"
+        )
+    elif trunk_sha == head_sha:
+        report.append("")
+        report.append(
+            "SQUASHED SHAPE: skipped -- HEAD is already the trunk, nothing to squash"
+        )
+    else:
+        try:
+            _squash_clone_onto_trunk(clone_dir, trunk_sha, trunk_ref)
+        except subprocess.CalledProcessError as exc:
+            detail = exc.stderr or exc.stdout or str(exc)
+            report.append("")
+            report.append(f"SQUASHED SHAPE: could not squash the rehearsal clone: {detail}")
+            final_code = final_code or 2
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            report.append("")
+            report.append(f"SQUASHED SHAPE: could not squash the rehearsal clone: {exc}")
+            final_code = final_code or 2
+        else:
+            squash_proc, squash_timeout_error = _run_pytest_in_clone(
+                clone_dir, paths, junit_path, "squashed"
+            )
+            if squash_proc is None:
+                report.append("")
+                report.append(f"SQUASHED SHAPE: {squash_timeout_error}")
+                final_code = final_code or 2
+            else:
+                squash_failed, squash_skipped = _parse_junit(junit_path, clone_dir)
+                report.append("")
+                report.append("SQUASHED SHAPE")
+                report.append(f"FAILED ({len(squash_failed)})")
+                report.extend(f"FAILED {nodeid}" for nodeid in squash_failed)
+                report.append(f"SKIPPED ({len(squash_skipped)})")
+                report.extend(
+                    f"SKIPPED {nodeid}: {reason}" for nodeid, reason in squash_skipped
+                )
+                report.append("")
+                if squash_proc.stdout:
+                    report.append(squash_proc.stdout.rstrip("\n"))
+                if squash_proc.stderr:
+                    report.append(squash_proc.stderr.rstrip("\n"))
+                if squash_proc.returncode != 0:
+                    final_code = final_code or squash_proc.returncode
+
     if args.keep:
         report.append("")
         report.append(f"kept the rehearsal clone at: {clone_dir}")
@@ -356,7 +536,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.keep:
         shutil.rmtree(clone_dir, ignore_errors=True)
-    return proc.returncode
+    return final_code
 
 
 if __name__ == "__main__":
