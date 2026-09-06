@@ -547,6 +547,22 @@
       "model": "sonnet",
       "started": "2026-09-06T10:32:45+0800",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-mg-claude",
+      "model": "sonnet",
+      "started": "2026-09-06T11:00:50+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-mg-codex",
+      "model": "gpt-5-codex",
+      "started": "2026-09-06T11:00:50+0800",
+      "fresh_context": true
     }
   ],
   "cost": {
