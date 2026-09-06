@@ -21,8 +21,8 @@
 - **證據**：`test_full_lane_adversary_first_covers_code_and_gate` 及 W0-01 → W0-02 dispatch 順序。
 
 ### 5. 所有工作完成後才進入唯一一次 branch-end review
-- **結果**：流程符合，checkpoint 尚在修正複核中。第一輪 Codex 與 Claude 都回傳 `NEEDS_REVISION`，因此 Ship 正確停住；本報告沒有宣稱最終已通過。
-- **證據**：review round 4、13 個 open findings，以及修正後待續的同一 checkpoint。
+- **結果**：符合。第一輪 Codex 與 Claude 都回傳 `NEEDS_REVISION`，Ship 因此停住；修正完成後，同一組 Codex 與 Claude reviewer 在 round 5 都回傳 `PASS`，才進入使用者驗收。
+- **證據**：review round 4 保留原始 findings；round 5 在相同最終 SHA 記錄兩家 reviewer 的通過結果，所有 finding 均已解決或由原 reviewer 駁回。
 
 ### 6. 其他 lane、紀錄與 Ship 保護維持
 - **結果**：符合目前可機械驗證的部分。full/small/express/gate-only 的 branch-end 差異仍在；manifest 與 Codex scaffold 已同步；plan 的 Files 清單已降到上限內。
@@ -37,7 +37,7 @@
 第一輪盲跑依 README 建立新 venv 時，套件安裝成功，但 `wcwidth` 沒有列在 `requirements-dev.txt`，因此得到 2 failed、2016 passed；第二個失敗是 nested rehearsal 重複同一個根因。第一輪也因乾淨 worktree 的三個 Codex hook 尚未受信任而無法真正啟動完整 Build，沒有把直接 checker 操作冒充完整工作流。
 
 修正後以 `uv run --isolated --with-requirements requirements-dev.txt` 建立隔離依賴環境，執行 KICKOFF 指定的完整 package command，結果為：
-- loom-code / scripts / hooks：2021 passed、2 skipped、1 xfailed。
+- loom-code / scripts / hooks：2025 passed、2 skipped、1 xfailed。
 - loom-design：183 passed、1 skipped。
 - branch-end adversarial probe：11 passed。
 
@@ -45,7 +45,7 @@
 
 - 第一輪有效找出並保留所有重要問題，沒有駁回 important 或 fatal finding。
 - readiness、reviewer independence、runtime contract、Claude CLI adapter、replay oracle、mechanism eval、plan cap、release probes與乾淨依賴已修正。
-- 最終是否可 Ship 仍由同一組 Codex／Claude reviewer 複核及 review-only HEAD gate 決定。
+- 同一組 Codex／Claude reviewer 最終均通過；是否完成仍由使用者依本報告驗收，之後才執行 push gate。
 
 ## Questions I asked you
 
