@@ -6,17 +6,21 @@ source_change:
   plan: docs/loom/2026-09-03-small-change-lane/plan.md
   review: docs/loom/2026-09-03-small-change-lane/review.json
   cost: docs/loom/2026-09-03-small-change-lane/evidence/cost.md
-  pre_checkpoint_patch:
-    path: docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-pre-checkpoint.patch.gz
-    sha256: 2ecd708ebc70dc9b74550137a0b58940f9bfa50ce89f91914df2a2ebe9727900
-    excludes:
-      - docs/loom/2026-09-03-small-change-lane/review.json
+  committed_plan_patch:
+    path: docs/loom/2026-09-06-remove-build-time-reviews/evidence/plan-base.patch.gz
+    sha256: 04e04c0af011d65ede262844110b74582520f229a90af2312113ce3c710c9444
+  excluded_post_build_records:
+    - docs/loom/2026-09-03-small-change-lane/review.json
+    - docs/loom/2026-09-03-small-change-lane/blind-run-report.md
+    - docs/loom/2026-09-03-small-change-lane/evidence/adversarial-branch-end-skill.md
 
 materialize:
   - git worktree add <baseline-tree> b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0
-  - gzip -dc <fixture-dir>/replay-pre-checkpoint.patch.gz | git -C <baseline-tree> apply --index
+  - gzip -dc <fixture-dir>/plan-base.patch.gz | git -C <baseline-tree> apply --index
+  - git -C <baseline-tree> commit -m "docs(loom): plan 2026-09-03-small-change-lane"
   - git worktree add <candidate-tree> b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0
-  - gzip -dc <fixture-dir>/replay-pre-checkpoint.patch.gz | git -C <candidate-tree> apply --index
+  - gzip -dc <fixture-dir>/plan-base.patch.gz | git -C <candidate-tree> apply --index
+  - git -C <candidate-tree> commit -m "docs(loom): plan 2026-09-03-small-change-lane"
 runtime:
   baseline:
     source_sha: 130b4ca1691de465be71df163f620d761abef5fa
@@ -29,12 +33,36 @@ runtime:
     cannot be loaded by exact SHA, report UNGRADABLE.
 
 fixed_task_order:
-  - W0-01
-  - W0-02
-  - W1-01
-  - W1-02
-  - W1-03
-  - W1-04
+  - id: W0-01
+    patch: W0-01.patch.gz
+    sha256: 0d2d8eaf2e7fc18395bc394f84a383325c1b80b124460182cab1971f2911476b
+    expected_after_commit: adversary RED — new lane behavior fails before W0-02
+  - id: W0-02
+    patch: W0-02.patch.gz
+    sha256: 09069b4f51602afa9b4544d1a184699c716285ba9a095a1031b496a62e07883b
+    expected_after_commit: W0-01 probes GREEN
+  - id: W1-01
+    patch: W1-01.patch.gz
+    sha256: 0d04d01d4e1d00a63152e405c433d9b931f01fbabead9216d53fb12015bba8d9
+    expected_after_commit: review contract tests GREEN
+  - id: W1-02
+    patch: W1-02.patch.gz
+    sha256: 64d0eddd89a1e95d9635f3c2034f8d19de0ce827838c36ae965196efe3cdc314
+    expected_after_commit: station text tests GREEN
+  - id: W1-03
+    patch: W1-03.patch.gz
+    sha256: cabe7000f8159ccadccb8507d5f6125d0983989409f9035d5a489be87ad0e76f
+    expected_after_commit: version and mirror checks GREEN
+  - id: W1-04
+    patch: W1-04.patch.gz
+    sha256: 426ad4878b35a1c87f0ab51b807abc715b1eee581b14479d2da18aed0ec67579
+    expected_after_commit: standing and package checks GREEN
+task_application:
+  - Verify each patch SHA-256 before applying it.
+  - In fixed_task_order, run `gzip -dc <fixture-dir>/<patch> | git -C <tree> apply --index`.
+  - Commit immediately with subject `replay: apply <id>` and body trailer `Task: <id>`; do not stage a later task early.
+  - Treat W0-01's declared adversary RED as expected evidence, not an implementation failure; every later declared command must pass before advancing.
+  - Run permanent_commands from each integrated tree after W1-04 and before branch-end review.
 permanent_commands:
   - python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q
   - python3 -m pytest loom-code/scripts/test_skill_word_caps.py -q
@@ -49,7 +77,7 @@ actors:
       - external-runtime:skills/build/SKILL.md
       - docs/loom/2026-09-03-small-change-lane/plan.md
       - this fixture except finding_oracle
-    rule: Apply the fixed task patch as task output; do not regenerate code.
+    rule: Apply and commit exactly one fixed task patch at a time using task_application; do not regenerate code.
   branch_end_review:
     reviewers:
       - vendor: openai
