@@ -1,4 +1,4 @@
-# loom 五支腳本純效能優化：每次 Bash 呼叫少載一個模組、引用檢查 3 秒降到 0.3 秒、三處重複讀取合成一趟，輸出逐位元不變
+# loom 五支腳本純效能優化：每次 Bash 呼叫少載一個模組、引用檢查 1.8 秒降到 0.6 秒、三處重複讀取合成一趟，輸出逐位元不變
 originator: kouko
 kind: engineering
 needs-design: no — 只改五支腳本的內部實作與它們的測試；命令列參數、輸出格式、exit code、hook 注入的文字一個都不動；沒有使用者讀或輸入的介面改變
@@ -25,7 +25,7 @@ status: confirmed 2026-09-07
 
 ## Acceptance
 1. **loom_checker hook 路徑**：在本 repo 執行 `python3 -X importtime loom-code/scripts/loom_checker.py push --hook` 餵一條非 push 指令（例如 `echo hi`），importtime 輸出中不再出現 `yaml`；exit code 仍為 0。餵一條 `git push` 指令時 `load_manifest()` 仍正常載入 manifest（既有 push 規則測試全綠）。
-2. **check_doc_citations**：在本 repo 對全部 markdown 跑 `python3 loom-code/scripts/check_doc_citations.py`（用它現有的參數形式），改前與改後的 stdout、stderr、exit code `diff` 全空；wall time 從 ≥1.2 秒降到 ≤0.4 秒（盲跑報告寫出量測指令與兩邊秒數）。沙盒裡造「同 basename 出現在兩個目錄」「引用帶 `/` 但零命中」「裸檔名零命中」三種引用，改前改後輸出逐位元相同。
+2. **check_doc_citations**：在本 repo 對全部 markdown 跑 `python3 loom-code/scripts/check_doc_citations.py`（用它現有的參數形式），改前與改後的 stdout、stderr、exit code `diff` 全空；wall time 從 ≥1.2 秒降到 ≤0.6 秒（盲跑報告寫出量測指令與兩邊秒數；原寫 ≤0.4 秒是規劃時從 profile 推估的數字——kouko 2026-09-07 於 branch-end review 後核可改為 ≤0.6 秒：實測 1.77 秒→0.57 秒、CPU 時間 0.56 秒，剩餘時間是開 3,383 個檔案與比對本身，不在本 change 的「消除白工」範圍）。沙盒裡造「同 basename 出現在兩個目錄」「引用帶 `/` 但零命中」「裸檔名零命中」三種引用，改前改後輸出逐位元相同。
 3. **session-start**：`bash loom-code/hooks/session-start </dev/null` 在本 repo 與一個空 git repo 各跑一次，改前改後 stdout 逐位元相同（`diff` 全空）；`test_session_start_words.py` 的字數上限測試仍綠；腳本裡 `awk` 對 manifest 的呼叫由 4 次變 1 次（`bash -x` 計數）。
 4. **check_map_fog**：本 repo 的 decision-map（或沙盒裡造一張 20 張 ticket 的地圖，其中若干張帶 `graduated-from`）跑 `read_base_graduated_ids`，改前改後回傳的集合相同；`bash -x`／`strace` 等價計數顯示 git 子行程由 1+N 次降為 2 次；base ref 缺 ticket 目錄、某張 ticket 無法解析兩種錯誤情境的 `SchemaViolation` 訊息逐字相同。
 5. **map_store／map_transaction**：對同一張地圖跑 `validate()` 與 `update-blockers`，改前改後的 finding 清單（順序、文字）與寫回的檔案逐位元相同；以 monkeypatch 計數 `read_ticket()` 的呼叫次數，validate 由 2N 降為 N，`_update_blockers_locked` 由 2N 降為 N。
