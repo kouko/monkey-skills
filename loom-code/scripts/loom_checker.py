@@ -2350,8 +2350,60 @@ def _plan_edits_after_ids(manifest) -> list[str]:
     ]
 
 
+def _intent_closed_descriptor_from_branch_history(repo: Path, intent_path: Path) -> str | None:
+    """The closed-status descriptor from the earliest commit, reachable
+    from HEAD, whose content of `intent_path` ever read a frontmatter
+    `status: closed ...` line -- case (i) of `check_intent_not_reopened`'s
+    terminal rule (W0-02, loom_checker.py:1410), extracted here so the
+    plan-edits shipped-change carve-out (W1-01) recomputes the SAME
+    notion of "closed" rather than growing a second one: a status line
+    reverted back to `confirmed` must not resurrect a BLOCK-worthy
+    in-flight change here any more than it reopens a closed intent
+    there."""
+    try:
+        intent_rel = intent_path.relative_to(repo)
+    except ValueError:
+        return None
+    log_output = git_maybe(repo, "log", "--format=%H", f"-G{REOPEN_LOG_PATTERN}", "--", str(intent_rel))
+    for commit in (log_output or "").splitlines():
+        commit = commit.strip()
+        if not commit:
+            continue
+        content = git_maybe(repo, "show", f"{commit}:{intent_rel}")
+        if content is None:
+            continue
+        descriptor = _status_closed_descriptor_from_text(content)
+        if descriptor is not None:
+            return descriptor
+    return None
+
+
+def _intent_closed_descriptor(repo: Path, intent_path: Path) -> str | None:
+    """Whether `intent_path` counts as closed for the plan-edits
+    shipped-change carve-out (W1-01): either the file's current
+    working-tree content (which may never have been committed at all --
+    the checker reads it directly, mirroring how `plan.md` itself is
+    read) carries a frontmatter `status: closed ...` line, or -- reusing
+    `check_intent_not_reopened`'s own history-recomputed notion (W0-02)
+    -- some earlier commit's content of the file did, even though a later
+    commit reverted the line back to `confirmed`. Returns the closed
+    descriptor (`PR #<n>` / `branch <name>`), or None when neither test
+    finds one -- including an absent file, an unreadable file, or a
+    status line that fails to parse as closed at all."""
+    if intent_path.is_file():
+        try:
+            text = read_text(intent_path)
+        except OSError:
+            text = None
+        if text is not None:
+            descriptor = _status_closed_descriptor_from_text(text)
+            if descriptor is not None:
+                return descriptor
+    return _intent_closed_descriptor_from_branch_history(repo, intent_path)
+
+
 def check_plan_edits_after_commit(
-    repo: Path, plan_path: Path, change_id: str, manifest
+    repo: Path, plan_path: Path, change_id: str, manifest, out=sys.stdout
 ) -> list[tuple[str, str]]:
     """Recomputed per-edit charter enforcement on a charter-stamped plan
     (W1-02): once the plan's own `docs(loom): plan <change-id>` commit
@@ -2361,7 +2413,14 @@ def check_plan_edits_after_commit(
     The allow-list is recomputed from `manifest.artifacts.plan.charter.
     edits_after` by stable policy id (not hard-coded) every run: an id
     with no matching branch in `IMPLEMENTED_EDITS_AFTER_IDS` fails closed
-    instead of silently drifting from the manifest."""
+    instead of silently drifting from the manifest.
+
+    W1-01's shipped-change carve-out: a missing plan commit alone is
+    never amnesty (an in-flight change with a lost plan commit must still
+    BLOCK) -- only a missing plan commit ON TOP OF a closed intent
+    (`_intent_closed_descriptor`) reports NOT APPLICABLE instead, writing
+    a visible line to `out` so exit 0 here is never mistaken for the
+    silent exit 0 of an ordinary untouched pass."""
     ids = _plan_edits_after_ids(manifest)
     unsupported = [pid for pid in ids if pid not in IMPLEMENTED_EDITS_AFTER_IDS]
     if unsupported:
@@ -2378,6 +2437,15 @@ def check_plan_edits_after_commit(
 
     baseline_sha = find_plan_commit_sha(repo, change_id)
     if baseline_sha is None:
+        intent_path = artifact_path(manifest, "intent", change_id, repo)
+        descriptor = _intent_closed_descriptor(repo, intent_path)
+        if descriptor is not None:
+            out.write(
+                f"plan.edits-after-commit: NOT APPLICABLE -- {change_id} was "
+                f"closed ({descriptor}) and its plan commit is absent; the "
+                "edits-after-commit question no longer applies.\n"
+            )
+            return []
         return [("plan.edits-after-commit", "no plan commit found")]
 
     plan_rel = plan_path.relative_to(repo).as_posix()
@@ -2413,13 +2481,15 @@ def check_plan_edits_after_commit(
     return failures
 
 
-def check_plan_edits_after_commit_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+def check_plan_edits_after_commit_at(
+    manifest, repo: Path, change_id: str, out=sys.stdout
+) -> list[tuple[str, str]]:
     """Same rule, applied to a change's own `plan.md` when it exists --
     skipped silently when there is no plan file yet (push's shape)."""
     plan_path = artifact_path(manifest, "plan", change_id, repo)
     if not plan_path.is_file():
         return []
-    return check_plan_edits_after_commit(repo, plan_path, change_id, manifest)
+    return check_plan_edits_after_commit(repo, plan_path, change_id, manifest, out)
 
 
 # --- review.round-append-only (W1-03) ---------------------------------------
@@ -3301,7 +3371,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_open_findings_closed(review)
     if change_id:
         failures += check_plan_field_caps_at(manifest, repo, change_id)
-        failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
+        failures += check_plan_edits_after_commit_at(manifest, repo, change_id, out)
         failures += check_review_round_append_only_at(manifest, repo, change_id)
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
@@ -6072,7 +6142,7 @@ def cmd_plan_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if not plan_path.is_file():
         err.write(f"no plan file at {plan_path} for change {change_id!r}.\n")
         return 2
-    return report(check_plan_edits_after_commit(repo, plan_path, change_id, manifest), err)
+    return report(check_plan_edits_after_commit(repo, plan_path, change_id, manifest, out), err)
 
 
 def cmd_review_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
