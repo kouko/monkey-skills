@@ -118,3 +118,37 @@ def test_missing_tree_and_unparsable_ticket_verbatim_schema_violation(
         raise AssertionError("expected SchemaViolation")
     except map_store.SchemaViolation as exc:
         assert str(exc) == f"cannot enumerate base Ticket history at {bogus_ref!r}"
+
+
+def test_multibyte_content_does_not_corrupt_batch_blob_boundaries(
+    tmp_path: Path,
+) -> None:
+    """`cat-file --batch` reports `<size>` in BYTES, but `_run_git`
+    decodes stdout to `str` (`text=True`) — a naive
+    `output[pos:pos+size]` slices CHARACTERS, not bytes. A ticket body
+    containing multi-byte (CJK) content therefore drifts the blob
+    boundary for every ticket that follows it in the batch stream: the
+    old per-ticket `git show` loop read each ticket independently and
+    was immune to this, so it is the oracle here (both graduated ids
+    present, no exception).
+
+    Ticket 1's body is CJK-heavy (byte length far exceeds char length);
+    tickets 2 and 3 each carry `graduated-from`. A byte/char-confused
+    reader either loses F-2 (drifted past it) or raises outright — both
+    the un-fixed batched code have been observed to do here."""
+    repo_root = tmp_path / "repo"
+    _init_repo(repo_root)
+    map_dir = _map_dir(repo_root)
+    tickets = map_dir / "tickets"
+    _write(map_dir / "MAP.md", "hello\n")
+
+    cjk_body = "日本語テキスト" * 5  # 35 chars, 105 UTF-8 bytes
+    _write(tickets / "ticket-01.md", f"---\nstatus: open\n---\n{cjk_body}\n")
+    _write(tickets / "ticket-02.md", "---\ngraduated-from: F-2\n---\nbody\n")
+    _write(tickets / "ticket-03.md", "---\ngraduated-from: F-3\n---\nbody\n")
+    base_ref = _commit(repo_root, "multibyte content")
+
+    result = check_map_fog.read_base_graduated_ids(
+        repo_root, base_ref, map_dir / "MAP.md"
+    )
+    assert result == {"F-2", "F-3"}
