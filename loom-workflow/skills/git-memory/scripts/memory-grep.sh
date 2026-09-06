@@ -355,12 +355,22 @@ fi
 # `git interpret-trailers --parse --unfold` used, exposed as a format
 # placeholder instead of a second process per commit.
 #
-# Record separator: git's `-z` (NUL between commits) with git's own
-# `%x1F` between fields — a commit message cannot contain NUL, and
-# `%x1F` in a subject is the same assumption the old code accepted
-# (field metadata used %x1F too, see history). This file never spells
-# out a raw NUL or 0x1F byte: jq builds both at runtime via
-# `[N] | implode`, so the separators survive any editor/encoding.
+# Record separator: every FIELD is delimited by NUL, and git's `-z`
+# terminates each commit's whole record with NUL too — so the raw
+# stream is ONE flat sequence of NUL-delimited tokens (sha, date,
+# subject, trailers, sha, date, subject, trailers, …), split on a
+# single byte value and then chunked four tokens per record. NUL is
+# the one byte a commit message provably cannot contain (git's own
+# object model forbids it), so this encoding is injective for every
+# OTHER byte a subject or trailer value might hold — 0x1F, 0x1E, CJK,
+# an embedded newline, all round-trip untouched. (wave-end:1-01: an
+# earlier revision of this file used `%x1F` between fields instead —
+# a subject containing a raw 0x1F byte mis-split the record and
+# silently dropped it, because %x1F is NOT provably absent from
+# commit text the way NUL is. NUL has no such exposure, so this is
+# the smallest change that makes the encoding injective for every
+# non-NUL byte.) This file never spells out a raw NUL byte: jq builds
+# it at runtime via `[0] | implode`, so it survives any editor/encoding.
 #
 # `%(trailers:key=…)` matches keys CASE-INSENSITIVELY (unlike the old
 # `grep -E '^(Decision|…):'`), so the jq stage below re-filters each
@@ -399,8 +409,8 @@ extract_commits_ndjson() {
   # — the case-sensitive re-filter happens per key below).
   all_records=$(
     git -C "$REPO" log --since="$SINCE" --no-merges -z --date=short \
-      --format='%h%x1F%ad%x1F%s%x1F%(trailers:key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold)' \
-      | jq -R -s -c '([0] | implode) as $NUL | ([31] | implode) as $FS | ([10] | implode) as $LF | (split($NUL)) as $r0 | ($r0 | if (length>0 and .[-1]=="") then .[:-1] else . end) as $recs | ("(?s)^(?<sha>[^" + $FS + "]*)" + $FS + "(?<date>[^" + $FS + "]*)" + $FS + "(?<subject>[^" + $FS + "]*)" + $FS + "(?<trailers>.*)$") as $re | [ $recs[] | select(length>0) | capture($re) as $c | ($c.trailers // "" | split($LF) | map(select(length>0))) as $lines | { sha: $c.sha, date: $c.date, subject: $c.subject, decision: [ $lines[] | select(test("^Decision: ")) | sub("^Decision: ";"") ], learning: [ $lines[] | select(test("^Learning: ")) | sub("^Learning: ";"") ], gotcha: [ $lines[] | select(test("^Gotcha: ")) | sub("^Gotcha: ";"") ], related: [ $lines[] | select(test("^Related: ")) | sub("^Related: ";"") ], supersedes: [ $lines[] | select(test("^Supersedes: ")) | sub("^Supersedes: ";"") ] } ]'
+      --format='%h%x00%ad%x00%s%x00%(trailers:key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold)' \
+      | jq -R -s -c '([0] | implode) as $NUL | ([10] | implode) as $LF | (split($NUL)) as $tok0 | ($tok0 | if (length>0 and .[-1]=="") then .[:-1] else . end) as $tok | [ range(0; ($tok|length) / 4) as $i | $tok[$i*4] as $sha | $tok[$i*4+1] as $date | $tok[$i*4+2] as $subject | ($tok[$i*4+3] // "" | split($LF) | map(select(length>0))) as $lines | { sha: $sha, date: $date, subject: $subject, decision: [ $lines[] | select(test("^Decision: ")) | sub("^Decision: ";"") ], learning: [ $lines[] | select(test("^Learning: ")) | sub("^Learning: ";"") ], gotcha: [ $lines[] | select(test("^Gotcha: ")) | sub("^Gotcha: ";"") ], related: [ $lines[] | select(test("^Related: ")) | sub("^Related: ";"") ], supersedes: [ $lines[] | select(test("^Supersedes: ")) | sub("^Supersedes: ";"") ] } ]'
     git_rc="${PIPESTATUS[0]}"
     [ "$git_rc" -ne 0 ] && exit "$git_rc"
     true

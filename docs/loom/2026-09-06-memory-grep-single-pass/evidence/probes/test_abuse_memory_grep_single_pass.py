@@ -193,6 +193,46 @@ def test_extract_commits_hostile_separator_value_stays_structurally_valid(tmp_pa
     assert "backslash" in commits[0]["decision"][0]
 
 
+def test_extract_commits_subject_with_hostile_separator_byte_round_trips(tmp_path):
+    """wave-end:1-01: a commit SUBJECT containing a raw 0x1F byte must
+    round-trip exactly as the PRE-CHANGE script rendered it — the
+    single-pass rewrite's field encoding must be injective for every
+    non-NUL byte, not just trailer values. The pre-change script (fetched
+    via `git show <reviewed_sha>:...`, the same technique the
+    equivalence suite's goldens used) is run against the identical
+    fixture and its output is the expectation, not an invented string.
+    Before the wave-end:1-01 fix, the new script silently dropped this
+    record (printed "(none in range)", exit 0) because its `%x1F`
+    field-separator encoding mis-split on the embedded 0x1F byte.
+    """
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init_repo(repo)
+    hostile_subject = "feat: subject with " + chr(0x1F) + " inside (#1)"
+    _commit(repo, "2026-01-03", hostile_subject, b"Decision: hostile subject decision")
+
+    pre_change_sha = "4e45d6de1214d164ce9ebe18bcd30bf7f4499a1e"
+    old_script = tmp_path / "memory-grep-old.sh"
+    old_script.write_bytes(
+        subprocess.run(
+            ["git", "show", f"{pre_change_sha}:loom-workflow/skills/git-memory/scripts/memory-grep.sh"],
+            cwd=REPO, capture_output=True, check=True,
+        ).stdout
+    )
+    old_script.chmod(0o755)
+
+    old_run = subprocess.run(
+        ["bash", str(old_script), f"--repo={repo}", "--no-pr", "--since=2020-01-01"],
+        capture_output=True, text=True,
+    )
+    new_run = _run(repo, "--no-pr", "--since=2020-01-01")
+
+    assert old_run.returncode == 0
+    assert new_run.returncode == old_run.returncode
+    assert new_run.stdout == old_run.stdout
+    assert "hostile subject decision" in new_run.stdout
+
+
 # ─── 4. trailer block followed by a non-trailer line (#575) ───────
 
 def test_extract_commits_trailer_followed_by_stray_line_excluded(tmp_path):
