@@ -122,11 +122,43 @@
       "model": "fable",
       "started": "2026-09-07T01:55:09+0800",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:57:23+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-be-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:57:23+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sp-a",
+      "model": "opus",
+      "started": "2026-09-07T01:57:23+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-sp-codex",
+      "model": "codex exec (gpt-5-codex)",
+      "started": "2026-09-07T01:57:23+0800",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 12,
+    "dispatches": 16,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
