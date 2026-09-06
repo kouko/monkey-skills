@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "fe958bfb2d7078477b2a10b5c16ca31593632661",
+  "reviewed_sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -280,6 +280,39 @@
       "notes": [
         "design re-look: shape of the change unchanged; the user was asked at the checkpoint and chose to accept the measured bound (option A) — recorded in questions[] and the intent at e1735c2b."
       ]
+    },
+    {
+      "reviewer": "rev-be-sp-a",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "dimension_scores": {},
+      "findings": [],
+      "previous_findings": [],
+      "notes": [
+        "Resumed standing reader at 82ef06c2 (delta: intent amendment, plan line restore, memory entry, report re-evaluation): PASS with two nits, both folded in 2028a2ec and confirmed fixed in one line each; PASS restated at 2028a2ec.",
+        "design re-look: shape of the change unchanged; the user decided the acceptance bound (questions[] decision_point 3)."
+      ]
+    },
+    {
+      "reviewer": "rev-be-sp-codex",
+      "vendor": "openai",
+      "model": "codex exec (gpt-5.6-sol)",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "dimension_scores": {},
+      "findings": [],
+      "previous_findings": [],
+      "notes": [
+        "Resumed at 82ef06c2: PASS — the delta restores the topology-required plan text while preserving the corrected measurement in durable records; PASS restated at 2028a2ec after the docs-only nit fold."
+      ]
     }
   ],
   "probes": [
@@ -362,6 +395,70 @@
       "sha": "fe958bfb2d7078477b2a10b5c16ca31593632661",
       "result": "pass",
       "artifact": "docs/loom/2026-09-07-loom-script-performance/blind-run-report.md"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-07-loom-script-performance/blind-run-report.md (each Acceptance block names its command)",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_lazy_yaml_import.py -q",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_lazy_yaml_import.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_citation_index.py -q",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_citation_index.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_session_start_awk.py -q",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_session_start_awk.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_fog_cat_file_batch.py -q",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_fog_cat_file_batch.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_ticket_read_once.py -q",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_ticket_read_once.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_branch_end.py -q",
+      "sha": "2028a2ec8b07ef7ebbf715fb2b79cdb620ef8834",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_branch_end.py"
     }
   ],
   "questions": [
@@ -383,6 +480,11 @@
     {
       "decision_point": 3,
       "text": "引用檢查從 1.77 s 降到 0.57 s（快 3.1 倍、輸出逐位元相同），但沒到 intent 的 ≤0.4 s；A. 接受 0.57 s、把 Acceptance 2 改成 ≤0.6 s；B. 再砍一輪動比對邏輯。你選哪個？（答：A）",
+      "type": "done"
+    },
+    {
+      "decision_point": 3,
+      "text": "盲跑報告七條 Acceptance（第 2 條依你核可的 0.6 秒門檻）全部符合；這是你要的嗎？（答：OK）",
       "type": "done"
     }
   ],
@@ -634,7 +736,7 @@
     }
   ],
   "cost": {
-    "rounds": 3,
+    "rounds": 4,
     "dispatches": 24,
     "cap_changes": [],
     "hours_plan_to_pr": null

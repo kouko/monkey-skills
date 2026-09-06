@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改五支腳本的內部實作與它們的測試；命令列參數、輸出格式、exit code、hook 注入的文字一個都不動；沒有使用者讀或輸入的介面改變
 evidence: [loom-code/scripts/test_check_doc_citations.py, loom-code/scripts/test_session_start_words.py, loom-workflow/skills/decision-map/scripts/test_check_map_fog.py, loom-workflow/skills/decision-map/scripts/test_map_store.py]
-status: confirmed 2026-09-07
+status: closed 2026-09-07 — branch loom-script-performance
 
 ## Problem
 2026-09-07 對 loom-code／loom-design／loom-workflow 三個 plugin 的全部腳本做了一輪效能審計（兩個 fresh-context agent、cProfile 與計時實測）。大多數腳本已是單趟或本來就小，但有五處是「每次都做、多數時候不需要」或「同一件事做兩遍以上」，形狀跟 2026-09-06 memory-grep 那次（逐 commit 開子行程→單趟 git，19.9 秒→0.09 秒）一樣：
