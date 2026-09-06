@@ -315,3 +315,39 @@ def test_not_applicable_output_differs_from_silent_pass(tmp_path: Path) -> None:
     not_applicable = run_plan_edits(repo2)
     assert not_applicable.returncode == 0
     assert combined_output(not_applicable) != ""
+
+
+def test_duplicate_status_lines_committed_still_blocks(tmp_path: Path) -> None:
+    """Two frontmatter `status:` lines -- `confirmed` first, `closed`
+    second -- are a malformed intent, and the amnesty must refuse it.
+    `parse_document` keeps the last duplicate, so without an explicit
+    one-line requirement the closed line would win and a change that
+    never cleanly closed would read as shipped (branch-end adversary
+    probe `test_planedits_duplicatestatus_blocks`)."""
+    repo = init_repo(tmp_path)
+    path = intent_path(repo)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join([
+            f"# Permanent shipped-plan-edits check -- {CHANGE_ID}",
+            "originator: adversary",
+            "kind: engineering",
+            "needs-design: no -- probe fixture",
+            "status: confirmed 2026-09-01",
+            f"status: closed 2026-09-01 {EM_DASH} PR #123",
+            "",
+            "## Problem",
+            "",
+            "",
+        ]),
+        encoding="utf-8",
+    )
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): intent with two status lines")
+    seed_plan_without_commit(repo, base_plan_text())
+    result = run_plan_edits(repo)
+    assert result.returncode == 1, (
+        f"a duplicated status line must be in-flight, never shipped: stdout={result.stdout!r}"
+    )
+    assert "plan.edits-after-commit" in blocked_rules(result)
+    assert "no plan commit found" in result.stderr

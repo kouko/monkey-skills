@@ -2378,6 +2378,25 @@ def _intent_closed_descriptor_from_branch_history(repo: Path, intent_path: Path)
     return None
 
 
+def _frontmatter_line_count(text: str, key: str) -> int:
+    """How many frontmatter lines (between the H1 and the first H2, the
+    region `parse_document` reads) carry `key:` -- `parse_document` itself
+    collapses duplicates to the last one, which is exactly the fact a
+    caller that must fail closed on a duplicated key needs to see."""
+    if text.startswith("﻿"):
+        text = text[1:]
+    count = 0
+    for line in text.splitlines():
+        if line.startswith("﻿"):
+            line = line[1:]
+        if line.startswith("## "):
+            break
+        match = _FRONTMATTER_LINE.match(line)
+        if match and match.group(1) == key:
+            count += 1
+    return count
+
+
 def _intent_closed_descriptor(repo: Path, intent_path: Path) -> str | None:
     """Whether `intent_path` counts as closed for the plan-edits
     shipped-change carve-out (W1-01). The amnesty is narrow: it requires
@@ -2396,6 +2415,12 @@ def _intent_closed_descriptor(repo: Path, intent_path: Path) -> str | None:
     try:
         text = read_text(intent_path)
     except OSError:
+        return None
+    # `parse_document` keeps the LAST of duplicate frontmatter keys, so an
+    # intent carrying `status: confirmed` and then `status: closed` would
+    # read as closed. Two status lines are one malformed intent: in-flight,
+    # blocks (branch-end adversary probe, duplicate-status).
+    if _frontmatter_line_count(text, "status") != 1:
         return None
     front, _sections = parse_document(text)
     if STATUS.fullmatch(front.get("status", "").strip()) is None:
