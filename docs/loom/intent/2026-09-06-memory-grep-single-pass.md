@@ -19,7 +19,7 @@ status: confirmed 2026-09-06
 
 ## Acceptance
 1. 在本 repo，`time bash loom-workflow/skills/git-memory/scripts/memory-grep.sh --no-pr` 在 2 秒內結束（改前 19.9 秒），`--no-pr --history`、`--no-pr --format=json` 也是；沙盒裡造一個 2,000 個 commit、其中 300 個帶記憶尾標的 repo，同樣 2 秒內。
-2. 等價：對本 repo 用 main 上的舊腳本與新腳本各跑 `--no-pr`、`--no-pr --format=json`、`--no-pr --history`、`--no-pr --match=probe`、`--no-pr --path=loom-code/scripts`、`--no-pr --top=5` 六組，六組輸出 `diff` 全空（stdout 與 exit code 都相同）。
+2. 等價：對本 repo 用 main 上的舊腳本與新腳本各跑 `--no-pr`、`--no-pr --format=json`、`--no-pr --history`、`--no-pr --match=probe`、`--no-pr --path=loom-code/scripts`、`--no-pr --top=5` 六組，六組輸出 `diff` 全空（stdout 與 exit code 都相同）。**唯一例外（kouko 2026-09-06 核可）**：舊腳本漏讀尾標的 commit，新腳本讀得比較全，這種差異算通過，但要指名是哪些 commit、多讀到幾行。本 repo 近三個月 423 個 commit 中只有 `fe9218d7` 落在此例（尾標分兩段、中間隔一條 `---`；舊版只認最後一行，新版五行全讀到，多 4 行）。exit code 仍須完全相同。
 3. 邊界不變：沙盒裡 commit 的尾標值含 `|`、`:`、`#`、CJK 與折行（folded）續行，`Supersedes:` 指向 PR 編號與指向 sha 兩種，只帶 `Related:` 的 commit，記憶 commit 落在 `--since` 視窗外——舊腳本與新腳本輸出逐位元相同；每一種各一個測試。
 4. `loom-workflow/tests/test-memory-grep-*.sh` 五份既有測試不動，全綠；`--verify`／`--verify-merged`／`--verify-strict` 的程式碼路徑 diff 為零。
 5. loom-workflow 版本 bump、CHANGELOG 有一行寫改前改後秒數與量測方法；腳本檔頭寫明需要的最低 git 版本（`%(trailers:key=)` 的下限）。
