@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "4e1582015c2258ab2463c4e8c2f51d0d97ddb035",
+  "reviewed_sha": "fe958bfb2d7078477b2a10b5c16ca31593632661",
   "scope": "branch-end",
   "vendors": [
     "anthropic",
@@ -257,6 +257,28 @@
         "Independently re-verified ab3d94e6 vs 4e158201 over all 3,383 tracked md files: stdout, stderr and exit code identical; 345 tests pass across the touched suites.",
         "Single-slot index rebuilds per call when a run spans two repo roots; correctness unaffected, no caller does it."
       ]
+    },
+    {
+      "reviewer": "rev-be-sp-codex",
+      "vendor": "codex",
+      "model": "codex exec (gpt-5.6-sol)",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "sha": "fe958bfb2d7078477b2a10b5c16ca31593632661",
+      "dimension_scores": {},
+      "findings": [],
+      "previous_findings": [
+        {
+          "id": "branch-end-01",
+          "status": "fixed",
+          "reason": "praise (non-blocking): The user approved the revised 0.6-second bound, the intent records it, and the blind-run report confirms the measured 0.57 seconds satisfies it."
+        }
+      ],
+      "notes": [
+        "design re-look: shape of the change unchanged; the user was asked at the checkpoint and chose to accept the measured bound (option A) — recorded in questions[] and the intent at e1735c2b."
+      ]
     }
   ],
   "probes": [
@@ -331,6 +353,14 @@
       "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
       "result": "pass",
       "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_branch_end.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-07-loom-script-performance/blind-run-report.md (each Acceptance block names its command)",
+      "sha": "fe958bfb2d7078477b2a10b5c16ca31593632661",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/blind-run-report.md"
     }
   ],
   "questions": [
@@ -362,7 +392,8 @@
       "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
       "raised_by": "rev-be-sp-codex",
       "severity": "fatal",
-      "text": "Acceptance 2 wall time <=0.4 s not met (0.67 s measured)"
+      "text": "Acceptance 2 wall time <=0.4 s not met (0.67 s measured)",
+      "resolved": "user-decided 2026-09-07 (option A): Acceptance 2 amended to <=0.6 s at e1735c2b; measured 0.57 s; confirmed fixed by rev-be-sp-codex round 3"
     },
     {
       "id": "branch-end-02",
@@ -584,7 +615,7 @@
     }
   ],
   "cost": {
-    "rounds": 2,
+    "rounds": 3,
     "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
