@@ -116,6 +116,40 @@ def test_slash_path_zero_hits_boundary(tmp_path: Path) -> None:
     )
 
 
+def test_basename_index_gc_reused_id_returns_fresh_result_not_stale() -> None:
+    """A garbage-collected `repo_files` list's `id()` can be reused by a new
+    same-length list; the memoization must not let the old entry's index
+    leak into the new one. Reproduce the collision deterministically: build
+    list A, index it, drop the only reference and force a collection, then
+    keep allocating same-length list B candidates until one reuses A's old
+    id (capped at 500 tries; skip -- not fail -- if the interpreter never
+    reuses it, since this is a CPython allocator detail, not a guarantee)."""
+    import gc
+
+    collided = False
+    for i in range(500):
+        old_list = [f"a/x{i}.md", f"a/y{i}.md"]
+        old_id = id(old_list)
+        cdc._basename_index(old_list)
+        del old_list
+        gc.collect()
+
+        new_list = [f"a/x{i}.md", f"a/z{i}.md"]  # same length, different content
+        if id(new_list) != old_id:
+            continue
+        collided = True
+        index = cdc._basename_index(new_list)
+        # Fixed behavior: the index must reflect the NEW list, never the
+        # old (garbage-collected) one that happened to share its id.
+        assert f"z{i}.md" in index
+        assert f"y{i}.md" not in index
+        break
+    if not collided:
+        import pytest
+
+        pytest.skip("no id() collision in 500 tries on this interpreter/build")
+
+
 def test_bare_name_zero_hits_boundary(tmp_path: Path) -> None:
     """A bare filename with zero repo-wide matches stays UNCHECKED (not a
     finding) — same verdict as the pre-index linear scan."""

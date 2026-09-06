@@ -243,33 +243,52 @@ def list_repo_files(repo_root: Path) -> list[str]:
 # tiny) pruned set — the verdict (zero/one/multiple matches) is unchanged,
 # only the number of `endswith` calls shrinks.
 #
-# The index is memoized per `repo_files` LIST OBJECT (keyed by `id`) and
-# invalidated whenever that object's length changes since the index was
-# built. `id()`-only memoization is fragile in general (a garbage-collected
-# list's id can be reused by an unrelated new list), but combined with the
-# length check it is sufficient here: `repo_files` lists live only for the
-# duration of one `main()` run (see `list_repo_files` / `snapshot_repo_files`
-# callers), and the one caller that mutates a list in place after resolving
-# against it (a test) grows its length, which this check catches — see
+# The index is memoized per `repo_files` LIST OBJECT, keyed by `id()` but
+# validated against a STRONG REFERENCE to that same object (`cached_list is
+# repo_files`) plus its length at index-build time. The strong reference is
+# the load-bearing part: `id()`-only memoization is unsafe in general
+# because a garbage-collected list's id can be reused by an unrelated new
+# list of the same length, silently returning a foreign index — holding a
+# reference in the cache keeps the original list alive for as long as its
+# entry survives, so its id can never be handed to a different object while
+# the entry is live. The length check on top of that still catches the one
+# caller that mutates a list in place after resolving against it (a test)
+# by appending — see
 # `test_resolve_cited_path_repo_files_mutated_after_call_uses_latest_list`.
-_suffix_index_cache: dict[int, tuple[int, dict[str, list[str]]]] = {}
+# A same-length in-place mutation (replacing an element without changing
+# length) is NOT detected — that would need an O(n) per-call validation,
+# which would erase the whole point of the index. The production callers
+# (`list_repo_files` / `snapshot_repo_files` and their callers in `main`
+# and `check_doc`) treat `repo_files` as immutable after handing it in, so
+# this does not arise there; both caches are bounded to a handful of
+# entries since each run only ever indexes one list per repo root.
+_CACHE_MAX_ENTRIES = 8
+
+_suffix_index_cache: dict[int, tuple[list[str], int, dict[str, list[str]]]] = {}
 
 # Same memoization shape as `_suffix_index_cache` above, for the exact-match
 # `cited_path in repo_files` membership test `_resolve_snapshot_cited_path`
 # runs before falling back to the suffix scan: that was also an O(n) linear
 # scan per call and, once the suffix scan is index-pruned, dominates the
 # call's cost. A `set` gives the same membership semantics in O(1).
-_repo_files_set_cache: dict[int, tuple[int, set[str]]] = {}
+_repo_files_set_cache: dict[int, tuple[list[str], int, set[str]]] = {}
+
+
+def _evict_oldest_if_full(cache: dict) -> None:
+    """Keep the memoization caches small — see the module comment above."""
+    if len(cache) >= _CACHE_MAX_ENTRIES:
+        cache.pop(next(iter(cache)))
 
 
 def _repo_files_set(repo_files: list[str]) -> set[str]:
     """Return a `set` of `repo_files`, memoized like `_basename_index`."""
     cache_key = id(repo_files)
     cached = _repo_files_set_cache.get(cache_key)
-    if cached is not None and cached[0] == len(repo_files):
-        return cached[1]
+    if cached is not None and cached[0] is repo_files and cached[1] == len(repo_files):
+        return cached[2]
     files_set = set(repo_files)
-    _repo_files_set_cache[cache_key] = (len(repo_files), files_set)
+    _evict_oldest_if_full(_repo_files_set_cache)
+    _repo_files_set_cache[cache_key] = (repo_files, len(repo_files), files_set)
     return files_set
 
 
@@ -287,12 +306,13 @@ def _basename_index(repo_files: list[str]) -> dict[str, list[str]]:
     """
     cache_key = id(repo_files)
     cached = _suffix_index_cache.get(cache_key)
-    if cached is not None and cached[0] == len(repo_files):
-        return cached[1]
+    if cached is not None and cached[0] is repo_files and cached[1] == len(repo_files):
+        return cached[2]
     index: dict[str, list[str]] = {}
     for f in repo_files:
         index.setdefault(_basename(f), []).append(f)
-    _suffix_index_cache[cache_key] = (len(repo_files), index)
+    _evict_oldest_if_full(_suffix_index_cache)
+    _suffix_index_cache[cache_key] = (repo_files, len(repo_files), index)
     return index
 
 
