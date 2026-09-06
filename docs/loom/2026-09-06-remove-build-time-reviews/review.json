@@ -449,11 +449,20 @@
       "started": "2026-09-06T16:39:00+08:00",
       "fresh_context": true,
       "note": "author executable RED probes for readiness and risk-gating bypasses before checker implementation"
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "root",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T16:45:32+08:00",
+      "fresh_context": false,
+      "note": "implement checker and plan-contract enforcement against the adversary-authored RED probes"
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 9,
+    "dispatches": 10,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
