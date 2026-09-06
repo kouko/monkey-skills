@@ -202,6 +202,146 @@
       },
       "findings": [],
       "notes": "spec-16 through spec-18 fixed; all seven patch checksums and sequential hunks independently validated; no blind run."
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "NEEDS_REVISION",
+      "sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1848",
+          "text": "New-plan readiness can be bypassed by removing every Acceptance marker, using punctuation-only markers, or supplying an empty task DAG.",
+          "fix": "Distinguish committed legacy plans from new plans and require meaningful Acceptance ownership and a non-empty task population for every new plan."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:2774",
+          "text": "A required combined spec and adversarial PASS is accepted when the reviewer is also recorded as the implementer.",
+          "fix": "For explicitly required pre-build review, require an independent fresh-context reviewer dispatch and reject self-review."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:1886",
+          "text": "Malformed or hostile Acceptance references raise an internal error instead of a controlled BLOCK.",
+          "fix": "Validate reference tokens and bounds before integer conversion."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:1900",
+          "text": "Punctuation-only positive or negative case identifiers are accepted.",
+          "fix": "Require each case identifier to contain at least one alphanumeric character."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/contract/manifest.yaml:67",
+          "text": "Runtime contract and lane guidance still describe after-task and wave-end formal reviews.",
+          "fix": "Align the manifest, scaffolded mirror, and lane-switch guidance with the single branch-end review design."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-results/comparison.md:51",
+          "text": "The replay maps a published-verdict oracle to a stale mirror even though the canonical replay target already contains the fix.",
+          "fix": "Mark that oracle inapplicable rather than claiming the same root cause."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/plan.md:34",
+          "text": "W2-01 and W2-memory exceed the declared eight-file task cap.",
+          "fix": "Correct the plan ownership lists without changing delivered scope."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md:40",
+          "text": "The report presents a separate passing run as the cold-run result, omits the hook-trust and wcwidth blockers, and names tests that do not exist.",
+          "fix": "Rewrite the report from the recorded blind observations and use verified test names."
+        }
+      ],
+      "notes": "Focused branch-end probe suite: 8 failed and 102 passed at the reviewed SHA."
+    },
+    {
+      "round": 4,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "NEEDS_REVISION",
+      "sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:1848",
+          "text": "New-plan readiness can be bypassed when all Acceptance markers are absent.",
+          "fix": "Make the readiness requirement default for new plans and narrow the legacy exemption."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:1886",
+          "text": "Non-numeric or huge Acceptance references can produce an internal error.",
+          "fix": "Return a controlled BLOCK for malformed references."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:1900",
+          "text": "A punctuation-only test identifier passes the non-empty check.",
+          "fix": "Require meaningful identifiers."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:2774",
+          "text": "The published independence rule does not reject an implementer acting as the required spec reviewer.",
+          "fix": "Enforce reviewer independence for explicitly required pre-build reviews."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-results/comparison.md:51",
+          "text": "The published-verdict oracle is incorrectly mapped to the stale-mirror replay defect.",
+          "fix": "Record it as inapplicable to this fixture."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/plan.md:34",
+          "text": "Two tasks exceed the plan file-count cap.",
+          "fix": "Use accurate bounded ownership patterns or split the work."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/evidence/mechanisms.yaml:112",
+          "text": "The mechanism evaluation points at a change-local evidence copy rather than the permanent package test.",
+          "fix": "Point the evaluation at the permanent review-reduction probe."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/evidence/mechanisms.yaml:112",
+          "text": "The recorded checker-rule count and CHANGELOG mechanism claim are inconsistent with a one-for-one rule replacement.",
+          "fix": "Recompute the mechanism population and align the evidence and release note."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/skills/review/SKILL.md",
+          "text": "The Claude invocation contract omits the tested CLI source/version and does not explain that verdict YAML is inside the JSON envelope result field.",
+          "fix": "Document the verified non-interactive invocation and extraction contract."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/test_probes_charter_release_1_6_0.py",
+          "text": "Release probes became duplicates and the Ship word-count drift pin was removed.",
+          "fix": "Restore independently useful version agreement and current word-count checks without duplicating assertions."
+        },
+        {
+          "severity": "important",
+          "anchor": "requirements-dev.txt",
+          "text": "A clean README-style package setup lacks wcwidth, causing two package tests to fail.",
+          "fix": "Declare wcwidth in the development requirements and rerun from a clean environment."
+        }
+      ],
+      "notes": "Verdict was extracted from the JSON envelope result field after a no-tools Claude Code retry; earlier toolful attempts were nonconforming."
     }
   ],
   "probes": [
@@ -220,6 +360,30 @@
       "result": "needs-revision",
       "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
       "scope": "spec"
+    },
+    {
+      "kind": "adversarial",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py -q",
+      "sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "result": "needs-revision (8 failed, 3 passed)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see recorded commands in the report",
+      "sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "result": "needs-revision",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 -m pytest -q",
+      "sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "result": "needs-revision (clean environment: 2 failed, 2016 passed; missing wcwidth)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/blind-run-observations.txt",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -370,6 +534,110 @@
       "origin_sha": "621c83230be0d1c291f23587a726f2603e3a874d",
       "raised_by": "spec-risk-review-codex",
       "resolved": "closed by a6056ff5 — committed-plan start and six checksummed task patches replay sequentially"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/loom_checker.py:1848",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-adversary-gpt6",
+      "resolved": null,
+      "note": "readiness default and legacy exemption"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-code/scripts/loom_checker.py:2774",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-codex",
+      "resolved": null,
+      "note": "required spec-review independence"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/scripts/loom_checker.py:1886",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-adversary-gpt6",
+      "resolved": null,
+      "note": "controlled malformed-reference handling"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "loom-code/scripts/loom_checker.py:1900",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-adversary-gpt6",
+      "resolved": null,
+      "note": "meaningful case identifiers"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/contract/manifest.yaml:67",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-codex",
+      "resolved": null,
+      "note": "runtime contract and lane guidance"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-results/comparison.md:51",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-codex",
+      "resolved": null,
+      "note": "replay oracle classification"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/plan.md:34",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-codex",
+      "resolved": null,
+      "note": "task file ownership caps"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md:40",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-codex",
+      "resolved": null,
+      "note": "blind-report accuracy"
+    },
+    {
+      "id": "branch-end-09",
+      "anchor": "docs/loom/evidence/mechanisms.yaml:112",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-claude",
+      "resolved": null,
+      "note": "permanent mechanism evaluation"
+    },
+    {
+      "id": "branch-end-10",
+      "anchor": "docs/loom/evidence/mechanisms.yaml:112",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-claude",
+      "resolved": null,
+      "note": "mechanism count and release-note agreement"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "loom-code/skills/review/SKILL.md",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-claude",
+      "resolved": null,
+      "note": "Claude CLI adapter contract"
+    },
+    {
+      "id": "branch-end-12",
+      "anchor": "loom-code/scripts/test_probes_charter_release_1_6_0.py",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-claude",
+      "resolved": null,
+      "note": "release and word-count probes"
+    },
+    {
+      "id": "branch-end-13",
+      "anchor": "requirements-dev.txt",
+      "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
+      "raised_by": "branch-end-review-claude",
+      "resolved": null,
+      "note": "clean development dependency set"
     }
   ],
   "dispatch": [
@@ -541,7 +809,7 @@
     }
   ],
   "cost": {
-    "rounds": 3,
+    "rounds": 4,
     "dispatches": 20,
     "cap_changes": [],
     "hours_plan_to_pr": null
