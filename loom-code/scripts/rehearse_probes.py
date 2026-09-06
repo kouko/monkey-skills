@@ -234,6 +234,77 @@ def _resolve_trunk_sha(repo_root: Path) -> tuple[str | None, str | None]:
     return None, None
 
 
+def _trunk_precondition_problem(
+    repo_root: Path, trunk_sha: str, trunk_ref: str, head_sha: str
+) -> str | None:
+    """Why the squashed shape must refuse `trunk_sha`, or None when it may
+    proceed. Two preconditions, both read from `repo_root` (the source,
+    untouched), both fail-closed:
+
+    - The trunk must be an ancestor of HEAD. `_squash_clone_onto_trunk`
+      is `reset --soft` + `commit`: it re-records the branch's tree on
+      top of the trunk. On a trunk that moved past the fork point, that
+      tree lacks everything the trunk gained, so the rehearsal would run
+      against a history no squash merge ever produces and could report
+      green while the real merge is red (branch-end findings 01, 05, 10).
+    - When the trunk was resolved through `origin/<name>` and a local
+      `<name>` also resolves, the remote-tracking ref must be at or ahead
+      of the local one. An `origin/<name>` behind local `<name>` is a
+      stale view of the trunk: ancestry alone would then squash onto a
+      base older than the one the branch actually diverged from, and the
+      trunk the branch would really land on is unknowable from here
+      (branch-end findings 05, 09).
+    """
+    # `_resolve_trunk_sha` hands back whatever the ref names -- for a ref
+    # pointing at an annotated tag that is the tag object, which `reset`
+    # peels but `merge-base` does not. Compare commits.
+    trunk_commit = run_git(
+        repo_root, "rev-parse", "--verify", "--quiet", f"{trunk_sha}^{{commit}}",
+        timeout=GIT_TIMEOUT,
+    )
+    if not trunk_commit:
+        return f"trunk {trunk_ref} ({trunk_sha[:8]}) does not name a commit"
+    trunk_sha = trunk_commit
+    is_ancestor = run_git(
+        repo_root, "merge-base", "--is-ancestor", trunk_sha, head_sha, timeout=GIT_TIMEOUT
+    )
+    if is_ancestor is None:
+        return (
+            f"trunk {trunk_ref} ({trunk_sha[:8]}) is not an ancestor of HEAD "
+            f"({head_sha[:8]}); a squash merge would land on a trunk this branch "
+            "has never been rebased onto -- rebase onto it first, then rehearse again"
+        )
+    if trunk_ref.startswith("origin/"):
+        local_ref = trunk_ref[len("origin/"):]
+        local_sha = run_git(
+            repo_root, "rev-parse", "--verify", "--quiet", f"{local_ref}^{{commit}}",
+            timeout=GIT_TIMEOUT,
+        )
+        # Only a local trunk that sits strictly BETWEEN origin/<name> and
+        # HEAD is evidence of a stale remote-tracking ref. A local trunk
+        # that IS HEAD is the ordinary "unpushed commits on the trunk
+        # branch" shape and squashes onto origin/<name> as before; a local
+        # trunk unrelated to HEAD's ancestry says nothing about this
+        # branch.
+        if local_sha and local_sha not in (trunk_sha, head_sha):
+            behind = run_git(
+                repo_root, "merge-base", "--is-ancestor", trunk_sha, local_sha,
+                timeout=GIT_TIMEOUT,
+            )
+            local_in_head = run_git(
+                repo_root, "merge-base", "--is-ancestor", local_sha, head_sha,
+                timeout=GIT_TIMEOUT,
+            )
+            if behind is not None and local_in_head is not None:
+                return (
+                    f"{trunk_ref} ({trunk_sha[:8]}) is behind local {local_ref} "
+                    f"({local_sha[:8]}); the trunk this branch would land on is "
+                    "unknowable from here -- fetch or push so the two agree, then "
+                    "rehearse again"
+                )
+    return None
+
+
 def _squash_clone_onto_trunk(clone_dir: Path, trunk_sha: str, trunk_ref: str) -> None:
     """Collapse everything in `clone_dir` since `trunk_sha` into one new
     commit on top of it, in place.
@@ -510,6 +581,14 @@ def main(argv: list[str] | None = None) -> int:
         report.append(
             "SQUASHED SHAPE: skipped -- HEAD is already the trunk, nothing to squash"
         )
+    elif (
+        trunk_problem := _trunk_precondition_problem(repo_root, trunk_sha, trunk_ref, head_sha)
+    ) is not None:
+        # Refused, never silently skipped: a rehearsal that squashes onto
+        # the wrong history is worse than none, because it was trusted.
+        report.append("")
+        report.append(f"SQUASHED SHAPE: could not squash the rehearsal clone: {trunk_problem}")
+        final_code = final_code or 2
     else:
         try:
             _squash_clone_onto_trunk(clone_dir, trunk_sha, trunk_ref)

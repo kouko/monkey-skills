@@ -455,3 +455,61 @@ def test_squashedShape_localTrunk_keepsOriginMainReachable(
     # must resolve there, not be deleted
     squashed_section = out.split("SQUASHED SHAPE", 1)[1]
     assert "SKIPPED (0)" in squashed_section, out
+
+
+def test_squashedShape_trunkAheadAndDivergent_refusesNamingAncestry(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`origin/main` has moved past the point the branch forked from, so it
+    is no longer an ancestor of HEAD. `reset --soft` onto it would commit
+    the branch's tree on top of the newer trunk -- dropping whatever the
+    trunk gained -- and rehearse a history the squash merge would never
+    produce (branch-end findings 01, 05, 10). The squashed shape must
+    refuse, name the ancestry problem, and still report the CI-shaped
+    result first."""
+    repo = make_repo(tmp_path, trunk="main")
+    _git_ok(repo, "checkout", "-q", "-b", "feature")
+    commit_file(repo, "tests/test_green.py", "def test_ok():\n    assert True\n", "branch work")
+    _git_ok(repo, "checkout", "-q", "main")
+    commit_file(repo, "ahead.txt", "ahead\n", "trunk moved on")
+    ahead = _git_ok(repo, "rev-parse", "HEAD")
+    _git_ok(repo, "checkout", "-q", "feature")
+    _git_ok(repo, "update-ref", "refs/remotes/origin/main", ahead)
+
+    code = rehearse_probes.main(["tests/test_green.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code != 0, out
+    assert "could not squash" in out.lower(), out
+    assert "ancestor" in out.lower(), out
+    ci_shaped_section = out.split("SQUASHED SHAPE", 1)[0]
+    assert "FAILED (0)" in ci_shaped_section, out
+
+
+def test_squashedShape_originMainBehindLocalMain_refusesNamingFetch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Local `main` carries commits that `origin/main` lacks, and the branch
+    already merged them. `origin/main` is still an ancestor of HEAD, so
+    ancestry alone would let the rehearsal squash onto a base older than
+    the one the branch actually diverged from and call that green
+    (branch-end findings 05, 09). When the two same-name trunks disagree
+    this way the real trunk is unknowable from here: refuse and say which
+    is behind."""
+    repo = make_repo(tmp_path, trunk="main")
+    base = _git_ok(repo, "rev-parse", "HEAD")
+    _git_ok(repo, "checkout", "-q", "-b", "feature")
+    commit_file(repo, "tests/test_green.py", "def test_ok():\n    assert True\n", "branch work")
+    _git_ok(repo, "checkout", "-q", "main")
+    commit_file(repo, "later.txt", "later\n", "advance local main")
+    advanced = _git_ok(repo, "rev-parse", "HEAD")
+    _git_ok(repo, "checkout", "-q", "feature")
+    _git_ok(repo, "merge", "-q", "--no-edit", advanced)
+    _git_ok(repo, "update-ref", "refs/remotes/origin/main", base)
+
+    code = rehearse_probes.main(["tests/test_green.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code != 0, out
+    assert "could not squash" in out.lower(), out
+    assert "behind" in out.lower(), out
+    ci_shaped_section = out.split("SQUASHED SHAPE", 1)[0]
+    assert "FAILED (0)" in ci_shaped_section, out
