@@ -4,7 +4,73 @@
   "vendors": [
     "openai"
   ],
-  "verdicts": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "NEEDS_REVISION",
+      "sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "spec_sha": "dde4c70",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "NEEDS_REVISION",
+        "design-conformance": "N/A — DESIGN.md is absent; KICKOFF-DEFAULTS.md:9 waives it for this repository.",
+        "principles-conformance": "NEEDS_REVISION",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:23",
+          "text": "issue (blocking): The proposed move does not define an executable binding between an observed successful suite execution and the checkpoint Ship accepts. Git can prove commit contents and ancestry, but an agent-authored checkpoint with matching SHAs has the same observable shape whether the suite ran or was skipped; the current hook dispatches only push-shaped commands (loom-code/scripts/loom_checker.py:3234), and its observed execution is the guarantee being removed (loom-code/scripts/loom_checker.py:3998).",
+          "fix": "Specify the authoritative branch-end execution-to-checkpoint transition, its enforcement on both supported hosts, and how Ship rejects a fabricated, copied, legacy, or interrupted checkpoint without trusting result fields. Include a negative acceptance case with a schema-valid passing checkpoint for an unexecuted or failing suite. If Git-only state cannot establish execution under the selected trust model, resolve that design contradiction explicitly before implementation."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+          "text": "issue (blocking): REQ-1 blocks a missing declaration or unusable command, while the design decision at line 24 preserves existing fallback and error behaviour. Existing resolution accepts absent declarations through build markers (loom-code/scripts/loom_checker.py:3977), and an explicit package-tests: none succeeds without a run (loom-code/scripts/loom_checker.py:4014); the two readings produce different outcomes in adopting repositories.",
+          "fix": "Define separate outcomes for absent declaration with successful detection, absent declaration without detection, explicit none, malformed argv, missing executable, timeout, and non-zero exit. State whether the existing none exemption is preserved, and align REQ-1 and the UI flow with that decision."
+        },
+        {
+          "severity": "important",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:47",
+          "text": "issue (blocking): The suite runs before the blind run and adversarial work, but that work currently commits evidence before the final reviewers are dispatched (loom-code/skills/review/SKILL.md:157), including executable regression cases (loom-code/skills/review/SKILL.md:307). The spec does not settle whether those later commits invalidate the tested commit, cause another suite execution, or are exempted, so exactly once against the final implementation commit is not yet executable.",
+          "fix": "Place the single successful suite execution after all tree-changing branch-end work and before checkpoint creation, or define an equivalent precise ordering. Explicitly invalidate the run on later probe, evidence, nit, command-declaration, or other tracked-content changes; describe retry behaviour and the exact permitted close-record exceptions without introducing general safe-path exemptions."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
+          "text": "issue (blocking): The current checker does not create a clean worktree at the reviewed commit. It checks the existing working tree for cleanliness (loom-code/scripts/loom_checker.py:4050) and executes the declared command with cwd set to that repository (loom-code/scripts/loom_checker.py:4066); _cmd_push calls it directly without creating another checkout (loom-code/scripts/loom_checker.py:3306).",
+          "fix": "Correct Current state evidence to distinguish the documented claim from the actual execution directory. Specify whether the candidate will execute at the pinned commit in an isolated checkout or validate and use the existing checkout, including how it prevents HEAD movement and tracked changes during execution."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:17",
+          "text": "issue (blocking): The baseline count is fixed at two before measurement, but the existing Ship instructions call the push checker explicitly and then state that the host hook runs it again when pushing (loom-code/skills/ship/SKILL.md:238 and :247), in addition to the branch-end run (loom-code/skills/review/SKILL.md:317). A full unchanged workflow therefore has additional execution sites; a two-call replay requires an explicitly narrower scope.",
+          "fix": "Define the replay start and stop points and whether actual push-hook execution and Ship's preceding test checklist are included. Record the observed baseline invocation count rather than requiring two, then require one candidate execution over that identical scope, equal release verdicts, and lower measured wait."
+        }
+      ],
+      "notes": [
+        "The corrected reviewed SHA matches HEAD. All five Current state evidence sources were opened; findings above distinguish source text from executable behaviour.",
+        "PRINCIPLES.md:10 forbids trusting agent-authored gate claims. Its gate-only wording at PRINCIPLES.md:9 also still assigns package-test recomputation to push and needs reconciliation with the final ownership contract.",
+        "This is a pre-build static spec review. No blind run, suite execution, timing measurement, or repository modification was performed."
+      ]
+    }
+  ],
   "probes": [],
   "questions": [
     {
@@ -48,7 +114,43 @@
       "type": "behaviour"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "spec-01",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:23",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": ""
+    },
+    {
+      "id": "spec-02",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": ""
+    },
+    {
+      "id": "spec-03",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:47",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": ""
+    },
+    {
+      "id": "spec-04",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": ""
+    },
+    {
+      "id": "spec-05",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:17",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": ""
+    }
+  ],
   "dispatch": [
     {
       "task": "spec",
@@ -60,7 +162,7 @@
     }
   ],
   "cost": {
-    "rounds": 0,
+    "rounds": 1,
     "dispatches": 1,
     "cap_changes": [],
     "hours_plan_to_pr": null
