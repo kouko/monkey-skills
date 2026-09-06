@@ -46,9 +46,17 @@ _OUT_OF_SCOPE_ID = re.compile(r"^(?P<id>F-\d+)\s*:")
 
 
 def _run_git(
-    args: list[str], cwd: Path, *, stdin: bytes | str | None = None
-) -> subprocess.CompletedProcess[str]:
-    input_text = stdin.decode() if isinstance(stdin, bytes) else stdin
+    args: list[str],
+    cwd: Path,
+    *,
+    stdin: bytes | None = None,
+    binary: bool = False,
+) -> subprocess.CompletedProcess:
+    if binary:
+        return subprocess.run(
+            ["git", *args], cwd=cwd, capture_output=True, text=False, input=stdin
+        )
+    input_text = stdin.decode() if stdin is not None else None
     return subprocess.run(
         ["git", *args], cwd=cwd, capture_output=True, text=True, input=input_text
     )
@@ -155,26 +163,29 @@ def read_base_graduated_ids(
     if not entries:
         return set()
 
-    stdin_text = "".join(f"{sha}\n" for sha, _ in entries)
-    batch = _run_git(["cat-file", "--batch"], repo_root, stdin=stdin_text)
+    stdin_bytes = "".join(f"{sha}\n" for sha, _ in entries).encode()
+    batch = _run_git(
+        ["cat-file", "--batch"], repo_root, stdin=stdin_bytes, binary=True
+    )
     if batch.returncode != 0:
         raise map_store.SchemaViolation(
             f"cannot read base Ticket history at {base_ref!r}"
         )
 
-    # `cat-file --batch` reports each object's <size> in BYTES, but
-    # `_run_git` decodes stdout to `str` (`text=True`, same as every
-    # other call in this module). A ticket body with multi-byte (CJK)
-    # content therefore has more bytes than characters, so slicing the
-    # decoded str by the declared byte size drifts every subsequent
-    # blob's boundary. Re-encode the (already successfully decoded)
-    # str back to bytes with the SAME encoding Python's text mode used
-    # for the decode, so slicing happens where the sizes are actually
-    # measured; each blob is then decoded individually with that same
-    # encoding — identical decoding behaviour to the old per-ticket
-    # `git show` (also `_run_git`, also text=True) loop.
+    # `cat-file --batch` reports each object's <size> in BYTES, so this
+    # call runs `_run_git` in binary mode (`text=False`) and every
+    # index/slice below happens in raw bytes — never in a `str`, where
+    # `text=True` decoding would already have both (a) collapsed
+    # multi-byte (CJK) characters to fewer code points than bytes, and
+    # (b) applied universal-newline translation (`\r\n`/`\r` -> `\n`)
+    # that a later re-encode cannot undo. Each blob's raw bytes are cut
+    # out first, THEN decoded individually — with the same encoding and
+    # the same newline translation `_run_git`'s `text=True` mode (used
+    # by the old per-ticket `git show` loop) applied — so
+    # `parse_frontmatter` receives byte-for-byte the same text either
+    # way.
     encoding = locale.getpreferredencoding(False)
-    raw = batch.stdout.encode(encoding)
+    raw = batch.stdout
     graduated: set[str] = set()
     pos = 0
     for sha, name in entries:
@@ -188,8 +199,11 @@ def read_base_graduated_ids(
             )
         # header format: "<sha> <type> <size>"
         content_size = int(parts[2])
-        content = raw[pos : pos + content_size].decode(encoding)
+        content_bytes = raw[pos : pos + content_size]
         pos += content_size + 1  # trailing newline after the content
+        content = content_bytes.decode(encoding).replace("\r\n", "\n").replace(
+            "\r", "\n"
+        )
         try:
             fields, _ = map_store.parse_frontmatter(content)
         except map_store.SchemaViolation as exc:
