@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+  "reviewed_sha": "6c77091206f260c9406e8b5599035f87f35b8864",
   "scope": "branch-end",
   "vendors": [
     "openai",
@@ -651,6 +651,40 @@
       },
       "findings": [],
       "notes": "Confirmed the 2055 core, 183 design, and 11 adversarial results plus the bare-publish, env-wrapper, and env -S residuals."
+    },
+    {
+      "round": 13,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex-ci-fix",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "6c77091206f260c9406e8b5599035f87f35b8864",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "scope-preservation": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": "Confirmed that the final delta only synchronizes the loom-code marketplace description and records the observed CI root cause; local description, manifest, full package, and adversarial checks pass."
+    },
+    {
+      "round": 13,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude-ci-fix",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "6c77091206f260c9406e8b5599035f87f35b8864",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "scope-preservation": "PASS",
+        "tests": "PASS"
+      },
+      "findings": [],
+      "notes": "Confirmed byte-identical marketplace and plugin descriptions, a single targeted metadata correction plus an accurate report entry, and no behavioral side effects; noted only that remote job names rely on the recorded CI logs."
     }
   ],
   "probes": [
@@ -819,6 +853,46 @@
       "command": "see recorded commands in the report",
       "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
       "result": "pass after repository-selection remediation",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "6c77091206f260c9406e8b5599035f87f35b8864",
+      "result": "pass (core: 2055 passed, 2 skipped, 1 xfailed; design: 183 passed, 1 skipped)",
+      "artifact": "requirements-dev.txt",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "uv run --isolated --with pytest --with pyyaml python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "6c77091206f260c9406e8b5599035f87f35b8864",
+      "result": "pass (readiness mutation cases)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "uv run --isolated --with pytest --with pyyaml python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "6c77091206f260c9406e8b5599035f87f35b8864",
+      "result": "pass (review independence and missing dependency cases)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "uv run --isolated --with pytest --with pyyaml python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "6c77091206f260c9406e8b5599035f87f35b8864",
+      "result": "pass (staleness, foreign cwd, and legacy-claim cases; 11 total)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see recorded commands in the report",
+      "sha": "6c77091206f260c9406e8b5599035f87f35b8864",
+      "result": "pass after marketplace-description CI remediation",
       "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
       "scope": "branch-end"
     }
@@ -1619,11 +1693,29 @@
       "started": "2026-09-06T21:39:00+08:00",
       "fresh_context": false,
       "note": "round 12 records-only blind-report confirmation in the same Claude Code session"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex-ci-fix",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T22:34:35+08:00",
+      "fresh_context": true,
+      "note": "round 13 fresh-context marketplace-description CI fix review"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude-ci-fix",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T22:34:35+08:00",
+      "fresh_context": true,
+      "note": "round 13 no-tools marketplace-description CI fix review"
     }
   ],
   "cost": {
-    "rounds": 12,
-    "dispatches": 45,
+    "rounds": 13,
+    "dispatches": 47,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
