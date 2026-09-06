@@ -218,6 +218,21 @@ def test_charter_and_plan_edits_agree_the_real_change_id_resolves() -> None:
     change-id (which DOES have a plan and a review.json on disk) must
     resolve cleanly through both cited commands, proving the absent-input
     failures above are about the input, not a broken command."""
+    # The control resolves the plan commit by its exact subject through
+    # HEAD's history. A squash merge flattens that commit away (main
+    # carries only the PR-titled squash commit), and the checker then
+    # fails closed with "no plan commit found" -- correct behaviour, but
+    # this control has nothing left to resolve. Skip with that reason,
+    # the same way the language-policy probes skip when their branch
+    # history is gone; the negative controls above still run everywhere.
+    import loom_checker  # noqa: E402  (same sys.path insertion as prose_pin above)
+
+    if loom_checker.find_plan_commit_sha(REPO, CHANGE_ID) is None:
+        pytest.skip(
+            "plan commit not reachable from HEAD -- the trunk carries only "
+            "the squashed PR commit; the positive control needs the commit "
+            "that landed the plan"
+        )
     plan_result = run_checker("plan-edits", CHANGE_ID)
     review_result = run_checker("review-edits", CHANGE_ID)
     assert plan_result.returncode == 0, plan_result.stdout + plan_result.stderr
