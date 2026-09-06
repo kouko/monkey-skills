@@ -571,3 +571,42 @@ def test_store_entries_paragraph_names_risks_stays_as_left() -> None:
         "sentence stating the plan's Risks section stays as the plan "
         "commit left it"
     )
+
+
+def test_graduation_paragraph_names_the_squashed_rehearsal_shape() -> None:
+    """W2-01 (2026-09-06-graduated-probes-survive-squash): the rehearsal
+    gate paragraph describes the CI-shaped clone, but `rehearse_probes.py`
+    now runs a SECOND shape in the same run -- the branch squashed to one
+    commit off its trunk -- which is what catches a probe that only passes
+    because it can still see one of the branch's own commits (the failure
+    that took `plan-edits` red on main after PR #798 squash-merged).
+
+    A cold reader who never opens the script learns the shapes only from
+    this paragraph, so the squashed shape has to be named here, inside the
+    same registered gate, in an AFFIRMATIVE sentence: the prose-pin rule
+    (PRINCIPLES.md) refuses a negation token in a sentence that carries a
+    blocking rule, because a later edit can invert `does not` far more
+    quietly than it can delete an affirmative clause."""
+    paragraph = _probe_graduation_paragraph()
+    sentences = _flat_sentences(paragraph)
+
+    squashed = [s for s in sentences if "squash" in s.lower()]
+    assert squashed, (
+        "the graduation paragraph never names the squashed rehearsal shape; "
+        "a cold reader cannot learn it runs two shapes"
+    )
+    for sentence in squashed:
+        assert not _has_negation(sentence), (
+            f"the squashed-shape sentence carries a negation token: {sentence!r}"
+        )
+
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    open_marker = "<!-- gate: build.rehearsal-before-graduation -->"
+    close_marker = "<!-- /gate -->"
+    start = text.index(open_marker)
+    end = text.index(close_marker, start)
+    gated = " ".join(text[start + len(open_marker):end].split())
+    assert "squash" in gated.lower(), (
+        "the squashed shape is named outside the registered rehearsal gate, "
+        "so it is prose a reader may treat as commentary rather than a rule"
+    )
