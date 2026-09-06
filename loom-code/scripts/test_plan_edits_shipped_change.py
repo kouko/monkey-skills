@@ -219,6 +219,7 @@ def test_unreadable_intent_after_historical_closure_still_blocks(tmp_path: Path)
         result = run_plan_edits(repo)
         assert result.returncode == 1
         assert "plan.edits-after-commit" in blocked_rules(result)
+        assert "no plan commit found" in result.stderr
     finally:
         intent_path(repo).chmod(0o644)
 
