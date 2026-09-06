@@ -74,43 +74,51 @@ def test_basename_index_inplace_mutation_same_length_returns_stale_result() -> N
         assert fresh is None, "stale miss not reproduced -- report as-is"
 
 
-def test_basename_index_gc_reused_id_returns_stale_result() -> None:
-    """CPython can reuse a garbage-collected list's `id()` for a new list
-    of the same length. When that happens, `_basename_index`'s
-    `id(repo_files)`+`len(repo_files)` cache key collides with the old
-    entry and returns the OLD list's index for a completely different
-    (same-length) NEW list -- a wrong verdict, not merely a slow one.
-    This loop hunts for that collision (CPython's small-int/object-pool
-    allocator makes it common, not adversarially rare) and asserts the
-    stale-index symptom the first time it fires; if 500 tries never
-    collide, the probe is a documented no-op rather than a false pass."""
-    collided = False
-    for i in range(500):
-        old_list = [f"a/x{i}.md", f"a/y{i}.md"]
-        old_id = id(old_list)
-        check_doc_citations._basename_index(old_list)
-        del old_list
-        gc.collect()
+def test_basename_index_gc_reused_id_never_reuses_or_returns_stale_result() -> None:
+    """Fixed contract (b8ba8a62): `_suffix_index_cache` now stores a
+    STRONG reference to the exact `repo_files` list object it indexed
+    (`cached[0] is repo_files`, not just an `id()`+`len()` match). A
+    live cache entry keeps its list alive, so CPython cannot hand that
+    same `id()` to any other object while the entry survives -- the
+    id-reuse collision this file's sibling probe used to reproduce is
+    now impossible by construction, deterministically, not by luck.
 
-        new_list = [f"a/x{i}.md", f"a/z{i}.md"]  # same length, different content
-        if id(new_list) != old_id:
-            continue
-        collided = True
-        index = check_doc_citations._basename_index(new_list)
-        # Bug symptom: the returned index still carries the OLD list's
-        # "y{i}.md" basename key instead of the NEW list's "z{i}.md".
-        assert f"y{i}.md" in index, (
-            "id-reuse collision happened but no staleness observed -- "
-            "cache may have been fixed; re-run to confirm before trusting "
-            "a single miss"
-        )
-        assert f"z{i}.md" not in index
-        break
-    if not collided:
-        raise AssertionError(
-            "no id() collision in 500 tries on this interpreter/build -- "
-            "inconclusive, not a pass: re-run or widen the loop"
-        )
+    Proven in two parts, both without a skip/collision-hunt loop:
+    (1) while list A's entry is alive in the cache, no same-length list
+    B allocated in a tight loop is ever handed A's `id()` -- checked on
+    every iteration, not sampled; (2) once A's entry is evicted (the
+    cache is capped at `_CACHE_MAX_ENTRIES`), a genuinely new list B —
+    same length as A, different content — always gets an index built
+    from B's own content, never A's, whether or not B happens to reuse
+    a freed id."""
+    cache = check_doc_citations._suffix_index_cache
+    cache.clear()
+
+    a_list = ["a/x.md", "a/y.md"]
+    id_a = id(a_list)
+    check_doc_citations._basename_index(a_list)
+    del a_list  # local name gone; the cache's tuple still holds the object alive
+
+    # Part 1: while A's cache entry is alive, no same-length list can ever
+    # be allocated at A's freed address -- it was never freed to begin with.
+    max_entries = check_doc_citations._CACHE_MAX_ENTRIES
+    for i in range(max_entries - 2):  # stays under the eviction threshold
+        b_list = [f"a/p{i}.md", f"a/q{i}.md"]
+        assert id(b_list) != id_a, "A's entry is still cached -- its id cannot be reused"
+        index = check_doc_citations._basename_index(b_list)
+        assert index == {f"p{i}.md": [f"a/p{i}.md"], f"q{i}.md": [f"a/q{i}.md"]}
+
+    # Part 2: evict A's entry (fill the cache past capacity), then confirm a
+    # fresh same-length list always gets ITS OWN content indexed -- never a
+    # stale carry-over -- regardless of whether its id happens to be reused.
+    for i in range(max_entries + 4):
+        check_doc_citations._basename_index([f"filler{i}/f.md"])
+
+    gc.collect()
+    b_list = ["a/x.md", "a/z.md"]  # same length as A, content differs at [1]
+    index = check_doc_citations._basename_index(b_list)
+    assert index == {"x.md": ["a/x.md"], "z.md": ["a/z.md"]}
+    assert "y.md" not in index, "stale A content leaked into a post-eviction rebuild"
 
 
 # ---------------------------------------------------------------------------
@@ -273,18 +281,16 @@ def _run_with_yaml_unimportable(script_path: Path, args: list[str]) -> subproces
         )
 
 
-def test_loom_checker_yaml_unimportable_diverges_from_old_exit_code() -> None:
-    """With `yaml` unimportable and a well-formed `contract --require
-    1.0` (a real manifest load is required, so both old and new code
-    MUST attempt the yaml import), the pre-change script imported yaml
-    at MODULE level -- outside any try/except -- and crashed with an
-    unhandled traceback at Python's default exit code 1. The lazy
-    import moved the same `import yaml` inside `load_manifest()`, which
-    now runs inside main()'s catch-all (`except Exception ... exit 2`),
-    so the identical failing dependency now produces a different exit
-    code and a different (caught, one-line) message shape. This is a
-    real divergence from the stated zero-behaviour-change constraint
-    for the failing-yaml-import case, not a false positive."""
+def test_loom_checker_yaml_unimportable_matches_old_exit_code_and_last_stderr_line() -> None:
+    """Fixed contract (cbd204c4): with `yaml` unimportable and a
+    well-formed `contract --require 1.0` (a real manifest load is
+    required, so both old and new code MUST attempt the yaml import),
+    `load_manifest` now catches the `ImportError`, prints the same
+    traceback shape via `traceback.print_exc()`, and raises
+    `SystemExit(1)` -- a `BaseException` that passes straight through
+    `main`'s `except Exception` catch-all instead of being swallowed
+    into a misleading exit-2 "internal error". Old and new must now
+    match on both the exit code and the final stderr line."""
     old_dir = Path(tempfile.mkdtemp())
     old_script = old_dir / "loom_checker_old.py"
     old_script.write_text(OLD_LOOM_CHECKER_TEXT)
@@ -292,14 +298,12 @@ def test_loom_checker_yaml_unimportable_diverges_from_old_exit_code() -> None:
     old = _run_with_yaml_unimportable(old_script, ["contract", "--require", "1.0"])
     new = _run_with_yaml_unimportable(LOOM_CHECKER, ["contract", "--require", "1.0"])
 
-    assert "ModuleNotFoundError" in old.stderr
-    assert "ModuleNotFoundError" in new.stderr
-    # Pin the observed divergence so a future fix (or a future widening
-    # of the gap) is visible as a test change, not a silent drift.
     assert old.returncode == 1
-    assert new.returncode == 2
-    assert "Traceback" in old.stderr
-    assert "Traceback" not in new.stderr
+    assert new.returncode == 1
+    old_last_line = old.stderr.rstrip("\n").splitlines()[-1]
+    new_last_line = new.stderr.rstrip("\n").splitlines()[-1]
+    assert old_last_line == "ModuleNotFoundError: No module named 'yaml'"
+    assert new_last_line == old_last_line
 
 
 def test_loom_checker_yaml_unimportable_nonpush_path_still_exits_zero() -> None:
