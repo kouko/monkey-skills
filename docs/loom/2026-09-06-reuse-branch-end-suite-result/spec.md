@@ -1,6 +1,6 @@
 # Single-owner local push-gate package test — spec
 intent: 2026-09-06-reuse-branch-end-suite-result@ddee7445
-confirmed-behavior: 2026-09-07 @94ace14
+confirmed-behavior: 2026-09-07 @aed53de
 pre-build-review: required — this change moves an executable release gate between workflow stages and changes the public Ship contract
 
 ## Requirements
