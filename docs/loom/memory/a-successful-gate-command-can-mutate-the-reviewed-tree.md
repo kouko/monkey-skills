@@ -29,6 +29,10 @@ enough when shell expansion, aliases, wrappers, or Git configuration can add
 runtime arguments, tags, or submodule pushes. Accept one canonical quote-all
 command using the trusted absolute Git executable, a literal remote, the exact
 object-to-branch refspec, and fixed flags that disable implicit tag and
-submodule publication. Reject every other form before running the expensive
-suite. This guarantees which object is published; it does not claim to contain
-hostile descendants or stop them from modifying local files later.
+submodule publication. A quoted absolute executable can still be shadowed by
+an inherited shell function with the same name, so the canonical command starts
+with the supported shell's standard `command` builtin; that builtin is the
+explicit trust root. Reject every other form before running the expensive
+suite. This guarantees which object is published under that supported-shell
+boundary; it does not claim to contain hostile descendants, protect a shell
+whose `command` builtin is itself replaced, or stop later local-file mutation.
