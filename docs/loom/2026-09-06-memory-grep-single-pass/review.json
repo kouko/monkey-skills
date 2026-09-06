@@ -1256,6 +1256,33 @@
    "started": "2026-09-06T12:40:00+0800",
    "fresh_context": true,
    "note": "round 8 re-baseline after rebase onto origin/main; second vendor"
+  },
+  {
+   "task": "W3-03",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "glm",
+   "started": "2026-09-06T13:35:00+0800",
+   "fresh_context": false,
+   "note": "CI fixes — capability probe pins a throwaway identity (bare repo + no host identity); hostile-subject oracle reads a committed fixture instead of a pinned sha (depth-1 CI checkout)"
+  },
+  {
+   "task": "branch-end-9",
+   "role": "reviewer",
+   "agent_id": "rev-be9-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T13:35:00+0800",
+   "fresh_context": true,
+   "note": "round 9 re-baseline after CI fixes"
+  },
+  {
+   "task": "branch-end-9",
+   "role": "reviewer",
+   "agent_id": "rev-be9-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T13:35:00+0800",
+   "fresh_context": true,
+   "note": "round 9 re-baseline after CI fixes; second vendor"
   }
  ],
  "cost": {
