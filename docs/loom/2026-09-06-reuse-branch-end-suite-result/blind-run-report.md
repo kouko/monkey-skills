@@ -8,7 +8,7 @@
 
 - **如何驗證**：把舊版與含安全修正的新版本 checker、hook 定義及完整 contract package 分別從 Git 取出，在同一個已接受 checkpoint 上執行舊版的明確 preflight 加 hook，以及新版的 hook-only 路徑；另用臨時本機 bare remote 驗證 hook 放行後真正發布的物件。
 - **發生了什麼**：新版每次只由真實 hook 啟動完整測試一次並放行；舊版每次由真實 preflight 與 hook 各啟動一次。先前的反例證明 detached writer 可在 hook 回傳後移動本機 HEAD；新版沒有宣稱阻止這類後續寫入，而是以支援 shell 的標準 `command` builtin 作為 trust root，繞過 alias／function lookup 後呼叫 trusted absolute Git，再用 canonical quote-all command 綁定已驗證的完整 SHA，固定關閉隱含 tag／submodule 發布，並以 `--no-verify` 阻止 repository-configured pre-push hook 在 gate 放行後執行額外發布。
-- **Evidence**：`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`、`test_refspec_exacthead_accepted`、`test_gate_immutable_pinsreviewed`、`test_ship_issues_canonical_immutable_refspec_without_explicit_checker_preflight`、`test_ship_push_requires_quote_all_literal_command_and_fixed_containment_flags`、`test_ship_supported_host_hook_is_sole_package_suite_owner`、`test_ship_missing_or_inactive_supported_host_hook_blocks`；量測 probe：`2 passed in 27.25s`
+- **Evidence**：`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`、`test_refspec_exacthead_accepted`、`test_gate_immutable_pinsreviewed`、`test_ship_issues_canonical_immutable_refspec_without_explicit_checker_preflight`、`test_ship_push_requires_quote_all_literal_command_and_fixed_containment_flags`、`test_ship_supported_host_hook_is_sole_package_suite_owner`、`test_ship_missing_or_inactive_supported_host_hook_blocks`；量測 probe：`2 passed in 27.84s`
 - **Verdict**：works — 完整測試在最終 Ship 路徑只有 hook 這一個執行者，發布來源綁定已驗證物件且固定 flags 不發布隱含 refs；這不是 process-containment 保證。
 
 ### 2. push checker 仍從 Git 重新確認 branch-end checkpoint、reviewed commit 與 Loom 允許的 review-only／intent-close 紀錄；它只相信當次實際觀察到的完整測試 exit code，不相信 agent 寫入的歷史結果。
@@ -42,13 +42,13 @@
 ### 6. 實作途中以同一個已接受 checkpoint 重播從 Ship Push step 到本機 gate 阻擋或釋放 network push 的相同範圍，記錄 baseline 與 candidate 實際完整測試次數及 monotonic 等待秒數；candidate 恰好執行一次、少於 baseline、發布 verdict 相同且實測等待下降。
 
 - **如何驗證**：從 Git 取出兩個版本的真實 checker bundle 與 hook 定義，在同一個已接受 checkpoint 上交替執行七組；由 repository 宣告的 package command 以 monotonic clock 自行記錄每次執行時間，外層再量測直到真實 hook verdict，流程在 network transfer 前停止。
-- **發生了什麼**：舊版實際走 preflight 加 hook，共執行十四次；最終新版用以 `command` 開頭的完整 canonical quote-all command 走 hook-only，共執行七次。兩者全部由真實 gate 判定放行。舊版完整邊界中位數為 2.099876084 秒，新版為 1.119914000 秒，下降 0.979962084 秒，約 46.7%。
-- **Evidence**：`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`；輸出：`2 passed in 27.25s`
+- **發生了什麼**：舊版實際走 preflight 加 hook，共執行十四次；最終新版用以 `command` 開頭且固定 `--no-verify` 的完整 canonical quote-all command 走 hook-only，共執行七次。兩者全部由真實 gate 判定放行。舊版完整邊界中位數為 3.449805708 秒，新版為 1.935328208 秒，下降 1.514477500 秒，約 43.9%。
+- **Evidence**：`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`；輸出：`2 passed in 27.84s`
 - **Verdict**：works — 固定案例的實測次數減半，判定不變且等待下降。
 
 ## Review summary
 
-六條驗收目前都有可執行證據。detached-writer、shell expansion 與 executable-function shadowing 風險已由 `f6e58b72` 的 `command`-prefixed canonical immutable command 修正，量測也已重跑最終版本的真實入口；是否關閉 findings 仍由原 reviewer 在本輪複查決定。英文規則稽核另有一項不影響執行的文字一致性問題。
+六條驗收目前都有可執行證據。detached-writer、shell expansion、executable-function shadowing 與 repository-configured pre-push hook 風險已由 `3ecac98e` 的 `command`-prefixed canonical immutable command 與固定 `--no-verify` 修正，量測也已重跑最終版本的真實入口；是否關閉 findings 仍由原 reviewer 在本輪複查決定。英文規則稽核另有一項不影響執行的文字一致性問題。
 
 | 可讀標籤 | 英文規則結果 | Evidence |
 |---|---|---|

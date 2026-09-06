@@ -28,7 +28,7 @@ ROOT = next(
     if (parent / "loom-code" / "skills" / "ship" / "SKILL.md").exists()
 )
 BASELINE = "9d009c49e02a52c4838dba30a88501e0bbe79ab0"
-CANDIDATE = "f6e58b7269d1803feed2c2b29589109d33f17707"
+CANDIDATE = "3ecac98e2b54282f88414481fae7ed8981b8d0e3"
 SAMPLES = 7
 WORK_SECONDS = "0.080"
 CHANGE = "2026-09-02-a"
@@ -230,6 +230,7 @@ def canonical_push_command(repo: Path, refspec: str) -> str:
         "--no-follow-tags",
         "--recurse-submodules=no",
         "-u",
+        "--no-verify",
         "origin",
         refspec,
     ]
@@ -353,6 +354,7 @@ def test_revisions_execute_versioned_real_gate_entrypoints(tmp_path: Path) -> No
         "--no-follow-tags",
         "--recurse-submodules=no",
         "-u",
+        "--no-verify",
         "origin",
         candidate.refspec,
     ]
