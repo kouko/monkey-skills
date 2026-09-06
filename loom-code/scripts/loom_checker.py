@@ -85,16 +85,16 @@ RULES: list[tuple[str, str]] = [
         "`confirmed-behavior: <date> @<spec-blob-sha7>` line naming the spec as it stands.",
     ),
     (
-        "intake.after-task-budget",
-        "A plan may mark two tasks `review: after-task` for free; every further "
-        "one carries a reason on its own task line.",
+        "intake.test-case-pair",
+        "Every task in a newly authored plan names the intent Acceptance lines it owns, "
+        "and each named line has positive plus negative or boundary test cases.",
     ),
     (
         "intake.spec-pass",
-        "write-plan accepts a needs-design: yes change only when the latest spec review round "
-        "carries at least two distinct reviewers all passing, every verdict records a spec_sha "
-        "equal to the spec's current identity, and the round carries a `scope: spec` "
-        "adversarial probe.",
+        "write-plan accepts a needs-design: yes change according to its pre-build-review "
+        "declaration: not-required skips formal review, required needs one passing independent "
+        "spec + adversarial reviewer, and an undeclared legacy spec retains the former two-reader "
+        "plus adversarial-probe floor; every counted verdict names the current spec_sha identity.",
     ),
     (
         "intent.kind-recompute",
@@ -189,7 +189,9 @@ RULES: list[tuple[str, str]] = [
         "`closed <date> — branch <name>`) -- any other intent-file edit riding along still blocks. "
         "When instead HEAD^ turns an intent's status to closed as a commit of its own, its shape "
         "is recomputed too: it must touch only that intent file, change exactly its status line, "
-        "and sit on a checkpoint whose own review.json vouches for HEAD^^^.",
+        "and sit on a checkpoint whose own review.json vouches for HEAD^^^. "
+        "Hook mode also uses this rule when it cannot prove that a publish command targets one "
+        "local repository.",
     ),
     (
         "push.reviewed-sha",
@@ -1544,8 +1546,8 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
 
     failures: list[tuple[str, str]] = []
-    failures += check_after_task_budget(manifest, repo, change_id)
     if station == "write-plan":
+        failures += check_test_case_pairs(manifest, repo, change_id, sections)
         failures += check_plan_field_caps_at(manifest, repo, change_id)
 
     kind = front.get("kind", "").strip()
@@ -1810,50 +1812,137 @@ def sha_agrees(recorded: str, current: str) -> bool:
     return bool(recorded) and (current.startswith(recorded) or recorded.startswith(current))
 
 
-AFTER_TASK_FREE = 2
-
 # A plan's task line, per templates/plan.md:
-# `**<id> <title>**  after: <ids>  review: after-task[ — <reason>]`
+# `**<id> <title>**  after: <ids>  acceptance: <numbers>`
 TASK_LINE = re.compile(
     r"^(?:[-*+]\s+)?\*\*(?P<id>[A-Za-z0-9][A-Za-z0-9._-]*)[^*]*\*\*(?P<rest>.*)$"
 )
+TASK_ACCEPTANCE = re.compile(r"(?:^|\s)acceptance:\s*(.*?)\s*$", re.IGNORECASE)
+VALID_ACCEPTANCE_REFS = re.compile(r"[0-9]{1,9}(?:\s*,\s*[0-9]{1,9})*")
+TEST_CASE = re.compile(
+    r"(?:^|[.;]\s*)A(?P<number>\d+)\s+positive:\s*(?P<positive>[^;]+?)\s*;\s*"
+    r"(?P<kind>negative|boundary):\s*(?P<opposite>.+?)"
+    r"(?=\s*(?:[.;]\s*A\d+\s+positive:|$))",
+    re.IGNORECASE,
+)
 
 
-def check_after_task_budget(manifest, repo: Path, change_id: str):
-    """Two `review: after-task` tasks are free; the rest justify themselves.
+def check_test_case_pairs(
+    manifest, repo: Path, change_id: str, intent_sections: dict[str, str]
+) -> list[tuple[str, str]]:
+    """A new plan owns every Acceptance line and pairs both sides of its tests.
 
-    The budget is not a hard cap (concept-model §5) -- it is a prompt to
-    say why this task cannot wait for the wave. Without the reason the
-    marker is free, and a plan can turn every task into a checkpoint
-    without anyone noticing the cost."""
+    Plans authored before this contract remain byte-compatible when their
+    first committed form used the old task grammar. A new plan cannot
+    self-exempt later by deleting its ownership markers or charter line."""
     plan_path = artifact_path(manifest, "plan", change_id, repo)
     if not plan_path.is_file():
         return []
-    unjustified: list[str] = []
-    seen = 0
-    for line in read_text(plan_path).splitlines():
-        match = TASK_LINE.match(line.strip())
-        if not match:
-            continue
-        rest = match.group("rest")
-        if "review: after-task" not in _squeeze(rest):
-            continue
-        seen += 1
-        if seen <= AFTER_TASK_FREE:
-            continue
-        tail = _squeeze(rest).split("review: after-task", 1)[1]
-        if not re.match(r"\s*(?:—|–|--)\s*\S", tail):
-            unjustified.append(match.group("id"))
-    if unjustified:
-        return [
+    plan_text = read_text(plan_path)
+    _front, plan_sections = parse_document(plan_text)
+    task_dag = plan_sections.get("Task DAG", "")
+    headers = [
+        match
+        for raw_line in task_dag.splitlines()
+        if (match := TASK_LINE.match(raw_line.strip()))
+    ]
+    relative_plan = plan_path.relative_to(repo).as_posix()
+    first_commit_log = git_maybe(
+        repo, "log", "--diff-filter=A", "--reverse", "--format=%H", "HEAD", "--", relative_plan
+    )
+    first_commit = first_commit_log.splitlines()[0] if first_commit_log else None
+    if first_commit:
+        original_plan = git_maybe(repo, "show", f"{first_commit}:{relative_plan}")
+        if original_plan is not None:
+            _original_front, original_sections = parse_document(original_plan)
+            original_headers = [
+                match
+                for raw_line in original_sections.get("Task DAG", "").splitlines()
+                if (match := TASK_LINE.match(raw_line.strip()))
+            ]
+            if original_headers and not any(
+                TASK_ACCEPTANCE.search(match.group("rest"))
+                for match in original_headers
+            ):
+                return []
+
+    failures: list[tuple[str, str]] = []
+    if not headers:
+        failures.append(
+            ("intake.test-case-pair", "a newly authored plan requires at least one task.")
+        )
+    acceptance_numbers = {
+        int(match.group(1))
+        for raw_line in intent_sections.get("Acceptance", "").splitlines()
+        if (match := re.match(r"^\s*(\d+)[.)]\s+\S", raw_line))
+    }
+    if intent_sections.get("Open questions", "").strip() != "- none":
+        failures.append(
             (
-                "intake.after-task-budget",
-                f"{seen} tasks are marked `review: after-task`; past the first "
-                f"{AFTER_TASK_FREE}, each carries `— <reason>` on its own task line. "
-                f"Missing on: {', '.join(unjustified)}.",
+                "intake.test-case-pair",
+                "a newly authored plan requires intent Open questions to be exactly `- none`.",
             )
-        ]
-    return []
+        )
+
+    fields = _parse_plan_task_fields(task_dag)
+    owned: set[int] = set()
+    for header in headers:
+        task_id = header.group("id")
+        if MEMORY_TASK_ID.match(task_id):
+            continue
+        marker = TASK_ACCEPTANCE.search(header.group("rest"))
+        if marker is None:
+            failures.append(
+                ("intake.test-case-pair", f"{task_id} carries no `acceptance: <numbers>` marker.")
+            )
+            continue
+        raw_marker = marker.group(1).strip()
+        if not VALID_ACCEPTANCE_REFS.fullmatch(raw_marker):
+            failures.append(
+                (
+                    "intake.test-case-pair",
+                    f"{task_id} carries malformed Acceptance references.",
+                )
+            )
+            continue
+        raw_references = [value.strip() for value in raw_marker.split(",")]
+        references = [int(value) for value in raw_references]
+        nonexistent = sorted(set(references) - acceptance_numbers)
+        if nonexistent:
+            failures.append(
+                (
+                    "intake.test-case-pair",
+                    f"{task_id} references nonexistent Acceptance lines: "
+                    f"{', '.join(map(str, nonexistent))}.",
+                )
+            )
+        owned.update(set(references) & acceptance_numbers)
+        cases = {
+            int(match.group("number")): match
+            for match in TEST_CASE.finditer(str(fields.get(task_id, {}).get("Test") or ""))
+            if any(ch.isalnum() for ch in match.group("positive"))
+            and any(ch.isalnum() for ch in match.group("opposite"))
+        }
+        missing_cases = sorted(set(references) - set(cases))
+        if missing_cases:
+            failures.append(
+                (
+                    "intake.test-case-pair",
+                    f"{task_id} lacks a non-empty positive plus negative or boundary pair for "
+                    f"Acceptance: {', '.join(map(str, missing_cases))}.",
+                )
+            )
+
+    uncovered = sorted(acceptance_numbers - owned)
+    if uncovered:
+        failures.append(
+            (
+                "intake.test-case-pair",
+                "intent Acceptance lines are owned by no task: "
+                f"{', '.join(map(str, uncovered))}.",
+            )
+        )
+    return failures
 
 
 # --- plan.field-caps (W1-01) -----------------------------------------------
@@ -2397,19 +2486,23 @@ def _review_norm(value) -> str:
 
 def _open_finding_gained_resolution_only(earlier, later) -> bool:
     """True when `later` differs from `earlier` only by gaining exactly one
-    of `resolved`/`dismissed` (absent in `earlier`, present in `later`),
-    every other key on the entry unchanged."""
+    of `resolved`/`dismissed` (absent or null in `earlier`, populated in
+    `later`), every other key on the entry unchanged."""
     if not isinstance(earlier, dict) or not isinstance(later, dict):
         return False
     other_keys = (set(earlier) | set(later)) - set(OPEN_FINDING_MOVABLE_KEYS)
     if any(earlier.get(key) != later.get(key) for key in other_keys):
         return False
-    gained = [key for key in OPEN_FINDING_MOVABLE_KEYS if key not in earlier and key in later]
-    changed_existing = [
+    if any(bool(earlier.get(key)) for key in OPEN_FINDING_MOVABLE_KEYS):
+        return False
+    gained = [
         key for key in OPEN_FINDING_MOVABLE_KEYS
-        if key in earlier and earlier.get(key) != later.get(key)
+        if not earlier.get(key) and bool(later.get(key))
     ]
-    return len(gained) == 1 and not changed_existing
+    return (
+        len(gained) == 1
+        and sum(bool(later.get(key)) for key in OPEN_FINDING_MOVABLE_KEYS) == 1
+    )
 
 
 def _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier_doc: dict, later_doc: dict) -> bool:
@@ -2615,7 +2708,10 @@ def check_review_round_append_only_at(manifest, repo: Path, change_id: str) -> l
     return check_review_round_append_only(repo, review_path, change_id, manifest)
 
 
-SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
+SPEC_LENSES = {"spec", "docs", "spec-adversarial", "spec+adversarial"}
+PRE_BUILD_REVIEW = re.compile(
+    r"^(required|not-required)\s*(?:—|–|--)\s*(\S.*)$", re.IGNORECASE
+)
 
 
 def spec_scoped_verdicts(review) -> tuple[list[dict], str | None]:
@@ -2669,11 +2765,27 @@ def is_spec_adversarial_probe(probe) -> bool:
 
 
 def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> list[tuple[str, str]]:
-    """write-plan accepts a needs-design: yes change only after the spec's
-    own review round passed (concept-model §5, §7)."""
+    """Apply the spec's risk-triggered review declaration at write-plan.
+
+    A missing declaration is the legacy marker: it deliberately keeps the
+    former two-reader plus adversarial-probe floor. New templates always emit
+    a declaration, so omitting it never weakens the gate."""
     spec_path = artifact_path(manifest, "spec", change_id, repo)
     if not spec_path.is_file():
         return [("intake.spec-pass", f"needs-design: yes but no spec at {spec_path.relative_to(repo)}.")]
+    spec_front, _ = parse_document(read_text(spec_path))
+    declaration = spec_front.get("pre-build-review", "").strip()
+    declaration_match = PRE_BUILD_REVIEW.fullmatch(declaration) if declaration else None
+    if declaration and declaration_match is None:
+        return [
+            (
+                "intake.spec-pass",
+                "`pre-build-review` must be `required|not-required — <reason>`.",
+            )
+        ]
+    if declaration_match and declaration_match.group(1).lower() == "not-required":
+        return []
+
     review_path = artifact_path(manifest, "review", change_id, repo)
     if not review_path.is_file():
         return [
@@ -2687,13 +2799,22 @@ def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> lis
     if selection_failure:
         return [("intake.spec-pass", selection_failure)]
     round_number, verdicts = latest_round(spec_verdicts)
-    reviewers = {str(entry.get("reviewer", "")) for entry in verdicts}
-    if len(reviewers) < 2:
+    reviewers = {
+        str(entry.get("reviewer", "")).strip()
+        for entry in verdicts
+        if str(entry.get("reviewer", "")).strip()
+    }
+    required_review = bool(
+        declaration_match and declaration_match.group(1).lower() == "required"
+    )
+    minimum_reviewers = 1 if required_review else 2
+    if len(reviewers) < minimum_reviewers:
         return [
             (
                 "intake.spec-pass",
                 f"the latest spec review round ({round_number}) carries "
-                f"{len(reviewers)} reviewer(s); two independent ones are required.",
+                f"{len(reviewers)} reviewer(s); {minimum_reviewers} independent "
+                f"reviewer(s) are required.",
             )
         ]
     failed = [
@@ -2709,9 +2830,43 @@ def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> lis
                 f"{', '.join(failed)}.",
             )
         ]
-    # The spec lens is read AND adversarial (concept-model §5, §6): two
-    # passing readers without a red-team is half a review.
-    if not any(is_spec_adversarial_probe(probe) for probe in review.get("probes", [])):
+    implementers = {
+        str(entry.get("agent_id", "")).strip()
+        for entry in review.get("dispatch", [])
+        if str(entry.get("role", "")).strip() == "implementer"
+    }
+    reviewer_dispatches = {
+        str(entry.get("agent_id", "")).strip()
+        for entry in review.get("dispatch", [])
+        if str(entry.get("role", "")).strip() == "reviewer"
+        and entry.get("fresh_context") is True
+    }
+    combined_reviewers = {
+        str(entry.get("reviewer", "")).strip()
+        for entry in verdicts
+        if str(entry.get("lens", "")).strip().lower() == "spec+adversarial"
+    }
+    independent_combined_reviewers = (
+        combined_reviewers & reviewer_dispatches
+    ) - implementers
+    has_combined_lens = bool(independent_combined_reviewers)
+    has_legacy_floor = len(reviewers) >= 2 and any(
+        is_spec_adversarial_probe(probe) for probe in review.get("probes", [])
+    )
+    if required_review and not (has_combined_lens or has_legacy_floor):
+        return [
+            (
+                "intake.spec-pass",
+                "a required pre-build review needs one reviewer with "
+                "`lens: spec+adversarial`; an already-recorded legacy two-reader "
+                "round plus spec adversarial probe also remains valid.",
+            )
+        ]
+    # An undeclared legacy spec retains the old read + separate adversarial
+    # contract. This is the safe compatibility default, never a skip.
+    if not required_review and not any(
+        is_spec_adversarial_probe(probe) for probe in review.get("probes", [])
+    ):
         return [
             (
                 "intake.spec-pass",
@@ -2841,6 +2996,9 @@ SEGMENT_SPLIT = re.compile(r"\|\||&&|[;\n|&]")
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # Options that swallow the next word, so it is a value and never the verb.
 GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
+GH_VALUE_OPTIONS = {"-R", "--repo", "--hostname"}
+GIT_REPOSITORY_ENV = {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GH_REPO"}
+ENV_VALUE_OPTIONS = {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}
 PREFIX_WORDS = {"sudo", "command", "env", "nohup", "time", "nice", "builtin", "exec", "xargs"}
 # `bash -c "git push"` / `sh -c` / `zsh -c` / `dash -c` hand the checker a
 # shell line as a single quoted argument -- shlex has already unquoted it, so
@@ -2858,15 +3016,23 @@ def _tokenise(segment: str) -> list[str]:
 def _strip_prefix(tokens: list[str]) -> list[str]:
     """Drop `VAR=…` assignments and wrapper words that precede the program."""
     index = 0
-    while index < len(tokens) and (
-        ASSIGNMENT.match(tokens[index]) or tokens[index] in PREFIX_WORDS
-    ):
+    while index < len(tokens):
+        if ASSIGNMENT.match(tokens[index]):
+            index += 1
+            continue
+        wrapper = Path(tokens[index]).name
+        if wrapper not in PREFIX_WORDS:
+            break
         index += 1
+        if wrapper == "env":
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                index += 2 if option in ENV_VALUE_OPTIONS else 1
     return tokens[index:]
 
 
-def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
-    """The first word that is neither an option nor an option's value."""
+def _subcommand_at(tokens: list[str], value_options: set[str]) -> tuple[int, str] | None:
+    """The position and value of the first non-option, non-value word."""
     index = 0
     while index < len(tokens):
         token = tokens[index]
@@ -2878,8 +3044,14 @@ def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
         if token.startswith("-"):
             index += 1
             continue
-        return token
+        return index, token
     return None
+
+
+def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
+    """The first word that is neither an option nor an option's value."""
+    found = _subcommand_at(tokens, value_options)
+    return found[1] if found else None
 
 
 def is_push_command(command: str) -> bool:
@@ -2905,11 +3077,128 @@ def is_push_command(command: str) -> bool:
                 return True
         elif program == "gh":
             rest = tokens[1:]
-            if _subcommand(rest, set()) == "pr":
-                after = rest[rest.index("pr") + 1:]
-                if _subcommand(after, set()) in {"create", "merge"}:
+            found = _subcommand_at(rest, GH_VALUE_OPTIONS)
+            if found and found[1] == "pr":
+                after = rest[found[0] + 1:]
+                if _subcommand(after, GH_VALUE_OPTIONS) in {"create", "merge"}:
                     return True
     return False
+
+
+def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
+    """Return the one unambiguous repository selected by every Git push.
+
+    The host-reported cwd is authoritative only when a push has no directory
+    override. An absolute ``-C`` anchors later relative ``-C`` options. A
+    relative first ``-C``, another directory-changing option, a missing or
+    invalid directory, or pushes selecting distinct repositories is unsafe
+    because the hook cannot prove which repository the shell will push.
+    """
+    selected_roots: set[str] = set()
+    shell_root: Path | None = None
+    repository_env_changed = False
+    for segment in SEGMENT_SPLIT.split(command):
+        raw_tokens = _tokenise(segment)
+        tokens = _strip_prefix(raw_tokens)
+        if not tokens:
+            continue
+        if any(Path(token).name == "env" for token in raw_tokens) and any(
+            token.startswith("-C")
+            or token == "--chdir"
+            or token.startswith("--chdir=")
+            for token in raw_tokens
+        ):
+            return None
+        segment_changes_repository_env = any(
+            ASSIGNMENT.match(token)
+            and token.split("=", 1)[0] in GIT_REPOSITORY_ENV
+            for token in raw_tokens
+        )
+        program = Path(tokens[0]).name.lstrip("(")
+        if program == "export" and any(
+            token.split("=", 1)[0] in GIT_REPOSITORY_ENV
+            for token in tokens[1:]
+        ):
+            segment_changes_repository_env = True
+        repository_env_changed = (
+            repository_env_changed or segment_changes_repository_env
+        )
+        if program in {"cd", "pushd"}:
+            directory_args = [
+                token for token in tokens[1:]
+                if token != "--" and not token.startswith("-")
+            ]
+            if len(directory_args) != 1:
+                return None
+            candidate = Path(directory_args[0])
+            if candidate.is_absolute():
+                shell_root = candidate
+            elif shell_root is not None:
+                shell_root = shell_root / candidate
+            else:
+                return None
+            if not shell_root.is_dir():
+                return None
+            continue
+        if program == "popd":
+            return None
+        if program == "eval" and is_push_command(" ".join(tokens[1:])):
+            return None
+        if program in SHELL_PROGRAMS and "-c" in tokens[1:]:
+            index = tokens.index("-c")
+            if index + 1 < len(tokens) and is_push_command(tokens[index + 1]):
+                return None
+        if any(Path(token).name == "xargs" for token in raw_tokens) and is_push_command(segment):
+            return None
+        if program == "gh" and is_push_command(segment):
+            if repository_env_changed or any(
+                token.startswith("-R")
+                or token == "--repo"
+                or token.startswith("--repo=")
+                for token in tokens[1:]
+            ):
+                return None
+            root = shell_root if shell_root is not None else Path(fallback)
+            selected_roots.add(str(root.resolve()))
+            continue
+        if program != "git" or _subcommand(tokens[1:], GIT_VALUE_OPTIONS) != "push":
+            continue
+        if repository_env_changed:
+            return None
+        selected = shell_root
+        index = 1
+        while index < len(tokens):
+            token = tokens[index]
+            if token == "-C":
+                if index + 1 >= len(tokens):
+                    return None
+                candidate = Path(tokens[index + 1])
+                if candidate.is_absolute():
+                    selected = candidate
+                elif selected is not None:
+                    selected = selected / candidate
+                else:
+                    return None
+                index += 2
+                continue
+            if token.startswith("-C") or token in {"--git-dir", "--work-tree"}:
+                return None
+            if token.startswith("--git-dir=") or token.startswith("--work-tree="):
+                return None
+            if token in GIT_VALUE_OPTIONS:
+                index += 2
+                continue
+            if token.startswith("-"):
+                index += 1
+                continue
+            break
+        root = selected if selected is not None else Path(fallback)
+        if not root.is_dir():
+            return None
+        selected_roots.add(str(root.resolve()))
+    if len(selected_roots) > 1:
+        return None
+    return next(iter(selected_roots)) if selected_roots else None
 
 
 def read_hook_payload(stdin=sys.stdin) -> dict | None:
@@ -2947,9 +3236,16 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     command = str((payload.get("tool_input") or {}).get("command", ""))
     if not is_push_command(command):
         return 0
-    cwd = payload.get("cwd")
-    if cwd:
-        os.chdir(cwd)
+    cwd = str(payload.get("cwd") or os.getcwd())
+    push_cwd = git_dash_c_push_cwd(command, cwd)
+    if push_cwd is None:
+        print(
+            "BLOCK push.review-only-head: ambiguous repository selection; "
+            "use one absolute git -C path, or cd to one absolute path first",
+            file=err,
+        )
+        return 2
+    os.chdir(push_cwd)
     rc = _cmd_push(rest, out, err)
     return 2 if rc == 1 else rc   # hosts block on exit 2
 

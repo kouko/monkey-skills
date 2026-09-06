@@ -50,6 +50,14 @@ def test_write_plan_second_vendor_ask() -> None:
     assert "second-vendor: ask" in text
 
 
+def test_write_plan_requires_acceptance_case_pairs() -> None:
+    text = WRITE_PLAN_SKILL.read_text(encoding="utf-8")
+    assert "acceptance: <numbers>" in text
+    assert "A<n> positive: <case-id>; negative: <case-id>" in text
+    assert "intake.test-case-pair" in text
+    assert "must be exactly\n  `- none` before Build" in text
+
+
 def test_capture_intent_second_vendor_ask() -> None:
     text = CAPTURE_INTENT_SKILL.read_text(encoding="utf-8")
     assert "second-vendor: ask" in text

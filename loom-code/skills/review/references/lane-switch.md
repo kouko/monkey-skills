@@ -25,7 +25,7 @@ what stays, and an estimate:
 | Lane | What you lose | What stays | Estimate |
 |---|---|---|---|
 | `full` | (current lane keeps everything) | two or more readers, the blind run, the branch-end adversary | — |
-| `express` | one reader instead of two or more, the wave-end checkpoint | one reader, the blind run when an Acceptance line resists mechanical checking, one branch-end adversary | from this change's `review.json` `cost` block and the last change recorded in this lane |
+| `express` | one branch-end reader instead of two or more | one reader, the blind run when an Acceptance line resists mechanical checking, one branch-end adversary | from this change's `review.json` `cost` block and the last change recorded in this lane |
 | `gate-only` | every reader, the blind run | the probes, the package tests, one branch-end adversary | from this change's `review.json` `cost` block and the last change recorded in this lane |
 
 Read the estimate column from `review.json`'s own `cost` block (`rounds`,
@@ -74,5 +74,5 @@ Append the user's answer to `questions[]` in `review.json`, one entry
 with `type: consequence`:
 
 ```json
-{"decision_point": 1, "text": "Switching to express from round 3 drops one reader and the wave-end checkpoint — OK?", "type": "consequence"}
+{"decision_point": 1, "text": "Switching to express from round 3 drops one branch-end reader — OK?", "type": "consequence"}
 ```

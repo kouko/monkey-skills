@@ -16,10 +16,10 @@ CHECKER = Path(__file__).with_name("loom_checker.py")
 EXPECTED_RULE_IDS = [
     "contract.charter-complete",
     "contract.requires",
-    "intake.after-task-budget",
     "intake.confirmed",
     "intake.confirmed-behavior",
     "intake.spec-pass",
+    "intake.test-case-pair",
     "intent.kind-recompute",
     "intent.needs-design-reason",
     "intent.needs-design-recompute",
@@ -209,7 +209,8 @@ LOAD_BEARING_WORDS = {
     "push.verdicts-ge-2": ["two distinct", "not passing"],
     "push.dispatch-covers-tasks": ["Task:", "implementer dispatch"],
     "push.frozen-store-untouched": ["frozen store", "ARCHIVED.md"],
-    "intake.spec-pass": ["spec_sha", "two distinct", "adversarial"],
+    "intake.spec-pass": ["spec_sha", "one passing", "two-reader", "adversarial"],
+    "intake.test-case-pair": ["Acceptance", "positive", "negative or boundary"],
     "contract.requires": ["same major", "minor"],
     "spec.ui-flows-recompute": ["visible characters", "reviewer"],
 }

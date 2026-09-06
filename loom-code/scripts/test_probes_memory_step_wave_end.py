@@ -124,6 +124,19 @@ def _trailer_check_loop() -> str:
     pytest.skip("build §5 has no fenced git-log/Task: loop yet")
 
 
+def _with_wave_base(command: str, sha: str) -> str:
+    return command.replace("<reviewed_sha>", sha).replace("<wave-base>", sha)
+
+
+def _reported_missing_shas(stdout: str) -> set[str]:
+    prefix = "no Task trailer: "
+    return {
+        line.removeprefix(prefix).strip()
+        for line in stdout.splitlines()
+        if line.startswith(prefix)
+    }
+
+
 def test_trailerlooop_mergecommit_ignored():
     """Attack: a merge commit carries no Task: trailer of its own (the
     trailer lives on the commits it merges). The loop must not report it,
@@ -159,15 +172,16 @@ def test_trailerlooop_mergecommit_ignored():
         assert merge_result.returncode == 0, merge_result.stderr
         merge_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
 
-        substituted = command.replace("<reviewed_sha>", reviewed_sha)
+        substituted = _with_wave_base(command, reviewed_sha)
         result = subprocess.run(
             ["bash", "-c", substituted], cwd=repo, capture_output=True, text=True,
         )
-        assert merge_sha not in result.stdout, (
+        reported = _reported_missing_shas(result.stdout)
+        assert merge_sha not in reported, (
             f"the trailer loop reported the merge commit itself as missing "
             f"a Task: trailer: {result.stdout!r}"
         )
-        assert feature_sha not in result.stdout, (
+        assert feature_sha not in reported, (
             f"the trailered feature commit was wrongly reported: {result.stdout!r}"
         )
 
@@ -204,11 +218,11 @@ def test_trailerloop_docsonlycommitnotrailer_ignored():
         _git(repo, "commit", "-q", "-m", "docs: add a note")
         docs_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
 
-        substituted = command.replace("<reviewed_sha>", reviewed_sha)
+        substituted = _with_wave_base(command, reviewed_sha)
         result = subprocess.run(
             ["bash", "-c", substituted], cwd=repo, capture_output=True, text=True,
         )
-        assert docs_sha not in result.stdout, (
+        assert docs_sha not in _reported_missing_shas(result.stdout), (
             f"the trailer loop reported a docs-only, trailer-less commit "
             f"as missing a Task: trailer, which build's own text says it "
             f"does not owe: {result.stdout!r}"
@@ -239,11 +253,11 @@ def test_trailerloop_mixeddocsandcodecommitnotrailer_reported():
         _git(repo, "commit", "-q", "-m", "mixed docs and code, no trailer")
         mixed_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
 
-        substituted = command.replace("<reviewed_sha>", reviewed_sha)
+        substituted = _with_wave_base(command, reviewed_sha)
         result = subprocess.run(
             ["bash", "-c", substituted], cwd=repo, capture_output=True, text=True,
         )
-        assert mixed_sha in result.stdout, (
+        assert mixed_sha in _reported_missing_shas(result.stdout), (
             f"the trailer loop failed to report a commit that mixes docs/ "
             f"and code with no Task: trailer: {result.stdout!r}"
         )
@@ -275,11 +289,11 @@ def test_trailerloop_trailingspacetrailer_stillmatched():
         )
         trailing_space_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
 
-        substituted = command.replace("<reviewed_sha>", reviewed_sha)
+        substituted = _with_wave_base(command, reviewed_sha)
         result = subprocess.run(
             ["bash", "-c", substituted], cwd=repo, capture_output=True, text=True,
         )
-        assert trailing_space_sha not in result.stdout, (
+        assert trailing_space_sha not in _reported_missing_shas(result.stdout), (
             f"a Task: trailer with a trailing space after the id was "
             f"wrongly reported as missing: {result.stdout!r}"
         )
@@ -315,11 +329,11 @@ def test_trailerloop_lowercasetaskkeytrailer_reportedasmissing():
         )
         lowercase_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
 
-        substituted = command.replace("<reviewed_sha>", reviewed_sha)
+        substituted = _with_wave_base(command, reviewed_sha)
         result = subprocess.run(
             ["bash", "-c", substituted], cwd=repo, capture_output=True, text=True,
         )
-        assert lowercase_sha in result.stdout, (
+        assert lowercase_sha in _reported_missing_shas(result.stdout), (
             f"expected the case-sensitive grep to report the lowercase-key "
             f"trailer as missing (documenting current behaviour); got "
             f"{result.stdout!r} -- if this now passes, the loop's matching "

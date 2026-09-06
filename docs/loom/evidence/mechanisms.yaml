@@ -94,7 +94,7 @@ mechanisms:
     class: skill
     eval: "loom-workflow/scripts/test_critique_compaction.py"
 
-  # --- checker-rule (29; loom_checker.py --list-rules) ---
+  # --- checker-rule (31; loom_checker.py --list-rules) ---
   - id: contract.charter-complete
     class: checker-rule
     eval: loom-code/scripts/test_contract_charter.py::test_charter_command_every_column_of_every_row_is_non_empty
@@ -107,9 +107,9 @@ mechanisms:
   - id: intake.confirmed-behavior
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_product_spec_without_confirmed_behavior_is_blocked
-  - id: intake.after-task-budget
+  - id: intake.test-case-pair
     class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_hardening.py::test_a_fourth_after_task_without_a_reason_blocks
+    eval: loom-code/scripts/test_probes_review_reduction.py::test_plan_uncovered_rejected
   - id: intake.spec-pass
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_latest_round_all_passing_is_accepted
@@ -254,6 +254,7 @@ mechanisms:
   - {id: "artifact:intent.Open questions",      class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:spec.intent",                class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:spec.confirmed-behavior",    class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:spec.pre-build-review",      class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:spec.Requirements",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:spec.Design decision",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:spec.Alternatives considered", class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
@@ -283,9 +284,9 @@ mechanisms:
   - id: "build.no-dispatch-without-a-record"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
-  - id: "build.after-task-review-before-next-task"
+  - id: "build.task-tests-before-dependent-task"
     class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
+    eval: "loom-code/scripts/test_build_station_text.py::test_step4_requires_paired_cases_before_dependents_advance"
   - id: "build.rehearsal-before-graduation"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md"  # executable twin: loom-code/scripts/test_build_station_text.py::test_rehearsal_paragraph_is_a_registered_prose_gate

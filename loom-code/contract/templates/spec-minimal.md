@@ -1,6 +1,7 @@
 # <title> — spec
 intent: <change-id>@<sha>
 confirmed-behavior: <date> @<spec-blob-sha7>   # only when kind: product; written by the agent after decision point ②
+pre-build-review: <required|not-required> — <reason>
 #   <spec-blob-sha7> = the first seven chars of the spec file's blob sha
 #   "before" this line was written (`git hash-object spec.md`);
 #   if the spec is rewritten afterward, this line no longer matches, and

@@ -501,11 +501,11 @@ def test_readme_claim_readers_wait_for_the_adversary_and_blind_run() -> None:
     # line break is invisible to a naive `in`. A grep-shaped claim check that
     # can be defeated by reflowing the source is not a check.
     skill = " ".join(REVIEW_SKILL.read_text(encoding="utf-8").split())
-    assert "Dispatch in two stages" in skill, (
+    assert "dispatch in two stages" in skill.lower(), (
         "review/SKILL.md does not describe a two-stage dispatch, so the "
         "README's 「等 4a/4b 落地才派」 is unsupported"
     )
-    assert "committed before any reviewer starts" in skill, (
+    assert "committed once together before any of the three roles is dispatched" in skill, (
         "review/SKILL.md never says the probes and report are committed "
         "before any reviewer starts; the README claim is unsupported"
     )

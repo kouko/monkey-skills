@@ -9,9 +9,8 @@ usable by the push rules `reviewer-ne-implementer` and
    exactly the fields the manifest declares — no more (an invented field is
    an unrecomputable mechanism), no fewer (a missing field is a push rule
    that cannot run);
-2. the wave-end thresholds the prose tells the orchestrator to compute are
-   the numbers concept-model §5 fixes — 8 files, 400 lines. A station that
-   drifts from those silently changes how often the project is reviewed.
+2. Build has no automatic intermediate review trigger. Task and integration
+   tests advance the DAG; one branch-end review follows the completed build.
 """
 from __future__ import annotations
 
@@ -84,14 +83,18 @@ def test_dispatch_example_is_an_implementer_record():
     )
 
 
-def test_wave_end_thresholds_match_the_concept_model():
+def test_build_has_no_automatic_intermediate_review_thresholds():
     text = SKILL.read_text(encoding="utf-8")
-    assert re.search(r"\b8\b\s*files", text), (
-        "the wave-end trigger must state the 8-file threshold verbatim "
-        "(concept-model §5)."
-    )
-    assert re.search(r"\b400\b\s*lines", text), (
-        "the wave-end trigger must state the 400-line threshold verbatim "
-        "(concept-model §5)."
-    )
-    assert re.search(r"\b5\b", text), "the ≤5 checkpoint budget must be stated."
+    assert not re.search(r"\b8\b\s*files", text)
+    assert not re.search(r"\b400\b\s*lines", text)
+    assert "at most 5 per plan" not in text
+
+
+def test_only_branch_end_calls_the_review_station():
+    text = SKILL.read_text(encoding="utf-8")
+    task_section = text.split("## 4. After each task returns", 1)[1]
+    task_section = task_section.split("## 5. Wave end", 1)[0]
+    wave_section = text.split("## 5. Wave end", 1)[1]
+    wave_section = wave_section.split("**Last wave of the plan.**", 1)[0]
+    assert "call `loom-code:review`" not in task_section
+    assert "call `loom-code:review`" not in wave_section

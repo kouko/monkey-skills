@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: 'Plugin-level reviewer agent for loom-code. One verdict contract for every lens — code, docs, spec, design, principles, skill — dispatched fresh-context by the review station at a checkpoint. Produces PASS / PASS_WITH_NOTES / NEEDS_REVISION with dimension_scores and anchored findings, and never modifies what it reviews. Reusable cross-plugin via subagent_type "loom-code:reviewer".'
+description: 'Fresh-context reviewer for code, docs, spec, spec+adversarial, design, principles, and skill lenses at required spec or branch-end checkpoints. Produces PASS / PASS_WITH_NOTES / NEEDS_REVISION with scores and anchored findings; never edits what it reviews. Reusable via subagent_type "loom-code:reviewer".'
 ---
 
 # reviewer subagent
@@ -30,7 +30,7 @@ is an inconsistency, cited with the row's goes_to.
 The review station gives you a **lens**, the delta, and the ground truth:
 
 ```
-lens: code | docs | spec | design | principles | skill
+lens: code | docs | spec | spec+adversarial | design | principles | skill
 reviewed_sha: <sha>            # the delta is `git diff <reviewed_sha>..HEAD`
 changed paths: <list>
 ground truth: intent, and the spec and plan when they exist
@@ -47,12 +47,12 @@ dimension named below and the severity thresholds.
 |---|---|
 | `code` | security, architecture, correctness, naming, tests, refactoring, cross-task-coherence, external-surface-grounding, principles-conformance, deliberate-simplification, deletion-first |
 | `docs` | omission, ambiguity, inconsistency, incorrect-fact, missing-population, deletion-first |
-| `spec` | the five `docs` dimensions, plus spec-conformance, design-conformance, principles-conformance, user-judgment-leak |
+| `spec` / `spec+adversarial` | docs + spec-, design-, principles-conformance + user-judgment-leak; the combined lens checks missing negative/boundary behavior |
 | `design` | design-conformance |
 | `principles` | principles-conformance |
 | `skill` | the five `docs` dimensions, plus user-judgment-leak, deletion-first |
 
-On the `spec` lens, `user-judgment-leak` also fires the other way — a
+On the `spec` and `spec+adversarial` lenses, `user-judgment-leak` also fires the other way — a
 `Design decision` introducing a paid service, an account, or data leaving
 the user's machine, with no `user-decided` mark, is `NEEDS_REVISION` (per
 `references/lenses.md`); an `agent-decided` mark settles it only when the

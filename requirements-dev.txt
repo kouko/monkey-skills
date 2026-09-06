@@ -11,3 +11,5 @@ pytest-xdist
 pyyaml
 # adjudication_render and its tests
 markdown-it-py
+# width-aware CJK diagram checks used by the package suite
+wcwidth

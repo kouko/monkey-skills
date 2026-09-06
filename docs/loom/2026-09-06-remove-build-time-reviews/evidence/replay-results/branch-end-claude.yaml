@@ -1,0 +1,41 @@
+reviewer: claude-code
+vendor: anthropic
+cli_version: 2.1.263
+requested_model: opus
+reported_model: claude-opus-5
+effort: high
+runtime:
+  source_sha: 6bca3513bf6ff997419fb73a6a56ea8613db62ac
+  reviewer_sha256: b38abe5ae931beaedd862f7f919b92d0bb1c792c3af36a6d78ecb3802e35d2dd
+  lenses_sha256: a0626a0303ef9bccc46845ee00bf0baea5536f5510f28a46fc7ec8d0991d7b62
+target:
+  base: b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0
+  head: 37cd6da17912b706cab8e514e1c5f0155b21ef9f
+  diff_sha256: fbda89da51d1dcbeed0b3667f1f7a6d804389b886be770fe5cdd309fa1955823
+verdict: NEEDS_REVISION
+findings:
+  - severity: fatal
+    anchor: .codex/hooks/loom_checker.py:2457
+    text: The Codex-side checker mirror is stale.
+  - severity: important
+    anchor: .codex/hooks/contract/manifest.yaml:146
+    text: The Codex-side manifest mirror is stale.
+  - severity: important
+    anchor: loom-code/skills/review/SKILL.md:122
+    text: The full-lane prose omits the standing-document trigger.
+  - severity: important
+    anchor: loom-code/skills/review/SKILL.md:142
+    text: The prose makes the blind run always off for the small lane rather than conditional on mechanical acceptance.
+  - severity: important
+    anchor: loom-code/scripts/loom_checker.py:2486
+    text: A settings file under .claude can be classified as small-lane-safe configuration.
+  - severity: important
+    anchor: loom-code/scripts/loom_checker.py:2509
+    text: The change-record exclusion is broader than the documented record set.
+  - severity: important
+    anchor: loom-code/CHANGELOG.md:8
+    text: The changelog omits the dispatch-covers-tasks exemption.
+notes:
+  - The successful attempt read copied exact runtime contracts and the full binary diff from the target worktree.
+  - Bash access was disabled for this reviewer; permanent tests were executed separately by the orchestrator.
+  - Replay records, timing evidence, and the hidden oracle were excluded from the prompt.

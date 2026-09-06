@@ -44,7 +44,7 @@ README_TRIO = [
     REPO_ROOT / "loom-code" / "README.zh-TW.md",
 ]
 
-TARGET_VERSION = "1.7.0"
+CHARTER_RELEASE_VERSION = "1.7.0"
 STAMP_PREFIX = "# loom-checker "
 
 RULE_IDS = [
@@ -114,26 +114,19 @@ def test_marketplace_entry_version_field_absent_target_not_1_6_0():
 # 2. Boundary — the plugin manifest version itself.
 # ---------------------------------------------------------------------------
 def test_plugin_manifest_version_at_head_equals_target_1_6_0():
-    """plugin.json's version must equal 1.7.0 once W3-02 lands.
-
-    RED at HEAD: currently 1.5.1.
-    """
-    assert _plugin_version() == TARGET_VERSION, (
-        f"loom-code/.claude-plugin/plugin.json version is {_plugin_version()!r}, "
-        f"expected {TARGET_VERSION!r}"
-    )
+    """The live manifest must not regress below the charter release."""
+    current = tuple(map(int, _plugin_version().split(".")))
+    floor = tuple(map(int, CHARTER_RELEASE_VERSION.split(".")))
+    assert current >= floor, f"plugin version {_plugin_version()!r} regressed below {CHARTER_RELEASE_VERSION!r}"
 
 
 # ---------------------------------------------------------------------------
 # 3. Boundary — the Codex mirror stamp line.
 # ---------------------------------------------------------------------------
 def test_mirror_stamp_version_equals_target_1_6_0():
-    """The Codex mirror's inserted stamp line must read 1.7.0.
-
-    RED at HEAD: currently `# loom-checker 1.5.1`.
-    """
-    assert _mirror_stamp_version() == TARGET_VERSION, (
-        f"mirror stamp version is {_mirror_stamp_version()!r}, expected {TARGET_VERSION!r}"
+    """The Codex mirror stamp must track the live plugin version."""
+    assert _mirror_stamp_version() == _plugin_version(), (
+        f"mirror stamp {_mirror_stamp_version()!r} does not match plugin {_plugin_version()!r}"
     )
 
 
@@ -154,9 +147,9 @@ def test_release_three_version_carriers_all_agree_with_each_other():
     """
     plugin_v = _plugin_version()
     mirror_v = _mirror_stamp_version()
-    assert plugin_v == mirror_v == TARGET_VERSION, (
+    assert plugin_v == mirror_v, (
         f"version carriers disagree: plugin.json={plugin_v!r}, "
-        f"mirror stamp={mirror_v!r}, target={TARGET_VERSION!r}"
+        f"mirror stamp={mirror_v!r}"
     )
 
 
@@ -210,19 +203,11 @@ def test_contract_mirror_tree_byte_equal_no_orphans_either_side():
 #    rule id and every subcommand this release is supposed to be about,
 #    not just claim a version bump.
 # ---------------------------------------------------------------------------
-def test_changelog_top_entry_names_all_four_rule_ids_and_subcommands():
-    """The [1.7.0] entry must be the top entry and must name all 4 rule ids
-    and all 4 subcommands verbatim.
-
-    RED at HEAD: the top entry is [1.5.1] and names none of these strings.
-    """
+def test_changelog_charter_entry_names_all_four_rule_ids_and_subcommands():
+    """The historical [1.7.0] entry keeps its promised rule inventory."""
     text = CHANGELOG.read_text(encoding="utf-8")
-    heading_match = re.search(r"^## \[(?P<version>[^\]]+)\]", text, re.MULTILINE)
-    assert heading_match, "CHANGELOG.md has no `## [<version>]` heading at all"
-    top_version = heading_match.group("version")
-    assert top_version == TARGET_VERSION, (
-        f"CHANGELOG.md top entry is [{top_version}], expected [{TARGET_VERSION}]"
-    )
+    heading_match = re.search(r"^## \[1\.7\.0\]", text, re.MULTILINE)
+    assert heading_match, "CHANGELOG.md has no `## [1.7.0]` heading"
 
     next_heading = re.search(r"^## \[", text[heading_match.end():], re.MULTILINE)
     entry_body = text[heading_match.end():heading_match.end() + next_heading.start()] if next_heading else text[heading_match.end():]

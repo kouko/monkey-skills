@@ -1,0 +1,51 @@
+{
+  "schema": "loom-workflow-replay-events/v1",
+  "flow": "baseline",
+  "target_head": "0ff3e06bad9e4d0c53d9682beec3e7db9c221695",
+  "target_tree": "e6201f8f13d18a36ccd5362204ee1c5d7d5aa2b7",
+  "events": [
+    {
+      "task": "W0-01",
+      "commit": "9ba695da69e94123dfe44a6d2ce199384f5f2121",
+      "test": "adversary probes",
+      "outcome": "EXPECTED_RED",
+      "detail": "19 failed, 7 passed"
+    },
+    {
+      "task": "W0-02",
+      "commit": "76e5cdf1cf17c0922bff4765b35681cabb30c2a1",
+      "test": "adversary probes",
+      "outcome": "PASS",
+      "detail": "26 passed"
+    },
+    {
+      "task": "W1-01",
+      "commit": "07e40e13db92d410b22241690dfd6eaba210496d",
+      "outcome": "APPLIED"
+    },
+    {
+      "task": "W1-02",
+      "commit": "cb85b5279f8553fe32335d307f94536cc4031069",
+      "outcome": "APPLIED"
+    },
+    {
+      "task": "W1-03",
+      "commit": "de7318998405199908e355aa2fd3582528cef0cd",
+      "outcome": "APPLIED"
+    },
+    {
+      "task": "W1-04",
+      "commit": "0ff3e06bad9e4d0c53d9682beec3e7db9c221695",
+      "outcome": "APPLIED"
+    }
+  ],
+  "build_time_formal_review": {
+    "dispatches": 2,
+    "scope": "after-task:W0-02",
+    "started": "2026-09-04T00:40:07+08:00",
+    "first_passing_review_commit": "2026-09-04T00:58:13+08:00",
+    "checkpoint_blocking_seconds": 1086,
+    "defect_fix_seconds": null,
+    "defect_fix_seconds_reason": "No separate fix-implementer dispatch timestamp exists in the source review record."
+  }
+}

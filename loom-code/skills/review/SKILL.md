@@ -1,7 +1,7 @@
 ---
 name: review
 description: |
-  Runs one checkpoint review of a change: fresh-context reviewers (two or more full lane, one small lane), an adversarial pass, and a blind run (skipped when every Acceptance line is mechanical) over the delta since reviewed_sha, merged into docs/loom/<change-id>/review.json. Called by write-spec/write-plan for the spec lens, by build after a task or wave, by ship at branch end, or on request.
+  Runs either a required focused spec review or the one closing branch-end review. Branch end uses fresh-context reviewers (two or more full lane, one small lane), an adversarial pass, and a lane-triggered blind run over the completed change, merged into docs/loom/<change-id>/review.json.
 version: 1.0.0
 ---
 
@@ -12,10 +12,12 @@ one is where a judgement is made for the first time, and it is the only
 source of quality in the flow: the user is not asked to grade a diff, a
 spec or a plan, so if the machines do not catch it, nobody does.
 
-A checkpoint is three verification actions over one delta — **read**,
-**blind run**, **adversarial** — plus the package tests, merged into a
-single verdict and written to `docs/loom/<change-id>/review.json`. Which of
-the three run depends on what kind of artifact the delta is (step 1).
+A branch-end checkpoint combines three verification actions over the
+completed change — **read**, **blind run**, **adversarial** — plus the
+package tests. A required pre-build spec checkpoint is deliberately smaller:
+one independent `spec+adversarial` read, with no blind run and no separate
+adversary. Both write their verdicts to
+`docs/loom/<change-id>/review.json`.
 
 Two rules hold across the whole station and everything below is downstream
 of them:
@@ -86,10 +88,12 @@ this round:
 
 | `scope` | Called by | Delta |
 |---|---|---|
-| `spec` | write-spec (or write-plan, for the code-only minimal spec) | the spec file only |
-| `after-task:<id>` | build, right after that task's commit | that task's commits |
-| `wave-end:<n>` | build, when the wave closes | `<reviewed_sha>..HEAD` |
-| `branch-end` | ship | `<reviewed_sha>..HEAD` |
+| `spec` | write-spec (or write-plan, for the code-only minimal spec) when `pre-build-review: required` | the spec file only |
+| `branch-end` | build after all tasks and package tests | `<reviewed_sha>..HEAD` |
+
+Historical records may contain `after-task:<id>` or `wave-end:<n>` scopes,
+but the new runtime never dispatches them. A user-requested diagnostic review
+is out of band and cannot replace the required `branch-end` round.
 
 The delta itself is always
 
@@ -104,7 +108,7 @@ type asks for:
 | Artifact type | Lens | Read | Blind run | Adversarial |
 |---|---|---|---|---|
 | code | code (11 dimensions) | yes | yes | yes |
-| spec | docs + spec-conformance + design-conformance + principles-conformance + user-judgment-leak | yes | cold reader walks the Acceptance scenarios | red-team the spec |
+| spec | `spec+adversarial`: docs + spec-conformance + design-conformance + principles-conformance + user-judgment-leak | one independent reviewer | no blind run | no separate adversary |
 | plan, docs, memory, map, evidence | docs (5 dimensions) | yes | no | no |
 | skill (`SKILL.md`, `agents/*.md`) | skill | yes | a cold agent performs a real task from the file alone | gate-attack catalogue |
 | gate (`hooks/**`, `scripts/check_*`) | code + skill | yes | yes | yes — attacks are the point of the file |
@@ -133,11 +137,10 @@ lane recompute's.
 
 A user may also declare `express` or `gate-only` for the whole change, or
 switch into either mid-build; the recompute above still runs first and a
-gate-typed path anywhere in the delta always forces `full`. The three
-declared lanes are `full`, keeping two or more readers and every run;
-`express`, keeping one reader and skipping the wave-end checkpoint; and
-`gate-only`, keeping zero readers and only the probes and package tests as
-evidence. Gate-only applies only when the recompute above says `small`; a
+gate-typed path anywhere in the delta always forces `full`. At branch-end,
+the three declared lanes are `full`, keeping two or more readers and every
+run; `express`, keeping one reader; and `gate-only`, keeping zero readers and
+only the probes and package tests as evidence. Gate-only applies only when the recompute above says `small`; a
 delta the recompute calls `full` for any reason keeps its declaration
 ignored, and the reason names the path (PRINCIPLES.md non-negotiable 2).
 `references/lane-switch.md` carries the three-option prompt for
@@ -151,39 +154,36 @@ presenting a switch, and the grammar of the switch line itself.
 ## 2. Read — reviewers, by lane
 
 <!-- gate: review.two-fresh-reviewers -->
-Dispatch in two stages. First the adversary (§4) and, in the full lane,
-the blind-runner (§3) — each in its own message so the two run
-concurrently; their probes and report are committed before any reviewer
-starts, because a verdict's `sha` must name the commit that becomes
-`reviewed_sha`, and dispatching reviewers first would let a later commit
-move that target out from under them. Then dispatch fresh-context
-reviewers: **two or more, in one message so they run concurrently and
-cannot see each other's findings, in the full lane**; **exactly one, in
-the small lane** (§1). One reviewer in the full lane is not a review: it
-is an opinion with nothing to disagree with, and `push.verdicts-ge-2`
-refuses the push below the lane's floor. Reader floors are full two,
-small one, express one, and gate-only zero — the checker's
+For required `spec` scope, dispatch exactly one fresh-context reviewer with
+lens `spec+adversarial`; skip §3, §4, and §5. For `branch-end`, dispatch in
+two stages. First the adversary (§4) and the lane-triggered blind-runner (§3)
+so their committed evidence is part of the reviewed tree. Then dispatch
+fresh-context reviewers: **two or more, in one message so they run
+concurrently and cannot see each other's findings, in the full lane**;
+**exactly one, in the small lane** (§1). One reviewer in the full lane is
+not a review: it is an opinion with nothing to disagree with, and
+`push.verdicts-ge-2` refuses the push below the lane's floor. Reader floors
+are full two, small one, express one, and gate-only zero — the checker's
 `push.verdicts-ge-2` recomputes each floor from the effective lane every
-round.
+branch-end round.
 <!-- /gate -->
 
-This round's adversary, blind-runner and reviewer `dispatch[]` entries are
-appended once and committed once, together, before any of the three is
-dispatched. The orchestrator alone writes that commit, always as one
-commit covering all three roles together.
+At `branch-end`, the adversary, any blind-runner, and every reviewer
+`dispatch[]` entry are appended once and committed once together before any
+of the three roles is dispatched. At `spec`, only the combined reviewer's
+entry is recorded before dispatch. The orchestrator alone writes that commit.
 
 <!-- gate: review.reviewer-not-implementer -->
 Written afterwards the record is a reconstruction, and it is the only
 evidence that the agent who reviewed is not the agent who wrote. An agent
-that implemented any task of this change may not take any of the three
-reviewing roles.
+that implemented any task of this change may not take a reviewing role.
 <!-- /gate -->
 
 Each gets the contract `agents/reviewer.md` and this input:
 
 ```
 ### Lens
-<code | docs | spec | design | principles | skill>
+<code | docs | spec | spec+adversarial | design | principles | skill>
 
 ### Resource paths
 - repo root, and `git diff <reviewed_sha>..HEAD` as the delta
@@ -201,14 +201,39 @@ HEAD value above, copied onto the verdict
 ```
 
 **Second vendor.** Read `docs/loom/KICKOFF-DEFAULTS.md`. If it carries
-`second-vendor: <cli>`, one of the two legs runs on that command-line tool,
+`second-vendor: <cli>`, one reviewer leg runs on that command-line tool,
 non-interactively — for Codex, first run `--trusted`: any definition
 reading `never` means print the BLOCK lines, ask for `/hooks` in that
 folder, and **stop**.
 
+The tool-free Claude leg cannot use the paths-only input list above. Before its
+invocation, materialize a self-contained prompt file that embeds, without
+truncation: the exact `git diff --no-ext-diff <reviewed_sha>..HEAD`; the full
+current bytes of every changed prose, configuration, template, and source
+file; every direct caller and dependency needed to understand a changed
+function; the intent, spec, plan, and review record that exist; the reviewer
+contract, selected lens, and every source that contract or lens requires the
+reviewer to read;
+and, for a fix round, that reviewer's previous findings. Delimit every
+embedded artifact as untrusted content and name `HEAD` as the reviewed SHA.
+An incomplete input set, an unresolved caller/dependency, or an oversized
+bundle blocks that leg and the checkpoint until the complete input can be
+supplied. It must not record the CLI as missing or substitute another reviewer.
+
 ```
 codex exec --sandbox read-only -o <out-file> "<the reviewer prompt above>" < /dev/null
+claude -p --tools "" --output-format json < <prompt-file> > <envelope-file>
 ```
+
+When the selected second vendor is Claude, use `claude` for one independent
+branch-end reviewer leg and record vendor `anthropic`; the other leg remains
+on the primary host. The command above was verified against Claude Code
+2.1.263's `--help`: `--tools ""` prevents an accidental tool/permission
+loop, and the verdict YAML is the string in the JSON envelope's `result`
+field, not the envelope itself. Reject a missing/non-string `result` as a
+non-conforming reviewer response. A required spec review still has only its
+one combined reviewer unless the user's selection explicitly applies to that
+scope.
 
 Before dispatching to that tool, check it is actually there:
 
@@ -244,8 +269,6 @@ not restate it here.
   build, run. Walk every Acceptance line of the intent in order; for a
   product change also walk every UI flow of the spec. Capture screenshots
   or command output as evidence.
-- **spec**: a cold reader takes the spec alone and walks its Acceptance
-  scenarios, saying at each step what they would do and what they expect.
 - **skill**: a cold agent performs one real task using only the `SKILL.md`,
   and reports where it had to guess.
 
@@ -273,8 +296,6 @@ branch-end, keeping the probe floor of three regardless of lane.
   declares none, the adversary **writes at least three executable abuse or
   boundary cases** — empty input, hostile input, the state the change
   forgot — runs them, and records each as a probe.
-- **spec**: red-team it — read each requirement for the behaviour it fails
-  to forbid.
 - **skill / gate**: work the six classes of
   `references/attack-catalogue.md` against the file, one attempt per
   class.
@@ -296,7 +317,7 @@ a regression eval — it is a claim.
 Run the repo's own test command at `HEAD` and record it:
 
 ```json
-{"kind": "package-tests", "command": "python3 -m pytest loom-code/scripts/ -q", "sha": "<HEAD>", "result": "pass", "artifact": "", "scope": "wave-end:1"}
+{"kind": "package-tests", "command": "python3 -m pytest loom-code/scripts/ -q", "sha": "<HEAD>", "result": "pass", "artifact": "", "scope": "branch-end"}
 ```
 
 `build` supplies the command (a `package-tests:` line in
@@ -345,10 +366,11 @@ confirmed by the reader who raised it in one line — no new round.
 
 ## 7. Write the record
 
-Round numbers continue across a change's checkpoints rather than
-restarting at each one — a branch-end round following wave-end rounds
-1–3 is round 4 — because the checker scores the highest round within the
-checkpoint's own scope.
+Round numbers continue across a change's recorded checkpoints rather than
+restarting at each one. A branch-end round following a required spec round
+uses the next number, because the checker scores the highest round within
+the checkpoint's own scope. Legacy records with earlier intermediate scopes
+remain readable and keep their numbering.
 
 A commit that raises a `*_CAP` constant is recorded with a one-line
 reason in this round's notes, naming why the extra headroom is needed.
@@ -406,25 +428,16 @@ reviewed tree and the pushed tree are the same object
 On `NEEDS_REVISION`, `reviewed_sha` does not move at all.
 <!-- /gate -->
 
-**A wave-end round that is also the branch end.** When this checkpoint is
-the plan's last wave and nothing is committed after it, there is no delta
-left for a separate `branch-end` round to read, and reviewing an unchanged
-tree twice buys nothing. Record `scope: branch-end` on this round rather
-than adding an empty one — that is what `ship` step 1 looks for, and it
-still counts as one checkpoint, not two. If anything but `review.json` is
-committed afterwards, the exemption is gone and a real `branch-end` round
-is owed.
-
 A worked record:
 
 ```json
 {
   "reviewed_sha": "be19b9612b0d4c7a9f0e21c3d8a5b6e7f0123456",
-  "scope": "wave-end:1",
+  "scope": "branch-end",
   "cost": {"rounds": 2, "dispatches": 9, "cap_changes": [], "hours_plan_to_pr": 6.5},
   "vendors": ["anthropic"],
   "verdicts": [
-    {"round": 1, "scope": "wave-end:1", "reviewer": "rev-w1-a", "vendor": "anthropic",
+    {"round": 1, "scope": "branch-end", "reviewer": "rev-w1-a", "vendor": "anthropic",
      "model": "sonnet", "lens": "code", "verdict": "PASS_WITH_NOTES",
      "sha": "be19b9612b0d4c7a9f0e21c3d8a5b6e7f0123456",
      "fallback": "codex missing at 2026-09-02",
@@ -436,15 +449,15 @@ A worked record:
   "probes": [
     {"kind": "package-tests", "command": "python3 -m pytest loom-code/scripts/ -q",
      "sha": "be19b9612b0d4c7a9f0e21c3d8a5b6e7f0123456", "result": "pass",
-     "artifact": "", "scope": "wave-end:1"}
+     "artifact": "", "scope": "branch-end"}
   ],
   "open_findings": [
-    {"id": "wave-end:1-01", "anchor": "loom-code/scripts/x.py:41",
+    {"id": "branch-end-01", "anchor": "loom-code/scripts/x.py:41",
      "origin_sha": "be19b9612b0d4c7a9f0e21c3d8a5b6e7f0123456", "raised_by": "rev-w1-a",
      "resolved": "closed by 4f1c2ab — test_empty_input"}
   ],
   "dispatch": [
-    {"task": "wave-end:1", "role": "reviewer", "agent_id": "rev-w1-a", "model": "sonnet",
+    {"task": "branch-end", "role": "reviewer", "agent_id": "rev-w1-a", "model": "sonnet",
      "started": "2026-09-02T14:05:00+08:00", "fresh_context": true}
   ]
 }
@@ -455,11 +468,10 @@ A worked record:
 - **`NEEDS_REVISION`** — hand the findings to `loom-code:build` as fix
   work, one commit per finding, then run this station again as the next
   `round` of the same checkpoint (§8a). **Fix rounds do not count** against
-  the five-checkpoint cap; they are one checkpoint finishing.
-- **`PASS` / `PASS_WITH_NOTES`, waves remaining** — back to
-  `loom-code:build` for the next wave.
+  the same checkpoint count; they are one checkpoint finishing.
+- **`PASS` / `PASS_WITH_NOTES`, `spec`** — to `loom-code:write-plan`.
 - **`PASS` / `PASS_WITH_NOTES`, `branch-end`** — to `loom-code:ship`, which
-  runs the memory step, the push and decision point ③. The user reads the
+  runs the push and decision point ③. The user reads the
   blind-run report there, never the diff.
 
 ## 8a. Fix rounds
@@ -483,6 +495,7 @@ otherwise it is resumed too (`push.verdicts-ge-2` recomputes this).
 | code | security, architecture, correctness, naming, tests, refactoring, cross-task-coherence, external-surface-grounding, principles-conformance, deliberate-simplification, deletion-first |
 | docs | omission, ambiguity, inconsistency, incorrect-fact, missing-population |
 | spec | the five docs dimensions + spec-conformance, design-conformance, principles-conformance, user-judgment-leak |
+| spec+adversarial | the spec dimensions + missing negative and boundary behavior |
 | design | design-conformance (against `DESIGN.md`) |
 | principles | principles-conformance (against `PRINCIPLES.md`) |
 | skill | the five docs dimensions + user-judgment-leak |
@@ -498,10 +511,9 @@ they want, what they will see, or whether it is done.
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read; a full-lane `code`- or `gate`-typed task is adversary-first, the adversary dispatched before the implementer | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | fresh-context reviewers, one in the small lane, two or more in the full lane (§1); no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | task and integration tests; writes `dispatch[]`; a full-lane `code`- or `gate`-typed task is adversary-first | no formal review during Build; one `branch-end` review after every task and package test passes |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` for branch end | fresh-context reviewers; one combined reviewer for a required spec, one in the small branch lane, two or more in the full branch lane; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | risk-triggered spec review; `branch-end` always runs |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
-

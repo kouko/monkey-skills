@@ -115,12 +115,8 @@ def _handoff_heading_index(headings: list[tuple[str, int]], text: str) -> int | 
     candidates = []
     for i, (title, offset) in enumerate(headings):
         end = headings[i + 1][1] if i + 1 < len(headings) else len(text)
-        body = text[offset:end]
         title_low = title.lower()
-        body_low = body.lower()
         if "hand-off" in title_low or "handoff" in title_low:
-            candidates.append(i)
-        elif "loom-code:ship" in body_low or "branch end" in body_low or "branch-end" in body_low:
             candidates.append(i)
     return min(candidates) if candidates else None
 
@@ -293,6 +289,15 @@ def _trailer_check_command(text: str) -> str | None:
     return None
 
 
+def _reported_missing_shas(stdout: str) -> set[str]:
+    prefix = "no Task trailer: "
+    return {
+        line.removeprefix(prefix).strip()
+        for line in stdout.splitlines()
+        if line.startswith(prefix)
+    }
+
+
 def test_buildtrailercommand_fencedblock_absent():
     """Attack: build/SKILL.md's "## 4. After each task returns" or
     "## 5. Wave end" section must contain a fenced code block whose text
@@ -312,7 +317,7 @@ def test_buildtrailercommand_fencedblock_absent():
         "neither build §4 nor §5 contains a fenced code block with both "
         "'git log' and 'Task:' in it"
     )
-    assert "<reviewed_sha>..HEAD" in sec5 or "the wave's commits" in sec5.lower(), (
+    assert any(token in sec5 for token in ("<reviewed_sha>..HEAD", "<wave-base>..HEAD")) or "the wave's commits" in sec5.lower(), (
         "build §5 does not say the trailer-check command runs over "
         "<reviewed_sha>..HEAD or 'the wave's commits'"
     )
@@ -420,19 +425,20 @@ def test_trailercommand_missingtrailercommit_caught():
             f"exactly the two wave commits: {wave_commits}"
         )
 
-        substituted = command.replace("<reviewed_sha>", reviewed_sha)
+        substituted = command.replace("<reviewed_sha>", reviewed_sha).replace("<wave-base>", reviewed_sha)
         result = subprocess.run(
             ["bash", "-c", substituted],
             cwd=tmp_path,
             capture_output=True,
             text=True,
         )
-        assert missing_sha in result.stdout, (
+        reported = _reported_missing_shas(result.stdout)
+        assert missing_sha in reported, (
             f"build's §5 trailer loop did not name the missing-trailer "
             f"commit {missing_sha} in its output: {result.stdout!r} "
             f"(stderr {result.stderr!r})"
         )
-        assert trailered_sha not in result.stdout, (
+        assert trailered_sha not in reported, (
             f"build's §5 trailer loop wrongly named the trailered commit "
             f"{trailered_sha} as missing its trailer: {result.stdout!r}"
         )

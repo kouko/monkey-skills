@@ -320,7 +320,8 @@ def test_isolated_loom_plugins_are_standalone_and_compose_by_public_contract(
     assert "DESIGN.md" in design_system
     assert "docs/loom/<change-id>/" in design_spec
     assert "docs/loom/<change-id>/" in code_planning
-    assert "review: after-task" in code_planning
+    assert "positive" in code_planning and "negative or boundary" in code_planning
+    assert "review station once at branch end" in " ".join(code_planning.split())
 
 
 def test_isolated_plugins_execute_local_behavior_without_sibling(tmp_path: Path) -> None:

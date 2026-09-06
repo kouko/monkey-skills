@@ -11,8 +11,9 @@ Relative paths in this document are relative to this skill's own directory.
 
 You take one intent — a short document saying what the user wants and how
 they will know it is done — and produce `docs/loom/<change-id>/plan.md`: a
-graph of tasks, grouped into waves, each with its files, its one failing
-test, and its risk. You do **not** implement anything, and you do not ask
+graph of tasks, grouped into waves, each with its files, Acceptance ownership,
+positive and negative or boundary cases, and risk. You do **not** implement
+anything, and you do not ask
 the user to approve the plan: how the work is split is your decision, and
 you write down why.
 
@@ -45,10 +46,10 @@ date, not the example's).
 | station | artifact | who decides | checker | checkpoint |
 |---|---|---|---|---|
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only | `intake.confirmed`, `standing.product-principles-reject` | spec lens must pass before a plan exists |
-| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.after-task-budget` | calls review with scope `spec` |
-| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | none during build; writes the `dispatch[]` the push rules read; a full-lane `code`- or `gate`-typed task is adversary-first, the adversary dispatched before the implementer | wave end when the unreviewed delta exceeds 8 files or 400 lines; immediately after an `after-task` task; ≤5 checkpoints during build, NEEDS_REVISION fix rounds not counted; branch end always |
-| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` from the blind run | fresh-context reviewers, one in the small lane, two or more in the full lane (§1); no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | `branch-end` always runs |
+| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
+| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | task and integration tests; writes `dispatch[]`; a full-lane `code`- or `gate`-typed task is adversary-first | no formal review during Build; one `branch-end` review after every task and package test passes |
+| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` for branch end | fresh-context reviewers; one combined reviewer for a required spec, one in the small branch lane, two or more in the full branch lane; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | risk-triggered spec review; `branch-end` always runs |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
@@ -86,10 +87,10 @@ shapes.
 | Station | Artifact produced (path) | Who decides | Checker rules that can block, and when | Checkpoint |
 |---|---|---|---|---|
 | capture-intent | `docs/loom/intent/<change-id>.md` | User — **decision point ①** ("is this what you want?"). Absent `loom-design`: step 3 of this file does it | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` — when the intent is committed | none |
-| write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering: agent-decided. Absent `loom-design`: step 4 of this file writes a minimal spec and runs ② | `standing.product-principles-reject` blocks a product change with no ratified `PRINCIPLES.md`, when the spec is started | spec review (read + adversarial) must PASS before any plan is written |
-| **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | step 2, every change, before ①: `standing.warn` and `standing.silence` are notice-only and never block, `standing.product-principles-reject` blocks. Step 4, before the plan: `intake.confirmed`, `intake.spec-pass`, `intake.confirmed-behavior` | none of its own; when `needs-design: yes` it calls the review station once with scope `spec` (that checkpoint belongs to review) |
-| build | commits (the diff); one commit per task carrying a `Task: <id>` trailer | Agent | none | end of a wave when the unreviewed change exceeds 8 files or 400 lines; immediately after any task the plan marked `review: after-task`; a wave containing an after-task task always ends with a checkpoint too, and that one reviews only the delta after the after-task review plus cross-task consistency |
-| review | `docs/loom/<change-id>/review.json` — created here, at the first checkpoint (the spec review, or the first wave end); never written by write-plan | Agent — two or more fresh reviewers; their disagreement is recorded, not averaged | none directly; it writes the record the push rules read | every checkpoint; the end of the branch always; at most 5 during build |
+| write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering and pre-build risk: agent-decided. Absent `loom-design`: step 4 writes the minimal spec and runs ② | `standing.product-principles-reject` blocks a product change with no ratified `PRINCIPLES.md`, when the spec is started | `required`: one fresh `spec+adversarial` reviewer and no blind run; `not-required`: none |
+| **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | before drafting: `intake.confirmed`, `intake.spec-pass`, `intake.confirmed-behavior`; after drafting: `intake.test-case-pair` and `plan.field-caps` | no formal plan review |
+| build | commits (the diff); one commit per task carrying a `Task: <id>` trailer | Agent | task tests and dependency-boundary integration checks | no formal review during Build; transition once to branch end after every task and package test passes |
+| review | `docs/loom/<change-id>/review.json`; never written by write-plan | Agent — one combined reviewer for a required spec; lane-defined fresh reviewers at branch end; disagreement is recorded, not averaged | none directly; it writes the record the push rules read | risk-triggered spec review and one mandatory branch-end review |
 | ship | pull request and merge (git) | User — **decision point ③**: they read the blind-run report, not the diff | `push.review-only-head`, `push.reviewed-sha`, `push.open-findings-closed`, `push.probes-package-tests`, `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.review-schema` — on `git push`, `gh pr create`, `gh pr merge` | the end-of-branch checkpoint must have passed first |
 | maintain | a new or updated `docs/loom/intent/<change-id>.md` | Agent turns an incident into an intent; the user then answers ① for that new change | `intent.schema` and the rest of the `intent.*` family, when that intent is committed | none |
 
@@ -306,7 +307,8 @@ Requirements one per Acceptance line, Design decision one line per
 agent-decided fork, Alternatives considered, Current state evidence, UI
 flows N/A — carrying the template's five sections and leaving the
 `confirmed-behavior:` line to product changes. Decision point ② stays
-product-only, and the first checkpoint reads the spec under the docs lens.
+product-only. Declare `pre-build-review: required|not-required — <reason>`
+using the risk classes below; only a required spec gets a pre-build review.
 
 **`yes`, and `docs/loom/<change-id>/spec.md` already exists** — go to the
 intake check below.
@@ -318,7 +320,11 @@ intake check below.
 spec yourself, from `contract/templates/spec-minimal.md`:
 
 - **Frontmatter** — `intent: <change-id>@<sha>`, where the sha is the
-  commit you made in step 3 confirming the intent.
+  commit you made in step 3 confirming the intent, plus
+  `pre-build-review: required|not-required — <reason>`. Use `required` for
+  security or privacy, irreversible data, a public contract, cross-system
+  architecture, or materially ambiguous requirements; otherwise use
+  `not-required`. This is agent-decided, not another user question.
 - **Requirements** — one `REQ-<n> — <name>` per line of the intent's
   Acceptance list, each ending `→ Acceptance #<n>`. One-to-one; do not
   merge two Acceptance lines into one requirement.
@@ -330,9 +336,11 @@ spec yourself, from `contract/templates/spec-minimal.md`:
   an anchor) — you fill these in. They are never shown to the user.
 
 Print one line for the user: installing `loom-design` gets them a fuller
-spec than this one. Then hand the spec to the **review** station under the
-spec lens (read + adversarial). It must come back PASS or PASS_WITH_NOTES
-before you write a plan; on NEEDS_REVISION, fix and send it round again.
+spec than this one. For `pre-build-review: required`, hand the spec to the
+**review** station for one fresh-context `spec+adversarial` reviewer and no
+blind run; it must pass before planning. For `not-required`, proceed without
+a formal spec review. A missing declaration on a legacy spec is the safe
+`required` default and uses its existing passing review record.
 
 <!-- gate: write-plan.product-spec-needs-confirmed-behavior -->
 **A product spec needs `confirmed-behavior:` before it becomes a plan.**
@@ -356,38 +364,29 @@ plan:
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py intake write-plan <change-id>
 ```
 
-Fix and re-run until it exits 0. It checks `intake.confirmed`,
-`intake.spec-pass`, `intake.confirmed-behavior` and
-`intake.after-task-budget` — the ways a plan can be started too early or
-mark more checkpoints than it justifies. When `needs-design: no` there is
-no spec, and the spec rules have nothing to check and pass; only
-`intake.confirmed` and the budget rule can block.
+Fix and re-run until it exits 0. At this point it checks
+`intake.confirmed`, `intake.spec-pass`, and `intake.confirmed-behavior` —
+whether the intent, visible-behaviour confirmation, and any risk-triggered
+spec review are ready. When `needs-design: no`, only intent readiness can
+block before the plan exists.
 
 ## Step 5 — Write the plan
 
 Write `docs/loom/<change-id>/plan.md` from `contract/templates/plan.md`.
 
-**Task size.** A task is right-sized when all three hold: you can name the
-first test — one that fails today and passes when the task is done — so the
-implementer has a concrete RED to start from; it touches one module
-boundary; and it can be done in isolation given only the dependencies it
-declares. That first test is the starting point, not a ceiling: the
-implementer writes as many tests as the behaviour has faces. If the task
-needs tests for three unrelated behaviours, it is three tasks. Never size
-a task by how long it will take.
+**Task size.** A task is right-sized when it owns a coherent set of intent
+Acceptance lines, can name a positive case plus a negative or boundary case
+for each, touches one module boundary, and can be done in isolation given
+only its declared dependencies. The compact case identifiers are the
+starting contract, not a ceiling; scenario detail stays in the spec. If a
+task needs tests for unrelated behaviours, split it. Never size a task by
+how long it will take.
 
 **Shape.**
 
-- Group tasks into **waves**. The hard limit is on reviews, not waves:
-  **at most 5 checkpoints during build**, counting wave-end checkpoints and
-  after-task ones together, with the fix rounds after a NEEDS_REVISION not
-  counted. The branch-end checkpoint is **not** one of the five — it always
-  runs, on top. And when the last wave-end checkpoint ran at what is still
-  `HEAD` and nothing changed after it, that round doubles as the branch-end
-  one: it records `scope: branch-end` rather than a second, empty review.
-  Derive the wave count from that budget; as a rough guide that leaves
-  about five waves, and needing more usually means the change is too big —
-  say so rather than nesting further.
+- Group tasks into **waves** as dependency and integration boundaries. Waves
+  do not schedule formal review; after all tasks and package tests pass,
+  Build transitions once to the closing `branch-end` review.
 - Task ids are `W<n>-<nn>`, plus the reserved `W<n>-memory` on the last
   wave as the one named exception to that numeric form; both are
   **stable**: once written, an id is never renumbered, because commits
@@ -396,6 +395,11 @@ a task by how long it will take.
   with no dependency between them run in parallel — but disjoint files are
   not enough: a shared symbol, a doc that mirrors code, or a
   producer/consumer pair stays sequential.
+- Each non-memory task line carries `acceptance: <numbers>` naming the intent
+  Acceptance lines it owns. Each referenced number appears in the task's
+  Test line as `A<n> positive: <case-id>; negative: <case-id>` or with
+  `boundary:` instead. Empty cases, nonexistent references, and Acceptance
+  lines owned by no task are blocked by `intake.test-case-pair`.
 - Each task carries three one-line fields -- Files, Test and Risk -- whose
   content kinds and word caps are set by the plan row of the artifact
   charter (`contract/manifest.yaml`, `artifacts.plan.charter`, rendered by
@@ -405,12 +409,6 @@ a task by how long it will take.
   the plan file changes only by the charter's `edits_after` policies,
   recomputed by `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py
   plan-edits <change-id>`.
-- `review: after-task` marks a task that gets its own review immediately
-  after its commit. Budget **2 per plan**; more is allowed, and each extra
-  one carries `— <reason>` on that task line — `intake.after-task-budget`
-  reads that line and blocks a third marker without one. A wave holding
-  one still ends with its own wave-end checkpoint, and both count against
-  the 5.
 - Every plan's last wave ends with a memory-step task, id `W<n>-memory`
   (n = the last wave number): Files are the graduated probe copies and
   the `docs/loom/memory/` entries, Test is the store integrity check
@@ -433,12 +431,24 @@ spoken to the user rather than read as a machine artifact.
   rather than restating the reasoning.
 - A **Questions asked** section carrying the list you kept from step 3 —
   one line per question, `<decision point> — <type> — <text>`. The review
-  station reads this section at the first checkpoint and copies it into
-  `questions[]`.
+  station reads this section at the first applicable checkpoint and copies
+  it into `questions[]`. The intent's `## Open questions` must be exactly
+  `- none` before Build; unresolved choices go back to intent work.
 - A closing **Risks** section for risks that span the whole plan. When
   there is no spec, this section is also where the answers to one-way-door
   questions live: one `user-decided — <what they chose and why>` line each,
   because with no spec there is no `## Design decision` to hold them.
+
+After the draft exists, run both commands before committing it:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py plan docs/loom/<change-id>/plan.md
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py intake write-plan <change-id>
+```
+
+The second run is when `intake.test-case-pair` can inspect the completed
+Task DAG and block missing ownership, empty case pairs, or unresolved intent
+questions. A pre-plan intake pass cannot substitute for this readiness run.
 
 **Forks you decided yourself.** Every one gets a one-line reason on its
 task: what you chose and why. Any one-way door that surfaces now — after
@@ -473,4 +483,5 @@ branch.
 
 Commit the plan with the message `docs(loom): plan <change-id>`. Then hand
 the change to the build station — `loom-code:build` — which dispatches one
-implementer per task and calls the review station at each checkpoint.
+implementer per task, runs task and integration tests, and calls the review
+station once at branch end.

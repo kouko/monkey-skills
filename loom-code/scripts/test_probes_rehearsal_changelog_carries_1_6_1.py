@@ -39,20 +39,13 @@ PLUGIN_JSON = REPO / "loom-code" / ".claude-plugin" / "plugin.json"
 CODEX_PLUGIN_JSON = REPO / "loom-code" / ".codex-plugin" / "plugin.json"
 CHANGELOG = REPO / "loom-code" / "CHANGELOG.md"
 
-TARGET_VERSION = "1.7.0"  # retargeted when 1.7.0 (artifact charter) landed on top of 1.6.1
-
-
 def test_plugin_json_is_1_6_1() -> None:
     version = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))["version"]
-    assert version == TARGET_VERSION, (
-        f"{PLUGIN_JSON} version is {version!r}, expected {TARGET_VERSION!r}"
-    )
-
-
-def test_codex_plugin_json_agrees() -> None:
-    version = json.loads(CODEX_PLUGIN_JSON.read_text(encoding="utf-8"))["version"]
-    assert version == TARGET_VERSION, (
-        f"{CODEX_PLUGIN_JSON} version is {version!r}, expected {TARGET_VERSION!r}"
+    codex_version = json.loads(CODEX_PLUGIN_JSON.read_text(encoding="utf-8"))["version"]
+    changelog = CHANGELOG.read_text(encoding="utf-8")
+    assert version == codex_version
+    assert re.search(rf"^##\s*\[{re.escape(version)}\]", changelog, re.MULTILINE), (
+        f"loom-code/CHANGELOG.md has no entry for the live version {version}"
     )
 
 
