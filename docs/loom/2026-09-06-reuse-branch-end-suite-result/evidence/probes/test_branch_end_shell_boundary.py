@@ -33,3 +33,15 @@ def test_shell_absolutefunction_rejected(tmp_path, shell):
 def test_shell_commandbuiltin_publishesonlypinned(tmp_path, shell):
     """The standard command builtin bypasses the inherited Git function."""
     permanent.test_shell_commandbuiltin_publishesonlypinned(tmp_path, shell)
+
+
+@pytest.mark.parametrize("shell", [permanent.BASH, permanent.ZSH], ids=["bash", "zsh"])
+def test_shell_prepushhook_rejected(tmp_path, shell):
+    """A repository hook cannot run an unvalidated second publication."""
+    permanent.test_shell_prepushhook_rejected(tmp_path, shell)
+
+
+@pytest.mark.parametrize("shell", [permanent.BASH, permanent.ZSH], ids=["bash", "zsh"])
+def test_shell_noverify_publishesonlypinned(tmp_path, shell):
+    """The canonical no-verify command publishes only the pinned branch."""
+    permanent.test_shell_noverify_publishesonlypinned(tmp_path, shell)

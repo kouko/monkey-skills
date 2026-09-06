@@ -274,6 +274,45 @@ def test_shell_commandbuiltin_publishesonlypinned(tmp_path, shell):
     assert result["refs"] == {"refs/heads/work": head}, repr(result)
 
 
+def install_extra_ref_pre_push(repo):
+    """Install a repository-controlled hook that attempts a second push."""
+    hook = repo / ".git/hooks/pre-push"
+    hook.write_text(
+        "#!/bin/sh\n"
+        + quote_all(GIT)
+        + " push --no-verify origin extra:refs/heads/extra\n"
+    )
+    hook.chmod(0o755)
+
+
+@pytest.mark.parametrize("shell", [BASH, ZSH], ids=["bash", "zsh"])
+def test_shell_prepushhook_rejected(tmp_path, shell):
+    """A command that permits a post-gate pre-push hook is not canonical."""
+    if shell is None:
+        pytest.skip("the requested shell is unavailable")
+    repo, remote, head, extra = scene(tmp_path)
+    install_extra_ref_pre_push(repo)
+    command = render(["command", *canonical_tokens(repo, head)])
+    result = exact_shell_replay(repo, remote, command, shell=shell)
+    if result["hook_rc"] == 0:
+        assert result["shell_rc"] == 0 and result["refs"].get("refs/heads/extra") == extra, repr(result)
+    rejected(result)
+
+
+@pytest.mark.parametrize("shell", [BASH, ZSH], ids=["bash", "zsh"])
+def test_shell_noverify_publishesonlypinned(tmp_path, shell):
+    """The fixed no-verify flag prevents repository hooks from adding refs."""
+    if shell is None:
+        pytest.skip("the requested shell is unavailable")
+    repo, remote, head, _ = scene(tmp_path)
+    install_extra_ref_pre_push(repo)
+    tokens = canonical_tokens(repo, head)
+    tokens.insert(tokens.index("-u") + 1, "--no-verify")
+    result = exact_shell_replay(repo, remote, render(["command", *tokens]), shell=shell)
+    assert result["hook_rc"] == 0 and result["suites"] == 1 and result["shell_rc"] == 0, repr(result)
+    assert result["refs"] == {"refs/heads/work": head}, repr(result)
+
+
 @pytest.mark.parametrize("shell", [BASH, ZSH], ids=["bash", "zsh"])
 def test_shell_builtinoracle_publishesonlypinned(tmp_path, shell):
     """A shell-only local control proves the proposed prefix bypasses the function."""
