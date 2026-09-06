@@ -431,3 +431,27 @@ def test_squashedShape_nothingToSquash_skipsAndStaysGreen(
     assert "FAILED (0)" in out, out
     assert "SQUASHED SHAPE: skipped" in out, out
     assert "nothing to squash" in out, out
+
+
+def test_squashedShape_localTrunk_keepsOriginMainReachable(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A repo whose trunk resolves through LOCAL `main` (no origin remote)
+    must still carry `origin/main` in the squashed shape. The fix maps a
+    local trunk to `refs/remotes/origin/<name>` and updates that ref to the
+    squashed commit instead of deleting every `origin/*` ref -- so a probe
+    that skips when `origin/main` is absent (the `ORIGIN_MAIN_PROBE` above)
+    cannot falsely pass in the squashed shape."""
+    repo = make_repo(tmp_path, trunk="main")
+    assert _git(repo, "remote").stdout.strip() == ""  # no origin at all
+    _git_ok(repo, "checkout", "-q", "-b", "feature")
+    commit_file(repo, "tests/test_origin_main.py", ORIGIN_MAIN_PROBE, "origin/main probe")
+
+    code = rehearse_probes.main(["tests/test_origin_main.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert "SQUASHED SHAPE" in out, out
+    # the squashed section must not skip the origin/main probe -- the ref
+    # must resolve there, not be deleted
+    squashed_section = out.split("SQUASHED SHAPE", 1)[1]
+    assert "SKIPPED (0)" in squashed_section, out

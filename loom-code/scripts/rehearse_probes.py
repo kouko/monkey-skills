@@ -252,13 +252,23 @@ def _squash_clone_onto_trunk(clone_dir: Path, trunk_sha: str, trunk_ref: str) ->
     always present because `_clone_ci_shaped` clones from `repo_root`
     itself) still point at the branch's full, unsquashed history after the
     commit above -- `git log --all`, or any other ref walk a probe runs,
-    would still see it. Every `refs/remotes/origin/*` ref other than
-    `trunk_ref` is deleted outright; `trunk_ref` itself, when it is one of
-    those (`origin/main`/`origin/master`), is updated to the new squashed
-    commit instead of deleted, so a probe asserting that ref specifically
-    resolves (a property of the CI-shaped clone this same script also
-    produces) keeps seeing it resolve -- to the squashed commit now, the
-    way a real `origin/main` would read once the squash merge lands.
+    would still see it. Every `refs/remotes/origin/*` ref other than the
+    trunk's is deleted outright; the trunk's own remote-tracking ref is
+    updated to the new squashed commit instead of deleted, so a probe
+    asserting that ref specifically resolves (a property of the CI-shaped
+    clone this same script also produces) keeps seeing it resolve -- to the
+    squashed commit now, the way a real `origin/main` would read once the
+    squash merge lands. A trunk resolved through a LOCAL `main`/`master`
+    maps to `refs/remotes/origin/<name>` (the clone's `origin` points back
+    at `repo_root`), so the squashed shape always carries the trunk ref a
+    post-squash CI checkout would.
+
+    The relied-upon Git semantics are `git reset --soft` (moves HEAD
+    without touching the index or working tree), `git commit --allow-empty`
+    (records a commit even with no staged change), and `git update-ref`
+    (rewrites a ref to a new object) -- see
+    https://git-scm.com/docs/git-reset, https://git-scm.com/docs/git-commit,
+    and https://git-scm.com/docs/git-update-ref.
 
     Raises subprocess.CalledProcessError / OSError / TimeoutExpired on any
     git failure; callers turn that into a script-level error, same as
@@ -277,7 +287,16 @@ def _squash_clone_onto_trunk(clone_dir: Path, trunk_sha: str, trunk_ref: str) ->
     )
     new_sha = run_git(clone_dir, "rev-parse", "HEAD", timeout=GIT_TIMEOUT, check=True)
 
-    trunk_remote_ref = f"refs/remotes/{trunk_ref}" if trunk_ref.startswith("origin/") else None
+    # The clone's `origin` remote always points back at `repo_root` (that is
+    # how `_clone_ci_shaped` clones), so a trunk resolved through a LOCAL
+    # `main`/`master` still corresponds to `refs/remotes/origin/<name>` inside
+    # the clone -- map it there rather than leaving `trunk_remote_ref` null,
+    # which would delete every `origin/*` ref and leave the squashed shape
+    # without the `origin/main` a real post-squash CI checkout would carry.
+    if trunk_ref.startswith("origin/"):
+        trunk_remote_ref = f"refs/remotes/{trunk_ref}"
+    else:
+        trunk_remote_ref = f"refs/remotes/origin/{trunk_ref}"
     existing_origin_refs = run_git(
         clone_dir, "for-each-ref", "--format=%(refname)", "refs/remotes/origin",
         timeout=GIT_TIMEOUT,

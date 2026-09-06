@@ -82,8 +82,10 @@ def init_repo(tmp_path: Path) -> Path:
 
 def write_intent(repo: Path, front_status_line: str) -> None:
     """Writes `intent/<change-id>.md` with a real frontmatter `status:`
-    line -- never committed by default, since the checker reads the
-    working-tree file directly, mirroring how `plan.md` itself is read."""
+    line. Not committed here -- a test that needs the closed status to be a
+    shipped fact commits it explicitly, because the amnesty (W1-01) reads
+    the closed status from committed history reachable from HEAD, not from
+    the working tree."""
     path = intent_path(repo)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -102,9 +104,19 @@ def write_intent(repo: Path, front_status_line: str) -> None:
     )
 
 
+def write_plan_without_commit(repo: Path, text: str) -> None:
+    """Writes `plan.md` without committing anything -- so neither the plan
+    nor any staged intent is committed, and `find_plan_commit_sha` finds
+    nothing while the working tree stays dirty."""
+    path = plan_path(repo)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
 def seed_plan_without_commit(repo: Path, text: str) -> None:
     """Commits `plan.md` under an ordinary message -- never `docs(loom):
-    plan <change-id>` -- so `find_plan_commit_sha` finds nothing."""
+    plan <change-id>` -- so `find_plan_commit_sha` finds nothing. Note the
+    `git add -A` also commits any uncommitted intent staged alongside."""
     path = plan_path(repo)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
@@ -137,10 +149,54 @@ def test_closed_intent_missing_commit_reports_not_applicable(tmp_path: Path) -> 
     absent exits 0 and names the outcome NOT APPLICABLE."""
     repo = init_repo(tmp_path)
     write_intent(repo, f"status: closed 2026-09-01 {EM_DASH} PR #123")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): close intent")
     seed_plan_without_commit(repo, base_plan_text())
     result = run_plan_edits(repo)
     assert result.returncode == 0, result.stderr
     assert re.search(r"not.applicable", combined_output(result), re.I)
+
+
+def test_uncommitted_closed_status_still_blocks(tmp_path: Path) -> None:
+    """An uncommitted working-tree `status: closed` is not a shipped fact
+    -- the amnesty requires a committed closed status reachable from HEAD,
+    so an in-flight change with a lost plan commit still BLOCKs."""
+    repo = init_repo(tmp_path)
+    write_intent(repo, f"status: closed 2026-09-01 {EM_DASH} PR #123")
+    write_plan_without_commit(repo, base_plan_text())
+    result = run_plan_edits(repo)
+    assert result.returncode == 1
+    assert "plan.edits-after-commit" in blocked_rules(result)
+    assert "no plan commit found" in result.stderr
+
+
+def test_deleted_intent_after_historical_closure_still_blocks(tmp_path: Path) -> None:
+    """A current intent deleted after a historical close is in-flight --
+    the amnesty requires a parseable current intent, so it still BLOCKs."""
+    repo = init_repo(tmp_path)
+    write_intent(repo, f"status: closed 2026-09-01 {EM_DASH} PR #123")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): close intent")
+    intent_path(repo).unlink()
+    seed_plan_without_commit(repo, base_plan_text())
+    result = run_plan_edits(repo)
+    assert result.returncode == 1
+    assert "plan.edits-after-commit" in blocked_rules(result)
+
+
+def test_malformed_intent_after_historical_closure_still_blocks(tmp_path: Path) -> None:
+    """A current intent whose status line is malformed after a historical
+    close is in-flight -- the amnesty requires a parseable current intent,
+    so it still BLOCKs."""
+    repo = init_repo(tmp_path)
+    write_intent(repo, f"status: closed 2026-09-01 {EM_DASH} PR #123")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): close intent")
+    write_intent(repo, "status: closed banana -- not a real date or descriptor")
+    seed_plan_without_commit(repo, base_plan_text())
+    result = run_plan_edits(repo)
+    assert result.returncode == 1
+    assert "plan.edits-after-commit" in blocked_rules(result)
 
 
 def test_confirmed_intent_missing_commit_still_blocks(tmp_path: Path) -> None:
@@ -228,6 +284,8 @@ def test_not_applicable_output_differs_from_silent_pass(tmp_path: Path) -> None:
     repo2_root.mkdir()
     repo2 = init_repo(repo2_root)
     write_intent(repo2, f"status: closed 2026-09-01 {EM_DASH} PR #123")
+    git(repo2, "add", "-A")
+    git(repo2, "commit", "-q", "-m", "docs(loom): close intent")
     seed_plan_without_commit(repo2, base_plan_text())
     not_applicable = run_plan_edits(repo2)
     assert not_applicable.returncode == 0

@@ -2381,25 +2381,31 @@ def _intent_closed_descriptor_from_branch_history(repo: Path, intent_path: Path)
 
 def _intent_closed_descriptor(repo: Path, intent_path: Path) -> str | None:
     """Whether `intent_path` counts as closed for the plan-edits
-    shipped-change carve-out (W1-01): either the file's current
-    working-tree content (which may never have been committed at all --
-    the checker reads it directly, mirroring how `plan.md` itself is
-    read) carries a frontmatter `status: closed ...` line, or -- reusing
-    `check_intent_not_reopened`'s own history-recomputed notion (W0-02)
-    -- some earlier commit's content of the file did, even though a later
-    commit reverted the line back to `confirmed`. Returns the closed
-    descriptor (`PR #<n>` / `branch <name>`), or None when neither test
-    finds one -- including an absent file, an unreadable file, or a
-    status line that fails to parse as closed at all."""
-    if intent_path.is_file():
-        try:
-            text = read_text(intent_path)
-        except OSError:
-            text = None
-        if text is not None:
-            descriptor = _status_closed_descriptor_from_text(text)
-            if descriptor is not None:
-                return descriptor
+    shipped-change carve-out (W1-01). The amnesty is narrow: it requires
+    BOTH a parseable current intent AND a committed closed status
+    reachable from HEAD. An absent, unreadable, or malformed current
+    intent is in-flight and blocks (plan risk line 2); an uncommitted
+    working-tree `status: closed` is not a shipped fact and does not
+    grant amnesty. Returns the closed descriptor (`PR #<n>` / `branch
+    <name>`), or None when either test fails."""
+    # (a) The current intent must be parseable: present, readable, and its
+    #     status line must parse as a valid status (open/confirmed/closed/
+    #     withdrawn). An absent, unreadable, or malformed current intent is
+    #     in-flight and blocks.
+    if not intent_path.is_file():
+        return None
+    try:
+        text = read_text(intent_path)
+    except OSError:
+        return None
+    front, _sections = parse_document(text)
+    if STATUS.fullmatch(front.get("status", "").strip()) is None:
+        return None
+    # (b) A committed closed status reachable from HEAD (history, incl.
+    #     HEAD itself) -- reusing `check_intent_not_reopened`'s own
+    #     history-recomputed notion (W0-02), so a status line reverted
+    #     back to `confirmed` does not resurrect a BLOCK-worthy in-flight
+    #     change here any more than it reopens a closed intent there.
     return _intent_closed_descriptor_from_branch_history(repo, intent_path)
 
 
