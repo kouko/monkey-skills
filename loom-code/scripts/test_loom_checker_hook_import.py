@@ -54,6 +54,34 @@ def test_hook_nonpush_no_yaml_import():
         )
 
 
+def test_yaml_unimportable_exits_1_with_traceback_not_caught_as_internal_error():
+    """The lazy `import yaml` inside `load_manifest` must not be swallowed
+    by `main`'s catch-all `except Exception` (which prints `loom_checker
+    internal error: ...` and exits 2) -- before the import moved off
+    module scope, a missing `yaml` crashed uncaught at Python's default
+    exit code 1 with a full traceback on stderr. `load_manifest` must
+    re-raise a missing `yaml` as a `SystemExit(1)` (a `BaseException`,
+    so `except Exception` does not catch it) with the traceback still
+    printed to stderr, restoring that exact failure shape."""
+    with tempfile.TemporaryDirectory() as td:
+        badlib = Path(td) / "badlib"
+        badlib.mkdir()
+        (badlib / "yaml.py").write_text(
+            "raise ModuleNotFoundError(\"No module named 'yaml'\")\n"
+        )
+        result = subprocess.run(
+            [sys.executable, str(CHECKER), "contract", "--require", "1.0"],
+            cwd=str(REPO_ROOT),
+            env={"PYTHONPATH": str(badlib), "PATH": "/usr/bin:/bin"},
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 1, result.stderr
+        assert "Traceback" in result.stderr
+        assert "ModuleNotFoundError" in result.stderr
+        assert "loom_checker internal error" not in result.stderr
+
+
 def test_push_command_still_reaches_load_manifest():
     """Negative: a push-shaped command in a repo with no review.json must
     still reach a real BLOCK/PASS decision via `load_manifest`, not crash

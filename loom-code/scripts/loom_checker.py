@@ -33,6 +33,7 @@ import re
 import shlex
 import subprocess
 import sys
+import traceback
 from datetime import date
 from pathlib import Path
 
@@ -325,7 +326,16 @@ def manifest_path_in_effect() -> Path:
 
 
 def load_manifest(path: Path | None = None):
-    import yaml  # lazy: the non-push hook fast path must never pay this import
+    try:
+        import yaml  # lazy: the non-push hook fast path must never pay this import
+    except ImportError:
+        # Restore the pre-lazy-import failure shape: a missing `yaml` used
+        # to crash uncaught at module scope (exit 1, full traceback on
+        # stderr). `main`'s catch-all `except Exception` would otherwise
+        # swallow this into a misleading "internal error" at exit 2 --
+        # `SystemExit` is a `BaseException`, so it passes through instead.
+        traceback.print_exc(file=sys.stderr)
+        raise SystemExit(1)
 
     return yaml.safe_load(read_text(path if path is not None else manifest_path_in_effect()))
 
