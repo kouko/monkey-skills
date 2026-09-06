@@ -32,6 +32,11 @@ def _init_repo(repo_root: Path) -> None:
     _git(["init", "-b", "main"], repo_root)
     _git(["config", "user.email", "test@example.com"], repo_root)
     _git(["config", "user.name", "Test"], repo_root)
+    # Pin explicitly: this machine's global git config is
+    # `autocrlf=input`, which would silently normalize a fixture's
+    # CRLF content away on `git add`, masking the CRLF regression case
+    # below (repo memory already records this false-green trap).
+    _git(["config", "core.autocrlf", "false"], repo_root)
 
 
 def _map_dir(repo_root: Path) -> Path:
@@ -41,6 +46,11 @@ def _map_dir(repo_root: Path) -> Path:
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def _write_bytes(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
 
 
 def _commit(repo_root: Path, message: str) -> str:
@@ -154,3 +164,35 @@ def test_multibyte_content_does_not_corrupt_batch_blob_boundaries(
         repo_root, base_ref, map_dir / "MAP.md"
     )
     assert result == {"F-2", "F-3"}
+
+
+def test_crlf_content_does_not_corrupt_batch_blob_boundaries(tmp_path: Path) -> None:
+    """`subprocess.run(text=True)` applies universal-newline
+    translation (`\\r\\n` -> `\\n`, lone `\\r` -> `\\n`) on the way in.
+    Re-encoding the already-translated `str` back to bytes therefore
+    yields FEWER bytes than git's declared `<size>` for any blob with
+    CRLF line endings — the boundary drifts by one byte per CRLF,
+    exactly the failure a bytes-mode batch read must avoid.
+
+    `a.md` has CRLF frontmatter fences and a 60-line CRLF body; `b.md`
+    and `c.md` are plain LF, each carrying `graduated-from`. The old
+    per-ticket `git show` loop reads each blob's raw bytes independent
+    of any other blob's line endings, so all three ids together are
+    the oracle here."""
+    repo_root = tmp_path / "repo"
+    _init_repo(repo_root)
+    map_dir = _map_dir(repo_root)
+    tickets = map_dir / "tickets"
+    _write(map_dir / "MAP.md", "hello\n")
+
+    crlf_body = "line\r\n" * 60
+    a_content = f"---\r\ngraduated-from: F-1\r\n---\r\n{crlf_body}".encode("utf-8")
+    _write_bytes(tickets / "a.md", a_content)
+    _write(tickets / "b.md", "---\ngraduated-from: F-2\n---\nbody\n")
+    _write(tickets / "c.md", "---\ngraduated-from: F-3\n---\nbody\n")
+    base_ref = _commit(repo_root, "crlf content")
+
+    result = check_map_fog.read_base_graduated_ids(
+        repo_root, base_ref, map_dir / "MAP.md"
+    )
+    assert result == {"F-1", "F-2", "F-3"}
