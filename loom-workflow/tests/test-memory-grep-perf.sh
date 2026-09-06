@@ -90,8 +90,19 @@ Decision: memory decision number $i"
     if [ "$i" -lt "$memory_count" ]; then
       local sha
       sha="$(git -C "$dir" rev-parse HEAD)"
-      memory_shas="$memory_shas
+      # No leading newline: an accumulator that always prepends "\n$sha"
+      # to an initially-empty string leaves a BLANK first line, so
+      # `sed -n '1p'` on it returns "" instead of the first sha — the
+      # earliest paired supersession silently got an empty
+      # Supersedes: target and fell back to a plain Decision: commit
+      # instead (wave-end:1-04 found this: 300 memory-worthy records
+      # but only 19, not 20, actually superseded).
+      if [ -z "$memory_shas" ]; then
+        memory_shas="$sha"
+      else
+        memory_shas="$memory_shas
 $sha"
+      fi
       msha_count=$((msha_count + 1))
     fi
     i=$((i + 1))
@@ -160,6 +171,38 @@ SMALL_REPO="$TMP_ROOT/small"
 LARGE_REPO="$TMP_ROOT/large"
 build_perf_repo "$SMALL_REPO" 20 5 1
 build_perf_repo "$LARGE_REPO" 2000 300 20
+
+# ── fixture verification (wave-end:1-04): assert record counts BEFORE
+# using the fixture for timing/subprocess-count assertions. Every
+# assertion below this point discards stdout (>/dev/null) or only
+# counts subprocess invocations, so the fixture could silently regress
+# to zero live records (the exact class of bug W1-03 found and fixed)
+# while every count/timing assertion stayed green. Verify shape via
+# --format=json --history first: 300 total commit records, exactly 20
+# marked superseded, and the default (live-only) run's 280 = 300 - 20.
+large_json_history="$(bash "$SCRIPT" --repo="$LARGE_REPO" --no-pr --since=2010-01-01 --format=json --history)"
+large_total_records="$(printf '%s' "$large_json_history" | jq '.commits | length')"
+large_superseded_records="$(printf '%s' "$large_json_history" | jq '[.commits[] | select(.superseded == true)] | length')"
+large_json_default="$(bash "$SCRIPT" --repo="$LARGE_REPO" --no-pr --since=2010-01-01 --format=json)"
+large_live_records="$(printf '%s' "$large_json_default" | jq '.commits | length')"
+
+if [ "$large_total_records" -eq 300 ]; then
+  pass "the 2,000-commit fixture yields exactly 300 commit records (--format=json --history)"
+else
+  fail "the 2,000-commit fixture yields $large_total_records commit records, expected 300"
+fi
+
+if [ "$large_superseded_records" -eq 20 ]; then
+  pass "the 2,000-commit fixture marks exactly 20 records superseded"
+else
+  fail "the 2,000-commit fixture marks $large_superseded_records records superseded, expected 20"
+fi
+
+if [ "$large_live_records" -eq 280 ]; then
+  pass "the 2,000-commit fixture's default (live-only) run yields exactly 280 commit records (300 - 20 superseded)"
+else
+  fail "the 2,000-commit fixture's default run yields $large_live_records commit records, expected 280 (300 - 20 superseded)"
+fi
 
 # ── (b) git-call count: constant across repo sizes ─────────────────
 small_count_no_path="$(count_git_calls "$SMALL_REPO" --no-pr --since=2010-01-01)"
