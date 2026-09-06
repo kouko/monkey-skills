@@ -507,23 +507,26 @@ def _flat_sentences(text: str) -> list[str]:
 
 def test_review_round_numbers_continue_across_checkpoints() -> None:
     """W2-01: review/SKILL.md §7 states round numbers continue across a
-    change's checkpoints rather than restarting at each one — a
-    branch-end round after wave-end rounds 1-3 is round 4 — because the
+    change's checkpoints rather than restarting at each one — a branch-end
+    round after a required spec round uses the next number — because the
     checker scores the highest round within the checkpoint's own scope.
     Affirmative, un-negated."""
     text = (REPO / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
     start = text.index("## 7. Write the record")
     end = text.index("Every finding `text`, review note")
     section = text[start:end]
-    hits = [
-        s for s in _flat_sentences(section)
-        if "continue" in s.lower()
+    sentences = _flat_sentences(section)
+    assert any(
+        "continue" in s.lower()
         and "checkpoint" in s.lower()
-        and "round 4" in s.lower()
         and not _has_negation(s)
-    ]
-    assert hits, (
-        "review/SKILL.md §7 has no affirmative round-numbers-continue sentence"
+        for s in sentences
+    )
+    assert any(
+        "required spec round" in s.lower()
+        and "next number" in s.lower()
+        and not _has_negation(s)
+        for s in sentences
     )
 
 
@@ -826,13 +829,13 @@ def _section_4_adversarial() -> str:
     return text[start:end]
 
 
-def test_lane_paragraph_names_three_declared_lanes_and_what_each_drops() -> None:
+def test_lane_paragraph_names_three_declared_lanes_at_branch_end() -> None:
     hits = [
         s for s in _flat_sentences(_section_1_scope_and_type())
         if "`full`" in s
         and "`express`" in s
         and "`gate-only`" in s
-        and "skipping the wave-end checkpoint" in s.lower()
+        and "branch-end" in s.lower()
         and "only the probes and package tests" in s.lower()
         and not _has_negation(s)
     ]
@@ -853,17 +856,38 @@ def test_matcher_three_lane_sentence_negated_rejected() -> None:
 
 def test_matcher_three_lane_sentence_affirmative_accepted() -> None:
     sentence = (
-        "The three declared lanes are `full`, keeping two or more readers "
-        "and every run; `express`, keeping one reader and skipping the "
-        "wave-end checkpoint; and `gate-only`, keeping zero readers and "
+        "At branch-end the three declared lanes are `full`, keeping two or "
+        "more readers and every run; `express`, keeping one reader; and "
+        "`gate-only`, keeping zero readers and "
         "only the probes and package tests as evidence."
     )
     assert "`full`" in sentence
     assert "`express`" in sentence
     assert "`gate-only`" in sentence
-    assert "skipping the wave-end checkpoint" in sentence.lower()
+    assert "branch-end" in sentence.lower()
     assert "only the probes and package tests" in sentence.lower()
     assert not _has_negation(sentence)
+
+
+def test_review_has_no_build_time_runtime_scope() -> None:
+    section = _section_1_scope_and_type()
+    assert "| `after-task:<id>` |" not in section
+    assert "| `wave-end:<n>` |" not in section
+    assert "| `branch-end` |" in section
+
+
+def test_required_spec_review_is_one_combined_reader_without_runs() -> None:
+    section = _section_1_scope_and_type().lower()
+    assert "spec+adversarial" in section
+    assert "one independent reviewer" in section
+    assert "no blind run" in section
+    assert "no separate adversary" in section
+
+
+def test_claude_is_named_as_the_selected_second_vendor() -> None:
+    section = _section_2_read().lower()
+    assert "second vendor" in section
+    assert "claude" in section
 
 
 def test_reader_floor_sentence_names_all_four_lanes() -> None:

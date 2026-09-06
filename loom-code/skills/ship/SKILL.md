@@ -52,14 +52,6 @@ facts, in this order:
    was any other scope — or the branch grew a commit after it — call
    `loom-code:review` with scope `branch-end` now and come back with its
    verdict.
-
-   One case does not need a second run: when the last wave-end checkpoint
-   ran at the commit that is still `HEAD^` and nothing has changed since,
-   there is no delta for a branch-end round to look at, and re-reviewing an
-   unchanged tree buys nothing. That round **is** the branch-end
-   checkpoint — the review station records `scope: branch-end` on it rather
-   than adding an empty round, and this precondition is met. Anything
-   committed after it, review.json aside, and the exemption is gone.
 2. **The blind-run report exists** at
    `docs/loom/<change-id>/blind-run-report.md`. Without it there is nothing
    to accept, and step 2 has no material.
@@ -190,7 +182,7 @@ Amending any other file, or an earlier commit, invalidates the review and
 sends you back to `loom-code:review`.
 
 Durable-lesson entries under `docs/loom/memory/` and probe graduation were
-done by build's memory step before the plan's final checkpoint; ship
+done by build's memory step before the branch-end review; ship
 writes only the trailers on the review-only commit and the
 `questions[]` entries. If ship finds a lesson or a probe that build
 missed, that is a task for `loom-code:build` followed by a fresh

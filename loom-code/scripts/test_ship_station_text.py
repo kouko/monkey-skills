@@ -58,6 +58,15 @@ def _section_4_push() -> str:
     return text[start:end]
 
 
+def test_ship_never_reuses_a_wave_end_round_as_branch_end() -> None:
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    section = text.split("## 1. Preconditions", 1)[1].split("## 2.", 1)[0]
+    assert "last wave-end checkpoint" not in section
+    assert "latest round is a branch-end pass" in section.lower()
+    assert "its `scope` is `branch-end`" in section.lower()
+    assert "any other scope" in section
+
+
 def _pr_body_template() -> str:
     """The fenced block right after the PR-body anchor comment."""
     text = SHIP_SKILL_MD.read_text(encoding="utf-8")
