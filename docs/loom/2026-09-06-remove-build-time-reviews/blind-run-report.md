@@ -1,6 +1,6 @@
 # 縮減實作途中審閱 — 盲跑報告
 
-第一輪盲跑以乾淨副本 `64edb744` 執行，找出 readiness 繞過、規格自審、計畫欄位超限、replay oracle 誤配及乾淨環境缺少 `wcwidth`。修正輪在同一 branch-end checkpoint 針對這些項目補強，沒有把第一輪失敗改寫成成功。第一次 push gate 又找出 null finding 無法正常補證據、probe 記錄命令不精確、對抗檔不能直接執行及第二家模型答案未落盤；這些問題也在推送前修正。
+第一輪盲跑以乾淨副本 `64edb744` 執行，找出 readiness 繞過、規格自審、計畫欄位超限、replay oracle 誤配及乾淨環境缺少 `wcwidth`。修正輪在同一 branch-end checkpoint 針對這些項目補強，沒有把第一輪失敗改寫成成功。第一次 push gate 又找出 null finding 無法正常補證據、probe 記錄命令不精確、對抗檔不能直接執行及第二家模型答案未落盤；實際 push 嘗試進一步證明 host 回報的 hook cwd 可能是 saved checkout，而不是命令所指向的 worktree。這些問題都在推送前修正。
 
 ## 你要求的每一項結果
 
@@ -22,10 +22,10 @@
 
 ### 5. 所有工作完成後才進入唯一一次 branch-end review
 - **結果**：符合。第一輪 Codex 與 Claude 都回傳 `NEEDS_REVISION`，Ship 因此停住；修正完成後，同一組 Codex 與 Claude reviewer 通過。第一次 push gate 找出的問題修正後，也重新由兩家 reviewer 通過。
-- **證據**：review 保留原始 findings、push gate 的阻擋與後續 fix rounds；最新一輪在相同最終 SHA 記錄兩家 reviewer 的通過結果，所有 finding 均已解決或由原 reviewer 駁回。
+- **證據**：review 保留原始 findings、push gate 的阻擋與後續 fix rounds；兩家 reviewer 已對 `4bce6c6f` 的程式狀態通過，正式 final-content record 會在本報告確認後附加，所有 finding 均已解決或由原 reviewer 駁回。
 
 ### 6. 其他 lane、紀錄與 Ship 保護維持
-- **結果**：符合目前可機械驗證的部分。full/small/express/gate-only 的 branch-end 差異仍在；manifest 與 Codex scaffold 已同步；plan 的 Files 清單已降到上限內。
+- **結果**：符合目前可機械驗證的部分。full/small/express/gate-only 的 branch-end 差異仍在；manifest 與 Codex scaffold 已同步；plan 的 Files 清單已降到上限內。當 publish 命令明確切換 repository 時，hook 支援的可證明 selector 限於絕對 `git -C` 或絕對 `cd`；本輪列出的多目標、相對路徑、nested shell、`xargs` 與 repository environment override 會 fail-closed。
 - **證據**：相關 station tests、`check_mechanisms.py --baseline origin/main` 與 scaffold self-test 均通過。
 
 ### 7. 真實多任務 replay 的等待縮減且不誇大
@@ -37,14 +37,14 @@
 第一輪盲跑依 README 建立新 venv 時，套件安裝成功，但 `wcwidth` 沒有列在 `requirements-dev.txt`，因此得到 2 failed、2016 passed；第二個失敗是 nested rehearsal 重複同一個根因。第一輪也因乾淨 worktree 的三個 Codex hook 尚未受信任而無法真正啟動完整 Build，沒有把直接 checker 操作冒充完整工作流。
 
 修正後以 `uv run --isolated --with-requirements requirements-dev.txt` 建立隔離依賴環境，執行 KICKOFF 指定的完整 package command，結果為：
-- loom-code / scripts / hooks：2028 passed、2 skipped、1 xfailed。
+- loom-code / scripts / hooks：2055 passed、2 skipped、1 xfailed。
 - loom-design：183 passed、1 skipped。
 - branch-end adversarial probe：11 passed。
 
 ## Review summary
 
 - 第一輪有效找出並保留所有重要問題，沒有駁回 important 或 fatal finding。
-- readiness、reviewer independence、runtime contract、Claude CLI adapter、replay oracle、mechanism eval、plan cap、release probes、乾淨依賴，以及 push gate 的 null finding 與直接執行 probe 問題已修正。
+- readiness、reviewer independence、runtime contract、Claude CLI adapter、replay oracle、mechanism eval、plan cap、release probes、乾淨依賴，以及 push gate 的 null finding、直接執行 probe 與 repository 選擇問題已修正。
 - 同一組 Codex／Claude reviewer 最終均通過；是否完成仍由使用者依本報告驗收，之後才執行 push gate。
 
 ## Questions I asked you
@@ -63,3 +63,10 @@
 - Claude reviewer adapter 固定禁用工具、要求 JSON，並只接受 envelope 的字串 `result`，降低非互動呼叫的不穩定性。
 - replay 只計可重算的正式審閱等待；缺少 defect-fix 時間時不推估整體加速。
 - `resolved: null` 與欄位不存在都視為尚未關閉；只能補上一種非空證據，已關閉的 finding 不得再改寫或補上另一種關閉方式。
+- publish hook 只把絕對 `git -C` 與絕對 `cd` 視為可證明的 repository 選擇；多目標、相對路徑、nested shell、`xargs`、Git／GitHub repository environment override 均沿用 `push.review-only-head` fail-closed，不新增 checker mechanism。
+
+## Known residuals
+
+- 沒有明確 repository selector 的 bare publish 仍依賴 host payload cwd；在 cwd 可能錯置的 host 上，呼叫者應使用絕對 `git -C`，或先 `cd` 到絕對路徑再執行 `gh pr create`。
+- `env` wrapper 與 Git 的絕對 `-C` 同時出現在一個 publish segment 時會保守阻擋；應直接使用 `git -C`，不要在同一命令外包 `env`。
+- `env -S 'git push'` 會把完整命令藏在單一字串，目前既有 publish recognizer 不會辨識；本次沒有把 shell parser 擴張成通用直譯器。
