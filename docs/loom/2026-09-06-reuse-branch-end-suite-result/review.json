@@ -69,6 +69,57 @@
         "PRINCIPLES.md:10 forbids trusting agent-authored gate claims. Its gate-only wording at PRINCIPLES.md:9 also still assigns package-test recomputation to push and needs reconciliation with the final ownership contract.",
         "This is a pre-build static spec review. No blind run, suite execution, timing measurement, or repository modification was performed."
       ]
+    },
+    {
+      "round": 2,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "NEEDS_REVISION",
+      "sha": "56024c091402ed2d8c886ea753f2bb579e0ddf87",
+      "spec_sha": "0b76fc1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "NEEDS_REVISION",
+        "design-conformance": "N/A — DESIGN.md is absent; the previously verified waiver remains applicable.",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+          "text": "issue (blocking): The fix changes ownership to the push hook but still references the unchanged intent, whose Acceptance #1 requires branch-end ownership and whose Out of scope forbids removing branch-end package tests (docs/loom/intent/2026-09-06-reuse-branch-end-suite-result.md:15 and :37). REQ-5 and REQ-6 additionally reference Acceptance #5 and #6, which do not exist.",
+          "fix": "Reconcile the authoritative intent and spec with the already approved ownership change, preserve the required history, and update the spec's intent reference so every REQ maps to an existing Acceptance line."
+        },
+        {
+          "severity": "important",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:55",
+          "text": "issue (blocking): spec-03 is only partly fixed: running the suite after tree-changing review work resolves ordering, but the new absolute rule invalidates the checkpoint after any tracked-content modification. Existing permitted Ship changes include acceptance entries in review.json and the intent close line (loom-code/skills/ship/SKILL.md:168), so this conflicts with preserving existing continuity checks at spec.md:50.",
+          "fix": "Explicitly preserve the existing mechanically validated review-only and intent-status-only close shapes, and state that all other tracked-content changes require a new branch-end checkpoint. Apply the same qualification to the design decision at line 33."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:33",
+          "text": "issue (blocking): spec-04's false isolated-worktree claim is corrected, but its execution-boundary issue remains: the spec says any later tracked change fails existing recomputation, while the current suite runner checks cleanliness before subprocess execution (loom-code/scripts/loom_checker.py:4050) and can return success afterward without checking whether the command changed HEAD or tracked files (loom-code/scripts/loom_checker.py:4095).",
+          "fix": "Define the candidate's execution directory and require the validated HEAD and tracked tree to remain unchanged through suite and probe execution before the hook releases the push; changes detected at that boundary must block and return to branch-end."
+        }
+      ],
+      "notes": [
+        "spec-01 fixed: execution remains in the blocking push transition, eliminating historical-result trust. spec-02 fixed: REQ-4 explicitly distinguishes fallback, none, invalid commands, timeout, interruption, dirty state, and failure.",
+        "spec-03 unfixed: ordering is corrected, but permitted closure exceptions remain unspecified. spec-04 unfixed: current-state evidence is corrected, but execution-time content changes remain unguarded by the stated existing checks. spec-05 fixed: measurement now has a defined Ship-to-push boundary and observes baseline counts.",
+        "HEAD matches the requested SHA. Reviewed only the fix delta, previous findings, and directly relevant sources; no probes, blind run, timing measurement, or repository modifications were performed."
+      ]
     }
   ],
   "probes": [],
@@ -120,14 +171,14 @@
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:23",
       "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
       "raised_by": "spec-risk-review-codex",
-      "resolved": ""
+      "resolved": "fixed by 1659125f — execution stays inside the blocking push transition"
     },
     {
       "id": "spec-02",
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
       "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
       "raised_by": "spec-risk-review-codex",
-      "resolved": ""
+      "resolved": "fixed by 1659125f — command resolution and failure outcomes are explicit"
     },
     {
       "id": "spec-03",
@@ -147,6 +198,13 @@
       "id": "spec-05",
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:17",
       "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "fixed by 1659125f — the measurement boundary observes baseline invocations"
+    },
+    {
+      "id": "spec-06",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+      "origin_sha": "56024c091402ed2d8c886ea753f2bb579e0ddf87",
       "raised_by": "spec-risk-review-codex",
       "resolved": ""
     }
@@ -170,7 +228,7 @@
     }
   ],
   "cost": {
-    "rounds": 1,
+    "rounds": 2,
     "dispatches": 2,
     "cap_changes": [],
     "hours_plan_to_pr": null
