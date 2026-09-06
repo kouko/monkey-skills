@@ -178,6 +178,30 @@
         }
       ],
       "notes": "Single risk-triggered pre-build reader covering spec and adversarial concerns; no blind run."
+    },
+    {
+      "round": 3,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "a6056ff5a9660b934ffb422a0525226b1c5ecdc8",
+      "spec_sha": "72788ab700bfe40eef106a6b1a5c870f60fb2879",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS_WITH_NOTES",
+        "spec-conformance": "PASS_WITH_NOTES",
+        "design-conformance": "N/A — no DESIGN.md; existing applicability judgment retained",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": "spec-16 through spec-18 fixed; all seven patch checksums and sequential hunks independently validated; no blind run."
     }
   ],
   "probes": [
@@ -330,19 +354,22 @@
       "id": "spec-16",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:8",
       "origin_sha": "621c83230be0d1c291f23587a726f2603e3a874d",
-      "raised_by": "spec-risk-review-codex"
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "closed by a6056ff5 — task Acceptance ownership and compact paired case identifiers are explicit"
     },
     {
       "id": "spec-17",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:38",
       "origin_sha": "621c83230be0d1c291f23587a726f2603e3a874d",
-      "raised_by": "spec-risk-review-codex"
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "closed by a6056ff5 — new-plan readiness and legacy grammar now have separate paths"
     },
     {
       "id": "spec-18",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:26",
       "origin_sha": "621c83230be0d1c291f23587a726f2603e3a874d",
-      "raised_by": "spec-risk-review-codex"
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "closed by a6056ff5 — committed-plan start and six checksummed task patches replay sequentially"
     }
   ],
   "dispatch": [
@@ -416,7 +443,7 @@
     }
   ],
   "cost": {
-    "rounds": 2,
+    "rounds": 3,
     "dispatches": 8,
     "cap_changes": [],
     "hours_plan_to_pr": null
