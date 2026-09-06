@@ -860,11 +860,29 @@
       "started": "2026-09-06T20:37:00+08:00",
       "fresh_context": false,
       "note": "round 5 continuation because the Claude adapter contract changed"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T20:49:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 continuation for fail-closed bundle test polarity"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T20:49:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 continuation for branch-end-fix-02-t1"
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 26,
+    "dispatches": 28,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
