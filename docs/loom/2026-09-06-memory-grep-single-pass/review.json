@@ -415,6 +415,81 @@
         "Isolation verified against a pinned copy: an inherited GIT_OBJECT_DIRECTORY pointing at the real store, and a symlinked objects directory, both isolate correctly; a bogus inherited GIT_OBJECT_DIRECTORY breaks the pre-change script identically, so it is not a regression. Temp-dir cleanup confirmed on the fast path, the exit-3 path, bare, shallow and the SHA-256 path. Git-call count recounted with a logging shim: exactly 4 on the fast path, the cap fully consumed by design. The set -u trap bug is fixed and the pattern appears nowhere else.",
         "Process hazard worth keeping: several early checks silently ran against the shared working tree while another agent was mid-edit on the same file; the reader re-ran every load-bearing check against a pinned `git show <sha>:<path>` copy and reported only those. It also found 82 stray probe directories in TMPDIR from a concurrent burst; the orchestrator confirmed the shipped code leaks none across the fast path, three consecutive runs and the exit-3 path, and removed them."
       ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-codex",
+      "vendor": "codex",
+      "model": "gpt-5-codex",
+      "lens": "code + docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "14f02d9f6ce12243a48102881d5fdb39e648fd25",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS_WITH_NOTES",
+        "deletion-first": "PASS_WITH_NOTES",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "branch-end-07 fixed: no probe-build failure can reach unguarded extraction; both messages state the failed prerequisite and the recovery action.",
+        "The design re-look obligation was met because both shapes were explicitly compared, though its first reason is circular and its second weak; the retained mechanism is bounded, isolated and safe to ship."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-claude",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code + docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "14f02d9f6ce12243a48102881d5fdb39e648fd25",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS_WITH_NOTES",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "architecture",
+          "anchor": "14f02d9f (commit body, the design re-look block)",
+          "text": "issue (blocking): the design re-look's first reason for rejecting the delete-the-probe shape is circular - the tests that assert the mechanism's own call shape cannot be evidence that the shape is right - and it traces to the brief's own constraint, which asked the implementer to weigh deletion while forbidding changes to the tests describing the mechanism. Reason 2 is real but narrower than recorded: on a truly empty commit range an empty digest is correct under either design, so it is the loss of an independent confirmation signal, not a data-loss regression. The outcome (repair rather than delete) stands on the narrower reason 2 alone.",
+          "fix": "No code change. Record that reason 1 is circular and traces to the brief, that reason 2 holds only in its narrower form, and that the decision is still correct on reason 2 alone. Do not reopen the design this late in the checkpoint."
+        }
+      ],
+      "notes": [
+        "branch-end-07 fixed: reproduced its own round-5 repro against a pinned copy of 14f02d9f and got exit 3 with an actionable message on both a capable and an incapable git; traced every remaining path and found none reaching extraction with capability unconfirmed.",
+        "Reran 65 pytest tests and all seven shell suites against the committed sha; all green, matching the reported figures.",
+        "Nit for the ship batch: the header's exit-code table does not list the two new exit-3 sub-cases, though each runtime message is self-contained."
+      ]
     }
   ],
   "probes": [
@@ -792,7 +867,15 @@
       "id": "branch-end-07",
       "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
       "origin_sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
-      "raised_by": "rev-be-mg-codex and rev-be-mg-claude (independently)"
+      "raised_by": "rev-be-mg-codex and rev-be-mg-claude (independently)",
+      "resolved": "closed by 14f02d9f - every probe-build failure exits 3 before extraction and the dead fallback is deleted; confirmed by both readers in round 6"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "14f02d9f (commit body, the design re-look block)",
+      "origin_sha": "14f02d9f6ce12243a48102881d5fdb39e648fd25",
+      "raised_by": "rev-be-mg-claude",
+      "resolved": "closed by record, as the finding itself prescribes: reason 1 of the design re-look is circular and traces to the orchestrator's brief, which asked for deletion to be weighed while forbidding changes to the tests that describe the mechanism; reason 2 holds only in its narrower form, that an empty range loses a confirmation signal rather than data; the decision to repair rather than delete stands on that narrower reason alone. Recorded rather than reopened, per the finding's own fix."
     }
   ],
   "dispatch": [
@@ -1023,12 +1106,13 @@
     }
   ],
   "cost": {
-    "rounds": 5,
+    "rounds": 6,
     "dispatches": 27,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
   "notes": [
-    "design re-look: the capability guard has now taken a finding in three consecutive rounds (substring comparison, then an object written into the target repo, then an inconclusive path when the scratch store cannot be made). Round 6 weighs removing the probe rather than repairing it: the extraction already fetches the field, so an unexpanded placeholder can be recognised in the data itself at zero extra cost, with no synthetic object, no temporary store and no third failure mode. The implementer decides and records why."
+    "design re-look: the capability guard has now taken a finding in three consecutive rounds (substring comparison, then an object written into the target repo, then an inconclusive path when the scratch store cannot be made). Round 6 weighs removing the probe rather than repairing it: the extraction already fetches the field, so an unexpanded placeholder can be recognised in the data itself at zero extra cost, with no synthetic object, no temporary store and no third failure mode. The implementer decides and records why.",
+    "design re-look outcome: the guard was repaired, not deleted. The reasoning recorded at the time was partly circular and the circularity came from the brief; a later brief that asks whether a mechanism should exist must also say which of its tests may move, or the answer is decided by the constraint rather than by the design."
   ]
 }
