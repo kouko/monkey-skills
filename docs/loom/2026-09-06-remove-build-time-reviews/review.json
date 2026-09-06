@@ -6,7 +6,24 @@
     "anthropic"
   ],
   "verdicts": [],
-  "probes": [],
+  "probes": [
+    {
+      "kind": "adversarial",
+      "command": "python3 loom-code/scripts/check_doc_citations.py docs/loom/2026-09-06-remove-build-time-reviews/evidence/adversarial-spec-round-1.md",
+      "sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "result": "needs-revision",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/adversarial-spec-round-1.md",
+      "scope": "spec"
+    },
+    {
+      "kind": "blind-run",
+      "command": "",
+      "sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "result": "needs-revision",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
+      "scope": "spec"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -17,9 +34,63 @@
       "decision_point": 1,
       "text": "這次要使用 Claude 作為第二家模型的審閱者嗎？這會多花幾分鐘與一些額度，但能增加不同模型發現問題的機會。",
       "type": "consequence"
+    },
+    {
+      "decision_point": 2,
+      "text": "這些修正符合你的意思嗎？確認後我就提交修正版並交給 Codex 與 Claude 審閱。",
+      "type": "behaviour"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "spec-01",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:7",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    },
+    {
+      "id": "spec-02",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:7",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    },
+    {
+      "id": "spec-03",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    },
+    {
+      "id": "spec-04",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    },
+    {
+      "id": "spec-05",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:13",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    },
+    {
+      "id": "spec-06",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:16",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    },
+    {
+      "id": "spec-07",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    },
+    {
+      "id": "spec-08",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:27",
+      "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
+      "raised_by": "spec-adversary-codex"
+    }
+  ],
   "dispatch": [
     {
       "task": "spec",
