@@ -40,7 +40,7 @@ Lane: full (repo default; `loom_checker.py` and `session-start` are `gate`-typed
 
 **W1-05 Single ticket read in validate and update-blockers**  acceptance: 5
 - Files: `loom-workflow/skills/decision-map/scripts/map_store.py`, `loom-workflow/skills/decision-map/scripts/map_transaction.py`, `loom-workflow/skills/decision-map/scripts/test_ticket_read_once.py` (new)
-- Test: A5 positive: `validate-findings-identical` — same finding text and order, `read_ticket` call count N not 2N; negative: `update-blockers-files-identical` — written files byte-identical, count N not 2N.
+- Test: A5 positive: `validate-findings-identical` — same finding text and order, `read_ticket` call count N not 2N; negative: `update-blockers-files-identical` — written files byte-identical, own pass count N not 2N (nested `validate()` adds its own N; today 4N+1).
 - Risk: `_check_tickets` raises on the first bad ticket before `_check_monotonic_relations` runs; a shared pre-read must not reorder which error surfaces first. agent-decided: read the sorted list once, keep both checks' iteration order and raise points unchanged.
 
 ### Wave 2 — versions, changelogs, memory
