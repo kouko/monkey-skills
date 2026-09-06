@@ -45,15 +45,15 @@ fi
 
 # --- derived from the contract package ------------------------------------
 # One `- {name: <station>, ...}` line per station, in manifest order.
-stations_block() {
-  awk '/^stations:/{f=1;next} /^[a-z_]+:/{f=0} f' "${MANIFEST}"
-}
+# Scanned with a single awk pass into a variable (bash 3.2 has no mapfile;
+# every use below quotes the multi-line value via `printf '%s\n'`).
+stations_yaml="$(awk '/^stations:/{f=1;next} /^[a-z_]+:/{f=0} f' "${MANIFEST}")"
 
-station_names="$(stations_block | sed -n 's/^[[:space:]]*-[[:space:]]*{name:[[:space:]]*\([a-z0-9-]*\).*/\1/p')"
+station_names="$(printf '%s\n' "${stations_yaml}" | sed -n 's/^[[:space:]]*-[[:space:]]*{name:[[:space:]]*\([a-z0-9-]*\).*/\1/p')"
 
 # Stations owning a given decision point, joined by " / ".
 stations_for_dp() {
-  stations_block \
+  printf '%s\n' "${stations_yaml}" \
     | { grep "decision_point: $1" || true; } \
     | sed -n 's/^[[:space:]]*-[[:space:]]*{name:[[:space:]]*\([a-z0-9-]*\).*/\1/p' \
     | paste -sd@ - | sed 's/@/ \/ /g'
