@@ -895,6 +895,10 @@ def test_claude_second_vendor_adapter_is_no_tools_and_extracts_result() -> None:
     assert 'claude -p --tools "" --output-format json' in section
     assert "Claude Code 2.1.263" in section
     assert "JSON envelope's `result`" in section
+    assert "self-contained prompt file" in section
+    assert "without truncation" in section
+    assert "git diff --no-ext-diff <reviewed_sha>..HEAD" in section
+    assert "reviewer contract and selected lens" in section
 
 
 def test_reader_floor_sentence_names_all_four_lanes() -> None:

@@ -719,9 +719,9 @@ def test_lane_switch_forbidden_reason_pin_rejects_hostile_negated_rewrite(
 
 def test_ship_skill_word_count_matches_plan_claim_measured_with_python_split() -> None:
     """The plan (`docs/loom/2026-09-05-user-declared-express-lane/plan.md`
-    Current State Evidence, Boundary line) claims
-    `ship/SKILL.md: 3,475 of 3,500` words before W1-04's edit and settles
-    at 3,497 after it -- word counting here MUST use
+    Current State Evidence, Boundary line) originally claimed
+    `ship/SKILL.md: 3,475 of 3,500` words before later edits; the current
+    release settles at 3,417 -- word counting here MUST use
     `len(text.split())` (never `wc`, which is not portable across BSD/GNU
     -- repo memory `feedback_wc_word_count_never_portable_use_python_
     split`). This probe measures the shipped file directly and pins the

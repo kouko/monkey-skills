@@ -559,22 +559,43 @@ def test_new_plan_cannot_self_exempt_by_removing_charter_and_acceptance(tmp_path
     assert "intake.test-case-pair" in blocked_rules(result)
 
 
-def test_committed_pre_charter_plan_keeps_legacy_task_grammar(tmp_path: Path) -> None:
+def test_committed_charter_era_plan_keeps_legacy_task_grammar(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     write_intent(repo, open_questions="- none")
     write_plan(
         repo,
-        "**W0-01 Legacy task**  after: —\n"
+        "**W0-01 Legacy task**  after: —  review: after-task\n"
         "- Files: `first.py`\n"
         "- Test: run the legacy check.\n"
         "- Risk: fixture.\n",
     )
-    plan = repo / "docs/loom" / CHANGE / "plan.md"
-    plan.write_text(plan.read_text().replace("charter: 1.0\n", ""))
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "legacy plan")
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+def test_committed_new_plan_cannot_strip_readiness_to_claim_legacy(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, open_questions="- none")
+    write_plan(
+        repo,
+        "**W0-01 First**  after: —  acceptance: 1\n"
+        "- Files: `first.py`\n"
+        "- Test: A1 positive: works; negative: rejects-empty.\n"
+        "- Risk: fixture.\n",
+    )
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "new paired plan")
+    plan = repo / "docs/loom" / CHANGE / "plan.md"
+    plan.write_text(
+        plan.read_text()
+        .replace("charter: 1.0\n", "")
+        .replace("  acceptance: 1", "")
+        .replace("A1 positive: works; negative: rejects-empty.", "run smoke")
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.test-case-pair" in blocked_rules(result)
 
 
 def test_missing_spec_file_is_blocked(tmp_path: Path) -> None:

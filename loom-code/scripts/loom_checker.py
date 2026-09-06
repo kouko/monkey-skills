@@ -1830,14 +1830,14 @@ def check_test_case_pairs(
 ) -> list[tuple[str, str]]:
     """A new plan owns every Acceptance line and pairs both sides of its tests.
 
-    Plans authored before this contract remain byte-compatible only when they
-    have no charter stamp and already exist in Git history. A new plan cannot
-    self-exempt by deleting its ownership markers or its charter line."""
+    Plans authored before this contract remain byte-compatible when their
+    first committed form used the old task grammar. A new plan cannot
+    self-exempt later by deleting its ownership markers or charter line."""
     plan_path = artifact_path(manifest, "plan", change_id, repo)
     if not plan_path.is_file():
         return []
     plan_text = read_text(plan_path)
-    front, plan_sections = parse_document(plan_text)
+    _front, plan_sections = parse_document(plan_text)
     task_dag = plan_sections.get("Task DAG", "")
     headers = [
         match
@@ -1845,11 +1845,24 @@ def check_test_case_pairs(
         if (match := TASK_LINE.match(raw_line.strip()))
     ]
     relative_plan = plan_path.relative_to(repo).as_posix()
-    committed_before_intake = bool(
-        git_maybe(repo, "log", "-1", "--format=%H", "--", relative_plan)
+    first_commit_log = git_maybe(
+        repo, "log", "--diff-filter=A", "--reverse", "--format=%H", "HEAD", "--", relative_plan
     )
-    if "charter" not in front and committed_before_intake:
-        return []
+    first_commit = first_commit_log.splitlines()[0] if first_commit_log else None
+    if first_commit:
+        original_plan = git_maybe(repo, "show", f"{first_commit}:{relative_plan}")
+        if original_plan is not None:
+            _original_front, original_sections = parse_document(original_plan)
+            original_headers = [
+                match
+                for raw_line in original_sections.get("Task DAG", "").splitlines()
+                if (match := TASK_LINE.match(raw_line.strip()))
+            ]
+            if original_headers and not any(
+                TASK_ACCEPTANCE.search(match.group("rest"))
+                for match in original_headers
+            ):
+                return []
 
     failures: list[tuple[str, str]] = []
     if not headers:
