@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "9bbf92dfbcb275adad2ee8e75165e9d04079e1d1",
+  "reviewed_sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
   "scope": "branch-end",
   "vendors": [
     "openai"
@@ -594,6 +594,43 @@
         {"severity": "blocking", "dimension": "security", "anchor": "loom-code/skills/ship/SKILL.md:260", "text": "The accepted Git command can still invoke a repository-configurable pre-push hook after the gate releases it; that hook can issue an unvalidated second push.", "fix": "Make --no-verify a fixed validated token, add Bash/zsh local-remote regressions, and refresh the final versioned-entrypoint measurement."}
       ],
       "notes": ["design re-look: continue fixing", "The command builtin fix closes branch-end-05, but the post-gate pre-push hook path remains open."]
+    },
+    {
+      "round": 12,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS_WITH_NOTES", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "PASS_WITH_NOTES", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:68", "status": "fixed", "evidence": "The probe now reaches package-induced HEAD mutation through the accepted canonical push and verifies the final snapshot blocks release."},
+        {"anchor": "loom-code/skills/ship/SKILL.md:260", "status": "fixed", "evidence": "The canonical no-verify publication boundary remains unchanged and reviewed."}
+      ],
+      "findings": [
+        {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe retains an unused shlex import.", "fix": "Remove it in a later non-behavioral cleanup."}
+      ],
+      "notes": ["design re-look: continue fixing", "No behavioral or security regression was found."]
+    },
+    {
+      "round": 12,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS_WITH_NOTES", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "loom-code/skills/ship/SKILL.md:260", "status": "fixed", "evidence": "The canonical command and no-verify containment remain unchanged."}
+      ],
+      "findings": [
+        {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe retains an unused shlex import.", "fix": "Remove it in a later non-behavioral cleanup."}
+      ],
+      "notes": ["design re-look: continue fixing", "The updated probe exercises the accepted command and the security conclusion is unchanged."]
     }
   ],
   "probes": [
@@ -652,6 +689,46 @@
       "sha": "862ddaed865e3cb2ebce600dc5fb9b1e2dd43bdb",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:12",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:12",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:12",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
     }
   ],
   "questions": [
@@ -800,7 +877,7 @@
       "anchor": "loom-code/skills/ship/SKILL.md:260",
       "origin_sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
       "raised_by": "branch-end-reader-b-codex-cli",
-      "resolved": ""
+      "resolved": "fixed by 42739e14, 3ecac98e, and 1dbcd4a6 — the accepted command requires --no-verify, Bash and zsh regressions contain repository hooks, and the final candidate measurement was refreshed"
     }
   ],
   "dispatch": [
@@ -1110,7 +1187,7 @@
     }
   ],
   "cost": {
-    "rounds": 8,
+    "rounds": 12,
     "dispatches": 38,
     "cap_changes": [],
     "hours_plan_to_pr": null
