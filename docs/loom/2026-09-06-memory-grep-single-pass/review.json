@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "9222526498ef47116d7a7b251d2091cb58d9852f",
-  "scope": "wave-end:1",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "codex"
@@ -155,6 +155,111 @@
       "findings": [],
       "notes": [
         "wave-end:1-06 fixed: the probe shim logs a fixed marker and the four jq programs are multi-line again, byte-identical apart from whitespace, counts unchanged (4 plain / 5 json, constant); the header Parsing strategy comment nit stays open for the ship nit batch."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-codex",
+      "vendor": "codex",
+      "model": "gpt-5-codex",
+      "lens": "code + docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:517",
+          "text": "issue (blocking): the capability guard claims an exact placeholder match but uses grep -qF, which is substring containment. On a capable git, a HEAD trailer value quoting the placeholder text falsely selects the fallback and then falsely concludes no trailer capability exists, exiting 3 instead of returning the complete digest.",
+          "fix": "Compare the whole probe output to the attempted placeholder with shell equality, accounting for the format's trailing-newline behaviour; pin it with a fixture whose HEAD carries the placeholder text as a real trailer value."
+        },
+        {
+          "severity": "important",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/intent/2026-09-06-memory-grep-single-pass.md:35",
+          "text": "issue (blocking): the approved Acceptance 2 exception is worded as a general class - any commit whose trailers the old parser missed may diverge - rather than the measured case, which would let future unmeasured differences pass whenever described as recovering more.",
+          "fix": "Limit the exception to fe9218d7, five recovered lines versus one, four additional lines in the recorded 423-commit population; every other stdout byte and every exit code identical."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:18",
+          "text": "issue (blocking): the report cites unnamed diff files and output summaries that are neither linked nor preserved, so the user cannot inspect or reproduce the Acceptance 2 population; the ref, the fixed window and the derivation command for 423 commits are absent.",
+          "fix": "Name a preserved artifact or executable command per Acceptance line, and record the old/new refs, a fixed --since boundary, and the commands that recompute the population, the sole differing commit and the four regained lines."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:69",
+          "text": "issue (blocking): the report tells the user that review ended with everything passing and zero findings, written before the branch-end closing reviewers had returned any verdict.",
+          "fix": "State only that the wave-end findings and the branch-end adversary finding were fixed; defer any claim about the closing review until its verdicts exist."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/review.json:554",
+          "text": "issue (blocking): cost.dispatches reads 11 while dispatch[] has grown past it, omitting at least the branch-end-fix implementer.",
+          "fix": "Recompute cost.dispatches from the dispatch[] population and cost.rounds from the distinct verdict rounds."
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-claude",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code + docs",
+      "verdict": "PASS",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "fd4bae5a",
+          "text": "nitpick (non-blocking): the branch-end adversary's probe file spans W1-02, W2-01 and W2-memory territory but its Task: trailer names only W2-01, and no commit in the delta carries a branch-end task id even though that dispatch entry exists.",
+          "fix": "Add the covering dispatch id or a one-line note in the commit body on why W2-01 was chosen, so a later git log --grep of branch-end work is not empty."
+        }
+      ],
+      "notes": [
+        "Re-derived Acceptance 2 independently: diffed the pre-rewrite script against HEAD on this repo's real history; fe9218d7's five memory lines are the only difference in either unfiltered mode. Reproduced the pre-existing empty-repo exit 128 on both scripts. Ran 57 pytest tests and all seven shell suites in this checkout."
       ]
     }
   ],
@@ -358,6 +463,78 @@
       "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
       "result": "pass",
       "artifact": "loom-workflow/tests/test-memory-grep-perf.sh"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_graduated_copy_single_pass_diff_pinned_to_parents_line",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_graduated_copy_render_diff_pinned_to_parents_line",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_version_carriers_full_set_agree",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_extract_commits_incompatible_git_rejects_loudly",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_extract_commits_incompatible_git_literal_placeholder_not_silently_dropped",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_memory_store_new_entries_resolve_and_wikilink_each_other",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_pr_extraction_malformed_gh_json_does_not_corrupt_commit_digest",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "cat docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md",
+      "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md"
     }
   ],
   "questions": [
@@ -414,6 +591,36 @@
       "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
       "raised_by": "rev-we1-mg-claude",
       "resolved": "closed by 9baa5231 — probe shim logs one marker per invocation; the four jq programs are multi-line again with whitespace-only diffs and unchanged counts; confirmed fixed by rev-we1-mg-claude round 2"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:517",
+      "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "raised_by": "rev-be-mg-codex"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/intent/2026-09-06-memory-grep-single-pass.md:35",
+      "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "raised_by": "rev-be-mg-codex"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:18",
+      "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "raised_by": "rev-be-mg-codex"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:69",
+      "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "raised_by": "rev-be-mg-codex"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/review.json:554",
+      "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+      "raised_by": "rev-be-mg-codex"
     }
   ],
   "dispatch": [
@@ -574,8 +781,8 @@
     }
   ],
   "cost": {
-    "rounds": 2,
-    "dispatches": 11,
+    "rounds": 3,
+    "dispatches": 19,
     "cap_changes": [],
     "hours_plan_to_pr": null
   }
