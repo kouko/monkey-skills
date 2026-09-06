@@ -440,11 +440,20 @@
       "started": "2026-09-06T16:21:03+08:00",
       "fresh_context": false,
       "note": "focused fix verification for spec-16 through spec-18 only"
+    },
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "w0-01-adversary",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T16:39:00+08:00",
+      "fresh_context": true,
+      "note": "author executable RED probes for readiness and risk-gating bypasses before checker implementation"
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 8,
+    "dispatches": 9,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
