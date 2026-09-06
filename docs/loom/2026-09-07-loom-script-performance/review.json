@@ -1,0 +1,118 @@
+{
+  "reviewed_sha": "4e1582015c2258ab2463c4e8c2f51d0d97ddb035",
+  "scope": "branch base — nothing reviewed yet",
+  "vendors": [
+    "anthropic",
+    "codex"
+  ],
+  "second_vendor": "codex",
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是把 loom 三個 plugin 裡五支腳本的白工修掉，但參數、輸出、錯誤訊息、exit code、hook 注入文字一個位元組都不變；做完後你可以：hook 每次少載一個模組、引用檢查 3 秒→0.4 秒、session-start 掃 manifest 一次、fog 檢查只開 2 個 git 子行程、validate 每張 ticket 只讀一次；對嗎？（答：OK）",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "任何一處做不到逐位元等價，那一處就退回不做並在報告寫明。（安全網，無分岔）",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？（答：OK）",
+      "type": "what"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "W1-01",
+      "role": "adversary",
+      "agent_id": "adv-w1-01-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "adversary",
+      "agent_id": "adv-w1-02-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "adversary",
+      "agent_id": "adv-w1-03-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "adversary",
+      "agent_id": "adv-w1-04-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-05",
+      "role": "adversary",
+      "agent_id": "adv-w1-05-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-04",
+      "role": "implementer",
+      "agent_id": "impl-w1-04-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-05",
+      "role": "implementer",
+      "agent_id": "impl-w1-05-sp",
+      "model": "sonnet",
+      "started": "2026-09-07T01:01:49+0800",
+      "fresh_context": true
+    }
+  ],
+  "cost": {
+    "rounds": 0,
+    "dispatches": 10,
+    "cap_changes": [],
+    "hours_plan_to_pr": null
+  },
+  "charter": "1.0"
+}
