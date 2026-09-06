@@ -98,7 +98,14 @@
 #      commit-trailer extraction depends on (both capability probes in
 #      extract_commits_ndjson came back with the literal placeholder
 #      text unexpanded) — upgrade git to at least the version assumed
-#      above
+#      above;
+#      also: the capability probe itself could not be built, so the
+#      placeholder support is unverifiable — either its scratch object
+#      store could not be created (mktemp failed) or the synthetic
+#      commit object could not be written into that store. A probe that
+#      cannot be built is not evidence the git is capable, so this
+#      exits rather than extracting unguarded; each message names the
+#      failed prerequisite and its recovery action
 #   4  --verify only: a memory check was requested but NO memory trailer
 #      (^Decision:/^Learning:/^Gotcha:) was found in the ref's message body
 #   4  --verify-merged only: the ref's body has a `## Memory` heading AND
