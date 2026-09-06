@@ -159,11 +159,19 @@
       "model": "gpt-6-astra",
       "started": "2026-09-06T23:45:14+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "spec-fix-round:2",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T23:58:53+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 1,
-    "dispatches": 1,
+    "dispatches": 2,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
