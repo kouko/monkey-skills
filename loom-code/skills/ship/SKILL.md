@@ -243,30 +243,37 @@ The supported host's local push hook is the sole owner: its deterministic
 push checker runs the resolved complete package-test command exactly once and
 re-runs recorded adversarial probes. Never invoke it as a separate preflight.
 
-Read the current full object id and symbolic branch, then substitute both
-literal values into the push. The source must be the 40-character object id,
-not `HEAD`, a branch name, an abbreviation, or a shell variable; the explicit
-destination must be `refs/heads/<current-symbolic-branch>`:
+Resolve the four values with read-only commands:
 
 ```
+python3 -c 'import shutil; from pathlib import Path; print(Path(shutil.which("git")).resolve())'
+git rev-parse --show-toplevel
 git rev-parse HEAD
 git symbolic-ref --quiet --short HEAD
-git push -u origin <full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>
 ```
 
-The hook binds validation to that immutable source object in the selected
-repository, believes only the exit codes it observes, and may take minutes.
-Exit 0 releases the network push. Exit 1 prints `BLOCK <rule.id>: <reason>` on
-stderr. **Print that line
-verbatim to the user and stop.** Do not re-run with flags, do not
-`--no-verify`, do not adjust `review.json` to satisfy the rule — every rule
-recomputes its fact, so the only way past it is to make the fact true at
-the station that owns it:
+Replace the placeholders with observed literals. Render every token as `"'" +
+token.replace("'", "'\"'\"'") + "'"` and join with one ASCII space; the actual
+command must contain no variables, substitutions, or other shell syntax:
+
+```
+'<absolute-trusted-git>' '-C' '<absolute-selected-repository>' 'push' '--no-follow-tags' '--recurse-submodules=no' '-u' 'origin' '<full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>'
+```
+
+The source is the full 40-character object id—not `HEAD`, a branch name, an
+abbreviation, or a shell variable—and the destination is
+`refs/heads/<current-symbolic-branch>`. Fixed flags prevent configured tag or
+submodule publication.
+
+The hook validates that source in the selected repository and may take minutes.
+Exit 0 releases the push. Exit 1 prints `BLOCK <rule.id>: <reason>` on stderr;
+**print that line verbatim and stop.** Do not re-run with flags, use
+`--no-verify`, or adjust `review.json`: every rule recomputes its fact.
 
 | BLOCK | What is actually wrong | Go back to |
 |---|---|---|
 | `push.review-only-head` | HEAD touches more than `review.json` | `loom-code:review` — a new checkpoint |
-| `push.reviewed-sha` | the branch moved after review, or the Git push does not bind the current full object id to its current branch | `loom-code:review` |
+| `push.reviewed-sha` | branch moved, or push is not the canonical quote-all command binding its current full object id and branch | `loom-code:review` |
 | `push.review-schema` | `review.json` lost a declared key | `loom-code:review` |
 | `push.open-findings-closed` | a finding is neither resolved nor dismissed | `loom-code:build` for the fix, then `loom-code:review` |
 | `push.probes-package-tests` | the recorded command fails in the hook, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |

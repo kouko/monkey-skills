@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -2205,18 +2206,6 @@ PUSH_SHAPED = (
     "xargs git push",
 )
 
-AMBIGUOUS_PUSH_SHAPED = {
-    "cd sub && git push",
-    "git -C /tmp/other push",
-    "git --git-dir=/tmp/x/.git --work-tree=/tmp/x push",
-    'eval "git push"',
-    'bash -c "git push"',
-    'sh -c "git push"',
-    'zsh -c "git push"',
-    'dash -c "git push"',
-    "xargs git push",
-}
-
 NOT_PUSH_SHAPED = (
     "ls -la",
     "git pushd",
@@ -2238,10 +2227,8 @@ def test_hook_mode_recognises_every_push_shape(tmp_path: Path) -> None:
     for cmd in PUSH_SHAPED:
         result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
         assert result.returncode == 2, (cmd, result.stdout, result.stderr)
-        assert blocked_rules(result) & {"push.review-only-head", "push.reviewed-sha"}, cmd
-        assert ("ambiguous repository selection" in result.stderr) == (
-            cmd in AMBIGUOUS_PUSH_SHAPED
-        ), cmd
+        expected = "push.review-only-head" if "gh pr" in cmd else "push.reviewed-sha"
+        assert expected in blocked_rules(result), cmd
 
 
 def test_hook_mode_lets_non_push_shapes_through(tmp_path: Path) -> None:
@@ -2257,7 +2244,11 @@ def test_hook_mode_lets_non_push_shapes_through(tmp_path: Path) -> None:
 def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     head = git(repo, "rev-parse", "HEAD")
-    command = f"git push origin {head}:refs/heads/work"
+    trusted_git = str(Path(shutil.which("git")).resolve())
+    command = loom_checker.render_quote_all([
+        trusted_git, "push", "--no-follow-tags", "--recurse-submodules=no",
+        "-u", "origin", f"{head}:refs/heads/work",
+    ])
     result = run_hook({"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo)}, cwd=tmp_path)
     assert result.returncode == 0, result.stderr
 
@@ -2307,7 +2298,12 @@ def test_hook_mode_honours_git_dash_c_over_payload_cwd(tmp_path: Path) -> None:
     git(unrelated, "add", "after.py")
     git(unrelated, "commit", "-q", "-m", "feat(x): unreviewed change")
     head = git(target, "rev-parse", "HEAD")
-    command = f"git -C {target} push origin {head}:refs/heads/work"
+    trusted_git = str(Path(shutil.which("git")).resolve())
+    command = loom_checker.render_quote_all([
+        trusted_git, "-C", str(target), "push", "--no-follow-tags",
+        "--recurse-submodules=no", "-u", "origin",
+        f"{head}:refs/heads/work",
+    ])
 
     result = run_hook(
         {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(unrelated)},
@@ -2350,7 +2346,7 @@ def test_hook_mode_blocks_pushes_to_distinct_git_dash_c_directories(tmp_path: Pa
     )
 
     assert result.returncode == 2
-    assert "push.review-only-head" in blocked_rules(result)
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 def test_hook_mode_blocks_relative_git_dash_c_when_payload_cwd_is_untrusted(tmp_path: Path) -> None:
@@ -2364,7 +2360,7 @@ def test_hook_mode_blocks_relative_git_dash_c_when_payload_cwd_is_untrusted(tmp_
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 @pytest.mark.parametrize(
@@ -2416,7 +2412,7 @@ def test_hook_mode_blocks_unsupported_git_directory_options(
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 @pytest.mark.parametrize("variable", ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"])
@@ -2440,7 +2436,7 @@ def test_hook_mode_blocks_git_repository_environment_override(
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 def test_hook_mode_blocks_gh_repo_environment_override(tmp_path: Path) -> None:
@@ -2472,7 +2468,7 @@ def test_hook_mode_blocks_compact_env_chdir_before_push(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 @pytest.mark.parametrize(
@@ -2512,7 +2508,7 @@ def test_hook_mode_blocks_xargs_push_behind_another_prefix(tmp_path: Path) -> No
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 def test_hook_mode_malformed_payload_fails_closed(tmp_path: Path) -> None:

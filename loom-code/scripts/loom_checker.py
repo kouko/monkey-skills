@@ -31,6 +31,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from datetime import date
@@ -3056,24 +3057,19 @@ def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
 
 def is_push_command(command: str) -> bool:
     """True when any segment of this shell line pushes or opens/merges a PR."""
+    if is_git_push_command(command):
+        return True
     for segment in SEGMENT_SPLIT.split(command):
         tokens = _strip_prefix(_tokenise(segment))
         if not tokens:
             continue
         program = Path(tokens[0]).name
         if program == "eval":
-            # `eval "git push"`: shlex already removed the quoting, so the
-            # payload is re-read as a shell line of its own.
             if is_push_command(" ".join(tokens[1:])):
                 return True
         elif program in SHELL_PROGRAMS and "-c" in tokens[1:]:
-            # `bash -c "git push"` / `sh -c` / `zsh -c` / `dash -c`: the
-            # argument after `-c` is itself a shell line, same as eval's.
             index = tokens.index("-c")
             if index + 1 < len(tokens) and is_push_command(tokens[index + 1]):
-                return True
-        elif program == "git":
-            if _subcommand(tokens[1:], GIT_VALUE_OPTIONS) == "push":
                 return True
         elif program == "gh":
             rest = tokens[1:]
@@ -3082,6 +3078,25 @@ def is_push_command(command: str) -> bool:
                 after = rest[found[0] + 1:]
                 if _subcommand(after, GH_VALUE_OPTIONS) in {"create", "merge"}:
                     return True
+    return False
+
+
+def is_git_push_command(command: str) -> bool:
+    """True when any shell segment can reach a Git push."""
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens:
+            continue
+        program = Path(tokens[0]).name
+        if program == "eval":
+            if is_git_push_command(" ".join(tokens[1:])):
+                return True
+        elif program in SHELL_PROGRAMS and "-c" in tokens[1:]:
+            index = tokens.index("-c")
+            if index + 1 < len(tokens) and is_git_push_command(tokens[index + 1]):
+                return True
+        elif program == "git" and _subcommand(tokens[1:], GIT_VALUE_OPTIONS) == "push":
+            return True
     return False
 
 
@@ -3201,55 +3216,70 @@ def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
     return next(iter(selected_roots)) if selected_roots else None
 
 
-IMMUTABLE_PUSH_FLAGS = {"-u", "--set-upstream"}
+CANONICAL_PUSH_FLAGS = ["--no-follow-tags", "--recurse-submodules=no", "-u"]
+SAFE_REMOTE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
 
-def immutable_git_push_head(command: str, repo: Path) -> tuple[str | None, str | None]:
-    """The immutable object named by every direct ``git push`` in a hook.
+def quote_all_shell_token(token: str) -> str:
+    """Render one argv token without leaving any shell expansion position."""
+    return "'" + token.replace("'", "'\"'\"'") + "'"
 
-    ``None, None`` means the hook payload contains only a PR create/merge and
-    therefore has no Git network refspec to bind. Every actual Git push must
-    name one repository plus one literal ``<full HEAD>:refs/heads/<branch>``
-    refspec; accepting any other option or positional shape would make the
-    source or destination ambiguous again.
-    """
-    pushes: list[list[str]] = []
-    for segment in SEGMENT_SPLIT.split(command):
-        tokens = _strip_prefix(_tokenise(segment))
-        if not tokens or Path(tokens[0]).name.lstrip("(") != "git":
-            continue
-        found = _subcommand_at(tokens[1:], GIT_VALUE_OPTIONS)
-        if not found or found[1] != "push":
-            continue
-        push_index = found[0] + 1
-        pushes.append(tokens[push_index + 1:])
 
-    if not pushes:
-        return None, None
+def render_quote_all(tokens: list[str]) -> str:
+    return " ".join(quote_all_shell_token(token) for token in tokens)
+
+
+def canonical_git_push(
+    command: str, fallback: str
+) -> tuple[Path | None, str | None, str | None]:
+    """Validate the complete shell bytes for the one supported Git push."""
+    trusted = shutil.which("git")
+    if not trusted:
+        return None, None, "the hook environment has no trusted Git executable"
+    trusted_git = str(Path(trusted).resolve())
+    try:
+        tokens = shlex.split(command, posix=True)
+    except ValueError as exc:
+        return None, None, f"the Git push command has malformed quoting: {exc}"
+    if command != render_quote_all(tokens):
+        return None, None, "the entire Git push command must use canonical quote-all rendering"
+    if not tokens or tokens[0] != trusted_git or not Path(tokens[0]).is_absolute():
+        return None, None, f"the Git executable must be the trusted absolute path {trusted_git!r}"
+
+    index = 1
+    selected = Path(fallback)
+    if index < len(tokens) and tokens[index] == "-C":
+        if index + 1 >= len(tokens) or not Path(tokens[index + 1]).is_absolute():
+            return None, None, "Git -C must name the selected repository by absolute path"
+        selected = Path(tokens[index + 1])
+        index += 2
+    try:
+        repo = repo_root(selected.resolve())
+    except UsageError as exc:
+        return None, None, str(exc)
+    if "-C" in tokens[1:index] and selected.resolve() != repo.resolve():
+        return None, None, "Git -C must name the selected repository root exactly"
+
+    required = ["push", *CANONICAL_PUSH_FLAGS]
+    if tokens[index:index + len(required)] != required:
+        return None, None, (
+            "Git push must use exactly --no-follow-tags --recurse-submodules=no -u"
+        )
+    tail = tokens[index + len(required):]
+    if len(tail) != 2:
+        return None, None, "Git push must name one literal remote and one explicit refspec"
+    remote, refspec = tail
+    if not SAFE_REMOTE.fullmatch(remote):
+        return None, None, f"Git push remote {remote!r} is not a safe literal name"
 
     head = git_text(repo, "rev-parse", "HEAD")
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not branch:
-        return None, "the selected repository has no current symbolic branch"
+        return None, None, "the selected repository has no current symbolic branch"
     expected = f"{head}:refs/heads/{branch}"
-
-    for arguments in pushes:
-        positionals: list[str] = []
-        for token in arguments:
-            if token in IMMUTABLE_PUSH_FLAGS:
-                continue
-            if token.startswith("-"):
-                return None, f"Git push option {token!r} is not allowed by the immutable refspec contract"
-            positionals.append(token)
-        if len(positionals) != 2:
-            return None, (
-                "each Git push must name exactly one repository and one explicit "
-                f"refspec {expected!r}"
-            )
-        _remote, refspec = positionals
-        if refspec != expected:
-            return None, f"Git push refspec must be exactly {expected!r}, got {refspec!r}"
-    return head, None
+    if refspec != expected:
+        return None, None, f"Git push refspec must be exactly {expected!r}, got {refspec!r}"
+    return repo, head, None
 
 
 def read_hook_payload(stdin=sys.stdin) -> dict | None:
@@ -3285,9 +3315,33 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # The matcher is the tool name, so every Bash command arrives here; only
     # push-shaped commands are judged.
     command = str((payload.get("tool_input") or {}).get("command", ""))
-    if not is_push_command(command):
-        return 0
+    push_shaped = is_push_command(command)
+    git_push = is_git_push_command(command)
+    malformed_canonical_push = False
+    if not push_shaped:
+        # A malformed quote can defeat the permissive recogniser, but not a
+        # command that visibly starts with the canonical trusted executable.
+        trusted = shutil.which("git")
+        trusted_prefix = quote_all_shell_token(str(Path(trusted).resolve())) if trusted else ""
+        malformed_canonical_push = bool(
+            trusted_prefix
+            and command.startswith(trusted_prefix)
+            and quote_all_shell_token("push") in command
+        )
+        if not malformed_canonical_push:
+            return 0
     cwd = str(payload.get("cwd") or os.getcwd())
+    if git_push or malformed_canonical_push:
+        repo, immutable_head, refspec_error = canonical_git_push(command, cwd)
+        if refspec_error:
+            print(f"BLOCK push.reviewed-sha: {refspec_error}", file=err)
+            return 2
+        assert repo is not None and immutable_head is not None
+        os.chdir(repo)
+        rc = _cmd_push(["--head", immutable_head, "--require-live-head"] + rest, out, err)
+        return 2 if rc == 1 else rc
+
+    # gh pr create/merge keep their existing repository-selection behavior.
     push_cwd = git_dash_c_push_cwd(command, cwd)
     if push_cwd is None:
         print(
@@ -3297,18 +3351,13 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
         return 2
     os.chdir(push_cwd)
-    repo = repo_root(Path.cwd())
-    immutable_head, refspec_error = immutable_git_push_head(command, repo)
-    if refspec_error:
-        print(f"BLOCK push.reviewed-sha: {refspec_error}", file=err)
-        return 2
-    checked_args = (["--head", immutable_head] if immutable_head else []) + rest
-    rc = _cmd_push(checked_args, out, err)
+    rc = _cmd_push(rest, out, err)
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
 
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     head = "HEAD"
+    require_live_head = False
     rest = list(args)
     while rest:
         token = rest.pop(0)
@@ -3316,6 +3365,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             if not rest:
                 raise UsageError("--head needs a ref.")
             head = rest.pop(0)
+        elif token == "--require-live-head":
+            require_live_head = True
         else:
             raise UsageError(f"unexpected argument {token!r}.")
 
@@ -3367,16 +3418,34 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # index/working tree while the gate was observing it.
     live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
     porcelain_before_probes = git_text(repo, "status", "--porcelain")
+    if require_live_head and live_head_before_probes != head_sha:
+        failures.append(
+            (
+                "push.reviewed-sha",
+                "the selected repository's live HEAD moved after command "
+                "validation and before executable probes; complete a fresh "
+                "branch-end review",
+            )
+        )
+        return report(failures, err)
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
     live_head_after_probes = git_text(repo, "rev-parse", "HEAD")
     porcelain_after_probes = git_text(repo, "status", "--porcelain")
     if (
-        live_head_after_probes != live_head_before_probes
+        (
+            live_head_after_probes != head_sha
+            if require_live_head
+            else live_head_after_probes != live_head_before_probes
+        )
         or porcelain_after_probes != porcelain_before_probes
     ):
         changed = []
-        if live_head_after_probes != live_head_before_probes:
+        if (
+            live_head_after_probes != head_sha
+            if require_live_head
+            else live_head_after_probes != live_head_before_probes
+        ):
             changed.append("HEAD moved")
         if porcelain_after_probes != porcelain_before_probes:
             changed.append("git status --porcelain changed")

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import re
-import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -21,6 +21,21 @@ import pytest
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "loom-code/scripts/loom_checker.py").exists())
 sys.path.insert(0, str(ROOT / "loom-code/scripts"))
 import test_loom_checker_push as fixture
+
+
+TRUSTED_GIT = str(Path(shutil.which("git")).resolve())
+
+
+def quote_all(tokens):
+    return " ".join("'" + token.replace("'", "'\"'\"'") + "'" for token in tokens)
+
+
+def immutable_push_command(repo, head, *, external=False):
+    return quote_all([
+        TRUSTED_GIT, *(["-C", str(repo)] if external else []), "push",
+        "--no-follow-tags", "--recurse-submodules=no", "-u", "origin",
+        f"{head}:refs/heads/work",
+    ])
 
 
 def repository(tmp_path: Path, *, package="python3 -c pass", scripts=None):
@@ -65,7 +80,10 @@ def test_hook_selectedrepomutation_rejected(tmp_path):
     unrelated = tmp_path / "unrelated"
     unrelated.mkdir()
     before = fixture.git(repo, "rev-parse", "HEAD")
-    payload = {"cwd": str(unrelated), "tool_input": {"command": f"git -C {shlex.quote(str(repo))} push origin {before}:refs/heads/work"}}
+    payload = {
+        "cwd": str(unrelated),
+        "tool_input": {"command": immutable_push_command(repo, before, external=True)},
+    }
     result = subprocess.run([sys.executable, str(fixture.CHECKER), "push", "--hook"], input=json.dumps(payload), capture_output=True, text=True, cwd=unrelated)
     assert fixture.git(repo, "rev-parse", "HEAD") != before, "attack did not move target HEAD"
     assert not list(unrelated.iterdir()), "wrong repository was modified"
@@ -224,7 +242,7 @@ def test_refspec_exacthead_accepted(tmp_path, external):
     head = fixture.git(repo, "rev-parse", "HEAD")
     caller = tmp_path / "caller"
     caller.mkdir()
-    command = f"git -C {shlex.quote(str(repo))} push -u origin {head}:refs/heads/work" if external else f"git push -u origin {head}:refs/heads/work"
+    command = immutable_push_command(repo, head, external=external)
     result = hook_command(repo, command, cwd=caller if external else repo)
     assert result.returncode == 0, f"rc={result.returncode}\n{result.stdout}{result.stderr}"
     assert result.stdout.count("package-tests `python3 -c pass`: observed exit code 0") == 1
@@ -264,7 +282,8 @@ def delayed_network_replay(tmp_path, immutable):
     fixture.git(repo, "remote", "add", "origin", str(remote))
     head = fixture.git(repo, "rev-parse", "HEAD")
     refspec = f"{head}:refs/heads/work" if immutable else "work:refs/heads/work"
-    result = hook_command(repo, f"git push origin {refspec}")
+    command = immutable_push_command(repo, head) if immutable else f"git push origin {refspec}"
+    result = hook_command(repo, command)
     control = repo / ".git"
     if result.returncode != 0:
         (control / "writer-cancel").touch()
