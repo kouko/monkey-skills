@@ -1,0 +1,31 @@
+{
+  "reviewed_sha": "4e45d6de1214d164ce9ebe18bcd30bf7f4499a1e",
+  "scope": "",
+  "vendors": [
+    "anthropic",
+    "codex"
+  ],
+  "second_vendor": "codex",
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "你要的是撈記憶的腳本只叫一次 git、本 repo 2 秒內完成、輸出與 exit code 逐位元不變、五份舊測試不動全綠、verify 模式不動。對嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Codex 當第二位讀者？（答：用）",
+      "type": "what"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [],
+  "cost": {
+    "rounds": 0,
+    "dispatches": 0,
+    "cap_changes": [],
+    "hours_plan_to_pr": null
+  }
+}
