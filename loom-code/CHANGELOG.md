@@ -5,6 +5,32 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] — 2026-09-06 — task-test Build and one branch-end review
+
+budget-exception: artifact:spec.pre-build-review — the explicit risk decision
+is the new plan-readiness input; it replaces unconditional spec review and has
+an executable contract-manifest check.
+
+`docs/loom/2026-09-06-remove-build-time-reviews/`.
+
+1. New plans map every Acceptance line to compact positive and negative or
+   boundary cases. The checker rejects missing ownership, incomplete pairs,
+   unresolved intent questions, and malformed spec risk declarations.
+2. Build keeps adversary-first executable RED tests for full-lane code and
+   gate tasks, runs task and dependency-boundary integration tests, and no
+   longer dispatches formal review after a task or wave.
+3. A required pre-build spec review uses one independent
+   `spec+adversarial` reader with no blind run or separate adversary. A
+   low-risk declaration skips formal spec review; legacy specs keep their
+   previous review floor.
+4. One complete `branch-end` review remains mandatory, preserving lane
+   floors, blind-run triggers, adversarial probes, fix rounds, second-vendor
+   enforcement, review-only HEAD, and Ship blocking gates.
+5. `intake.test-case-pair` replaces `intake.after-task-budget`, and
+   `build.task-tests-before-dependent-task` replaces the per-task review
+   prose gate. The mechanism count rises by one only because the spec risk
+   declaration is a new contract field.
+
 ## [1.7.0] — 2026-09-06 — artifact charter, four recomputed rules, Codex mirror
 
 budget-exception: 1.7.0 — six mechanisms registered for the artifact charter, the point of the change: four checker rules (`contract.charter-complete`, `plan.field-caps`, `plan.edits-after-commit`, `review.round-append-only`), one contract field (`artifact:review.charter`, the stamp that scopes the review rule to charter-era records) and one prose gate (`charter.plan-omission-narrow`, the narrowed omission definition reviewers apply to plans). Each is recomputed at push; none replaces an existing mechanism.

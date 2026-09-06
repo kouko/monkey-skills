@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# loom-checker 1.7.0
+# loom-checker 1.8.0
 """The loom checker -- the single deterministic layer of the loom flow.
 
 Every rule here RECOMPUTES its fact from the repository (the intent file,
@@ -86,16 +86,16 @@ RULES: list[tuple[str, str]] = [
         "`confirmed-behavior: <date> @<spec-blob-sha7>` line naming the spec as it stands.",
     ),
     (
-        "intake.after-task-budget",
-        "A plan may mark two tasks `review: after-task` for free; every further "
-        "one carries a reason on its own task line.",
+        "intake.test-case-pair",
+        "Every task in a newly authored plan names the intent Acceptance lines it owns, "
+        "and each named line has positive plus negative or boundary test cases.",
     ),
     (
         "intake.spec-pass",
-        "write-plan accepts a needs-design: yes change only when the latest spec review round "
-        "carries at least two distinct reviewers all passing, every verdict records a spec_sha "
-        "equal to the spec's current identity, and the round carries a `scope: spec` "
-        "adversarial probe.",
+        "write-plan accepts a needs-design: yes change according to its pre-build-review "
+        "declaration: not-required skips formal review, required needs one passing independent "
+        "spec + adversarial reviewer, and an undeclared legacy spec retains the former two-reader "
+        "plus adversarial-probe floor; every counted verdict names the current spec_sha identity.",
     ),
     (
         "intent.kind-recompute",
@@ -1545,8 +1545,8 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
 
     failures: list[tuple[str, str]] = []
-    failures += check_after_task_budget(manifest, repo, change_id)
     if station == "write-plan":
+        failures += check_test_case_pairs(manifest, repo, change_id, sections)
         failures += check_plan_field_caps_at(manifest, repo, change_id)
 
     kind = front.get("kind", "").strip()
@@ -1811,50 +1811,115 @@ def sha_agrees(recorded: str, current: str) -> bool:
     return bool(recorded) and (current.startswith(recorded) or recorded.startswith(current))
 
 
-AFTER_TASK_FREE = 2
-
 # A plan's task line, per templates/plan.md:
-# `**<id> <title>**  after: <ids>  review: after-task[ — <reason>]`
+# `**<id> <title>**  after: <ids>  acceptance: <numbers>`
 TASK_LINE = re.compile(
     r"^(?:[-*+]\s+)?\*\*(?P<id>[A-Za-z0-9][A-Za-z0-9._-]*)[^*]*\*\*(?P<rest>.*)$"
 )
+TASK_ACCEPTANCE = re.compile(r"(?:^|\s)acceptance:\s*([0-9][0-9, ]*)\s*$", re.IGNORECASE)
+TEST_CASE = re.compile(
+    r"(?:^|[.;]\s*)A(?P<number>\d+)\s+positive:\s*(?P<positive>[^;]+?)\s*;\s*"
+    r"(?P<kind>negative|boundary):\s*(?P<opposite>.+?)"
+    r"(?=\s*(?:[.;]\s*A\d+\s+positive:|$))",
+    re.IGNORECASE,
+)
 
 
-def check_after_task_budget(manifest, repo: Path, change_id: str):
-    """Two `review: after-task` tasks are free; the rest justify themselves.
+def check_test_case_pairs(
+    manifest, repo: Path, change_id: str, intent_sections: dict[str, str]
+) -> list[tuple[str, str]]:
+    """A new plan owns every Acceptance line and pairs both sides of its tests.
 
-    The budget is not a hard cap (concept-model §5) -- it is a prompt to
-    say why this task cannot wait for the wave. Without the reason the
-    marker is free, and a plan can turn every task into a checkpoint
-    without anyone noticing the cost."""
+    Plans authored before this contract remain byte-compatible. A plan opts
+    into the new grammar by carrying at least one `acceptance:` task marker;
+    the new template always does. A completely old
+    task grammar therefore remains readable during migration instead of being
+    rewritten merely to satisfy a newer checker."""
     plan_path = artifact_path(manifest, "plan", change_id, repo)
     if not plan_path.is_file():
         return []
-    unjustified: list[str] = []
-    seen = 0
-    for line in read_text(plan_path).splitlines():
-        match = TASK_LINE.match(line.strip())
-        if not match:
-            continue
-        rest = match.group("rest")
-        if "review: after-task" not in _squeeze(rest):
-            continue
-        seen += 1
-        if seen <= AFTER_TASK_FREE:
-            continue
-        tail = _squeeze(rest).split("review: after-task", 1)[1]
-        if not re.match(r"\s*(?:—|–|--)\s*\S", tail):
-            unjustified.append(match.group("id"))
-    if unjustified:
-        return [
+    plan_text = read_text(plan_path)
+    _front, plan_sections = parse_document(plan_text)
+    task_dag = plan_sections.get("Task DAG", "")
+    headers = [
+        match
+        for raw_line in task_dag.splitlines()
+        if (match := TASK_LINE.match(raw_line.strip()))
+    ]
+    if not any(TASK_ACCEPTANCE.search(match.group("rest")) for match in headers):
+        return []
+
+    failures: list[tuple[str, str]] = []
+    acceptance_numbers = {
+        int(match.group(1))
+        for raw_line in intent_sections.get("Acceptance", "").splitlines()
+        if (match := re.match(r"^\s*(\d+)[.)]\s+\S", raw_line))
+    }
+    if intent_sections.get("Open questions", "").strip() != "- none":
+        failures.append(
             (
-                "intake.after-task-budget",
-                f"{seen} tasks are marked `review: after-task`; past the first "
-                f"{AFTER_TASK_FREE}, each carries `— <reason>` on its own task line. "
-                f"Missing on: {', '.join(unjustified)}.",
+                "intake.test-case-pair",
+                "a newly authored plan requires intent Open questions to be exactly `- none`.",
             )
-        ]
-    return []
+        )
+
+    fields = _parse_plan_task_fields(task_dag)
+    owned: set[int] = set()
+    for header in headers:
+        task_id = header.group("id")
+        if MEMORY_TASK_ID.match(task_id):
+            continue
+        marker = TASK_ACCEPTANCE.search(header.group("rest"))
+        if marker is None:
+            failures.append(
+                ("intake.test-case-pair", f"{task_id} carries no `acceptance: <numbers>` marker.")
+            )
+            continue
+        raw_references = [value.strip() for value in marker.group(1).split(",")]
+        if any(not value for value in raw_references):
+            failures.append(
+                (
+                    "intake.test-case-pair",
+                    f"{task_id} carries an empty Acceptance reference.",
+                )
+            )
+            continue
+        references = [int(value) for value in raw_references]
+        nonexistent = sorted(set(references) - acceptance_numbers)
+        if nonexistent:
+            failures.append(
+                (
+                    "intake.test-case-pair",
+                    f"{task_id} references nonexistent Acceptance lines: "
+                    f"{', '.join(map(str, nonexistent))}.",
+                )
+            )
+        owned.update(set(references) & acceptance_numbers)
+        cases = {
+            int(match.group("number")): match
+            for match in TEST_CASE.finditer(str(fields.get(task_id, {}).get("Test") or ""))
+            if match.group("positive").strip() and match.group("opposite").strip()
+        }
+        missing_cases = sorted(set(references) - set(cases))
+        if missing_cases:
+            failures.append(
+                (
+                    "intake.test-case-pair",
+                    f"{task_id} lacks a non-empty positive plus negative or boundary pair for "
+                    f"Acceptance: {', '.join(map(str, missing_cases))}.",
+                )
+            )
+
+    uncovered = sorted(acceptance_numbers - owned)
+    if uncovered:
+        failures.append(
+            (
+                "intake.test-case-pair",
+                "intent Acceptance lines are owned by no task: "
+                f"{', '.join(map(str, uncovered))}.",
+            )
+        )
+    return failures
 
 
 # --- plan.field-caps (W1-01) -----------------------------------------------
@@ -2616,7 +2681,10 @@ def check_review_round_append_only_at(manifest, repo: Path, change_id: str) -> l
     return check_review_round_append_only(repo, review_path, change_id, manifest)
 
 
-SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
+SPEC_LENSES = {"spec", "docs", "spec-adversarial", "spec+adversarial"}
+PRE_BUILD_REVIEW = re.compile(
+    r"^(required|not-required)\s*(?:—|–|--)\s*(\S.*)$", re.IGNORECASE
+)
 
 
 def spec_scoped_verdicts(review) -> tuple[list[dict], str | None]:
@@ -2670,11 +2738,27 @@ def is_spec_adversarial_probe(probe) -> bool:
 
 
 def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> list[tuple[str, str]]:
-    """write-plan accepts a needs-design: yes change only after the spec's
-    own review round passed (concept-model §5, §7)."""
+    """Apply the spec's risk-triggered review declaration at write-plan.
+
+    A missing declaration is the legacy marker: it deliberately keeps the
+    former two-reader plus adversarial-probe floor. New templates always emit
+    a declaration, so omitting it never weakens the gate."""
     spec_path = artifact_path(manifest, "spec", change_id, repo)
     if not spec_path.is_file():
         return [("intake.spec-pass", f"needs-design: yes but no spec at {spec_path.relative_to(repo)}.")]
+    spec_front, _ = parse_document(read_text(spec_path))
+    declaration = spec_front.get("pre-build-review", "").strip()
+    declaration_match = PRE_BUILD_REVIEW.fullmatch(declaration) if declaration else None
+    if declaration and declaration_match is None:
+        return [
+            (
+                "intake.spec-pass",
+                "`pre-build-review` must be `required|not-required — <reason>`.",
+            )
+        ]
+    if declaration_match and declaration_match.group(1).lower() == "not-required":
+        return []
+
     review_path = artifact_path(manifest, "review", change_id, repo)
     if not review_path.is_file():
         return [
@@ -2688,13 +2772,22 @@ def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> lis
     if selection_failure:
         return [("intake.spec-pass", selection_failure)]
     round_number, verdicts = latest_round(spec_verdicts)
-    reviewers = {str(entry.get("reviewer", "")) for entry in verdicts}
-    if len(reviewers) < 2:
+    reviewers = {
+        str(entry.get("reviewer", "")).strip()
+        for entry in verdicts
+        if str(entry.get("reviewer", "")).strip()
+    }
+    required_review = bool(
+        declaration_match and declaration_match.group(1).lower() == "required"
+    )
+    minimum_reviewers = 1 if required_review else 2
+    if len(reviewers) < minimum_reviewers:
         return [
             (
                 "intake.spec-pass",
                 f"the latest spec review round ({round_number}) carries "
-                f"{len(reviewers)} reviewer(s); two independent ones are required.",
+                f"{len(reviewers)} reviewer(s); {minimum_reviewers} independent "
+                f"reviewer(s) are required.",
             )
         ]
     failed = [
@@ -2710,9 +2803,27 @@ def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> lis
                 f"{', '.join(failed)}.",
             )
         ]
-    # The spec lens is read AND adversarial (concept-model §5, §6): two
-    # passing readers without a red-team is half a review.
-    if not any(is_spec_adversarial_probe(probe) for probe in review.get("probes", [])):
+    has_combined_lens = any(
+        str(entry.get("lens", "")).strip().lower() == "spec+adversarial"
+        for entry in verdicts
+    )
+    has_legacy_floor = len(reviewers) >= 2 and any(
+        is_spec_adversarial_probe(probe) for probe in review.get("probes", [])
+    )
+    if required_review and not (has_combined_lens or has_legacy_floor):
+        return [
+            (
+                "intake.spec-pass",
+                "a required pre-build review needs one reviewer with "
+                "`lens: spec+adversarial`; an already-recorded legacy two-reader "
+                "round plus spec adversarial probe also remains valid.",
+            )
+        ]
+    # An undeclared legacy spec retains the old read + separate adversarial
+    # contract. This is the safe compatibility default, never a skip.
+    if not required_review and not any(
+        is_spec_adversarial_probe(probe) for probe in review.get("probes", [])
+    ):
         return [
             (
                 "intake.spec-pass",

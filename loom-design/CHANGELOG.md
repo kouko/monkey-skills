@@ -12,6 +12,15 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [1.1.0] — 2026-09-06 — risk-triggered spec review
+
+`write-spec` now records `pre-build-review: required|not-required — <reason>`.
+Security or privacy, irreversible data, public-contract, cross-system
+architecture, and materially ambiguous changes receive one independent
+`spec+adversarial` read; lower-risk specs proceed after mechanical readiness.
+Neither path performs a spec blind run. New plans retain positive and negative
+or boundary cases for every Acceptance line.
+
 ## [1.0.4] — 2026-09-05 — Internal artifacts in English
 
 No code change. Bumped because `capture-intent/SKILL.md` gains one
