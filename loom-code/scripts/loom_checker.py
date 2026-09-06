@@ -2344,7 +2344,7 @@ IMPLEMENTED_REVIEW_EDITS_AFTER_IDS = {
     "vendors-gain-entries",
     "reviewed-sha-scope-cost-replaced",
     "open-finding-resolved-or-dismissed-in-place",
-    "questions-written-once",
+    "questions-gain-entries",
     "second-vendor-set-once",
 }
 
@@ -2459,7 +2459,7 @@ def _compare_review_round(
     allow_vendor_gain = "vendors-gain-entries" in enabled_ids
     allow_resolve = "open-finding-resolved-or-dismissed-in-place" in enabled_ids
     allow_replace = "reviewed-sha-scope-cost-replaced" in enabled_ids
-    allow_questions_fill = "questions-written-once" in enabled_ids
+    allow_questions_gain = "questions-gain-entries" in enabled_ids
     allow_second_vendor_set = "second-vendor-set-once" in enabled_ids
 
     failures: list[tuple[str, str]] = []
@@ -2530,7 +2530,17 @@ def _compare_review_round(
         if key == "questions":
             e_q, l_q = earlier.get("questions", []), later.get("questions", [])
             if _review_norm(e_q) != _review_norm(l_q):
-                if not (allow_questions_fill and not e_q and l_q):
+                # Decision-point questions accrete: ① is copied in at the
+                # first checkpoint, ③ is appended by ship into the review-only
+                # commit it amends. The earlier list must be a byte-equal
+                # prefix of the later one; anything else is a rewritten
+                # record of what the user was asked.
+                grown = (
+                    isinstance(e_q, list) and isinstance(l_q, list)
+                    and len(l_q) > len(e_q)
+                    and _review_norm(l_q[: len(e_q)]) == _review_norm(e_q)
+                )
+                if not (allow_questions_gain and grown):
                     failures.append(_review_block(f"{label}.questions", "changed"))
             continue
 

@@ -205,7 +205,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {id: verdicts-probes-findings-dispatch-gain-entries, text: "verdicts, probes, open_findings and dispatch gain entries"}
         - {id: reviewed-sha-scope-cost-replaced,                text: "reviewed_sha, scope and cost are replaced"}
         - {id: open-finding-resolved-or-dismissed-in-place,     text: "an open finding is resolved or dismissed in place"}
-        - {id: questions-written-once,                          text: "questions is written once"}
+        - {id: questions-gain-entries,                          text: "questions gains entries, one per decision-point question asked; earlier entries unchanged"}
         - {id: second-vendor-set-once,                          text: "second_vendor is set once"}
         - {id: vendors-gain-entries,                            text: "vendors gains entries"}
     fields:

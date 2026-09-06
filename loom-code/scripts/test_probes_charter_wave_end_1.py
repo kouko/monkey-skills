@@ -256,13 +256,13 @@ def test_review_edits_after_bare_string_shape_fails_closed_not_crash(tmp_path: P
         "        - {id: verdicts-probes-findings-dispatch-gain-entries, text: \"verdicts, probes, open_findings and dispatch gain entries\"}\n"
         "        - {id: reviewed-sha-scope-cost-replaced,                text: \"reviewed_sha, scope and cost are replaced\"}\n"
         "        - {id: open-finding-resolved-or-dismissed-in-place,     text: \"an open finding is resolved or dismissed in place\"}\n"
-        "        - {id: questions-written-once,                          text: \"questions is written once\"}\n"
+        "        - {id: questions-gain-entries,                          text: \"questions gains entries, one per decision-point question asked; earlier entries unchanged\"}\n"
         "        - {id: second-vendor-set-once,                          text: \"second_vendor is set once\"}\n",
         "      edits_after:\n"
         "        - verdicts-probes-findings-dispatch-gain-entries\n"
         "        - reviewed-sha-scope-cost-replaced\n"
         "        - open-finding-resolved-or-dismissed-in-place\n"
-        "        - questions-written-once\n"
+        "        - questions-gain-entries\n"
         "        - second-vendor-set-once\n",
         1,
     )

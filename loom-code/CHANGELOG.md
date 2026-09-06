@@ -20,7 +20,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
    `plan.edits-after-commit` (an edit to a plan after its owning commit
    only touches fields the charter marks editable), and
    `review.round-append-only` (a review round only appends, never rewrites
-   an earlier round).
+   an earlier round; `questions[]` accretes too — decision-point ① entries
+   copied in at the first checkpoint, ③ entries appended by ship into the
+   review-only commit it amends — under the policy id
+   `questions-gain-entries`, earlier entries byte-equal).
 3. Four new checker subcommands: `charter` (renders the charter as a
    table), `plan <path>` (validates one plan file standalone),
    `plan-edits <change-id>` (checks a plan's post-commit edits against

@@ -25,7 +25,7 @@ report, not a silent guess):
   - the policy ids read from `manifest.artifacts.review.charter.
     edits_after` are: `verdicts-probes-findings-dispatch-gain-entries`,
     `reviewed-sha-scope-cost-replaced`, `open-finding-resolved-or-
-    dismissed-in-place`, `questions-written-once` (read from
+    dismissed-in-place`, `questions-gain-entries` (read from
     loom-code/contract/manifest.yaml at dispatch time -- a fifth id,
     `second-vendor-set-once`, was added to the manifest mid-round; see
     the findings below);
@@ -443,8 +443,8 @@ def test_review_edits_unsupported_policy_id_blocks_closed(tmp_path: Path) -> Non
     manifest_path = REPO / "loom-code" / "contract" / "manifest.yaml"
     original = manifest_path.read_text(encoding="utf-8")
     patched = original.replace(
-        "        - {id: questions-written-once,                          text: \"questions is written once\"}\n",
-        "        - {id: questions-written-once,                          text: \"questions is written once\"}\n"
+        "        - {id: questions-gain-entries,                          text: \"questions gains entries, one per decision-point question asked; earlier entries unchanged\"}\n",
+        "        - {id: questions-gain-entries,                          text: \"questions gains entries, one per decision-point question asked; earlier entries unchanged\"}\n"
         "        - {id: a-brand-new-unimplemented-policy-id,             text: \"a made-up policy id the checker cannot possibly implement yet\"}\n",
     )
     assert patched != original, "the manifest's review edits_after block did not match the expected text to patch"

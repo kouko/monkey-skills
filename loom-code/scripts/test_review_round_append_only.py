@@ -366,3 +366,49 @@ def test_review_edits_reviewed_sha_string_to_string_replacement_passes(tmp_path:
     )
     result = run_review_edits(repo)
     assert result.returncode == 0, result.stderr
+
+
+def test_review_edits_questions_gain_a_decision_point_entry_passes(tmp_path: Path) -> None:
+    """The ship station appends one `questions[]` entry per decision-point-3
+    question, into the review-only commit it amends (ship §2-§3), and the
+    review station copies decision-point-1 questions in at the first
+    checkpoint: `questions` accretes like `verdicts` does. The charter names
+    that by its own id (`questions-gain-entries`): a later round whose
+    questions list is the earlier list plus new entries passes."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    doc["questions"] = [{"decision_point": 1, "text": "Is this what you want?", "type": "what"}]
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["questions"].append({"decision_point": 3, "text": "Line 1 works as shown — OK?", "type": "done"})
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — branch-end, decision point 3 recorded")
+    result = run_review_edits(repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_review_edits_questions_earlier_entry_rewritten_blocks(tmp_path: Path) -> None:
+    """Gaining entries is the whole allowance: an earlier question rewritten
+    in place, or dropped, is a changed record of what the user was asked and
+    blocks under `review.round-append-only` naming `questions`."""
+    repo = init_repo(tmp_path)
+    doc = base_review_doc()
+    doc["questions"] = [
+        {"decision_point": 1, "text": "Is this what you want?", "type": "what"},
+        {"decision_point": 1, "text": "Use Codex as a second reader?", "type": "what"},
+    ]
+    write_and_commit(repo, doc, "chore(loom): checkpoint review — round 1")
+    doc2 = copy.deepcopy(doc)
+    doc2["questions"][1]["text"] = "Use Codex as the only reader?"
+    write_and_commit(repo, doc2, "chore(loom): checkpoint review — round 2 rewrites a question")
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+    assert "questions" in result.stderr
+
+    doc3 = copy.deepcopy(doc)
+    doc3["questions"] = doc3["questions"][:1]
+    write_and_commit(repo, doc3, "chore(loom): checkpoint review — round 3 drops a question")
+    result = run_review_edits(repo)
+    assert result.returncode == 1
+    assert "review.round-append-only" in blocked_rule_ids(result)
+
