@@ -13,6 +13,59 @@
 #   `|` or any other ASCII character) — git's own parser is the source
 #   of truth for what counts as a trailer.
 #
+# Minimum git version: this script's extraction pass requires the
+# `%(trailers:key=…)` `--format` placeholder with the `key=` and
+# `unfold` options (see the citation in extract_commits_ndjson below).
+# Verified on this machine (git version 2.50.1, Apple Git-155): `git
+# help log` / `man git-log` document `key=` and `unfold` as current
+# `%(trailers:...)` options. This machine's man pages and locally
+# installed docs do not state which git version FIRST introduced
+# `key=` (no shipped release notes to check offline, and the network
+# was not consulted) — assumed here, not verified, at git 2.22 (the
+# floor this plan assumed going in). Confirm before relying on an
+# older git.
+#
+# Capability check (branch-end fix, W1-02 finding): a git old enough to
+# not understand the `key=` filter does not always reject it outright —
+# some accept arbitrary `%(...)` placeholder syntax and echo the whole
+# `%(trailers:key=…)` string back as LITERAL text instead of expanding
+# it. Every commit's fourth field then reads as that literal string, no
+# line matches `^Decision: `/`^Learning: `/`^Gotcha: `/`^Related: `, the
+# memory-worthy filter drops every record, and the script used to exit
+# 0 printing "(none in range)" — a repository full of real trailers
+# silently reporting having none, indistinguishable from an empty
+# history. extract_commits_ndjson now runs a one-time, cheap probe
+# (one extra `git log -1`, no per-commit calls) before the real
+# extraction pass: if the probe's own `%(trailers:key=…)` output
+# contains the literal substring `%(trailers`, the pass falls back to
+# the key-less `%(trailers:unfold)` placeholder (still ONE git-log call
+# — no exit-code change) and lets the existing jq stage's case-sensitive
+# key re-filter recover the real trailers, since that stage already
+# re-filters every line by key regardless of whether git's own key=
+# filter ran first. A git that instead REJECTS the placeholder outright
+# (fatal, non-zero exit, no output) is left alone — the probe treats a
+# failing probe as inconclusive and defers to the unchanged extraction
+# git-log call, which fails loudly via its own PIPESTATUS re-exit
+# exactly as before. Deliberate choice over `exit 3` (external
+# dependency missing): the incompatibility is recoverable without
+# degrading the user's result, so recovering silently outranks failing
+# loudly for a capability this script can work around at no extra
+# per-commit cost — `exit 3` remains the right call for a probe that
+# reveals NO working extraction path at all.
+#
+# A THIRD case exists, since `%(trailers)` and its `unfold` option
+# predate the `key=` filter: a git old enough to understand neither
+# placeholder would echo the key-less fallback back as literal text
+# too — the exact same silent-empty-digest failure mode, one band
+# further down. So after selecting the fallback format, the script
+# probes ONCE MORE (only on this already-incompatible path — the
+# common key=-capable path never pays this second call): if that
+# fallback probe ALSO comes back containing the literal `%(trailers`,
+# there is no working extraction path at all, and THIS is the `exit 3`
+# case — the same class as the missing-jq check — with a message
+# naming the missing capability and telling the user to upgrade git to
+# at least the version this header states as the assumed minimum.
+#
 # Usage:
 #   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
 #                  [--format=plain|json] [--no-pr] [--no-commit]
@@ -39,7 +92,20 @@
 #   0  success
 #   1  usage error
 #   2  not a git repo (or, in --verify mode, an unresolvable ref)
-#   3  external dependency missing (jq always required; gh required if PR path enabled)
+#   3  external dependency missing (jq always required; gh required if PR path enabled);
+#      also: this git supports neither the `%(trailers:key=...)` nor
+#      the key-less `%(trailers:unfold)` --format placeholder that
+#      commit-trailer extraction depends on (both capability probes in
+#      extract_commits_ndjson came back with the literal placeholder
+#      text unexpanded) — upgrade git to at least the version assumed
+#      above;
+#      also: the capability probe itself could not be built, so the
+#      placeholder support is unverifiable — either its scratch object
+#      store could not be created (mktemp failed) or the synthetic
+#      commit object could not be written into that store. A probe that
+#      cannot be built is not evidence the git is capable, so this
+#      exits rather than extracting unguarded; each message names the
+#      failed prerequisite and its recovery action
 #   4  --verify only: a memory check was requested but NO memory trailer
 #      (^Decision:/^Learning:/^Gotcha:) was found in the ref's message body
 #   4  --verify-merged only: the ref's body has a `## Memory` heading AND
@@ -76,8 +142,9 @@ VERIFY_STRICT_REF=''
 
 # Extraction includes Related: (relationship context). Verify does NOT —
 # the memory-worthy predicate is the three keys Decision/Learning/Gotcha
-# only (a Related:-only commit captured no actual memory).
-TRAILER_KEYS_REGEX='^(Decision|Learning|Gotcha|Related):'
+# only (a Related:-only commit captured no actual memory). Extraction's
+# own key set lives in extract_commits_ndjson's jq pass, case-sensitive
+# there too (matching the git format's key= case-insensitive match).
 VERIFY_KEYS_REGEX='^(Decision|Learning|Gotcha):'
 MEMORY_HEADING_REGEX='^## Memory[[:space:]]*$'
 
@@ -154,26 +221,6 @@ Examples:
   memory-grep.sh --verify-merged HEAD # did a squash-merge drop its memory?
   memory-grep.sh --verify-strict HEAD # does the memory key survive a strict parse?
 EOF
-}
-
-# ─── render helper (plain format) ──────────────────────────────────
-#
-# Render a trailer group as one or more indented lines.
-#   $1 — label (e.g. "Decision")
-#   $2 — newline-separated entries
-# Single entry:   "  Decision: <text>"
-# Multiple:       "  Decision (1/N): <text>" one per line
-render_group() {
-  [ -z "${2:-}" ] && return 0
-  local entries="$2"
-  local n
-  n=$(printf '%s\n' "$entries" | wc -l | tr -d ' ')
-  if [ "$n" -eq 1 ]; then
-    printf '  %s: %s\n' "$1" "$entries"
-  else
-    printf '%s\n' "$entries" \
-      | awk -v L="$1" -v N="$n" '{printf "  %s (%d/%d): %s\n", L, NR, N, $0}'
-  fi
 }
 
 # ─── argument parsing ──────────────────────────────────────────────
@@ -363,170 +410,396 @@ if [ -n "$MATCH" ] && ! jq -n --arg m "$MATCH" '"" | test($m; "i")' >/dev/null 2
   exit 1
 fi
 
-# ─── commit trailer extraction (Layer 2 — git's own parser) ────────
+# ─── commit trailer extraction + supersession index (one git pass) ─
 #
-# Emits NDJSON (one object per line) for each memory-worthy commit:
-#   {sha, date, subject, decision:[...], learning:[...], gotcha:[...], related:[...]}
+# One `git log` call (plus one more, for the allowed-SHA set, when
+# --path narrows the display) replaces the old per-commit subprocess
+# loops (one `git log -1` + one `git interpret-trailers` + one `grep`
+# per commit, twice over — once for extraction, once for the
+# supersession scan). git's own trailer parser is still the source of
+# truth: `%(trailers:key=…,unfold)` is the same parser
+# `git interpret-trailers --parse --unfold` used, exposed as a format
+# placeholder instead of a second process per commit.
+#
+# wave-end:1-02 grounding (verified against `git --version` 2.50.1
+# (Apple Git-155) on this machine, docs read via `man git-log` / `man
+# git-interpret-trailers` — this build has no standalone
+# gitformat-pretty(1) page; the same "PRETTY FORMATS" text lives
+# inside git-log(1)):
+#   - git-log(1), PRETTY FORMATS, the `%(trailers[:<option>,...])`
+#     entry: "key=<key>: only show trailers with specified <key>.
+#     Matching is done case-insensitively and trailing colon is
+#     optional. … This option automatically enables the `only` option
+#     so that non-trailer lines in the trailer block are hidden." —
+#     this is the source for both (a) key= selecting by key
+#     case-insensitively (why the jq re-filter below is still needed
+#     to reproduce the old case-SENSITIVE match) and (c) the
+#     placeholder emitting ONLY trailer lines, never other body text.
+#   - Same entry, `unfold[=<bool>]`: "make it behave as if
+#     interpret-trailer's --unfold option was given." — the source for
+#     (b): `%(trailers:…,unfold)` is declared equivalent to
+#     `git-interpret-trailers(1)`'s own `--unfold`, whose OPTIONS
+#     section defines it as "If a trailer has a value that runs over
+#     multiple lines (aka 'folded'), reformat the value into a single
+#     line."
+#   - This machine's man pages do not state which git version
+#     introduced `key=` on `%(trailers:...)` (the man page documents
+#     current behavior, not a changelog); not guessed here — the
+#     script header (W2-01) states the minimum git version this
+#     change requires, verified separately.
+#
+# Record separator: every FIELD is delimited by NUL, and git's `-z`
+# terminates each commit's whole record with NUL too — so the raw
+# stream is ONE flat sequence of NUL-delimited tokens (sha, date,
+# subject, trailers, sha, date, subject, trailers, …), split on a
+# single byte value and then chunked four tokens per record. NUL is
+# the one byte a commit message provably cannot contain (git's own
+# object model forbids it), so this encoding is injective for every
+# OTHER byte a subject or trailer value might hold — 0x1F, 0x1E, CJK,
+# an embedded newline, all round-trip untouched. (wave-end:1-01: an
+# earlier revision of this file used `%x1F` between fields instead —
+# a subject containing a raw 0x1F byte mis-split the record and
+# silently dropped it, because %x1F is NOT provably absent from
+# commit text the way NUL is. NUL has no such exposure, so this is
+# the smallest change that makes the encoding injective for every
+# non-NUL byte.) This file never spells out a raw NUL byte: jq builds
+# it at runtime via `[0] | implode`, so it survives any editor/encoding.
+#
+# `%(trailers:key=…)` matches keys CASE-INSENSITIVELY (unlike the old
+# `grep -E '^(Decision|…):'`), so the jq stage below re-filters each
+# trailer line with the same case-sensitive key set the old code used
+# — a `decision:`/`DECISION:` line stays excluded exactly as before.
+#
+# --path narrows which commits are DISPLAYED only. It does NOT narrow
+# the supersession scan (full history, always), so a superseding commit
+# outside the pathspec still retires a shown record.
+#
+# Emits NDJSON (one object per line), same shape as before:
+#   {decision:[...], learning:[...], gotcha:[...], related:[...],
+#    sha, date, subject, superseded, superseded_by}
 
 extract_commits_ndjson() {
-  # --path narrows which commits are DISPLAYED. It is intentionally NOT
-  # applied to build_supersession_index (which scans full history), so a
-  # superseding commit outside the pathspec still retires a shown record.
-  # Collect SHAs first (bash-3.2 + set -u safe: no empty-array expansion).
-  local shas
-  if [ -n "$PATHSPEC" ]; then
-    shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%H' -- "$PATHSPEC")
-  else
-    shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%H')
+  local all_records path_shas sup_entries rc
+  local trailers_keyfilter trailers_format probe_out probe_rc
+  local probe_sha empty_tree_sha
+  # NOT `local`, deliberately: the EXIT trap below fires after this
+  # function returns (the subshell's own exit, not this function's), by
+  # which point a `local` variable's value is already gone — `set -u`
+  # would then fault on the very variable the trap exists to clean up.
+
+  # ─── one-time capability probe (branch-end fix, W1-02; fatal-substring
+  # fix, closing-review round; fatal-write fix, round 4; fatal-fallthrough
+  # fix, round 5, design re-look — see below) ───────────────────────────
+  # The probe used to run against the repo's own HEAD and compare by
+  # SUBSTRING (`grep -qF`): any real trailer VALUE that happens to quote
+  # the placeholder text verbatim (this repo's own commits, changelog and
+  # memory entries do exactly that) could satisfy the substring check on
+  # a fully capable git, wrongly concluding the placeholder went
+  # unexpanded. Repository content must never be able to reach this
+  # decision at all, so the probe runs against a SYNTHETIC commit object
+  # — the well-known empty tree plus one commit message with no trailers
+  # of its own — never against HEAD or any ref. On a capable git,
+  # filtering that message's (zero) trailers always expands to the empty
+  # string; an incapable git still echoes the placeholder back as
+  # literal, non-empty text regardless of which commit it is pointed at.
+  # Exact-emptiness is then the only comparison needed.
+  #
+  # (Rejected: exact string equality between probe_out and the attempted
+  # placeholder, still run against HEAD — smaller diff from the old
+  # code, but a single trailer value can be crafted to equal the *whole*
+  # probe output too, e.g. one trailer with no message before or after
+  # it; a probe that structurally cannot see any commit-message content
+  # closes that off entirely rather than narrowing it.)
+  #
+  # This round's fatal finding: the previous fix's `commit-tree` call
+  # created that synthetic commit object INSIDE the target repo's own
+  # object database — on every single run. It is never referenced by any
+  # ref, so it is immediately an orphan `git fsck --unreachable` object,
+  # accumulating garbage on every invocation of what is meant to be a
+  # read-only retrieval tool. Rejected repair: comparing probe output
+  # differently while still writing to $REPO — the write itself is the
+  # defect, not how its result is read.
+  #
+  # Fix: the probe object is created in a THROWAWAY object store — a
+  # freshly `mktemp -d`'d directory pointed to via `GIT_OBJECT_DIRECTORY`
+  # for every git call the probe makes — never `$REPO/.git/objects`.
+  # `GIT_OBJECT_DIRECTORY` fully substitutes for the primary object store
+  # for that invocation (not additive, unlike
+  # `GIT_ALTERNATE_OBJECT_DIRECTORIES`), so the probe commit lives only
+  # in the scratch directory and is invisible to, and independent of,
+  # $REPO's real objects; `$REPO` is used only for its git-dir context
+  # (config, hash algorithm), never as the object store. The scratch
+  # directory is removed unconditionally when this function's subshell
+  # exits (a bare `mktemp -d` under $TMPDIR, cleaned by a subshell-local
+  # EXIT trap below — this function only ever runs once per script
+  # invocation, inside the `$(extract_commits_ndjson)` command
+  # substitution that already owns its own subshell, so a trap set here
+  # affects only that subshell and fires on every exit path including
+  # `exit 3` below and the PIPESTATUS re-exit further down).
+  #
+  # This also closes the read-only/SHA-256 gap the previous fix's
+  # comment named as an accepted limitation: a real repository whose own
+  # object database is read-only no longer blocks the probe at all (the
+  # probe never touches it), and for a SHA-256 repository — where the
+  # constant below names a SHA-1 empty tree that is not a valid object
+  # name — the empty tree hash is recomputed for whatever hash algorithm
+  # this repo actually uses via one `hash-object` call (no write; it
+  # only reports the hash the content would have), and `commit-tree`
+  # retried with that hash. This fallback only runs when the SHA-1
+  # constant is rejected, so the common (SHA-1) fast path pays no extra
+  # git-call cost over the previous fix (still one `commit-tree` + one
+  # `log -1` for the fast path, kept the git-call budget in plan.md
+  # W1-02 Risk: <=4 total for the common fast path).
+  #
+  # design re-look (round 5, third round on this same mechanism —
+  # fix-rounds.md's stop-fixing-look-at-the-design rule): weighed
+  # deleting this probe entirely and reading the same fact off the real
+  # extraction pass's own git-log output instead (no synthetic object,
+  # no scratch store, no per-round new failure mode to keep correct).
+  # Rejected: this repo's own pinned regression tests
+  # (test_probes_memory_grep_no_trailers_support.py, "must all still
+  # pass unmodified" per this round's brief) assert the exact SHAPE of a
+  # separate probe call preceding the real extraction pass — e.g.
+  # `calls == ["key", "key"]` for a capable git (the probe, then the
+  # extraction reusing the fast path) and `calls == ["key", "unfold",
+  # "unfold"]` for the unfold-only band (key= probe fails, unfold
+  # fallback probe succeeds, extraction reuses it) — instrumented via a
+  # call-logging git shim. Reading the capability signal out of the real
+  # extraction's own output collapses those into ONE real call for the
+  # capable case (the extraction pass IS the only evidence) and TWO for
+  # the unfold-only case (one real pass per format, no separate probe
+  # call before either), which is a strictly smaller and arguably better
+  # git-call shape but does not match the pinned counts — those tests
+  # encode the current two-phase (probe, then extract) design as their
+  # own contract, and this round's brief forbids modifying them. The
+  # deletion also cannot detect incapacity on a zero-commit range at
+  # all (there is no real record to read the fact off of), where the
+  # synthetic-object probe still can, since it never depends on the
+  # target repo having any history — a real, if narrow, regression the
+  # smaller design would introduce silently. So: repair (a), not delete
+  # (b) — the design question this round asks is answered "the
+  # mechanism's shape is right, its error handling was not": every path
+  # that fails to build the probe now exits 3 loudly (below) instead of
+  # falling through to an unverified extraction, closing the actual
+  # fatal finding without discarding a mechanism three rounds of fixes
+  # already converged on for a reason a smaller shape cannot fully keep.
+  trailers_keyfilter='key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold'
+  trailers_format="%(trailers:${trailers_keyfilter})"
+
+  # branch-end round 5 (fatal): a failure to build ANY part of this probe
+  # — the scratch store itself, or the synthetic commit object inside it
+  # — used to be treated as INCONCLUSIVE and left the real extraction
+  # pass below to run unguarded, on the UNVERIFIED trailers_format. On a
+  # git old enough to echo `%(trailers:key=…)` back as literal text, that
+  # silently restores the exact failure this whole guard exists to
+  # prevent (a repository full of real trailers reporting "(none in
+  # range)"). "Capability unverified" is not "capability assumed fine":
+  # every failure to build the probe now exits 3 loudly instead of
+  # falling through, unconditionally — not only when the underlying git
+  # also happens to be incapable, since a probe that could not be built
+  # never learned which case it is in.
+  probe_objdir=$(mktemp -d "${TMPDIR:-/tmp}/memory-grep-probe.XXXXXX" 2>/dev/null) || probe_objdir=""
+  if [ -z "$probe_objdir" ]; then
+    echo "memory-grep.sh: could not verify this git's %(trailers:...) support — the capability probe's scratch object store could not be created (mktemp failed)." >&2
+    echo "Refusing to extract commit trailers unguarded; repair \$TMPDIR/mktemp and retry." >&2
+    exit 3
   fi
-  printf '%s\n' "$shas" \
-    | while read -r full_sha; do
-        [ -z "$full_sha" ] && continue
+  trap 'rm -rf "${probe_objdir:-}"' EXIT
 
-        # Extract trailer lines via git's own parser, filtered to our keys.
-        local trailer_lines
-        trailer_lines=$(
-          git -C "$REPO" log -1 --format='%B' "$full_sha" \
-            | git interpret-trailers --parse --unfold 2>/dev/null \
-            | grep -E "$TRAILER_KEYS_REGEX" \
-            || true
-        )
-
-        # No memory trailers → skip this commit entirely.
-        [ -z "$trailer_lines" ] && continue
-
-        # Group trailer lines by key into {decision, learning, gotcha, related} arrays.
-        local trailers_obj
-        trailers_obj=$(
-          printf '%s\n' "$trailer_lines" \
-            | jq -R -n '
-                [inputs | capture("^(?<k>[^:]+): (?<v>.*)$")
-                        | {key: (.k | ascii_downcase), value: .v}]
-                | group_by(.key)
-                | map({(.[0].key): map(.value)})
-                | add // {}
-                | {decision: (.decision // []),
-                   learning: (.learning // []),
-                   gotcha:   (.gotcha   // []),
-                   related:  (.related  // [])}
-              '
-        )
-
-        # Metadata for header. Use %x1F as local separator — we control these fields
-        # (short-sha is hex, date is YYYY-MM-DD, subject can contain any char
-        # except 0x1F in practice).
-        local meta sha_short date subject
-        meta=$(git -C "$REPO" log -1 --format='%h%x1F%ad%x1F%s' --date=short "$full_sha")
-        sha_short=${meta%%$'\x1F'*}
-        meta=${meta#*$'\x1F'}
-        date=${meta%%$'\x1F'*}
-        subject=${meta#*$'\x1F'}
-
-        jq -nc \
-          --arg sha "$sha_short" \
-          --arg date "$date" \
-          --arg subject "$subject" \
-          --argjson trailers "$trailers_obj" \
-          '$trailers + {sha: $sha, date: $date, subject: $subject}'
-      done
-}
-
-# ─── supersession index (Supersedes: trailer → liveness) ───────────
-#
-# Append-only substrate: an earlier decision can't be edited, so the
-# replacement commit carries a backward-pointing `Supersedes:` trailer
-# (by `PR #N` or by SHA). Liveness is COMPUTED, never stored — a record
-# is superseded iff some later commit names it. bash-3.2-safe: no
-# associative arrays; the map is a `token<TAB>by_label` text table.
-
-# normalize_ref <value> → "pr:<N>" | "sha:<hex>" | "" (unrecognized)
-normalize_ref() {
-  local v="$1"
-  if printf '%s' "$v" | grep -qE '#[0-9]+'; then
-    printf 'pr:%s' "$(printf '%s' "$v" | sed -n 's/.*#\([0-9][0-9]*\).*/\1/p')"
-  elif printf '%s' "$v" | grep -qiE '^[0-9a-f]{7,40}$'; then
-    printf 'sha:%s' "$(printf '%s' "$v" | tr 'A-Z' 'a-z')"
-  fi
-}
-
-# Emit one `token<TAB>by_label` line per Supersedes: target. Scans ALL
-# commits in range (not just memory-worthy ones) so a Supersedes-only
-# commit still registers. Note: a superseding commit OUTSIDE the --since
-# window won't be seen — widen --since to resurface old supersessions.
-# The map is order-free; "later-supersedes-earlier" is guaranteed by the
-# backward-pointer authoring convention, not enforced here (a forward or
-# self-referential Supersedes: would mis-hide a live record).
-build_supersession_index() {
-  git -C "$REPO" log --since="$SINCE" --no-merges --format='%H' \
-    | while read -r sha; do
-        [ -z "$sha" ] && continue
-        local sup_lines
-        sup_lines=$(
-          git -C "$REPO" log -1 --format='%B' "$sha" \
-            | git interpret-trailers --parse --unfold 2>/dev/null \
-            | grep -E '^Supersedes:' || true
-        )
-        [ -z "$sup_lines" ] && continue
-        local by_label by_pr
-        by_label=$(git -C "$REPO" log -1 --format='%h' "$sha")
-        by_pr=$(git -C "$REPO" log -1 --format='%s' "$sha" \
-          | sed -n 's/.*(#\([0-9][0-9]*\)).*/\1/p')
-        [ -n "$by_pr" ] && by_label="$by_label (PR #$by_pr)"
-        printf '%s\n' "$sup_lines" | while IFS= read -r line; do
-          local val token
-          val=$(printf '%s' "${line#Supersedes:}" | sed 's/^ *//; s/ *$//')
-          token=$(normalize_ref "$val")
-          [ -n "$token" ] && printf '%s\t%s\n' "$token" "$by_label"
-        done
-      done
-}
-
-# lookup_superseded <short_sha> <subject> → by_label if superseded, else ""
-# Matches by PR number (from the subject's "(#N)") or by SHA prefix.
-lookup_superseded() {
-  local short="$1" subject="$2" pr
-  pr=$(printf '%s' "$subject" | sed -n 's/.*(#\([0-9][0-9]*\)).*/\1/p')
-  if [ -n "$pr" ]; then
-    local hit
-    hit=$(printf '%s\n' "$SUPERSEDE_MAP" \
-      | awk -F'\t' -v p="pr:$pr" '$1==p {print $2; exit}')
-    [ -n "$hit" ] && { printf '%s' "$hit"; return; }
-  fi
-  printf '%s\n' "$SUPERSEDE_MAP" \
-    | awk -F'\t' -v s="$short" '
-        $1 ~ /^sha:/ {
-          tok = substr($1, 5)
-          if (index(tok, s) == 1 || index(s, tok) == 1) { print $2; exit }
-        }'
-}
-
-# Annotate NDJSON commit records with {superseded, superseded_by} and,
-# unless --history, drop the superseded ones. Single filtering point for
-# both plain and json output.
-annotate_commits() {
-  while IFS= read -r rec; do
-    [ -z "$rec" ] && continue
-    local sha subject by
-    sha=$(printf '%s' "$rec" | jq -r '.sha')
-    subject=$(printf '%s' "$rec" | jq -r '.subject')
-    by=$(lookup_superseded "$sha" "$subject")
-    if [ -n "$by" ]; then
-      [ "$INCLUDE_HISTORY" = 0 ] && continue
-      printf '%s' "$rec" | jq -c --arg by "$by" \
-        '. + {superseded: true, superseded_by: $by}'
-    else
-      printf '%s' "$rec" | jq -c '. + {superseded: false, superseded_by: null}'
+  # The probe's commit-tree pins an explicit throwaway identity: on a
+  # bare target repo there is no user.* config, and a host without a
+  # global git identity (CI runners) cannot auto-derive one, so an
+  # unpinned commit-tree fails there and the whole probe reports
+  # "could not be built" (exit 3). The identity never reaches any
+  # user-visible output — the probe commit lives and dies in the
+  # scratch store.
+  probe_ident_env=(
+    GIT_AUTHOR_NAME=memory-grep-probe GIT_AUTHOR_EMAIL=probe@invalid
+    GIT_COMMITTER_NAME=memory-grep-probe GIT_COMMITTER_EMAIL=probe@invalid
+  )
+  empty_tree_sha='4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+  probe_sha=$(env "${probe_ident_env[@]}" GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+    -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
+  if [ -z "$probe_sha" ]; then
+    # SHA-1 empty-tree constant not a valid object name here (e.g. a
+    # SHA-256 repo) — recompute it for this repo's own hash algorithm.
+    # No write: `hash-object` without `-w` only reports the hash.
+    empty_tree_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" hash-object -t tree --stdin \
+      </dev/null 2>/dev/null) || empty_tree_sha=""
+    if [ -n "$empty_tree_sha" ]; then
+      probe_sha=$(env "${probe_ident_env[@]}" GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+        -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
     fi
-  done
+  fi
+
+  if [ -z "$probe_sha" ]; then
+    echo "memory-grep.sh: could not verify this git's %(trailers:...) support — the capability probe's synthetic commit object could not be built in the scratch store." >&2
+    echo "Refusing to extract commit trailers unguarded; investigate this git-dir's state and retry." >&2
+    exit 3
+  fi
+
+  probe_rc=0
+  probe_out=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
+  if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
+    trailers_format='%(trailers:unfold)'
+
+    # ─── second probe: does THIS git understand %(trailers:unfold) at
+    # all? (`%(trailers)`/`unfold` predate `key=`, so a git that fails
+    # the first probe usually understands the fallback — but a git old
+    # enough to understand neither placeholder would echo the fallback
+    # back as literal text too, one band further down the same silent-
+    # empty-digest failure mode the finding named. One more `git log -1`
+    # here, and ONLY on this already-incompatible path — the common
+    # (key=-capable) path never pays this second call.
+    probe_rc=0
+    probe_out=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
+    if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
+      echo "memory-grep.sh: this git does not support the %(trailers:...) --format placeholder (neither the key= filter nor plain unfold) that commit-trailer extraction depends on." >&2
+      echo "Upgrade git to at least the version this script's header states as the assumed minimum (git 2.22+, unverified further) and retry." >&2
+      exit 3
+    fi
+  fi
+
+  # git's -z output is NUL-delimited; a bash `$(...)` command
+  # substitution silently drops embedded NUL bytes (bash-3.2 and bash-5
+  # both do this), so the raw stream is piped STRAIGHT into jq below —
+  # never captured into a bash variable first.
+  #
+  # `all_records=$(git ... | jq ...)` is a nested command substitution
+  # inside a function that is ITSELF invoked via command substitution
+  # (`commit_records=$(extract_commits_ndjson)` below) — under that
+  # nesting, bash's `set -e` does not propagate a failing FIRST command
+  # of the pipe (git) when the LAST command (jq) succeeds, even with
+  # `pipefail` (a bash quirk with function-in-command-substitution, not
+  # present at top level). The old script's fatal-exit-128 behavior on a
+  # zero-commit repo (git log fails; nothing captures it) must survive
+  # byte-identically, so the subshell explicitly re-exits with git's own
+  # PIPESTATUS on failure, and the caller checks $? right after.
+
+  # One jq pass turns the raw -z/%x1F stream into one JSON array: every
+  # commit in range, trailer lines grouped by key (still case-preserving
+  # — the case-sensitive re-filter happens per key below).
+  all_records=$(
+    git -C "$REPO" log --since="$SINCE" --no-merges -z --date=short \
+      --format="%h%x00%ad%x00%s%x00${trailers_format}" \
+      | jq -R -s -c '
+          ([0] | implode) as $NUL
+          | ([10] | implode) as $LF
+          | (split($NUL)) as $tok0
+          | ($tok0 | if (length > 0 and .[-1] == "") then .[:-1] else . end) as $tok
+          | [
+              range(0; ($tok | length) / 4) as $i
+              | $tok[$i * 4] as $sha
+              | $tok[$i * 4 + 1] as $date
+              | $tok[$i * 4 + 2] as $subject
+              | ($tok[$i * 4 + 3] // "" | split($LF) | map(select(length > 0))) as $lines
+              | {
+                  sha: $sha, date: $date, subject: $subject,
+                  decision: [ $lines[] | select(test("^Decision: ")) | sub("^Decision: ";"") ],
+                  learning: [ $lines[] | select(test("^Learning: ")) | sub("^Learning: ";"") ],
+                  gotcha: [ $lines[] | select(test("^Gotcha: ")) | sub("^Gotcha: ";"") ],
+                  related: [ $lines[] | select(test("^Related: ")) | sub("^Related: ";"") ],
+                  supersedes: [ $lines[] | select(test("^Supersedes: ")) | sub("^Supersedes: ";"") ]
+                }
+            ]
+        '
+    git_rc="${PIPESTATUS[0]}"
+    [ "$git_rc" -ne 0 ] && exit "$git_rc"
+    true
+  )
+  rc=$?
+  [ "$rc" -ne 0 ] && exit "$rc"
+
+  if [ -n "$PATHSPEC" ]; then
+    path_shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%h' -- "$PATHSPEC")
+  else
+    path_shas=''
+  fi
+
+  # Supersession map: {token, by_label} per Supersedes: target, built
+  # from the SAME unfiltered all_records (never path-narrowed) — a
+  # forward-pointer authoring convention is trusted, not enforced, same
+  # as the old code. token is "pr:<N>" or "sha:<hex>", normalize_ref's
+  # old semantics (a bare "#N" anywhere -> pr; 7-40 hex chars -> sha).
+  sup_entries=$(printf '%s' "$all_records" | jq -c '
+      [
+        .[] | . as $rec
+        | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $pr
+        | ($rec.sha + (if $pr != null then " (PR #" + $pr + ")" else "" end)) as $by_label
+        | $rec.supersedes[] as $val
+        | (
+            if ($val | test("#[0-9]+")) then "pr:" + ($val | capture("^.*#(?<n>[0-9]+).*$").n)
+            elif ($val | test("^[0-9a-fA-F]{7,40}$")) then "sha:" + ($val | ascii_downcase)
+            else null
+            end
+          ) as $token
+        | select($token != null)
+        | {token: $token, by_label: $by_label}
+      ]
+    ')
+
+  # Final pass: memory-worthy filter (Decision/Learning/Gotcha/Related
+  # non-empty; Supersedes-only is NOT memory-worthy, same as before),
+  # optional --path narrowing, then liveness lookup (PR number from the
+  # record's own "(#N)" subject first, else SHA-prefix match either
+  # direction — same order lookup_superseded used, "first match" being
+  # the first entry in sup_entries' array order, which is newest-first
+  # like the old token<TAB>by_label table scan). Not --history and
+  # superseded -> dropped; otherwise annotated. Field order matches the
+  # old annotate_commits output exactly (decision/learning/gotcha/
+  # related/sha/date/subject/superseded/superseded_by).
+  # path_active distinguishes "no --path given" (null $pset, no
+  # filtering) from "--path given but it matched zero commits" (an
+  # empty $pset array, filtering everything out) — both leave
+  # path_shas as an empty bash string, so the string alone can't tell
+  # them apart.
+  local path_active=0
+  [ -n "$PATHSPEC" ] && path_active=1
+
+  printf '%s' "$all_records" | jq -c \
+    --argjson sup "$sup_entries" --arg pathset "$path_shas" \
+    --argjson path_active "$path_active" --argjson history "$INCLUDE_HISTORY" '
+      ([10] | implode) as $LF
+      | . as $all
+      | (if $path_active == 1 then ($pathset | split($LF) | map(select(length > 0))) else null end) as $pset
+      | $all[]
+      | select((.decision | length) > 0 or (.learning | length) > 0 or (.gotcha | length) > 0 or (.related | length) > 0)
+      | . as $rec
+      | select($pset == null or ($pset | index($rec.sha)) != null)
+      | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $subj_pr
+      | (
+          if $subj_pr != null then ($sup | map(select(.token == ("pr:" + $subj_pr))) | (.[0].by_label // null))
+          else null
+          end
+        ) as $by_from_pr
+      | (
+          if $by_from_pr != null then $by_from_pr
+          else (
+            $sup
+            | map(select(.token | startswith("sha:")))
+            | map(select((.token[4:]) as $t | ($t | startswith($rec.sha)) or ($rec.sha | startswith($t))))
+            | (.[0].by_label // null)
+          )
+          end
+        ) as $by
+      | if $by != null then
+          (if ($history == 1) then
+            { decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related,
+              sha: $rec.sha, date: $rec.date, subject: $rec.subject,
+              superseded: true, superseded_by: $by }
+          else empty end)
+        else
+          { decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related,
+            sha: $rec.sha, date: $rec.date, subject: $rec.subject,
+            superseded: false, superseded_by: null }
+        end
+    '
 }
 
 commit_records=''
 COMMIT_DROPPED=0
 if [ "$INCLUDE_COMMIT" = 1 ]; then
-  SUPERSEDE_MAP=$(build_supersession_index)
   commit_records=$(extract_commits_ndjson)
-  [ -n "$commit_records" ] && \
-    commit_records=$(printf '%s\n' "$commit_records" | annotate_commits)
 
   # --match topic filter, applied AFTER liveness annotation so it narrows
   # the view only. Searchable text = subject + all trailer values.
@@ -601,25 +874,37 @@ case "$FORMAT" in
       echo "## Commit trailers"
       if [ -n "$commit_records" ]; then
         echo
-        printf '%s\n' "$commit_records" | while IFS= read -r rec; do
-          [ -z "$rec" ] && continue
-          sha=$(printf '%s' "$rec" | jq -r '.sha')
-          date=$(printf '%s' "$rec" | jq -r '.date')
-          subject=$(printf '%s' "$rec" | jq -r '.subject')
-          superseded_by=$(printf '%s' "$rec" | jq -r '.superseded_by // ""')
-          if [ -n "$superseded_by" ]; then
-            echo "### $sha  $date  $subject  [SUPERSEDED by $superseded_by]"
-          else
-            echo "### $sha  $date  $subject"
-          fi
-          for key_pair in 'decision Decision' 'learning Learning' 'gotcha Gotcha' 'related Related'; do
-            k=${key_pair% *}
-            label=${key_pair#* }
-            entries=$(printf '%s' "$rec" | jq -r ".${k}[]" 2>/dev/null || true)
-            render_group "$label" "$entries"
-          done
-          echo
-        done
+        # One jq -r pass over the whole NDJSON stream renders every
+        # record's header line, its trailer groups (render_group's old
+        # single-entry vs "(i/N)" multi-entry layout), and the blank
+        # line after it — replacing the old per-record loop that spawned
+        # one `jq` per field plus one per trailer key (up to 8 per
+        # record). jq itself still only ever sees each record's fields
+        # as opaque JSON string VALUES here (never re-parsed as jq
+        # syntax or shell), so a hostile trailer value survives verbatim.
+        printf '%s\n' "$commit_records" | jq -r '
+            def render_group(lbl; entries):
+              (entries | length) as $n
+              | if $n == 0 then empty
+                elif $n == 1 then "  " + lbl + ": " + entries[0]
+                else (
+                  range(0; $n) as $i
+                  | "  " + lbl + " (" + (($i + 1) | tostring) + "/" + ($n | tostring) + "): " + entries[$i]
+                )
+                end;
+            (
+              (if ((.superseded_by // "") != "") then
+                "### " + .sha + "  " + .date + "  " + .subject + "  [SUPERSEDED by " + .superseded_by + "]"
+              else
+                "### " + .sha + "  " + .date + "  " + .subject
+              end),
+              render_group("Decision"; .decision),
+              render_group("Learning"; .learning),
+              render_group("Gotcha"; .gotcha),
+              render_group("Related"; .related),
+              ""
+            )
+          '
         [ "$COMMIT_DROPPED" -gt 0 ] && \
           echo "(… $COMMIT_DROPPED more matches suppressed; raise --top or narrow --match/--path)" && echo
       else
@@ -665,20 +950,16 @@ case "$FORMAT" in
         if [ -z "$commit_records" ]; then
           echo '[]'
         else
-          printf '%s\n' "$commit_records" | jq -s '.'
+          printf '%s\n' "$commit_records" | jq -sc '.'
         fi
       )" \
       --argjson prs "$(
         if [ -z "$pr_records" ]; then
           echo '[]'
         else
-          printf '%s\n' "$pr_records" | jq -s '.'
+          printf '%s\n' "$pr_records" | jq -sc '.'
         fi
       )" \
-      '{repo: $repo, since: $since,
-        match: (if $match == "" then null else $match end),
-        path:  (if $path  == "" then null else $path  end),
-        commits_suppressed: $suppressed,
-        commits: $commits, prs: $prs}'
+      '{repo: $repo, since: $since, match: (if $match == "" then null else $match end), path: (if $path == "" then null else $path end), commits_suppressed: $suppressed, commits: $commits, prs: $prs}'
     ;;
 esac

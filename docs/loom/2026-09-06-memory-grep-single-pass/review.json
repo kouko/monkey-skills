@@ -1,0 +1,1394 @@
+{
+ "reviewed_sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+ "scope": "branch-end",
+ "vendors": [
+  "anthropic",
+  "codex"
+ ],
+ "second_vendor": "codex",
+ "verdicts": [
+  {
+   "round": 1,
+   "scope": "wave-end:1",
+   "reviewer": "rev-we1-mg-codex",
+   "vendor": "codex",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "NEEDS_REVISION",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "dimension_scores": {
+    "security": "NEEDS_REVISION",
+    "architecture": "PASS",
+    "correctness": "NEEDS_REVISION",
+    "naming": "PASS",
+    "tests": "NEEDS_REVISION",
+    "refactoring": "PASS_WITH_NOTES",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "NEEDS_REVISION",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "NEEDS_REVISION",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "fatal",
+     "dimension": "correctness",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:403",
+     "text": "issue (blocking): a commit subject containing byte 0x1F breaks the new record parser -- the record is silently dropped, where the old implementation rendered it. No fixture or probe covers a hostile subject (only trailer values).",
+     "fix": "Frame fields with NUL, or use an encoding injective for every non-NUL byte; add an old-versus-new regression case whose subject contains 0x1F."
+    },
+    {
+     "severity": "fatal",
+     "dimension": "external-surface-grounding",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:402",
+     "text": "issue (blocking): the correctness-critical use of git's %(trailers:key=...,unfold) has no grounding citation for its filtering, case-matching and unfolding semantics.",
+     "fix": "Cite the official git pretty-formats and interpret-trailers documentation supporting the claimed equivalence (key=, unfold, trailer-only)."
+    },
+    {
+     "severity": "important",
+     "dimension": "tests",
+     "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py:182",
+     "text": "issue (blocking): the hostile-separator probe claims the raw 0x1E/0x1F value survives verbatim but asserts only the words 'quoted' and 'backslash'; deleting both separator bytes would still pass.",
+     "fix": "Assert exact equality with the hostile value in json and plain, and add a subject-side 0x1F case."
+    },
+    {
+     "severity": "important",
+     "dimension": "tests",
+     "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:161",
+     "text": "issue (blocking): the repaired perf fixture is never verified to contain 300 parsed records and 20 effective supersessions; every assertion discards stdout, so it can regress to zero live records while the counts stay green.",
+     "fix": "Assert the record counts through --format=json --history before measuring."
+    },
+    {
+     "severity": "important",
+     "dimension": "incorrect-fact",
+     "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:231",
+     "text": "issue (blocking): whole-second timestamps do not enforce the stated two-second bound (a ~3 s run can report 2), and runner load can fail CI while the constant-process contract holds.",
+     "fix": "Measure with a monotonic sub-second clock; state the CI tolerance separately; keep subprocess counts as the deterministic gate."
+    },
+    {
+     "severity": "nit",
+     "dimension": "refactoring",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:403",
+     "text": "nitpick (non-blocking): three substantial jq programs were flattened onto single physical lines to accommodate the adversary shim's counting defect, reducing reviewability.",
+     "fix": "Repair the adversary shim the way the perf suite's shim was repaired, then bring the jq programs back to multiline form."
+    }
+   ]
+  },
+  {
+   "round": 1,
+   "scope": "wave-end:1",
+   "reviewer": "rev-we1-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code",
+   "verdict": "PASS_WITH_NOTES",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS_WITH_NOTES",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS_WITH_NOTES",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "important",
+     "dimension": "architecture",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:442",
+     "text": "issue: the four jq templates at :403/:422/:442/:531 (up to 1421 characters on one physical line) were flattened because the adversary probe's jq shim logs the whole argument list, miscounting a multi-line jq argument as several invocations. This is a test-tooling defect dictating production code shape; this same branch already proves the correct fix in test-memory-grep-perf.sh's shim, which logs a fixed one-line marker.",
+     "fix": "Change the probe shim to a fixed marker, then reformat the four jq programs across multiple indented lines and re-run both the perf suite and the probe file."
+    },
+    {
+     "severity": "nit",
+     "dimension": "refactoring",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:9",
+     "text": "nitpick: the top-of-file Parsing strategy comment still describes only interpret-trailers and does not mention that extraction now uses %(trailers:key=...,unfold).",
+     "fix": "Add one sentence pointing to the detailed comment block."
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "scope": "wave-end:1",
+   "reviewer": "rev-we1-mg-codex",
+   "vendor": "codex",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "9baa5231fb63b442e1e08d4df0e0ddec3f1115ab",
+   "dimension_scores": {
+    "correctness": "PASS",
+    "external-surface-grounding": "PASS",
+    "tests": "PASS",
+    "incorrect-fact": "PASS",
+    "refactoring": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "wave-end:1-01..06 all confirmed fixed; no fix introduced a new defect within the fix delta; round 1's reported 20-supersession perf fixture was invalid (19 in fact) until the accumulator bug was fixed; bash -n and /bin/bash -n pass; the five pre-existing suites remain byte-unchanged from 4e45d6de."
+   ]
+  },
+  {
+   "round": 2,
+   "scope": "wave-end:1",
+   "reviewer": "rev-we1-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code",
+   "verdict": "PASS",
+   "sha": "9baa5231fb63b442e1e08d4df0e0ddec3f1115ab",
+   "dimension_scores": {
+    "architecture": "PASS",
+    "refactoring": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "wave-end:1-06 fixed: the probe shim logs a fixed marker and the four jq programs are multi-line again, byte-identical apart from whitespace, counts unchanged (4 plain / 5 json, constant); the header Parsing strategy comment nit stays open for the ship nit batch."
+   ]
+  },
+  {
+   "round": 3,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-codex",
+   "vendor": "codex",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "NEEDS_REVISION",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "NEEDS_REVISION",
+    "naming": "PASS",
+    "tests": "NEEDS_REVISION",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "NEEDS_REVISION",
+    "ambiguity": "NEEDS_REVISION",
+    "inconsistency": "PASS",
+    "incorrect-fact": "NEEDS_REVISION",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "fatal",
+     "dimension": "correctness",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:517",
+     "text": "issue (blocking): the capability guard claims an exact placeholder match but uses grep -qF, which is substring containment. On a capable git, a HEAD trailer value quoting the placeholder text falsely selects the fallback and then falsely concludes no trailer capability exists, exiting 3 instead of returning the complete digest.",
+     "fix": "Compare the whole probe output to the attempted placeholder with shell equality, accounting for the format's trailing-newline behaviour; pin it with a fixture whose HEAD carries the placeholder text as a real trailer value."
+    },
+    {
+     "severity": "important",
+     "dimension": "ambiguity",
+     "anchor": "docs/loom/intent/2026-09-06-memory-grep-single-pass.md:35",
+     "text": "issue (blocking): the approved Acceptance 2 exception is worded as a general class - any commit whose trailers the old parser missed may diverge - rather than the measured case, which would let future unmeasured differences pass whenever described as recovering more.",
+     "fix": "Limit the exception to fe9218d7, five recovered lines versus one, four additional lines in the recorded 423-commit population; every other stdout byte and every exit code identical."
+    },
+    {
+     "severity": "important",
+     "dimension": "omission",
+     "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:18",
+     "text": "issue (blocking): the report cites unnamed diff files and output summaries that are neither linked nor preserved, so the user cannot inspect or reproduce the Acceptance 2 population; the ref, the fixed window and the derivation command for 423 commits are absent.",
+     "fix": "Name a preserved artifact or executable command per Acceptance line, and record the old/new refs, a fixed --since boundary, and the commands that recompute the population, the sole differing commit and the four regained lines."
+    },
+    {
+     "severity": "important",
+     "dimension": "incorrect-fact",
+     "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:69",
+     "text": "issue (blocking): the report tells the user that review ended with everything passing and zero findings, written before the branch-end closing reviewers had returned any verdict.",
+     "fix": "State only that the wave-end findings and the branch-end adversary finding were fixed; defer any claim about the closing review until its verdicts exist."
+    },
+    {
+     "severity": "important",
+     "dimension": "incorrect-fact",
+     "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/review.json:554",
+     "text": "issue (blocking): cost.dispatches reads 11 while dispatch[] has grown past it, omitting at least the branch-end-fix implementer.",
+     "fix": "Recompute cost.dispatches from the dispatch[] population and cost.rounds from the distinct verdict rounds."
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "nit",
+     "dimension": "inconsistency",
+     "anchor": "fd4bae5a",
+     "text": "nitpick (non-blocking): the branch-end adversary's probe file spans W1-02, W2-01 and W2-memory territory but its Task: trailer names only W2-01, and no commit in the delta carries a branch-end task id even though that dispatch entry exists.",
+     "fix": "Add the covering dispatch id or a one-line note in the commit body on why W2-01 was chosen, so a later git log --grep of branch-end work is not empty."
+    }
+   ],
+   "notes": [
+    "Re-derived Acceptance 2 independently: diffed the pre-rewrite script against HEAD on this repo's real history; fe9218d7's five memory lines are the only difference in either unfiltered mode. Reproduced the pre-existing empty-repo exit 128 on both scripts. Ran 57 pytest tests and all seven shell suites in this checkout."
+   ]
+  },
+  {
+   "round": 4,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-codex",
+   "vendor": "codex",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "NEEDS_REVISION",
+   "sha": "e62652ef8c0dec9701c1be29ebef230b35a81fdb",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "NEEDS_REVISION",
+    "correctness": "NEEDS_REVISION",
+    "naming": "PASS",
+    "tests": "PASS_WITH_NOTES",
+    "refactoring": "PASS",
+    "cross-task-coherence": "NEEDS_REVISION",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "NEEDS_REVISION",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "NEEDS_REVISION",
+    "incorrect-fact": "NEEDS_REVISION",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "fatal",
+     "dimension": "correctness",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:518",
+     "text": "issue (blocking): the capability probe runs git commit-tree in the target repository, writing an unreachable commit object on every invocation. A read-only retrieval command now mutates the repository it reads, contradicting the blind-run report's statement that the tool writes nothing, and it also bypasses detection when the object database is read-only or uses the SHA-256 object format. Reproduced by the orchestrator on a clean fixture: object count 3 before, 4 after, git fsck --unreachable lists the orphan.",
+     "fix": "Decide capability without writing anything into the target repository - a sentinel trailer key no commit can carry, a temporary alternate object database, or a probe run outside the target - and pin the object count before and after a run, plus the bare, shallow, empty, read-only and SHA-256 shapes."
+    }
+   ],
+   "notes": [
+    "branch-end-01..05 all confirmed fixed; the fix for -01 introduced the new fatal above."
+   ]
+  },
+  {
+   "round": 4,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "e62652ef8c0dec9701c1be29ebef230b35a81fdb",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "Reproduced the substring false-positive against the pre-fix script and confirmed it is closed. Tested the empty, bare, shallow and SHA-256 repository shapes itself: on SHA-256 the commit-tree probe fails against the SHA-1 empty-tree constant and the guard degrades to unguarded extraction, judged the right failure direction and practically unreachable because a SHA-256-capable git is strictly newer than the git the guard exists for. Re-derived the narrowed Acceptance 2 exception end to end from the report's own recipe. Confirmed cost.dispatches follows the array-population rule across three consecutive snapshots. Did not notice the object write the other reader found."
+   ]
+  },
+  {
+   "round": 5,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-codex",
+   "vendor": "codex",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "NEEDS_REVISION",
+   "sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "NEEDS_REVISION",
+    "naming": "PASS",
+    "tests": "PASS_WITH_NOTES",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "fatal",
+     "dimension": "correctness",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
+     "text": "issue (blocking): when mktemp -d fails the capability probe is treated as inconclusive and extraction runs unguarded, restoring the original silent-data-loss path on a git that echoes unsupported placeholders - a repository containing memory exits 0 with an empty digest.",
+     "fix": "Fail loudly with exit 3 whenever the scratch store or the synthetic probe object cannot be created; pin it with a shim that fails mktemp while git echoes the placeholder."
+    }
+   ],
+   "notes": [
+    "branch-end-06 fixed: every probe invocation overrides inherited GIT_OBJECT_DIRECTORY with a unique temporary store, the EXIT trap removes it on normal, exit-3 and error paths, inherited GIT_ALTERNATE_OBJECT_DIRECTORIES can only add read sources, concurrent runs use distinct directories, and the SHA-256 fallback derives the empty-tree hash without writing."
+   ]
+  },
+  {
+   "round": 5,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "NEEDS_REVISION",
+   "sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "NEEDS_REVISION",
+    "naming": "PASS",
+    "tests": "PASS_WITH_NOTES",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "NEEDS_REVISION",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "fatal",
+     "dimension": "correctness",
+     "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
+     "text": "issue (blocking): a probe-build failure (mktemp -d on a full or unwritable TMPDIR, a restrictive sandbox, a quota) falls through to unguarded extraction. Reproduced against the pinned commit with TMPDIR pointed at a nonexistent path plus a placeholder-echoing git shim: exit 0 and '(none in range)' over a repository carrying a real Decision: trailer. Unlike the SHA-256 gap accepted in round 4, this is not version-gated and can co-occur with a genuinely incapable git on any machine.",
+     "fix": "Any probe-build failure must exit 3 rather than fall through; pin mktemp failure combined with an incapable-git shim."
+    }
+   ],
+   "notes": [
+    "Independent of the other reader, this is the same defect as branch-end-07 and is closed by 14f02d9f.",
+    "Isolation verified against a pinned copy: an inherited GIT_OBJECT_DIRECTORY pointing at the real store, and a symlinked objects directory, both isolate correctly; a bogus inherited GIT_OBJECT_DIRECTORY breaks the pre-change script identically, so it is not a regression. Temp-dir cleanup confirmed on the fast path, the exit-3 path, bare, shallow and the SHA-256 path. Git-call count recounted with a logging shim: exactly 4 on the fast path, the cap fully consumed by design. The set -u trap bug is fixed and the pattern appears nowhere else.",
+    "Process hazard worth keeping: several early checks silently ran against the shared working tree while another agent was mid-edit on the same file; the reader re-ran every load-bearing check against a pinned `git show <sha>:<path>` copy and reported only those. It also found 82 stray probe directories in TMPDIR from a concurrent burst; the orchestrator confirmed the shipped code leaks none across the fast path, three consecutive runs and the exit-3 path, and removed them."
+   ]
+  },
+  {
+   "round": 6,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-codex",
+   "vendor": "codex",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "PASS_WITH_NOTES",
+   "sha": "14f02d9f6ce12243a48102881d5fdb39e648fd25",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS_WITH_NOTES",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS_WITH_NOTES",
+    "deletion-first": "PASS_WITH_NOTES",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "branch-end-07 fixed: no probe-build failure can reach unguarded extraction; both messages state the failed prerequisite and the recovery action.",
+    "The design re-look obligation was met because both shapes were explicitly compared, though its first reason is circular and its second weak; the retained mechanism is bounded, isolated and safe to ship."
+   ]
+  },
+  {
+   "round": 6,
+   "scope": "branch-end",
+   "reviewer": "rev-be-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "PASS_WITH_NOTES",
+   "sha": "14f02d9f6ce12243a48102881d5fdb39e648fd25",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS_WITH_NOTES",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "important",
+     "dimension": "architecture",
+     "anchor": "14f02d9f (commit body, the design re-look block)",
+     "text": "issue (blocking): the design re-look's first reason for rejecting the delete-the-probe shape is circular - the tests that assert the mechanism's own call shape cannot be evidence that the shape is right - and it traces to the brief's own constraint, which asked the implementer to weigh deletion while forbidding changes to the tests describing the mechanism. Reason 2 is real but narrower than recorded: on a truly empty commit range an empty digest is correct under either design, so it is the loss of an independent confirmation signal, not a data-loss regression. The outcome (repair rather than delete) stands on the narrower reason 2 alone.",
+     "fix": "No code change. Record that reason 1 is circular and traces to the brief, that reason 2 holds only in its narrower form, and that the decision is still correct on reason 2 alone. Do not reopen the design this late in the checkpoint."
+    }
+   ],
+   "notes": [
+    "branch-end-07 fixed: reproduced its own round-5 repro against a pinned copy of 14f02d9f and got exit 3 with an actionable message on both a capable and an incapable git; traced every remaining path and found none reaching extraction with capability unconfirmed.",
+    "Reran 65 pytest tests and all seven shell suites against the committed sha; all green, matching the reported figures.",
+    "Nit for the ship batch: the header's exit-code table does not list the two new exit-3 sub-cases, though each runtime message is self-contained."
+   ]
+  },
+  {
+   "round": 8,
+   "scope": "branch-end",
+   "reviewer": "rev-be8-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "re-baseline after rebase onto origin/main; delta = charter positive-control skip (2b2cad98) + conflict resolutions; both suites ran green (11 passed 1 skipped; 1 passed); skip condition keyed on find_plan_commit_sha reachability, not trunk identity"
+   ]
+  },
+  {
+   "round": 8,
+   "scope": "branch-end",
+   "reviewer": "rev-be8-mg-codex",
+   "vendor": "openai",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "PASS_WITH_NOTES",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS_WITH_NOTES",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "note",
+     "dimension": "tests",
+     "anchor": "loom-code/scripts/test_probes_charter_wave_end_2.py:230",
+     "text": "codex sandbox had no writable temp dir, so pytest could not start there; static checks passed and the same suites were run green by the co-reader this round"
+    }
+   ],
+   "notes": [
+    "second vendor fulfilled"
+   ]
+  },
+  {
+   "round": 9,
+   "scope": "branch-end",
+   "reviewer": "rev-be9-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "re-baseline after CI fixes (23bb927b); 62 skill-script tests passed, 6 shell suites OK, bare-repo no-identity simulation exit 0"
+   ]
+  },
+  {
+   "round": 9,
+   "scope": "branch-end",
+   "reviewer": "rev-be9-mg-codex",
+   "vendor": "openai",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "static review; identity scoped to commit-tree, fixture inert, fast path 4 git calls within budget"
+   ]
+  }
+ ],
+ "probes": [
+  {
+   "kind": "package-tests",
+   "scope": "wave-end:1",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": ""
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_mixed_case_trailer_key_excluded",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_path_scope_external_supersession_retires_record",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_hostile_separator_value_stays_structurally_valid",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_trailer_followed_by_stray_line_excluded",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_folded_continuation_joined_single_space",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_subprocess_count_bounded",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_wall_clock_bounded",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_brand_new_repo_crashes_with_undocumented_exit",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_zero_memory_commits_shows_none_in_range",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_match_no_hit_shows_no_memory_matches_line",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_path_no_hit_shows_no_memory_touched_line",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_render_plain_top_cap_shows_exact_suppression_line",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_verify_mode_non_memory_commit_exits_four",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_verify_mode_unresolvable_ref_exits_two",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_preflight_git_repo_check_precedes_jq_check",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_plain_and_json_jq_invocation_count_bounded_and_constant",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_plain_exact_byte_layout_matches_fixture_built_expectation",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_hostile_jq_syntax_trailer_value_survives_verbatim",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_trailer_value_resembling_record_header_does_not_split_layout",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_plain_empty_groups_omitted_json_arrays_present",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_top_history_match_combined_counts_superseded_toward_cap",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "wave-end:1",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_json_top_level_shape_key_order_and_null_vs_string",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "wave-end:1",
+   "command": "bash loom-workflow/tests/test-memory-grep-equivalence.sh",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "loom-workflow/tests/test-memory-grep-equivalence.sh"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "wave-end:1",
+   "command": "bash loom-workflow/tests/test-memory-grep-perf.sh",
+   "sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "result": "pass",
+   "artifact": "loom-workflow/tests/test-memory-grep-perf.sh"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_graduated_copy_single_pass_diff_pinned_to_parents_line",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_graduated_copy_render_diff_pinned_to_parents_line",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_version_carriers_full_set_agree",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_extract_commits_incompatible_git_rejects_loudly",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_extract_commits_incompatible_git_literal_placeholder_not_silently_dropped",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_memory_store_new_entries_resolve_and_wikilink_each_other",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_pr_extraction_malformed_gh_json_does_not_corrupt_commit_digest",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "branch-end",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": ""
+  },
+  {
+   "kind": "blind-run",
+   "scope": "branch-end",
+   "command": "cat docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md",
+   "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "result": "pass",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md"
+  },
+  {
+   "kind": "package-tests",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "result": "pass — 182 passed, 1 skipped (round 8 re-baseline, post-fix)"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "branch-end:8",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass — 182 passed, 1 skipped (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": ""
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:8",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_hostile_separator_value_stays_structurally_valid",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:8",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_hostile_jq_syntax_trailer_value_survives_verbatim",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:8",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_version_carriers_full_set_agree",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "branch-end:9",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass — 182 passed, 1 skipped (round 9 re-run at reviewed content)",
+   "artifact": ""
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:9",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_hostile_separator_value_stays_structurally_valid",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass (round 9 re-run at reviewed content)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:9",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_hostile_jq_syntax_trailer_value_survives_verbatim",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass (round 9 re-run at reviewed content)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:9",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_version_carriers_full_set_agree",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass (round 9 re-run at reviewed content)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  }
+ ],
+ "questions": [
+  {
+   "decision_point": 1,
+   "text": "你要的是撈記憶的腳本只叫一次 git、本 repo 2 秒內完成、輸出與 exit code 逐位元不變、五份舊測試不動全綠、verify 模式不動。對嗎？",
+   "type": "what"
+  },
+  {
+   "decision_point": 1,
+   "text": "這次要不要用 Codex 當第二位讀者？（答：用）",
+   "type": "what"
+  }
+ ],
+ "open_findings": [
+  {
+   "id": "wave-end:1-01",
+   "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:403",
+   "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "raised_by": "rev-we1-mg-codex",
+   "resolved": "closed by 03271dcb — NUL field delimiters; regression test compares HEAD against the pre-change script on a 0x1F subject; confirmed fixed by rev-we1-mg-codex round 2"
+  },
+  {
+   "id": "wave-end:1-02",
+   "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:402",
+   "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "raised_by": "rev-we1-mg-codex",
+   "resolved": "closed by 00312a41 — grounding comment naming git-log(1) PRETTY FORMATS and git-interpret-trailers(1) OPTIONS; introducing version honestly deferred to W2-01; confirmed fixed by rev-we1-mg-codex round 2"
+  },
+  {
+   "id": "wave-end:1-03",
+   "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py:182",
+   "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "raised_by": "rev-we1-mg-codex",
+   "resolved": "closed by 9f31972d — probe asserts exact equality in plain and JSON; confirmed fixed by rev-we1-mg-codex round 2"
+  },
+  {
+   "id": "wave-end:1-04",
+   "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:161",
+   "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "raised_by": "rev-we1-mg-codex",
+   "resolved": "closed by 1142806d — perf suite asserts 300/20/280 before measuring, which surfaced and fixed a real 19-vs-20 fixture bug; confirmed fixed by rev-we1-mg-codex round 2"
+  },
+  {
+   "id": "wave-end:1-05",
+   "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:231",
+   "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "raised_by": "rev-we1-mg-codex",
+   "resolved": "closed by ddd7613f — monotonic sub-second clock, 2.0 s local bound stated separately from the 5.0 s CI tolerance; confirmed fixed by rev-we1-mg-codex round 2"
+  },
+  {
+   "id": "wave-end:1-06",
+   "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:442",
+   "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
+   "raised_by": "rev-we1-mg-claude",
+   "resolved": "closed by 9baa5231 — probe shim logs one marker per invocation; the four jq programs are multi-line again with whitespace-only diffs and unchanged counts; confirmed fixed by rev-we1-mg-claude round 2"
+  },
+  {
+   "id": "branch-end-01",
+   "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:517",
+   "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "raised_by": "rev-be-mg-codex",
+   "resolved": "closed by 76190760 - the probe moved off repository content onto a synthetic object; confirmed fixed by both readers in round 4, and it raised the new finding branch-end-06"
+  },
+  {
+   "id": "branch-end-02",
+   "anchor": "docs/loom/intent/2026-09-06-memory-grep-single-pass.md:35",
+   "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "raised_by": "rev-be-mg-codex",
+   "resolved": "closed by 50b904e5 and e62652ef - the exception names fe9218d7 alone and no longer pins a population that grows; confirmed by both readers in round 4"
+  },
+  {
+   "id": "branch-end-03",
+   "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:18",
+   "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "raised_by": "rev-be-mg-codex",
+   "resolved": "closed by e62652ef - every Acceptance line names a runnable command or committed artifact, with the full recipe for the Acceptance 2 claim; confirmed by rev-be-mg-codex round 4"
+  },
+  {
+   "id": "branch-end-04",
+   "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md:69",
+   "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "raised_by": "rev-be-mg-codex",
+   "resolved": "closed by e62652ef - the report states the true timeline and makes no claim about the round that had not returned; confirmed by both readers in round 4"
+  },
+  {
+   "id": "branch-end-05",
+   "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/review.json:554",
+   "origin_sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
+   "raised_by": "rev-be-mg-codex",
+   "resolved": "closed by 1ba1bd4e - cost recomputed from the arrays; rev-be-mg-claude verified the rule holds across three consecutive snapshots"
+  },
+  {
+   "id": "branch-end-06",
+   "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:518",
+   "origin_sha": "e62652ef8c0dec9701c1be29ebef230b35a81fdb",
+   "raised_by": "rev-be-mg-codex",
+   "resolved": "closed by 3379531b - the probe's git calls run against an isolated temporary object store; confirmed by rev-be-mg-codex round 5, and it raised branch-end-07"
+  },
+  {
+   "id": "branch-end-07",
+   "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
+   "origin_sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
+   "raised_by": "rev-be-mg-codex and rev-be-mg-claude (independently)",
+   "resolved": "closed by 14f02d9f - every probe-build failure exits 3 before extraction and the dead fallback is deleted; confirmed by both readers in round 6"
+  },
+  {
+   "id": "branch-end-08",
+   "anchor": "14f02d9f (commit body, the design re-look block)",
+   "origin_sha": "14f02d9f6ce12243a48102881d5fdb39e648fd25",
+   "raised_by": "rev-be-mg-claude",
+   "resolved": "closed by record, as the finding itself prescribes: reason 1 of the design re-look is circular and traces to the orchestrator's brief, which asked for deletion to be weighed while forbidding changes to the tests that describe the mechanism; reason 2 holds only in its narrower form, that an empty range loses a confirmation signal rather than data; the decision to repair rather than delete stands on that narrower reason alone. Recorded rather than reopened, per the finding's own fix."
+  }
+ ],
+ "dispatch": [
+  {
+   "task": "W1-01",
+   "role": "implementer",
+   "agent_id": "impl-w1-01-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T08:00:46+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-02",
+   "role": "adversary",
+   "agent_id": "adv-w1-02-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T08:00:46+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-02",
+   "role": "implementer",
+   "agent_id": "impl-w1-02-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T08:00:46+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-03",
+   "role": "adversary",
+   "agent_id": "adv-w1-03-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T08:00:46+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-03",
+   "role": "implementer",
+   "agent_id": "impl-w1-03-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T08:00:46+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "W1-02",
+   "role": "implementer",
+   "agent_id": "impl-w1-02-mg-b",
+   "model": "sonnet",
+   "started": "2026-09-06T09:04:38+0800",
+   "fresh_context": true,
+   "note": "took over after impl-w1-02-mg was killed mid-verification by an auth error; re-ran every suite and signed the commit"
+  },
+  {
+   "task": "wave-end:1",
+   "role": "reviewer",
+   "agent_id": "rev-we1-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T09:34:25+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "wave-end:1",
+   "role": "reviewer",
+   "agent_id": "rev-we1-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T09:34:25+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "wave-end:1-fix",
+   "role": "implementer",
+   "agent_id": "impl-we1-fix-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T09:45:36+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "wave-end:1",
+   "role": "reviewer",
+   "agent_id": "rev-we1-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T10:12:07+0800",
+   "fresh_context": false,
+   "note": "round 2 confirmation — same reader resumed"
+  },
+  {
+   "task": "wave-end:1",
+   "role": "reviewer",
+   "agent_id": "rev-we1-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T10:12:07+0800",
+   "fresh_context": false,
+   "note": "round 2 confirmation — same reader resumed"
+  },
+  {
+   "task": "W2-01",
+   "role": "implementer",
+   "agent_id": "impl-w2-01-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T10:16:21+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "W2-memory",
+   "role": "implementer",
+   "agent_id": "orchestrator-mg",
+   "model": "fable-5.1",
+   "started": "2026-09-06T10:22:35+0800",
+   "fresh_context": false
+  },
+  {
+   "task": "branch-end",
+   "role": "adversary",
+   "agent_id": "adv-be-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T10:24:56+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end",
+   "role": "blind-runner",
+   "agent_id": "blind-be-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T10:24:56+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end-fix",
+   "role": "implementer",
+   "agent_id": "impl-be-fix-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T10:32:45+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T11:00:50+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T11:00:50+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end-fix-2",
+   "role": "implementer",
+   "agent_id": "impl-be-fix2-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T11:05:33+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T11:26:01+0800",
+   "fresh_context": false,
+   "note": "round 4 confirmation — same reader resumed"
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T11:26:01+0800",
+   "fresh_context": false,
+   "note": "round 4 confirmation — same reader resumed"
+  },
+  {
+   "task": "branch-end-fix-3",
+   "role": "implementer",
+   "agent_id": "impl-be-fix3-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T11:28:58+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T11:42:00+0800",
+   "fresh_context": false,
+   "note": "round 5 confirmation — same reader resumed"
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T11:42:00+0800",
+   "fresh_context": false,
+   "note": "round 5 confirmation — same reader resumed"
+  },
+  {
+   "task": "branch-end-fix-4",
+   "role": "implementer",
+   "agent_id": "impl-be-fix4-mg",
+   "model": "sonnet",
+   "started": "2026-09-06T11:43:55+0800",
+   "fresh_context": true
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T11:54:28+0800",
+   "fresh_context": false,
+   "note": "round 6 confirmation — same reader resumed"
+  },
+  {
+   "task": "branch-end",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T11:54:28+0800",
+   "fresh_context": false,
+   "note": "round 6 confirmation — same reader resumed"
+  },
+  {
+   "task": "nit-batch",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T12:05:54+0800",
+   "fresh_context": false,
+   "note": "nit-batch confirmation"
+  },
+  {
+   "task": "nit-batch",
+   "role": "reviewer",
+   "agent_id": "rev-be-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T12:05:54+0800",
+   "fresh_context": false,
+   "note": "nit-batch confirmation"
+  },
+  {
+   "task": "W3-01",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "glm",
+   "started": "2026-09-06T12:40:00+0800",
+   "fresh_context": false,
+   "note": "rebase fix — charter positive-control skip when plan commit unreachable; inline fix by orchestrator, recorded honestly (not a dispatched implementer)"
+  },
+  {
+   "task": "branch-end-8",
+   "role": "reviewer",
+   "agent_id": "rev-be8-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T12:40:00+0800",
+   "fresh_context": true,
+   "note": "round 8 re-baseline after rebase onto origin/main"
+  },
+  {
+   "task": "branch-end-8",
+   "role": "reviewer",
+   "agent_id": "rev-be8-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T12:40:00+0800",
+   "fresh_context": true,
+   "note": "round 8 re-baseline after rebase onto origin/main; second vendor"
+  },
+  {
+   "task": "W3-03",
+   "role": "implementer",
+   "agent_id": "orchestrator-inline",
+   "model": "glm",
+   "started": "2026-09-06T13:35:00+0800",
+   "fresh_context": false,
+   "note": "CI fixes — capability probe pins a throwaway identity (bare repo + no host identity); hostile-subject oracle reads a committed fixture instead of a pinned sha (depth-1 CI checkout)"
+  },
+  {
+   "task": "branch-end-9",
+   "role": "reviewer",
+   "agent_id": "rev-be9-mg-claude",
+   "model": "sonnet",
+   "started": "2026-09-06T13:35:00+0800",
+   "fresh_context": true,
+   "note": "round 9 re-baseline after CI fixes"
+  },
+  {
+   "task": "branch-end-9",
+   "role": "reviewer",
+   "agent_id": "rev-be9-mg-codex",
+   "model": "gpt-5-codex",
+   "started": "2026-09-06T13:35:00+0800",
+   "fresh_context": true,
+   "note": "round 9 re-baseline after CI fixes; second vendor"
+  }
+ ],
+ "cost": {
+  "rounds": 9,
+  "dispatches": 35,
+  "cap_changes": [],
+  "hours_plan_to_pr": null
+ },
+ "notes": [
+  "design re-look: the capability guard has now taken a finding in three consecutive rounds (substring comparison, then an object written into the target repo, then an inconclusive path when the scratch store cannot be made). Round 6 weighs removing the probe rather than repairing it: the extraction already fetches the field, so an unexpanded placeholder can be recognised in the data itself at zero extra cost, with no synthetic object, no temporary store and no third failure mode. The implementer decides and records why.",
+  "design re-look outcome: the guard was repaired, not deleted. The reasoning recorded at the time was partly circular and the circularity came from the brief; a later brief that asks whether a mechanism should exist must also say which of its tests may move, or the answer is decided by the constraint rather than by the design."
+ ]
+}

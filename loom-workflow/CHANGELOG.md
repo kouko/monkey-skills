@@ -4,6 +4,30 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.1.0] — 2026-09-06 — memory-grep.sh in one git pass
+
+Minor. `memory-grep.sh` no longer spawns one subprocess chain per commit;
+extraction, the supersession index, and both renderers each now make a
+constant number of subprocess calls regardless of repo size. Output is
+byte-identical (pinned by a golden-output equivalence suite). Measured on
+this repo (395 non-merge commits in the default 3-month window, 63
+memory-worthy) with `time bash
+loom-workflow/skills/git-memory/scripts/memory-grep.sh --no-pr >/dev/null`:
+19.9 s before this change, 0.083 s after. This tightens the script's
+minimum git version (see the script header) even though its command-line
+surface is unchanged — hence a minor bump, not a patch.
+
+Branch-end fix (same 4.1.0): a git that does not expand the
+`%(trailers:key=...)` --format placeholder no longer silently drops
+every commit's memory trailers. `extract_commits_ndjson` now runs a
+one-time capability probe before extraction; a git that understands the
+key-less `%(trailers:unfold)` placeholder but not `key=` gets a
+transparent fallback (still one git-log call, no exit-code change); a
+git that understands neither now exits 3 (external dependency missing)
+with a message naming the missing capability, instead of exiting 0 and
+printing "(none in range)" over real trailers. Exit code 3's documented
+meaning is extended to cover this case — see the script header.
+
 ## [4.0.1] — 2026-09-03 — Status grammar
 
 No code change. Bumped only because this plugin's prose describes the
