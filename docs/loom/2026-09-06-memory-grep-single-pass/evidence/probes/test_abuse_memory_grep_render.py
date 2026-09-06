@@ -120,6 +120,16 @@ def _build_records_repo(repo: Path, n_records: int) -> None:
 
 
 def _jq_call_count(repo: Path, tmp_path: Path, *args: str) -> int:
+    """A PATH-prepended `jq` shim that logs exactly ONE fixed marker
+    line per invocation (never the args themselves — wave-end:1-06: a
+    jq FILTER PROGRAM is typically a multi-line string, so `echo "$@"
+    >> log` logs several newlines per single invocation and overcounts,
+    which is what forced production jq programs in memory-grep.sh onto
+    single physical lines to dodge this shim's own miscounting instead
+    of fixing the shim. Matches loom-workflow/tests/test-memory-grep-perf.sh's
+    `make_jq_shim`, which already used the correct one-marker-per-call
+    shape.
+    """
     real_jq = shutil.which("jq")
     assert real_jq, "jq not found on PATH"
     shim_dir = tmp_path / f"shim-jq-{'-'.join(a.lstrip('-') for a in args) or 'plain'}"
@@ -127,7 +137,7 @@ def _jq_call_count(repo: Path, tmp_path: Path, *args: str) -> int:
     log = shim_dir / "jq-calls.log"
     log.write_text("")
     shim = shim_dir / "jq"
-    shim.write_text(f'#!/bin/sh\necho "$@" >> "{log}"\nexec "{real_jq}" "$@"\n')
+    shim.write_text(f'#!/bin/sh\necho call >> "{log}"\nexec "{real_jq}" "$@"\n')
     shim.chmod(0o755)
     env = os.environ.copy()
     env["PATH"] = f"{shim_dir}:{env['PATH']}"

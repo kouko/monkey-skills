@@ -437,7 +437,27 @@ extract_commits_ndjson() {
   all_records=$(
     git -C "$REPO" log --since="$SINCE" --no-merges -z --date=short \
       --format='%h%x00%ad%x00%s%x00%(trailers:key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold)' \
-      | jq -R -s -c '([0] | implode) as $NUL | ([10] | implode) as $LF | (split($NUL)) as $tok0 | ($tok0 | if (length>0 and .[-1]=="") then .[:-1] else . end) as $tok | [ range(0; ($tok|length) / 4) as $i | $tok[$i*4] as $sha | $tok[$i*4+1] as $date | $tok[$i*4+2] as $subject | ($tok[$i*4+3] // "" | split($LF) | map(select(length>0))) as $lines | { sha: $sha, date: $date, subject: $subject, decision: [ $lines[] | select(test("^Decision: ")) | sub("^Decision: ";"") ], learning: [ $lines[] | select(test("^Learning: ")) | sub("^Learning: ";"") ], gotcha: [ $lines[] | select(test("^Gotcha: ")) | sub("^Gotcha: ";"") ], related: [ $lines[] | select(test("^Related: ")) | sub("^Related: ";"") ], supersedes: [ $lines[] | select(test("^Supersedes: ")) | sub("^Supersedes: ";"") ] } ]'
+      | jq -R -s -c '
+          ([0] | implode) as $NUL
+          | ([10] | implode) as $LF
+          | (split($NUL)) as $tok0
+          | ($tok0 | if (length > 0 and .[-1] == "") then .[:-1] else . end) as $tok
+          | [
+              range(0; ($tok | length) / 4) as $i
+              | $tok[$i * 4] as $sha
+              | $tok[$i * 4 + 1] as $date
+              | $tok[$i * 4 + 2] as $subject
+              | ($tok[$i * 4 + 3] // "" | split($LF) | map(select(length > 0))) as $lines
+              | {
+                  sha: $sha, date: $date, subject: $subject,
+                  decision: [ $lines[] | select(test("^Decision: ")) | sub("^Decision: ";"") ],
+                  learning: [ $lines[] | select(test("^Learning: ")) | sub("^Learning: ";"") ],
+                  gotcha: [ $lines[] | select(test("^Gotcha: ")) | sub("^Gotcha: ";"") ],
+                  related: [ $lines[] | select(test("^Related: ")) | sub("^Related: ";"") ],
+                  supersedes: [ $lines[] | select(test("^Supersedes: ")) | sub("^Supersedes: ";"") ]
+                }
+            ]
+        '
     git_rc="${PIPESTATUS[0]}"
     [ "$git_rc" -ne 0 ] && exit "$git_rc"
     true
@@ -456,7 +476,22 @@ extract_commits_ndjson() {
   # forward-pointer authoring convention is trusted, not enforced, same
   # as the old code. token is "pr:<N>" or "sha:<hex>", normalize_ref's
   # old semantics (a bare "#N" anywhere -> pr; 7-40 hex chars -> sha).
-  sup_entries=$(printf '%s' "$all_records" | jq -c '[ .[] | . as $rec | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $pr | ($rec.sha + (if $pr != null then " (PR #" + $pr + ")" else "" end)) as $by_label | $rec.supersedes[] as $val | ( if ($val | test("#[0-9]+")) then "pr:" + ($val | capture("^.*#(?<n>[0-9]+).*$").n) elif ($val | test("^[0-9a-fA-F]{7,40}$")) then "sha:" + ($val | ascii_downcase) else null end ) as $token | select($token != null) | {token: $token, by_label: $by_label} ]')
+  sup_entries=$(printf '%s' "$all_records" | jq -c '
+      [
+        .[] | . as $rec
+        | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $pr
+        | ($rec.sha + (if $pr != null then " (PR #" + $pr + ")" else "" end)) as $by_label
+        | $rec.supersedes[] as $val
+        | (
+            if ($val | test("#[0-9]+")) then "pr:" + ($val | capture("^.*#(?<n>[0-9]+).*$").n)
+            elif ($val | test("^[0-9a-fA-F]{7,40}$")) then "sha:" + ($val | ascii_downcase)
+            else null
+            end
+          ) as $token
+        | select($token != null)
+        | {token: $token, by_label: $by_label}
+      ]
+    ')
 
   # Final pass: memory-worthy filter (Decision/Learning/Gotcha/Related
   # non-empty; Supersedes-only is NOT memory-worthy, same as before),
@@ -476,7 +511,44 @@ extract_commits_ndjson() {
   local path_active=0
   [ -n "$PATHSPEC" ] && path_active=1
 
-  printf '%s' "$all_records" | jq -c --argjson sup "$sup_entries" --arg pathset "$path_shas" --argjson path_active "$path_active" --argjson history "$INCLUDE_HISTORY" '([10] | implode) as $LF | . as $all | (if $path_active == 1 then ($pathset | split($LF) | map(select(length>0))) else null end) as $pset | $all[] | select((.decision|length)>0 or (.learning|length)>0 or (.gotcha|length)>0 or (.related|length)>0) | . as $rec | select($pset == null or ($pset | index($rec.sha)) != null) | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $subj_pr | ( if $subj_pr != null then ($sup | map(select(.token == ("pr:" + $subj_pr))) | (.[0].by_label // null)) else null end ) as $by_from_pr | ( if $by_from_pr != null then $by_from_pr else ($sup | map(select(.token | startswith("sha:"))) | map(select((.token[4:]) as $t | ($t | startswith($rec.sha)) or ($rec.sha | startswith($t)))) | (.[0].by_label // null)) end ) as $by | if $by != null then (if ($history == 1) then {decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related, sha: $rec.sha, date: $rec.date, subject: $rec.subject, superseded: true, superseded_by: $by} else empty end) else {decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related, sha: $rec.sha, date: $rec.date, subject: $rec.subject, superseded: false, superseded_by: null} end'
+  printf '%s' "$all_records" | jq -c \
+    --argjson sup "$sup_entries" --arg pathset "$path_shas" \
+    --argjson path_active "$path_active" --argjson history "$INCLUDE_HISTORY" '
+      ([10] | implode) as $LF
+      | . as $all
+      | (if $path_active == 1 then ($pathset | split($LF) | map(select(length > 0))) else null end) as $pset
+      | $all[]
+      | select((.decision | length) > 0 or (.learning | length) > 0 or (.gotcha | length) > 0 or (.related | length) > 0)
+      | . as $rec
+      | select($pset == null or ($pset | index($rec.sha)) != null)
+      | ($rec.subject | if test("\\(#[0-9]+\\)") then capture("^.*\\(#(?<n>[0-9]+)\\).*$").n else null end) as $subj_pr
+      | (
+          if $subj_pr != null then ($sup | map(select(.token == ("pr:" + $subj_pr))) | (.[0].by_label // null))
+          else null
+          end
+        ) as $by_from_pr
+      | (
+          if $by_from_pr != null then $by_from_pr
+          else (
+            $sup
+            | map(select(.token | startswith("sha:")))
+            | map(select((.token[4:]) as $t | ($t | startswith($rec.sha)) or ($rec.sha | startswith($t))))
+            | (.[0].by_label // null)
+          )
+          end
+        ) as $by
+      | if $by != null then
+          (if ($history == 1) then
+            { decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related,
+              sha: $rec.sha, date: $rec.date, subject: $rec.subject,
+              superseded: true, superseded_by: $by }
+          else empty end)
+        else
+          { decision: $rec.decision, learning: $rec.learning, gotcha: $rec.gotcha, related: $rec.related,
+            sha: $rec.sha, date: $rec.date, subject: $rec.subject,
+            superseded: false, superseded_by: null }
+        end
+    '
 }
 
 commit_records=''
@@ -565,7 +637,29 @@ case "$FORMAT" in
         # record). jq itself still only ever sees each record's fields
         # as opaque JSON string VALUES here (never re-parsed as jq
         # syntax or shell), so a hostile trailer value survives verbatim.
-        printf '%s\n' "$commit_records" | jq -r 'def render_group(lbl; entries): (entries | length) as $n | if $n == 0 then empty elif $n == 1 then "  " + lbl + ": " + entries[0] else (range(0; $n) as $i | "  " + lbl + " (" + (($i + 1) | tostring) + "/" + ($n | tostring) + "): " + entries[$i]) end; ( (if ((.superseded_by // "") != "") then "### " + .sha + "  " + .date + "  " + .subject + "  [SUPERSEDED by " + .superseded_by + "]" else "### " + .sha + "  " + .date + "  " + .subject end), render_group("Decision"; .decision), render_group("Learning"; .learning), render_group("Gotcha"; .gotcha), render_group("Related"; .related), "" )'
+        printf '%s\n' "$commit_records" | jq -r '
+            def render_group(lbl; entries):
+              (entries | length) as $n
+              | if $n == 0 then empty
+                elif $n == 1 then "  " + lbl + ": " + entries[0]
+                else (
+                  range(0; $n) as $i
+                  | "  " + lbl + " (" + (($i + 1) | tostring) + "/" + ($n | tostring) + "): " + entries[$i]
+                )
+                end;
+            (
+              (if ((.superseded_by // "") != "") then
+                "### " + .sha + "  " + .date + "  " + .subject + "  [SUPERSEDED by " + .superseded_by + "]"
+              else
+                "### " + .sha + "  " + .date + "  " + .subject
+              end),
+              render_group("Decision"; .decision),
+              render_group("Learning"; .learning),
+              render_group("Gotcha"; .gotcha),
+              render_group("Related"; .related),
+              ""
+            )
+          '
         [ "$COMMIT_DROPPED" -gt 0 ] && \
           echo "(… $COMMIT_DROPPED more matches suppressed; raise --top or narrow --match/--path)" && echo
       else
