@@ -2,7 +2,7 @@
 originator: kouko
 kind: product
 needs-design: yes — 審查時機、使用者提問與多階段證據狀態會改變，現有規格未涵蓋這次精簡
-status: confirmed 2026-09-06
+status: withdrawn — superseded by 2026-09-06-remove-build-time-reviews after scope was narrowed
 
 ## Problem
 Loom 的主流程實際上已經是 Start、Plan、Build、Review、Ship，但每個階段內仍維護速度模式、波次審查與多份重複證據。小型變更因此反覆派工、審查、記錄與重跑，使用者等待很久，卻沒有得到相稱的品質提升。
