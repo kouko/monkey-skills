@@ -85,9 +85,11 @@ def test_read_base_graduated_ids_twenty_tickets_two_git_spawns(tmp_path: Path) -
     calls: list[list[str]] = []
     original = check_map_fog._run_git
 
-    def counting(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    def counting(
+        args: list[str], cwd: Path, *a, **kw
+    ) -> subprocess.CompletedProcess[str]:
         calls.append(args)
-        return original(args, cwd)
+        return original(args, cwd, *a, **kw)
 
     check_map_fog._run_git = counting
     try:
@@ -279,10 +281,12 @@ def test_read_base_graduated_ids_blob_read_failure_raises_not_partial_set(
     original = check_map_fog._run_git
     call_count = {"n": 0}
 
-    def failing(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    def failing(
+        args: list[str], cwd: Path, *a, **kw
+    ) -> subprocess.CompletedProcess[str]:
         call_count["n"] += 1
         if call_count["n"] == 1:
-            return original(args, cwd)
+            return original(args, cwd, *a, **kw)
         return subprocess.CompletedProcess(args=args, returncode=128, stdout="", stderr="fatal: bad object")
 
     check_map_fog._run_git = failing
@@ -318,7 +322,7 @@ def test_read_base_graduated_ids_cat_file_missing_blob_marker_raises_schema_viol
     original = check_map_fog._run_git
     calls: list[list[str]] = []
 
-    def fake(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    def fake(args: list[str], cwd: Path, *a, **kw) -> subprocess.CompletedProcess[str]:
         calls.append(args)
         if "ls-tree" in args:
             return subprocess.CompletedProcess(
@@ -332,11 +336,16 @@ def test_read_base_graduated_ids_cat_file_missing_blob_marker_raises_schema_viol
             )
         # any other spawn stands in for the blob-reading call
         # (cat-file --batch or equivalent), reporting the blob as
-        # missing inline per git's documented format.
+        # missing inline per git's documented format. Reads the blob
+        # sha list back out of whatever stdin-carrying argument the
+        # production call used, instead of re-hardcoding it, so this
+        # double stays correct regardless of how that plumbing works.
+        stdin_text = kw.get("stdin") or (a[0] if a else "")
+        first_sha = stdin_text.strip().splitlines()[0]
         return subprocess.CompletedProcess(
             args=args,
             returncode=0,
-            stdout="deadbeefdeadbeefdeadbeefdeadbeefdeadbeef missing\n",
+            stdout=f"{first_sha} missing\n",
             stderr="",
         )
 
