@@ -523,6 +523,22 @@
       "model": "fable-5.1",
       "started": "2026-09-06T10:22:35+0800",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T10:24:56+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-be-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T10:24:56+0800",
+      "fresh_context": true
     }
   ],
   "cost": {
