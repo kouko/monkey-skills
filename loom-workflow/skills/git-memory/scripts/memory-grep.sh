@@ -13,6 +13,18 @@
 #   `|` or any other ASCII character) — git's own parser is the source
 #   of truth for what counts as a trailer.
 #
+# Minimum git version: this script's extraction pass requires the
+# `%(trailers:key=…)` `--format` placeholder with the `key=` and
+# `unfold` options (see the citation in extract_commits_ndjson below).
+# Verified on this machine (git version 2.50.1, Apple Git-155): `git
+# help log` / `man git-log` document `key=` and `unfold` as current
+# `%(trailers:...)` options. This machine's man pages and locally
+# installed docs do not state which git version FIRST introduced
+# `key=` (no shipped release notes to check offline, and the network
+# was not consulted) — assumed here, not verified, at git 2.22 (the
+# floor this plan assumed going in). Confirm before relying on an
+# older git.
+#
 # Usage:
 #   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
 #                  [--format=plain|json] [--no-pr] [--no-commit]
