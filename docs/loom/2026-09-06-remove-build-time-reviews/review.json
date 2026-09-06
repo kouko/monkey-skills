@@ -404,11 +404,20 @@
       "started": "2026-09-06T16:10:03+08:00",
       "fresh_context": true,
       "note": "risk-triggered pre-build review; one reader covers spec and adversarial concerns; no blind run"
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T16:21:03+08:00",
+      "fresh_context": false,
+      "note": "focused fix verification for spec-16 through spec-18 only"
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 7,
+    "dispatches": 8,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
