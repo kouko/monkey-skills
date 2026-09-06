@@ -1,0 +1,64 @@
+{
+  "reviewed_sha": "130b4ca1691de465be71df163f620d761abef5fa",
+  "scope": "spec",
+  "vendors": [
+    "openai",
+    "anthropic"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "實作前保留正向與負向測試設計，實作途中只跑測試、不做自動正式審查；全部實作完成後做一次 branch-end review，其餘流程維持原樣。確認這就是你要我實作的範圍嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要使用 Claude 作為第二家模型的審閱者嗎？這會多花幾分鐘與一些額度，但能增加不同模型發現問題的機會。",
+      "type": "consequence"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "spec",
+      "role": "adversary",
+      "agent_id": "spec-adversary-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T15:00:49+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "blind-runner",
+      "agent_id": "spec-blind-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T15:00:49+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "spec-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T15:00:49+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "spec-review-claude",
+      "model": "claude-code-2.1.263",
+      "started": "2026-09-06T15:00:49+08:00",
+      "fresh_context": true
+    }
+  ],
+  "cost": {
+    "rounds": 0,
+    "dispatches": 4,
+    "cap_changes": [],
+    "hours_plan_to_pr": null
+  },
+  "charter": "1.0"
+}
