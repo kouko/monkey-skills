@@ -41,6 +41,10 @@
 - loom-design：183 passed、1 skipped。
 - branch-end adversarial probe：11 passed。
 
+## PR CI 修正
+
+PR 首次執行 CI 時，`salesforce-toolkit CI` 與 `skill-structure` 各有一個同名的 `marketplace description sync` job 失敗；兩個紅燈來自同一根因：`loom-code/.claude-plugin/plugin.json` 已採用新流程描述，但 `.claude-plugin/marketplace.json` 仍保留舊句子。修正只同步這一個 description 欄位。本機重跑 `python3 scripts/check-marketplace-description-sync.py` 後，24 個 plugin description 全部一致；`sync_codex_manifests.py --check --all` 與 `git diff --check` 也通過。
+
 ## Review summary
 
 - 第一輪有效找出並保留所有重要問題，沒有駁回 important 或 fatal finding。
