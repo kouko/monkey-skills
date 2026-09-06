@@ -12,10 +12,13 @@ file's helpers (`test_plan_edits_after_commit.py`'s `seed_plan` /
 """
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 CHECKER = Path(__file__).resolve().parent / "loom_checker.py"
 CHANGE_ID = "2099-03-03-permanent-shipped-plan-edits-check"
@@ -197,6 +200,27 @@ def test_malformed_intent_after_historical_closure_still_blocks(tmp_path: Path) 
     result = run_plan_edits(repo)
     assert result.returncode == 1
     assert "plan.edits-after-commit" in blocked_rules(result)
+
+
+def test_unreadable_intent_after_historical_closure_still_blocks(tmp_path: Path) -> None:
+    """A current intent that cannot be read after a historical close is
+    in-flight -- the amnesty requires a readable current intent, so it
+    still BLOCKs. Skipped when running as root, which can read a 000-mode
+    file."""
+    if os.geteuid() == 0:
+        pytest.skip("running as root; a 000-mode file is still readable")
+    repo = init_repo(tmp_path)
+    write_intent(repo, f"status: closed 2026-09-01 {EM_DASH} PR #123")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "docs(loom): close intent")
+    seed_plan_without_commit(repo, base_plan_text())
+    intent_path(repo).chmod(0)
+    try:
+        result = run_plan_edits(repo)
+        assert result.returncode == 1
+        assert "plan.edits-after-commit" in blocked_rules(result)
+    finally:
+        intent_path(repo).chmod(0o644)
 
 
 def test_confirmed_intent_missing_commit_still_blocks(tmp_path: Path) -> None:
