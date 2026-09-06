@@ -1103,11 +1103,29 @@
       "started": "2026-09-06T11:54:28+0800",
       "fresh_context": false,
       "note": "round 6 confirmation — same reader resumed"
+    },
+    {
+      "task": "nit-batch",
+      "role": "reviewer",
+      "agent_id": "rev-be-mg-claude",
+      "model": "sonnet",
+      "started": "2026-09-06T12:05:54+0800",
+      "fresh_context": false,
+      "note": "nit-batch confirmation"
+    },
+    {
+      "task": "nit-batch",
+      "role": "reviewer",
+      "agent_id": "rev-be-mg-codex",
+      "model": "gpt-5-codex",
+      "started": "2026-09-06T12:05:54+0800",
+      "fresh_context": false,
+      "note": "nit-batch confirmation"
     }
   ],
   "cost": {
     "rounds": 6,
-    "dispatches": 27,
+    "dispatches": 29,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
