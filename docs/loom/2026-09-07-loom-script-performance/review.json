@@ -348,6 +348,11 @@
       "decision_point": 1,
       "text": "這次要不要用 Codex 當第二位讀者？（答：OK）",
       "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "引用檢查從 1.77 s 降到 0.57 s（快 3.1 倍、輸出逐位元相同），但沒到 intent 的 ≤0.4 s；A. 接受 0.57 s、把 Acceptance 2 改成 ≤0.6 s；B. 再砍一輪動比對邏輯。你選哪個？（答：A）",
+      "type": "done"
     }
   ],
   "open_findings": [
