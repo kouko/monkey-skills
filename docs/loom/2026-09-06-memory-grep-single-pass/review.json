@@ -70,6 +70,22 @@
       "started": "2026-09-06T09:04:38+0800",
       "fresh_context": true,
       "note": "took over after impl-w1-02-mg was killed mid-verification by an auth error; re-ran every suite and signed the commit"
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-mg-claude",
+      "model": "sonnet",
+      "started": "2026-09-06T09:34:25+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-we1-mg-codex",
+      "model": "gpt-5-codex",
+      "started": "2026-09-06T09:34:25+0800",
+      "fresh_context": true
     }
   ],
   "cost": {
