@@ -5,6 +5,22 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] — 2026-09-07 — three pure performance fixes
+
+Patch. Three scripts run faster on the same inputs; behaviour, output,
+messages and exit codes are unchanged, so this is a patch bump, not a
+minor one.
+
+1. `loom_checker.py` moves `import yaml` inside `load_manifest()`. The
+   PreToolUse hook's non-push fast path no longer pays the ~8.7 ms yaml
+   import on every Bash tool call (measured with `python3 -X importtime`).
+2. `check_doc_citations.py` adds a basename index for the three
+   suffix-resolution sites. On this repo's 3,380 tracked markdown files:
+   ~1.66 s → ~0.79 s wall (single process, xargs form as CI runs it;
+   18.1M `endswith` calls eliminated). Output is byte-identical.
+3. `hooks/session-start` scans the manifest with one awk instead of four.
+   Injected text is byte-identical (sha256-pinned).
+
 ## [1.8.0] — 2026-09-06 — task-test Build and one branch-end review
 
 budget-exception: artifact:spec.pre-build-review — the explicit risk decision

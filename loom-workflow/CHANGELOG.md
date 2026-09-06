@@ -4,6 +4,24 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.1.1] — 2026-09-07 — decision-map read-once fixes
+
+Patch. Two `decision-map` scripts do less redundant `git`/ticket I/O on the
+same inputs; behaviour, output, messages and exit codes are unchanged, so
+this is a patch bump, not a minor one.
+
+1. `check_map_fog.py`'s `read_base_graduated_ids` uses one
+   `git ls-tree -r` plus one `git cat-file --batch` (2 spawns) instead of
+   1+N `git show` calls. On a 20-ticket fixture: 658.88 ms → 64.13 ms per
+   call (~10x). The batch read runs in bytes mode so CJK and CRLF ticket
+   content slice correctly. A pre-existing quirk — a non-ASCII ticket
+   FILENAME comes back C-quoted from `ls-tree` and is silently skipped —
+   is deliberately preserved for a follow-up, not fixed here.
+2. `map_store.validate()` and `map_transaction._update_blockers_locked`
+   now read each ticket once instead of re-reading it per reference. On a
+   N=6 fixture: 12 → 6 `read_ticket` calls for `validate`, 25 → 13 for
+   update-blockers (the nested `validate` call keeps its own N).
+
 ## [4.1.0] — 2026-09-06 — memory-grep.sh in one git pass
 
 Minor. `memory-grep.sh` no longer spawns one subprocess chain per commit;
