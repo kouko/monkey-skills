@@ -7021,6 +7021,15 @@
       "model": "fable",
       "started": "2026-09-06T06:44:04+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "orchestrator-fable-main",
+      "model": "fable",
+      "started": "2026-09-06T08:28:02+08:00",
+      "fresh_context": false,
+      "note": "fix after push gate: review.round-append-only blocked the ship station's decision-point-3 questions[] append; questions-written-once becomes questions-gain-entries"
     }
   ],
   "cost": {
