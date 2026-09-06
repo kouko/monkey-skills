@@ -1,13 +1,236 @@
 {
   "reviewed_sha": "4e1582015c2258ab2463c4e8c2f51d0d97ddb035",
-  "scope": "branch base — nothing reviewed yet",
+  "scope": "branch-end",
   "vendors": [
     "anthropic",
     "codex"
   ],
   "second_vendor": "codex",
-  "verdicts": [],
-  "probes": [],
+  "verdicts": [
+    {
+      "reviewer": "rev-be-sp-codex",
+      "vendor": "codex",
+      "model": "codex exec (gpt-5.6-sol)",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-07-loom-script-performance/blind-run-report.md:16",
+          "text": "issue (blocking): Acceptance 2 requires wall time at or below 0.4 seconds, but the blind run measured 0.670-0.678 seconds; the delivered change therefore does not satisfy the confirmed acceptance contract.",
+          "fix": "Either optimize the cited command to meet the 0.4-second bound and re-run the blind test, or obtain user approval for a revised Acceptance 2 before completing this checkpoint."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-workflow/skills/decision-map/scripts/check_map_fog.py:167",
+          "text": "issue (blocking): The new git cat-file --batch integration has no grounding citation for the external CLI protocol, including its header grammar, byte-sized payload, missing-object response, and delimiter.",
+          "fix": "Add a direct citation to the applicable official git-cat-file documentation supporting the implemented batch protocol."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-07-loom-script-performance/plan.md:28",
+          "text": "issue (blocking): The plan embeds a scenario list in its Test line, although manifest.yaml artifacts.plan.charter.must_not assigns scenario lists to the spec; the same inconsistency recurs in the other task Test lines.",
+          "fix": "Remove scenario-level behavior from the plan Test lines and place it in the charter-designated artifact, retaining only executable test identifiers and task-level start information."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-07-loom-script-performance/plan.md:64",
+          "text": "issue (blocking): The plan unilaterally calls the confirmed 0.4-second acceptance bound secondary, contradicting the intent's unconditional threshold and permitting the failed result later retained by the blind-run report.",
+          "fix": "Restore the 0.4-second requirement as binding, or amend the intent through the user decision process before changing the plan's treatment."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/CHANGELOG.md:18",
+          "text": "nit (non-blocking): The changelog says 3,380 tracked Markdown files, while the reviewed tree contains 3,383; the measurement population is not tied to a named snapshot.",
+          "fix": "State the measured commit or update the count and measurement consistently."
+        }
+      ]
+    },
+    {
+      "reviewer": "rev-be-sp-a",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "external-surface-grounding": "PASS_WITH_NOTES",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS_WITH_NOTES",
+        "omission": "PASS_WITH_NOTES",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:36",
+          "text": "issue (non-blocking): W1-01 removed the module-scope `import yaml` from the hook fast path but added a module-scope `import traceback` to the same path, used only inside the ImportError branch at :337; measured with -X importtime, traceback's subtree costs 3.5 ms, so the fast path went 24-26 ms -> 19-20 ms, a ~5 ms win rather than ~8.7 ms.",
+          "fix": "Move `import traceback` inside the `except ImportError:` block in `load_manifest` and drop the top-level import at :36."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/check_doc_citations.py:274",
+          "text": "suggestion (if-minor): `_repo_files_set` + `_repo_files_set_cache` is a second cache whose membership test is derivable from the basename index (`cited_path in _basename_index(repo_files).get(_basename(cited_path), [])`).",
+          "fix": "Delete `_repo_files_set` and `_repo_files_set_cache`; derive the exact-match test from the index."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/scripts/check_doc_citations.py:265",
+          "text": "suggestion (if-minor): `_CACHE_MAX_ENTRIES = 8` plus `_evict_oldest_if_full` is eviction machinery for a bound the module comment says cannot be reached.",
+          "fix": "Replace with a single-slot cache holding the last list indexed."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-workflow/skills/decision-map/scripts/check_map_fog.py:59",
+          "text": "nitpick (non-blocking): the text-mode `stdin` branch is dead — the only caller passing `stdin` always passes `binary=True`.",
+          "fix": "Accept `stdin` only in the binary branch."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-workflow/skills/decision-map/scripts/check_map_fog.py:201",
+          "text": "question (non-blocking): `int(parts[2])` assumes the header is always `<sha> <type> <size>`; any other reply shape raises IndexError/ValueError where the old code raised SchemaViolation. Not reachable with full shas from ls-tree.",
+          "fix": "Wrap the header parse so a non-conforming line raises `map_store.SchemaViolation` with the same message the missing branch uses."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-07-loom-script-performance/plan.md:49",
+          "text": "nitpick (non-blocking): W2-01's Files line omits README.md, both .codex-plugin/plugin.json files and .codex/hooks/loom-checker, which the bump had to touch.",
+          "fix": "Amend W2-01's Files line (landed task — record only)."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/CHANGELOG.md:15",
+          "text": "nitpick (non-blocking): states the removed ~8.7 ms yaml cost but not the ~3.5 ms traceback import the same change added; measured net ~5 ms.",
+          "fix": "State the net, or move the traceback import into the except branch and re-measure."
+        },
+        {
+          "severity": "nit",
+          "anchor": "loom-code/CHANGELOG.md:18",
+          "text": "nitpick (non-blocking): CHANGELOG says 3,380 files, ~1.66 s -> ~0.79 s while the blind-run report records 1.518/1.501/1.494 s -> 0.677/0.670/0.678 s for the same command; two number pairs, neither naming host/load.",
+          "fix": "Add the host/load qualifier and cite the blind-run report as the run of record."
+        },
+        {
+          "severity": "nit",
+          "anchor": "docs/loom/2026-09-07-loom-script-performance/blind-run-report.md:19",
+          "text": "note (non-blocking): intent Acceptance 2 requires <=0.4 s; delivered 0.67 s, reported as partly; the user should be told at decision point 3.",
+          "fix": "Meet the bound, or amend Acceptance 2 with the user."
+        }
+      ],
+      "notes": [
+        "Verified independently: session-start stdout byte-identical vs 4e158201 in this repo and an empty git repo; check_doc_citations stdout/stderr/exit identical over all 3383 tracked md files; the four A6 test files have a zero diff; package tests 2101/183 and decision-map 272 green.",
+        "The adversary's mutation probe asserting the stale result is acceptable characterization evidence; its sibling pins the fixed strong-reference contract.",
+        "Graduated copies differ from the evidence probes only in the parents[] line."
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": ""
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 -m pytest loom-workflow/skills/decision-map/scripts -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": "loom-workflow/skills/decision-map/scripts"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-07-loom-script-performance/blind-run-report.md (each Acceptance block names its command)",
+      "sha": "f3a8c47b",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_lazy_yaml_import.py -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_lazy_yaml_import.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_citation_index.py -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_citation_index.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_session_start_awk.py -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_session_start_awk.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_fog_cat_file_batch.py -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_fog_cat_file_batch.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_ticket_read_once.py -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_ticket_read_once.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "python3 -m pytest docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_branch_end.py -q",
+      "sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-loom-script-performance/evidence/probes/test_abuse_branch_end.py"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -25,7 +248,48 @@
       "type": "what"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "branch-end-01",
+      "anchor": "docs/loom/2026-09-07-loom-script-performance/blind-run-report.md:16",
+      "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "raised_by": "rev-be-sp-codex",
+      "severity": "fatal",
+      "text": "Acceptance 2 wall time <=0.4 s not met (0.67 s measured)"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "loom-workflow/skills/decision-map/scripts/check_map_fog.py:167",
+      "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "raised_by": "rev-be-sp-codex",
+      "severity": "fatal",
+      "text": "cat-file --batch protocol has no grounding citation"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-07-loom-script-performance/plan.md:28",
+      "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "raised_by": "rev-be-sp-codex",
+      "severity": "important",
+      "text": "plan Test lines carry scenario clauses the charter assigns to the spec"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-07-loom-script-performance/plan.md:64",
+      "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "raised_by": "rev-be-sp-codex",
+      "severity": "important",
+      "text": "plan Risks #1 calls the 0.4 s bound secondary, contradicting the intent"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/scripts/loom_checker.py:36",
+      "origin_sha": "32e1cb08614169dc6d94c662e41ea5c453ee8f5a",
+      "raised_by": "rev-be-sp-a",
+      "severity": "important",
+      "text": "module-scope `import traceback` re-adds ~3.5 ms to the hook fast path"
+    }
+  ],
   "dispatch": [
     {
       "task": "W1-01",
@@ -165,7 +429,7 @@
     }
   ],
   "cost": {
-    "rounds": 0,
+    "rounds": 1,
     "dispatches": 17,
     "cap_changes": [],
     "hours_plan_to_pr": null
