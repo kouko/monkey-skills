@@ -391,7 +391,7 @@ def test_ship_push_requires_quote_all_literal_command_and_fixed_containment_flag
     assert "token.replace(\"'\", \"'\\\"'\\\"'\")" in flat
     assert "join with one ASCII space" in flat
     assert "Use no variables, substitutions, or other shell syntax" in flat
-    assert "prevent tag or submodule publication" in flat
+    assert "Flags block tags, submodules, pre-push hooks" in flat
     assert "standard `command` builtin is the supported-shell trust root" in flat
     assert "bypasses absolute-executable functions" in flat
     assert "A malicious `command` replacement is outside this guarantee" in flat
