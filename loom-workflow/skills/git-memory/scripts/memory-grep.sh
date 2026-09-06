@@ -355,6 +355,33 @@ fi
 # `git interpret-trailers --parse --unfold` used, exposed as a format
 # placeholder instead of a second process per commit.
 #
+# wave-end:1-02 grounding (verified against `git --version` 2.50.1
+# (Apple Git-155) on this machine, docs read via `man git-log` / `man
+# git-interpret-trailers` — this build has no standalone
+# gitformat-pretty(1) page; the same "PRETTY FORMATS" text lives
+# inside git-log(1)):
+#   - git-log(1), PRETTY FORMATS, the `%(trailers[:<option>,...])`
+#     entry: "key=<key>: only show trailers with specified <key>.
+#     Matching is done case-insensitively and trailing colon is
+#     optional. … This option automatically enables the `only` option
+#     so that non-trailer lines in the trailer block are hidden." —
+#     this is the source for both (a) key= selecting by key
+#     case-insensitively (why the jq re-filter below is still needed
+#     to reproduce the old case-SENSITIVE match) and (c) the
+#     placeholder emitting ONLY trailer lines, never other body text.
+#   - Same entry, `unfold[=<bool>]`: "make it behave as if
+#     interpret-trailer's --unfold option was given." — the source for
+#     (b): `%(trailers:…,unfold)` is declared equivalent to
+#     `git-interpret-trailers(1)`'s own `--unfold`, whose OPTIONS
+#     section defines it as "If a trailer has a value that runs over
+#     multiple lines (aka 'folded'), reformat the value into a single
+#     line."
+#   - This machine's man pages do not state which git version
+#     introduced `key=` on `%(trailers:...)` (the man page documents
+#     current behavior, not a changelog); not guessed here — the
+#     script header (W2-01) states the minimum git version this
+#     change requires, verified separately.
+#
 # Record separator: every FIELD is delimited by NUL, and git's `-z`
 # terminates each commit's whole record with NUL too — so the raw
 # stream is ONE flat sequence of NUL-delimited tokens (sha, date,
