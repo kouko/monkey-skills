@@ -265,6 +265,27 @@
       "origin_sha": "56024c091402ed2d8c886ea753f2bb579e0ddf87",
       "raised_by": "spec-risk-review-codex",
       "resolved": "fixed by ddee7445 and c988a3a5 — amended intent and spec share the same six Acceptance outcomes"
+    },
+    {
+      "id": "W0-02-01",
+      "anchor": "loom-code/scripts/loom_checker.py:3306",
+      "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
+      "raised_by": "adv-w0-02-codex",
+      "resolved": ""
+    },
+    {
+      "id": "W0-02-02",
+      "anchor": "loom-code/skills/build/SKILL.md:289",
+      "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
+      "raised_by": "adv-w0-02-codex",
+      "resolved": ""
+    },
+    {
+      "id": "W0-02-03",
+      "anchor": "loom-code/skills/ship/SKILL.md:231",
+      "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
+      "raised_by": "adv-w0-02-codex",
+      "resolved": ""
     }
   ],
   "dispatch": [
@@ -323,11 +344,19 @@
       "model": "gpt-6-astra",
       "started": "2026-09-07T00:45:11+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T00:52:54+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 7,
+    "dispatches": 8,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
