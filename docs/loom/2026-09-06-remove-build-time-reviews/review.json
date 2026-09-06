@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+  "reviewed_sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
   "scope": "branch-end",
   "vendors": [
     "openai",
@@ -509,6 +509,148 @@
       },
       "findings": [],
       "notes": "The same Claude Code session confirmed the full current report preserves failed history, accurately records the 2028-test result and push-gate remediation, and changes no behavior."
+    },
+    {
+      "round": 10,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3937dffba5a551f7afc24a722c4e2fe6d5e30783",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION",
+        "contract": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION",
+        "cross-task-coherence": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3078",
+          "text": "The repository selector inspected only the first direct push and trusted the payload cwd for indirect shell forms.",
+          "fix": "Resolve every supported publish segment to one repository and fail closed on distinct, relative, nested, or otherwise ambiguous selection."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3059",
+          "text": "GitHub CLI repository overrides before the pr subcommand were not recognized as publish operations.",
+          "fix": "Parse value-taking GitHub CLI options and reject repository overrides, including compact -R forms."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:3100",
+          "text": "PR creation had no provable worktree selector when the host payload cwd named the saved checkout.",
+          "fix": "Allow an absolute cd to establish the single repository for a following gh pr create."
+        }
+      ],
+      "notes": "The reviewer reproduced clean-checkout bypasses for multiple push, nested shell, and GitHub CLI forms before the final fail-closed selector was complete."
+    },
+    {
+      "round": 10,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3937dffba5a551f7afc24a722c4e2fe6d5e30783",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION",
+        "contract": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION",
+        "cross-task-coherence": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:3094",
+          "text": "Git and GitHub repository environment selectors could make the shell publish a different repository from the one the hook judged.",
+          "fix": "Track inline and exported repository selectors across segments, parse env options, and fail closed."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:3141",
+          "text": "A recognized publish with no repository collected fell back to the untrusted payload cwd.",
+          "fix": "Treat an empty recognized-root set as ambiguous instead of selecting a default."
+        },
+        {
+          "severity": "important",
+          "anchor": "loom-code/scripts/loom_checker.py:3184",
+          "text": "The first draft emitted an unregistered push.command-scope rule id.",
+          "fix": "Reuse push.review-only-head for inability to prove the reviewed HEAD and document the second condition in the rule SSOT."
+        }
+      ],
+      "notes": "The no-tools second-vendor review supplied the environment-selector and rule-registration adversarial cases."
+    },
+    {
+      "round": 11,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "4bce6c6f1e59ebbab1f8800aed4cf39a53a9db62",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "contract": "PASS",
+        "tests": "PASS",
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "notes": "Confirmed 28 focused positive and negative selector cases, py_compile, diff-check, and canonical/scaffold parity apart from the generated version line."
+    },
+    {
+      "round": 11,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "4bce6c6f1e59ebbab1f8800aed4cf39a53a9db62",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "contract": "PASS",
+        "tests": "PASS",
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "notes": "The resumed no-tools review confirmed the final selector logic and tests, with only documented fail-closed usability nits and known recognizer residuals."
+    },
+    {
+      "round": 12,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+      "dimension_scores": {
+        "records-only": "PASS",
+        "scope-preservation": "PASS"
+      },
+      "findings": [],
+      "notes": "Confirmed that the final report distinguishes proven selectors, fail-closed cases, and known residuals without overstating coverage."
+    },
+    {
+      "round": 12,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+      "dimension_scores": {
+        "records-only": "PASS",
+        "scope-preservation": "PASS"
+      },
+      "findings": [],
+      "notes": "Confirmed the 2055 core, 183 design, and 11 adversarial results plus the bare-publish, env-wrapper, and env -S residuals."
     }
   ],
   "probes": [
@@ -639,6 +781,46 @@
       "result": "pass after push-gate remediation",
       "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
       "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+      "result": "pass in an isolated requirements-dev environment (core: 2055 passed, 2 skipped, 1 xfailed; design: 183 passed, 1 skipped)",
+      "artifact": "requirements-dev.txt",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+      "result": "pass (readiness mutation cases)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+      "result": "pass (review independence and missing dependency cases)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+      "result": "pass (staleness, foreign cwd, and legacy-claim cases; 11 total)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see recorded commands in the report",
+      "sha": "fe86ef7d18f83e210818c522a2c8642fab00411f",
+      "result": "pass after repository-selection remediation",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -670,6 +852,11 @@
     {
       "decision_point": 3,
       "text": "如果更新後的盲跑結果仍符合你的需求，請再回覆一次「OK」；我就重新執行 push gate、推送並開 PR。",
+      "type": "done"
+    },
+    {
+      "decision_point": 3,
+      "text": "使用者回覆「OK」，接受更新後的盲跑報告並授權執行 push gate、推送與建立 PR。",
       "type": "done"
     }
   ],
@@ -983,6 +1170,62 @@
       "raised_by": "branch-end-review-codex",
       "resolved": "closed by e0c1d7a5 — codex_scaffold regenerated the committed mirror and its self-test passed",
       "note": "the Codex checker mirror still contained the pre-fix predicate"
+    },
+    {
+      "id": "branch-end-fix-10",
+      "anchor": "loom-code/scripts/loom_checker.py:3196",
+      "origin_sha": "c7807ecb6940986fdfb65c594819428db552740b",
+      "raised_by": "loom-hook",
+      "resolved": "closed by 4bce6c6f — hook mode resolves a provable publish repository instead of blindly trusting payload cwd",
+      "note": "the host reported the saved checkout cwd while git -C targeted the feature worktree"
+    },
+    {
+      "id": "branch-end-fix-11",
+      "anchor": "loom-code/scripts/loom_checker.py:3078",
+      "origin_sha": "3937dffba5a551f7afc24a722c4e2fe6d5e30783",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by 4bce6c6f — all direct push segments must resolve to one root; distinct, relative, or unsupported selectors fail closed",
+      "note": "the first selector draft inspected only the first push and admitted ambiguous directory options"
+    },
+    {
+      "id": "branch-end-fix-12",
+      "anchor": "loom-code/scripts/loom_checker.py:3094",
+      "origin_sha": "3937dffba5a551f7afc24a722c4e2fe6d5e30783",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by 4bce6c6f — nested shell, eval, xargs, relative cwd, and unknown cwd transitions fail closed",
+      "note": "indirect shell selection could publish a different repository from the payload cwd"
+    },
+    {
+      "id": "branch-end-fix-13",
+      "anchor": "loom-code/scripts/loom_checker.py:3059",
+      "origin_sha": "3937dffba5a551f7afc24a722c4e2fe6d5e30783",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by 4bce6c6f — option-aware parsing recognizes and blocks GitHub CLI repository overrides including compact -R",
+      "note": "repository options before pr could evade publish recognition"
+    },
+    {
+      "id": "branch-end-fix-14",
+      "anchor": "loom-code/scripts/loom_checker.py:3094",
+      "origin_sha": "3937dffba5a551f7afc24a722c4e2fe6d5e30783",
+      "raised_by": "branch-end-review-claude",
+      "resolved": "closed by 4bce6c6f — inline, exported, and env-wrapped Git/GitHub repository selectors are tracked and blocked",
+      "note": "GIT_DIR, GIT_WORK_TREE, GIT_COMMON_DIR, GH_REPO, and env chdir forms could redirect publication"
+    },
+    {
+      "id": "branch-end-fix-15",
+      "anchor": "loom-code/scripts/loom_checker.py:3100",
+      "origin_sha": "3937dffba5a551f7afc24a722c4e2fe6d5e30783",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by 4bce6c6f — an absolute cd establishes the provable worktree for a following gh pr create",
+      "note": "PR creation otherwise had no safe repository selector on this host"
+    },
+    {
+      "id": "branch-end-fix-16",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md:25",
+      "origin_sha": "d226a0a6898b6d9c9effb184909019eb26820e5a",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by fe86ef7d — the report limits selector claims, distinguishes pending formal records, and lists all known residuals",
+      "note": "the first records-only update overstated fail-closed coverage and final-SHA recording"
     }
   ],
   "dispatch": [
@@ -1322,11 +1565,65 @@
       "started": "2026-09-06T20:42:28+08:00",
       "fresh_context": false,
       "note": "round 9 records-only blind-report confirmation in the same Claude Code session"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T20:55:00+08:00",
+      "fresh_context": true,
+      "note": "round 10 repository-selection adversarial review and continuations"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T20:55:00+08:00",
+      "fresh_context": false,
+      "note": "round 10 repository-selection adversarial review in the same Claude Code session"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T21:23:00+08:00",
+      "fresh_context": false,
+      "note": "round 11 final selector-fix confirmation"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T21:23:00+08:00",
+      "fresh_context": false,
+      "note": "round 11 final selector-fix confirmation in the same Claude Code session"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T21:39:00+08:00",
+      "fresh_context": false,
+      "note": "round 12 records-only blind-report confirmation"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T21:39:00+08:00",
+      "fresh_context": false,
+      "note": "round 12 records-only blind-report confirmation in the same Claude Code session"
     }
   ],
   "cost": {
-    "rounds": 9,
-    "dispatches": 39,
+    "rounds": 12,
+    "dispatches": 45,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
