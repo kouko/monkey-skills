@@ -1,0 +1,48 @@
+{
+  "schema": "loom-workflow-replay-events/v1",
+  "flow": "candidate",
+  "target_head": "37cd6da17912b706cab8e514e1c5f0155b21ef9f",
+  "target_tree": "e6201f8f13d18a36ccd5362204ee1c5d7d5aa2b7",
+  "events": [
+    {
+      "task": "W0-01",
+      "commit": "b4586e3e80775eed19189c2412fa3b83e22f2dd0",
+      "test": "adversary probes",
+      "outcome": "EXPECTED_RED",
+      "detail": "19 failed, 7 passed"
+    },
+    {
+      "task": "W0-02",
+      "commit": "81ecbcadf0efc354d41a319253150f69327313f4",
+      "test": "adversary probes",
+      "outcome": "PASS",
+      "detail": "26 passed"
+    },
+    {
+      "task": "W1-01",
+      "commit": "50d68c57091dc249e7adddb6c95a1e560bcaff9f",
+      "outcome": "APPLIED"
+    },
+    {
+      "task": "W1-02",
+      "commit": "be5704246b3b890883041e746079a906e1bc2a79",
+      "outcome": "APPLIED"
+    },
+    {
+      "task": "W1-03",
+      "commit": "b6a3234779862b3799163218202d0b70dd65fa67",
+      "outcome": "APPLIED"
+    },
+    {
+      "task": "W1-04",
+      "commit": "37cd6da17912b706cab8e514e1c5f0155b21ef9f",
+      "outcome": "APPLIED"
+    }
+  ],
+  "build_time_formal_review": {
+    "dispatches": 0,
+    "checkpoint_blocking_seconds": 0,
+    "defect_fix_seconds": 0,
+    "detail": "All task tests passed before dependent work; no after-task or wave-end formal review was dispatched."
+  }
+}

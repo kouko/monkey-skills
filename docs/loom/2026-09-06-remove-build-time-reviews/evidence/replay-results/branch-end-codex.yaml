@@ -1,0 +1,39 @@
+reviewer: replay_branch_review_codex
+vendor: openai
+requested_model: gpt-6-astra
+reported_model: gpt-6
+effort: high
+runtime:
+  source_sha: 6bca3513bf6ff997419fb73a6a56ea8613db62ac
+  reviewer_sha256: b38abe5ae931beaedd862f7f919b92d0bb1c792c3af36a6d78ecb3802e35d2dd
+  lenses_sha256: a0626a0303ef9bccc46845ee00bf0baea5536f5510f28a46fc7ec8d0991d7b62
+target:
+  base: b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0
+  head: 37cd6da17912b706cab8e514e1c5f0155b21ef9f
+verdict: NEEDS_REVISION
+findings:
+  - severity: fatal
+    anchor: loom-code/scripts/loom_checker.py:2563
+    text: Test and config exemptions can reclassify a path that also belongs to a forbidden gate type as small-lane-safe.
+  - severity: fatal
+    anchor: .codex/hooks/loom_checker.py:2457
+    text: The committed Codex checker mirror predates canonical lane and record-exclusion fixes.
+  - severity: fatal
+    anchor: loom-code/skills/review/references/fix-rounds.md:35
+    text: Reused probe records retain an old reviewed SHA and are rejected after a fix round advances the reviewed SHA.
+  - severity: important
+    anchor: loom-code/skills/ship/SKILL.md:192
+    text: The nit-batch procedure opens a new verdict round despite the contract saying nits do not open a round.
+  - severity: important
+    anchor: loom-code/skills/review/SKILL.md:136
+    text: An all-mechanical small change skips the blind run while Ship still requires a blind-run report.
+  - severity: important
+    anchor: loom-code/skills/review/SKILL.md:179
+    text: The review station does not resolve and record second-vendor ask before dispatch.
+  - severity: important
+    anchor: loom-code/contract/manifest.yaml:141
+    text: The manifest promises a configured docs-lint CI execution but no execution path exists.
+notes:
+  - The reviewer read the supplied exact runtime contracts and full target diff.
+  - The reviewer did not run probes or package tests; those executions are recorded separately.
+  - Replay records, timing evidence, and the hidden oracle were excluded from the prompt.

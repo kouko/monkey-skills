@@ -26,7 +26,7 @@ runtime:
     source_sha: 130b4ca1691de465be71df163f620d761abef5fa
     loom_code_version: 1.7.0
   candidate:
-    source_sha: <first-review-only-branch-end-commit-parent>
+    source_sha: 6bca3513bf6ff997419fb73a6a56ea8613db62ac
   rule: >-
     Load loom-code from source_sha as the external plugin runtime; do not use
     the loom-code copy inside either replay target tree. If either runtime
@@ -60,14 +60,14 @@ fixed_task_order:
 task_application:
   - Verify each patch SHA-256 before applying it.
   - In fixed_task_order, run `gzip -dc <fixture-dir>/<patch> | git -C <tree> apply --index`.
-  - Commit immediately with subject `replay: apply <id>` and body trailer `Task: <id>`; do not stage a later task early.
+  - 'Commit immediately with subject `replay: apply <id>` and body trailer `Task: <id>`; do not stage a later task early.'
   - Treat W0-01's declared adversary RED as expected evidence, not an implementation failure; every later declared command must pass before advancing.
   - Run permanent_commands from each integrated tree after W1-04 and before branch-end review.
 permanent_commands:
   - python3 -m pytest docs/loom/2026-09-03-small-change-lane/evidence/probes/test_abuse_change_lane.py -q
-  - python3 -m pytest loom-code/scripts/test_skill_word_caps.py -q
-  - python3 scripts/check_version_bump.py
-  - python3 scripts/sync_codex_manifests.py --check loom-code loom-design
+  - python3 scripts/check_version_bump.py --base b4ac0430a8a07e050b3e4f6f0dccf27582ab65d0 --head HEAD
+  - python3 scripts/sync_codex_manifests.py --check loom-code
+  - python3 scripts/sync_codex_manifests.py --check loom-design
   - python3 loom-code/scripts/loom_checker.py --list-rules
   - python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto
 
