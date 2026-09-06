@@ -3216,7 +3216,7 @@ def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
     return next(iter(selected_roots)) if selected_roots else None
 
 
-CANONICAL_PUSH_FLAGS = ["--no-follow-tags", "--recurse-submodules=no", "-u"]
+CANONICAL_PUSH_FLAGS = ["--no-follow-tags", "--recurse-submodules=no", "-u", "--no-verify"]
 SAFE_REMOTE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
 
@@ -3265,7 +3265,7 @@ def canonical_git_push(
     required = ["push", *CANONICAL_PUSH_FLAGS]
     if tokens[index:index + len(required)] != required:
         return None, None, (
-            "Git push must use exactly --no-follow-tags --recurse-submodules=no -u"
+            "Git push must use exactly --no-follow-tags --recurse-submodules=no -u --no-verify"
         )
     tail = tokens[index + len(required):]
     if len(tail) != 2:

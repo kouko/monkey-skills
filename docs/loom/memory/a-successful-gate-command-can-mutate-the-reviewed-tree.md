@@ -29,7 +29,7 @@ enough when shell expansion, aliases, wrappers, or Git configuration can add
 runtime arguments, tags, or submodule pushes. Accept one canonical quote-all
 command using the trusted absolute Git executable, a literal remote, the exact
 object-to-branch refspec, and fixed flags that disable implicit tag and
-submodule publication. A quoted absolute executable can still be shadowed by
+submodule publication plus repository-configured pre-push hooks. A quoted absolute executable can still be shadowed by
 an inherited shell function with the same name, so the canonical command starts
 with the supported shell's standard `command` builtin; that builtin is the
 explicit trust root. Reject every other form before running the expensive

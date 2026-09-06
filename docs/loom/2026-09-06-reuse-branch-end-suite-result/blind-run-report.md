@@ -7,7 +7,7 @@
 ### 1. 完整 branch-end review 與使用者接受完成後，支援的本機 host hook 在實際 push transition 內執行 repository 完整測試唯一一次；成功才允許 network push，Ship 不再另外預跑同一 checker。
 
 - **如何驗證**：把舊版與含安全修正的新版本 checker、hook 定義及完整 contract package 分別從 Git 取出，在同一個已接受 checkpoint 上執行舊版的明確 preflight 加 hook，以及新版的 hook-only 路徑；另用臨時本機 bare remote 驗證 hook 放行後真正發布的物件。
-- **發生了什麼**：最終新版七次樣本每次都由真實 hook 啟動完整測試一次並放行；舊版每次由真實 preflight 與 hook 各啟動一次。先前的反例證明 detached writer 可在 hook 回傳後移動本機 HEAD；`f6e58b72` 沒有宣稱阻止這類後續寫入，而是以支援 shell 的標準 `command` builtin 作為 trust root，繞過 alias／function lookup 後呼叫 trusted absolute Git，再用 canonical quote-all command 綁定已驗證的完整 SHA 並固定關閉隱含 tag／submodule 發布。
+- **發生了什麼**：新版每次只由真實 hook 啟動完整測試一次並放行；舊版每次由真實 preflight 與 hook 各啟動一次。先前的反例證明 detached writer 可在 hook 回傳後移動本機 HEAD；新版沒有宣稱阻止這類後續寫入，而是以支援 shell 的標準 `command` builtin 作為 trust root，繞過 alias／function lookup 後呼叫 trusted absolute Git，再用 canonical quote-all command 綁定已驗證的完整 SHA，固定關閉隱含 tag／submodule 發布，並以 `--no-verify` 阻止 repository-configured pre-push hook 在 gate 放行後執行額外發布。
 - **Evidence**：`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`、`test_refspec_exacthead_accepted`、`test_gate_immutable_pinsreviewed`、`test_ship_issues_canonical_immutable_refspec_without_explicit_checker_preflight`、`test_ship_push_requires_quote_all_literal_command_and_fixed_containment_flags`、`test_ship_supported_host_hook_is_sole_package_suite_owner`、`test_ship_missing_or_inactive_supported_host_hook_blocks`；量測 probe：`2 passed in 27.25s`
 - **Verdict**：works — 完整測試在最終 Ship 路徑只有 hook 這一個執行者，發布來源綁定已驗證物件且固定 flags 不發布隱含 refs；這不是 process-containment 保證。
 
@@ -63,7 +63,7 @@
 
 ## 對你既有的資料做了什麼
 
-驗證只在乾淨副本與臨時建立的專案中讀取既有版本與設定，沒有接觸或遷移你的個人資料，也沒有向外部或 network remote 推送。shell-boundary 與 immutable-source 攻擊案例會把 synthetic commit 推到臨時本機 bare remote。checker 回傳前發生的 repository mutation 會阻擋；detached writer 若在回傳後才動作，仍可能改變本機內容，但標準 `command` builtin 會先繞過 alias／function lookup，canonical command 綁定的已驗證 SHA 不會被替換成發布來源，固定 flags 也不會帶出隱含 tag 或 submodule refs。流程不替你復原或備份這類本機變動，原有檔案格式沒有改變。
+驗證只在乾淨副本與臨時建立的專案中讀取既有版本與設定，沒有接觸或遷移你的個人資料，也沒有向外部或 network remote 推送。shell-boundary 與 immutable-source 攻擊案例會把 synthetic commit 推到臨時本機 bare remote。checker 回傳前發生的 repository mutation 會阻擋；detached writer 若在回傳後才動作，仍可能改變本機內容，但標準 `command` builtin 會先繞過 alias／function lookup，canonical command 綁定的已驗證 SHA 不會被替換成發布來源，固定 flags 不會帶出隱含 tag、submodule refs，也不會執行 repository-configured pre-push hook。流程不替你復原或備份這類本機變動，原有檔案格式沒有改變。
 
 ## 我替你決定的事
 

@@ -22,7 +22,7 @@ import test_single_owner_push_gate as previous
 GIT = str(Path(shutil.which("git")).resolve())
 BASH = shutil.which("bash")
 ZSH = shutil.which("zsh")
-FIXED = "--no-follow-tags --recurse-submodules=no -u"
+FIXED = "--no-follow-tags --recurse-submodules=no -u --no-verify"
 COUNTER = "from pathlib import Path\np=Path('.git/suite-count'); p.write_text(p.read_text()+'run\\n' if p.exists() else 'run\\n')\n"
 
 
@@ -292,7 +292,9 @@ def test_shell_prepushhook_rejected(tmp_path, shell):
         pytest.skip("the requested shell is unavailable")
     repo, remote, head, extra = scene(tmp_path)
     install_extra_ref_pre_push(repo)
-    command = render(["command", *canonical_tokens(repo, head)])
+    tokens = canonical_tokens(repo, head)
+    tokens.remove("--no-verify")
+    command = render(["command", *tokens])
     result = exact_shell_replay(repo, remote, command, shell=shell)
     if result["hook_rc"] == 0:
         assert result["shell_rc"] == 0 and result["refs"].get("refs/heads/extra") == extra, repr(result)
@@ -306,9 +308,7 @@ def test_shell_noverify_publishesonlypinned(tmp_path, shell):
         pytest.skip("the requested shell is unavailable")
     repo, remote, head, _ = scene(tmp_path)
     install_extra_ref_pre_push(repo)
-    tokens = canonical_tokens(repo, head)
-    tokens.insert(tokens.index("-u") + 1, "--no-verify")
-    result = exact_shell_replay(repo, remote, render(["command", *tokens]), shell=shell)
+    result = exact_shell_replay(repo, remote, render(["command", *canonical_tokens(repo, head)]), shell=shell)
     assert result["hook_rc"] == 0 and result["suites"] == 1 and result["shell_rc"] == 0, repr(result)
     assert result["refs"] == {"refs/heads/work": head}, repr(result)
 

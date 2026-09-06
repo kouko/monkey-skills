@@ -368,7 +368,7 @@ def test_ship_issues_canonical_immutable_refspec_without_explicit_checker_prefli
     deterministic checker first."""
     section = _section_4_push()
     assert "'command' '<absolute-trusted-git>' '-C' '<absolute-selected-repository>' 'push'" in section
-    assert "'--no-follow-tags' '--recurse-submodules=no' '-u' 'origin'" in section
+    assert "'--no-follow-tags' '--recurse-submodules=no' '-u' '--no-verify' 'origin'" in section
     assert "'<full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>'" in section
     assert "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py push" not in section
 
