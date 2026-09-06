@@ -28,6 +28,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 CHECKER = Path(__file__).resolve().parents[5] / "loom-code" / "scripts" / "loom_checker.py"
 CHANGE_ID = "2099-04-04-shipped-plan-edits-probe"
 
@@ -365,3 +367,7 @@ def test_plan_edits_not_applicable_output_differs_from_silent_pass(tmp_path: Pat
         "a not-applicable outcome must not be silent -- it must say why, "
         "so it can never be mistaken for the ordinary silent pass above"
     )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-v"]))

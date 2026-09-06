@@ -377,3 +377,7 @@ def test_exitCode_squashedShapeRed_isNonzeroEvenThoughCiShapedShapeIsGreen(
         "one red probe in the squashed shape must fail the whole run even "
         f"though a sibling probe is green in both shapes -- stdout:\n{proc.stdout}"
     )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-v"]))
