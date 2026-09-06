@@ -610,3 +610,34 @@ def test_graduation_paragraph_names_the_squashed_rehearsal_shape() -> None:
         "the squashed shape is named outside the registered rehearsal gate, "
         "so it is prose a reader may treat as commentary rather than a rule"
     )
+
+
+def test_graduation_paragraph_states_the_trunk_ancestry_precondition() -> None:
+    """Branch-end finding 03 (2026-09-06-graduated-probes-survive-squash):
+    the gate paragraph names the squashed shape but gave a cold executor
+    no precondition for it. The rehearsal now refuses a trunk that is not
+    an ancestor of the rehearsed HEAD, or an `origin/<name>` behind its
+    local `<name>`; the paragraph has to say so, inside the registered
+    gate, in an affirmative sentence (prose-pin rule), and tell the
+    executor what comes before graduation in that case -- a rebase or a
+    fetch."""
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    open_marker = "<!-- gate: build.rehearsal-before-graduation -->"
+    close_marker = "<!-- /gate -->"
+    start = text.index(open_marker)
+    end = text.index(close_marker, start)
+    gated = text[start + len(open_marker):end]
+    sentences = _flat_sentences(gated)
+
+    ancestry = [s for s in sentences if "ancestor" in s.lower()]
+    assert ancestry, (
+        "the gate paragraph states no ancestry precondition for the squashed shape"
+    )
+    for sentence in ancestry:
+        assert not _has_negation(sentence), (
+            f"the ancestry sentence carries a negation token: {sentence!r}"
+        )
+        assert re.search(r"\b(rebase|fetch)\b", sentence, re.I), (
+            "the ancestry sentence must name what precedes graduation when the "
+            f"precondition fails (a rebase or a fetch): {sentence!r}"
+        )

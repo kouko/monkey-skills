@@ -345,7 +345,10 @@ commit or a branch only this tree has verifies nothing on CI. The same
 run then rehearses a second shape, the branch squashed to one commit off
 its trunk, so a probe that passes only because it still sees one of this
 branch's own commits goes red here rather than after the squash merge
-lands.
+lands. That second shape needs a trunk that is an ancestor of the
+rehearsed HEAD, with its remote-tracking ref agreeing with the local one;
+when the rehearsal finds otherwise it stops with the reason, and a rebase
+or a fetch comes before graduation.
 <!-- /gate -->
 
 **Store entries.** Write any durable lesson as a `docs/loom/memory/`
