@@ -1,0 +1,1332 @@
+{
+  "reviewed_sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+  "scope": "branch-end",
+  "vendors": [
+    "codex"
+  ],
+  "verdicts": [
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:2304",
+          "text": "issue (blocking): The amnesty accepts an uncommitted working-tree `status: closed`, so an in-flight change with a lost plan commit can bypass the required BLOCK. The historical fallback also grants amnesty when the current intent is absent, unreadable, or malformed, contradicting the stated fail-closed boundary.",
+          "fix": "Require a parseable current intent and a committed closed status reachable from HEAD; otherwise return the existing no-plan-commit BLOCK, with regression tests for uncommitted closure and deleted, unreadable, and malformed current intents after historical closure."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/rehearse_probes.py:273",
+          "text": "issue (blocking): New behavior relies on externally owned Git CLI semantics for `reset --soft`, commit creation, and ref rewriting without a grounding citation, so the claimed squash equivalence is unsupported under this lens.",
+          "fix": "Cite the authoritative Git documentation beside the squash implementation for the relied-upon reset, commit, and update-ref semantics."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/plan.md:45",
+          "text": "issue: The plan states that an unreadable intent blocks, but the implementation falls back to historical closure and can return NOT APPLICABLE.",
+          "fix": "Make the implementation fail closed for an unreadable current intent so this recorded risk remains true."
+        }
+      ],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/rehearse_probes.py:280",
+          "text": "issue (blocking): When the source resolves its trunk through local `main` or `master`, `trunk_remote_ref` becomes null and the following loop deletes every `origin/*` ref. The resulting squashed rehearsal lacks `origin/main`, unlike the post-squash CI checkout it promises to model, so a probe that skips when that ref is absent can falsely pass.",
+          "fix": "Map local `main`/`master` selections to the corresponding `refs/remotes/origin/<name>` ref and update that ref to `new_sha`; add a divergent-feature/local-trunk regression test asserting it remains reachable in the squashed run."
+        }
+      ],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 2,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_plan_edits_shipped_change.py:173",
+          "text": "issue (unfixed): The fix covers uncommitted, deleted, and malformed current intents, but still lacks the previously required regression case proving that an unreadable current intent blocks after historical closure.",
+          "fix": "Add a regression test that makes reading the current intent raise OSError after committing a historical closed status, then assert plan-edits returns the existing no-plan-commit BLOCK."
+        }
+      ],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 2,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 3,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_plan_edits_shipped_change.py:205",
+          "text": "issue (unfixed): The unreadable-intent regression checks only the plan.edits-after-commit rule ID, so it can pass for a different BLOCK reason and does not pin the required existing no-plan-commit BLOCK.",
+          "fix": "Add `assert \"no plan commit found\" in result.stderr` to `test_unreadable_intent_after_historical_closure_still_blocks`."
+        }
+      ],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 4,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-w1-codex2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 4,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "naming": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES"
+      },
+      "findings": [],
+      "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/rehearse_probes.py:283",
+          "text": "issue (blocking): The squashed rehearsal assumes the selected trunk SHA is an ancestor of HEAD, but never verifies that assumption. If origin/main advances after the branch diverges, reset --soft keeps the feature branch's old tree and commits it on the newer trunk, deleting upstream changes instead of modeling the tree a real squash merge would produce; probes can therefore return the wrong result.",
+          "fix": "Before constructing the squashed shape, either require git merge-base --is-ancestor <trunk-sha> <head-sha> and fail with an actionable rebase-required message, or construct the actual merged tree; add a regression test where origin/main and the feature branch have diverged."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "text": "issue (blocking): The branch-end dispatches are present, but probes[] contains only wave-end evidence at SHA 83d129c9; it has no adversarial or blind-run entry for reviewed SHA 3d3422f7ef1f700f0bcde3dde05330e6a6280858. The required branch-end verification therefore cannot be reproduced from the record.",
+          "fix": "Append the branch-end package-test, adversarial, and blind-run probe entries with their exact commands, artifacts, scope, and SHA 3d3422f7ef1f700f0bcde3dde05330e6a6280858 before accepting this checkpoint."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/build/SKILL.md:345",
+          "text": "issue (blocking): The executable gate tells Build that the second run models a branch squashed onto its trunk, but gives no ancestry precondition or divergence handling. A cold executor can rely on a misleading rehearsal when trunk advanced independently.",
+          "fix": "State and enforce in this gate that the selected trunk must be an ancestor of the rehearsed HEAD, with divergence requiring a rebase or a merge-accurate rehearsal before graduation."
+        },
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py:206",
+          "text": "nitpick (non-blocking): The new probe uses camelCase components instead of the required test_<unit>_<state>_<expected> function-name shape.",
+          "fix": "Rename this probe and the other newly added camelCase probe functions to snake_case test_<unit>_<state>_<expected> names, updating the graduated copies and recorded commands together."
+        }
+      ],
+      "sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2400",
+          "text": "issue (blocking): `parse_document` silently keeps the last of duplicate frontmatter keys, so an invalid intent containing both confirmed and closed `status:` lines can be treated as shipped and receive NOT APPLICABLE instead of the fail-closed BLOCK.",
+          "fix": "Reject duplicate `status:` frontmatter before granting the carve-out, and make `test_planedits_duplicatestatus_blocks` pass while retaining the existing single-status cases."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "architecture",
+          "anchor": "loom-code/scripts/rehearse_probes.py:230",
+          "text": "issue (blocking): Trunk resolution accepts the first resolvable ref without validating its relationship to HEAD or conflicting same-name trunk refs; `_squash_clone_onto_trunk` then uses `reset --soft`, which can fabricate a green tree that drops newer divergent trunk content or squash from a stale base.",
+          "fix": "Resolve candidate refs to commits, fail loudly when the selected trunk is divergent or inconsistent with the applicable same-name trunk history, and make both `test_rehearsal_trunkbehindmergebase_failsloudly` and `test_rehearsal_trunkaheadofbranch_failsloudly` pass."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "text": "issue (blocking): The record contains no branch-end probe entries at the reviewed SHA: all five recorded probes still name the earlier wave-end SHA and omit `scope`, despite committed branch-end adversarial and blind-run artifacts. The checkpoint therefore cannot reproduce or gate the current evidence.",
+          "fix": "Append the branch-end package-test, adversarial, and blind-run probe entries with their exact commands, artifacts, `scope: branch-end`, and SHA binding for this round before recording verdicts."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md:57",
+          "text": "issue (blocking): The report says the package-suite environment is the only missing evidence, but the already-committed branch-end adversarial catalogue exposes three failing cases, including two ways the squash rehearsal can model the wrong history. This hides known blockers at the user's acceptance point.",
+          "fix": "Regenerate the blind-run report after the branch-end probes and findings are recorded, explicitly listing the failing adversarial boundaries and withholding an acceptance-ready summary until they pass or are validly dismissed."
+        }
+      ],
+      "sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + skill",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/rehearse_probes.py:283",
+          "status": "fixed",
+          "note": "_trunk_precondition_problem now rejects divergent and stale trunk inputs before constructing the squashed shape."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "status": "dismissed",
+          "note": "dismissed: §7 writes each round's probes after its readers return, and the supplied round-6 record evidence binds reproducible commands to 130c75de without rewriting the truthful earlier execution SHAs — by rev-be-a-q3n7"
+        },
+        {
+          "anchor": "loom-code/skills/build/SKILL.md:345",
+          "status": "fixed",
+          "note": "The registered gate now states the ancestry and trunk-ref preconditions and the required rebase or fetch response."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py:206",
+          "status": "unfixed",
+          "note": "The camelCase probe names remain; this is a non-blocking nit for ship to fold."
+        }
+      ],
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 6,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "loom-code/skills/build/SKILL.md:349",
+          "text": "nitpick (non-blocking): The gate says the remote-tracking ref must agree with the local ref, but `_trunk_precondition_problem` intentionally permits some unequal shapes, including a local ref equal to HEAD and a remote ref ahead of a stale local ref.",
+          "fix": "Replace “agreeing with the local one” with wording that matches the implemented condition: the remote ref must not lag a distinct local trunk already contained in HEAD."
+        }
+      ],
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:2400",
+          "status": "fixed",
+          "note": "_frontmatter_line_count requires exactly one status line before the shipped-change amnesty can apply."
+        },
+        {
+          "anchor": "loom-code/scripts/rehearse_probes.py:230",
+          "status": "fixed",
+          "note": "_trunk_precondition_problem now rejects divergent trunks and stale origin refs before constructing the squashed shape."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "status": "fixed",
+          "note": "The record now carries the branch-end adversarial, blind-run, and package-test entries with commands, artifacts, scope, and SHA bindings."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md:57",
+          "status": "fixed",
+          "note": "The refreshed report identifies the three former adversarial failures, their fixes, and the remaining current-HEAD package-test limitation."
+        }
+      ],
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + skill",
+      "scope": "branch-end",
+      "round": 7,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "naming": "PASS"
+      },
+      "findings": [],
+      "confirmation": "The nit batch renames all eight affected top-level probes to lowercase three-part names in both path-only-different copies; the other two wording/record edits change no behavior, and only the four authorized files changed.",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 7,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "inconsistency": "PASS"
+      },
+      "findings": [],
+      "confirmation": "The revised gate sentence now matches the strict-between trunk condition, fixes my wording nit, and the other three files contain only probe renames and report-record wording; nothing behavioral or outside those four files changed.",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + skill",
+      "scope": "branch-end",
+      "round": 8,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "confirmation": "The two commits contain only the accurate 1.8.1 stamps/CHANGELOG and a stale test-pin correction that still strictly verifies the banner against plugin.json and the full mirror; no production behavior changed.",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 8,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "incorrect-fact": "PASS"
+      },
+      "findings": [],
+      "confirmation": "At f028d5f6, the post-confirmation changes are the accurate 1.8.1 version/manifest/README/hook-banner/CHANGELOG stamps plus a manifest-derived correction of the stale banner pin that preserves the full mirror assertion; no behavioral code changed.",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "83d129c9",
+      "result": "2016 passed, 1 skipped, 1 xfailed; 182 passed, 1 skipped",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py -q -k test_plan_edits_closed_intent_missing_commit_reports_not_applicable",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py -q -k test_plan_edits_closed_intent_present_commit_tampered_still_blocks",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_plan_edits_shipped.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py -q -k test_squashedShape_probeNeedingBranchOnlyCommit_isReportedFailedWithReason",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py -q -k test_exitCode_squashedShapeRed_isNonzeroEvenThoughCiShapedShapeIsGreen",
+      "sha": "83d129c9",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_unreachableclosure_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_fullwidthdecoration_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_fencedstatus_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_symlinkintent_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_traversalchange_refused",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_detachedhead_runsboth",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_tagtrunk_resolvescommit",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_symbolictrunk_resolvescommit",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_mergehistory_collapsesonecommit",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_unicodepath_runsboth",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_dirtysource_ignoresworktree",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_unwritabletmp_failsloudly",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_unsettmp_runsboth",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_keep_preservessquashedclone",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_callermarkers_overwritten",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_forgedartifact_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_staleartifact_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_trustboundary_matches",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_concurrentwriter_detects",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_matcher_selftests_expected",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "",
+      "sha": "7bd989fe",
+      "result": "line 1: partly, line 2: works, line 3: works, line 4: works, line 5: partly",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "result": "2089 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "",
+      "sha": "ebc3ddc22b158522323e9d023c659b884693aadf",
+      "result": "line 1: partly, line 2: works, line 3: works, line 4: works, line 5: partly; adversarial re-runs: test_planedits_duplicatestatus_blocks: pass, test_rehearsal_trunkbehindmergebase_failsloudly: pass, test_rehearsal_trunkaheadofbranch_failsloudly: pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "130c75dee74efe9e05499a5378408c7a0149f31b",
+      "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "a4341ede58af1d2d2b39ee3d6ed50a523fc7a0ac",
+      "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "f028d5f69762e0093ab9ee831e30bc6980a83e95",
+      "result": "2093 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "type": "what",
+      "text": "你要的是合併之後 main 不要再因為這種事變紅，做完後你可以：在合併後的 main 上跑整包測試不再有測試因為找不到自己 change 的 commit 而紅；把一支故意依賴自己歷史的探針丟進畢業前的排練，排練當場紅並指名哪一支與為什麼；對一個已出貨的 change 問 checker plan 定稿後有沒有被亂改，得到「不適用」而不是看起來像「有人亂改了」的封鎖；在 build 站畢業段落讀到這條規則且有測試釘住。對嗎？（答：好）"
+    },
+    {
+      "decision_point": 1,
+      "type": "what",
+      "text": "這次要不要用 Codex 當第二位讀者？（答：好，用 Codex）"
+    },
+    {
+      "decision_point": 3,
+      "text": "決策點③ — 盲跑報告逐條讀過（五條 Acceptance：2、3、4 可以；1、5 部分，原因各為未真正合併到 main、沙箱無法重跑整包而由沙箱外紀錄與 push 閘補上；對抗案例 26/26 通過；既有資料未動；替你決定的事項與審閱者 A 自行撤回的一條發現皆已列出）— 這是你要的嗎？（答：go）",
+      "type": "done"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "w1-amnesty-too-wide",
+      "anchor": "loom-code/scripts/loom_checker.py:2304",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex-h4n8",
+      "resolved": true
+    },
+    {
+      "id": "w1-plan-unreadable-intent",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/plan.md:45",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex-h4n8",
+      "resolved": true
+    },
+    {
+      "id": "w1-squashed-ref-deletion",
+      "anchor": "loom-code/scripts/rehearse_probes.py:280",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex2",
+      "resolved": true
+    },
+    {
+      "id": "w1-git-citation",
+      "anchor": "loom-code/scripts/rehearse_probes.py:273",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex-h4n8",
+      "resolved": true
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/rehearse_probes.py:283",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-a-q3n7",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (ancestry); test_squashedShape_trunkAheadAndDivergent_refusesNamingAncestry; probe test_rehearsal_trunkaheadofbranch_failsloudly passes"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-a-q3n7",
+      "dismissed": "§7 writes each round's probes after its readers return, and the supplied round-6 record evidence binds reproducible commands to 130c75de without rewriting the truthful earlier execution SHAs — by rev-be-a-q3n7"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/skills/build/SKILL.md:345",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-a-q3n7",
+      "resolved": "closed by 93a43823 -- ancestry precondition sentence inside the gate; test_graduation_paragraph_states_the_trunk_ancestry_precondition"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "loom-code/scripts/loom_checker.py:2400",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by 3b0ef50c -- _frontmatter_line_count guard; test_duplicate_status_lines_committed_still_blocks; probe test_planedits_duplicatestatus_blocks passes"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/scripts/rehearse_probes.py:230",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (same-name trunk consistency); test_squashedShape_originMainBehindLocalMain_refusesNamingFetch; probe test_rehearsal_trunkbehindmergebase_failsloudly passes"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by e5ec1d35 -- round 5 recorded the 26 adversarial, blind-run and package-tests probes with scope branch-end"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md:57",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1",
+      "resolved": "closed by 130c75de -- report refreshed at ebc3ddc2 with the adversarial-case block and the fix-round decisions"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "loom-code/scripts/loom_checker.py:2400",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "adv-be-r5k2",
+      "resolved": "closed by 3b0ef50c -- _frontmatter_line_count guard; test_duplicate_status_lines_committed_still_blocks; probe test_planedits_duplicatestatus_blocks passes"
+    },
+    {
+      "id": "branch-end-09",
+      "anchor": "loom-code/scripts/rehearse_probes.py:230",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "adv-be-r5k2",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (same-name trunk consistency); test_squashedShape_originMainBehindLocalMain_refusesNamingFetch; probe test_rehearsal_trunkbehindmergebase_failsloudly passes"
+    },
+    {
+      "id": "branch-end-10",
+      "anchor": "loom-code/scripts/rehearse_probes.py:283",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "adv-be-r5k2",
+      "resolved": "closed by ebc3ddc2 -- _trunk_precondition_problem (ancestry); test_squashedShape_trunkAheadAndDivergent_refusesNamingAncestry; probe test_rehearsal_trunkaheadofbranch_failsloudly passes"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "Acceptance line 5",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "br-be-t8m4",
+      "resolved": "closed by the round-5 package-tests probe -- 2089 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped at 3d3422f7, run outside the sandbox"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W1-01",
+      "role": "adversary",
+      "agent_id": "adv-w1-01-k3p9",
+      "model": "sonnet",
+      "started": "2026-09-06T11:47:16+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "adversary",
+      "agent_id": "adv-w1-02-m7t2",
+      "model": "sonnet",
+      "started": "2026-09-06T11:47:16+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-b4x1",
+      "model": "sonnet",
+      "started": "2026-09-06T11:47:16+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-c8y5",
+      "model": "sonnet",
+      "started": "2026-09-06T11:47:16+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-d2z7",
+      "model": "sonnet",
+      "started": "2026-09-06T12:04:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-a-h4n8",
+      "model": "sonnet",
+      "started": "2026-09-06T12:22:58+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex-h4n8",
+      "model": "codex",
+      "started": "2026-09-06T12:22:58+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex2",
+      "model": "codex",
+      "started": "2026-09-06T12:45:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex-h4n8",
+      "model": "codex",
+      "started": "2026-09-06T13:00:00+08:00",
+      "fresh_context": false,
+      "round": 2
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex2",
+      "model": "codex",
+      "started": "2026-09-06T13:00:00+08:00",
+      "fresh_context": false,
+      "round": 2
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex-h4n8",
+      "model": "codex",
+      "started": "2026-09-06T13:05:00+08:00",
+      "fresh_context": false,
+      "round": 3
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex-h4n8",
+      "model": "codex",
+      "started": "2026-09-06T13:10:00+08:00",
+      "fresh_context": false,
+      "round": 4
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex2",
+      "model": "codex",
+      "started": "2026-09-06T13:10:00+08:00",
+      "fresh_context": false,
+      "round": 4
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-w2-01-inline",
+      "model": "opus",
+      "started": "2026-09-07T00:31:19+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "W2-memory",
+      "role": "implementer",
+      "agent_id": "impl-w2-memory-inline",
+      "model": "opus",
+      "started": "2026-09-07T00:42:50+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-be-r5k2",
+      "model": "codex",
+      "started": "2026-09-07T00:51:42+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-t8m4",
+      "model": "codex",
+      "started": "2026-09-07T00:51:42+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-a-q3n7",
+      "model": "codex",
+      "started": "2026-09-07T00:51:42+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-b-x6p1",
+      "model": "codex",
+      "started": "2026-09-07T00:51:42+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-fix-be-w1-01",
+      "model": "opus",
+      "started": "2026-09-07T01:21:15+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-fix-be-w1-02",
+      "model": "opus",
+      "started": "2026-09-07T01:21:15+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "W2-01",
+      "role": "implementer",
+      "agent_id": "impl-fix-be-w2-01",
+      "model": "opus",
+      "started": "2026-09-07T01:21:15+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "br-be-t8m4",
+      "model": "codex",
+      "started": "2026-09-07T01:32:30+08:00",
+      "fresh_context": false,
+      "round": 6
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-a-q3n7",
+      "model": "codex",
+      "started": "2026-09-07T01:32:30+08:00",
+      "fresh_context": false,
+      "round": 6
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-b-x6p1",
+      "model": "codex",
+      "started": "2026-09-07T01:32:30+08:00",
+      "fresh_context": false,
+      "round": 6
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-a-q3n7",
+      "model": "codex",
+      "started": "2026-09-07T06:17:50+08:00",
+      "fresh_context": false,
+      "round": 7
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-b-x6p1",
+      "model": "codex",
+      "started": "2026-09-07T06:17:50+08:00",
+      "fresh_context": false,
+      "round": 7
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-a-q3n7",
+      "model": "codex",
+      "started": "2026-09-07T06:43:30+08:00",
+      "fresh_context": false,
+      "round": 8
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-be-b-x6p1",
+      "model": "codex",
+      "started": "2026-09-07T06:43:30+08:00",
+      "fresh_context": false,
+      "round": 8
+    }
+  ],
+  "cost": {
+    "rounds": 8,
+    "dispatches": 29,
+    "cap_changes": [],
+    "hours_plan_to_pr": 19.0
+  },
+  "charter": "1.0",
+  "second_vendor": "codex"
+}

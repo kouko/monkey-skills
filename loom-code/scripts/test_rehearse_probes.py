@@ -350,3 +350,166 @@ def test_cloneRun_carriesTheNestedMarker_soCloneAndRunProbesCanSkip(
     out = capsys.readouterr().out
     assert code == 0, out
     assert "FAILED (0)" in out, out
+
+
+# --------------------------------------------------------------------------
+# squashed shape (plan task W1-02) -- the adversary's
+# `docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/
+# test_abuse_squashed_rehearsal.py` is the attack catalogue and is not
+# duplicated here; these companions drive the same scenario in-process via
+# `rehearse_probes.main([...])` and add `_resolve_trunk_sha` white-box
+# coverage the adversary's file, which only ever sees the script from the
+# outside, does not exercise directly.
+# --------------------------------------------------------------------------
+
+def test_resolveTrunkSha_noOriginAndNonTrunkBranch_returnsNone(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path, trunk="develop")
+    assert rehearse_probes._resolve_trunk_sha(repo) == (None, None)
+
+
+def test_resolveTrunkSha_originAheadOfLocalMain_returnsOriginSha(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path, trunk="main")
+    bare = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True, capture_output=True)
+    _git_ok(repo, "remote", "add", "origin", str(bare))
+    _git_ok(repo, "push", "-q", "origin", "main")
+    origin_sha = _git_ok(repo, "rev-parse", "origin/main")
+
+    commit_file(repo, "tests/test_ahead.py", "def test_ok():\n    assert True\n", "ahead of origin")
+
+    sha, ref = rehearse_probes._resolve_trunk_sha(repo)
+    assert (sha, ref) == (origin_sha, "origin/main")
+    assert sha != _git_ok(repo, "rev-parse", "HEAD")
+
+
+BRANCH_ONLY_COMMIT_PROBE = _HEADER + '''
+
+def test_branchOnlyCommitProbe_findsIntermediateCommitSubject_bySubjectGrep():
+    log = _git("log", "--oneline", "--all", "--grep=intermediate branch work", "--format=%H")
+    assert log.stdout.strip() != "", (
+        "the commit subject 'intermediate branch work' is not reachable -- "
+        "this probe depends on a commit that only exists before the branch "
+        "is squashed to one commit off its trunk"
+    )
+'''
+
+
+def test_squashedShape_probeNeedingBranchOnlyCommit_failsInProcessWhileCiShapedStaysGreen(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = make_repo(tmp_path, trunk="main")
+    bare = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True, capture_output=True)
+    _git_ok(repo, "remote", "add", "origin", str(bare))
+    _git_ok(repo, "push", "-q", "origin", "main")
+
+    commit_file(repo, "src/marker.txt", "intermediate\n", "intermediate branch work")
+    commit_file(
+        repo, "tests/test_branch_only.py", BRANCH_ONLY_COMMIT_PROBE, "add branch-only probe"
+    )
+
+    code = rehearse_probes.main(["tests/test_branch_only.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code != 0, out
+    assert "test_branch_only.py" in out, out
+    assert "SQUASHED SHAPE" in out, out
+    # the CI-shaped section (printed first, before "SQUASHED SHAPE") stays
+    # green -- only the squashed shape loses the branch-only commit
+    ci_shaped_section = out.split("SQUASHED SHAPE", 1)[0]
+    assert "FAILED (0)" in ci_shaped_section, out
+
+
+def test_squashedShape_nothingToSquash_skipsAndStaysGreen(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = make_repo(tmp_path, trunk="main")
+    commit_file(repo, "tests/test_green.py", "def test_ok():\n    assert True\n", "green")
+
+    code = rehearse_probes.main(["tests/test_green.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert "FAILED (0)" in out, out
+    assert "SQUASHED SHAPE: skipped" in out, out
+    assert "nothing to squash" in out, out
+
+
+def test_squashedShape_localTrunk_keepsOriginMainReachable(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A repo whose trunk resolves through LOCAL `main` (no origin remote)
+    must still carry `origin/main` in the squashed shape. The fix maps a
+    local trunk to `refs/remotes/origin/<name>` and updates that ref to the
+    squashed commit instead of deleting every `origin/*` ref -- so a probe
+    that skips when `origin/main` is absent (the `ORIGIN_MAIN_PROBE` above)
+    cannot falsely pass in the squashed shape."""
+    repo = make_repo(tmp_path, trunk="main")
+    assert _git(repo, "remote").stdout.strip() == ""  # no origin at all
+    _git_ok(repo, "checkout", "-q", "-b", "feature")
+    commit_file(repo, "tests/test_origin_main.py", ORIGIN_MAIN_PROBE, "origin/main probe")
+
+    code = rehearse_probes.main(["tests/test_origin_main.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert "SQUASHED SHAPE" in out, out
+    # the squashed section must not skip the origin/main probe -- the ref
+    # must resolve there, not be deleted
+    squashed_section = out.split("SQUASHED SHAPE", 1)[1]
+    assert "SKIPPED (0)" in squashed_section, out
+
+
+def test_squashedShape_trunkAheadAndDivergent_refusesNamingAncestry(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`origin/main` has moved past the point the branch forked from, so it
+    is no longer an ancestor of HEAD. `reset --soft` onto it would commit
+    the branch's tree on top of the newer trunk -- dropping whatever the
+    trunk gained -- and rehearse a history the squash merge would never
+    produce (branch-end findings 01, 05, 10). The squashed shape must
+    refuse, name the ancestry problem, and still report the CI-shaped
+    result first."""
+    repo = make_repo(tmp_path, trunk="main")
+    _git_ok(repo, "checkout", "-q", "-b", "feature")
+    commit_file(repo, "tests/test_green.py", "def test_ok():\n    assert True\n", "branch work")
+    _git_ok(repo, "checkout", "-q", "main")
+    commit_file(repo, "ahead.txt", "ahead\n", "trunk moved on")
+    ahead = _git_ok(repo, "rev-parse", "HEAD")
+    _git_ok(repo, "checkout", "-q", "feature")
+    _git_ok(repo, "update-ref", "refs/remotes/origin/main", ahead)
+
+    code = rehearse_probes.main(["tests/test_green.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code != 0, out
+    assert "could not squash" in out.lower(), out
+    assert "ancestor" in out.lower(), out
+    ci_shaped_section = out.split("SQUASHED SHAPE", 1)[0]
+    assert "FAILED (0)" in ci_shaped_section, out
+
+
+def test_squashedShape_originMainBehindLocalMain_refusesNamingFetch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Local `main` carries commits that `origin/main` lacks, and the branch
+    already merged them. `origin/main` is still an ancestor of HEAD, so
+    ancestry alone would let the rehearsal squash onto a base older than
+    the one the branch actually diverged from and call that green
+    (branch-end findings 05, 09). When the two same-name trunks disagree
+    this way the real trunk is unknowable from here: refuse and say which
+    is behind."""
+    repo = make_repo(tmp_path, trunk="main")
+    base = _git_ok(repo, "rev-parse", "HEAD")
+    _git_ok(repo, "checkout", "-q", "-b", "feature")
+    commit_file(repo, "tests/test_green.py", "def test_ok():\n    assert True\n", "branch work")
+    _git_ok(repo, "checkout", "-q", "main")
+    commit_file(repo, "later.txt", "later\n", "advance local main")
+    advanced = _git_ok(repo, "rev-parse", "HEAD")
+    _git_ok(repo, "checkout", "-q", "feature")
+    _git_ok(repo, "merge", "-q", "--no-edit", advanced)
+    _git_ok(repo, "update-ref", "refs/remotes/origin/main", base)
+
+    code = rehearse_probes.main(["tests/test_green.py", "--repo", str(repo)])
+    out = capsys.readouterr().out
+    assert code != 0, out
+    assert "could not squash" in out.lower(), out
+    assert "behind" in out.lower(), out
+    ci_shaped_section = out.split("SQUASHED SHAPE", 1)[0]
+    assert "FAILED (0)" in ci_shaped_section, out

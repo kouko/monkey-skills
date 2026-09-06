@@ -213,15 +213,56 @@ def test_review_edits_command_absent_change_id_fails_closed_not_crash() -> None:
     assert "no review file" in result.stderr
 
 
+def _plan_commit_reachable_from_head() -> bool:
+    """Whether `docs(loom): plan <CHANGE_ID>` is reachable from HEAD --
+    the same reachability `find_plan_commit_sha` (loom_checker.py) walks
+    -- so this test recomputes which of the two shapes it is running in
+    (a branch that still carries the plan commit, or a post-squash tree
+    that dropped it) instead of guessing from the branch name."""
+    wanted = f"docs(loom): plan {CHANGE_ID}"
+    log = subprocess.run(
+        ["git", "-C", str(REPO), "log", "--format=%s", "HEAD"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    return wanted in log.splitlines()
+
+
 def test_charter_and_plan_edits_agree_the_real_change_id_resolves() -> None:
     """Positive control for the two probes above: this change's own
     change-id (which DOES have a plan and a review.json on disk) must
     resolve cleanly through both cited commands, proving the absent-input
-    failures above are about the input, not a broken command."""
+    failures above are about the input, not a broken command.
+
+    Exit 0 alone does not distinguish "the baseline was actually checked"
+    from "there was no baseline to check" -- W1-01 made a missing plan
+    commit on a closed intent exit 0 too, via a different code path
+    (plan.edits-after-commit: NOT APPLICABLE). So this recomputes which
+    shape the tree is actually in and asserts the matching reason: with
+    the plan commit reachable from HEAD, plan-edits must have compared
+    against it (never taken the not-applicable shortcut); with it absent
+    -- the post-squash shape -- plan-edits must say so explicitly, naming
+    this change-id, using the exact wording `check_plan_edits_after_commit`
+    (loom_checker.py) writes for the carve-out."""
     plan_result = run_checker("plan-edits", CHANGE_ID)
     review_result = run_checker("review-edits", CHANGE_ID)
     assert plan_result.returncode == 0, plan_result.stdout + plan_result.stderr
     assert review_result.returncode == 0, review_result.stdout + review_result.stderr
+
+    combined = plan_result.stdout + plan_result.stderr
+    if _plan_commit_reachable_from_head():
+        assert "NOT APPLICABLE" not in combined, (
+            "the plan commit is reachable from HEAD, yet plan-edits took "
+            f"the shipped-change not-applicable shortcut anyway: {combined!r}"
+        )
+    else:
+        expected = (
+            f"plan.edits-after-commit: NOT APPLICABLE -- {CHANGE_ID} was closed"
+        )
+        assert expected in combined, (
+            "the plan commit is absent from HEAD (post-squash shape), but "
+            f"plan-edits did not report the not-applicable carve-out for "
+            f"{CHANGE_ID!r}: {combined!r}"
+        )
 
 
 # ---------------------------------------------------------------------------

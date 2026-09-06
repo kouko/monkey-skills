@@ -341,7 +341,14 @@ no local trunk branch — and runs the copies there (on Codex, the script
 ships with the loom-code checkout). A red rehearsal blocks graduation
 until the probe reads `origin/main` first and skips when nothing
 resolves, and reading every skip it lists matters, since a skip naming a
-commit or a branch only this tree has verifies nothing on CI.
+commit or a branch only this tree has verifies nothing on CI. The same
+run then rehearses a second shape, the branch squashed to one commit off
+its trunk, so a probe that passes only because it still sees one of this
+branch's own commits goes red here rather than after the squash merge
+lands. That second shape needs a trunk that is an ancestor of the
+rehearsed HEAD, with its remote-tracking ref at or ahead of any local
+trunk the branch already contains; when the rehearsal finds otherwise it
+stops with the reason, and a rebase or a fetch comes before graduation.
 <!-- /gate -->
 
 **Store entries.** Write any durable lesson as a `docs/loom/memory/`

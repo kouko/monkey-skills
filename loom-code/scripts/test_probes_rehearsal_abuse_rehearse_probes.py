@@ -172,14 +172,25 @@ def test_cloneShape_freshRehearsalClone_matchesCiCheckout():
     """Full history, origin/main, no local trunk branch, detached HEAD.
 
     The expected shas arrive by environment variable so that committing
-    this file cannot invalidate the sha it pins.
+    this file cannot invalidate the sha it pins. `REHEARSE_PROBES_SHAPE`
+    (added alongside the squashed rehearsal shape) says which shape this
+    run is in -- the CI-shaped clone's HEAD is exactly the caller's own
+    HEAD, but the squashed shape deliberately replaces it with one new
+    commit, so that one fact only holds for the CI-shaped run.
     """
     assert _resolves(os.environ["ADVERSARY_OLD_SHA"]), "the clone lost history older than HEAD"
     assert _resolves("origin/main"), "origin/main does not resolve in the clone"
     assert not _resolves("refs/heads/main"), "the clone kept a local main branch"
     assert not _resolves("refs/heads/master"), "the clone kept a local master branch"
     assert _git("symbolic-ref", "-q", "HEAD").returncode != 0, "HEAD is still attached"
-    assert _git("rev-parse", "HEAD").stdout.strip() == os.environ["ADVERSARY_HEAD_SHA"]
+    head = _git("rev-parse", "HEAD").stdout.strip()
+    if os.environ.get("REHEARSE_PROBES_SHAPE", "ci-shaped") == "ci-shaped":
+        assert head == os.environ["ADVERSARY_HEAD_SHA"]
+    else:
+        assert head != os.environ["ADVERSARY_HEAD_SHA"], (
+            "the squashed shape must replace HEAD with a new commit, not "
+            "keep the branch's own"
+        )
 '''
 
 MASTER_TRUNK_PROBE = _HEADER + '''
