@@ -3304,8 +3304,34 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         failures += check_plan_field_caps_at(manifest, repo, change_id)
         failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
         failures += check_review_round_append_only_at(manifest, repo, change_id)
+    # Package and adversarial programs are untrusted executables. Snapshot the
+    # selected repository itself (not the hook caller's cwd) immediately before
+    # either kind runs, then recompute after both have finished. A successful
+    # exit code cannot release a push if an executable moved HEAD or changed the
+    # index/working tree while the gate was observing it.
+    live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
+    porcelain_before_probes = git_text(repo, "status", "--porcelain")
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
+    live_head_after_probes = git_text(repo, "rev-parse", "HEAD")
+    porcelain_after_probes = git_text(repo, "status", "--porcelain")
+    if (
+        live_head_after_probes != live_head_before_probes
+        or porcelain_after_probes != porcelain_before_probes
+    ):
+        changed = []
+        if live_head_after_probes != live_head_before_probes:
+            changed.append("HEAD moved")
+        if porcelain_after_probes != porcelain_before_probes:
+            changed.append("git status --porcelain changed")
+        failures.append(
+            (
+                "push.reviewed-sha",
+                "executable probes changed the selected repository after "
+                f"validation ({' and '.join(changed)}); return to build and "
+                "complete a fresh branch-end review",
+            )
+        )
 
     # `dispatch[]` lives inside the review.json that was read out of the
     # reviewed commit's tree, so both identity rules -- and the standing-

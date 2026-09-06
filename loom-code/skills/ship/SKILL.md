@@ -223,12 +223,12 @@ nit batch — fixing wording never substitutes for a passing probe run.
 
 ## 4. Push
 
-Before the push, walk this checklist once. It mirrors
-`.github/workflows/loom-code-ci.yml`'s jobs, command for command, so a
-red line here is red there too:
+Before the push, walk the remaining repository-local non-package deterministic
+safety checklist once. These
+non-package checks mirror their jobs in `.github/workflows/loom-code-ci.yml`;
+the complete package suite is intentionally absent because the hook owns it:
 
 ```
-python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v -n auto
 python3 scripts/check_plugin_boundaries.py loom-code
 python3 scripts/check_plugin_boundaries.py loom-design
 python3 scripts/sync_codex_manifests.py --check --all

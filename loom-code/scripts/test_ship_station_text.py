@@ -342,12 +342,11 @@ def test_ship_pr_body_process_cost_lists_rounds_dispatches_caps_hours() -> None:
     assert "review.json" in tail
 
 
-def test_ship_push_checklist_lists_one_command_per_ci_job() -> None:
-    """§4 retains the existing CI-job checklist; W0-01 removes only the
-    duplicate complete-suite checker preflight that follows it."""
+def test_ship_push_checklist_keeps_nonpackage_deterministic_checks() -> None:
+    """§4 keeps deterministic CI checks but leaves the complete suite to
+    the hook-triggered checker."""
     section = _section_4_push()
     for expected in (
-        "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/",
         "check_plugin_boundaries.py loom-code",
         "check_plugin_boundaries.py loom-design",
         "sync_codex_manifests.py --check --all",
@@ -358,6 +357,7 @@ def test_ship_push_checklist_lists_one_command_per_ci_job() -> None:
         "check-skill-crossrefs.py",
     ):
         assert expected in section, f"§4's checklist is missing {expected!r}"
+    assert not re.search(r"^python3 -m pytest\b", section, re.MULTILINE)
     checklist_idx = section.index("check-skill-crossrefs.py")
     branch_command_idx = section.index("git push -u origin")
     assert checklist_idx < branch_command_idx
@@ -371,18 +371,19 @@ def test_ship_issues_named_branch_without_explicit_checker_preflight() -> None:
     assert "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py push" not in section
 
 
-def test_ship_push_checklist_mirrors_workflow_sentence() -> None:
+def test_ship_push_checklist_mirrors_nonpackage_workflow_jobs() -> None:
     section = _section_4_push()
     hits = [
         s for s in _sentences(section)
-        if "mirrors" in s.lower()
+        if "mirror" in s.lower()
         and "loom-code-ci.yml" in s.lower()
         and "jobs" in s.lower()
+        and "non-package" in s.lower()
         and not _has_negation(s)
     ]
     assert hits, (
-        "ship/SKILL.md §4 has no affirmative sentence stating the checklist "
-        "mirrors the workflow's jobs"
+        "ship/SKILL.md §4 has no affirmative sentence stating its non-package "
+        "checks mirror the workflow's jobs"
     )
 
 
