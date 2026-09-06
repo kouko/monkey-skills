@@ -3202,6 +3202,57 @@ def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
     return next(iter(selected_roots)) if selected_roots else None
 
 
+IMMUTABLE_PUSH_FLAGS = {"-u", "--set-upstream"}
+
+
+def immutable_git_push_head(command: str, repo: Path) -> tuple[str | None, str | None]:
+    """The immutable object named by every direct ``git push`` in a hook.
+
+    ``None, None`` means the hook payload contains only a PR create/merge and
+    therefore has no Git network refspec to bind. Every actual Git push must
+    name one repository plus one literal ``<full HEAD>:refs/heads/<branch>``
+    refspec; accepting any other option or positional shape would make the
+    source or destination ambiguous again.
+    """
+    pushes: list[list[str]] = []
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens or Path(tokens[0]).name.lstrip("(") != "git":
+            continue
+        found = _subcommand_at(tokens[1:], GIT_VALUE_OPTIONS)
+        if not found or found[1] != "push":
+            continue
+        push_index = found[0] + 1
+        pushes.append(tokens[push_index + 1:])
+
+    if not pushes:
+        return None, None
+
+    head = git_text(repo, "rev-parse", "HEAD")
+    branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if not branch:
+        return None, "the selected repository has no current symbolic branch"
+    expected = f"{head}:refs/heads/{branch}"
+
+    for arguments in pushes:
+        positionals: list[str] = []
+        for token in arguments:
+            if token in IMMUTABLE_PUSH_FLAGS:
+                continue
+            if token.startswith("-"):
+                return None, f"Git push option {token!r} is not allowed by the immutable refspec contract"
+            positionals.append(token)
+        if len(positionals) != 2:
+            return None, (
+                "each Git push must name exactly one repository and one explicit "
+                f"refspec {expected!r}"
+            )
+        _remote, refspec = positionals
+        if refspec != expected:
+            return None, f"Git push refspec must be exactly {expected!r}, got {refspec!r}"
+    return head, None
+
+
 def read_hook_payload(stdin=sys.stdin) -> dict | None:
     """PreToolUse payload (Claude Code and Codex share the shape) when the
     checker is invoked as a hook; None when run from a terminal or with an
@@ -3247,7 +3298,13 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
         return 2
     os.chdir(push_cwd)
-    rc = _cmd_push(rest, out, err)
+    repo = repo_root(Path.cwd())
+    immutable_head, refspec_error = immutable_git_push_head(command, repo)
+    if refspec_error:
+        print(f"BLOCK push.reviewed-sha: {refspec_error}", file=err)
+        return 2
+    checked_args = (["--head", immutable_head] if immutable_head else []) + rest
+    rc = _cmd_push(checked_args, out, err)
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
 

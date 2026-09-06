@@ -2238,7 +2238,7 @@ def test_hook_mode_recognises_every_push_shape(tmp_path: Path) -> None:
     for cmd in PUSH_SHAPED:
         result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
         assert result.returncode == 2, (cmd, result.stdout, result.stderr)
-        assert "push.review-only-head" in blocked_rules(result), cmd
+        assert blocked_rules(result) & {"push.review-only-head", "push.reviewed-sha"}, cmd
         assert ("ambiguous repository selection" in result.stderr) == (
             cmd in AMBIGUOUS_PUSH_SHAPED
         ), cmd
@@ -2256,8 +2256,38 @@ def test_hook_mode_lets_non_push_shapes_through(tmp_path: Path) -> None:
 
 def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
-    result = run_hook({"tool_name": "Bash", "tool_input": {"command": "git push"}, "cwd": str(repo)}, cwd=tmp_path)
+    head = git(repo, "rev-parse", "HEAD")
+    command = f"git push origin {head}:refs/heads/work"
+    result = run_hook({"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo)}, cwd=tmp_path)
     assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize(
+    "unsafe",
+    [
+        "+{head}:refs/heads/work",
+        "--force origin {head}:refs/heads/work",
+        "-f origin {head}:refs/heads/work",
+        "--force-with-lease origin {head}:refs/heads/work",
+        "origin {head}:refs/heads/*",
+    ],
+)
+def test_hook_mode_blocks_force_and_wildcard_refspecs_before_probes(
+    tmp_path: Path, unsafe: str,
+) -> None:
+    repo = build_repo(tmp_path)
+    head = git(repo, "rev-parse", "HEAD")
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"git push {unsafe.format(head=head)}"},
+            "cwd": str(repo),
+        },
+        cwd=tmp_path,
+    )
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "observed exit code" not in result.stdout
 
 
 def test_hook_mode_honours_git_dash_c_over_payload_cwd(tmp_path: Path) -> None:
@@ -2276,7 +2306,8 @@ def test_hook_mode_honours_git_dash_c_over_payload_cwd(tmp_path: Path) -> None:
     (unrelated / "after.py").write_text("changed = True\n", encoding="utf-8")
     git(unrelated, "add", "after.py")
     git(unrelated, "commit", "-q", "-m", "feat(x): unreviewed change")
-    command = f"git -C {target} push origin HEAD"
+    head = git(target, "rev-parse", "HEAD")
+    command = f"git -C {target} push origin {head}:refs/heads/work"
 
     result = run_hook(
         {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(unrelated)},
@@ -2362,7 +2393,7 @@ def test_hook_mode_blocks_indirect_push_repository_selection(
     )
 
     assert result.returncode == 2
-    assert "push.review-only-head" in blocked_rules(result)
+    assert blocked_rules(result) & {"push.review-only-head", "push.reviewed-sha"}
 
 
 @pytest.mark.parametrize(

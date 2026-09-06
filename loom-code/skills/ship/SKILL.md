@@ -243,15 +243,21 @@ The supported host's local push hook is the sole owner: its deterministic
 push checker runs the resolved complete package-test command exactly once and
 re-runs recorded adversarial probes. Never invoke it as a separate preflight.
 
-Issue the branch push by name, never bare:
+Read the current full object id and symbolic branch, then substitute both
+literal values into the push. The source must be the 40-character object id,
+not `HEAD`, a branch name, an abbreviation, or a shell variable; the explicit
+destination must be `refs/heads/<current-symbolic-branch>`:
 
 ```
-git push -u origin <branch>
+git rev-parse HEAD
+git symbolic-ref --quiet --short HEAD
+git push -u origin <full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>
 ```
 
-The hook-triggered checker runs in the selected repository, believes only the
-exit codes it observes, and may take minutes. Exit 0 releases the network
-push. Exit 1 prints `BLOCK <rule.id>: <reason>` on stderr. **Print that line
+The hook binds validation to that immutable source object in the selected
+repository, believes only the exit codes it observes, and may take minutes.
+Exit 0 releases the network push. Exit 1 prints `BLOCK <rule.id>: <reason>` on
+stderr. **Print that line
 verbatim to the user and stop.** Do not re-run with flags, do not
 `--no-verify`, do not adjust `review.json` to satisfy the rule — every rule
 recomputes its fact, so the only way past it is to make the fact true at
@@ -260,7 +266,7 @@ the station that owns it:
 | BLOCK | What is actually wrong | Go back to |
 |---|---|---|
 | `push.review-only-head` | HEAD touches more than `review.json` | `loom-code:review` — a new checkpoint |
-| `push.reviewed-sha` | the branch moved after the review | `loom-code:review` |
+| `push.reviewed-sha` | the branch moved after review, or the Git push does not bind the current full object id to its current branch | `loom-code:review` |
 | `push.review-schema` | `review.json` lost a declared key | `loom-code:review` |
 | `push.open-findings-closed` | a finding is neither resolved nor dismissed | `loom-code:build` for the fix, then `loom-code:review` |
 | `push.probes-package-tests` | the recorded command fails in the hook, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |

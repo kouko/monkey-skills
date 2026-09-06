@@ -363,12 +363,22 @@ def test_ship_push_checklist_keeps_nonpackage_deterministic_checks() -> None:
     assert checklist_idx < branch_command_idx
 
 
-def test_ship_issues_named_branch_without_explicit_checker_preflight() -> None:
-    """A2: Ship issues the named-branch command without separately invoking
-    the deterministic checker first."""
+def test_ship_issues_immutable_refspec_without_explicit_checker_preflight() -> None:
+    """Ship emits an immutable source without separately invoking the
+    deterministic checker first."""
     section = _section_4_push()
-    assert "git push -u origin <branch>" in section
+    assert "git push -u origin <full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>" in section
     assert "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py push" not in section
+
+
+def test_ship_push_uses_immutable_full_head_refspec() -> None:
+    """The network push cannot re-resolve a mutable branch after its hook."""
+    section = _section_4_push()
+    assert "git rev-parse HEAD" in section
+    assert "git symbolic-ref --quiet --short HEAD" in section
+    assert "40-character object id" in " ".join(section.split())
+    assert "not `HEAD`, a branch name, an abbreviation, or a shell variable" in " ".join(section.split())
+    assert "git push -u origin <branch>" not in section
 
 
 def test_ship_push_checklist_mirrors_nonpackage_workflow_jobs() -> None:
