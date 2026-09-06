@@ -1,6 +1,7 @@
 """Executable six-class attack catalogue for the changed skill and mirror gate."""
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -68,7 +69,12 @@ def test_gate_trustboundary_matches(tmp_path: Path) -> None:
     source = CHECKER.read_text(encoding="utf-8").splitlines()
     mirror = MIRROR.read_text(encoding="utf-8").splitlines()
     assert mirror[0] == source[0]
-    assert mirror[1] == "# loom-checker 1.8.0"
+    # The banner carries the plugin version -- recompute it rather than pin
+    # the value of the day, which goes red at the next bump.
+    version = json.loads(
+        (CHECKER.parents[1] / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )["version"]
+    assert mirror[1] == f"# loom-checker {version}"
     assert mirror[2:] == source[1:]
 
 
