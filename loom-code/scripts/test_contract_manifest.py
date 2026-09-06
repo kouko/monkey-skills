@@ -24,7 +24,16 @@ STATIONS = {
     "ship": "loom-code",
     "maintain": "loom-code",
 }
-ARTIFACTS = {"intent", "spec", "plan", "review"}
+ARTIFACTS = {
+    "intent", "spec", "plan", "review",
+    "blind-run-report", "memory", "kickoff-defaults", "dispatch",
+}
+# The four W0-01 additions declare no `fields:` schema of their own (their
+# content is free-form prose / an existing sub-key of review.json, not a
+# frontmatter/section/json-key schema) and two of them (blind-run-report,
+# dispatch) have no template file at all -- they are per-change artifact
+# charter rows, not new template-backed schemas.
+ARTIFACTS_WITHOUT_FIELDS_SCHEMA = {"blind-run-report", "memory", "kickoff-defaults", "dispatch"}
 ID_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -67,6 +76,12 @@ def test_artifact_schemas_declare_fields_and_templates(manifest):
     assert set(schemas) == ARTIFACTS
     for name, schema in schemas.items():
         assert schema["path"], name
+        if name in ARTIFACTS_WITHOUT_FIELDS_SCHEMA:
+            assert schema.get("fields", []) == [], name
+            if schema.get("template") is not None:
+                tmpl = TEMPLATES / schema["template"]
+                assert tmpl.is_file(), f"{name}: template missing {tmpl}"
+            continue
         assert isinstance(schema["fields"], list) and schema["fields"], name
         tmpl = TEMPLATES / schema["template"]
         assert tmpl.is_file(), f"{name}: template missing {tmpl}"
@@ -74,10 +89,15 @@ def test_artifact_schemas_declare_fields_and_templates(manifest):
 
 def test_markdown_templates_carry_declared_fields(manifest):
     """Every frontmatter field / section the schema declares appears in the
-    template, so the template and the schema cannot drift apart."""
+    template, so the template and the schema cannot drift apart. Skips an
+    artifact with no template file at all (`template: null` -- W0-01's
+    blind-run-report and dispatch, which are prose / a review.json sub-key,
+    not a template-backed schema)."""
     for name, schema in manifest["artifacts"].items():
+        if schema.get("template") is None:
+            continue
         tmpl = (TEMPLATES / schema["template"]).read_text(encoding="utf-8")
-        for f in schema["fields"]:
+        for f in schema.get("fields", []):
             key = f["name"]
             assert key in tmpl, f"{name}: field {key!r} not in template {schema['template']}"
 

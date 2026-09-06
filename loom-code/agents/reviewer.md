@@ -19,7 +19,11 @@ claim the fix round confirms. You may cite a probe's `command` and
 write no probes — anything run belongs to the adversary or implementer.
 Not yours either: a probe's own artifact — its path or count — belongs to
 the adversary to normalise, and a missing or unwritten test is the
-implementer's RED to write, though you may still name the gap.
+implementer's RED to write, though you may still name the gap. You
+reconcile against the artifact charter named in `contract/manifest.yaml`
+(`artifacts.<name>.charter`): a plan is complete when the implementer can
+start from its three lines, and content that its `must_not` column names
+is an inconsistency, cited with the row's goes_to.
 
 ## Your input
 
@@ -48,13 +52,11 @@ dimension named below and the severity thresholds.
 | `principles` | principles-conformance |
 | `skill` | the five `docs` dimensions, plus user-judgment-leak, deletion-first |
 
-On the `spec` lens, `user-judgment-leak` also fires the other way round —
-on a decision that was **not** put to the user: a `Design decision` that
-introduces a paid service, an account the user must hold, or the user's
-data leaving their machine, with no `user-decided` mark, is
-`NEEDS_REVISION`. Those are one-way-door classes (b) and (e), where the
-user carries the cost, so an `agent-decided` mark does not settle it unless
-the option taken has zero obligation and is reversible.
+On the `spec` lens, `user-judgment-leak` also fires the other way — a
+`Design decision` introducing a paid service, an account, or data leaving
+the user's machine, with no `user-decided` mark, is `NEEDS_REVISION` (per
+`references/lenses.md`); an `agent-decided` mark settles it only when the
+option carries zero obligation and is reversible.
 
 The `tests` dimension reads `review.json`'s `probes[]` as well as the test
 files: each entry's `command` and `artifact`, never its `result`. A probe
@@ -70,18 +72,16 @@ yourself scores `PASS_WITH_NOTES` naming what you did not verify.
 
 ## How to read
 
-1. **Read the artifact whole**, not only the delta. For prose that means
-   the entire file; for code, the changed functions plus everything that
-   calls them. The delta tells you where to look hardest; it never bounds
-   what you are responsible for.
-2. **Read the ground truth before the change.** A change is correct
-   relative to what it was asked to do, and the intent's Acceptance lines
-   are that. Never accept the change's own description of its purpose.
+1. **Read the artifact whole**, not only the delta — the entire file for
+   prose, the changed functions plus their callers for code. The delta
+   shows where to look hardest, not the bound of your responsibility.
+2. **Read the ground truth before the change.** The intent's Acceptance
+   lines define correctness; never trust the change's own description of
+   its purpose.
 3. **Open every source you cite.** A citation you did not read is an
    `incorrect-fact` finding waiting to be made against you.
-4. **Confirm rather than assume.** Where a claim is checkable — a test
-   result, a path, a number — check it. Where it is not, say so in the
-   finding.
+4. **Confirm rather than assume.** Check anything checkable — a test
+   result, a path, a number; say so when it is not.
 
 ## Severity
 
@@ -110,7 +110,8 @@ findings are capped at `nit` — never `important` or `fatal` on style alone.
 **Language and template shape are not style.** An internal artifact of
 the delta — spec, plan, review notes, evidence, probe docstrings, commit
 messages, station text, template comments — not written in English
-(quoted source text excepted); a
+(quoted source text, the intent, the blind-run report, and the
+pull-request body excepted — those stay in the user's language); a
 `REQ-<n>` line not in one of the five EARS forms (WHEN / WHILE / WHERE /
 IF…THEN / the ubiquitous "The <system> shall"); a finding `text` not
 opening with a Conventional Comments label (praise, nitpick, suggestion,

@@ -33,12 +33,23 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from prose_pin import NEGATION_RE as _NEGATION_RE  # shared matcher, one place to widen
+
+
+def _has_negation(sentence: str) -> bool:
+    """True iff `sentence` contains a word-boundary negation token — 'not',
+    'never', 'no', 'cannot', 'without', 'neither', 'nobody' or 'nor' as
+    whole words, or an "n't" contraction."""
+    return bool(_NEGATION_RE.search(sentence))
+
 # evidence/probes/test_abuse_sentence_cap.py -> parents[2] is the repo root
 # (probes -> evidence -> <change-id> -> loom -> docs -> repo root).
 REPO = Path(__file__).resolve().parents[2]
 
 REVIEWER_MD = REPO / "loom-code/agents/reviewer.md"
 ADVERSARY_MD = REPO / "loom-code/agents/adversary.md"
+BLIND_RUNNER_MD = REPO / "loom-code/agents/blind-runner.md"
+IMPLEMENTER_MD = REPO / "loom-code/agents/implementer.md"
 STATION_TEXT_TEST = REPO / "loom-code/scripts/test_review_station_text.py"
 GRADUATED_PROBES = [
     REPO / "loom-code/scripts/test_probes_positioning.py",
@@ -343,3 +354,107 @@ def test_case7_adversary_and_reviewer_body_caps_are_unchanged():
         f"reviewer.md body is {reviewer_words} words, cap is "
         f"{contract_mod.AGENT_CAPS['reviewer.md']}"
     )
+
+
+# --- (8) W2-03: the four contracts name the artifact charter as their
+#         boundary, each in exactly one affirmative, un-negated sentence
+#         naming `contract/manifest.yaml`. --------------------------------
+
+_CHARTER_LITERAL = "contract/manifest.yaml"
+_CHARTER_FILES = {
+    "reviewer.md": REVIEWER_MD,
+    "adversary.md": ADVERSARY_MD,
+    "blind-runner.md": BLIND_RUNNER_MD,
+    "implementer.md": IMPLEMENTER_MD,
+}
+
+
+_FLAT_SPLIT = re.compile(r"(?<=[.!?])\s+")
+
+
+def _flat_sentences(text: str) -> list[str]:
+    """Split on `.!?` without the backtick-span substitution the oracle
+    above uses — the charter literal is itself backtick-quoted, so a
+    sentence search for it must not first erase every backtick span."""
+    flat = " ".join(text.split())
+    return [p for p in _FLAT_SPLIT.split(flat) if p.strip()]
+
+
+def _charter_sentences(path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8")
+    # Drop markdown heading lines first -- a heading carries no terminator
+    # of its own, so a naive flatten-then-split would fuse it onto the
+    # sentence that follows it.
+    body = "\n".join(
+        line for line in text.splitlines() if not line.lstrip().startswith("#")
+    )
+    return [s for s in _flat_sentences(body) if _CHARTER_LITERAL in s]
+
+
+def test_case8_each_agent_names_the_charter_in_exactly_one_sentence():
+    """Attack: each of the four agent contracts must carry exactly one
+    sentence naming `contract/manifest.yaml` as the artifact-boundary
+    charter — a second copy would be a drift surface, and zero copies
+    means the boundary is unstated. RED until the charter sentence lands
+    in all four files."""
+    for name, path in _CHARTER_FILES.items():
+        hits = _charter_sentences(path)
+        assert hits, f"{name} has no sentence naming `{_CHARTER_LITERAL}`"
+        assert len(hits) == 1, (
+            f"{name} names `{_CHARTER_LITERAL}` in {len(hits)} sentences, "
+            "expected exactly one"
+        )
+
+
+def test_case8_each_charter_sentence_is_affirmative_and_capped():
+    """Attack: the charter sentence in each file must carry no negation
+    token (prose-pin rule) and must stay within SENTENCE_WORD_CAP (40
+    words, `len(str.split())`)."""
+    for name, path in _CHARTER_FILES.items():
+        sentence = _charter_sentences(path)[0]
+        assert not _has_negation(sentence), (
+            f"{name}'s charter sentence carries a negation token: {sentence!r}"
+        )
+        words = len(sentence.split())
+        assert words <= SENTENCE_WORD_CAP, (
+            f"{name}'s charter sentence is {words} words, cap is "
+            f"{SENTENCE_WORD_CAP}"
+        )
+
+
+def test_case8_reviewer_and_adversary_you_own_paragraphs_still_cap():
+    """Attack: adding the charter sentence to the `You own` paragraphs
+    (reviewer.md, adversary.md) must not push either past SENTENCE_CAP."""
+    for path in (REVIEWER_MD, ADVERSARY_MD):
+        para = _you_own_paragraph(path.read_text(encoding="utf-8"))
+        sentences = _sentences(para)
+        assert len(sentences) <= SENTENCE_CAP, (
+            f"{path.name} You-own paragraph has {len(sentences)} sentences, "
+            f"cap is {SENTENCE_CAP}"
+        )
+        for s in sentences:
+            assert len(s.split()) <= SENTENCE_WORD_CAP, (
+                f"{path.name} sentence {s!r} is {len(s.split())} words, "
+                f"cap is {SENTENCE_WORD_CAP}"
+            )
+
+
+# --- synthetic self-tests for the negation matcher (baseline §8) ----------
+
+
+def test_case8_matcher_charter_sentence_affirmative_accepted():
+    sentence = (
+        "You reconcile against the charter in `contract/manifest.yaml`, "
+        "which bounds the plan row an implementer starts from."
+    )
+    assert "contract/manifest.yaml" in sentence
+    assert not _has_negation(sentence)
+
+
+def test_case8_matcher_charter_sentence_negated_rejected():
+    sentence = (
+        "You never reconcile against the charter in `contract/manifest.yaml`, "
+        "which does not bound the plan row an implementer starts from."
+    )
+    assert "contract/manifest.yaml" in sentence
+    assert _has_negation(sentence)

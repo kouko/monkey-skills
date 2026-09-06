@@ -65,6 +65,12 @@ RULES: list[tuple[str, str]] = [
         "the same major, and a minor at or above the required one.",
     ),
     (
+        "contract.charter-complete",
+        "Every artifact in the contract manifest carries a complete `charter:` block -- "
+        "non-empty answers/readers/must/must_not/edits_after, a must_not goes_to naming "
+        "another artifact in the table, and a signoff naming a real station.",
+    ),
+    (
         "intake.confirmed",
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
         "with a date the calendar has; `closed <date> — PR #<N>` or `closed <date> — branch <name>` "
@@ -110,6 +116,27 @@ RULES: list[tuple[str, str]] = [
     (
         "intent.schema",
         "The intent file carries every required frontmatter field and H2 section declared in the contract manifest.",
+    ),
+    (
+        "plan.field-caps",
+        "A plan whose frontmatter carries a `charter:` key (any value, presence only) caps each "
+        "task's Test and Risk lines at 40 words, its Files line at 8 comma-separated entries "
+        "(a comma inside backticks does not split), each numbered `## Risks` item at 40 words, "
+        "and each `## Current State Evidence` bullet at 30 words -- CJK runs with no internal "
+        "whitespace count as one word by len(text.split()); a task missing its Files, Test or "
+        "Risk line blocks too. A plan with no `charter:` line is skipped entirely.",
+    ),
+    (
+        "plan.edits-after-commit",
+        "A plan whose frontmatter carries a `charter:` key admits only the charter's "
+        "`edits_after` edits once its own plan commit (subject `docs(loom): plan "
+        "<change-id>`, the earliest such commit reachable from HEAD) has landed: a "
+        "claimed/blocked mark on a task title, an appended `W<n>-memory` task, a "
+        "change to a task with no `Task: <id>` trailer among the commits since that "
+        "carries a stated reason, or an appended `## Questions asked` line. Every "
+        "other edit -- a landed task's fields, `## Risks`, `## Current State "
+        "Evidence`, the frontmatter, or a new section -- blocks. A plan with no "
+        "`charter:` line is skipped entirely.",
     ),
     (
         "push.frozen-store-untouched",
@@ -204,6 +231,19 @@ RULES: list[tuple[str, str]] = [
         "one from it stands -- and blocks when any verdict in the latest round is not passing.",
     ),
     (
+        "review.round-append-only",
+        "Once a review.json round carries a top-level `charter` key, a later round may only "
+        "accrete per the charter's `edits_after` policy ids: verdicts, probes, open_findings "
+        "and dispatch gain entries with every pre-existing entry byte-equal (an open_findings "
+        "entry may additionally gain exactly one of resolved/dismissed in place); "
+        "reviewed_sha, scope and cost are replaced freely; questions moves from empty to "
+        "non-empty exactly once and second_vendor is set exactly once, then both are "
+        "immutable; vendors gains entries only under its own policy id and is otherwise byte-equal; no top-level key "
+        "is ever removed and no key outside the template plus second_vendor and charter is "
+        "ever added. A round with no `charter` key is skipped entirely. An unsupported policy "
+        "id on the manifest's review row fails closed.",
+    ),
+    (
         "spec.req-grammar",
         "Every Requirements entry reads `REQ-<n> — <name>` with n contiguous from 1, "
         "unique, and points at an Acceptance number the intent actually carries.",
@@ -276,8 +316,16 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="surrogateescape")
 
 
-def load_manifest(path: Path = MANIFEST_PATH):
-    return yaml.safe_load(read_text(path))
+def manifest_path_in_effect() -> Path:
+    """The manifest the checker reads: `LOOM_MANIFEST_PATH` when set (a
+    test points it at a scratch copy so nothing writes into the tree),
+    else the plugin's own contract manifest."""
+    override = os.environ.get("LOOM_MANIFEST_PATH", "").strip()
+    return Path(override) if override else MANIFEST_PATH
+
+
+def load_manifest(path: Path | None = None):
+    return yaml.safe_load(read_text(path if path is not None else manifest_path_in_effect()))
 
 
 GIT_TIMEOUT = 30  # a hung git is a failure, not a pass
@@ -1497,6 +1545,8 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
     failures: list[tuple[str, str]] = []
     failures += check_after_task_budget(manifest, repo, change_id)
+    if station == "write-plan":
+        failures += check_plan_field_caps_at(manifest, repo, change_id)
 
     kind = front.get("kind", "").strip()
     needs_design = front.get("needs-design", "").strip().split()[:1]
@@ -1804,6 +1854,765 @@ def check_after_task_budget(manifest, repo: Path, change_id: str):
             )
         ]
     return []
+
+
+# --- plan.field-caps (W1-01) -----------------------------------------------
+
+PLAN_FIELD_CAP_TEST = 40
+PLAN_FIELD_CAP_RISK = 40
+PLAN_FIELD_CAP_FILES = 8
+PLAN_FIELD_CAP_RISKS_ITEM = 40
+PLAN_FIELD_CAP_CSE_BULLET = 30
+
+TASK_FIELD_LINE = re.compile(r"^-\s*(Files|Test|Risk):\s*(.*)$")
+NUMBERED_ITEM = re.compile(r"^\d+\.\s+(\S.*)$")
+BULLET_ITEM = re.compile(r"^-\s+(\S.*)$")
+
+
+def _split_respecting_backticks(text: str) -> list[str]:
+    """Comma-split `text`, except a comma sitting inside a `backtick span`
+    never splits -- a generated fixture path legitimately containing a
+    comma must still count as one Files entry (W1-01 adversary pin)."""
+    entries: list[str] = []
+    current: list[str] = []
+    in_backtick = False
+    for ch in text:
+        if ch == "`":
+            in_backtick = not in_backtick
+            current.append(ch)
+        elif ch == "," and not in_backtick:
+            entries.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    entries.append("".join(current))
+    return [entry.strip() for entry in entries if entry.strip()]
+
+
+def _parse_plan_task_fields(task_dag_text: str) -> dict[str, dict[str, str | None]]:
+    """One dict per task id, `{"Files": ..., "Test": ..., "Risk": ...}`,
+    values `None` when the task's block carries no such line at all --
+    distinct from an empty value, which the task did write."""
+    tasks: dict[str, dict[str, str | None]] = {}
+    current_id: str | None = None
+    for raw_line in task_dag_text.splitlines():
+        line = raw_line.strip()
+        header = TASK_LINE.match(line)
+        if header:
+            current_id = header.group("id")
+            tasks[current_id] = {"Files": None, "Test": None, "Risk": None}
+            continue
+        if current_id is None:
+            continue
+        field_match = TASK_FIELD_LINE.match(line)
+        if field_match:
+            tasks[current_id][field_match.group(1)] = field_match.group(2)
+    return tasks
+
+
+def _plan_numbered_items(text: str) -> list[str]:
+    items = []
+    for raw_line in text.splitlines():
+        match = NUMBERED_ITEM.match(raw_line.strip())
+        if match:
+            items.append(match.group(1))
+    return items
+
+
+def _plan_bullets(text: str) -> list[str]:
+    items = []
+    for raw_line in text.splitlines():
+        match = BULLET_ITEM.match(raw_line.strip())
+        if match:
+            items.append(match.group(1))
+    return items
+
+
+def check_plan_field_caps(plan_text: str) -> list[tuple[str, str]]:
+    """Recomputed per-field caps on a charter-stamped plan (W1-01).
+
+    Skipped entirely -- no output at all -- when the plan's frontmatter
+    carries no `charter:` key; presence is the stamp, not any particular
+    value, so grandfathering is by template, not by date (concept-model
+    §5, plan Risk #1)."""
+    front, sections = parse_document(plan_text)
+    if "charter" not in front:
+        return []
+
+    failures: list[tuple[str, str]] = []
+
+    tasks = _parse_plan_task_fields(sections.get("Task DAG", ""))
+    for task_id, fields in tasks.items():
+        for field, cap in (("Files", PLAN_FIELD_CAP_FILES), ("Test", PLAN_FIELD_CAP_TEST), ("Risk", PLAN_FIELD_CAP_RISK)):
+            value = fields.get(field)
+            if value is None:
+                failures.append(("plan.field-caps", f"{task_id}.{field} missing"))
+                continue
+            if field == "Files":
+                entries = _split_respecting_backticks(value)
+                if len(entries) > cap:
+                    failures.append((
+                        "plan.field-caps",
+                        f"{task_id}.Files {len(entries)} entries, cap {cap}",
+                    ))
+            else:
+                words = len(value.split())
+                if words > cap:
+                    failures.append((
+                        "plan.field-caps",
+                        f"{task_id}.{field} {words} words, cap {cap}",
+                    ))
+
+    for index, item in enumerate(_plan_numbered_items(sections.get("Risks", "")), start=1):
+        words = len(item.split())
+        if words > PLAN_FIELD_CAP_RISKS_ITEM:
+            failures.append((
+                "plan.field-caps",
+                f"Risks#{index} {words} words, cap {PLAN_FIELD_CAP_RISKS_ITEM}",
+            ))
+
+    cse = sections.get("Current State Evidence", "")
+    for index, item in enumerate(_plan_bullets(cse), start=1):
+        words = len(item.split())
+        if words > PLAN_FIELD_CAP_CSE_BULLET:
+            failures.append((
+                "plan.field-caps",
+                f"Current State Evidence#{index} {words} words, cap {PLAN_FIELD_CAP_CSE_BULLET}",
+            ))
+
+    return failures
+
+
+def check_plan_field_caps_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+    """Same rule, applied to a change's own `plan.md` when it exists -- the
+    shape `check_after_task_budget` uses, reused at intake and push."""
+    plan_path = artifact_path(manifest, "plan", change_id, repo)
+    if not plan_path.is_file():
+        return []
+    return check_plan_field_caps(read_text(plan_path))
+
+
+# --- plan.edits-after-commit (W1-02) ----------------------------------------
+
+PLAN_COMMIT_SUBJECT = "docs(loom): plan {}"
+MARK_START = re.compile(r"(\*\*)\s*(claimed|blocked)\(")
+# Only the explicit `landed: <sha>` annotation counts. A bare hex-looking
+# token is not enough: ordinary words spelt from hex letters ("defaced",
+# "cafe") would otherwise send an unauthorised addition to `dispatch`
+# instead of `spec` (round-5 finding).
+LANDED_SHA = re.compile(r"landed:\s*[0-9a-f]{7,40}\b", re.IGNORECASE)
+MEMORY_TASK_ID = re.compile(r"^W\d+-memory$", re.IGNORECASE)
+TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$")
+KNOWN_PLAN_SECTIONS = {"Task DAG", "Risks", "Current State Evidence", "Questions asked"}
+
+# The plan charter's `edits_after` policy ids this rule actually
+# implements (W1-02 fix round): recomputed against
+# `manifest.artifacts.plan.charter.edits_after` at every run rather than
+# assumed, so a manifest id with no matching branch here fails closed
+# instead of silently drifting from the code (the "second drift surface"
+# named in the design finding).
+IMPLEMENTED_EDITS_AFTER_IDS = {
+    "mark-claimed-or-blocked",
+    "memory-task-appended",
+    "unlanded-task-replaced-on-spec-change",
+    "unlanded-task-amended-with-reason",
+    "questions-asked-appended",
+}
+
+
+def find_plan_commit_sha(repo: Path, change_id: str, head: str = "HEAD") -> str | None:
+    """The earliest commit reachable from `head` whose subject is exactly
+    `docs(loom): plan <change-id>` -- `git log --reverse` walks oldest
+    first, so the first hit is the earliest one, pinning a tie to the
+    first plan commit ever made rather than a later re-stamp."""
+    log = git_maybe(repo, "log", "--reverse", "--format=%H\x01%s", head)
+    if not log:
+        return None
+    wanted = PLAN_COMMIT_SUBJECT.format(change_id)
+    for line in log.split("\n"):
+        if "\x01" not in line:
+            continue
+        sha, subject = line.split("\x01", 1)
+        if subject == wanted:
+            return sha
+    return None
+
+
+def _commits_between(repo: Path, baseline_sha: str, head: str = "HEAD", *paths: str) -> list[str]:
+    log = git_maybe(repo, "log", "--format=%H", f"{baseline_sha}..{head}", *(["--", *paths] if paths else []))
+    if not log:
+        return []
+    return log.splitlines()
+
+
+def _commit_message(repo: Path, sha: str) -> str:
+    return git_maybe(repo, "log", "-1", "--format=%B", sha) or ""
+
+
+def _landed_task_ids(repo: Path, commits: list[str]) -> set[str]:
+    ids: set[str] = set()
+    for sha in commits:
+        for line in _commit_message(repo, sha).splitlines():
+            match = TASK_TRAILER.match(line.strip())
+            if match:
+                ids.add(match.group(1))
+    return ids
+
+
+def _block(section: str, detail: str, goes_to: str) -> tuple[str, str]:
+    return ("plan.edits-after-commit", f"{section} {detail}; goes to {goes_to}")
+
+
+def _strip_task_mark(title: str) -> tuple[str, str | None]:
+    """Strip a `claimed(...)` / `blocked(...)` mark right after the closing
+    `**` -- the one addition the charter allows on a task title line --
+    so an otherwise-identical title compares equal. `landed(...)` (or any
+    other annotation) is deliberately NOT stripped: it is not on the
+    allow-list, so it must keep reading as a real change.
+
+    Balances nested parentheses inside the mark (`blocked(waiting on
+    upstream (see #42))` strips cleanly) rather than stopping at the
+    first `)`. Returns `(normalized_title, None)` when there is no mark
+    or it strips cleanly; returns `(title, mark_text)` UNCHANGED when a
+    `claimed(`/`blocked(` mark starts but its parentheses never balance,
+    so the caller can BLOCK on the malformed mark instead of silently
+    leaving stray text behind in the comparison."""
+    match = MARK_START.search(title)
+    if not match:
+        return title, None
+    open_paren = match.end() - 1
+    depth = 0
+    close_paren = None
+    for i in range(open_paren, len(title)):
+        ch = title[i]
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                close_paren = i
+                break
+    if close_paren is None:
+        return title, title[match.start(2):]
+    head_end = match.start(1) + len(match.group(1))
+    return title[:head_end] + title[close_paren + 1:], None
+
+
+def _mentioned_token(task_id: str, message: str) -> bool:
+    """`task_id` counts as mentioned only as a whole token bounded by
+    non-id characters, so `W1-10` never satisfies a check for `W1-1`."""
+    pattern = r"(?<![A-Za-z0-9-])" + re.escape(task_id) + r"(?![A-Za-z0-9-])"
+    return re.search(pattern, message) is not None
+
+
+def _goes_to_for_unauthorised(title: str) -> str:
+    """An unauthorised add/change whose title line carries a landed-sha
+    annotation (`landed: <7-40 hex chars>`, or a bare 7-40 hex token) goes
+    to `dispatch` per the charter's must_not row for landed commit shas;
+    an ordinary unauthorised edit still goes to `spec`."""
+    return "dispatch" if LANDED_SHA.search(title) else "spec"
+
+
+def _parse_task_dag(text: str) -> dict[str, dict[str, str | None]]:
+    tasks: dict[str, dict[str, str | None]] = {}
+    current_id: str | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        header = TASK_LINE.match(line)
+        if header:
+            current_id = header.group("id")
+            tasks[current_id] = {"title": line, "Files": None, "Test": None, "Risk": None}
+            continue
+        if current_id is None:
+            continue
+        field_match = TASK_FIELD_LINE.match(line)
+        if field_match:
+            tasks[current_id][field_match.group(1)] = field_match.group(2)
+    return tasks
+
+
+def _check_task_dag(
+    baseline_text: str, current_text: str, landed_ids: set[str],
+    plan_touch_messages: list[str], enabled_ids: set[str],
+) -> list[tuple[str, str]]:
+    baseline_tasks = _parse_task_dag(baseline_text)
+    current_tasks = _parse_task_dag(current_text)
+    failures: list[tuple[str, str]] = []
+
+    allow_mark = "mark-claimed-or-blocked" in enabled_ids
+    allow_memory = "memory-task-appended" in enabled_ids
+    allow_replaced = "unlanded-task-replaced-on-spec-change" in enabled_ids
+    allow_amended = "unlanded-task-amended-with-reason" in enabled_ids
+
+    def mentioned(task_id: str) -> bool:
+        return any(_mentioned_token(task_id, message) for message in plan_touch_messages)
+
+    def normalized_title(title: str) -> tuple[str, str | None]:
+        if not allow_mark:
+            return title, None
+        return _strip_task_mark(title)
+
+    all_ids = list(dict.fromkeys([*baseline_tasks, *current_tasks]))
+    for task_id in all_ids:
+        in_baseline = task_id in baseline_tasks
+        in_current = task_id in current_tasks
+        if in_baseline and in_current:
+            before, after = baseline_tasks[task_id], current_tasks[task_id]
+            before_title, before_mark_error = normalized_title(before["title"])
+            after_title, after_mark_error = normalized_title(after["title"])
+            mark_error = before_mark_error or after_mark_error
+            if mark_error is not None:
+                failures.append((
+                    "plan.edits-after-commit",
+                    f"{task_id} carries an unbalanced claimed/blocked mark {mark_error!r}.",
+                ))
+                continue
+            title_changed = before_title != after_title
+            fields_changed = any(before[field] != after[field] for field in ("Files", "Test", "Risk"))
+            if not title_changed and not fields_changed:
+                continue
+            if task_id in landed_ids:
+                failures.append(_block(task_id, "changed after landing", "git history"))
+                continue
+            allowed = allow_replaced if title_changed else allow_amended
+            if not allowed or not mentioned(task_id):
+                failures.append(_block(task_id, "changed", _goes_to_for_unauthorised(after["title"])))
+        elif in_baseline and not in_current:
+            if task_id in landed_ids:
+                failures.append(_block(task_id, "removed after landing", "git history"))
+            elif not allow_replaced or not mentioned(task_id):
+                failures.append(_block(task_id, "removed", "spec"))
+        else:  # added since the plan commit
+            if MEMORY_TASK_ID.match(task_id) and allow_memory:
+                continue
+            if not allow_replaced or not mentioned(task_id):
+                failures.append(
+                    _block(task_id, "added", _goes_to_for_unauthorised(current_tasks[task_id]["title"]))
+                )
+    return failures
+
+
+def _check_risks(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
+    if baseline_text.strip() == current_text.strip():
+        return []
+    return [_block("Risks", "section changed", "review")]
+
+
+def _check_cse(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
+    if baseline_text.strip() == current_text.strip():
+        return []
+    return [_block("Current State Evidence", "section changed", "spec")]
+
+
+def _check_questions_asked(
+    baseline_text: str, current_text: str, allow_append: bool
+) -> list[tuple[str, str]]:
+    baseline_lines = [line.strip() for line in baseline_text.splitlines() if line.strip()]
+    current_lines = [line.strip() for line in current_text.splitlines() if line.strip()]
+    if current_lines == baseline_lines:
+        return []
+    if allow_append and current_lines[: len(baseline_lines)] == baseline_lines:
+        return []
+    return [_block("Questions asked", "changed", "spec")]
+
+
+def _check_frontmatter(baseline_front: dict[str, str], current_front: dict[str, str]) -> list[tuple[str, str]]:
+    if baseline_front == current_front:
+        return []
+    keys = sorted(
+        key for key in {*baseline_front, *current_front}
+        if baseline_front.get(key) != current_front.get(key)
+    )
+    return [_block("frontmatter", f"{', '.join(keys)} changed", "spec")]
+
+
+def _check_other_sections(
+    baseline_sections: dict[str, str], current_sections: dict[str, str]
+) -> list[tuple[str, str]]:
+    failures: list[tuple[str, str]] = []
+    baseline_other = {k: v for k, v in baseline_sections.items() if k not in KNOWN_PLAN_SECTIONS}
+    current_other = {k: v for k, v in current_sections.items() if k not in KNOWN_PLAN_SECTIONS}
+    for name in sorted({*baseline_other, *current_other}):
+        if baseline_other.get(name) == current_other.get(name):
+            continue
+        goes_to = "memory" if "lesson" in name.lower() else "spec"
+        if name not in baseline_other:
+            detail = "section added"
+        elif name not in current_other:
+            detail = "section removed"
+        else:
+            detail = "section changed"
+        failures.append(_block(name, detail, goes_to))
+    return failures
+
+
+def _plan_edits_after_ids(manifest) -> list[str]:
+    """The `id`s declared on `artifacts.plan.charter.edits_after`, in
+    manifest order -- ids missing or blank are dropped (contract.charter
+    -complete separately requires every entry to carry one)."""
+    entries = (
+        (manifest.get("artifacts") or {}).get("plan", {}).get("charter", {}).get("edits_after")
+        or []
+    )
+    return [
+        str(entry["id"]).strip()
+        for entry in entries
+        if isinstance(entry, dict) and str(entry.get("id", "")).strip()
+    ]
+
+
+def check_plan_edits_after_commit(
+    repo: Path, plan_path: Path, change_id: str, manifest
+) -> list[tuple[str, str]]:
+    """Recomputed per-edit charter enforcement on a charter-stamped plan
+    (W1-02): once the plan's own `docs(loom): plan <change-id>` commit
+    lands, only the charter's `edits_after` list may still touch it --
+    everything else blocks, naming where the content belongs instead.
+
+    The allow-list is recomputed from `manifest.artifacts.plan.charter.
+    edits_after` by stable policy id (not hard-coded) every run: an id
+    with no matching branch in `IMPLEMENTED_EDITS_AFTER_IDS` fails closed
+    instead of silently drifting from the manifest."""
+    ids = _plan_edits_after_ids(manifest)
+    unsupported = [pid for pid in ids if pid not in IMPLEMENTED_EDITS_AFTER_IDS]
+    if unsupported:
+        return [
+            ("plan.edits-after-commit", f"unsupported policy id {pid!r}.")
+            for pid in unsupported
+        ]
+    enabled_ids = set(ids)
+
+    text = read_text(plan_path)
+    front, sections = parse_document(text)
+    if "charter" not in front:
+        return []
+
+    baseline_sha = find_plan_commit_sha(repo, change_id)
+    if baseline_sha is None:
+        return [("plan.edits-after-commit", "no plan commit found")]
+
+    plan_rel = plan_path.relative_to(repo).as_posix()
+    baseline_text = git_maybe(repo, "show", f"{baseline_sha}:{plan_rel}")
+    if baseline_text is None:
+        return [("plan.edits-after-commit", "no plan commit found")]
+
+    baseline_front, baseline_sections = parse_document(baseline_text)
+    if baseline_front == front and baseline_sections == sections:
+        return []
+
+    commits = _commits_between(repo, baseline_sha)
+    landed_ids = _landed_task_ids(repo, commits)
+    plan_touch_shas = _commits_between(repo, baseline_sha, "HEAD", plan_rel)
+    plan_touch_messages = [_commit_message(repo, sha) for sha in plan_touch_shas]
+
+    failures: list[tuple[str, str]] = []
+    failures += _check_frontmatter(baseline_front, front)
+    failures += _check_task_dag(
+        baseline_sections.get("Task DAG", ""), sections.get("Task DAG", ""),
+        landed_ids, plan_touch_messages, enabled_ids,
+    )
+    failures += _check_risks(baseline_sections.get("Risks", ""), sections.get("Risks", ""))
+    failures += _check_cse(
+        baseline_sections.get("Current State Evidence", ""),
+        sections.get("Current State Evidence", ""),
+    )
+    failures += _check_questions_asked(
+        baseline_sections.get("Questions asked", ""), sections.get("Questions asked", ""),
+        "questions-asked-appended" in enabled_ids,
+    )
+    failures += _check_other_sections(baseline_sections, sections)
+    return failures
+
+
+def check_plan_edits_after_commit_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+    """Same rule, applied to a change's own `plan.md` when it exists --
+    skipped silently when there is no plan file yet (push's shape)."""
+    plan_path = artifact_path(manifest, "plan", change_id, repo)
+    if not plan_path.is_file():
+        return []
+    return check_plan_edits_after_commit(repo, plan_path, change_id, manifest)
+
+
+# --- review.round-append-only (W1-03) ---------------------------------------
+
+# The review charter's `edits_after` policy ids this rule actually
+# implements, recomputed against `manifest.artifacts.review.charter.
+# edits_after` at every run -- same fail-closed shape as
+# `IMPLEMENTED_EDITS_AFTER_IDS` above.
+IMPLEMENTED_REVIEW_EDITS_AFTER_IDS = {
+    "verdicts-probes-findings-dispatch-gain-entries",
+    "vendors-gain-entries",
+    "reviewed-sha-scope-cost-replaced",
+    "open-finding-resolved-or-dismissed-in-place",
+    "questions-gain-entries",
+    "second-vendor-set-once",
+}
+
+REVIEW_ACCRETING_ARRAYS = ("verdicts", "probes", "open_findings", "dispatch", "vendors")
+REVIEW_REPLACE_SET_FIELDS = ("reviewed_sha", "scope", "cost")
+OPEN_FINDING_MOVABLE_KEYS = ("resolved", "dismissed")
+
+
+def _review_edits_after_ids(manifest) -> list[str]:
+    """The `id`s declared on `artifacts.review.charter.edits_after`, in
+    manifest order -- same shape as `_plan_edits_after_ids`."""
+    entries = (
+        (manifest.get("artifacts") or {}).get("review", {}).get("charter", {}).get("edits_after")
+        or []
+    )
+    return [
+        str(entry["id"]).strip()
+        for entry in entries
+        if isinstance(entry, dict) and str(entry.get("id", "")).strip()
+    ]
+
+
+def _review_json_history(repo: Path, review_rel: str, head: str = "HEAD") -> list[str]:
+    """Every commit reachable from `head` that touches `review_rel`, oldest
+    first -- the first entry is the commit that created the file."""
+    log = git_maybe(repo, "log", "--reverse", "--format=%H", head, "--", review_rel)
+    if not log:
+        return []
+    return log.splitlines()
+
+
+def _review_doc_at(repo: Path, sha: str, review_rel: str) -> dict | None:
+    raw = git_maybe(repo, "show", f"{sha}:{review_rel}")
+    if raw is None:
+        return None
+    try:
+        doc = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    return doc if isinstance(doc, dict) else None
+
+
+def _review_block(path_label: str, detail: str, goes_to: str = "review") -> tuple[str, str]:
+    return ("review.round-append-only", f"{path_label} {detail}; goes to {goes_to}")
+
+
+def _review_norm(value) -> str:
+    return json.dumps(value, sort_keys=True)
+
+
+def _open_finding_gained_resolution_only(earlier, later) -> bool:
+    """True when `later` differs from `earlier` only by gaining exactly one
+    of `resolved`/`dismissed` (absent in `earlier`, present in `later`),
+    every other key on the entry unchanged."""
+    if not isinstance(earlier, dict) or not isinstance(later, dict):
+        return False
+    other_keys = (set(earlier) | set(later)) - set(OPEN_FINDING_MOVABLE_KEYS)
+    if any(earlier.get(key) != later.get(key) for key in other_keys):
+        return False
+    gained = [key for key in OPEN_FINDING_MOVABLE_KEYS if key not in earlier and key in later]
+    changed_existing = [
+        key for key in OPEN_FINDING_MOVABLE_KEYS
+        if key in earlier and earlier.get(key) != later.get(key)
+    ]
+    return len(gained) == 1 and not changed_existing
+
+
+def _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier_doc: dict, later_doc: dict) -> bool:
+    """True when the only difference between two verdict entries is `sha`,
+    and that `sha` tracked the top-level `reviewed_sha` on both sides --
+    `push.reviewed-sha` requires every verdict's `sha` to equal the current
+    `reviewed_sha`, so an earlier verdict's `sha` moves in lockstep when
+    `reviewed_sha` is replaced (reviewed-sha-scope-cost-replaced), never on
+    its own."""
+    if not isinstance(e_entry, dict) or not isinstance(l_entry, dict):
+        return False
+    if set(e_entry) != set(l_entry):
+        return False
+    diffs = [key for key in e_entry if e_entry.get(key) != l_entry.get(key)]
+    if diffs != ["sha"]:
+        return False
+    return (
+        e_entry.get("sha") == earlier_doc.get("reviewed_sha")
+        and l_entry.get("sha") == later_doc.get("reviewed_sha")
+    )
+
+
+def _probe_only_result_changed(earlier, later) -> bool:
+    if not isinstance(earlier, dict) or not isinstance(later, dict):
+        return False
+    if set(earlier) != set(later):
+        return False
+    diffs = [key for key in earlier if earlier.get(key) != later.get(key)]
+    return diffs == ["result"]
+
+
+def _compare_review_round(
+    earlier: dict, later: dict, enabled_ids: set[str], known_top_level_keys: set[str], label: str,
+) -> list[tuple[str, str]]:
+    """One consecutive pair of review.json rounds: `earlier` may only
+    differ from `later` per the charter's enabled policy ids -- skipped
+    entirely when `earlier` carries no top-level `charter` key
+    (grandfathering). Every known top-level key is checked here; a key
+    absent from this function's own categories below (accreting array,
+    replace-set, questions, second_vendor, charter) blocks on any
+    difference by falling through to the catch-all at the end -- there
+    is no key this function silently ignores."""
+    if "charter" not in earlier:
+        return []
+
+    allow_gain = "verdicts-probes-findings-dispatch-gain-entries" in enabled_ids
+    allow_vendor_gain = "vendors-gain-entries" in enabled_ids
+    allow_resolve = "open-finding-resolved-or-dismissed-in-place" in enabled_ids
+    allow_replace = "reviewed-sha-scope-cost-replaced" in enabled_ids
+    allow_questions_gain = "questions-gain-entries" in enabled_ids
+    allow_second_vendor_set = "second-vendor-set-once" in enabled_ids
+
+    failures: list[tuple[str, str]] = []
+
+    earlier_keys, later_keys = set(earlier), set(later)
+    for key in sorted(earlier_keys - later_keys):
+        failures.append(_review_block(f"{label}.{key}", "key removed"))
+    for key in sorted(later_keys - earlier_keys):
+        if key not in known_top_level_keys:
+            failures.append(_review_block(f"{label}.{key}", "unknown key added"))
+
+    for key in sorted((earlier_keys | later_keys) & known_top_level_keys):
+        if key in earlier_keys - later_keys:
+            continue  # already reported as "key removed" above
+
+        if key == "charter":
+            if _review_norm(earlier.get("charter")) != _review_norm(later.get("charter")):
+                failures.append(_review_block(f"{label}.charter", "charter stamp changed"))
+            continue
+
+        if key in REVIEW_ACCRETING_ARRAYS:
+            e_list, l_list = earlier.get(key), later.get(key)
+            if not isinstance(e_list, list) or not isinstance(l_list, list):
+                if _review_norm(e_list) != _review_norm(l_list):
+                    failures.append(_review_block(f"{label}.{key}", "array type changed"))
+                continue
+            if len(l_list) < len(e_list):
+                failures.append(_review_block(f"{label}.{key}", "earlier round rewritten"))
+                continue
+            for index, e_entry in enumerate(e_list):
+                l_entry = l_list[index]
+                if _review_norm(e_entry) == _review_norm(l_entry):
+                    continue
+                if (
+                    key == "open_findings"
+                    and allow_resolve
+                    and _open_finding_gained_resolution_only(e_entry, l_entry)
+                ):
+                    continue
+                if (
+                    key == "verdicts"
+                    and allow_replace
+                    and _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier, later)
+                ):
+                    continue
+                if key == "probes" and _probe_only_result_changed(e_entry, l_entry):
+                    failures.append(_review_block(f"{label}.{key}[{index}]", "evidence tampering"))
+                    continue
+                failures.append(_review_block(f"{label}.{key}[{index}]", "earlier round rewritten"))
+            gain_allowed = allow_vendor_gain if key == "vendors" else allow_gain
+            if len(l_list) > len(e_list) and not gain_allowed:
+                failures.append(
+                    _review_block(f"{label}.{key}", "gained entries with no charter allowance")
+                )
+            continue
+
+        if key in REVIEW_REPLACE_SET_FIELDS:
+            if not allow_replace:
+                if _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
+                    failures.append(_review_block(f"{label}.{key}", "changed"))
+                continue
+            e_val, l_val = earlier.get(key), later.get(key)
+            expected_type = dict if key == "cost" else str
+            if isinstance(e_val, expected_type) and not isinstance(l_val, expected_type):
+                failures.append(_review_block(f"{label}.{key}", "replace-set type changed"))
+            continue
+
+        if key == "questions":
+            e_q, l_q = earlier.get("questions", []), later.get("questions", [])
+            if _review_norm(e_q) != _review_norm(l_q):
+                # Decision-point questions accrete: ① is copied in at the
+                # first checkpoint, ③ is appended by ship into the review-only
+                # commit it amends. The earlier list must be a byte-equal
+                # prefix of the later one; anything else is a rewritten
+                # record of what the user was asked.
+                grown = (
+                    isinstance(e_q, list) and isinstance(l_q, list)
+                    and len(l_q) > len(e_q)
+                    and _review_norm(l_q[: len(e_q)]) == _review_norm(e_q)
+                )
+                if not (allow_questions_gain and grown):
+                    failures.append(_review_block(f"{label}.questions", "changed"))
+            continue
+
+        if key == "second_vendor":
+            e_sv, l_sv = earlier.get("second_vendor"), later.get("second_vendor")
+            if e_sv != l_sv:
+                if not (allow_second_vendor_set and e_sv is None and l_sv is not None):
+                    failures.append(_review_block(f"{label}.second_vendor", "changed"))
+            continue
+
+        # Any other known top-level key: block on any difference.
+        if _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
+            failures.append(_review_block(f"{label}.{key}", "changed"))
+
+    return failures
+
+
+def check_review_round_append_only(
+    repo: Path, review_path: Path, change_id: str, manifest,
+) -> list[tuple[str, str]]:
+    """Recomputed per-round charter enforcement on a charter-stamped
+    review.json (W1-03): once a round carries a top-level `charter` key,
+    only the charter's `edits_after` policy ids let a later round differ
+    from it -- everything else blocks, naming what changed. An id with no
+    matching branch in `IMPLEMENTED_REVIEW_EDITS_AFTER_IDS` fails closed,
+    mirroring `check_plan_edits_after_commit`."""
+    ids = _review_edits_after_ids(manifest)
+    unsupported = [pid for pid in ids if pid not in IMPLEMENTED_REVIEW_EDITS_AFTER_IDS]
+    if unsupported:
+        return [
+            ("review.round-append-only", f"unsupported policy id {pid!r}.")
+            for pid in unsupported
+        ]
+    enabled_ids = set(ids)
+    known_top_level_keys = set(review_container_types(manifest)) | {"second_vendor", "charter"}
+
+    review_rel = review_path.relative_to(repo).as_posix()
+    history = _review_json_history(repo, review_rel)
+    if not history:
+        return []
+
+    docs: list[dict] = []
+    for sha in history:
+        doc = _review_doc_at(repo, sha, review_rel)
+        if doc is not None:
+            docs.append(doc)
+
+    failures: list[tuple[str, str]] = []
+    for earlier, later in zip(docs, docs[1:]):
+        failures += _compare_review_round(earlier, later, enabled_ids, known_top_level_keys, review_rel)
+
+    if review_path.is_file() and docs:
+        try:
+            working_doc = json.loads(read_text(review_path))
+        except json.JSONDecodeError:
+            working_doc = None
+        if isinstance(working_doc, dict) and _review_norm(docs[-1]) != _review_norm(working_doc):
+            failures += _compare_review_round(
+                docs[-1], working_doc, enabled_ids, known_top_level_keys, review_rel
+            )
+
+    return failures
+
+
+def check_review_round_append_only_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+    """Same rule, applied to a change's own `review.json` when it exists --
+    skipped silently when there is no review.json yet (push's shape,
+    mirroring `check_plan_edits_after_commit_at`)."""
+    review_path = artifact_path(manifest, "review", change_id, repo)
+    if not review_path.is_file():
+        return []
+    return check_review_round_append_only(repo, review_path, change_id, manifest)
 
 
 SPEC_LENSES = {"spec", "docs", "spec-adversarial"}
@@ -2194,6 +3003,10 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
     failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id, review, change_id)
     failures += check_open_findings_closed(review)
+    if change_id:
+        failures += check_plan_field_caps_at(manifest, repo, change_id)
+        failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
+        failures += check_review_round_append_only_at(manifest, repo, change_id)
     failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
 
@@ -4690,6 +5503,301 @@ def find_standing_doc(repo: Path, name: str) -> Path | None:
     return None
 
 
+CHARTER_HEADER = (
+    "| artifact | answers | readers | must | must not → goes to | sign-off | edits after |\n"
+)
+CHARTER_SEPARATOR = "| --- | --- | --- | --- | --- | --- | --- |\n"
+
+
+def _charter_join(values) -> str:
+    if not isinstance(values, list) or not values:
+        return ""
+    return "; ".join(str(v) for v in values)
+
+
+KEBAB_ID = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+
+
+def _edits_after_cell(edits_after) -> str:
+    """`<id>: <text>` per entry, joined by '; ' -- the dict shape (W1-02's
+    charter-boundaries fix) every `edits_after` entry now carries."""
+    if not isinstance(edits_after, list) or not edits_after:
+        return ""
+    return "; ".join(
+        f"{item.get('id', '?')}: {item.get('text', '?')}"
+        for item in edits_after if isinstance(item, dict)
+    )
+
+
+def _charter_has_forbidden_chars(value: str) -> bool:
+    """A `|` or a newline inside a charter cell would render as extra
+    markdown table columns or rows -- reject both."""
+    return "|" in value or "\n" in value
+
+
+def _check_charter_cell_chars(
+    name: str, key: str, value: str, failures: list[tuple[str, str]]
+) -> None:
+    if isinstance(value, str) and _charter_has_forbidden_chars(value):
+        failures.append((
+            "contract.charter-complete",
+            f"{name}.{key} contains a '|' or a newline, which would corrupt "
+            f"the rendered table: {value!r}.",
+        ))
+
+
+def check_charter_row(
+    name: str, charter: dict, all_names: list[str], stations: set[str]
+) -> tuple[list[tuple[str, str]], tuple[str, str, str, str, str, str, str]]:
+    """Recompute every column of one charter row against the rules the
+    `contract.charter-complete` description promises: non-empty answers/
+    readers/must/must_not/edits_after, every must_not item naming a kind
+    and a goes_to that is ANOTHER artifact in the table, and a signoff
+    naming a real station."""
+    failures: list[tuple[str, str]] = []
+
+    answers = charter.get("answers")
+    if not isinstance(answers, str) or not answers.strip():
+        failures.append(("contract.charter-complete", f"{name}.answers is empty."))
+    else:
+        _check_charter_cell_chars(name, "answers", answers, failures)
+
+    readers = charter.get("readers")
+    if not isinstance(readers, list) or not readers:
+        failures.append(("contract.charter-complete", f"{name}.readers is empty."))
+    else:
+        for item in readers:
+            if isinstance(item, str):
+                _check_charter_cell_chars(name, "readers", item, failures)
+
+    must = charter.get("must")
+    if not isinstance(must, list) or not must:
+        failures.append(("contract.charter-complete", f"{name}.must is empty."))
+    else:
+        for item in must:
+            if isinstance(item, str):
+                _check_charter_cell_chars(name, "must", item, failures)
+
+    must_not = charter.get("must_not")
+    if not isinstance(must_not, list) or not must_not:
+        failures.append(("contract.charter-complete", f"{name}.must_not is empty."))
+    else:
+        for item in must_not:
+            if not isinstance(item, dict) or not str(item.get("kind") or "").strip():
+                failures.append(
+                    ("contract.charter-complete", f"{name}.must_not has an entry with no kind.")
+                )
+                continue
+            _check_charter_cell_chars(name, "must_not.kind", str(item.get("kind")), failures)
+            goes_to = str(item.get("goes_to") or "").strip()
+            if not goes_to:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.must_not entry {item['kind']!r} names no goes_to.",
+                ))
+            elif goes_to == name:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.must_not entry goes_to names itself ({name!r}); "
+                    "it must name another artifact in the table.",
+                ))
+            elif goes_to not in all_names:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.must_not entry goes_to {goes_to!r} names an artifact "
+                    "absent from the table.",
+                ))
+            else:
+                _check_charter_cell_chars(name, "must_not.goes_to", goes_to, failures)
+
+    signoff = charter.get("signoff")
+    if not isinstance(signoff, str) or not signoff.strip():
+        failures.append(("contract.charter-complete", f"{name}.signoff is empty."))
+    elif signoff not in stations:
+        failures.append((
+            "contract.charter-complete",
+            f"{name}.signoff names unknown station {signoff!r}.",
+        ))
+    else:
+        _check_charter_cell_chars(name, "signoff", signoff, failures)
+
+    edits_after = charter.get("edits_after")
+    if not isinstance(edits_after, list) or not edits_after:
+        failures.append(("contract.charter-complete", f"{name}.edits_after is empty."))
+    else:
+        seen_ids: set[str] = set()
+        for item in edits_after:
+            if not isinstance(item, dict):
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after has a non-mapping entry {item!r}.",
+                ))
+                continue
+            item_id = item.get("id")
+            if not isinstance(item_id, str) or not item_id.strip():
+                failures.append(
+                    ("contract.charter-complete", f"{name}.edits_after has an entry with no id.")
+                )
+            elif not KEBAB_ID.match(item_id):
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after id {item_id!r} is not kebab-case.",
+                ))
+            elif item_id in seen_ids:
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after id {item_id!r} is not unique within this artifact.",
+                ))
+            else:
+                seen_ids.add(item_id)
+            text = item.get("text")
+            if not isinstance(text, str) or not text.strip():
+                failures.append((
+                    "contract.charter-complete",
+                    f"{name}.edits_after entry {item.get('id', '?')!r} has no text.",
+                ))
+            elif isinstance(item_id, str):
+                _check_charter_cell_chars(name, "edits_after", text, failures)
+
+    must_not_cell = "; ".join(
+        f"{item.get('kind', '?')} → {item.get('goes_to', '?')}"
+        for item in must_not if isinstance(item, dict)
+    ) if isinstance(must_not, list) else ""
+    row = (
+        name,
+        str(answers) if isinstance(answers, str) and answers.strip() else "",
+        _charter_join(readers),
+        _charter_join(must),
+        must_not_cell,
+        str(signoff) if isinstance(signoff, str) and signoff.strip() else "",
+        _edits_after_cell(edits_after),
+    )
+    return failures, row
+
+
+def render_charter_table(rows: list[tuple[str, str, str, str, str, str, str]]) -> str:
+    lines = [CHARTER_HEADER, CHARTER_SEPARATOR]
+    for row in rows:
+        lines.append("| " + " | ".join(row) + " |\n")
+    return "".join(lines)
+
+
+def cmd_charter(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py charter [--manifest PATH]` -- the human view of
+    `artifacts.<name>.charter` (manifest.yaml is the checker-read SSOT;
+    this renders it). Prints one markdown row per artifact in manifest
+    order and recomputes `contract.charter-complete` over every row."""
+    manifest_path = manifest_path_in_effect()
+    rest = list(args)
+    while rest:
+        token = rest.pop(0)
+        if token == "--manifest":
+            if not rest:
+                raise UsageError("--manifest needs a path.")
+            manifest_path = Path(rest.pop(0))
+        else:
+            raise UsageError(f"unexpected argument {token!r}.")
+    if not manifest_path.is_file():
+        raise UsageError(f"no contract manifest at {manifest_path}")
+
+    manifest = load_manifest(manifest_path)
+    artifacts = manifest.get("artifacts")
+    if not artifacts:
+        out.write(render_charter_table([]))
+        return report(
+            [(
+                "contract.charter-complete",
+                "manifest carries no artifacts: mapping (absent or empty) -- "
+                "every charter row is missing.",
+            )],
+            err,
+        )
+    stations = {
+        s["name"] for s in manifest.get("stations", []) if isinstance(s, dict) and s.get("name")
+    }
+    all_names = list(artifacts.keys())
+
+    failures: list[tuple[str, str]] = []
+    rows: list[tuple[str, str, str, str, str, str, str]] = []
+    for name in all_names:
+        entry = artifacts.get(name) or {}
+        charter = entry.get("charter")
+        if not isinstance(charter, dict):
+            failures.append((
+                "contract.charter-complete",
+                f"{name} has no charter block (`charter:` is missing entirely).",
+            ))
+            rows.append((name, "", "", "", "", "", ""))
+            continue
+        row_failures, row = check_charter_row(name, charter, all_names, stations)
+        failures.extend(row_failures)
+        rows.append(row)
+
+    out.write(render_charter_table(rows))
+    return report(failures, err)
+
+
+def cmd_plan(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py plan <path>` -- runs `plan.field-caps` (and any other
+    `plan.*` rule) against one plan file directly, independent of a
+    change-id -- the shape the `plan` subcommand's own tests and the
+    write-plan / push callers both rely on. This is a raw-content check on
+    whatever file `<path>` names, by design: `plan-edits` and `push`
+    instead resolve and read the canonical `docs/loom/<change-id>/plan.md`
+    for that change-id."""
+    if not args:
+        raise UsageError("plan needs a path.")
+    if len(args) > 1:
+        raise UsageError(f"unexpected argument {args[1]!r}.")
+    path = Path(args[0])
+    if not path.is_file():
+        err.write(f"no such plan file: {path}\n")
+        return 2
+    try:
+        text = read_text(path)
+    except OSError as exc:
+        err.write(f"cannot read plan file {path}: {exc}\n")
+        return 2
+    return report(check_plan_field_caps(text), err)
+
+
+def cmd_plan_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py plan-edits <change-id>` -- runs `plan.edits-after-commit`
+    against that change's own `plan.md`. Exit 2 when the plan file is
+    missing (there is nothing to check, and never a silent 0 or 1)."""
+    if not args:
+        raise UsageError("plan-edits needs a change-id.")
+    if len(args) > 1:
+        raise UsageError(f"unexpected argument {args[1]!r}.")
+    change_id = args[0]
+    manifest = load_manifest()
+    repo = repo_root(Path.cwd())
+    plan_path = artifact_path(manifest, "plan", change_id, repo)
+    if not plan_path.is_file():
+        err.write(f"no plan file at {plan_path} for change {change_id!r}.\n")
+        return 2
+    return report(check_plan_edits_after_commit(repo, plan_path, change_id, manifest), err)
+
+
+def cmd_review_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """`loom_checker.py review-edits <change-id>` -- runs
+    `review.round-append-only` against that change's own `review.json`.
+    Exit 2 when the review file is missing (there is nothing to check,
+    and never a silent 0 or 1), mirroring `cmd_plan_edits`."""
+    if not args:
+        raise UsageError("review-edits needs a change-id.")
+    if len(args) > 1:
+        raise UsageError(f"unexpected argument {args[1]!r}.")
+    change_id = args[0]
+    manifest = load_manifest()
+    repo = repo_root(Path.cwd())
+    review_path = artifact_path(manifest, "review", change_id, repo)
+    if not review_path.is_file():
+        err.write(f"no review file at {review_path} for change {change_id!r}.\n")
+        return 2
+    return report(check_review_round_append_only(repo, review_path, change_id, manifest), err)
+
+
 REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")
 
 
@@ -4747,6 +5855,10 @@ COMMANDS = {
     "push": cmd_push,
     "standing": cmd_standing,
     "contract": cmd_contract,
+    "charter": cmd_charter,
+    "plan": cmd_plan,
+    "plan-edits": cmd_plan_edits,
+    "review-edits": cmd_review_edits,
 }
 
 

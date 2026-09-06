@@ -3,7 +3,8 @@
 version bump must be stamped everywhere the plugin claims a version, not
 just in `plugin.json`.
 
-Checks: `loom-code/.claude-plugin/plugin.json` `version` is `1.6.1`; the
+Checks: `loom-code/.claude-plugin/plugin.json` `version` is the current
+release (`1.7.0` after the artifact-charter change landed on 1.6.1); the
 Codex mirror `loom-code/.codex-plugin/plugin.json` agrees; `[1.6.1]`
 appears as a `## [x.y.z]` entry in `loom-code/CHANGELOG.md`; and
 `test_every_place_the_version_is_stamped_agrees` in
@@ -38,7 +39,7 @@ PLUGIN_JSON = REPO / "loom-code" / ".claude-plugin" / "plugin.json"
 CODEX_PLUGIN_JSON = REPO / "loom-code" / ".codex-plugin" / "plugin.json"
 CHANGELOG = REPO / "loom-code" / "CHANGELOG.md"
 
-TARGET_VERSION = "1.6.1"
+TARGET_VERSION = "1.7.0"  # retargeted when 1.7.0 (artifact charter) landed on top of 1.6.1
 
 
 def test_plugin_json_is_1_6_1() -> None:

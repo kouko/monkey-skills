@@ -14,6 +14,7 @@ from pathlib import Path
 CHECKER = Path(__file__).with_name("loom_checker.py")
 
 EXPECTED_RULE_IDS = [
+    "contract.charter-complete",
     "contract.requires",
     "intake.after-task-budget",
     "intake.confirmed",
@@ -24,6 +25,8 @@ EXPECTED_RULE_IDS = [
     "intent.needs-design-recompute",
     "intent.product-no-identifiers",
     "intent.schema",
+    "plan.edits-after-commit",
+    "plan.field-caps",
     "push.dismissed-by-reviewer",
     "push.dispatch-covers-tasks",
     "push.frozen-store-untouched",
@@ -36,6 +39,7 @@ EXPECTED_RULE_IDS = [
     "push.reviewer-ne-implementer",
     "push.second-vendor-honoured",
     "push.verdicts-ge-2",
+    "review.round-append-only",
     "spec.req-grammar",
     "spec.ui-flows-recompute",
     "standing.product-principles-reject",
@@ -104,7 +108,7 @@ def test_every_rule_id_is_area_dot_name() -> None:
     for line in run_checker("--list-rules").stdout.splitlines():
         rule_id = line.split("\t")[0]
         area, _, name = rule_id.partition(".")
-        assert area in {"contract", "intent", "intake", "push", "spec", "standing"}, rule_id
+        assert area in {"contract", "intent", "intake", "plan", "push", "review", "spec", "standing"}, rule_id
         assert name and "." not in name, rule_id
 
 
@@ -129,8 +133,8 @@ def test_hooks_probe_is_gone() -> None:
     assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
 
 
-def test_the_rule_population_is_twenty_seven() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 27
+def test_the_rule_population_is_twenty_eight() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 31
 
 
 # --- contract --require (spec G) -------------------------------------------

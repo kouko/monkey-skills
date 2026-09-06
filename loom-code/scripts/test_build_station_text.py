@@ -516,3 +516,76 @@ def test_rehearsal_paragraph_is_a_registered_prose_gate() -> None:
     )
     store_index = text.index("**Store entries.**")
     assert end < store_index, "the closing marker must precede Store entries."
+
+
+# --- W2-02: plan edits after the plan commit recompute from the charter ----
+
+
+def _derive_progress_section() -> str:
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    start = text.index("Derive progress from git")
+    end = text.index("## 1. The wave loop")
+    return text[start:end]
+
+
+def test_derive_progress_section_names_plan_edits_recompute() -> None:
+    """W2-02: build/SKILL.md §0 item 3 states the plan file changes after
+    the plan commit only by the plan charter's `edits_after` policies, and
+    names `loom_checker.py plan-edits <change-id>` as the recompute at
+    push. Affirmative, un-negated."""
+    section = _derive_progress_section()
+    hits = [
+        s for s in _flat_sentences(section)
+        if "edits_after" in s
+        and "artifacts.plan.charter" in s
+        and "plan-edits" in s
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "build/SKILL.md §0 item 3 has no affirmative sentence naming the "
+        "plan charter's edits_after policies and the plan-edits recompute"
+    )
+
+
+def test_matcher_plan_edits_sentence_negated_rejected() -> None:
+    sentence = (
+        "After the plan commit the file never changes except by the plan "
+        "charter's edits_after policies, and `loom_checker.py plan-edits "
+        "<change-id>` does not recompute that at push."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_plan_edits_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "After the plan commit the file changes only by the plan charter's "
+        "edits_after policies (contract/manifest.yaml, "
+        "artifacts.plan.charter), and `python3 loom_checker.py plan-edits "
+        "<change-id>` recomputes that at push."
+    )
+    assert "edits_after" in sentence
+    assert "artifacts.plan.charter" in sentence
+    assert "plan-edits" in sentence
+    assert not _has_negation(sentence)
+
+
+def test_store_entries_paragraph_names_risks_stays_as_left() -> None:
+    """W2-02: build/SKILL.md §6.5's Store entries paragraph states the
+    plan's Risks section stays exactly as the plan commit left it, the
+    plan charter's edits_after list naming the only exceptions."""
+    text = BUILD_SKILL.read_text(encoding="utf-8")
+    start = text.index("**Store entries.**")
+    end = text.index("**Commits.**")
+    section = text[start:end]
+    hits = [
+        s for s in _flat_sentences(section)
+        if "risks section" in s.lower()
+        and "plan commit left it" in s.lower()
+        and "edits_after" in s
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "build/SKILL.md §6.5 Store entries paragraph has no affirmative "
+        "sentence stating the plan's Risks section stays as the plan "
+        "commit left it"
+    )

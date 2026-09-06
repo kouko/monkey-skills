@@ -94,7 +94,10 @@ mechanisms:
     class: skill
     eval: "loom-workflow/scripts/test_critique_compaction.py"
 
-  # --- checker-rule (26; loom_checker.py --list-rules) ---
+  # --- checker-rule (29; loom_checker.py --list-rules) ---
+  - id: contract.charter-complete
+    class: checker-rule
+    eval: loom-code/scripts/test_contract_charter.py::test_charter_command_every_column_of_every_row_is_non_empty
   - id: contract.requires
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_cli.py::test_contract_require_blocks_a_higher_minor
@@ -125,6 +128,12 @@ mechanisms:
   - id: intent.schema
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intent.py::test_complete_intent_passes
+  - id: plan.field-caps
+    class: checker-rule
+    eval: loom-code/scripts/test_plan_field_caps.py::test_check_plan_field_caps_test_field_over_cap_names_task_and_field
+  - id: plan.edits-after-commit
+    class: checker-rule
+    eval: loom-code/scripts/test_plan_edits_after_commit.py::test_landed_task_files_change_blocks_even_with_reason
   - id: push.dismissed-by-reviewer
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_a_dismissal_by_the_implementer_blocks
@@ -161,6 +170,9 @@ mechanisms:
   - id: push.verdicts-ge-2
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_push.py::test_one_reviewer_blocks
+  - id: review.round-append-only
+    class: checker-rule
+    eval: loom-code/scripts/test_review_round_append_only.py::test_review_edits_ungrandfathered_verdict_flip_blocks_naming_rewrite
   - id: spec.req-grammar
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_a_skipped_req_number_is_blocked
@@ -261,6 +273,7 @@ mechanisms:
   - {id: "artifact:review.questions",           class: contract, eval: "loom-code/scripts/test_loom_checker_push.py::test_a_questions_entry_with_an_unknown_type_blocks"}
   - {id: "artifact:review.dispatch",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:review.cost",                class: contract, eval: "loom-code/scripts/test_review_json_template.py::test_template_carries_a_cost_block_with_the_declared_shape"}
+  - {id: "artifact:review.charter",              class: contract, eval: "loom-code/scripts/test_review_round_append_only.py::test_review_edits_no_charter_stamp_skips_a_rewritten_verdict"}
 
   # --- prose-gate: landed stations mark their real `<!-- gate: … -->`
   #     paragraphs in W1/W2, W3-06 §11 recomputes ---
@@ -321,3 +334,6 @@ mechanisms:
   - id: "design-system.never-blocks"
     class: prose-gate
     eval: loom-code/scripts/test_loom_checker_standing.py::test_missing_design_never_rejects
+  - id: "charter.plan-omission-narrow"
+    class: prose-gate
+    eval: loom-code/scripts/test_review_station_text.py::test_lenses_plan_omission_narrow_gate_present

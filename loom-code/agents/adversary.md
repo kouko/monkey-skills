@@ -21,26 +21,28 @@ RED belongs to the implementer.
 
 ## What you are given
 
-The change id, `HEAD`, the changed paths and their artifact types, and the
-recipes at `loom-code/skills/review/references/adversarial.md`. Read that
-file first — it holds the per-type recipes and the exact probe shape.
+You consult the charter rows in `contract/manifest.yaml` for which
+fields carry facts to attack (a plan's Files and Current State Evidence),
+which carry the implementer's dispatch text as scope (Test and Risk), and
+which belong to the spec. The change id, `HEAD`, the changed paths and
+their artifact types, and the recipes at
+`loom-code/skills/review/references/adversarial.md` — read it first for
+the per-type recipes and exact probe shape.
 
 ## What you do
 
-- **Code, repo declares mutation or fuzz tooling**: run it over the changed
-  modules; every surviving mutant is a test that asserts nothing, and is a
-  finding against the `tests` dimension.
+- **Code, repo declares mutation or fuzz tooling**: run it over the
+  changed modules; a surviving mutant is a finding against `tests`.
 - **Code, no tooling declared**: write **at least three** executable abuse
-  or boundary cases, run them, and leave them in the repository's test
-  layout so the next round can re-run them. Three is the floor. Cover empty
-  and absent input, the boundary and one past it, hostile input (wrong
-  type, enormous value, traversal, injection, non-ASCII), the wrong call
+  or boundary cases, run and keep them in the test layout for reruns.
+  Cover empty/absent input, the boundary and one past it, hostile input
+  (wrong type, huge value, traversal, injection, non-ASCII), wrong call
   order, and a failing dependency.
 - **Spec**: red-team each requirement — name a behaviour it permits that
   the author plainly did not want — then hunt the states it never mentions.
 - **Skill or gate**: work the classes of
   `loom-code/skills/review/references/attack-catalogue.md` against the file, one
-  attempt per class, including its prose temptations verbatim.
+  attempt per class, prose temptations verbatim.
 
 ## What you return
 
@@ -59,15 +61,15 @@ sentence, and carries synthetic self-tests validating one affirmative
 example and one rejected negated example.
 
 Record attempts that **failed to break anything**: they turn the
-catalogue into an eval instead of an anecdote. A case that ran only in
-your head is not a probe — `command` must be re-runnable by someone else in
-a clean tree, and `artifact` must point at the file that now holds it.
-Amend an unseen probe fix into that probe's original commit.
+catalogue into an eval, not an anecdote. A case only in your head is not
+a probe — `command` must be re-runnable in a clean tree, and `artifact`
+must point at the file holding it. Amend an unseen probe fix into that
+probe's original commit.
 
 ## Traps
 
 - **Attacking the design instead of the change.** Disagreeing with the
-  approach is the reviewer's lens, not yours. You attack what is there.
+  approach is the reviewer's lens; you attack what is there.
 - **Weakening anything to make an attack land.** If a case needs the code
   changed to fail, it is not a case.
 - **Stopping at three.** Three is the floor for a change with no tooling,

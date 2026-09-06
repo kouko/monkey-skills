@@ -57,6 +57,14 @@ one line. A dismissal by anyone holding an `implementer` role for this
 change is refused (`push.dismissed-by-reviewer`); it must come from the
 reviewing role that raised or is resuming the finding.
 
+## Where the fix round is recorded
+
+The fix commits carry the reason for the fix in their own message; the
+resumed reader's `previous_findings` and this round's verdicts live in
+`review.json` (`artifacts.review.charter`, `contract/manifest.yaml`); and
+the plan keeps the exact text its plan commit left, the plan charter's
+`edits_after` list naming the only exceptions.
+
 ## Third round: stop fixing, look at the design
 
 A third round on the **same checkpoint** — the same `scope`, not a new

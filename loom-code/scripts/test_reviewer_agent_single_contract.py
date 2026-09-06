@@ -31,6 +31,7 @@ CONTRACT = REPO / "loom-code" / "contract"
 MECHANISMS = REPO / "docs" / "loom" / "evidence" / "mechanisms.yaml"
 
 WORD_CAP = 4500
+# Ceilings, not targets -- a file sitting well under its cap is fine.
 AGENT_CAPS = {"reviewer.md": 1460, "blind-runner.md": 600, "adversary.md": 600}
 DESCRIPTION_CAP = 400
 
@@ -255,8 +256,9 @@ def test_gate_markers_are_registered_mechanisms():
         "reviewer who did not implement, and a review-only commit are gates."
     )
     for gate_id in sorted(found):
-        assert gate_id.startswith("review."), (
-            f"gate id {gate_id!r} must be namespaced `review.<id>`."
+        assert gate_id.startswith("review.") or gate_id.startswith("charter."), (
+            f"gate id {gate_id!r} must be namespaced `review.<id>` or, for a "
+            "cross-artifact charter gate (W0-01), `charter.<id>`."
         )
         assert gate_id in registered, (
             f"gate {gate_id!r} is not registered in "
@@ -301,12 +303,18 @@ LOAD_BEARING = [
     ("blind-run-report.md", "對你既有的資料做了什麼"),
     ("blind-run-report.md", "I decided for you"),
     ("adversarial.md", "at least three"),
+    ("implementer.md", "kebab-case plugin or module name"),
 ]
 
 
 @pytest.mark.parametrize("filename,fact", LOAD_BEARING)
 def test_load_bearing_facts_are_stated(filename, fact):
-    path = SKILL if filename == "SKILL.md" else SKILL_DIR / "references" / filename
+    if filename == "SKILL.md":
+        path = SKILL
+    elif filename == "implementer.md":
+        path = AGENTS / filename
+    else:
+        path = SKILL_DIR / "references" / filename
     assert fact in read(path), (
         f"{path.relative_to(REPO)} no longer states {fact!r}; without it the "
         "cold reader has to guess."

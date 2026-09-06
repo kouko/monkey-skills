@@ -2634,6 +2634,33 @@ def test_a_restored_deleted_plumbing_path_with_no_trailer_is_exempt(tmp_path: Pa
     assert result.returncode == 0, result.stderr
 
 
+def test_a_spec_md_only_commit_with_no_trailer_is_exempt(tmp_path: Path) -> None:
+    """W0-01/W2-01 fix round: `docs/loom/<change-id>/spec.md` types as
+    `spec` (contract/manifest.yaml `artifact_types`), which is outside
+    `TRAILER_DUTY_TYPES` (`{"code", "skill", "gate"}`) -- the same
+    exemption `check_dispatch_covers_tasks`'s own docstring already names
+    for the spec, alongside the plan, the intent and evidence. A commit
+    that touches only spec.md, with no `Task:` trailer, must not block
+    `push.dispatch-covers-tasks` -- this holds regardless of the intent's
+    `needs-design` value, since the exemption is by artifact type, not by
+    that field."""
+    repo = build_repo(tmp_path)
+
+    git(repo, "reset", "-q", "--soft", "HEAD~1")
+    spec_path = repo / "docs/loom" / CHANGE / "spec.md"
+    spec_path.parent.mkdir(parents=True, exist_ok=True)
+    spec_path.write_text("intent: demo@abc1234\n", encoding="utf-8")
+    git(repo, "add", "docs/loom")
+    git(repo, "commit", "-q", "-m", "docs: spec update, no trailer")
+    spec_sha = git(repo, "rev-parse", "HEAD")
+    write_review(repo, review_body(spec_sha))
+    git(repo, "add", REVIEW)
+    git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
 def _decoy_stamp_scaffold(repo: Path) -> None:
     """Scaffold genuine bytes into `repo`, then corrupt only the checker
     copy's own version stamp -- every other plumbing path (git_exec.py
