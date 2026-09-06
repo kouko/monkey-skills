@@ -13,6 +13,7 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -64,7 +65,7 @@ def test_hook_selectedrepomutation_rejected(tmp_path):
     unrelated = tmp_path / "unrelated"
     unrelated.mkdir()
     before = fixture.git(repo, "rev-parse", "HEAD")
-    payload = {"cwd": str(unrelated), "tool_input": {"command": f"git -C {shlex.quote(str(repo))} push origin work"}}
+    payload = {"cwd": str(unrelated), "tool_input": {"command": f"git -C {shlex.quote(str(repo))} push origin {before}:refs/heads/work"}}
     result = subprocess.run([sys.executable, str(fixture.CHECKER), "push", "--hook"], input=json.dumps(payload), capture_output=True, text=True, cwd=unrelated)
     assert fixture.git(repo, "rev-parse", "HEAD") != before, "attack did not move target HEAD"
     assert not list(unrelated.iterdir()), "wrong repository was modified"
@@ -185,6 +186,118 @@ def test_ship_presuitescript_absent():
         "python3 loom-code/scripts/check-skill-crossrefs.py",
     ):
         assert command in section, f"existing deterministic check removed: {command}"
+
+
+# Branch-end fix-round regression: source refs must survive the hook boundary.
+def hook_command(repo, command, *, cwd=None):
+    """Execute the supported host hook against the exact intercepted command."""
+    caller = cwd or repo
+    payload = {"cwd": str(caller), "tool_input": {"command": command}}
+    return subprocess.run(
+        [sys.executable, str(fixture.CHECKER), "push", "--hook"],
+        input=json.dumps(payload), capture_output=True, text=True, cwd=caller,
+    )
+
+
+@pytest.mark.parametrize("refspec", [
+    "", "work", "HEAD:refs/heads/work", "work:refs/heads/work",
+    "{short}:refs/heads/work", "{parent}:refs/heads/work",
+    "{head}:work", "{head}:refs/heads/other", "{head}:refs/tags/work",
+    ":refs/heads/work", "--all", "--mirror", "--tags",
+    "{head}:refs/heads/work work:refs/heads/other",
+])
+def test_refspec_mutablesource_rejected(tmp_path, refspec):
+    """Missing, mutable, or wrong source/destination blocks before any suite."""
+    repo, _, _ = repository(tmp_path)
+    head = fixture.git(repo, "rev-parse", "HEAD")
+    args = refspec.format(head=head, short=head[:8], parent=fixture.git(repo, "rev-parse", "HEAD^"))
+    result = hook_command(repo, f"git push origin {args}")
+    assert result.returncode == 2, f"unsafe refspec {args!r}: hook rc={result.returncode}\n{result.stdout}{result.stderr}"
+    assert "BLOCK " in result.stderr
+    assert "observed exit code" not in result.stdout, "package or adversarial execution preceded refspec rejection"
+
+
+@pytest.mark.parametrize("external", [False, True])
+def test_refspec_exacthead_accepted(tmp_path, external):
+    """The full current object ID and full current branch destination release."""
+    repo, _, _ = repository(tmp_path)
+    head = fixture.git(repo, "rev-parse", "HEAD")
+    caller = tmp_path / "caller"
+    caller.mkdir()
+    command = f"git -C {shlex.quote(str(repo))} push -u origin {head}:refs/heads/work" if external else f"git push -u origin {head}:refs/heads/work"
+    result = hook_command(repo, command, cwd=caller if external else repo)
+    assert result.returncode == 0, f"rc={result.returncode}\n{result.stdout}{result.stderr}"
+    assert result.stdout.count("package-tests `python3 -c pass`: observed exit code 0") == 1
+
+
+DELAYED_HEAD_WRITER = '''import subprocess, sys, time
+from pathlib import Path
+control = Path('.git')
+if len(sys.argv) > 1:
+    (control / 'writer-ready').touch()
+    deadline = time.monotonic() + 15
+    while not (control / 'writer-release').exists():
+        if time.monotonic() > deadline:
+            raise SystemExit(3)
+        time.sleep(0.01)
+    if (control / 'writer-cancel').exists():
+        raise SystemExit(0)
+    subprocess.run(['git', 'commit', '--allow-empty', '-qm', 'delayed mutation'], check=True)
+    (control / 'writer-done').touch()
+else:
+    subprocess.Popen([sys.executable, __file__, 'child'], stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
+    deadline = time.monotonic() + 5
+    while not (control / 'writer-ready').exists():
+        if time.monotonic() > deadline:
+            raise SystemExit(4)
+        time.sleep(0.01)
+'''
+
+
+def delayed_network_replay(tmp_path, immutable):
+    """Release a waiting child only after hook return, then push to a local bare remote."""
+    repo, _, _ = repository(tmp_path, package="python3 evidence/package.py", scripts={"evidence/package.py": DELAYED_HEAD_WRITER})
+    remote = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+    fixture.git(repo, "remote", "add", "origin", str(remote))
+    head = fixture.git(repo, "rev-parse", "HEAD")
+    refspec = f"{head}:refs/heads/work" if immutable else "work:refs/heads/work"
+    result = hook_command(repo, f"git push origin {refspec}")
+    control = repo / ".git"
+    if result.returncode != 0:
+        (control / "writer-cancel").touch()
+        (control / "writer-release").touch()
+        assert not (control / "writer-ready").exists(), "rejected source still executed package command"
+        return {"hook_rc": result.returncode, "before": head, "published": None, "detail": result.stderr}
+    assert (control / "writer-ready").exists(), "the delayed child was never started"
+    assert fixture.git(repo, "rev-parse", "HEAD") == head, "child moved before hook return"
+    assert not fixture.git(repo, "status", "--porcelain"), "hook returned on a dirty tree"
+    (control / "writer-release").touch()
+    deadline = time.monotonic() + 5
+    while not (control / "writer-done").exists() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert (control / "writer-done").exists(), "delayed child failed to move HEAD"
+    moved = fixture.git(repo, "rev-parse", "HEAD")
+    assert moved != head, "delayed child did not advance HEAD"
+    assert not fixture.git(repo, "status", "--porcelain")
+    pushed = subprocess.run(["git", "push", "origin", refspec], capture_output=True, text=True, cwd=repo)
+    assert pushed.returncode == 0, pushed.stderr
+    published = fixture.git(remote, "rev-parse", "refs/heads/work")
+    return {"hook_rc": result.returncode, "before": head, "after": moved, "published": published}
+
+
+@pytest.mark.parametrize("immutable", [False, True], ids=["mutable-rejected", "immutable-pins-reviewed"])
+def test_network_delayedhead_pinsreviewed(tmp_path, immutable):
+    """A post-hook HEAD move cannot publish a commit the hook never validated."""
+    result = delayed_network_replay(tmp_path, immutable)
+    if immutable:
+        assert result["hook_rc"] == 0, result
+        assert result["published"] == result["before"], result
+        assert result["published"] != result["after"], result
+    else:
+        assert result["hook_rc"] == 2 and result["published"] is None, f"mutable source published after hook return: {result}"
 
 
 if __name__ == "__main__":

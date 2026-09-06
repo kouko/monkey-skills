@@ -11,7 +11,6 @@ import re
 import shlex
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 
@@ -22,6 +21,7 @@ ROOT = next(
 )
 sys.path.insert(0, str(ROOT / "loom-code" / "scripts"))
 import test_loom_checker_push as fixture
+import test_single_owner_push_gate as permanent
 
 
 def repository(tmp_path: Path, package: str = "python3 -c pass") -> tuple[Path, dict]:
@@ -91,7 +91,7 @@ def test_hook_crossrepo_held(tmp_path: Path) -> None:
     unrelated.mkdir()
     payload = {
         "cwd": str(unrelated),
-        "tool_input": {"command": f"git -C {shlex.quote(str(repo))} push origin work"},
+        "tool_input": {"command": f"git -C {shlex.quote(str(repo))} push origin {fixture.git(repo, 'rev-parse', 'HEAD')}:refs/heads/work"},
     }
     result = subprocess.run(
         [sys.executable, str(fixture.CHECKER), "push", "--hook"],
@@ -116,32 +116,17 @@ def test_ship_selfexempt_held() -> None:
 
 
 def test_gate_concurrent_reproduced(tmp_path: Path) -> None:
-    """A detached writer can mutate the reviewed tree after the gate releases."""
-    writer = (
-        "import subprocess, sys\n"
-        "code = \"import time; from pathlib import Path; time.sleep(0.8); "
-        "Path('a.py').write_text('late = 1\\\\n')\"\n"
-        "subprocess.Popen([sys.executable, '-c', code], stdout=subprocess.DEVNULL, "
-        "stderr=subprocess.DEVNULL, start_new_session=True)\n"
-    )
-    repo, _ = repository(tmp_path, "python3 evidence/package.py")
-    fixture.git(repo, "reset", "--hard", "HEAD^")
-    (repo / "evidence" / "package.py").write_text(writer, encoding="utf-8")
-    fixture.git(repo, "add", "evidence/package.py")
-    fixture.git(repo, "commit", "--amend", "-q", "--no-edit")
-    reviewed = fixture.git(repo, "rev-parse", "HEAD")
-    body = fixture.review_body(reviewed)
-    body["probes"][0]["command"] = "python3 evidence/package.py"
-    fixture.write_review(repo, body)
-    fixture.git(repo, "add", fixture.REVIEW)
-    fixture.git(repo, "commit", "-q", "-m", "chore(loom): checkpoint review")
+    """Fail closed when a mutable source could publish a delayed child commit."""
+    result = permanent.delayed_network_replay(tmp_path, immutable=False)
+    assert result["hook_rc"] == 2 and result["published"] is None, result
 
-    result, detail = observed(repo)
-    assert result.returncode == 0, detail
-    deadline = time.monotonic() + 3
-    while time.monotonic() < deadline and not fixture.git(repo, "status", "--porcelain"):
-        time.sleep(0.05)
-    assert fixture.git(repo, "status", "--porcelain"), "detached attack did not mutate the tree"
+
+def test_gate_immutable_pinsreviewed(tmp_path: Path) -> None:
+    """An actual local push remains pinned despite a post-hook child commit."""
+    result = permanent.delayed_network_replay(tmp_path, immutable=True)
+    assert result["hook_rc"] == 0, result
+    assert result["published"] == result["before"], result
+    assert result["published"] != result["after"], result
 
 
 def test_gate_absent_held(tmp_path: Path) -> None:
