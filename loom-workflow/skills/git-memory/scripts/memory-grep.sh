@@ -25,6 +25,35 @@
 # floor this plan assumed going in). Confirm before relying on an
 # older git.
 #
+# Capability check (branch-end fix, W1-02 finding): a git old enough to
+# not understand the `key=` filter does not always reject it outright —
+# some accept arbitrary `%(...)` placeholder syntax and echo the whole
+# `%(trailers:key=…)` string back as LITERAL text instead of expanding
+# it. Every commit's fourth field then reads as that literal string, no
+# line matches `^Decision: `/`^Learning: `/`^Gotcha: `/`^Related: `, the
+# memory-worthy filter drops every record, and the script used to exit
+# 0 printing "(none in range)" — a repository full of real trailers
+# silently reporting having none, indistinguishable from an empty
+# history. extract_commits_ndjson now runs a one-time, cheap probe
+# (one extra `git log -1`, no per-commit calls) before the real
+# extraction pass: if the probe's own `%(trailers:key=…)` output
+# contains the literal substring `%(trailers`, the pass falls back to
+# the key-less `%(trailers:unfold)` placeholder (still ONE git-log call
+# — no exit-code change) and lets the existing jq stage's case-sensitive
+# key re-filter recover the real trailers, since that stage already
+# re-filters every line by key regardless of whether git's own key=
+# filter ran first. A git that instead REJECTS the placeholder outright
+# (fatal, non-zero exit, no output) is left alone — the probe treats a
+# failing probe as inconclusive and defers to the unchanged extraction
+# git-log call, which fails loudly via its own PIPESTATUS re-exit
+# exactly as before. Deliberate choice over `exit 3` (external
+# dependency missing): the incompatibility is recoverable without
+# degrading the user's result, so recovering silently outranks failing
+# loudly for a capability this script can work around at no extra
+# per-commit cost — `exit 3` remains the right call for a probe that
+# reveals NO working extraction path at all, which this one still is
+# not.
+#
 # Usage:
 #   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
 #                  [--format=plain|json] [--no-pr] [--no-commit]
@@ -426,6 +455,27 @@ fi
 
 extract_commits_ndjson() {
   local all_records path_shas sup_entries rc
+  local trailers_keyfilter trailers_format probe_out probe_rc
+
+  # ─── one-time capability probe (branch-end fix, W1-02) ────────────
+  # Cheap: a single `git log -1` with no ref pinned, so it needs neither
+  # the repo to have any commits nor any trailers to exist. A probe
+  # that itself FAILS (empty repo, or a git that rejects the
+  # placeholder outright) is inconclusive here, not a literal-echo
+  # finding — it is left to the real extraction git-log call below,
+  # which already fails loudly via its own PIPESTATUS re-exit in that
+  # case. Only a probe that SUCCEEDS while echoing the placeholder back
+  # as literal text (contains "%(trailers") is the failure mode this
+  # guards: fall back to the key-less `unfold` placeholder, still one
+  # single git-log call, and let the jq stage's existing case-sensitive
+  # key re-filter recover the real trailers.
+  trailers_keyfilter='key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold'
+  trailers_format="%(trailers:${trailers_keyfilter})"
+  probe_rc=0
+  probe_out=$(git -C "$REPO" log -1 --format="$trailers_format" 2>/dev/null) || probe_rc=$?
+  if [ "$probe_rc" -eq 0 ] && printf '%s' "$probe_out" | grep -qF '%(trailers'; then
+    trailers_format='%(trailers:unfold)'
+  fi
 
   # git's -z output is NUL-delimited; a bash `$(...)` command
   # substitution silently drops embedded NUL bytes (bash-3.2 and bash-5
@@ -448,7 +498,7 @@ extract_commits_ndjson() {
   # — the case-sensitive re-filter happens per key below).
   all_records=$(
     git -C "$REPO" log --since="$SINCE" --no-merges -z --date=short \
-      --format='%h%x00%ad%x00%s%x00%(trailers:key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold)' \
+      --format="%h%x00%ad%x00%s%x00${trailers_format}" \
       | jq -R -s -c '
           ([0] | implode) as $NUL
           | ([10] | implode) as $LF
