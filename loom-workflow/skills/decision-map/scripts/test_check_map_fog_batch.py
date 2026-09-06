@@ -74,9 +74,11 @@ def test_graduated_set_identical_20_tickets_two_git_spawns(tmp_path: Path) -> No
     calls: list[list[str]] = []
     original = check_map_fog._run_git
 
-    def counting(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    def counting(
+        args: list[str], cwd: Path, *a, **kw
+    ) -> subprocess.CompletedProcess[str]:
         calls.append(args)
-        return original(args, cwd)
+        return original(args, cwd, *a, **kw)
 
     check_map_fog._run_git = counting
     try:
