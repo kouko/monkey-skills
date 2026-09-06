@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "4e45d6de1214d164ce9ebe18bcd30bf7f4499a1e",
+  "reviewed_sha": "9222526498ef47116d7a7b251d2091cb58d9852f",
   "scope": "wave-end:1",
   "vendors": [
     "anthropic",
@@ -116,6 +116,45 @@
           "text": "nitpick: the top-of-file Parsing strategy comment still describes only interpret-trailers and does not mention that extraction now uses %(trailers:key=...,unfold).",
           "fix": "Add one sentence pointing to the detailed comment block."
         }
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-mg-codex",
+      "vendor": "codex",
+      "model": "gpt-5-codex",
+      "lens": "code + docs",
+      "verdict": "PASS",
+      "sha": "9baa5231fb63b442e1e08d4df0e0ddec3f1115ab",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "external-surface-grounding": "PASS",
+        "tests": "PASS",
+        "incorrect-fact": "PASS",
+        "refactoring": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-01..06 all confirmed fixed; no fix introduced a new defect within the fix delta; round 1's reported 20-supersession perf fixture was invalid (19 in fact) until the accumulator bug was fixed; bash -n and /bin/bash -n pass; the five pre-existing suites remain byte-unchanged from 4e45d6de."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "wave-end:1",
+      "reviewer": "rev-we1-mg-claude",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "sha": "9baa5231fb63b442e1e08d4df0e0ddec3f1115ab",
+      "dimension_scores": {
+        "architecture": "PASS",
+        "refactoring": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "wave-end:1-06 fixed: the probe shim logs a fixed marker and the four jq programs are multi-line again, byte-identical apart from whitespace, counts unchanged (4 plain / 5 json, constant); the header Parsing strategy comment nit stays open for the ship nit batch."
       ]
     }
   ],
@@ -338,37 +377,43 @@
       "id": "wave-end:1-01",
       "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:403",
       "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
-      "raised_by": "rev-we1-mg-codex"
+      "raised_by": "rev-we1-mg-codex",
+      "resolved": "closed by 03271dcb — NUL field delimiters; regression test compares HEAD against the pre-change script on a 0x1F subject; confirmed fixed by rev-we1-mg-codex round 2"
     },
     {
       "id": "wave-end:1-02",
       "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:402",
       "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
-      "raised_by": "rev-we1-mg-codex"
+      "raised_by": "rev-we1-mg-codex",
+      "resolved": "closed by 00312a41 — grounding comment naming git-log(1) PRETTY FORMATS and git-interpret-trailers(1) OPTIONS; introducing version honestly deferred to W2-01; confirmed fixed by rev-we1-mg-codex round 2"
     },
     {
       "id": "wave-end:1-03",
       "anchor": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py:182",
       "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
-      "raised_by": "rev-we1-mg-codex"
+      "raised_by": "rev-we1-mg-codex",
+      "resolved": "closed by 9f31972d — probe asserts exact equality in plain and JSON; confirmed fixed by rev-we1-mg-codex round 2"
     },
     {
       "id": "wave-end:1-04",
       "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:161",
       "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
-      "raised_by": "rev-we1-mg-codex"
+      "raised_by": "rev-we1-mg-codex",
+      "resolved": "closed by 1142806d — perf suite asserts 300/20/280 before measuring, which surfaced and fixed a real 19-vs-20 fixture bug; confirmed fixed by rev-we1-mg-codex round 2"
     },
     {
       "id": "wave-end:1-05",
       "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:231",
       "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
-      "raised_by": "rev-we1-mg-codex"
+      "raised_by": "rev-we1-mg-codex",
+      "resolved": "closed by ddd7613f — monotonic sub-second clock, 2.0 s local bound stated separately from the 5.0 s CI tolerance; confirmed fixed by rev-we1-mg-codex round 2"
     },
     {
       "id": "wave-end:1-06",
       "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:442",
       "origin_sha": "87004e6cad531fee20f43fcdb920269fc6634524",
-      "raised_by": "rev-we1-mg-claude"
+      "raised_by": "rev-we1-mg-claude",
+      "resolved": "closed by 9baa5231 — probe shim logs one marker per invocation; the four jq programs are multi-line again with whitespace-only diffs and unchanged counts; confirmed fixed by rev-we1-mg-claude round 2"
     }
   ],
   "dispatch": [
@@ -465,8 +510,8 @@
     }
   ],
   "cost": {
-    "rounds": 1,
-    "dispatches": 8,
+    "rounds": 2,
+    "dispatches": 11,
     "cap_changes": [],
     "hours_plan_to_pr": null
   }
