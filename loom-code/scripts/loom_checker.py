@@ -36,8 +36,6 @@ import sys
 from datetime import date
 from pathlib import Path
 
-import yaml
-
 from git_exec import run_git  # sibling module (no __init__.py, no conftest)
 
 
@@ -327,6 +325,8 @@ def manifest_path_in_effect() -> Path:
 
 
 def load_manifest(path: Path | None = None):
+    import yaml  # lazy: the non-push hook fast path must never pay this import
+
     return yaml.safe_load(read_text(path if path is not None else manifest_path_in_effect()))
 
 
