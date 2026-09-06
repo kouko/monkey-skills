@@ -32,7 +32,8 @@ reads "landed" by git topology, not by wall clock: an amendment on the
 trunk that the task branch never merged is, to the checker, a change
 made after the task landed, and the amended line then has to be reverted
 to the plan commit's text with the correction surviving only in the
-amendment commit's message and in this store, tell the implementer which probe assertion encodes the old
-fact and that it may correct that one assertion in its own commit, and
-let the blind-run report explain the delta to the user in plain words.
+amendment commit's message and in this store. Tell the implementer which
+probe assertion encodes the old fact and that it may correct that one
+assertion in its own commit, and let the blind-run report explain the
+delta to the user in plain words.
 The plan's number is never defended against a measurement.
