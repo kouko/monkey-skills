@@ -824,11 +824,29 @@
       "started": "2026-09-06T20:08:00+08:00",
       "fresh_context": false,
       "note": "round 5 focused fix verification for branch-end-01 through branch-end-13"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T20:25:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 continuation for branch-end-01 and fix-induced findings 01-02"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T20:25:00+08:00",
+      "fresh_context": false,
+      "note": "round 5 continuation for Codex fix-induced findings and Claude word-count note"
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 22,
+    "dispatches": 24,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
