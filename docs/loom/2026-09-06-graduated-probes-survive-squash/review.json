@@ -1,6 +1,6 @@
 {
   "reviewed_sha": "83d129c9",
-  "scope": "wave-end:1",
+  "scope": "branch-end",
   "vendors": [
     "codex"
   ],
@@ -224,6 +224,123 @@
       },
       "findings": [],
       "sha": "83d129c9"
+    },
+    {
+      "reviewer": "rev-be-a-q3n7",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/rehearse_probes.py:283",
+          "text": "issue (blocking): The squashed rehearsal assumes the selected trunk SHA is an ancestor of HEAD, but never verifies that assumption. If origin/main advances after the branch diverges, reset --soft keeps the feature branch's old tree and commits it on the newer trunk, deleting upstream changes instead of modeling the tree a real squash merge would produce; probes can therefore return the wrong result.",
+          "fix": "Before constructing the squashed shape, either require git merge-base --is-ancestor <trunk-sha> <head-sha> and fail with an actionable rebase-required message, or construct the actual merged tree; add a regression test where origin/main and the feature branch have diverged."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "text": "issue (blocking): The branch-end dispatches are present, but probes[] contains only wave-end evidence at SHA 83d129c9; it has no adversarial or blind-run entry for reviewed SHA 3d3422f7ef1f700f0bcde3dde05330e6a6280858. The required branch-end verification therefore cannot be reproduced from the record.",
+          "fix": "Append the branch-end package-test, adversarial, and blind-run probe entries with their exact commands, artifacts, scope, and SHA 3d3422f7ef1f700f0bcde3dde05330e6a6280858 before accepting this checkpoint."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "loom-code/skills/build/SKILL.md:345",
+          "text": "issue (blocking): The executable gate tells Build that the second run models a branch squashed onto its trunk, but gives no ancestry precondition or divergence handling. A cold executor can rely on a misleading rehearsal when trunk advanced independently.",
+          "fix": "State and enforce in this gate that the selected trunk must be an ancestor of the rehearsed HEAD, with divergence requiring a rebase or a merge-accurate rehearsal before graduation."
+        },
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py:206",
+          "text": "nitpick (non-blocking): The new probe uses camelCase components instead of the required test_<unit>_<state>_<expected> function-name shape.",
+          "fix": "Rename this probe and the other newly added camelCase probe functions to snake_case test_<unit>_<state>_<expected> names, updating the graduated copies and recorded commands together."
+        }
+      ],
+      "sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858"
+    },
+    {
+      "reviewer": "rev-be-b-x6p1",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code + docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:2400",
+          "text": "issue (blocking): `parse_document` silently keeps the last of duplicate frontmatter keys, so an invalid intent containing both confirmed and closed `status:` lines can be treated as shipped and receive NOT APPLICABLE instead of the fail-closed BLOCK.",
+          "fix": "Reject duplicate `status:` frontmatter before granting the carve-out, and make `test_planedits_duplicatestatus_blocks` pass while retaining the existing single-status cases."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "architecture",
+          "anchor": "loom-code/scripts/rehearse_probes.py:230",
+          "text": "issue (blocking): Trunk resolution accepts the first resolvable ref without validating its relationship to HEAD or conflicting same-name trunk refs; `_squash_clone_onto_trunk` then uses `reset --soft`, which can fabricate a green tree that drops newer divergent trunk content or squash from a stale base.",
+          "fix": "Resolve candidate refs to commits, fail loudly when the selected trunk is divergent or inconsistent with the applicable same-name trunk history, and make both `test_rehearsal_trunkbehindmergebase_failsloudly` and `test_rehearsal_trunkaheadofbranch_failsloudly` pass."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+          "text": "issue (blocking): The record contains no branch-end probe entries at the reviewed SHA: all five recorded probes still name the earlier wave-end SHA and omit `scope`, despite committed branch-end adversarial and blind-run artifacts. The checkpoint therefore cannot reproduce or gate the current evidence.",
+          "fix": "Append the branch-end package-test, adversarial, and blind-run probe entries with their exact commands, artifacts, `scope: branch-end`, and SHA binding for this round before recording verdicts."
+        },
+        {
+          "severity": "fatal",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md:57",
+          "text": "issue (blocking): The report says the package-suite environment is the only missing evidence, but the already-committed branch-end adversarial catalogue exposes three failing cases, including two ways the squash rehearsal can model the wrong history. This hides known blockers at the user's acceptance point.",
+          "fix": "Regenerate the blind-run report after the branch-end probes and findings are recorded, explicitly listing the failing adversarial boundaries and withholding an acceptance-ready summary until they pass or are validly dismissed."
+        }
+      ],
+      "sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858"
     }
   ],
   "probes": [
@@ -261,6 +378,230 @@
       "sha": "83d129c9",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_squashed_rehearsal.py"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_unreachableclosure_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_duplicatestatus_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_fullwidthdecoration_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_fencedstatus_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_symlinkintent_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_traversalchange_refused",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py -q -k test_planedits_closedlateredit_blocks",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_plan_edits.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_detachedhead_runsboth",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_tagtrunk_resolvescommit",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_symbolictrunk_resolvescommit",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkbehindmergebase_failsloudly",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_trunkaheadofbranch_failsloudly",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "fail",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_mergehistory_collapsesonecommit",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_unicodepath_runsboth",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_dirtysource_ignoresworktree",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_unwritabletmp_failsloudly",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_unsettmp_runsboth",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_keep_preservessquashedclone",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py -q -k test_rehearsal_callermarkers_overwritten",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_squashed_shape.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_forgedartifact_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_editedinput_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_staleartifact_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_trustboundary_matches",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_proseexemption_refuses",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_concurrentwriter_detects",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py -q -k test_gate_matcher_selftests_expected",
+      "sha": "7bd989feaf77098f6b33fc6828f46d265a2b839b",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/evidence/probes/test_abuse_branch_end_gate_text.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "",
+      "sha": "7bd989fe",
+      "result": "line 1: partly, line 2: works, line 3: works, line 4: works, line 5: partly",
+      "artifact": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "result": "2089 passed, 1 skipped, 1 xfailed; 183 passed, 1 skipped",
+      "artifact": "",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -303,6 +644,72 @@
       "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
       "raised_by": "rev-w1-codex-h4n8",
       "resolved": true
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/rehearse_probes.py:283",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-a-q3n7"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-a-q3n7"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "loom-code/skills/build/SKILL.md:345",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-a-q3n7"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "loom-code/scripts/loom_checker.py:2400",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/scripts/rehearse_probes.py:230",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/review.json:229",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/blind-run-report.md:57",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "rev-be-b-x6p1"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "loom-code/scripts/loom_checker.py:2400",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "adv-be-r5k2"
+    },
+    {
+      "id": "branch-end-09",
+      "anchor": "loom-code/scripts/rehearse_probes.py:230",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "adv-be-r5k2"
+    },
+    {
+      "id": "branch-end-10",
+      "anchor": "loom-code/scripts/rehearse_probes.py:283",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "adv-be-r5k2"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "Acceptance line 5",
+      "origin_sha": "3d3422f7ef1f700f0bcde3dde05330e6a6280858",
+      "raised_by": "br-be-t8m4"
     }
   ],
   "dispatch": [
@@ -465,10 +872,10 @@
     }
   ],
   "cost": {
-    "rounds": 0,
-    "dispatches": 0,
+    "rounds": 5,
+    "dispatches": 19,
     "cap_changes": [],
-    "hours_plan_to_pr": null
+    "hours_plan_to_pr": 13.4
   },
   "charter": "1.0",
   "second_vendor": "codex"
