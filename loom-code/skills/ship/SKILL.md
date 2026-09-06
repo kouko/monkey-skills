@@ -34,6 +34,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 1.0
 Exit 0 continue; non-zero stop and report the mismatch (`contract.requires`)
 — do not work around a contract that does not fit.
 
+A missing or inactive supported-host hook blocks Ship; use the host's setup
+or trust probe to prove activation. An unchecked manual network push is
+outside the Loom Ship.
+
 On Codex, if `.codex/hooks/loom_checker.py` does not exist, **stop**: run
 `loom-code:write-plan` step 0b (the scaffold and its trust probe; that station
 writes the procedure out in `codex-first-contact.md`, under its `references/`)
@@ -235,26 +239,19 @@ git ls-files '*.md' | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(cod
 python3 loom-code/scripts/check-skill-crossrefs.py
 ```
 
-Run the checker explicitly, then push:
+The supported host's local push hook is the sole owner: its deterministic
+push checker runs the resolved complete package-test command exactly once and
+re-runs recorded adversarial probes. Never invoke it as a separate preflight.
 
-```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py push
-```
-
-It re-runs the package tests and the adversarial probes recorded in
-`review.json` itself, in a clean tree at `reviewed_sha`, and believes only
-the exit codes it observes. Expect it to take minutes; that wait is the
-point of it. The same command runs again, unasked, from the host's
-PreToolUse hook the moment the push command is issued — running it here
-first only means you see the block before the tool call does.
-
-Exit 0 → push the branch, by name, never bare:
+Issue the branch push by name, never bare:
 
 ```
 git push -u origin <branch>
 ```
 
-Any exit 1 prints `BLOCK <rule.id>: <reason>` on stderr. **Print that line
+The hook-triggered checker runs in the selected repository, believes only the
+exit codes it observes, and may take minutes. Exit 0 releases the network
+push. Exit 1 prints `BLOCK <rule.id>: <reason>` on stderr. **Print that line
 verbatim to the user and stop.** Do not re-run with flags, do not
 `--no-verify`, do not adjust `review.json` to satisfy the rule — every rule
 recomputes its fact, so the only way past it is to make the fact true at
@@ -266,7 +263,7 @@ the station that owns it:
 | `push.reviewed-sha` | the branch moved after the review | `loom-code:review` |
 | `push.review-schema` | `review.json` lost a declared key | `loom-code:review` |
 | `push.open-findings-closed` | a finding is neither resolved nor dismissed | `loom-code:build` for the fix, then `loom-code:review` |
-| `push.probes-package-tests` | the recorded test run does not reproduce, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |
+| `push.probes-package-tests` | the recorded command fails in the hook, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |
 | `push.probes-adversarial` | fewer than 3 usable adversarial probes for this change's artifact types, or one exited non-zero when the checker ran it | back to `loom-code:review`, dispatch an adversary |
 | `push.dispatch-covers-tasks` | (i) a commit touching code/skill/gate carries no `Task:` trailer (spec/intent/plan/docs commits owe none); or (ii) a `Task:` trailer on this branch names a task no implementer entry claims | (i) `loom-code:build` — the task that owns the work amends or re-commits with the trailer; (ii) `loom-code:review` — the dispatch record lost a writer |
 | `push.second-vendor-honoured` | KICKOFF-DEFAULTS names a second vendor the round neither used nor recorded a `fallback` for | `loom-code:review` |

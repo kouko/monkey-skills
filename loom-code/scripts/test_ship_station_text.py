@@ -58,6 +58,13 @@ def _section_4_push() -> str:
     return text[start:end]
 
 
+def _section_0_contract_check() -> str:
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    start = text.index("## 0. Contract check")
+    end = text.index("## 1. Preconditions")
+    return text[start:end]
+
+
 def test_ship_never_reuses_a_wave_end_round_as_branch_end() -> None:
     text = SHIP_SKILL_MD.read_text(encoding="utf-8")
     section = text.split("## 1. Preconditions", 1)[1].split("## 2.", 1)[0]
@@ -336,8 +343,8 @@ def test_ship_pr_body_process_cost_lists_rounds_dispatches_caps_hours() -> None:
 
 
 def test_ship_push_checklist_lists_one_command_per_ci_job() -> None:
-    """§4 lists, before the push, one command per job of this repo's
-    loom-code CI workflow."""
+    """§4 retains the existing CI-job checklist; W0-01 removes only the
+    duplicate complete-suite checker preflight that follows it."""
     section = _section_4_push()
     for expected in (
         "python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/",
@@ -351,15 +358,20 @@ def test_ship_push_checklist_lists_one_command_per_ci_job() -> None:
         "check-skill-crossrefs.py",
     ):
         assert expected in section, f"§4's checklist is missing {expected!r}"
-    # the checklist appears before the push command
     checklist_idx = section.index("check-skill-crossrefs.py")
-    push_idx = section.index("git push -u origin")
-    assert checklist_idx < push_idx
+    branch_command_idx = section.index("git push -u origin")
+    assert checklist_idx < branch_command_idx
+
+
+def test_ship_issues_named_branch_without_explicit_checker_preflight() -> None:
+    """A2: Ship issues the named-branch command without separately invoking
+    the deterministic checker first."""
+    section = _section_4_push()
+    assert "git push -u origin <branch>" in section
+    assert "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py push" not in section
 
 
 def test_ship_push_checklist_mirrors_workflow_sentence() -> None:
-    """§4 carries an affirmative, un-negated sentence stating the checklist
-    mirrors the CI workflow's jobs."""
     section = _section_4_push()
     hits = [
         s for s in _sentences(section)
@@ -391,6 +403,58 @@ def test_matcher_push_checklist_mirrors_sentence_affirmative_accepted() -> None:
     assert "loom-code-ci.yml" in sentence.lower()
     assert "jobs" in sentence.lower()
     assert not _has_negation(sentence)
+
+
+def test_ship_supported_host_hook_is_sole_package_suite_owner() -> None:
+    """A1: the supported host's hook invokes the deterministic checker and
+    owns the one complete package-suite execution."""
+    section = _section_4_push()
+    hits = [
+        s for s in _sentences(section)
+        if "supported host's local push hook" in s.lower()
+        and "sole owner" in s.lower()
+        and "deterministic push checker" in s.lower()
+        and "exactly once" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "ship/SKILL.md §4 has no affirmative sentence making the supported "
+        "host hook sole owner of exactly one package-suite execution"
+    )
+
+
+def test_matcher_hook_owner_sentence_negated_rejected() -> None:
+    sentence = (
+        "The supported host's local push hook is never the sole owner and its "
+        "deterministic push checker does not execute the package suite exactly once."
+    )
+    assert _has_negation(sentence)
+
+
+def test_matcher_hook_owner_sentence_affirmative_accepted() -> None:
+    sentence = (
+        "The supported host's local push hook is the sole owner: its "
+        "deterministic push checker executes the package suite exactly once."
+    )
+    assert "supported host's local push hook" in sentence.lower()
+    assert "sole owner" in sentence.lower()
+    assert "deterministic push checker" in sentence.lower()
+    assert "exactly once" in sentence.lower()
+    assert not _has_negation(sentence)
+
+
+def test_ship_missing_or_inactive_supported_host_hook_blocks() -> None:
+    """A2 negative: an unchecked manual network operation is not Ship."""
+    hits = [
+        s for s in _sentences(_section_0_contract_check())
+        if "missing or inactive" in s.lower()
+        and "supported-host hook" in s.lower()
+        and "blocks ship" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "ship/SKILL.md §0 has no affirmative missing-or-inactive hook block"
+    )
 
 
 # --- W1-04: lane PR line, gate-only ③ pointer -------------------------------
