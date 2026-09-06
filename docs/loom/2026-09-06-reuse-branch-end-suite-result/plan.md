@@ -12,10 +12,10 @@ charter: 1.0
 - Test: A1 positive: hook-only-owner; boundary: no-branch-end-run. A2 positive: no-explicit-preflight; negative: missing-hook-blocks. A3 positive: repo-command-neutral; boundary: no-path-classification.
 - Risk: agent-decided — remove only the two station-owned duplicate calls; retain the deterministic push rule, recorded command contract, adversarial recomputes, and existing supported-host requirement.
 
-**W0-02 Reject repository mutation during the push gate**  after: W0-01  acceptance: 2,4,5
-- Files: loom-code/scripts/loom_checker.py, loom-code/scripts/test_loom_checker_push.py, loom-code/scripts/test_loom_checker_hardening.py
-- Test: A2 positive: stable-head-releases; negative: suite-moves-head-blocks. A4 positive: detected-command-runs; boundary: none-and-invalid-outcomes. A5 positive: environment-retry-stable; negative: tracked-fix-invalidates.
-- Risk: agent-decided — snapshot HEAD and porcelain before executable probes, then compare after all runs; do not classify paths or trust recorded results.
+**W0-02 Remove residual pre-review runs and reject push-gate mutation**  after: W0-01  acceptance: 1,2,4,5
+- Files: loom-code/skills/build/SKILL.md, loom-code/skills/ship/SKILL.md, loom-code/scripts/loom_checker.py, loom-code/scripts/test_build_station_text.py, loom-code/scripts/test_ship_station_text.py, loom-code/scripts/test_loom_checker_push.py, loom-code/scripts/test_loom_checker_hardening.py
+- Test: A1 positive: no-build-or-ship-suite; boundary: hook-only-run. A2 positive: stable-head-releases; negative: suite-moves-head-blocks. A4 positive: detected-command-runs; boundary: none-and-invalid-outcomes. A5 positive: environment-retry-stable; negative: tracked-fix-invalidates.
+- Risk: agent-decided — remove the newly discovered Build and Ship-checklist suite calls, preserve other deterministic checks, and compare HEAD plus porcelain after executable probes without trusting recorded results.
 
 ### Wave 1 — Measured workflow reduction
 
