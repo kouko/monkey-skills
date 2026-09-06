@@ -13,7 +13,7 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 1. **Survey the vault first** when the request implies cross-references — Glob/search for existing related notes BEFORE drafting, so wikilink targets and `related_notes` candidates are confirmed up front rather than bolted on (this is the discovery half of §Internal Links' existence rule, which only gates emission).
 2. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
 3. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
-   - Each time the note needs a **diagram**, read [mermaid-quirks.md](references/mermaid-quirks.md) and check §Diagrams for whether to invoke `obsidian:obsidian-mermaid-visualizer` or write inline. Repeat for every diagram in the note — inline and delegate decisions are made per diagram, not per note.
+   - Each time the note needs a **diagram**, read [mermaid-quirks.md](references/mermaid-quirks.md) and check §Diagrams for whether to invoke `obsidian:obsidian-mermaid-visualizer`, write inline, or use a fenced ASCII block (§Mermaid or ASCII?). Repeat for every diagram in the note — inline, delegate, and ASCII decisions are made per diagram, not per note.
 4. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.
 5. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections that **already exist** (see §Internal Links for the existence rule), or standard Markdown links for external URLs.
 6. **Embed content** from other notes, images, or PDFs using the `![[embed]]` syntax. See [EMBEDS.md](references/EMBEDS.md) for all embed types.
@@ -166,6 +166,52 @@ $$
 ## Diagrams (Mermaid)
 
 **Before writing any Mermaid block:** read [mermaid-quirks.md](references/mermaid-quirks.md) and run its pre-flight checklist.
+
+### Is this a graph at all?
+
+Two shapes are not graphs, and drawing them costs the reader.
+
+**No branching at all** — one straight line of steps — is a numbered list. Boxes
+and arrows add nothing a list does not already carry.
+
+**A rule set drawn as a fan-out tree** hides its own gaps. Check the shape: if
+**every leaf is a terminal outcome, no branch rejoins, and nothing loops back to
+an earlier node**, the content is a rule set, not a flow — write it as a table
+instead. In Markdown, put one **row per rule** and one column per condition plus
+an outcome column; tables grow downward comfortably and sideways badly.
+
+The table earns its place by making the *missing* rows visible. A tree shows only
+the branches someone drew; a grid exposes the combinations nobody answered — the
+unhandled band between two thresholds, the empty fourth cell of a 2×2, two
+conditions that overlap with no tie-breaker.
+
+Keep the diagram when the topology carries the meaning: a loop, a feedback edge,
+containment, fan-in onto a shared consequence, or branches that rejoin. Any edge
+back to an earlier node counts as a loop and settles it — a cyclic drawing is
+never a rule set. A decision diamond alone is not the signal, in either
+direction: plenty of correct diagrams have one, and plenty of rule sets do not.
+
+### Mermaid or ASCII?
+
+Mermaid is the default for every diagram in a note — it scales, follows the
+theme, and Obsidian renders it natively. Reach for a fenced ASCII block **only**
+for these shapes, where plain text beats a graph:
+
+- Directory / file trees
+- Terminal or CLI output
+- Diffs, and code snippets carrying inline annotations
+- Byte / field layouts (packet, record, memory)
+
+Two limits on that exception:
+
+- **Never hand-draw a boxes-and-arrows sketch in ASCII when it carries CJK
+  labels or has ≥3 boxes — use Mermaid.** "Box" means a drawn rectangle joined
+  to others by connectors; the four shapes above are not boxes-and-arrows, so a
+  40-line file tree or a long terminal dump stays ASCII. The reason for the
+  limit: full-width characters occupy two cells while ASCII occupies one, so
+  hand-padded columns misalign silently. If a width-aware generator is available
+  it may be used, but inside a note Mermaid is still the better answer.
+- Keep the block inside a fence so Obsidian renders it monospaced.
 
 ### When to invoke `obsidian:obsidian-mermaid-visualizer`
 
