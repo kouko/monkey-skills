@@ -5,7 +5,135 @@
     "openai",
     "anthropic"
   ],
-  "verdicts": [],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "spec",
+      "reviewer": "spec-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION",
+      "sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "spec_sha": "77c179b",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "spec-conformance": "NEEDS_REVISION",
+        "design-conformance": "N/A — no DESIGN.md exists, and KICKOFF-DEFAULTS waives it for this plugin repository",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
+          "text": "issue (blocking): The pinned replay endpoints were not reachable from the reviewed target, so a clean checkout could not execute the promised replay.",
+          "fix": "Commit a self-contained patch and manifest whose base is reachable from the reviewed history."
+        },
+        {
+          "severity": "important",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
+          "text": "issue (blocking): The replay did not define runtime injection, fixed model inputs, or the defect-fix clock endpoints.",
+          "fix": "Specify a committed replay recipe with runtime, actor, prompt, and clock inputs."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
+          "text": "issue (blocking): Several historical Test fields were qualitative, so the permanent-test set was not independently executable.",
+          "fix": "Enumerate every replay command byte-for-byte in a reachable manifest."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:16",
+          "text": "issue (blocking): The spec called small a declared mode even though the baseline mechanically recomputes it.",
+          "fix": "Distinguish recomputed lanes from user-declared modes and preserve the declaration grammar."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:41",
+          "text": "nitpick: Three current-state anchors did not match the pinned baseline headings.",
+          "fix": "Use the exact build and review section titles and item number."
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
+          "text": "nitpick: REQ-2 used BEFORE outside the contract's accepted EARS forms.",
+          "fix": "Use the ubiquitous The system shall form."
+        }
+      ],
+      "notes": "Confirmed-behavior 77c179b and intent pin d6a8829a recomputed; baseline version and 18-minute interval verified."
+    },
+    {
+      "round": 1,
+      "scope": "spec",
+      "reviewer": "spec-review-claude",
+      "vendor": "anthropic",
+      "model": "opus",
+      "lens": "spec",
+      "verdict": "NEEDS_REVISION",
+      "sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "spec_sha": "77c179b",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "spec-conformance": "PASS_WITH_NOTES",
+        "design-conformance": "N/A — no DESIGN.md exists and KICKOFF-DEFAULTS waives it for this plugin repository",
+        "principles-conformance": "PASS_WITH_NOTES",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
+          "text": "issue (blocking): The new positive-and-negative obligation named neither its plan carrier nor its mechanical enforcement.",
+          "fix": "Name the existing Test line as the carrier and either reuse an existing gate or declare a budgeted new one."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:41",
+          "text": "issue: The immediate after-task call is in build section 4 item 5, not Step 5.",
+          "fix": "Cite section 4 item 5 and its gate id."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:43",
+          "text": "issue: Step 6 close the wave does not exist; the threshold is under build section 5 Wave end.",
+          "fix": "Cite section 5 Wave end and its threshold lines."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:45",
+          "text": "nitpick: The review scope table is under section 1 Scope and artifact type, not the named heading.",
+          "fix": "Cite the exact section and table."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:16",
+          "text": "nitpick: Small is recomputed, while full, express, and gate-only are the admitted declarations.",
+          "fix": "Separate effective lanes from declaration grammar."
+        }
+      ],
+      "notes": "Claude Code 2.1.263, model alias opus, effort high; confirmed-behavior and cited baseline metrics independently verified."
+    }
+  ],
   "probes": [
     {
       "kind": "adversarial",
@@ -46,49 +174,99 @@
       "id": "spec-01",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:7",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — required task and integration checks now block completion and dependent tasks"
     },
     {
       "id": "spec-02",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:7",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — the prohibition now covers all Build closure, including the final task and wave"
     },
     {
       "id": "spec-03",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — every owned Acceptance behaviour now requires a negative or boundary case"
     },
     {
       "id": "spec-04",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — retained cases must execute and pass in the task test-first cycle"
     },
     {
       "id": "spec-05",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:13",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — Ship now requires a lane-defined passing branch-end verdict and no blocking finding"
     },
     {
       "id": "spec-06",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:16",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — every effective lane and its branch-end obligations are pinned to loom-code 1.7.0"
     },
     {
       "id": "spec-07",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — replay inputs, events, tests, and oracle were specified; round-1 reviewers found defects in that specification separately"
     },
     {
       "id": "spec-08",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:27",
       "origin_sha": "9dc508341b9df5be1a4ed3aa77f613c36a35334e",
-      "raised_by": "spec-adversary-codex"
+      "raised_by": "spec-adversary-codex",
+      "resolved": "closed by 71d61a78 — legacy markers are readable and inert under the new runtime without migrating active old-runtime Builds"
+    },
+    {
+      "id": "spec-09",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
+      "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "raised_by": "spec-review-codex"
+    },
+    {
+      "id": "spec-10",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
+      "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "raised_by": "spec-review-codex"
+    },
+    {
+      "id": "spec-11",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
+      "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "raised_by": "spec-review-codex"
+    },
+    {
+      "id": "spec-12",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:16",
+      "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "raised_by": "spec-review-codex"
+    },
+    {
+      "id": "spec-13",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
+      "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "raised_by": "spec-review-claude"
+    },
+    {
+      "id": "spec-14",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:41",
+      "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "raised_by": "spec-review-claude"
+    },
+    {
+      "id": "spec-15",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:43",
+      "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
+      "raised_by": "spec-review-claude"
     }
   ],
   "dispatch": [
@@ -126,7 +304,7 @@
     }
   ],
   "cost": {
-    "rounds": 0,
+    "rounds": 1,
     "dispatches": 4,
     "cap_changes": [],
     "hours_plan_to_pr": null
