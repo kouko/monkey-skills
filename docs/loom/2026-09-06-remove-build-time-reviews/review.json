@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "130b4ca1691de465be71df163f620d761abef5fa",
+  "reviewed_sha": "0d80c9dfcc8c7ff4c9996f0b9446c4c4aec87b4a",
   "scope": "branch-end",
   "vendors": [
     "openai",
@@ -342,6 +342,42 @@
         }
       ],
       "notes": "Verdict was extracted from the JSON envelope result field after a no-tools Claude Code retry; earlier toolful attempts were nonconforming."
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "0d80c9dfcc8c7ff4c9996f0b9446c4c4aec87b4a",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "contract": "PASS",
+        "tests": "PASS",
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "notes": "All round-4 findings and the fix-induced findings were rechecked. The final deleted-vocabulary repair preserves the tool-free bundle semantics and introduced no issue."
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "0d80c9dfcc8c7ff4c9996f0b9446c4c4aec87b4a",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "contract": "PASS",
+        "tests": "PASS",
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "notes": "The no-tools Claude Code result was extracted from the JSON envelope as conforming plain YAML. It confirmed the vocabulary repair preserves the fail-closed bundle contract and introduces no issue."
     }
   ],
   "probes": [
@@ -383,6 +419,30 @@
       "sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "result": "needs-revision (clean environment: 2 failed, 2016 passed; missing wcwidth)",
       "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/blind-run-observations.txt",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py -q",
+      "sha": "0d80c9dfcc8c7ff4c9996f0b9446c4c4aec87b4a",
+      "result": "pass (11 passed)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see recorded commands in the report",
+      "sha": "0d80c9dfcc8c7ff4c9996f0b9446c4c4aec87b4a",
+      "result": "pass after the recorded fixes",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-dev.txt python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "0d80c9dfcc8c7ff4c9996f0b9446c4c4aec87b4a",
+      "result": "pass (core: 2025 passed, 2 skipped, 1 xfailed; design: 183 passed, 1 skipped)",
+      "artifact": "requirements-dev.txt",
       "scope": "branch-end"
     }
   ],
@@ -540,7 +600,7 @@
       "anchor": "loom-code/scripts/loom_checker.py:1848",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-adversary-gpt6",
-      "resolved": null,
+      "resolved": "closed by fbbfe9ba — legacy status now comes from the first committed plan grammar, while new plans remain fail-closed",
       "note": "readiness default and legacy exemption"
     },
     {
@@ -548,7 +608,7 @@
       "anchor": "loom-code/scripts/loom_checker.py:2774",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-codex",
-      "resolved": null,
+      "resolved": "closed by 381de510 — required combined spec review now needs a fresh independent reviewer dispatch",
       "note": "required spec-review independence"
     },
     {
@@ -556,7 +616,7 @@
       "anchor": "loom-code/scripts/loom_checker.py:1886",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-adversary-gpt6",
-      "resolved": null,
+      "resolved": "closed by 381de510 — malformed or oversized references return a controlled validation failure",
       "note": "controlled malformed-reference handling"
     },
     {
@@ -564,7 +624,7 @@
       "anchor": "loom-code/scripts/loom_checker.py:1900",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-adversary-gpt6",
-      "resolved": null,
+      "resolved": "closed by 381de510 — case identifiers must contain an alphanumeric character",
       "note": "meaningful case identifiers"
     },
     {
@@ -572,7 +632,7 @@
       "anchor": "loom-code/contract/manifest.yaml:67",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-codex",
-      "resolved": null,
+      "resolved": "closed by 381de510 — runtime manifest, scaffold mirror, and lane guidance now require formal review only at branch end",
       "note": "runtime contract and lane guidance"
     },
     {
@@ -580,7 +640,7 @@
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/replay-results/comparison.md:51",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-codex",
-      "resolved": null,
+      "resolved": "closed by 381de510 — the published-verdict replay oracle is recorded as inapplicable",
       "note": "replay oracle classification"
     },
     {
@@ -588,7 +648,7 @@
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/plan.md:34",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-codex",
-      "resolved": null,
+      "resolved": "closed by c0431714 — W2 ownership lists are within the eight-file task cap",
       "note": "task file ownership caps"
     },
     {
@@ -596,7 +656,7 @@
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md:40",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-codex",
-      "resolved": null,
+      "resolved": "closed by 381de510 — the report preserves the first cold-run failures, hook block, and later isolated pass without conflation",
       "note": "blind-report accuracy"
     },
     {
@@ -604,7 +664,7 @@
       "anchor": "docs/loom/evidence/mechanisms.yaml:112",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-claude",
-      "resolved": null,
+      "resolved": "closed by 381de510 — the mechanism evaluation points to the permanent package probe",
       "note": "permanent mechanism evaluation"
     },
     {
@@ -612,7 +672,7 @@
       "anchor": "docs/loom/evidence/mechanisms.yaml:112",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-claude",
-      "resolved": null,
+      "dismissed": "recomputation proves the checker rule population remains 31 and the sole net mechanism increase is the new spec field, as confirmed by branch-end-review-claude",
       "note": "mechanism count and release-note agreement"
     },
     {
@@ -620,7 +680,7 @@
       "anchor": "loom-code/skills/review/SKILL.md",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-claude",
-      "resolved": null,
+      "resolved": "closed by 8b4affc2, a68531d3, and 3a91d6b0 — the Claude adapter records the verified no-tools JSON invocation, complete bundle, result extraction, and fail-closed handling",
       "note": "Claude CLI adapter contract"
     },
     {
@@ -628,7 +688,7 @@
       "anchor": "loom-code/scripts/test_probes_charter_release_1_6_0.py",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-claude",
-      "resolved": null,
+      "resolved": "closed by 381de510 — independent version probes and the current Ship word-count pin were restored",
       "note": "release and word-count probes"
     },
     {
@@ -636,8 +696,40 @@
       "anchor": "requirements-dev.txt",
       "origin_sha": "66f963029c839b90ac0da4a1e82f03fd15449e30",
       "raised_by": "branch-end-review-claude",
-      "resolved": null,
+      "resolved": "closed by 381de510 — wcwidth is declared and the isolated package suite passes",
       "note": "clean development dependency set"
+    },
+    {
+      "id": "branch-end-fix-01",
+      "anchor": "loom-code/scripts/loom_checker.py:1848",
+      "origin_sha": "511e7d9e",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by fbbfe9ba — the exemption reads the first committed plan instead of the mutable current text",
+      "note": "legacy-lineage bypass introduced by the first repair"
+    },
+    {
+      "id": "branch-end-fix-02",
+      "anchor": "loom-code/skills/review/SKILL.md",
+      "origin_sha": "511e7d9e",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by 8b4affc2 and a68531d3 — Claude receives every required byte without truncation and the fail-closed rule has an affirmative polarity test",
+      "note": "incomplete self-contained Claude bundle"
+    },
+    {
+      "id": "branch-end-fix-02-t1",
+      "anchor": "loom-code/scripts/test_review_station_text.py",
+      "origin_sha": "1ccb0d20",
+      "raised_by": "branch-end-review-claude",
+      "resolved": "closed by a68531d3 — the test selects the exact blocking sentence and rejects negated wording",
+      "note": "bundle test checked vocabulary but not semantic polarity"
+    },
+    {
+      "id": "branch-end-fix-03",
+      "anchor": "loom-code/skills/review/SKILL.md",
+      "origin_sha": "519ae9dc",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by 3a91d6b0 — incomplete or oversized input blocks the Claude leg and checkpoint without recording a missing CLI or substituting a reviewer",
+      "note": "incomplete bundle was incorrectly mapped to the missing-CLI fallback"
     }
   ],
   "dispatch": [
@@ -917,7 +1009,7 @@
     }
   ],
   "cost": {
-    "rounds": 4,
+    "rounds": 5,
     "dispatches": 32,
     "cap_changes": [],
     "hours_plan_to_pr": null
