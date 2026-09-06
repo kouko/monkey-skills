@@ -796,11 +796,19 @@
       "started": "2026-09-06T11:26:01+0800",
       "fresh_context": false,
       "note": "round 4 confirmation — same reader resumed"
+    },
+    {
+      "task": "branch-end-fix-3",
+      "role": "implementer",
+      "agent_id": "impl-be-fix3-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T11:28:58+0800",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 21,
+    "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": null
   }
