@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "4e1582015c2258ab2463c4e8c2f51d0d97ddb035",
+  "reviewed_sha": "bdede55d5f8cf602d47577066596aa3e15dd3a1a",
   "scope": "spec",
   "vendors": [
     "openai"
@@ -120,6 +120,35 @@
         "spec-03 unfixed: ordering is corrected, but permitted closure exceptions remain unspecified. spec-04 unfixed: current-state evidence is corrected, but execution-time content changes remain unguarded by the stated existing checks. spec-05 fixed: measurement now has a defined Ship-to-push boundary and observes baseline counts.",
         "HEAD matches the requested SHA. Reviewed only the fix delta, previous findings, and directly relevant sources; no probes, blind run, timing measurement, or repository modifications were performed."
       ]
+    },
+    {
+      "round": 3,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "PASS",
+      "sha": "bdede55d5f8cf602d47577066596aa3e15dd3a1a",
+      "spec_sha": "1a156ed",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "PASS",
+        "design-conformance": "N/A — DESIGN.md is absent; the previously verified waiver remains applicable.",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "spec-06 fixed: the amended intent supplies all six Acceptance lines and assigns observed package execution to the local push gate; spec.md:2 references that amendment, and its requirements map to the updated Acceptance lines.",
+        "spec-03 fixed: spec.md:23, :36, and :59 explicitly preserve the existing mechanically validated review-only and intent-status-only close shapes while invalidating other tracked-content changes.",
+        "spec-04 fixed: spec.md:8 and :37 require pre/post execution HEAD and working-tree validation; :52 correctly identifies its absence from the current implementation. Design re-look: continue with the corrected design. HEAD matches; this verdict covers the specification fixes only, with no probes, blind run, implementation verification, or file modifications."
+      ]
     }
   ],
   "probes": [],
@@ -185,14 +214,14 @@
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:47",
       "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
       "raised_by": "spec-risk-review-codex",
-      "resolved": ""
+      "resolved": "fixed by c988a3a5 — existing review-only and intent-close shapes are preserved explicitly"
     },
     {
       "id": "spec-04",
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
       "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
       "raised_by": "spec-risk-review-codex",
-      "resolved": ""
+      "resolved": "fixed by c988a3a5 — post-execution HEAD and working-tree recomputation is required"
     },
     {
       "id": "spec-05",
@@ -206,7 +235,7 @@
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
       "origin_sha": "56024c091402ed2d8c886ea753f2bb579e0ddf87",
       "raised_by": "spec-risk-review-codex",
-      "resolved": ""
+      "resolved": "fixed by ddee7445 and c988a3a5 — amended intent and spec share the same six Acceptance outcomes"
     }
   ],
   "dispatch": [
@@ -244,7 +273,7 @@
     }
   ],
   "cost": {
-    "rounds": 2,
+    "rounds": 3,
     "dispatches": 4,
     "cap_changes": [],
     "hours_plan_to_pr": null
