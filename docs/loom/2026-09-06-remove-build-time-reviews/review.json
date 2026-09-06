@@ -132,6 +132,52 @@
         }
       ],
       "notes": "Claude Code 2.1.263, model alias opus, effort high; confirmed-behavior and cited baseline metrics independently verified."
+    },
+    {
+      "round": 2,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "NEEDS_REVISION",
+      "sha": "621c83230be0d1c291f23587a726f2603e3a874d",
+      "spec_sha": "658b69eb7bdcfa4d3635267497691f8c4d484384",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS_WITH_NOTES",
+        "spec-conformance": "PASS_WITH_NOTES",
+        "design-conformance": "N/A — no DESIGN.md; KICKOFF explicitly waives it for this plugin repository",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:8",
+          "text": "issue (blocking): Mechanical coverage lacks a declared task-to-Acceptance reference and case association, so a plan could omit an Acceptance behaviour while still carrying both labels.",
+          "fix": "Define compact task-to-Acceptance references and per-reference case syntax, reject missing or nonexistent references and empty cases, and keep scenario detail in the spec."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:38",
+          "text": "issue (blocking): The universal new plan syntax and declaration checks contradict the byte-preserved legacy plan and legacy-spec compatibility paths.",
+          "fix": "Apply new readiness syntax only to newly authored plans; preserve legacy test contracts, treat missing legacy spec declarations as review-required, and add both compatibility cases."
+        },
+        {
+          "severity": "important",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:26",
+          "text": "issue (blocking): The pinned replay applies one aggregate staged patch and provides neither a committed-plan start nor per-task outputs, so task-by-task replay is not executable.",
+          "fix": "Pin a committed-plan start and an ordered task-to-commit or checksummed-patch mapping, exact application and Task-trailer steps, expected RED handling, and permanent-command locations."
+        }
+      ],
+      "notes": "Single risk-triggered pre-build reader covering spec and adversarial concerns; no blind run."
     }
   ],
   "probes": [
@@ -235,43 +281,68 @@
       "id": "spec-09",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
       "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
-      "raised_by": "spec-review-codex"
+      "raised_by": "spec-review-codex",
+      "resolved": "closed by b9c0cdec — the fixture now points at a clone-reachable base and a committed patch"
     },
     {
       "id": "spec-10",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
       "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
-      "raised_by": "spec-review-codex"
+      "raised_by": "spec-review-codex",
+      "resolved": "closed by b9c0cdec — commands, prompts, clocks, and artifact paths are pinned"
     },
     {
       "id": "spec-11",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:19",
       "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
-      "raised_by": "spec-review-codex"
+      "raised_by": "spec-review-codex",
+      "resolved": "closed by b9c0cdec — task order and event predicates distinguish review waiting from repair time"
     },
     {
       "id": "spec-12",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:16",
       "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
-      "raised_by": "spec-review-codex"
+      "raised_by": "spec-review-codex",
+      "resolved": "closed by b9c0cdec — effective lanes and user declarations are stated separately"
     },
     {
       "id": "spec-13",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:10",
       "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
-      "raised_by": "spec-review-claude"
+      "raised_by": "spec-review-claude",
+      "resolved": "closed by b9c0cdec — the existing Test line and replacement checker rule carry the obligation"
     },
     {
       "id": "spec-14",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:41",
       "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
-      "raised_by": "spec-review-claude"
+      "raised_by": "spec-review-claude",
+      "resolved": "closed by b9c0cdec — current-state evidence cites build section 4 item 5"
     },
     {
       "id": "spec-15",
       "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:43",
       "origin_sha": "71d61a783c65e93c989348bcdec269aa4d6b9b2f",
-      "raised_by": "spec-review-claude"
+      "raised_by": "spec-review-claude",
+      "resolved": "closed by b9c0cdec — current-state evidence cites build section 5 Wave end"
+    },
+    {
+      "id": "spec-16",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:8",
+      "origin_sha": "621c83230be0d1c291f23587a726f2603e3a874d",
+      "raised_by": "spec-risk-review-codex"
+    },
+    {
+      "id": "spec-17",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:38",
+      "origin_sha": "621c83230be0d1c291f23587a726f2603e3a874d",
+      "raised_by": "spec-risk-review-codex"
+    },
+    {
+      "id": "spec-18",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/spec.md:26",
+      "origin_sha": "621c83230be0d1c291f23587a726f2603e3a874d",
+      "raised_by": "spec-risk-review-codex"
     }
   ],
   "dispatch": [
@@ -336,7 +407,7 @@
     }
   ],
   "cost": {
-    "rounds": 1,
+    "rounds": 2,
     "dispatches": 7,
     "cap_changes": [],
     "hours_plan_to_pr": null
