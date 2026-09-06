@@ -554,6 +554,46 @@
         "The remaining gap can stay within this design if the accepted launch form and local-remote regression prove inherited functions cannot shadow the trusted executable.",
         "The final real-entrypoint measurement otherwise preserves 14-to-7 calls, equal release verdicts, and lower median wait."
       ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
+      "dimension_scores": {
+        "security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3249", "status": "fixed", "evidence": "The standard command builtin bypasses the inherited absolute-executable function in the supported-shell boundary, with Bash and zsh regressions."},
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58", "status": "unfixed", "evidence": "The language inconsistency remains behaviorally consistent and nonblocking so the confirmed fingerprint is unchanged."},
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:11", "status": "fixed", "evidence": "The report now names the exact existing canonical immutable-refspec test."}
+      ],
+      "findings": [],
+      "notes": ["design re-look: continue fixing", "The implementation, regressions, measurement, report, and durable memory agree on the supported-shell trust boundary."]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3249", "status": "fixed", "evidence": "The command builtin and Bash/zsh regressions close inherited executable-function shadowing inside the declared supported-shell boundary."}
+      ],
+      "findings": [
+        {"severity": "blocking", "dimension": "security", "anchor": "loom-code/skills/ship/SKILL.md:260", "text": "The accepted Git command can still invoke a repository-configurable pre-push hook after the gate releases it; that hook can issue an unvalidated second push.", "fix": "Make --no-verify a fixed validated token, add Bash/zsh local-remote regressions, and refresh the final versioned-entrypoint measurement."}
+      ],
+      "notes": ["design re-look: continue fixing", "The command builtin fix closes branch-end-05, but the post-gate pre-push hook path remains open."]
     }
   ],
   "probes": [
@@ -752,6 +792,13 @@
       "id": "branch-end-05",
       "anchor": "loom-code/scripts/loom_checker.py:3249",
       "origin_sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "raised_by": "branch-end-reader-b-codex-cli",
+      "resolved": "fixed by 7d06f948 and f6e58b72 — the standard command builtin bypasses inherited absolute-executable functions in Bash and zsh"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "loom-code/skills/ship/SKILL.md:260",
+      "origin_sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
       "raised_by": "branch-end-reader-b-codex-cli",
       "resolved": ""
     }
@@ -999,7 +1046,7 @@
     }
   ],
   "cost": {
-    "rounds": 7,
+    "rounds": 8,
     "dispatches": 30,
     "cap_changes": [],
     "hours_plan_to_pr": null
