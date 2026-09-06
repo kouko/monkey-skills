@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "478773f94d9f565a9e4f339f487098927f1e171e",
+  "reviewed_sha": "695f984c9e81a81db207265393aaf43f7187ea27",
   "scope": "branch-end",
   "vendors": [
     "openai",
@@ -410,6 +410,105 @@
       },
       "findings": [],
       "notes": "Confirmed in the same Claude Code session that the records-only nit batch fixes stale evidence and changes no behavior or scope."
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "NEEDS_REVISION",
+      "sha": "ba100e9e1f7be7788f90acecb0bdc11e9b2743ec",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION",
+        "contract": "NEEDS_REVISION",
+        "tests": "NEEDS_REVISION",
+        "cross-task-coherence": "NEEDS_REVISION"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:2502",
+          "text": "The first null-placeholder repair accepted a second closure when the other outcome already contained evidence.",
+          "fix": "Require both outcomes to be unresolved before the transition and exactly one to be populated afterward; test both directions."
+        },
+        {
+          "severity": "important",
+          "anchor": ".codex/hooks/loom_checker.py:2495",
+          "text": "The committed Codex checker mirror still contained the old predicate.",
+          "fix": "Regenerate the mirror and verify its body matches the canonical checker."
+        }
+      ],
+      "notes": "The direct adversary runner preserved all 11 cases; the closure predicate and mirror required another fix."
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "e0c1d7a57691afda7c33ceb891bcbe6948de0583",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "contract": "PASS",
+        "tests": "PASS",
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "notes": "Both closure directions are protected, exactly one outcome may be populated, and the generated Codex checker body matches the canonical checker."
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "e0c1d7a57691afda7c33ceb891bcbe6948de0583",
+      "dimension_scores": {
+        "correctness": "PASS",
+        "contract": "PASS",
+        "tests": "PASS",
+        "cross-task-coherence": "PASS"
+      },
+      "findings": [],
+      "notes": "The resumed no-tools Claude review confirmed the valid null transition, both sequential double-close guards, mirror agreement, and all 11 directly executable adversarial cases."
+    },
+    {
+      "round": 9,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+      "dimension_scores": {
+        "records-only": "PASS",
+        "scope-preservation": "PASS"
+      },
+      "findings": [],
+      "notes": "Confirmed that the final blind-run report update matches the reviewed push-gate fixes and changes no behavior or scope."
+    },
+    {
+      "round": 9,
+      "scope": "branch-end",
+      "reviewer": "branch-end-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-opus-5 via Claude Code 2.1.263",
+      "lens": "full",
+      "verdict": "PASS",
+      "sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+      "dimension_scores": {
+        "records-only": "PASS",
+        "scope-preservation": "PASS"
+      },
+      "findings": [],
+      "notes": "The same Claude Code session confirmed the full current report preserves failed history, accurately records the 2028-test result and push-gate remediation, and changes no behavior."
     }
   ],
   "probes": [
@@ -500,6 +599,46 @@
       "result": "pass (core: 2025 passed, 2 skipped, 1 xfailed; design: 183 passed, 1 skipped)",
       "artifact": "requirements-dev.txt",
       "scope": "branch-end"
+    },
+    {
+      "kind": "package-tests",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+      "result": "pass in an isolated requirements-dev environment (core: 2028 passed, 2 skipped, 1 xfailed; design: 183 passed, 1 skipped)",
+      "artifact": "requirements-dev.txt",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+      "result": "pass (readiness mutation cases)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+      "result": "pass (review independence and missing dependency cases)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+      "result": "pass (staleness, foreign cwd, and legacy-claim cases; 11 total)",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "scope": "branch-end"
+    },
+    {
+      "kind": "blind-run",
+      "command": "see recorded commands in the report",
+      "sha": "695f984c9e81a81db207265393aaf43f7187ea27",
+      "result": "pass after push-gate remediation",
+      "artifact": "docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md",
+      "scope": "branch-end"
     }
   ],
   "questions": [
@@ -526,6 +665,11 @@
     {
       "decision_point": 3,
       "text": "以上結果符合你要的嗎？你回覆「OK」後，我就執行 push gate、推送分支並建立 PR。",
+      "type": "done"
+    },
+    {
+      "decision_point": 3,
+      "text": "如果更新後的盲跑結果仍符合你的需求，請再回覆一次「OK」；我就重新執行 push gate、推送並開 PR。",
       "type": "done"
     }
   ],
@@ -791,6 +935,54 @@
       "raised_by": "branch-end-review-codex",
       "resolved": "closed by 3a91d6b0 — incomplete or oversized input blocks the Claude leg and checkpoint without recording a missing CLI or substituting a reviewer",
       "note": "incomplete bundle was incorrectly mapped to the missing-CLI fallback"
+    },
+    {
+      "id": "branch-end-fix-04",
+      "anchor": "loom-code/scripts/loom_checker.py:2486",
+      "origin_sha": "9cd40fad60b242df39bfae5b19810fb2f6716ec6",
+      "raised_by": "loom-checker",
+      "resolved": "closed by ba100e9e and e0c1d7a5 — an absent or null unresolved placeholder may gain exactly one closure, while existing evidence and double-close remain immutable",
+      "note": "append-only checker and review template disagreed about null unresolved placeholders"
+    },
+    {
+      "id": "branch-end-fix-05",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/review.json",
+      "origin_sha": "9cd40fad60b242df39bfae5b19810fb2f6716ec6",
+      "raised_by": "loom-checker",
+      "resolved": "closed in round 9 — package probe records the exact KICKOFF command at the final reviewed content",
+      "note": "package probe wrapper did not byte-match the declared command"
+    },
+    {
+      "id": "branch-end-fix-06",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/evidence/probes/test_branch_end_adversary_gpt6.py",
+      "origin_sha": "9cd40fad60b242df39bfae5b19810fb2f6716ec6",
+      "raised_by": "loom-checker",
+      "resolved": "closed by ba100e9e and round 9 — the artifact directly executes all 11 cases and three final-content records satisfy the adversarial floor",
+      "note": "adversarial evidence was neither directly runnable nor recorded three times at final content"
+    },
+    {
+      "id": "branch-end-fix-07",
+      "anchor": "docs/loom/2026-09-06-remove-build-time-reviews/review.json",
+      "origin_sha": "9cd40fad60b242df39bfae5b19810fb2f6716ec6",
+      "raised_by": "loom-checker",
+      "resolved": "closed in round 9 — review.json records second_vendor as claude and the latest round includes Anthropic",
+      "note": "the user's second-vendor choice was present in conversation but absent from the record"
+    },
+    {
+      "id": "branch-end-fix-08",
+      "anchor": "loom-code/scripts/loom_checker.py:2502",
+      "origin_sha": "ba100e9e1f7be7788f90acecb0bdc11e9b2743ec",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by e0c1d7a5 — both outcomes must start unresolved and exactly one may be populated afterward, with both sequential directions tested",
+      "note": "the first null-placeholder repair admitted a sequential double close"
+    },
+    {
+      "id": "branch-end-fix-09",
+      "anchor": ".codex/hooks/loom_checker.py:2495",
+      "origin_sha": "ba100e9e1f7be7788f90acecb0bdc11e9b2743ec",
+      "raised_by": "branch-end-review-codex",
+      "resolved": "closed by e0c1d7a5 — codex_scaffold regenerated the committed mirror and its self-test passed",
+      "note": "the Codex checker mirror still contained the pre-fix predicate"
     }
   ],
   "dispatch": [
@@ -1085,13 +1277,59 @@
       "started": "2026-09-06T20:21:24+08:00",
       "fresh_context": false,
       "note": "round 6 records-only nit-batch confirmation in the same Claude Code session"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T20:30:00+08:00",
+      "fresh_context": false,
+      "note": "round 7 push-gate fix review"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T20:35:00+08:00",
+      "fresh_context": false,
+      "note": "round 8 continuation for double-close and mirror findings"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T20:35:00+08:00",
+      "fresh_context": false,
+      "note": "round 8 cumulative push-gate fix review in the same Claude Code session"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T20:42:28+08:00",
+      "fresh_context": false,
+      "note": "round 9 records-only blind-report confirmation"
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-review-claude",
+      "model": "claude-code-2.1.263 opus",
+      "started": "2026-09-06T20:42:28+08:00",
+      "fresh_context": false,
+      "note": "round 9 records-only blind-report confirmation in the same Claude Code session"
     }
   ],
   "cost": {
-    "rounds": 6,
-    "dispatches": 34,
+    "rounds": 9,
+    "dispatches": 39,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
-  "charter": "1.0"
+  "charter": "1.0",
+  "second_vendor": "claude"
 }
