@@ -5,6 +5,26 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] — 2026-09-07 — graduated probes survive the squash merge
+
+`docs/loom/2026-09-06-graduated-probes-survive-squash/`.
+
+1. `rehearse_probes.py` runs a second shape in the same invocation: the
+   branch squashed to one commit on its trunk, so a probe that passes only
+   because it still sees one of the branch's own commits goes red before
+   graduation instead of after the squash merge lands. The trunk must be an
+   ancestor of HEAD, and its remote-tracking ref must be at or ahead of any
+   local trunk the branch already contains; otherwise the rehearsal refuses
+   with the reason and asks for a rebase or a fetch.
+2. `loom_checker.py plan-edits` reports NOT APPLICABLE, at exit 0, for a
+   shipped change whose plan commit the squash merge removed -- only when
+   the intent's closed status is committed and reachable from HEAD and the
+   current intent is present, parseable and carries exactly one `status:`
+   line; every other shape still blocks.
+3. The build station's graduation paragraph names the squashed shape and
+   its trunk precondition inside the registered rehearsal gate; both
+   sentences are pinned.
+
 ## [1.8.0] — 2026-09-06 — task-test Build and one branch-end review
 
 budget-exception: artifact:spec.pre-build-review — the explicit risk decision
