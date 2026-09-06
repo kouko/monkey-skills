@@ -11,7 +11,7 @@ charter: 1.0
 - Risk: agent-decided — attack omissions and bypasses before checker implementation; this high-risk gate task is adversary-first.
 
 **W0-02 Checker and plan-contract enforcement**  after: W0-01  acceptance: 1,2,6
-- Files: `loom-code/scripts/loom_checker.py`, `loom-code/scripts/test_loom_checker_intake.py`, `loom-code/scripts/test_loom_checker_cli.py`, `loom-code/scripts/test_loom_checker_hardening.py`, `loom-code/contract/manifest.yaml`, `loom-code/contract/templates/plan.md`, `loom-code/contract/templates/spec-minimal.md`
+- Files: `loom-code/scripts/loom_checker.py`, `loom-code/scripts/test_loom_checker_intake.py`, `loom-code/scripts/test_loom_checker_cli.py`, `loom-code/scripts/test_loom_checker_hardening.py`, `loom-code/contract/manifest.yaml`, `loom-code/contract/templates/*.md`, `docs/loom/evidence/mechanisms.yaml`
 - Test: A1 positive: paired-plan; negative: empty-or-missing-case. A2 positive: one-required-reader; boundary: legacy-two-reader. A6 positive: lane-independent; boundary: gate-path-full.
 - Risk: agent-decided — preserve legacy records while changing new-plan intake; keep existing rule IDs except the one-for-one budget replacement.
 
