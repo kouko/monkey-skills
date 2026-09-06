@@ -1,0 +1,69 @@
+{
+  "reviewed_sha": "4e1582015c2258ab2463c4e8c2f51d0d97ddb035",
+  "scope": "spec",
+  "vendors": [
+    "openai"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "當這個改動完成後，你希望達成什麼結果？例如：如果 Ship 的 HEAD 與 branch-end 已驗證的 commit 完全相同，就直接重用既有測試證據；只要程式或測試有任何變更，才重跑完整 suite。這是你要的嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "下一個要確認的是品質底線：哪些情況絕對不能重用舊結果？你希望還有哪些情況一定要強制重跑？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "對於沒有設定安全範圍的 repo，你是否同意預設仍重跑完整 suite，避免 Loom 自行猜測哪些變更『應該沒影響』？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Claude 作為第二位讀者？會多花幾分鐘與一些額度。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "請確認以上就是你要的範圍。",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這會修正剛才 intent 的 Proposed outcome，但不改變你要的外部結果：完整 suite 仍只跑一次，品質底線不降低。確認改成這個方向嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 2,
+      "text": "這個行為符合你的預期嗎？",
+      "type": "behaviour"
+    },
+    {
+      "decision_point": 2,
+      "text": "這就是你預期的修改後機制嗎？",
+      "type": "behaviour"
+    }
+  ],
+  "open_findings": [],
+  "dispatch": [
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T23:45:14+08:00",
+      "fresh_context": true
+    }
+  ],
+  "cost": {
+    "rounds": 0,
+    "dispatches": 1,
+    "cap_changes": [],
+    "hours_plan_to_pr": null
+  },
+  "charter": "1.0"
+}
