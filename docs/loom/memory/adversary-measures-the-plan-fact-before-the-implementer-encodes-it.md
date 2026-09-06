@@ -26,7 +26,13 @@ is a count measures the count first and reports it; the orchestrator
 compares it with the plan's Test line before dispatching the implementer.
 On disagreement, amend the un-landed task line (the plan charter's
 `unlanded-task-amended-with-reason` policy, reason in the commit
-message), tell the implementer which probe assertion encodes the old
+message) — and land that amendment INTO the task's own worktree branch
+before its `Task:` commit is made, because `plan.edits-after-commit`
+reads "landed" by git topology, not by wall clock: an amendment on the
+trunk that the task branch never merged is, to the checker, a change
+made after the task landed, and the amended line then has to be reverted
+to the plan commit's text with the correction surviving only in the
+amendment commit's message and in this store, tell the implementer which probe assertion encodes the old
 fact and that it may correct that one assertion in its own commit, and
 let the blind-run report explain the delta to the user in plain words.
 The plan's number is never defended against a measurement.
