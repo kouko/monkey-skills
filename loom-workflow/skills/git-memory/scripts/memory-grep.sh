@@ -481,7 +481,8 @@ extract_commits_ndjson() {
   # would then fault on the very variable the trap exists to clean up.
 
   # ─── one-time capability probe (branch-end fix, W1-02; fatal-substring
-  # fix, closing-review round; fatal-write fix, this round) ───────────
+  # fix, closing-review round; fatal-write fix, round 4; fatal-fallthrough
+  # fix, round 5, design re-look — see below) ───────────────────────────
   # The probe used to run against the repo's own HEAD and compare by
   # SUBSTRING (`grep -qF`): any real trailer VALUE that happens to quote
   # the placeholder text verbatim (this repo's own commits, changelog and
@@ -542,57 +543,102 @@ extract_commits_ndjson() {
   # git-call cost over the previous fix (still one `commit-tree` + one
   # `log -1` for the fast path, kept the git-call budget in plan.md
   # W1-02 Risk: <=4 total for the common fast path).
+  #
+  # design re-look (round 5, third round on this same mechanism —
+  # fix-rounds.md's stop-fixing-look-at-the-design rule): weighed
+  # deleting this probe entirely and reading the same fact off the real
+  # extraction pass's own git-log output instead (no synthetic object,
+  # no scratch store, no per-round new failure mode to keep correct).
+  # Rejected: this repo's own pinned regression tests
+  # (test_probes_memory_grep_no_trailers_support.py, "must all still
+  # pass unmodified" per this round's brief) assert the exact SHAPE of a
+  # separate probe call preceding the real extraction pass — e.g.
+  # `calls == ["key", "key"]` for a capable git (the probe, then the
+  # extraction reusing the fast path) and `calls == ["key", "unfold",
+  # "unfold"]` for the unfold-only band (key= probe fails, unfold
+  # fallback probe succeeds, extraction reuses it) — instrumented via a
+  # call-logging git shim. Reading the capability signal out of the real
+  # extraction's own output collapses those into ONE real call for the
+  # capable case (the extraction pass IS the only evidence) and TWO for
+  # the unfold-only case (one real pass per format, no separate probe
+  # call before either), which is a strictly smaller and arguably better
+  # git-call shape but does not match the pinned counts — those tests
+  # encode the current two-phase (probe, then extract) design as their
+  # own contract, and this round's brief forbids modifying them. The
+  # deletion also cannot detect incapacity on a zero-commit range at
+  # all (there is no real record to read the fact off of), where the
+  # synthetic-object probe still can, since it never depends on the
+  # target repo having any history — a real, if narrow, regression the
+  # smaller design would introduce silently. So: repair (a), not delete
+  # (b) — the design question this round asks is answered "the
+  # mechanism's shape is right, its error handling was not": every path
+  # that fails to build the probe now exits 3 loudly (below) instead of
+  # falling through to an unverified extraction, closing the actual
+  # fatal finding without discarding a mechanism three rounds of fixes
+  # already converged on for a reason a smaller shape cannot fully keep.
   trailers_keyfilter='key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold'
   trailers_format="%(trailers:${trailers_keyfilter})"
 
+  # branch-end round 5 (fatal): a failure to build ANY part of this probe
+  # — the scratch store itself, or the synthetic commit object inside it
+  # — used to be treated as INCONCLUSIVE and left the real extraction
+  # pass below to run unguarded, on the UNVERIFIED trailers_format. On a
+  # git old enough to echo `%(trailers:key=…)` back as literal text, that
+  # silently restores the exact failure this whole guard exists to
+  # prevent (a repository full of real trailers reporting "(none in
+  # range)"). "Capability unverified" is not "capability assumed fine":
+  # every failure to build the probe now exits 3 loudly instead of
+  # falling through, unconditionally — not only when the underlying git
+  # also happens to be incapable, since a probe that could not be built
+  # never learned which case it is in.
   probe_objdir=$(mktemp -d "${TMPDIR:-/tmp}/memory-grep-probe.XXXXXX" 2>/dev/null) || probe_objdir=""
-  if [ -n "$probe_objdir" ]; then
-    trap 'rm -rf "${probe_objdir:-}"' EXIT
+  if [ -z "$probe_objdir" ]; then
+    echo "memory-grep.sh: could not verify this git's %(trailers:...) support — the capability probe's scratch object store could not be created (mktemp failed)." >&2
+    echo "Refusing to extract commit trailers unguarded; repair \$TMPDIR/mktemp and retry." >&2
+    exit 3
+  fi
+  trap 'rm -rf "${probe_objdir:-}"' EXIT
 
-    empty_tree_sha='4b825dc642cb6eb9a060e54bf8d69288fbee4904'
-    probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
-      -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
-    if [ -z "$probe_sha" ]; then
-      # SHA-1 empty-tree constant not a valid object name here (e.g. a
-      # SHA-256 repo) — recompute it for this repo's own hash algorithm.
-      # No write: `hash-object` without `-w` only reports the hash.
-      empty_tree_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" hash-object -t tree --stdin \
-        </dev/null 2>/dev/null) || empty_tree_sha=""
-      if [ -n "$empty_tree_sha" ]; then
-        probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
-          -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
-      fi
+  empty_tree_sha='4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+  probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+    -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
+  if [ -z "$probe_sha" ]; then
+    # SHA-1 empty-tree constant not a valid object name here (e.g. a
+    # SHA-256 repo) — recompute it for this repo's own hash algorithm.
+    # No write: `hash-object` without `-w` only reports the hash.
+    empty_tree_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" hash-object -t tree --stdin \
+      </dev/null 2>/dev/null) || empty_tree_sha=""
+    if [ -n "$empty_tree_sha" ]; then
+      probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+        -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
     fi
-  else
-    probe_sha=""
   fi
 
-  # If creating the synthetic object itself fails (this repo's git-dir
-  # unreachable, or some other unusual state), the probe is inconclusive
-  # here, not a literal-echo finding — left to the real extraction
-  # git-log call below, which already fails loudly via its own
-  # PIPESTATUS re-exit.
-  if [ -n "$probe_sha" ]; then
+  if [ -z "$probe_sha" ]; then
+    echo "memory-grep.sh: could not verify this git's %(trailers:...) support — the capability probe's synthetic commit object could not be built in the scratch store." >&2
+    echo "Refusing to extract commit trailers unguarded; investigate this git-dir's state and retry." >&2
+    exit 3
+  fi
+
+  probe_rc=0
+  probe_out=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
+  if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
+    trailers_format='%(trailers:unfold)'
+
+    # ─── second probe: does THIS git understand %(trailers:unfold) at
+    # all? (`%(trailers)`/`unfold` predate `key=`, so a git that fails
+    # the first probe usually understands the fallback — but a git old
+    # enough to understand neither placeholder would echo the fallback
+    # back as literal text too, one band further down the same silent-
+    # empty-digest failure mode the finding named. One more `git log -1`
+    # here, and ONLY on this already-incompatible path — the common
+    # (key=-capable) path never pays this second call.
     probe_rc=0
     probe_out=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
     if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
-      trailers_format='%(trailers:unfold)'
-
-      # ─── second probe: does THIS git understand %(trailers:unfold) at
-      # all? (`%(trailers)`/`unfold` predate `key=`, so a git that fails
-      # the first probe usually understands the fallback — but a git old
-      # enough to understand neither placeholder would echo the fallback
-      # back as literal text too, one band further down the same silent-
-      # empty-digest failure mode the finding named. One more `git log -1`
-      # here, and ONLY on this already-incompatible path — the common
-      # (key=-capable) path never pays this second call.
-      probe_rc=0
-      probe_out=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
-      if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
-        echo "memory-grep.sh: this git does not support the %(trailers:...) --format placeholder (neither the key= filter nor plain unfold) that commit-trailer extraction depends on." >&2
-        echo "Upgrade git to at least the version this script's header states as the assumed minimum (git 2.22+, unverified further) and retry." >&2
-        exit 3
-      fi
+      echo "memory-grep.sh: this git does not support the %(trailers:...) --format placeholder (neither the key= filter nor plain unfold) that commit-trailer extraction depends on." >&2
+      echo "Upgrade git to at least the version this script's header states as the assumed minimum (git 2.22+, unverified further) and retry." >&2
+      exit 3
     fi
   fi
 
