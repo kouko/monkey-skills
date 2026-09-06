@@ -225,11 +225,27 @@
       "model": "gpt-6-astra",
       "started": "2026-09-06T23:58:53+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "spec-design-relook:3",
+      "role": "reviewer",
+      "agent_id": "spec-design-relook-codex",
+      "model": "gpt-6-astra-ultra",
+      "started": "2026-09-07T00:03:33+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec-fix-round:3",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T00:03:33+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 2,
+    "dispatches": 4,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
