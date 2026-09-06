@@ -188,6 +188,14 @@
       "sha": "b0d90f7b1ccbf13e39aacfdbe86c511a145283a3",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "uv run --isolated --with pytest python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py -q --tb=line",
+      "sha": "17417d19",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
     }
   ],
   "questions": [
@@ -369,11 +377,19 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T01:11:45+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-memory",
+      "role": "implementer",
+      "agent_id": "root",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T01:20:11+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 9,
+    "dispatches": 10,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
