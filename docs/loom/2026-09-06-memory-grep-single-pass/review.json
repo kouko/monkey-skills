@@ -333,6 +333,46 @@
       "notes": [
         "Reproduced the substring false-positive against the pre-fix script and confirmed it is closed. Tested the empty, bare, shallow and SHA-256 repository shapes itself: on SHA-256 the commit-tree probe fails against the SHA-1 empty-tree constant and the guard degrades to unguarded extraction, judged the right failure direction and practically unreachable because a SHA-256-capable git is strictly newer than the git the guard exists for. Re-derived the narrowed Acceptance 2 exception end to end from the report's own recipe. Confirmed cost.dispatches follows the array-population rule across three consecutive snapshots. Did not notice the object write the other reader found."
       ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-codex",
+      "vendor": "codex",
+      "model": "gpt-5-codex",
+      "lens": "code + docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
+          "text": "issue (blocking): when mktemp -d fails the capability probe is treated as inconclusive and extraction runs unguarded, restoring the original silent-data-loss path on a git that echoes unsupported placeholders - a repository containing memory exits 0 with an empty digest.",
+          "fix": "Fail loudly with exit 3 whenever the scratch store or the synthetic probe object cannot be created; pin it with a shim that fails mktemp while git echoes the placeholder."
+        }
+      ],
+      "notes": [
+        "branch-end-06 fixed: every probe invocation overrides inherited GIT_OBJECT_DIRECTORY with a unique temporary store, the EXIT trap removes it on normal, exit-3 and error paths, inherited GIT_ALTERNATE_OBJECT_DIRECTORIES can only add read sources, concurrent runs use distinct directories, and the SHA-256 fallback derives the empty-tree hash without writing."
+      ]
     }
   ],
   "probes": [
@@ -703,6 +743,13 @@
       "id": "branch-end-06",
       "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:518",
       "origin_sha": "e62652ef8c0dec9701c1be29ebef230b35a81fdb",
+      "raised_by": "rev-be-mg-codex",
+      "resolved": "closed by 3379531b - the probe's git calls run against an isolated temporary object store; confirmed by rev-be-mg-codex round 5, and it raised branch-end-07"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
+      "origin_sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
       "raised_by": "rev-be-mg-codex"
     }
   ],
@@ -905,12 +952,23 @@
       "started": "2026-09-06T11:42:00+0800",
       "fresh_context": false,
       "note": "round 5 confirmation — same reader resumed"
+    },
+    {
+      "task": "branch-end-fix-4",
+      "role": "implementer",
+      "agent_id": "impl-be-fix4-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T11:43:55+0800",
+      "fresh_context": true
     }
   ],
   "cost": {
-    "rounds": 4,
-    "dispatches": 24,
+    "rounds": 5,
+    "dispatches": 25,
     "cap_changes": [],
     "hours_plan_to_pr": null
-  }
+  },
+  "notes": [
+    "design re-look: the capability guard has now taken a finding in three consecutive rounds (substring comparison, then an object written into the target repo, then an inconclusive path when the scratch store cannot be made). Round 6 weighs removing the probe rather than repairing it: the extraction already fetches the field, so an unexpanded placeholder can be recognised in the data itself at zero extra cost, with no synthetic object, no temporary store and no third failure mode. The implementer decides and records why."
+  ]
 }
