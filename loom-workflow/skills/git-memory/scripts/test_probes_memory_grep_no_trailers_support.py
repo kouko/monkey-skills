@@ -298,3 +298,127 @@ def test_extract_commits_unfold_only_git_hostile_trailer_recovers_via_fallback(t
         f"run and succeed, and the real extraction pass to reuse that "
         f"fallback format, got: {calls!r}"
     )
+
+
+# ─── fatal fix: the capability probe must write nothing into the target
+# repository's own object database (any git call it makes must be
+# isolated to a throwaway store, never the real .git/objects) ─────────
+
+def _count_loose_and_packed_objects(repo: Path) -> int:
+    out = subprocess.run(
+        ["git", "-C", str(repo), "cat-file", "--batch-all-objects", "--batch-check=%(objectname)"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    return len([line for line in out.splitlines() if line.strip()])
+
+
+def _fsck_unreachable(repo: Path) -> list[str]:
+    result = subprocess.run(
+        ["git", "-C", str(repo), "fsck", "--unreachable", "--no-dangling"],
+        capture_output=True, text=True,
+    )
+    return [line for line in (result.stdout + result.stderr).splitlines() if "unreachable" in line]
+
+
+def test_probe_writes_no_objects_into_the_target_repository(tmp_path: Path) -> None:
+    """The capability probe must never leave a trace in the repository it
+    is inspecting: object count before and after a run is identical, and
+    `git fsck --unreachable` finds nothing new. A `commit-tree` call made
+    directly against the target repo's own object database — the
+    previous fix's shape — leaves exactly the kind of orphan this test
+    catches: it was RED against that code (object count off by one, one
+    new unreachable commit reported).
+    """
+    repo = _memory_repo(tmp_path)
+    env = os.environ.copy()
+
+    before = _count_loose_and_packed_objects(repo)
+    result = _run(repo, "--no-pr", "--since=2019-01-01", env=env)
+    after = _count_loose_and_packed_objects(repo)
+
+    assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
+    assert after == before, (
+        f"expected object count unchanged by a read-only probe, went from "
+        f"{before} to {after}"
+    )
+    unreachable = _fsck_unreachable(repo)
+    assert unreachable == [], (
+        f"expected no new unreachable objects after the probe, found: {unreachable!r}"
+    )
+
+
+def test_probe_writes_no_objects_into_a_bare_target_repository(tmp_path: Path) -> None:
+    """Same guarantee, on a bare repository (no working tree) — the probe
+    must not depend on one, and must not write into the bare repo's own
+    object store either.
+    """
+    repo = tmp_path / "bare.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(repo)], check=True)
+    # give it one real commit with a real Decision: trailer, via a throwaway
+    # clone so the bare repo has actual history to extract from.
+    work = tmp_path / "work"
+    work.mkdir()
+    subprocess.run(["git", "clone", "-q", str(repo), str(work)], check=True)
+    _init_repo(work)
+    _commit(work, "2024-01-01", "do the thing", body=b"Decision: use X because Y")
+    subprocess.run(["git", "push", "-q", "origin", "HEAD:refs/heads/main"], cwd=work, check=True)
+    subprocess.run(["git", "symbolic-ref", "HEAD", "refs/heads/main"], cwd=repo, check=True)
+
+    env = os.environ.copy()
+    before = _count_loose_and_packed_objects(repo)
+    result = _run(repo, "--no-pr", "--since=2019-01-01", env=env)
+    after = _count_loose_and_packed_objects(repo)
+
+    assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
+    assert "Decision: use X because Y" in result.stdout
+    assert after == before, (
+        f"expected object count unchanged in the bare repo, went from {before} to {after}"
+    )
+
+
+def test_empty_repository_still_exits_128_unchanged(tmp_path: Path) -> None:
+    """Pre-existing behavior this fix must not alter: a repository with
+    no commits at all still fails with git's own exit 128 from the real
+    extraction pass — the capability probe itself must not change this,
+    since it never depends on the target repo having any history.
+    """
+    repo = tmp_path / "empty-repo"
+    repo.mkdir()
+    _init_repo(repo)
+
+    env = os.environ.copy()
+    result = _run(repo, "--no-pr", "--since=2019-01-01", env=env)
+
+    assert result.returncode == 128, (
+        f"expected exit 128 (git's own error on an empty repo), got "
+        f"{result.returncode}; stdout={result.stdout!r} stderr={result.stderr!r}"
+    )
+
+
+def test_capability_probe_survives_sha256_object_format(tmp_path: Path) -> None:
+    """A SHA-256 repository's hash-object names are not the SHA-1 empty
+    tree constant, so a probe hard-coded to that constant cannot resolve
+    it. The fix must derive the empty tree hash for whatever hash
+    algorithm the target repo actually uses (or otherwise degrade
+    gracefully) rather than silently skipping capability detection, and
+    must still write nothing into the target repo's own object store.
+    """
+    repo = tmp_path / "sha256-repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", "--object-format=sha256", str(repo)], check=True)
+    subprocess.run(["git", "symbolic-ref", "HEAD", "refs/heads/main"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Fixture Bot"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "fixture@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "commit.gpgsign", "false"], cwd=repo, check=True)
+    _commit(repo, "2024-01-01", "do the thing", body=b"Decision: use X because Y")
+
+    env = os.environ.copy()
+    before = _count_loose_and_packed_objects(repo)
+    result = _run(repo, "--no-pr", "--since=2019-01-01", env=env)
+    after = _count_loose_and_packed_objects(repo)
+
+    assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
+    assert "Decision: use X because Y" in result.stdout
+    assert after == before, (
+        f"expected object count unchanged in the SHA-256 repo, went from {before} to {after}"
+    )

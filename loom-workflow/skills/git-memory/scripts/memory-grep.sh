@@ -474,10 +474,14 @@ fi
 extract_commits_ndjson() {
   local all_records path_shas sup_entries rc
   local trailers_keyfilter trailers_format probe_out probe_rc
-  local probe_sha
+  local probe_sha empty_tree_sha
+  # NOT `local`, deliberately: the EXIT trap below fires after this
+  # function returns (the subshell's own exit, not this function's), by
+  # which point a `local` variable's value is already gone — `set -u`
+  # would then fault on the very variable the trap exists to clean up.
 
   # ─── one-time capability probe (branch-end fix, W1-02; fatal-substring
-  # fix, closing-review round) ────────────────────────────────────────
+  # fix, closing-review round; fatal-write fix, this round) ───────────
   # The probe used to run against the repo's own HEAD and compare by
   # SUBSTRING (`grep -qF`): any real trailer VALUE that happens to quote
   # the placeholder text verbatim (this repo's own commits, changelog and
@@ -485,14 +489,12 @@ extract_commits_ndjson() {
   # a fully capable git, wrongly concluding the placeholder went
   # unexpanded. Repository content must never be able to reach this
   # decision at all, so the probe runs against a SYNTHETIC commit object
-  # this call creates on the fly — the well-known empty tree plus one
-  # commit message with no trailers of its own — never against HEAD or
-  # any ref. On a capable git, filtering that message's (zero) trailers
-  # always expands to the empty string; an incapable git still echoes
-  # the placeholder back as literal, non-empty text regardless of which
-  # commit it is pointed at. Exact-emptiness is then the only comparison
-  # needed — no need for exact-vs-substring string equality on real
-  # content, since real content never enters the comparison.
+  # — the well-known empty tree plus one commit message with no trailers
+  # of its own — never against HEAD or any ref. On a capable git,
+  # filtering that message's (zero) trailers always expands to the empty
+  # string; an incapable git still echoes the placeholder back as
+  # literal, non-empty text regardless of which commit it is pointed at.
+  # Exact-emptiness is then the only comparison needed.
   #
   # (Rejected: exact string equality between probe_out and the attempted
   # placeholder, still run against HEAD — smaller diff from the old
@@ -501,25 +503,78 @@ extract_commits_ndjson() {
   # it; a probe that structurally cannot see any commit-message content
   # closes that off entirely rather than narrowing it.)
   #
-  # If creating the synthetic object itself fails (unwritable object
-  # database, unusual repo state — e.g. a SHA-256 repo, where the
-  # constant below names a SHA-1 empty tree that does not exist), the
-  # probe is inconclusive here, not a literal-echo finding — left to the
-  # real extraction git-log call below, which already fails loudly via
-  # its own PIPESTATUS re-exit.
+  # This round's fatal finding: the previous fix's `commit-tree` call
+  # created that synthetic commit object INSIDE the target repo's own
+  # object database — on every single run. It is never referenced by any
+  # ref, so it is immediately an orphan `git fsck --unreachable` object,
+  # accumulating garbage on every invocation of what is meant to be a
+  # read-only retrieval tool. Rejected repair: comparing probe output
+  # differently while still writing to $REPO — the write itself is the
+  # defect, not how its result is read.
   #
-  # The empty tree's hash is a well-known git constant (the SHA-1 of the
-  # empty tree object's fixed byte content) — one `commit-tree` call is
-  # enough; git accepts it as a tree-ish and materializes it on demand,
-  # it needs no separate `hash-object -w` write first (kept the git-call
-  # budget in plan.md W1-02 Risk: <=4 total for the common fast path).
+  # Fix: the probe object is created in a THROWAWAY object store — a
+  # freshly `mktemp -d`'d directory pointed to via `GIT_OBJECT_DIRECTORY`
+  # for every git call the probe makes — never `$REPO/.git/objects`.
+  # `GIT_OBJECT_DIRECTORY` fully substitutes for the primary object store
+  # for that invocation (not additive, unlike
+  # `GIT_ALTERNATE_OBJECT_DIRECTORIES`), so the probe commit lives only
+  # in the scratch directory and is invisible to, and independent of,
+  # $REPO's real objects; `$REPO` is used only for its git-dir context
+  # (config, hash algorithm), never as the object store. The scratch
+  # directory is removed unconditionally when this function's subshell
+  # exits (a bare `mktemp -d` under $TMPDIR, cleaned by a subshell-local
+  # EXIT trap below — this function only ever runs once per script
+  # invocation, inside the `$(extract_commits_ndjson)` command
+  # substitution that already owns its own subshell, so a trap set here
+  # affects only that subshell and fires on every exit path including
+  # `exit 3` below and the PIPESTATUS re-exit further down).
+  #
+  # This also closes the read-only/SHA-256 gap the previous fix's
+  # comment named as an accepted limitation: a real repository whose own
+  # object database is read-only no longer blocks the probe at all (the
+  # probe never touches it), and for a SHA-256 repository — where the
+  # constant below names a SHA-1 empty tree that is not a valid object
+  # name — the empty tree hash is recomputed for whatever hash algorithm
+  # this repo actually uses via one `hash-object` call (no write; it
+  # only reports the hash the content would have), and `commit-tree`
+  # retried with that hash. This fallback only runs when the SHA-1
+  # constant is rejected, so the common (SHA-1) fast path pays no extra
+  # git-call cost over the previous fix (still one `commit-tree` + one
+  # `log -1` for the fast path, kept the git-call budget in plan.md
+  # W1-02 Risk: <=4 total for the common fast path).
   trailers_keyfilter='key=Decision,key=Learning,key=Gotcha,key=Related,key=Supersedes,unfold'
   trailers_format="%(trailers:${trailers_keyfilter})"
-  probe_sha=$(git -C "$REPO" commit-tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904 \
-    -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
+
+  probe_objdir=$(mktemp -d "${TMPDIR:-/tmp}/memory-grep-probe.XXXXXX" 2>/dev/null) || probe_objdir=""
+  if [ -n "$probe_objdir" ]; then
+    trap 'rm -rf "${probe_objdir:-}"' EXIT
+
+    empty_tree_sha='4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+    probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+      -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
+    if [ -z "$probe_sha" ]; then
+      # SHA-1 empty-tree constant not a valid object name here (e.g. a
+      # SHA-256 repo) — recompute it for this repo's own hash algorithm.
+      # No write: `hash-object` without `-w` only reports the hash.
+      empty_tree_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" hash-object -t tree --stdin \
+        </dev/null 2>/dev/null) || empty_tree_sha=""
+      if [ -n "$empty_tree_sha" ]; then
+        probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+          -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
+      fi
+    fi
+  else
+    probe_sha=""
+  fi
+
+  # If creating the synthetic object itself fails (this repo's git-dir
+  # unreachable, or some other unusual state), the probe is inconclusive
+  # here, not a literal-echo finding — left to the real extraction
+  # git-log call below, which already fails loudly via its own
+  # PIPESTATUS re-exit.
   if [ -n "$probe_sha" ]; then
     probe_rc=0
-    probe_out=$(git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
+    probe_out=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
     if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
       trailers_format='%(trailers:unfold)'
 
@@ -532,7 +587,7 @@ extract_commits_ndjson() {
       # here, and ONLY on this already-incompatible path — the common
       # (key=-capable) path never pays this second call.
       probe_rc=0
-      probe_out=$(git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
+      probe_out=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" log -1 --format="$trailers_format" "$probe_sha" 2>/dev/null) || probe_rc=$?
       if [ "$probe_rc" -eq 0 ] && [ -n "$probe_out" ]; then
         echo "memory-grep.sh: this git does not support the %(trailers:...) --format placeholder (neither the key= filter nor plain unfold) that commit-trailer extraction depends on." >&2
         echo "Upgrade git to at least the version this script's header states as the assumed minimum (git 2.22+, unverified further) and retry." >&2
