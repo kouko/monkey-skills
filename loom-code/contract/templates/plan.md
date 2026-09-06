@@ -13,12 +13,9 @@ charter: 1.0
      message. Landed tasks stay as they are. -->
 <wave segmentation; each task gets a stable ID; tasks with no dependency in the same wave can run in parallel>
 
-**<W0-01> <title>**  after: <ids>  review: after-task
-<!-- the first two after-task lines need no reason; the third onward is
-     written as `review: after-task — <reason>`, read by checker rule
-     intake.after-task-budget -->
+**<W0-01> <title>**  after: <ids>  acceptance: <numbers>
 - Files: <files this task touches>            <!-- ≤8 comma-separated entries -->
-- Test: <the failing test written first>      <!-- ≤40 words -->
+- Test: A<n> positive: <case-id>; negative|boundary: <case-id>.  <!-- one pair per referenced Acceptance; ≤40 words -->
 - Risk: <risk and the default choice; mark agent-decided>  <!-- ≤40 words -->
 
 **<Wn-memory> Memory step — graduated probes and store entries**  after: <last task ids>

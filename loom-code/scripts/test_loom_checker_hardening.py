@@ -495,7 +495,7 @@ def test_a_kickoff_added_surface_is_also_enforced(tmp_path: Path) -> None:
     assert "src/widgets/panel.py" in result.stderr
 
 
-# --- P02: the after-task budget ---------------------------------------------
+# --- P02: legacy after-task markers are inert -------------------------------
 
 
 PLAN_HEAD = (
@@ -524,7 +524,7 @@ def _intake_repo(tmp_path: Path, plan_tasks: str) -> Path:
     return repo
 
 
-def test_a_fourth_after_task_without_a_reason_blocks(tmp_path: Path) -> None:
+def test_a_fourth_legacy_after_task_without_a_reason_is_accepted(tmp_path: Path) -> None:
     repo = _intake_repo(
         tmp_path,
         "**W1-01 first** after: none review: after-task\n"
@@ -533,9 +533,7 @@ def test_a_fourth_after_task_without_a_reason_blocks(tmp_path: Path) -> None:
         "**W1-04 fourth** after: W1-03 review: after-task\n",
     )
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
-    assert result.returncode == 1
-    assert "intake.after-task-budget" in blocked_rules(result)
-    assert "W1-03" in result.stderr
+    assert result.returncode == 0, result.stderr
 
 
 def test_extra_after_tasks_carrying_a_reason_are_accepted(tmp_path: Path) -> None:
@@ -688,7 +686,7 @@ def test_a_failing_detected_command_asks_for_a_kickoff_declaration(tmp_path) -> 
 # --- re-review N3: a task line may carry a list bullet ---------------------
 
 
-def test_a_bullet_prefixed_after_task_line_is_still_counted(tmp_path: Path) -> None:
+def test_bullet_prefixed_legacy_after_task_lines_are_inert(tmp_path: Path) -> None:
     repo = _intake_repo(
         tmp_path,
         "**W1-01 first** after: none review: after-task\n"
@@ -697,9 +695,7 @@ def test_a_bullet_prefixed_after_task_line_is_still_counted(tmp_path: Path) -> N
         "* **W1-04 fourth** after: W1-03 review: after-task\n",
     )
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
-    assert result.returncode == 1
-    assert "intake.after-task-budget" in blocked_rules(result)
-    assert "W1-03" in result.stderr and "W1-04" in result.stderr
+    assert result.returncode == 0, result.stderr
 
 
 # --- re-review N4: `fallback` has a grammar --------------------------------

@@ -43,12 +43,13 @@ Make it fast.
 - Everything else.
 
 ## Open questions
-- None yet.
+{open_questions}
 """
 
 SPEC = """# A change — spec
 intent: {change}@abc1234
 {confirmed_behavior}
+{pre_build_review}
 
 ## Requirements
 REQ-1 — fast report
@@ -95,12 +96,40 @@ def write_intent(
     kind: str = "engineering",
     needs_design: str = "no — internal only",
     status: str = "status: confirmed 2026-09-02",
+    open_questions: str = "- None yet.",
     change: str = CHANGE,
 ) -> None:
     path = repo / "docs/loom/intent" / f"{change}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        INTENT.format(kind=kind, needs_design=needs_design, status=status), encoding="utf-8"
+        INTENT.format(
+            kind=kind,
+            needs_design=needs_design,
+            status=status,
+            open_questions=open_questions,
+        ),
+        encoding="utf-8",
+    )
+
+
+def write_plan(repo: Path, task_dag: str, *, change: str = CHANGE) -> None:
+    path = repo / "docs/loom" / change / "plan.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"""# A change — plan
+intent: {change}@abc1234
+charter: 1.0
+
+## Task DAG
+{task_dag}
+
+## Questions asked
+1 — what — none
+
+## Risks
+1. Fixture only.
+""",
+        encoding="utf-8",
     )
 
 
@@ -108,6 +137,7 @@ def write_spec(
     repo: Path,
     *,
     confirmed_behavior: str = "",
+    pre_build_review: str = "",
     change: str = CHANGE,
     sha: bool = True,
 ) -> None:
@@ -116,14 +146,25 @@ def write_spec(
     Pass sha=False to write the pre-W2 shape a test wants rejected."""
     path = repo / "docs/loom" / change / "spec.md"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(SPEC.format(change=change, confirmed_behavior=""), encoding="utf-8")
+    path.write_text(
+        SPEC.format(
+            change=change,
+            confirmed_behavior="",
+            pre_build_review=pre_build_review,
+        ),
+        encoding="utf-8",
+    )
     if not confirmed_behavior:
         return
     # Write the line first, THEN hash: the identity is the file with that
     # line removed, and removing it is not the same as never writing it (the
     # template leaves a blank line in its place).
     path.write_text(
-        SPEC.format(change=change, confirmed_behavior=confirmed_behavior),
+        SPEC.format(
+            change=change,
+            confirmed_behavior=confirmed_behavior,
+            pre_build_review=pre_build_review,
+        ),
         encoding="utf-8",
     )
     if not sha or "@" in confirmed_behavior:
@@ -132,6 +173,7 @@ def write_spec(
         SPEC.format(
             change=change,
             confirmed_behavior=f"{confirmed_behavior} @{spec_confirmation_sha(repo, change)}",
+            pre_build_review=pre_build_review,
         ),
         encoding="utf-8",
     )
@@ -308,6 +350,48 @@ def test_single_reviewer_round_is_blocked(tmp_path: Path) -> None:
     assert "intake.spec-pass" in blocked_rules(result)
 
 
+def test_required_spec_accepts_one_combined_reviewer_without_probe(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo, pre_build_review="pre-build-review: required — public contract")
+    write_review(
+        repo,
+        [dict(verdict("a", "PASS", 1), lens="spec+adversarial")],
+        probes=[],
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_required_spec_rejects_a_plain_single_reader(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo, pre_build_review="pre-build-review: required — public contract")
+    write_review(repo, [verdict("a", "PASS", 1)], probes=[])
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.spec-pass" in blocked_rules(result)
+    assert "spec+adversarial" in result.stderr
+
+
+def test_not_required_spec_skips_formal_review(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(
+        repo,
+        pre_build_review="pre-build-review: not-required — routine internal change",
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_invalid_pre_build_review_declaration_is_blocked(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, needs_design="yes — many states, no spec exists")
+    write_spec(repo, pre_build_review="pre-build-review: maybe")
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.spec-pass" in blocked_rules(result)
+
+
 def test_review_of_something_other_than_the_spec_does_not_count(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     write_intent(repo, needs_design="yes — many states, no spec exists")
@@ -348,6 +432,72 @@ def test_write_spec_does_not_require_a_spec_review(tmp_path: Path) -> None:
     write_intent(repo, needs_design="yes — many states, no spec exists")
     result = run_checker("intake", "write-spec", CHANGE, cwd=repo)
     assert result.returncode == 0, result.stderr
+
+
+def test_new_plan_accepts_positive_and_negative_pair(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, open_questions="- none")
+    write_plan(
+        repo,
+        "**W0-01 First**  after: —  acceptance: 1\n"
+        "- Files: `first.py`\n"
+        "- Test: A1 positive: works; negative: rejects-empty.\n"
+        "- Risk: agent-decided — fixture.\n",
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize(
+    "task_dag",
+    [
+        (
+            "**W0-01 First**  after: —  acceptance: 2\n"
+            "- Files: `first.py`\n"
+            "- Test: A2 positive: works; boundary: edge.\n"
+            "- Risk: agent-decided — fixture.\n"
+        ),
+        (
+            "**W0-01 First**  after: —  acceptance: 1\n"
+            "- Files: `first.py`\n"
+            "- Test: A1 positive: works; negative:\n"
+            "- Risk: agent-decided — fixture.\n"
+        ),
+        (
+            "**W0-01 First**  after: —  acceptance: 1\n"
+            "- Files: `first.py`\n"
+            "- Test: A1 positive: works; negative: rejects-empty.\n"
+            "- Risk: agent-decided — fixture.\n\n"
+            "**W0-02 Second**  after: W0-01\n"
+            "- Files: `second.py`\n"
+            "- Test: second works.\n"
+            "- Risk: agent-decided — fixture.\n"
+        ),
+    ],
+)
+def test_new_plan_rejects_missing_or_invalid_case_contract(
+    tmp_path: Path, task_dag: str
+) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo, open_questions="- none")
+    write_plan(repo, task_dag)
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.test-case-pair" in blocked_rules(result)
+
+
+def test_new_plan_rejects_unresolved_open_questions(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo)
+    write_plan(
+        repo,
+        "**W0-01 First**  after: —  acceptance: 1\n"
+        "- Files: `first.py`\n"
+        "- Test: A1 positive: works; boundary: edge.\n"
+        "- Risk: agent-decided — fixture.\n",
+    )
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert "intake.test-case-pair" in blocked_rules(result)
+    assert "Open questions" in result.stderr
 
 
 def test_missing_spec_file_is_blocked(tmp_path: Path) -> None:
@@ -1067,7 +1217,11 @@ def test_real_ui_flows_over_a_surface_diff_are_fine(tmp_path: Path) -> None:
     path = repo / "docs/loom" / CHANGE / "spec.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        SPEC.format(change=CHANGE, confirmed_behavior="confirmed-behavior: 2026-09-02")
+        SPEC.format(
+            change=CHANGE,
+            confirmed_behavior="confirmed-behavior: 2026-09-02",
+            pre_build_review="",
+        )
         .replace(
             "## UI flows\nN/A",
             "## UI flows\n- `todo list` → every row shows its due date\n",
@@ -1093,7 +1247,7 @@ def test_ui_flows_without_a_flow_line_is_blocked(tmp_path: Path, placeholder: st
     path = repo / "docs/loom" / CHANGE / "spec.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        SPEC.format(change=CHANGE, confirmed_behavior="")
+        SPEC.format(change=CHANGE, confirmed_behavior="", pre_build_review="")
         .replace("## UI flows\nN/A", f"## UI flows\n{placeholder}"),
         encoding="utf-8",
     )
@@ -1112,7 +1266,7 @@ def test_a_single_flow_line_with_either_arrow_is_enough(tmp_path: Path, arrow: s
     path = repo / "docs/loom" / CHANGE / "spec.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        SPEC.format(change=CHANGE, confirmed_behavior="")
+        SPEC.format(change=CHANGE, confirmed_behavior="", pre_build_review="")
         .replace("## UI flows\nN/A", f"## UI flows\n- `todo list` {arrow} rows show the due date"),
         encoding="utf-8",
     )
@@ -1129,7 +1283,7 @@ def write_ui_flows(repo: Path, body: str, change: str = CHANGE) -> None:
     path = repo / "docs/loom" / change / "spec.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        SPEC.format(change=change, confirmed_behavior="")
+        SPEC.format(change=change, confirmed_behavior="", pre_build_review="")
         .replace("## UI flows\nN/A", f"## UI flows\n{body}"),
         encoding="utf-8",
     )

@@ -143,6 +143,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
     fields:
       - {name: intent,             kind: frontmatter, required: true, grammar: "<change-id>@<sha>"}
       - {name: confirmed-behavior, kind: frontmatter, required: false, grammar: "<date> @<spec-blob-sha7>", note: "required when kind: product; the sha is `git hash-object` over the spec WITHOUT this line, i.e. the file as the user saw it, so a spec rewritten after decision point 2 no longer matches"}
+      - {name: pre-build-review,   kind: frontmatter, required: false, grammar: "required|not-required — <reason>", note: "required on new specs; missing on a legacy spec means required and retains its existing review floor"}
       - {name: Requirements,           kind: section, required: true, grammar: "REQ-<n> — <name> … → Acceptance #<n>"}
       - {name: Design decision,        kind: section, required: true}
       - {name: Alternatives considered, kind: section, required: true}
@@ -156,7 +157,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       readers: ["build orchestrator", "implementer (one task each)", "reviewers"]
       must:
         - "Current State Evidence as path plus anchor when no spec exists"
-        - "Task DAG with Files, Test and Risk one line each"
+        - "Task DAG with acceptance ownership plus Files, paired Test and Risk one line each"
         - "Questions asked verbatim"
         - "plan-wide Risks"
       must_not:
@@ -176,7 +177,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
     fields:
       - {name: intent, kind: frontmatter, required: true}
       - {name: spec,   kind: frontmatter, required: false}
-      - {name: Task DAG, kind: section, required: true, grammar: "**<id> <title>** after: <ids> review: after-task?"}
+      - {name: Task DAG, kind: section, required: true, grammar: "**<id> <title>** after: <ids> acceptance: <numbers>; Test: A<n> positive: <id>; negative|boundary: <id>"}
       - {name: Risks,    kind: section, required: true}
       - {name: Current State Evidence, kind: section, required: false, note: "required when needs-design: no"}
   review:
