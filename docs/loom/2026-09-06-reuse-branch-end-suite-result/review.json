@@ -604,11 +604,19 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T01:24:18+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix:6",
+      "role": "adversary",
+      "agent_id": "adv-w0-02-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T01:44:00+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 5,
-    "dispatches": 14,
+    "dispatches": 15,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
