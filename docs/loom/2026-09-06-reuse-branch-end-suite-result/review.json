@@ -180,7 +180,16 @@
       ]
     }
   ],
-  "probes": [],
+  "probes": [
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:0",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "b0d90f7b1ccbf13e39aacfdbe86c511a145283a3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    }
+  ],
   "questions": [
     {
       "decision_point": 1,
@@ -271,21 +280,21 @@
       "anchor": "loom-code/scripts/loom_checker.py:3306",
       "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
       "raised_by": "adv-w0-02-codex",
-      "resolved": ""
+      "resolved": "fixed by b0d90f7b — final selected-repository HEAD and porcelain are recomputed after all executable probes"
     },
     {
       "id": "W0-02-02",
       "anchor": "loom-code/skills/build/SKILL.md:289",
       "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
       "raised_by": "adv-w0-02-codex",
-      "resolved": ""
+      "resolved": "fixed by b0d90f7b — Build records the package command but leaves its complete execution to the local push hook"
     },
     {
       "id": "W0-02-03",
       "anchor": "loom-code/skills/ship/SKILL.md:231",
       "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
       "raised_by": "adv-w0-02-codex",
-      "resolved": ""
+      "resolved": "fixed by b0d90f7b — Ship keeps non-package deterministic checks and no longer runs a pre-hook pytest suite"
     }
   ],
   "dispatch": [
@@ -352,11 +361,19 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T00:52:54+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T01:11:45+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 4,
-    "dispatches": 8,
+    "dispatches": 9,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
