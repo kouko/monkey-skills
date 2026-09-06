@@ -159,13 +159,20 @@ def test_extract_commits_path_scope_external_supersession_retires_record(tmp_pat
 # ─── 3. hostile separator bytes in a trailer value ─────────────────
 
 def test_extract_commits_hostile_separator_value_stays_structurally_valid(tmp_path):
-    """A trailer value containing the script's own internal separators
-    (`\\x1F`, `\\x1E`), a literal tab, the literal text "%x1F", and a
-    double quote + backslash must not corrupt the record: --format=json
-    must stay parseable and the raw value must survive verbatim, and
-    plain output must not crash either. This is a structural invariant
-    (not a byte-for-byte pin) because the pre-change script's own
-    behaviour on this input IS the baseline being pinned.
+    """wave-end:1-03: a trailer value containing the script's own
+    internal separators (`\\x1F`, `\\x1E`), a literal tab, the literal
+    text "%x1F", and a double quote + backslash must not corrupt the
+    record: --format=json must stay parseable and the raw value must
+    survive VERBATIM (exact equality, not a substring check — deleting
+    both separator bytes would have still passed the old substring-only
+    assertions), and plain output must render the value byte-for-byte
+    too. This is a structural invariant (not a byte-for-byte pin
+    against the pre-change script) because the pre-change script's own
+    behaviour on this input IS the baseline being pinned — the
+    subject-side counterpart of this same encoding is pinned against
+    the pre-change script directly by
+    test_extract_commits_subject_with_hostile_separator_byte_round_trips
+    above.
     """
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -181,16 +188,14 @@ def test_extract_commits_hostile_separator_value_stays_structurally_valid(tmp_pa
 
     plain_run = _run(repo, "--no-pr", "--since=2020-01-01")
     assert plain_run.returncode == 0
-    assert "quoted" in plain_run.stdout and "backslash" in plain_run.stdout
+    assert ("  Decision: " + hostile_val + "\n") in plain_run.stdout
 
     json_run = _run(repo, "--no-pr", "--since=2020-01-01", "--format=json")
     assert json_run.returncode == 0
     obj = json.loads(json_run.stdout)  # must not raise
     commits = [c for c in obj["commits"] if "hostile separator" in c["subject"]]
     assert len(commits) == 1
-    assert len(commits[0]["decision"]) == 1
-    assert "quoted" in commits[0]["decision"][0]
-    assert "backslash" in commits[0]["decision"][0]
+    assert commits[0]["decision"] == [hostile_val]
 
 
 def test_extract_commits_subject_with_hostile_separator_byte_round_trips(tmp_path):
