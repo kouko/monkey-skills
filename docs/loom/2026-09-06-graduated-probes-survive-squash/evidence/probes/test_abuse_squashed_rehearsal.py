@@ -182,7 +182,7 @@ def test_recursingProbe_findsNestedMarkerSet_neverReRehearsesItself():
 # repository is single-branch (nothing to squash off).
 # --------------------------------------------------------------------------
 
-def test_squashedShape_noOriginConfigured_originMainSkipProbeStaysGreen(
+def test_squashedshape_nooriginconfigured_skipprobestaysgreen(
     tmp_path: Path,
 ) -> None:
     repo = make_repo(tmp_path, trunk="main")
@@ -203,7 +203,7 @@ def test_squashedShape_noOriginConfigured_originMainSkipProbeStaysGreen(
 # exists to catch before graduation instead of after.
 # --------------------------------------------------------------------------
 
-def test_squashedShape_probeNeedingBranchOnlyCommit_isReportedFailedWithReason(
+def test_squashedshape_branchonlycommitprobe_reportedfailedwithreason(
     tmp_path: Path,
 ) -> None:
     repo = make_repo(tmp_path, trunk="main")
@@ -241,7 +241,7 @@ def test_squashedShape_probeNeedingBranchOnlyCommit_isReportedFailedWithReason(
 # writes to.
 # --------------------------------------------------------------------------
 
-def test_squashedShape_run_leavesSourceRepoAndTempRootUntouched(tmp_path: Path) -> None:
+def test_squashedshape_onerun_sourcerepoandtmprootuntouched(tmp_path: Path) -> None:
     repo = make_repo(tmp_path, trunk="main")
     commit_file(repo, "tests/test_green.py", GREEN_PROBE, "green")
 
@@ -276,7 +276,7 @@ def test_squashedShape_run_leavesSourceRepoAndTempRootUntouched(tmp_path: Path) 
 # opens up.
 # --------------------------------------------------------------------------
 
-def test_squashedShape_recursingProbe_seesNestedMarkerTooNotJustCiShaped(
+def test_squashedshape_recursingprobe_seesnestedmarker(
     tmp_path: Path,
 ) -> None:
     repo = make_repo(tmp_path, trunk="main")
@@ -293,7 +293,7 @@ def test_squashedShape_recursingProbe_seesNestedMarkerTooNotJustCiShaped(
 # must say so rather than silently skipping the check.
 # --------------------------------------------------------------------------
 
-def test_noTrunkRefAtAll_squashedShapeHasNoTarget_doesNotCrashAndSaysSo(
+def test_squashedshape_notrunkrefatall_saysso(
     tmp_path: Path,
 ) -> None:
     repo = make_repo(tmp_path, trunk="develop")
@@ -314,7 +314,7 @@ def test_noTrunkRefAtAll_squashedShapeHasNoTarget_doesNotCrashAndSaysSo(
 # unaffected) must still be reported.
 # --------------------------------------------------------------------------
 
-def test_branchIsTrunk_nothingToSquash_ciShapedResultStillReported(tmp_path: Path) -> None:
+def test_squashedshape_branchistrunk_cishapedstillreported(tmp_path: Path) -> None:
     repo = make_repo(tmp_path, trunk="main")
     bare = tmp_path / "origin.git"
     subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True, capture_output=True)
@@ -339,7 +339,7 @@ def test_branchIsTrunk_nothingToSquash_ciShapedResultStillReported(tmp_path: Pat
 # unguarded `git rev-parse HEAD` on an unborn branch would surface.
 # --------------------------------------------------------------------------
 
-def test_emptyRepoNoCommits_squashedShapeAttempt_doesNotRaiseUnhandled(tmp_path: Path) -> None:
+def test_squashedshape_emptyrepo_nounhandledexception(tmp_path: Path) -> None:
     repo = tmp_path / "empty"
     repo.mkdir()
     subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
@@ -357,7 +357,7 @@ def test_emptyRepoNoCommits_squashedShapeAttempt_doesNotRaiseUnhandled(tmp_path:
 # code is the graduation gate, not the printed text.
 # --------------------------------------------------------------------------
 
-def test_exitCode_squashedShapeRed_isNonzeroEvenThoughCiShapedShapeIsGreen(
+def test_squashedshape_redwhilecishapedgreen_exitnonzero(
     tmp_path: Path,
 ) -> None:
     repo = make_repo(tmp_path, trunk="main")

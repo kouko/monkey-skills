@@ -63,7 +63,8 @@
 - **審查證據不完整** — 先前缺少 branch-end 的攻擊與盲跑紀錄；現在三份攻擊檔、26 個結果與刷新後的盲跑結果都已呈現。
 - **盲跑報告隱藏已知阻擋** — 上一版只寫套件環境問題，漏掉三個已知失敗邊界；本版逐項揭露它們原本攻擊什麼、現在發生什麼。
 - **套件測試環境問題** — 先前由我提出的問題已由沙箱外的正式執行關閉；本次仍如實保留目前 HEAD 在沙箱內無法完整重跑的限制。
-- **沒有駁回重要問題** — round 5 所有嚴重或重要發現都以修正、補齊證據或刷新報告處理，沒有任何一項被駁回。
+- **審閱者自行撤回的一條發現** — 審閱者 A 原本指出「審查紀錄裡的探針沒有綁到它審的版本」。在看過流程規定（一輪的探針與裁決本來就寫在同一個 commit，所以任何審閱者都看不到自己這一輪的探針）以及本輪紀錄已把重跑結果綁到它審的版本之後，A 自己撤回了這條，並在紀錄上留下理由。若這個理由不成立，會在出貨前的檢查點顯示出來：檢查器會自己重跑每一支探針，綁不上就擋下。
+- **除此之外沒有駁回重要問題** — round 5 其餘所有嚴重或重要發現都以修正、補齊證據或刷新報告處理。
 
 ## 我不確定你要不要的事
 
@@ -78,5 +79,5 @@
 | 審查發現 | 符合；使用 Conventional Comments 標籤 | `branch-end-round-5-verdicts` |
 | 證據 | 符合；內部證據為英文 | `test_abuse_branch_end_plan_edits.py`, `test_abuse_branch_end_squashed_shape.py`, `test_abuse_branch_end_gate_text.py` |
 | 測試說明 | 符合；為英文 | `branch-end-probe-docstrings` |
-| 測試名稱 | 部分符合；本輪三個名稱是單元／狀態／預期結果三段式，較早新增的部分名稱仍使用駝峰片段 | `test_planedits_duplicatestatus_blocks`, `test_rehearsal_trunkbehindmergebase_failsloudly`, `test_rehearsal_trunkaheadofbranch_failsloudly`, `test_squashedShape_probeNeedingBranchOnlyCommit_isReportedFailedWithReason` |
+| 測試名稱 | 部分符合；本輪三個名稱是單元／狀態／預期結果三段式，較早新增的部分名稱仍使用駝峰片段 | `test_planedits_duplicatestatus_blocks`, `test_rehearsal_trunkbehindmergebase_failsloudly`, `test_rehearsal_trunkaheadofbranch_failsloudly`, `test_squashedShape_probeNeedingBranchOnlyCommit_failsInProcessWhileCiShapedStaysGreen` |
 | Commit 訊息 | 符合；為英文 | `3b0ef50c`, `93a43823`, `ebc3ddc2` |
