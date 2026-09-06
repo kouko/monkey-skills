@@ -324,11 +324,20 @@
       "started": "2026-09-06T15:44:39+08:00",
       "fresh_context": false,
       "note": "fix round 2; resume with this reviewer's round-1 finding list only"
+    },
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T16:10:03+08:00",
+      "fresh_context": true,
+      "note": "risk-triggered pre-build review; one reader covers spec and adversarial concerns; no blind run"
     }
   ],
   "cost": {
     "rounds": 1,
-    "dispatches": 6,
+    "dispatches": 7,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
