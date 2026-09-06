@@ -202,10 +202,12 @@ def test_extract_commits_subject_with_hostile_separator_byte_round_trips(tmp_pat
     """wave-end:1-01: a commit SUBJECT containing a raw 0x1F byte must
     round-trip exactly as the PRE-CHANGE script rendered it — the
     single-pass rewrite's field encoding must be injective for every
-    non-NUL byte, not just trailer values. The pre-change script (fetched
-    via `git show <reviewed_sha>:...`, the same technique the
-    equivalence suite's goldens used) is run against the identical
-    fixture and its output is the expectation, not an invented string.
+    non-NUL byte, not just trailer values. The pre-change script (a
+    committed byte copy of the version at 4e45d6de, the last pre-rewrite
+    commit — a fixture file rather than a `git show <sha>` lookup, so the
+    oracle works in a depth-1 CI checkout that carries no history) is
+    run against the identical fixture and its output is the expectation,
+    not an invented string.
     Before the wave-end:1-01 fix, the new script silently dropped this
     record (printed "(none in range)", exit 0) because its `%x1F`
     field-separator encoding mis-split on the embedded 0x1F byte.
@@ -216,15 +218,8 @@ def test_extract_commits_subject_with_hostile_separator_byte_round_trips(tmp_pat
     hostile_subject = "feat: subject with " + chr(0x1F) + " inside (#1)"
     _commit(repo, "2026-01-03", hostile_subject, b"Decision: hostile subject decision")
 
-    pre_change_sha = "4e45d6de1214d164ce9ebe18bcd30bf7f4499a1e"
-    old_script = tmp_path / "memory-grep-old.sh"
-    old_script.write_bytes(
-        subprocess.run(
-            ["git", "show", f"{pre_change_sha}:loom-workflow/skills/git-memory/scripts/memory-grep.sh"],
-            cwd=REPO, capture_output=True, check=True,
-        ).stdout
-    )
-    old_script.chmod(0o755)
+    old_script = SCRIPT.parent / "fixture_memory_grep_pre_change.sh"
+    assert old_script.is_file(), f"expected pre-change fixture at {old_script}"
 
     old_run = subprocess.run(
         ["bash", str(old_script), f"--repo={repo}", "--no-pr", "--since=2020-01-01"],

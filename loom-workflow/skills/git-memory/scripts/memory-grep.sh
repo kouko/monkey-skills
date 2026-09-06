@@ -606,8 +606,19 @@ extract_commits_ndjson() {
   fi
   trap 'rm -rf "${probe_objdir:-}"' EXIT
 
+  # The probe's commit-tree pins an explicit throwaway identity: on a
+  # bare target repo there is no user.* config, and a host without a
+  # global git identity (CI runners) cannot auto-derive one, so an
+  # unpinned commit-tree fails there and the whole probe reports
+  # "could not be built" (exit 3). The identity never reaches any
+  # user-visible output — the probe commit lives and dies in the
+  # scratch store.
+  probe_ident_env=(
+    GIT_AUTHOR_NAME=memory-grep-probe GIT_AUTHOR_EMAIL=probe@invalid
+    GIT_COMMITTER_NAME=memory-grep-probe GIT_COMMITTER_EMAIL=probe@invalid
+  )
   empty_tree_sha='4b825dc642cb6eb9a060e54bf8d69288fbee4904'
-  probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+  probe_sha=$(env "${probe_ident_env[@]}" GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
     -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
   if [ -z "$probe_sha" ]; then
     # SHA-1 empty-tree constant not a valid object name here (e.g. a
@@ -616,7 +627,7 @@ extract_commits_ndjson() {
     empty_tree_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" hash-object -t tree --stdin \
       </dev/null 2>/dev/null) || empty_tree_sha=""
     if [ -n "$empty_tree_sha" ]; then
-      probe_sha=$(GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
+      probe_sha=$(env "${probe_ident_env[@]}" GIT_OBJECT_DIRECTORY="$probe_objdir" git -C "$REPO" commit-tree "$empty_tree_sha" \
         -m 'memory-grep capability probe (no trailers)' 2>/dev/null) || probe_sha=""
     fi
   fi
