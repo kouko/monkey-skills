@@ -21,7 +21,48 @@
     }
   ],
   "open_findings": [],
-  "dispatch": [],
+  "dispatch": [
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T08:00:46+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "adversary",
+      "agent_id": "adv-w1-02-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T08:00:46+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-02",
+      "role": "implementer",
+      "agent_id": "impl-w1-02-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T08:00:46+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "adversary",
+      "agent_id": "adv-w1-03-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T08:00:46+0800",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-03",
+      "role": "implementer",
+      "agent_id": "impl-w1-03-mg",
+      "model": "sonnet",
+      "started": "2026-09-06T08:00:46+0800",
+      "fresh_context": true
+    }
+  ],
   "cost": {
     "rounds": 0,
     "dispatches": 0,
