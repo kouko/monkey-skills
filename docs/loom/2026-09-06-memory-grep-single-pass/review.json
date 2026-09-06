@@ -1,5 +1,5 @@
 {
- "reviewed_sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+ "reviewed_sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
  "scope": "branch-end",
  "vendors": [
   "anthropic",
@@ -561,6 +561,70 @@
    "notes": [
     "second vendor fulfilled"
    ]
+  },
+  {
+   "round": 9,
+   "scope": "branch-end",
+   "reviewer": "rev-be9-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "re-baseline after CI fixes (23bb927b); 62 skill-script tests passed, 6 shell suites OK, bare-repo no-identity simulation exit 0"
+   ]
+  },
+  {
+   "round": 9,
+   "scope": "branch-end",
+   "reviewer": "rev-be9-mg-codex",
+   "vendor": "openai",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "static review; identity scoped to commit-tree, fixture inert, fast path 4 git calls within budget"
+   ]
   }
  ],
  "probes": [
@@ -871,6 +935,38 @@
    "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_version_carriers_full_set_agree",
    "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
    "result": "pass (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "branch-end:9",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass — 182 passed, 1 skipped (round 9 re-run at reviewed content)",
+   "artifact": ""
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:9",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_hostile_separator_value_stays_structurally_valid",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass (round 9 re-run at reviewed content)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:9",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_hostile_jq_syntax_trailer_value_survives_verbatim",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass (round 9 re-run at reviewed content)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:9",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_version_carriers_full_set_agree",
+   "sha": "e7c170a45ade85f0d9b4c0d17ab687bf1f32101c",
+   "result": "pass (round 9 re-run at reviewed content)",
    "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
   }
  ],
@@ -1286,8 +1382,8 @@
   }
  ],
  "cost": {
-  "rounds": 8,
-  "dispatches": 32,
+  "rounds": 9,
+  "dispatches": 35,
   "cap_changes": [],
   "hours_plan_to_pr": null
  },
