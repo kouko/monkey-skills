@@ -446,6 +446,114 @@
         "The immutable full-object strategy is sufficient for the prescribed literal push; process containment is not required for that path.",
         "No recorded probes were rerun; the new finding comes from direct control-flow analysis of the fix delta."
       ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "862ddaed865e3cb2ebce600dc5fb9b1e2dd43bdb",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "status": "fixed",
+          "evidence": "The immutable source remains bound through whole-command canonical quoting, trusted absolute Git, fixed implicit-publication flags, and both live HEAD snapshots."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "status": "fixed",
+          "evidence": "The real versioned-entrypoint harness now measures hardened candidate b197c123 with its canonical command."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+          "status": "fixed",
+          "evidence": "The report preserves the detached-writer disclosure and states only the canonical immutable-publication guarantee."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59",
+          "status": "fixed",
+          "evidence": "The report explicitly recomputes 60 definitions, 47 unique names, and 13 paired duplicates."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+          "status": "unfixed",
+          "evidence": "The artifact-language inconsistency remains a non-blocking nit so the confirmed behavior fingerprint is not changed."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:11",
+          "status": "unfixed",
+          "evidence": "The report points to the intermediate immutable-refspec test name, while the final test name adds canonical; this remains a non-blocking evidence-pointer nit."
+        }
+      ],
+      "findings": [],
+      "notes": [
+        "design re-look: continue fixing",
+        "All blocking findings previously raised by this reader remain fixed; the two artifact nits do not block."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "862ddaed865e3cb2ebce600dc5fb9b1e2dd43bdb",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3249",
+          "status": "unfixed",
+          "evidence": "Bash and zsh can resolve an inherited shell function named as the quoted absolute executable before the filesystem binary, and the permanent tests do not yet exercise that exact shadowing case."
+        }
+      ],
+      "findings": [],
+      "notes": [
+        "design re-look: continue fixing",
+        "The remaining gap can stay within this design if the accepted launch form and local-remote regression prove inherited functions cannot shadow the trusted executable.",
+        "The final real-entrypoint measurement otherwise preserves 14-to-7 calls, equal release verdicts, and lower median wait."
+      ]
     }
   ],
   "probes": [
@@ -496,6 +604,14 @@
       "sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:7",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "862ddaed865e3cb2ebce600dc5fb9b1e2dd43bdb",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
     }
   ],
   "questions": [
@@ -843,7 +959,7 @@
     }
   ],
   "cost": {
-    "rounds": 6,
+    "rounds": 7,
     "dispatches": 25,
     "cap_changes": [],
     "hours_plan_to_pr": null
