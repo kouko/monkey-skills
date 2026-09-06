@@ -266,8 +266,7 @@ replacement is outside this guarantee.
 
 Use the full 40-character object id as source—not `HEAD`, branch,
 abbreviation, or variable—and `refs/heads/<current-symbolic-branch>` as
-destination. Fixed flags prevent tag or submodule publication and suppress
-repository-configured pre-push hooks after the gate releases the command.
+destination. Flags block tags, submodules, pre-push hooks.
 
 The hook validates that source in the selected repository; it may take minutes.
 Exit 0 releases the push. Exit 1 prints `BLOCK <rule.id>: <reason>` on stderr;
