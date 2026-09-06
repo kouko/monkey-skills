@@ -1,5 +1,5 @@
 {
- "reviewed_sha": "9222526498ef47116d7a7b251d2091cb58d9852f",
+ "reviewed_sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
  "scope": "branch-end",
  "vendors": [
   "anthropic",
@@ -490,6 +490,77 @@
     "Reran 65 pytest tests and all seven shell suites against the committed sha; all green, matching the reported figures.",
     "Nit for the ship batch: the header's exit-code table does not list the two new exit-3 sub-cases, though each runtime message is self-contained."
    ]
+  },
+  {
+   "round": 8,
+   "scope": "branch-end",
+   "reviewer": "rev-be8-mg-claude",
+   "vendor": "anthropic",
+   "model": "sonnet",
+   "lens": "code + docs",
+   "verdict": "PASS",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [],
+   "notes": [
+    "re-baseline after rebase onto origin/main; delta = charter positive-control skip (2b2cad98) + conflict resolutions; both suites ran green (11 passed 1 skipped; 1 passed); skip condition keyed on find_plan_commit_sha reachability, not trunk identity"
+   ]
+  },
+  {
+   "round": 8,
+   "scope": "branch-end",
+   "reviewer": "rev-be8-mg-codex",
+   "vendor": "openai",
+   "model": "gpt-5-codex",
+   "lens": "code + docs",
+   "verdict": "PASS_WITH_NOTES",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "dimension_scores": {
+    "security": "PASS",
+    "architecture": "PASS",
+    "correctness": "PASS",
+    "naming": "PASS",
+    "tests": "PASS_WITH_NOTES",
+    "refactoring": "PASS",
+    "cross-task-coherence": "PASS",
+    "external-surface-grounding": "PASS",
+    "principles-conformance": "PASS",
+    "deliberate-simplification": "PASS",
+    "deletion-first": "PASS",
+    "omission": "PASS",
+    "ambiguity": "PASS",
+    "inconsistency": "PASS",
+    "incorrect-fact": "PASS",
+    "missing-population": "PASS"
+   },
+   "findings": [
+    {
+     "severity": "note",
+     "dimension": "tests",
+     "anchor": "loom-code/scripts/test_probes_charter_wave_end_2.py:230",
+     "text": "codex sandbox had no writable temp dir, so pytest could not start there; static checks passed and the same suites were run green by the co-reader this round"
+    }
+   ],
+   "notes": [
+    "second vendor fulfilled"
+   ]
   }
  ],
  "probes": [
@@ -764,6 +835,43 @@
    "sha": "9c133516dd6d4b3cf1afd8424173284b09c48472",
    "result": "pass",
    "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/blind-run-report.md"
+  },
+  {
+   "kind": "package-tests",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "result": "pass — 182 passed, 1 skipped (round 8 re-baseline, post-fix)"
+  },
+  {
+   "kind": "package-tests",
+   "scope": "branch-end:8",
+   "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass — 182 passed, 1 skipped (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": ""
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:8",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py -q -k test_extract_commits_hostile_separator_value_stays_structurally_valid",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_single_pass.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:8",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py -q -k test_render_hostile_jq_syntax_trailer_value_survives_verbatim",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_render.py"
+  },
+  {
+   "kind": "adversarial",
+   "scope": "branch-end:8",
+   "command": "python3 -m pytest docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py -q -k test_version_carriers_full_set_agree",
+   "sha": "26d760fcac3e7a8ba36ce47f6655766b75e17c1b",
+   "result": "pass (round 8 re-run at reviewed content; run tree equals reviewed code tree, only docs/loom differ)",
+   "artifact": "docs/loom/2026-09-06-memory-grep-single-pass/evidence/probes/test_abuse_memory_grep_branch_end.py"
   }
  ],
  "questions": [
@@ -1151,8 +1259,8 @@
   }
  ],
  "cost": {
-  "rounds": 6,
-  "dispatches": 29,
+  "rounds": 8,
+  "dispatches": 32,
   "cap_changes": [],
   "hours_plan_to_pr": null
  },

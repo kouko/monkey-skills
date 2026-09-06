@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — 只改一支 shell 腳本的內部實作與它的測試；命令列參數、輸出格式、exit code 一個都不動；沒有使用者讀或輸入的介面改變
 evidence: [loom-workflow/tests/test-memory-grep-match.sh, loom-workflow/tests/test-memory-grep-supersedes.sh, loom-workflow/tests/test-memory-grep-verify.sh]
-status: confirmed 2026-09-06
+status: closed 2026-09-06 — branch memory-grep-single-pass
 
 ## Problem
 `loom-workflow/skills/git-memory/scripts/memory-grep.sh` 是 git-memory skill 的取回工具：把 commit 的 `Decision:`／`Learning:`／`Gotcha:`／`Related:` 尾標和 merged PR 的 `## Memory` 段撈成一份摘要，寫 commit 訊息前、找過去決策時都靠它。它在本 repo 跑預設模式要 20 秒（2026-09-06 量測：近三個月 395 個非 merge commit，其中 63 個帶記憶尾標；`--no-pr` 19.9 秒，system time 17 秒）。`--verify-merged` 只查一個 commit，0.06 秒，不慢。
