@@ -1167,6 +1167,51 @@
       "findings": [],
       "previous_findings": [],
       "notes": "nit-batch confirmation: exactly one CHANGELOG line changed, matching the heading and both manifests."
+    },
+    {
+      "round": 17,
+      "scope": "branch-end",
+      "lens": "code+docs+skill",
+      "sha": "f1ed0110cab9b4b013cf57fd27c38431f126c7da",
+      "standards_version": "lenses.md@f1ed0110cab9b4b013cf57fd27c38431f126c7da",
+      "previous_findings": [],
+      "reviewer": "rev-be-codex-r7v3",
+      "vendor": "openai",
+      "model": "codex",
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "correctness": "PASS_WITH_NOTES",
+        "cross-task-coherence": "PASS",
+        "inconsistency": "PASS"
+      },
+      "findings": [],
+      "notes": "Rebase onto 1.6.1 confirmation (resumed): the repair preserves the branch's probes and station tests while removing tree mutation; release, mirror and conflict resolutions remain coherent. Supplied rehearsal and package results were not independently rerun."
+    },
+    {
+      "round": 17,
+      "scope": "branch-end",
+      "lens": "code+docs+skill",
+      "sha": "f1ed0110cab9b4b013cf57fd27c38431f126c7da",
+      "standards_version": "lenses.md@f1ed0110cab9b4b013cf57fd27c38431f126c7da",
+      "previous_findings": [],
+      "reviewer": "rev-be-a-r7v3",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "correctness": "NEEDS_REVISION",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "inconsistency": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py:237",
+          "text": "issue (blocking): the repair's skip-guard block kept in test_abuse_charter_wave_end.py and dropped from its graduated twin is not a shape _ALLOWED_TOKEN recognises, so test_graduated_twins_diff_only_in_allowed_lines — recorded pass at every prior sha through fec417fa — fails at HEAD (reproduced: passes at 225b9091, fails at f1ed0110); push.probes-adversarial re-runs that recorded command and will block the push. Invisible to the package suite (docs/loom/ path) and to rehearse_probes.py (graduated files only).",
+          "fix": "admit the retired-block divergence for this one pair explicitly in test_abuse_branch_end.py (strip the block #796 retired from the evidence side before diffing, or extend the allowed shape), then re-run -k test_graduated_twins_diff_only_in_allowed_lines."
+        }
+      ],
+      "notes": "Independently reran the package suite (1998/1/1 + 182/1), rehearse_probes.py (126/0/0), --list-rules 31, mirror/charter/plan-edits/review-edits/mechanisms/memory-integrity — all clean; one real regression found and reproduced in a detached worktree."
     }
   ],
   "probes": [
@@ -5439,6 +5484,14 @@
       "severity": "important",
       "text": "issue (blocking): the re-walked report still tells the user Acceptance 4 was not met and leaves its remedy as an open question, contradicting the fixed result recorded above.",
       "resolved": "resolved by a888d64a — decided-for-you and open questions match the re-walked Acceptance 4 (rev-be-codex-r7v3, round 14)"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "docs/loom/2026-09-05-artifact-charter-boundaries-and-edit-rights/evidence/probes/test_abuse_branch_end.py:237",
+      "origin_sha": "f1ed0110cab9b4b013cf57fd27c38431f126c7da",
+      "raised_by": "rev-be-a-r7v3",
+      "severity": "fatal",
+      "text": "the retired _confirm_intent_sha block kept in the evidence original and dropped from the graduated twin breaks test_graduated_twins_diff_only_in_allowed_lines, a recorded adversarial probe the push gate re-runs"
     }
   ],
   "dispatch": [
