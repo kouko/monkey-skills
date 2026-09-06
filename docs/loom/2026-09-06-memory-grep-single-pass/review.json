@@ -373,6 +373,48 @@
       "notes": [
         "branch-end-06 fixed: every probe invocation overrides inherited GIT_OBJECT_DIRECTORY with a unique temporary store, the EXIT trap removes it on normal, exit-3 and error paths, inherited GIT_ALTERNATE_OBJECT_DIRECTORIES can only add read sources, concurrent runs use distinct directories, and the SHA-256 fallback derives the empty-tree hash without writing."
       ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "rev-be-mg-claude",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code + docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "NEEDS_REVISION",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
+          "text": "issue (blocking): a probe-build failure (mktemp -d on a full or unwritable TMPDIR, a restrictive sandbox, a quota) falls through to unguarded extraction. Reproduced against the pinned commit with TMPDIR pointed at a nonexistent path plus a placeholder-echoing git shim: exit 0 and '(none in range)' over a repository carrying a real Decision: trailer. Unlike the SHA-256 gap accepted in round 4, this is not version-gated and can co-occur with a genuinely incapable git on any machine.",
+          "fix": "Any probe-build failure must exit 3 rather than fall through; pin mktemp failure combined with an incapable-git shim."
+        }
+      ],
+      "notes": [
+        "Independent of the other reader, this is the same defect as branch-end-07 and is closed by 14f02d9f.",
+        "Isolation verified against a pinned copy: an inherited GIT_OBJECT_DIRECTORY pointing at the real store, and a symlinked objects directory, both isolate correctly; a bogus inherited GIT_OBJECT_DIRECTORY breaks the pre-change script identically, so it is not a regression. Temp-dir cleanup confirmed on the fast path, the exit-3 path, bare, shallow and the SHA-256 path. Git-call count recounted with a logging shim: exactly 4 on the fast path, the cap fully consumed by design. The set -u trap bug is fixed and the pattern appears nowhere else.",
+        "Process hazard worth keeping: several early checks silently ran against the shared working tree while another agent was mid-edit on the same file; the reader re-ran every load-bearing check against a pinned `git show <sha>:<path>` copy and reported only those. It also found 82 stray probe directories in TMPDIR from a concurrent burst; the orchestrator confirmed the shipped code leaks none across the fast path, three consecutive runs and the exit-3 path, and removed them."
+      ]
     }
   ],
   "probes": [
@@ -750,7 +792,7 @@
       "id": "branch-end-07",
       "anchor": "loom-workflow/skills/git-memory/scripts/memory-grep.sh:548",
       "origin_sha": "3379531b4d294f7ef7e2aadd56232ee73a398f90",
-      "raised_by": "rev-be-mg-codex"
+      "raised_by": "rev-be-mg-codex and rev-be-mg-claude (independently)"
     }
   ],
   "dispatch": [
