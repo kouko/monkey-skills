@@ -73,10 +73,12 @@ build_perf_repo() {
       fi
       if [ -n "$supersede_target" ]; then
         msg="fix: superseding decision $i (#$((i + 1000)))
+
 Gotcha: superseding decision $i
 Supersedes: $supersede_target"
       else
         msg="feat: memory decision $i (#$((i + 1000)))
+
 Decision: memory decision number $i"
       fi
     fi
@@ -122,6 +124,37 @@ count_git_calls() {
   wc -l < "$log" | tr -d ' '
 }
 
+# ── jq-call-count shim (W1-03): a PATH-prepended dir with one `jq` shim
+# that logs exactly ONE marker line per invocation (never the args
+# themselves — unlike git's single-line args, a jq filter program is
+# typically a multi-line string, so `echo "$@" >> log` would log
+# several newlines per single invocation and overcount) then execs the
+# real binary. Renderers must read the NDJSON once — a small constant
+# number of jq invocations, not one (or more) per record. ───────────
+make_jq_shim() {
+  local shim_dir="$1" log="$2"
+  local real
+  real="$(command -v jq)"
+  mkdir -p "$shim_dir"
+  cat > "$shim_dir/jq" <<SHIM
+#!/bin/sh
+echo call >> "$log"
+exec "$real" "\$@"
+SHIM
+  chmod +x "$shim_dir/jq"
+}
+
+count_jq_calls() {
+  # $1 — repo, rest — memory-grep.sh args
+  local repo="$1"; shift
+  local shim_dir="$TMP_ROOT/jq-shim-$$-$RANDOM"
+  local log="$TMP_ROOT/jq-calls-$$-$RANDOM.log"
+  : > "$log"
+  make_jq_shim "$shim_dir" "$log"
+  ( PATH="$shim_dir:$PATH" bash "$SCRIPT" --repo="$repo" "$@" >/dev/null 2>/dev/null )
+  wc -l < "$log" | tr -d ' '
+}
+
 # ── build a small (20-commit) and a large (2,000-commit) fixture ───
 SMALL_REPO="$TMP_ROOT/small"
 LARGE_REPO="$TMP_ROOT/large"
@@ -150,6 +183,36 @@ if [ "$small_count_no_path" = "$large_count_no_path" ]; then
   pass "git-call count for --no-pr is the same constant regardless of repo size ($small_count_no_path)"
 else
   fail "git-call count for --no-pr varies with repo size: small=$small_count_no_path large=$large_count_no_path (not a constant)"
+fi
+
+# ── (c) jq-call count: small constant, both formats, both repo sizes ──
+plain_small_jq="$(count_jq_calls "$SMALL_REPO" --no-pr --since=2010-01-01)"
+plain_large_jq="$(count_jq_calls "$LARGE_REPO" --no-pr --since=2010-01-01)"
+json_small_jq="$(count_jq_calls "$SMALL_REPO" --no-pr --since=2010-01-01 --format=json)"
+json_large_jq="$(count_jq_calls "$LARGE_REPO" --no-pr --since=2010-01-01 --format=json)"
+
+if [ "$plain_small_jq" -le 6 ] && [ "$plain_large_jq" -le 6 ]; then
+  pass "jq-call count for plain format is <=6 on both a 20-commit repo ($plain_small_jq) and a 2,000-commit repo ($plain_large_jq)"
+else
+  fail "jq-call count for plain format exceeds 6: small=$plain_small_jq large=$plain_large_jq"
+fi
+
+if [ "$json_small_jq" -le 6 ] && [ "$json_large_jq" -le 6 ]; then
+  pass "jq-call count for json format is <=6 on both a 20-commit repo ($json_small_jq) and a 2,000-commit repo ($json_large_jq)"
+else
+  fail "jq-call count for json format exceeds 6: small=$json_small_jq large=$json_large_jq"
+fi
+
+if [ "$plain_small_jq" = "$plain_large_jq" ]; then
+  pass "jq-call count for plain format is the same constant regardless of repo size ($plain_small_jq)"
+else
+  fail "jq-call count for plain format varies with repo size: small=$plain_small_jq large=$plain_large_jq (not a constant)"
+fi
+
+if [ "$json_small_jq" = "$json_large_jq" ]; then
+  pass "jq-call count for json format is the same constant regardless of repo size ($json_small_jq)"
+else
+  fail "jq-call count for json format varies with repo size: small=$json_small_jq large=$json_large_jq (not a constant)"
 fi
 
 # ── (a) wall-clock bound on the 2,000-commit repo ──────────────────
