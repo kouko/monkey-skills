@@ -1,8 +1,95 @@
 {
-  "reviewed_sha": "f31006126203449d739ddcb7dd31080dc09a0a58",
+  "reviewed_sha": "c9d1abb1",
   "scope": "wave-end:1",
-  "vendors": [],
-  "verdicts": [],
+  "vendors": [
+    "codex"
+  ],
+  "verdicts": [
+    {
+      "reviewer": "rev-w1-codex-h4n8",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS_WITH_NOTES",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/loom_checker.py:2304",
+          "text": "issue (blocking): The amnesty accepts an uncommitted working-tree `status: closed`, so an in-flight change with a lost plan commit can bypass the required BLOCK. The historical fallback also grants amnesty when the current intent is absent, unreadable, or malformed, contradicting the stated fail-closed boundary.",
+          "fix": "Require a parseable current intent and a committed closed status reachable from HEAD; otherwise return the existing no-plan-commit BLOCK, with regression tests for uncommitted closure and deleted, unreadable, and malformed current intents after historical closure."
+        },
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/rehearse_probes.py:273",
+          "text": "issue (blocking): New behavior relies on externally owned Git CLI semantics for `reset --soft`, commit creation, and ref rewriting without a grounding citation, so the claimed squash equivalence is unsupported under this lens.",
+          "fix": "Cite the authoritative Git documentation beside the squash implementation for the relied-upon reset, commit, and update-ref semantics."
+        },
+        {
+          "severity": "important",
+          "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/plan.md:45",
+          "text": "issue: The plan states that an unreadable intent blocks, but the implementation falls back to historical closure and can return NOT APPLICABLE.",
+          "fix": "Make the implementation fail closed for an unreadable current intent so this recorded risk remains true."
+        }
+      ],
+      "sha": "c9d1abb1"
+    },
+    {
+      "reviewer": "rev-w1-codex2",
+      "vendor": "openai",
+      "model": "codex",
+      "lens": "code",
+      "scope": "wave-end:1",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "anchor": "loom-code/scripts/rehearse_probes.py:280",
+          "text": "issue (blocking): When the source resolves its trunk through local `main` or `master`, `trunk_remote_ref` becomes null and the following loop deletes every `origin/*` ref. The resulting squashed rehearsal lacks `origin/main`, unlike the post-squash CI checkout it promises to model, so a probe that skips when that ref is absent can falsely pass.",
+          "fix": "Map local `main`/`master` selections to the corresponding `refs/remotes/origin/<name>` ref and update that ref to `new_sha`; add a divergent-feature/local-trunk regression test asserting it remains reachable in the squashed run."
+        }
+      ],
+      "sha": "c9d1abb1"
+    }
+  ],
   "probes": [],
   "questions": [
     {
@@ -16,7 +103,32 @@
       "text": "這次要不要用 Codex 當第二位讀者？（答：好，用 Codex）"
     }
   ],
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "w1-amnesty-too-wide",
+      "anchor": "loom-code/scripts/loom_checker.py:2304",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex-h4n8"
+    },
+    {
+      "id": "w1-plan-unreadable-intent",
+      "anchor": "docs/loom/2026-09-06-graduated-probes-survive-squash/plan.md:45",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex-h4n8"
+    },
+    {
+      "id": "w1-squashed-ref-deletion",
+      "anchor": "loom-code/scripts/rehearse_probes.py:280",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex2"
+    },
+    {
+      "id": "w1-git-citation",
+      "anchor": "loom-code/scripts/rehearse_probes.py:273",
+      "origin_sha": "08677cf3e30bdbefed5311ece7bd32ee5bec4451",
+      "raised_by": "rev-w1-codex-h4n8"
+    }
+  ],
   "dispatch": [
     {
       "task": "W1-01",
@@ -72,6 +184,14 @@
       "agent_id": "rev-w1-codex-h4n8",
       "model": "codex",
       "started": "2026-09-06T12:22:58+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "wave-end:1",
+      "role": "reviewer",
+      "agent_id": "rev-w1-codex2",
+      "model": "codex",
+      "started": "2026-09-06T12:45:00+08:00",
       "fresh_context": true
     }
   ],
