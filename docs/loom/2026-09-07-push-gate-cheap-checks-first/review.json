@@ -415,11 +415,19 @@
       "model": "claude-opus-5",
       "started": "2026-09-07T23:05:26+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-fix-r2",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T23:42:36+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 2,
-    "dispatches": 10,
+    "dispatches": 11,
     "cap_changes": [],
     "hours_plan_to_pr": 1.6
   },
