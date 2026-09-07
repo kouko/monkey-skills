@@ -1033,6 +1033,18 @@
       "round": 24, "scope": "branch-end", "reviewer": "ledger-close-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "PASS_WITH_NOTES", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
       "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
       "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "The disposition preserves the stronger append-only invariant."}, {"id": "branch-end-29", "status": "fixed", "evidence": "The report count independently recomputes."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "The recorder must now bind the reviewed SHA."}], "findings": [], "notes": ["Focused guards and review-edits passed; the detached-process limitation stays outside scope."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-review-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "code", "verdict": "NEEDS_REVISION", "sha": "59416810", "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"}, "previous_findings": [], "findings": [{"severity": "fatal", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:19", "text": "issue (blocking): Direct replay inherits hostile caller cwd and Python module-search variables.", "fix": "Anchor cwd to the repository and sanitize PYTHONPATH and PYTHONHOME."}], "notes": ["Normal direct replay passed; no full suite was run."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-review-claude", "vendor": "anthropic", "model": "claude-sonnet-5", "lens": "code", "verdict": "NEEDS_REVISION", "sha": "59416810", "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS_WITH_NOTES", "tests": "PASS_WITH_NOTES", "refactoring": "NEEDS_REVISION", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "NEEDS_REVISION"}, "previous_findings": [], "findings": [{"severity": "important", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:249", "text": "issue: The probe retains an unreachable second __main__ block and stale unlocked run instructions.", "fix": "Delete the dead block and update the docstring to the locked command."}], "notes": ["Task trailers passed; no full suite was run."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-docs-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "docs", "verdict": "PASS", "sha": "59416810", "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "deletion-first": "PASS"}, "previous_findings": [], "findings": [], "notes": ["Counts, measurement, append-only history, and isolated direct replay passed; no full suite was run."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "NEEDS_REVISION", "sha": "59416810", "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "user-judgment-leak": "PASS"}, "previous_findings": [], "findings": [{"severity": "fatal", "dimension": "security", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:16", "text": "issue (security): A hostile cwd pytest.py and PYTHONPATH can hijack direct replay before collection.", "fix": "Use a trusted cwd and sanitized child environment."}], "notes": ["The absolute lock path and nonrecursion passed; no full suite was run."]
     }
   ],
   "probes": [
@@ -1661,6 +1673,9 @@
       "origin_sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
       "raised_by": "audit-repair-review-codex, audit-repair-docs-codex, audit-repair-adversary-codex",
       "resolved": "fixed by this closing review checkpoint — reviewed_sha is bound to 92f9acfb and four passing round-24 verdicts"
+    },
+    {
+      "id": "branch-end-31", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:16", "origin_sha": "59416810", "raised_by": "replay-bootstrap-review-codex, replay-bootstrap-adversary-codex", "resolved": "fixed by 149e45e9 — direct replay uses the trusted repo cwd, sanitizes Python module-search variables, and passes from a hostile cwd"
     }
   ],
   "dispatch": [
@@ -2223,11 +2238,23 @@
     },
     {
       "task": "branch-end-fix-review:25", "role": "adversary", "agent_id": "replay-bootstrap-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "reviewer", "agent_id": "bootstrap-close-review-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "reviewer", "agent_id": "bootstrap-close-review-claude", "model": "claude-sonnet-5", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "reviewer", "agent_id": "bootstrap-close-docs-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "adversary", "agent_id": "bootstrap-close-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
     }
   ],
   "cost": {
-    "rounds": 25,
-    "dispatches": 75,
+    "rounds": 26,
+    "dispatches": 79,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
