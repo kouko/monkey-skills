@@ -239,20 +239,20 @@ git ls-files '*.md' | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(cod
 python3 loom-code/scripts/check-skill-crossrefs.py
 ```
 
-The supported host's local push hook is the sole owner: its deterministic
+The local push hook is the sole owner: its deterministic
 push checker runs the resolved complete package-test command exactly once and
 re-runs recorded adversarial probes. Never invoke it as a separate preflight.
 
-Resolve values with read-only commands:
+Resolve:
 
 ```
-python3 -c 'import shutil; from pathlib import Path; print(Path(shutil.which("git")).resolve())'
+python3 -c 'import shutil; from pathlib import Path; print(*(Path(shutil.which(x)).resolve() for x in ("git","gh")), sep="\n")'
 git rev-parse --show-toplevel
 git rev-parse HEAD
 git symbolic-ref --quiet --short HEAD
 ```
 
-Substitute observed literals. Render each token as `"'" +
+Render each token as `"'" +
 token.replace("'", "'\"'\"'") + "'"` and join with one ASCII space. Use no
 variables, substitutions, or other shell syntax:
 
@@ -361,15 +361,10 @@ a single such line qualifies; a paragraph describing it does not.
 
 Then:
 
-PR creation changes GitHub metadata; it does not publish another commit. The
-hook therefore requires the named remote branch to already exist and exactly
-equal the current reviewed `HEAD`, then reuses that publication boundary and
-does not re-run the package suite. A missing or stale remote branch blocks;
-return to §4 and use the canonical push rather than letting the PR command
-become an implicit publication path. Merge remains a separate gate.
+Exact `origin` HEAD makes PR creation metadata-only.
 
 ```
-gh pr create --title "<title>" --body-file <path>
+cd '<absolute-selected-repository>' && 'command' '<absolute-trusted-gh>' 'pr' 'create' '--title' '<title>' '--body-file' '<path>'
 PR_URL=<the url it printed>
 ```
 

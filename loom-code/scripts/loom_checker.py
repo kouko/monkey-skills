@@ -3081,21 +3081,6 @@ def is_push_command(command: str) -> bool:
     return False
 
 
-def is_pr_create_command(command: str) -> bool:
-    """True when a shell segment creates PR metadata without publishing code."""
-    for segment in SEGMENT_SPLIT.split(command):
-        tokens = _strip_prefix(_tokenise(segment))
-        if not tokens or Path(tokens[0]).name != "gh":
-            continue
-        rest = tokens[1:]
-        found = _subcommand_at(rest, GH_VALUE_OPTIONS)
-        if found and found[1] == "pr":
-            after = rest[found[0] + 1:]
-            if _subcommand(after, GH_VALUE_OPTIONS) == "create":
-                return True
-    return False
-
-
 def is_pr_merge_command(command: str) -> bool:
     """True when a shell segment merges a PR."""
     for segment in SEGMENT_SPLIT.split(command):
@@ -3109,6 +3094,25 @@ def is_pr_merge_command(command: str) -> bool:
             if _subcommand(after, GH_VALUE_OPTIONS) == "merge":
                 return True
     return False
+
+
+def is_canonical_pr_create_command(command: str) -> bool:
+    """True only for absolute-cd plus quote-all trusted-gh PR creation."""
+    trusted = shutil.which("gh")
+    if not trusted:
+        return False
+    segments = [segment.strip() for segment in SEGMENT_SPLIT.split(command) if segment.strip()]
+    if len(segments) != 2:
+        return False
+    cd_tokens = _tokenise(segments[0])
+    if len(cd_tokens) != 2 or cd_tokens[0] != "cd" or not Path(cd_tokens[1]).is_absolute():
+        return False
+    gh_tokens = _tokenise(segments[1])
+    expected_prefix = ["command", str(Path(trusted).resolve()), "pr", "create"]
+    return (
+        gh_tokens[:4] == expected_prefix
+        and segments[1] == render_quote_all(gh_tokens)
+    )
 
 
 def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
@@ -3416,7 +3420,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
         return 2
     os.chdir(push_cwd)
-    if is_pr_create_command(command) and not is_pr_merge_command(command):
+    if is_canonical_pr_create_command(command) and not is_pr_merge_command(command):
         remote_error = check_pr_create_remote_head(Path.cwd(), command)
         if remote_error:
             print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)

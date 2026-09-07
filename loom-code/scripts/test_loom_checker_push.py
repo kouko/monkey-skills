@@ -19,6 +19,7 @@ Since the W0 wave-end fixes, three things changed shape here:
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -2353,10 +2354,15 @@ def test_gh_pr_create_does_not_rerun_the_package_suite(tmp_path: Path) -> None:
     recommit_review(repo, body)
     publish_current_head(repo, tmp_path / "remote.git")
 
+    trusted_gh = str(Path(shutil.which("gh")).resolve())
+    command = (
+        f"cd {repo} && "
+        + loom_checker.render_quote_all(["command", trusted_gh, "pr", "create", "--fill"])
+    )
     result = run_hook(
         {
             "tool_name": "Bash",
-            "tool_input": {"command": f"cd {repo} && gh pr create --fill"},
+            "tool_input": {"command": command},
             "cwd": str(tmp_path),
         },
         cwd=tmp_path,
@@ -2364,6 +2370,80 @@ def test_gh_pr_create_does_not_rerun_the_package_suite(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert "package-tests" not in result.stdout
+
+
+@pytest.mark.parametrize(
+    "unsafe_create",
+    [
+        "gh pr create --fill",
+        "/tmp/gh pr create --fill",
+        "gh pr create --fill; ./publish.sh",
+    ],
+)
+def test_noncanonical_pr_create_does_not_receive_the_package_exemption(
+    tmp_path: Path, unsafe_create: str,
+) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && {unsafe_create}"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.probes-package-tests" in blocked_rules(result)
+
+
+@pytest.mark.parametrize(
+    "shell",
+    [shutil.which("bash"), shutil.which("zsh")],
+    ids=["bash", "zsh"],
+)
+def test_canonical_pr_create_bypasses_an_inherited_absolute_gh_function(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, shell: str | None,
+) -> None:
+    if shell is None:
+        pytest.skip("the requested shell is unavailable")
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    trusted_gh = tmp_path / "bin" / "gh"
+    trusted_gh.parent.mkdir()
+    trusted_gh.write_text("#!/bin/sh\ntouch .trusted-gh\n", encoding="utf-8")
+    trusted_gh.chmod(0o755)
+    original_which = shutil.which
+    monkeypatch.setattr(
+        loom_checker.shutil,
+        "which",
+        lambda name: str(trusted_gh) if name == "gh" else original_which(name),
+    )
+    command = (
+        f"cd {repo} && "
+        + loom_checker.render_quote_all(
+            ["command", str(trusted_gh), "pr", "create", "--fill"]
+        )
+    )
+    assert loom_checker.is_canonical_pr_create_command(command)
+
+    preamble = f"function {trusted_gh}() {{ touch .shadowed-gh; }}"
+    env = dict(os.environ)
+    env.pop("BASH_ENV", None)
+    env.pop("ENV", None)
+    result = subprocess.run(
+        [shell, "-f"], input=preamble + "\n" + command + "\n",
+        cwd=repo, env=env, capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (repo / ".trusted-gh").exists()
+    assert not (repo / ".shadowed-gh").exists()
 
 
 def test_gh_pr_create_requires_the_reviewed_head_on_the_remote(tmp_path: Path) -> None:
