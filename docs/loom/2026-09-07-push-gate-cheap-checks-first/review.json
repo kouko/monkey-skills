@@ -463,6 +463,38 @@
       "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
       "result": "deferred-to-hook",
       "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py loom-code/scripts/test_loom_checker_push_probes.py::test_probes_extra_file_change_between_probe_and_head_still_blocks loom-code/scripts/test_probes_lanes_wave_end.py::test_push_gateonly_missing_package_tests_probe_still_blocked loom-code/scripts/test_loom_checker_push.py::test_every_failure_is_reported_not_just_the_first -q",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_single_owner_push_gate.py -q -k 'selectedrepomutation or packageheadmove or lastadversarymutation or firstadversarymutation or packagetrackedmutation or unchangedrepeat or existingguard'",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py -q -k test_push_liveheadrace_noexecutables",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "deferred-to-hook",
+      "artifact": ""
     }
   ],
   "questions": [
