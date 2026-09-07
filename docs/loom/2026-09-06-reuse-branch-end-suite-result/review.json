@@ -771,6 +771,23 @@
       "previous_findings": [{"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30", "status": "fixed", "evidence": "The baseline now names branch-reachable commit 2ec1e3b7; a no-tags single-branch clone excluded the obsolete object and the fixture passed."}],
       "findings": [],
       "notes": ["All rewritten commit subjects satisfy CI, active SHA references resolve from a branch-only clone, and the controlled replay still halves package-suite invocations with a 46.5 percent median wait reduction."]
+    },
+    {
+      "round": 18,
+      "scope": "branch-end",
+      "reviewer": "history-rewrite-review-b-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "findings": [
+        {"severity": "fatal", "dimension": "principles-conformance", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39", "text": "The user-selected Claude second reader was recorded as none and never used.", "fix": "Correct the immutable choice record and obtain a Claude verdict."},
+        {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:767", "text": "The existing round-18 docs verdict omits deletion-first and includes an out-of-lens score, so it cannot count.", "fix": "Obtain a conforming independent verdict for the repaired branch."},
+        {"severity": "fatal", "dimension": "external-surface-grounding", "anchor": "loom-code/scripts/loom_checker.py:3197", "text": "The new GitHub CLI API and Git push flag contracts lack authoritative citations.", "fix": "Cite the official GitHub CLI and Git manuals at the call sites."}
+      ],
+      "notes": ["The implementation tests, branch-only replay, tree-equivalence check, and permanent adversarial probes all passed."]
     }
   ],
   "probes": [
@@ -1217,6 +1234,27 @@
       "origin_sha": "e28991b3d8ebdb1630004a3466e597363fe6a581",
       "raised_by": "history-rewrite-adversary-rerun-codex",
       "resolved": "fixed by 177a38b5 — the replay baseline now resolves from a branch-only clone and the refreshed controlled measurement passes"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
+      "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "raised_by": "history-rewrite-review-b-codex",
+      "resolved": null
+    },
+    {
+      "id": "branch-end-09",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:767",
+      "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "raised_by": "history-rewrite-review-b-codex",
+      "resolved": null
+    },
+    {
+      "id": "branch-end-10",
+      "anchor": "loom-code/scripts/loom_checker.py:3197",
+      "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "raised_by": "history-rewrite-review-b-codex",
+      "resolved": null
     }
   ],
   "dispatch": [
@@ -1611,11 +1649,35 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T12:18:55+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:19",
+      "role": "reviewer",
+      "agent_id": "second-vendor-repair-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T12:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:19",
+      "role": "reviewer",
+      "agent_id": "second-vendor-repair-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T12:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:19",
+      "role": "adversary",
+      "agent_id": "second-vendor-repair-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T12:40:00+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
-    "rounds": 18,
-    "dispatches": 49,
+    "rounds": 19,
+    "dispatches": 52,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
