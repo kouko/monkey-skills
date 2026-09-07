@@ -16,11 +16,19 @@
       "model": "gpt-6-astra",
       "started": "2026-09-07T21:37:29+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T22:04:07+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 0,
-    "dispatches": 1,
+    "dispatches": 2,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
