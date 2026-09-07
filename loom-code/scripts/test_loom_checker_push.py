@@ -2575,7 +2575,7 @@ def test_gh_pr_create_cannot_exempt_a_later_merge_in_the_same_command(tmp_path: 
     )
 
     assert result.returncode == 2
-    assert "push.probes-package-tests" in blocked_rules(result)
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 @pytest.mark.parametrize(
@@ -2606,17 +2606,18 @@ def test_gh_pr_create_cannot_exempt_a_nested_merge(
     )
 
     assert result.returncode == 2
-    assert "push.review-only-head" in blocked_rules(result)
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 def test_gh_pr_create_blocks_attached_short_head_for_another_branch(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     publish_current_head(repo, tmp_path / "remote.git")
 
+    command = canonical_pr_create(repo, "-Hother-branch", "--fill")
     result = run_hook(
         {
             "tool_name": "Bash",
-            "tool_input": {"command": f"cd {repo} && gh pr create -Hother-branch --fill"},
+            "tool_input": {"command": command},
             "cwd": str(tmp_path),
         },
         cwd=tmp_path,
@@ -2745,7 +2746,7 @@ def test_hook_mode_blocks_gh_repo_environment_override(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "canonical trusted-gh command" in result.stderr
 
 
 def test_hook_mode_blocks_compact_env_chdir_before_push(tmp_path: Path) -> None:
@@ -2785,7 +2786,7 @@ def test_hook_mode_blocks_gh_repository_override_before_subcommand(
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "canonical trusted-gh command" in result.stderr
 
 
 def test_hook_mode_blocks_xargs_push_behind_another_prefix(tmp_path: Path) -> None:

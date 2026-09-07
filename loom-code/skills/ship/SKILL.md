@@ -239,12 +239,13 @@ git ls-files '*.md' | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(cod
 python3 loom-code/scripts/check-skill-crossrefs.py
 ```
 
-The local push hook owns this: its deterministic
-push checker runs the resolved complete package-test command exactly once and
-re-runs recorded adversarial probes. Never invoke it as a separate preflight.
+The supported host's local push hook is the sole owner: its deterministic
+push checker runs the package-test command exactly once and
+re-runs adversarial probes. Never invoke it as a separate preflight.
 
 ```
-python3 -c 'import shutil; from pathlib import Path; print(*(Path(shutil.which(x)).resolve() for x in ("git","env","gh")), sep="\n")'
+python3 -c 'import shutil; from pathlib import Path; print(Path(shutil.which("git")).resolve())'
+command -v env gh
 git rev-parse --show-toplevel
 git rev-parse HEAD
 git symbolic-ref --quiet --short HEAD
