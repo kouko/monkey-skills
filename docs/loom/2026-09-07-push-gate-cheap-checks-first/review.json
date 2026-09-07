@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
+  "reviewed_sha": "61543283ff2c76647c209026f96a4803ac211d4d",
   "scope": "branch-end",
   "vendors": [
     "openai",
@@ -206,6 +206,117 @@
         "No probes were rerun in this fix round, as required by the fix-round protocol."
       ],
       "sha": "5de39a158046c4bf7fe9966c247031c66973d978"
+    },
+    {
+      "reviewer": "rev-codex-r3",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/spec.md:7",
+          "text": "nitpick (non-blocking): REQ-1 still permits a broader reading than the implemented per-rule executable boundary.",
+          "fix": "State in a future wording pass that executable-record validation remains inside the two executable-owning rules."
+        },
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/test_push_preflight_before_executables.py:9",
+          "text": "nitpick (non-blocking): The json import remains unused in both the permanent and evidence probe copies.",
+          "fix": "Remove only the unused json import in a future cleanup."
+        }
+      ],
+      "notes": [
+        "No new blocking regression was found in the cumulative branch.",
+        "The source and scaffolded mirror differ only by the expected version-stamp line.",
+        "No tests were executed by this reviewer; the complete package suite remains owned by the push hook."
+      ],
+      "sha": "61543283ff2c76647c209026f96a4803ac211d4d"
+    },
+    {
+      "reviewer": "rev-claude-r3",
+      "vendor": "anthropic",
+      "model": "claude-fable-5-1",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/test_push_preflight_before_executables.py:9",
+          "text": "nitpick (non-blocking): json is imported but never used in both copies of the probe module.",
+          "fix": "Delete the unused json import from both copies in a future cleanup."
+        },
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/loom_checker.py:3596",
+          "text": "nitpick (non-blocking): The identical live-HEAD failure tuple is built twice around the pre-executable boundary.",
+          "fix": "Extract the diagnostic construction if its wording changes again."
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/spec.md:7",
+          "text": "nitpick (non-blocking): REQ-1 describes a per-condition boundary while the implementation intentionally uses a per-rule boundary.",
+          "fix": "Narrow the wording in a future documentation pass."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/review.json:498",
+          "text": "nitpick (non-blocking): cost.rounds still reads 2 while the third-round dispatches are already present.",
+          "fix": "Set cost.rounds to 3 when recording this verdict."
+        }
+      ],
+      "notes": [
+        "The Claude CLI selected claude-fable-5-1 for this fresh-context review; the user confirmed that this model satisfies the second-vendor leg.",
+        "No blocking finding was identified and no tests were executed by this reviewer."
+      ],
+      "sha": "61543283ff2c76647c209026f96a4803ac211d4d"
     }
   ],
   "probes": [
@@ -498,10 +609,10 @@
     }
   ],
   "cost": {
-    "rounds": 2,
+    "rounds": 3,
     "dispatches": 15,
     "cap_changes": [],
-    "hours_plan_to_pr": 1.6
+    "hours_plan_to_pr": 3.16
   },
   "charter": "1.0"
 }
