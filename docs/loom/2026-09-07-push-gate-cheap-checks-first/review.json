@@ -168,6 +168,14 @@
       "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
       "result": "deferred-to-hook",
       "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py::test_push_liveheadrace_noexecutables -q",
+      "sha": "14a2193a2a86fcfe1c92eb60188223a358abcfb1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py"
     }
   ],
   "questions": [
@@ -250,11 +258,27 @@
       "model": "gpt-6-astra",
       "started": "2026-09-07T22:53:20+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-codex-r1",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T23:05:26+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-claude-r1",
+      "model": "claude-opus-5",
+      "started": "2026-09-07T23:05:26+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 1,
-    "dispatches": 8,
+    "dispatches": 10,
     "cap_changes": [],
     "hours_plan_to_pr": 1.23
   },
