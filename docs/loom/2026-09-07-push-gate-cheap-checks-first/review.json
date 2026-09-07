@@ -1,0 +1,19 @@
+{
+  "reviewed_sha": "0f611564866ea8f17650c1b28f8ee492e56fd3c3",
+  "scope": "build",
+  "vendors": [
+    "openai"
+  ],
+  "verdicts": [],
+  "probes": [],
+  "questions": [],
+  "open_findings": [],
+  "dispatch": [],
+  "cost": {
+    "rounds": 0,
+    "dispatches": 0,
+    "cap_changes": [],
+    "hours_plan_to_pr": null
+  },
+  "charter": "1.0"
+}
