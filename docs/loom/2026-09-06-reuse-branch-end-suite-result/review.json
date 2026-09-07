@@ -873,6 +873,62 @@
       "previous_findings": [{"id": "branch-end-08", "status": "fixed", "evidence": "Anthropic participated."}, {"id": "branch-end-09", "status": "fixed", "evidence": "A conforming code verdict exists, while a docs replacement remains separately required."}, {"id": "branch-end-10", "status": "fixed", "evidence": "Mirror parity passed."}, {"id": "branch-end-11", "status": "not-fixed", "evidence": "A global pushurl rule bypassed the local snapshot."}, {"id": "branch-end-12", "status": "dismissed", "evidence": "Substantively accepted but mechanically misattributed."}, {"id": "branch-end-13", "status": "dismissed", "evidence": "Substantively accepted but mechanically misattributed."}],
       "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3578", "text": "Global remote.origin.pushurl retargets the released push past the local-only guard.", "fix": "Compare effective configuration and add a permanent global regression."}, {"severity": "fatal", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1314", "text": "Dismissals name a nonexistent reviewer.", "fix": "Use a dispatched reviewing identity."}, {"severity": "important", "dimension": "omission", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:76", "text": "The report omits the dismissed fatal replay finding.", "fix": "Disclose the dismissal and rationale."}],
       "notes": ["The post-merge replay concern is outside the explicit plan contract."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "effective-config-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "not-fixed", "evidence": "A code-lens verdict cannot replace the malformed docs-lens verdict."}, {"id": "branch-end-14", "status": "fixed", "evidence": "Targeted local, global, and worktree mutation cases pass."}, {"id": "branch-end-15", "status": "fixed", "evidence": "The REST refs citation grounds the endpoint and response."}, {"id": "branch-end-16", "status": "fixed", "evidence": "Global and worktree regressions are permanent."}, {"id": "branch-end-17", "status": "fixed", "evidence": "Both dispositions use the dispatched blind runner."}, {"id": "branch-end-18", "status": "fixed", "evidence": "The report discloses both dismissed findings."}],
+      "findings": [{"severity": "fatal", "dimension": "principles-conformance", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:125", "text": "issue (blocking): The local-config retarget incident remains only in change-specific evidence.", "fix": "Add the repository-local mutation case to the permanent package suite."}, {"severity": "fatal", "dimension": "external-surface-grounding", "anchor": "loom-code/scripts/loom_checker.py:3580", "text": "issue (blocking): The effective Git configuration snapshot lacks an official git-config citation.", "fix": "Cite the official git-config documentation and synchronize the mirror."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1331", "text": "issue (blocking): branch-end-09 is resolved by a code-lens verdict rather than a conforming docs-lens replacement.", "fix": "Keep it unresolved until the dispatched docs reviewer returns."}, {"severity": "important", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1338", "text": "issue: Two resolution records cite a commit that is not an ancestor after the history rewrite.", "fix": "Bind both records to branch-reachable repair commits."}],
+      "notes": ["Six targeted tests passed; the full package suite remained deferred to the push hook."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "effective-config-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "not-fixed", "evidence": "The conforming replacement docs verdict had not yet been recorded."}, {"id": "branch-end-14", "status": "fixed", "evidence": "Effective configuration mutations are detected."}, {"id": "branch-end-15", "status": "fixed", "evidence": "The official REST citation is present."}, {"id": "branch-end-16", "status": "fixed", "evidence": "Permanent regressions cover the repaired behavior."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1331", "text": "issue (blocking): branch-end-09 was claimed resolved before a conforming docs-lens replacement verdict existed.", "fix": "Record the dispatched docs verdict, then resolve the finding."}],
+      "notes": ["Implementation repairs passed targeted review; the full package suite remained deferred to the push hook."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "replacement-docs-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "fixed", "evidence": "This replacement verdict contains all and only the six required docs-lens dimensions."}],
+      "findings": [{"severity": "fatal", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51", "text": "issue (blocking): The measurement predates the final effective-configuration implementation.", "fix": "Rerun the paired replay against the final implementation and refresh the report."}, {"severity": "nit", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59", "text": "nitpick: The displayed test-name population is stale.", "fix": "Replace the counts with recomputed values."}, {"severity": "nit", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "nitpick: The audit incorrectly says every historical finding has a Conventional Comments label.", "fix": "Disclose the immutable historical population and keep new findings conforming."}, {"severity": "nit", "dimension": "inconsistency", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58", "text": "nitpick: The confirmed spec contains a Traditional Chinese UI-flow section despite the repository artifact-language rule.", "fix": "Translate and reconfirm the fingerprint through the decision-point flow."}],
+      "notes": ["Static contract checks passed; the complete package suite was not run."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "effective-config-adversary-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "adversarial-security",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "NEEDS_REVISION", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "NEEDS_REVISION", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "not-fixed", "evidence": "No round-21 docs verdict was recorded at the reviewed SHA."}, {"id": "branch-end-14", "status": "not-fixed", "evidence": "A detached child can retarget after hook success."}, {"id": "branch-end-15", "status": "fixed", "evidence": "The REST reference contract is cited."}, {"id": "branch-end-16", "status": "fixed", "evidence": "Direct global and worktree regressions passed."}, {"id": "branch-end-17", "status": "fixed", "evidence": "Dismissals name the dispatched blind runner."}, {"id": "branch-end-18", "status": "fixed", "evidence": "The dismissed replay concern is disclosed."}],
+      "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3405", "text": "issue (security): The canonical parser accepts a configured remote other than literal origin.", "fix": "Require literal origin and add a permanent negative regression."}, {"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3580", "text": "issue (race): A detached child can retarget the symbolic remote after hook success and before the released Git command executes.", "fix": "Bind publication to the verified destination or explicitly narrow and disclose the guarantee."}, {"severity": "fatal", "dimension": "correctness", "anchor": "loom-code/scripts/loom_checker.py:3505", "text": "issue (boundary): PR remote-head equality is not recomputed after adversarial executables run.", "fix": "Recheck the remote HEAD after probes and add a permanent regression."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1335", "text": "issue (evidence): branch-end-09 lacks the required conforming docs-lens replacement.", "fix": "Record the replacement docs verdict before resolving it."}, {"severity": "important", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:17", "text": "issue (disclosure): The report claims literal origin while the checker accepts another configured remote.", "fix": "Enforce the origin boundary and refresh the report."}],
+      "notes": ["Direct effective-config regressions passed; arbitrary-remote, delayed-retarget, and PR-head movement attacks reproduced. The full suite was not run."]
     }
   ],
   "probes": [
@@ -1332,7 +1388,7 @@
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:767",
       "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
       "raised_by": "history-rewrite-review-b-codex",
-      "resolved": null
+      "resolved": "fixed by the conforming round-21 replacement-docs-review-codex verdict"
     },
     {
       "id": "branch-end-10",
@@ -1396,6 +1452,54 @@
       "origin_sha": "3732d1b3cf05b89844f900460910af773804e725",
       "raised_by": "final-repair-adversary-codex",
       "resolved": "fixed by 5e50e711 — the report discloses the dismissed fatal finding and rationale"
+    },
+    {
+      "id": "branch-end-19",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "replacement-docs-review-codex",
+      "resolved": "fixed by 504ad546 — the paired replay and report now cover the final functional commit"
+    },
+    {
+      "id": "branch-end-20",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "replacement-docs-review-codex",
+      "resolved": "fixed by 504ad546 — audit counts and the immutable historical-label limitation were refreshed"
+    },
+    {
+      "id": "branch-end-21",
+      "anchor": "loom-code/scripts/loom_checker.py:3580",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-review-codex",
+      "resolved": "fixed by 9cb6f7a4 — the local regression is permanent and the effective git-config call cites its official contract"
+    },
+    {
+      "id": "branch-end-22",
+      "anchor": "loom-code/scripts/loom_checker.py:3405",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-adversary-codex",
+      "resolved": "fixed by 9cb6f7a4 — literal origin is required and PR remote HEAD is recomputed after executable probes"
+    },
+    {
+      "id": "branch-end-23",
+      "anchor": "loom-code/scripts/loom_checker.py:3580",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-adversary-codex",
+      "dismissed": {
+        "reason": "The hook guarantees a pinned full-SHA source and verifies destination state through hook completion, but cannot contain a detached process after return without moving network publication into the checker; the report now states this boundary and that architectural expansion is outside this intent.",
+        "by": "branch-end-blind-codex-cli"
+      }
+    },
+    {
+      "id": "branch-end-24",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "replacement-docs-review-codex",
+      "dismissed": {
+        "reason": "The text is part of a user-confirmed spec fingerprint and changing only its language would reopen a human decision point without changing delivered behavior; the final review treats this as a documented historical artifact nit.",
+        "by": "branch-end-blind-codex-cli"
+      }
     }
   ],
   "dispatch": [
