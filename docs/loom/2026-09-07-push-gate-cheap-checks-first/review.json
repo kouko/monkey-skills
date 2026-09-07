@@ -312,6 +312,46 @@
       "sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
       "result": "deferred-to-hook",
       "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py loom-code/scripts/test_loom_checker_push_probes.py::test_probes_extra_file_change_between_probe_and_head_still_blocks loom-code/scripts/test_probes_lanes_wave_end.py::test_push_gateonly_missing_package_tests_probe_still_blocked loom-code/scripts/test_loom_checker_push.py::test_every_failure_is_reported_not_just_the_first -q",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_single_owner_push_gate.py -q -k 'selectedrepomutation or packageheadmove or lastadversarymutation or firstadversarymutation or packagetrackedmutation or unchangedrepeat or existingguard'",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py -q -k test_push_liveheadrace_noexecutables",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest loom-code/scripts/test_push_preflight_before_executables.py loom-code/scripts/test_single_owner_push_gate.py::test_push_packageheadmove_rejected loom-code/scripts/test_single_owner_push_gate.py::test_push_lastadversarymutation_rejected loom-code/scripts/test_single_owner_push_gate.py::test_push_firstadversarymutation_rejected loom-code/scripts/test_single_owner_push_gate.py::test_push_packagetrackedmutation_rejected loom-code/scripts/test_loom_checker_push.py::test_every_failure_is_reported_not_just_the_first loom-code/scripts/test_loom_checker_push_probes.py::test_probes_extra_file_change_between_probe_and_head_still_blocks loom-code/scripts/test_probes_lanes_wave_end.py::test_push_gateonly_missing_package_tests_probe_still_blocked -vv -p no:cacheprovider",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/blind-run-report.md"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "deferred-to-hook",
+      "artifact": ""
     }
   ],
   "questions": [
