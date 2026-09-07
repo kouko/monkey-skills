@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+  "reviewed_sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
   "scope": "branch-end",
   "second_vendor": "claude",
   "vendors": [
@@ -668,6 +668,39 @@
       ],
       "findings": [],
       "notes": ["design re-look: continue fixing", "The only difference from the later reviewed tree is review.json audit history; no tests were rerun for this binding check."]
+    },
+    {
+      "round": 15,
+      "scope": "branch-end",
+      "reviewer": "final-independent-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3189", "status": "fixed", "evidence": "The remote SHA is queried through the same origin-derived GitHub API identity instead of redirectable Git transport."},
+        {"anchor": "loom-code/scripts/test_loom_checker_push.py:2427", "status": "fixed", "evidence": "The regression pins the complete hostname, endpoint, ref, and jq argv."}
+      ],
+      "findings": [],
+      "notes": ["The metadata-only PR-create exemption is bound to the reviewed repository, branch, SHA, and GitHub identity."]
+    },
+    {
+      "round": 15,
+      "scope": "branch-end",
+      "reviewer": "privacy-dispatch-measure8-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "adversarial-security",
+      "verdict": "PASS",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3124", "status": "fixed", "evidence": "The canonical form rejects shell, repository, host, head, body-path, and transport identity ambiguity."}
+      ],
+      "findings": [],
+      "notes": ["The final API argv coverage closed the only remaining non-blocking test note."]
     }
   ],
   "probes": [
@@ -804,6 +837,46 @@
       "scope": "branch-end",
       "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
       "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:15",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:15",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:15",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
     }
@@ -1277,11 +1350,27 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T08:07:09+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:15",
+      "role": "reviewer",
+      "agent_id": "final-independent-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T10:04:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:15",
+      "role": "adversary",
+      "agent_id": "privacy-dispatch-measure8-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T09:34:00+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
-    "rounds": 14,
-    "dispatches": 40,
+    "rounds": 15,
+    "dispatches": 42,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
