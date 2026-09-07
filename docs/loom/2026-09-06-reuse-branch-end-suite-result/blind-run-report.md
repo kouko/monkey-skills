@@ -37,33 +37,33 @@
 - **如何驗證**：讓測試或攻擊案例在 checker 回傳前修改已追蹤、暫存、未追蹤內容或移動版本；另重播 detached writer 在 hook 回傳後才移動 HEAD 的既知反例，並以本機 bare remote 觀察實際發布物件；最後以未變動版本連續重試兩次。
 - **發生了什麼**：同步發生的內容或版本變動都被阻擋並要求回到 Build／review；完全未變動的版本可重試。舊版反例確實能在 hook 成功後改動本機 repository，所以先前「任何變動都被 gate 阻擋」的說法是錯的；最終版要求 canonical command、在 executable probes 前後核對同一 live HEAD，並用 immutable refspec 使後置變動無法取代已驗證的發布物件。
 - **Evidence**：`test_push_packageheadmove_rejected`、`test_push_lastadversarymutation_rejected`、`test_push_firstadversarymutation_rejected`、`test_push_packagetrackedmutation_rejected`、`test_push_unchangedrepeat_released`、`test_gate_concurrent_reproduced`、`test_gate_immutable_pinsreviewed`
-- **Verdict**：works — tracked 修正仍使 checkpoint 失效；環境修復且 Git 不變可重試；對 hook 回傳後的 detached writer，保證是「不發布未驗證 commit」，不是「阻止本機 mutation」。
+- **Verdict**：works — tracked 修正仍使 checkpoint 失效；環境修復且 Git 不變可重試；對 hook 回傳後的 detached writer，保證只涵蓋完整 SHA 不會被換成未驗證 commit，不保證阻止後續本機 mutation 或目的地設定競態。
 
 ### 6. 實作途中以同一個已接受 checkpoint 重播從 Ship Push step 到本機 gate 阻擋或釋放 network push 的相同範圍，記錄 baseline 與 candidate 實際完整測試次數及 monotonic 等待秒數；candidate 恰好執行一次、少於 baseline、發布 verdict 相同且實測等待下降。
 
 - **如何驗證**：從 Git 取出兩個版本的真實 checker bundle 與 hook 定義，在同一個已接受 checkpoint 上交替執行七組；由 repository 宣告的 package command 以 monotonic clock 自行記錄每次執行時間，外層再量測直到真實 hook verdict，流程在 network transfer 前停止。
-- **發生了什麼**：舊版實際走 preflight 加 hook，共執行十四次；最終新版用以 `command` 開頭且固定 `--no-verify` 的完整 canonical quote-all command 走 hook-only，共執行七次。兩者全部由真實 gate 判定放行。舊版完整邊界中位數為 2.128029542 秒，新版為 1.138371292 秒，下降 0.989658250 秒，約 46.5%。
+- **發生了什麼**：舊版實際走 preflight 加 hook，共執行十四次；最終新版用以 `command` 開頭且固定 `--no-verify` 的完整 canonical quote-all command 走 hook-only，共執行七次。兩者全部由真實 gate 判定放行。舊版完整邊界中位數為 2.205527959 秒，新版為 1.209504333 秒，下降 0.996023626 秒，約 45.2%。
 - **Evidence**：`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`test_revisions_execute_versioned_real_gate_entrypoints`、`test_candidate_one_call_faster_same_verdict`；branch-only clone 輸出：`2 passed in 27.37s`
 - **Verdict**：works — 固定案例的實測次數減半，判定不變且等待下降。
 
 ## Review summary
 
-六條驗收目前都有可執行證據。detached-writer、shell expansion、executable-function shadowing 與 repository-configured pre-push hook 風險已由 `839f1884` 的 `command`-prefixed canonical immutable command 與固定 `--no-verify` 修正，量測也已重跑最終版本的真實入口；是否關閉 findings 仍由原 reviewer 在本輪複查決定。英文規則稽核另有一項不影響執行的文字一致性問題。
+六條驗收目前都有可執行證據。detached-writer、shell expansion、executable-function shadowing、repository-configured pre-push hook 與 synchronous Git destination mutation 風險已由 `9cb6f7a4` 的 canonical origin command、固定 `--no-verify`、probe 前後狀態比對與 PR remote-head 重查修正，量測也已重跑最終版本的真實入口；是否關閉 findings 仍由原 reviewer 在本輪複查決定。英文規則稽核另有一項不影響執行的文字一致性問題。
 
 | 可讀標籤 | 英文規則結果 | Evidence |
 |---|---|---|
 | 計畫 | 部分符合；工作拆分與風險為英文，逐字保留的使用者問題為繁體中文 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/plan.md:33` |
 | 規格 | 部分符合；需求與設計決定為英文，操作流程為繁體中文；七條需求皆使用規定格式 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:7`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58`、`REQ-1`–`REQ-7` |
-| 審查發現 | 符合；文字為英文且以允許的評論標籤開頭 | `review.json` 的 findings |
+| 審查發現 | 部分符合；最新 finding 使用允許的評論標籤，但不可變歷史中仍有 23 筆舊 finding 未使用該標籤 | `review.json` 的 findings |
 | 驗證證據 | 符合；量測說明、程式說明與案例說明皆為英文 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py` |
-| 測試名稱 | 符合；新增案例均使用三段式名稱 | 對 `git diff --unified=0 4e158201 -- '*.py'` 的新增行套用 `^+def (test_[A-Za-z0-9_]+)\(`：65 個 test definitions、50 個 unique names；15 個重複名稱來自 evidence probe 與 graduated probe 的成對案例 |
+| 測試名稱 | 符合；新增案例均使用三段式名稱 | 對 `git diff --unified=0 4e158201 -- '*.py'` 的新增行套用 `^+def (test_[A-Za-z0-9_]+)\(`：91 個 test definitions、74 個 unique names；17 個重複名稱來自 evidence probe 與 graduated probe 的成對案例 |
 | 提交訊息 | 符合；本次變更的 commit subjects 為英文 | `git log --format='%h%x09%s' 4e158201..HEAD` |
 
 非阻擋發現：規格的操作流程不是英文。本輪不修改已確認的 `spec.md`，以免改變使用者已確認的 fingerprint；此 nit 留待 checkpoint 流程處理。
 
 ## 對你既有的資料做了什麼
 
-驗證只在乾淨副本與臨時建立的專案中讀取既有版本與設定，沒有接觸或遷移你的個人資料，也沒有向外部或 network remote 推送。shell-boundary 與 immutable-source 攻擊案例會把 synthetic commit 推到臨時本機 bare remote。checker 回傳前發生的 repository mutation 會阻擋；detached writer 若在回傳後才動作，仍可能改變本機內容，但標準 `command` builtin 會先繞過 alias／function lookup，canonical command 綁定的已驗證 SHA 不會被替換成發布來源，固定 flags 不會帶出隱含 tag、submodule refs，也不會執行 repository-configured pre-push hook。流程不替你復原或備份這類本機變動，原有檔案格式沒有改變。
+驗證只在乾淨副本與臨時建立的專案中讀取既有版本與設定，沒有接觸或遷移你的個人資料，也沒有向外部或 network remote 推送。shell-boundary 與 immutable-source 攻擊案例會把 synthetic commit 推到臨時本機 bare remote。checker 回傳前發生的 repository mutation 會阻擋；detached writer 若在回傳後才動作，仍可能改變本機內容或目的地設定。標準 `command` builtin 與完整 SHA 只保證發布來源不會被替換成另一個 commit；hook 放行與 Git 真正執行之間的目的地競態不在此機制保證內。固定 flags 不會帶出隱含 tag、submodule refs，也不會執行 repository-configured pre-push hook。流程不替你復原或備份這類本機變動，原有檔案格式沒有改變。
 
 ## 我替你決定的事
 
