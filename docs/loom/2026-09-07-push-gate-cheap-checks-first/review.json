@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "b4672aba48bca335569f797ac2eec252592b92af",
+  "reviewed_sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
   "scope": "branch-end",
   "vendors": [
     "openai",
@@ -398,6 +398,52 @@
         "No rule text or control flow changed and no tests were executed by this reader."
       ],
       "sha": "b4672aba48bca335569f797ac2eec252592b92af"
+    },
+    {
+      "reviewer": "rev-codex-r5",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS", "architecture": "PASS", "correctness": "PASS",
+        "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS",
+        "cross-task-coherence": "PASS", "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS", "deliberate-simplification": "PASS",
+        "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS",
+        "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "All three README language tables now report 1.8.2, matching both manifests, both tracked Codex hook stamps, and the CHANGELOG.",
+        "Focused manifest, mirror, and whitespace checks passed; the full package suite remains deferred to the push hook."
+      ],
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048"
+    },
+    {
+      "reviewer": "rev-claude-r5",
+      "vendor": "anthropic",
+      "model": "claude-fable-5-1",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS", "architecture": "PASS", "correctness": "PASS",
+        "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS",
+        "cross-task-coherence": "PASS", "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS", "deliberate-simplification": "PASS",
+        "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS",
+        "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Fable confirmed the two-line localized README fix and consistent 1.8.2 publication stamps at the exact reviewed SHA.",
+        "No full package suite was run by this reviewer."
+      ],
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048"
     }
   ],
   "probes": [
@@ -574,6 +620,38 @@
       "scope": "branch-end",
       "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
       "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --with pytest --with pyyaml python -m pytest -q loom-code/scripts/test_codex_mirror_matches_checker.py loom-code/scripts/test_push_preflight_before_executables.py",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_lateblocker_noexecutables",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_validpath_onceinorder",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
       "result": "deferred-to-hook",
       "artifact": ""
     }
@@ -778,7 +856,7 @@
     }
   ],
   "cost": {
-    "rounds": 4,
+    "rounds": 5,
     "dispatches": 22,
     "cap_changes": [],
     "hours_plan_to_pr": 3.16
