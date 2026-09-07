@@ -614,11 +614,35 @@
       "model": "gpt-6-astra",
       "started": "2026-09-08T06:33:18+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-branch-end-r3",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T06:35:39+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-codex-r3",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T06:35:39+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-claude-r3",
+      "model": "claude-fable-5-1",
+      "started": "2026-09-08T06:35:39+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 16,
+    "dispatches": 19,
     "cap_changes": [],
     "hours_plan_to_pr": 3.16
   },
