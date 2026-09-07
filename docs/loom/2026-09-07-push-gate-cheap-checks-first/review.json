@@ -606,11 +606,19 @@
       "model": "claude-opus-5",
       "started": "2026-09-07T23:50:33+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "orchestrator-version-fix",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T06:33:18+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
     "rounds": 3,
-    "dispatches": 15,
+    "dispatches": 16,
     "cap_changes": [],
     "hours_plan_to_pr": 3.16
   },
