@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+  "reviewed_sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
   "scope": "branch-end",
   "second_vendor": "claude",
   "vendors": [
@@ -757,6 +757,20 @@
       "previous_findings": [{"anchor": "requirements-package-tests.lock:1", "status": "fixed", "evidence": "The complete 11-package graph is version-pinned and SHA-256 hash-verified."}],
       "findings": [],
       "notes": ["The dependency-resolution reproducibility blocker is closed."]
+    },
+    {
+      "round": 18,
+      "scope": "branch-end",
+      "reviewer": "history-rewrite-review-rerun-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "cross-task-coherence": "PASS"},
+      "previous_findings": [{"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30", "status": "fixed", "evidence": "The baseline now names branch-reachable commit 2ec1e3b7; a no-tags single-branch clone excluded the obsolete object and the fixture passed."}],
+      "findings": [],
+      "notes": ["All rewritten commit subjects satisfy CI, active SHA references resolve from a branch-only clone, and the controlled replay still halves package-suite invocations with a 46.5 percent median wait reduction."]
     }
   ],
   "probes": [
@@ -1015,6 +1029,38 @@
       "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py -q --tb=short",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest loom-code/scripts/test_loom_checker_push.py::test_reviewed_sha_review_only_commit_stacked_between_verdict_and_head_passes loom-code/scripts/test_loom_checker_push.py::test_reviewed_sha_extra_file_change_between_verdict_and_head_still_blocks loom-code/scripts/test_loom_checker_push.py::test_a_verdict_sha_pointing_to_an_older_commit_blocks loom-code/scripts/test_loom_checker_push.py::test_a_probe_for_another_commit_blocks loom-code/scripts/test_loom_checker_push.py::test_head_carrying_a_second_file_is_blocked -q --tb=line",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_loom_checker_push.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_two_commits_pure_appends_passes loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_earlier_verdict_value_changed_blocks_naming_rewrite loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_verdict_entry_deleted_blocks loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_probe_result_flipped_blocks_as_tampering loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_dispatch_started_edited_blocks -q --tb=line",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_charter_review_edits.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "deferred-to-hook",
+      "artifact": ""
     }
   ],
   "questions": [
@@ -1164,6 +1210,13 @@
       "origin_sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
       "raised_by": "branch-end-reader-b-codex-cli",
       "resolved": "fixed by 42739e14, 3ecac98e, and 1dbcd4a6 — the accepted command requires --no-verify, Bash and zsh regressions contain repository hooks, and the final candidate measurement was refreshed"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30",
+      "origin_sha": "e28991b3d8ebdb1630004a3466e597363fe6a581",
+      "raised_by": "history-rewrite-adversary-rerun-codex",
+      "resolved": "fixed by 177a38b5 — the replay baseline now resolves from a branch-only clone and the refreshed controlled measurement passes"
     }
   ],
   "dispatch": [
@@ -1553,7 +1606,7 @@
     }
   ],
   "cost": {
-    "rounds": 17,
+    "rounds": 18,
     "dispatches": 48,
     "cap_changes": [],
     "hours_plan_to_pr": null
