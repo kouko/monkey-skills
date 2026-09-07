@@ -2211,11 +2211,23 @@
     },
     {
       "task": "branch-end-fix-review:24", "role": "adversary", "agent_id": "ledger-close-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "reviewer", "agent_id": "replay-bootstrap-review-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "reviewer", "agent_id": "replay-bootstrap-review-claude", "model": "claude-sonnet-5", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "reviewer", "agent_id": "replay-bootstrap-docs-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "adversary", "agent_id": "replay-bootstrap-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
     }
   ],
   "cost": {
-    "rounds": 24,
-    "dispatches": 71,
+    "rounds": 25,
+    "dispatches": 75,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
