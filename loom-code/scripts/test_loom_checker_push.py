@@ -2445,6 +2445,37 @@ def test_gh_pr_create_cannot_exempt_a_later_merge_in_the_same_command(tmp_path: 
     assert "push.probes-package-tests" in blocked_rules(result)
 
 
+@pytest.mark.parametrize(
+    "nested_merge",
+    [
+        "eval 'gh pr merge 12 --squash'",
+        "bash -c 'gh pr merge 12 --squash'",
+    ],
+)
+def test_gh_pr_create_cannot_exempt_a_nested_merge(
+    tmp_path: Path, nested_merge: str,
+) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": f"cd {repo} && gh pr create --fill; {nested_merge}"
+            },
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.review-only-head" in blocked_rules(result)
+
+
 def test_gh_pr_create_blocks_attached_short_head_for_another_branch(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     publish_current_head(repo, tmp_path / "remote.git")
