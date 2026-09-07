@@ -3,7 +3,7 @@
 ## Scope and controls
 
 - Baseline: `9d009c49e02a52c4838dba30a88501e0bbe79ab0`.
-- Candidate: `931b9f9364309727f7891d57c80bbe6b6ea08bba`, including the immutable-source, shell-boundary, executable-shadow, and post-gate-hook hardening.
+- Candidate: `839f1884a0d839475f9276c228db70b546c218a2`, including the immutable-source, shell-boundary, executable-shadow, and post-gate-hook hardening.
 - Boundary: baseline runs its real explicit `loom_checker.py push` preflight and then its real versioned PreToolUse hook; candidate runs its real versioned hook only. Timing starts immediately before the first checker process and ends when the hook returns its actual release/block result. The intercepted Git push is not executed, so the boundary ends before network transfer.
 - Version isolation: the harness uses `git archive` to extract each revision's `loom_checker.py`, `git_exec.py`, `codex_scaffold.py`, `loom_record_fire.py`, `hooks/hooks.json`, and complete `contract/` package. It executes the hook command read from that revision's `hooks.json`; it never imports the current checkout's checker as a substitute.
 - Fixed fixture: one accepted checkpoint is copied unchanged into every arm. Its HEAD was `e8514d1ed2f49080629f5a439d13863d8681c01c` in this run, on branch `work`.

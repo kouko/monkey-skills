@@ -48,7 +48,7 @@
 
 ## Review summary
 
-六條驗收目前都有可執行證據。detached-writer、shell expansion、executable-function shadowing 與 repository-configured pre-push hook 風險已由 `931b9f93` 的 `command`-prefixed canonical immutable command 與固定 `--no-verify` 修正，量測也已重跑最終版本的真實入口；是否關閉 findings 仍由原 reviewer 在本輪複查決定。英文規則稽核另有一項不影響執行的文字一致性問題。
+六條驗收目前都有可執行證據。detached-writer、shell expansion、executable-function shadowing 與 repository-configured pre-push hook 風險已由 `839f1884` 的 `command`-prefixed canonical immutable command 與固定 `--no-verify` 修正，量測也已重跑最終版本的真實入口；是否關閉 findings 仍由原 reviewer 在本輪複查決定。英文規則稽核另有一項不影響執行的文字一致性問題。
 
 | 可讀標籤 | 英文規則結果 | Evidence |
 |---|---|---|
