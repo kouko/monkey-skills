@@ -17,6 +17,7 @@ SCRIPTS = Path(__file__).resolve().parents[5] / "loom-code" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import test_loom_checker_push as push_fixture  # noqa: E402
+import loom_checker  # noqa: E402
 
 
 def _package_command(label: str, *, exit_code: int = 0, mutate: bool = False) -> str:
@@ -160,3 +161,36 @@ def test_push_failedmutation_blockpreserved(tmp_path: Path) -> None:
         "adversarial-2",
         "adversarial-3",
     ]
+
+
+def test_push_liveheadrace_noexecutables(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A HEAD move after preflight validation must prevent executable starts."""
+    repo = push_fixture.build_repo(tmp_path)
+    package = _package_command("package")
+    adversarial = _adversarial_commands()
+    _set_package_default(repo, package)
+    _rebuild_checkpoint(repo, _review_with_commands(repo, package, adversarial))
+    original_git_text = loom_checker.git_text
+    head_reads = 0
+
+    def move_head_before_snapshot(selected: Path, *args: str) -> str:
+        nonlocal head_reads
+        if args == ("rev-parse", "HEAD"):
+            head_reads += 1
+            if head_reads == 2:
+                push_fixture.git(repo, "commit", "--allow-empty", "-q", "-m", "race")
+        return original_git_text(selected, *args)
+
+    monkeypatch.setattr(loom_checker, "git_text", move_head_before_snapshot)
+    monkeypatch.chdir(repo)
+
+    result = loom_checker._cmd_push(["--require-live-head"])
+
+    assert result == 1
+    assert head_reads >= 2
+    assert _execution_log(repo) == [], (
+        "HEAD moved after deterministic preflight validation, but commands started: "
+        f"{_execution_log(repo)}"
+    )
