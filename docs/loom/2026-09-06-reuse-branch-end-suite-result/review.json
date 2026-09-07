@@ -985,6 +985,34 @@
       "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "Final measurement is branch-reachable."}, {"id": "branch-end-20", "status": "fixed", "evidence": "The audit was refreshed, but nit findings should not be promoted to open findings."}, {"id": "branch-end-21", "status": "fixed", "evidence": "Effective configuration checks and regressions pass."}, {"id": "branch-end-22", "status": "not-fixed", "evidence": "The origin and PR-head fatals were conflated into one open finding."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The scoped limitation is disclosed."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "This nit should not be an open finding."}],
       "findings": [{"severity": "important", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1478", "text": "issue (evidence): The literal-origin and post-probe PR-head findings need distinct open-finding entries.", "fix": "Record a separate resolved entry for the PR-head finding."}, {"severity": "important", "dimension": "inconsistency", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464", "text": "issue (evidence): Two round-21 nits were promoted into open findings.", "fix": "Remove the nit-derived entries while preserving immutable verdict history."}],
       "notes": ["Seven targeted boundary cases passed; no complete package suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-review-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "code", "verdict": "NEEDS_REVISION", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "The post-probe PR-head recheck and permanent regression pass."}, {"id": "branch-end-26", "status": "fixed", "evidence": "The test population recomputes to 94 definitions and 77 unique names."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The closing checkpoint does not exist at the reviewed dispatch SHA."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575", "text": "issue (blocking): branch-end-27 is marked resolved before the closing checkpoint exists.", "fix": "Leave it unresolved until the closing checkpoint binds reviewed_sha."}],
+      "notes": ["The focused PR-head regression passed; no full suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-review-claude", "vendor": "anthropic", "model": "claude-sonnet-5", "lens": "code", "verdict": "PASS_WITH_NOTES", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "Core destination protections pass targeted checks."}, {"id": "branch-end-26", "status": "not-fixed", "evidence": "The allowed-label recompute gives 23, not 26."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The final checkpoint is still in progress."}],
+      "findings": [{"severity": "important", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue: The allowed-label population is 23 rather than 26.", "fix": "Use the repository rule with optional label decorations and refresh the count."}],
+      "notes": ["The 94/77/17 test population and three core destination protections verified; no full suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-docs-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "docs", "verdict": "NEEDS_REVISION", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "The PR-head finding has a distinct entry."}, {"id": "branch-end-26", "status": "not-fixed", "evidence": "The correct unlabeled count is 23."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The closing checkpoint is not yet present."}],
+      "findings": [{"severity": "fatal", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue (blocking): The report says 26 unlabeled findings while the allowed-label rule yields 23.", "fix": "Refresh the report and branch-end-26 resolution to 23."}, {"severity": "fatal", "dimension": "inconsistency", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575", "text": "issue (blocking): branch-end-27 is prematurely resolved.", "fix": "Keep it unresolved until the closing checkpoint exists."}],
+      "notes": ["Measurement and test populations otherwise recompute; no full suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "NEEDS_REVISION", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "Five focused destination tests pass."}, {"id": "branch-end-26", "status": "not-fixed", "evidence": "The correct historical unlabeled count is 23."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The promised final checkpoint is not present."}],
+      "findings": [{"severity": "fatal", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue (blocking): The unlabeled finding audit is 23, not 26.", "fix": "Correct the report and resolution evidence."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575", "text": "issue (blocking): A future closing checkpoint is recorded as already complete.", "fix": "Set branch-end-27 unresolved until that checkpoint is written."}, {"severity": "important", "dimension": "omission", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464", "text": "issue (evidence): The committed ledger contains two nit-derived open-finding entries without a disposition for the classification mistake.", "fix": "Record why append-only integrity requires retaining them."}],
+      "notes": ["Core destination protections pass; no full suite was run."]
     }
   ],
   "probes": [
@@ -1577,6 +1605,30 @@
       "origin_sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
       "raised_by": "final-evidence-review-claude",
       "resolved": "fixed by the closing review checkpoint, which binds reviewed_sha to the exact final reviewed content"
+    },
+    {
+      "id": "branch-end-28",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464",
+      "origin_sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "raised_by": "final-evidence-adversary-codex",
+      "dismissed": {
+        "reason": "The two nit-derived entries were already committed into the append-only review history before the classification error was identified; deleting or rewriting them would violate the stronger evidence-integrity invariant, and retaining resolved or dismissed extra entries changes no release behavior.",
+        "by": "branch-end-blind-codex-cli"
+      }
+    },
+    {
+      "id": "branch-end-29",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57",
+      "origin_sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "raised_by": "audit-repair-docs-codex, audit-repair-adversary-codex",
+      "resolved": "fixed by the post-round-23 evidence refresh — the report uses the repository rule with optional label decorations and correctly states 23"
+    },
+    {
+      "id": "branch-end-30",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575",
+      "origin_sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "raised_by": "audit-repair-review-codex, audit-repair-docs-codex, audit-repair-adversary-codex",
+      "resolved": null
     }
   ],
   "dispatch": [
@@ -2115,11 +2167,23 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T14:30:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "reviewer", "agent_id": "ledger-close-review-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "reviewer", "agent_id": "ledger-close-review-claude", "model": "claude-sonnet-5", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "reviewer", "agent_id": "ledger-close-docs-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "adversary", "agent_id": "ledger-close-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
     }
   ],
   "cost": {
-    "rounds": 23,
-    "dispatches": 67,
+    "rounds": 24,
+    "dispatches": 71,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },

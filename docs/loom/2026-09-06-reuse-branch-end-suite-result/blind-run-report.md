@@ -54,7 +54,7 @@
 |---|---|---|
 | 計畫 | 部分符合；工作拆分與風險為英文，逐字保留的使用者問題為繁體中文 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/plan.md:33` |
 | 規格 | 部分符合；需求與設計決定為英文，操作流程為繁體中文；七條需求皆使用規定格式 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:7`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58`、`REQ-1`–`REQ-7` |
-| 審查發現 | 部分符合；最新 finding 使用允許的評論標籤，但不可變歷史中仍有 26 筆舊 finding 未使用該標籤 | `review.json` 的 findings |
+| 審查發現 | 部分符合；最新 finding 使用允許的評論標籤，但不可變歷史中仍有 23 筆舊 finding 未使用該標籤 | `review.json` 的 findings |
 | 驗證證據 | 符合；量測說明、程式說明與案例說明皆為英文 | `docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py`、`docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py` |
 | 測試名稱 | 符合；新增案例均使用三段式名稱 | 對 `git diff --unified=0 4e158201 -- '*.py'` 的新增行套用 `^+def (test_[A-Za-z0-9_]+)\(`：94 個 test definitions、77 個 unique names；17 個重複名稱來自 evidence probe 與 graduated probe 的成對案例 |
 | 提交訊息 | 符合；本次變更的 commit subjects 為英文 | `git log --format='%h%x09%s' 4e158201..HEAD` |
