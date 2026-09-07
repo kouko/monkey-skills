@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+  "reviewed_sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
   "scope": "branch-end",
   "second_vendor": "claude",
   "vendors": [
@@ -1013,6 +1013,26 @@
       "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "Five focused destination tests pass."}, {"id": "branch-end-26", "status": "not-fixed", "evidence": "The correct historical unlabeled count is 23."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The promised final checkpoint is not present."}],
       "findings": [{"severity": "fatal", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue (blocking): The unlabeled finding audit is 23, not 26.", "fix": "Correct the report and resolution evidence."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575", "text": "issue (blocking): A future closing checkpoint is recorded as already complete.", "fix": "Set branch-end-27 unresolved until that checkpoint is written."}, {"severity": "important", "dimension": "omission", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464", "text": "issue (evidence): The committed ledger contains two nit-derived open-finding entries without a disposition for the classification mistake.", "fix": "Record why append-only integrity requires retaining them."}],
       "notes": ["Core destination protections pass; no full suite was run."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-review-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "code", "verdict": "PASS", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "The append-only rationale is valid."}, {"id": "branch-end-29", "status": "fixed", "evidence": "The allowed-label population recomputes to 23."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "Binding is intentionally pending this closing checkpoint."}], "findings": [], "notes": ["Five focused destination checks passed; no full suite was run."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-review-claude", "vendor": "anthropic", "model": "claude-sonnet-5", "lens": "code", "verdict": "PASS", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "Deleting committed ledger entries would violate append-only integrity."}, {"id": "branch-end-29", "status": "fixed", "evidence": "Independent recomputation yields 23."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "The closing binding is the recorder's remaining action."}], "findings": [], "notes": ["Counts and core protections verified without a full suite."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-docs-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "docs", "verdict": "PASS", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "The superseding entry preserves append-only history."}, {"id": "branch-end-29", "status": "fixed", "evidence": "Report and independent count both say 23."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "Expected pending state before the closing recorder."}], "findings": [], "notes": ["All counts and measurement figures recompute; no full suite was run."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "PASS_WITH_NOTES", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "The disposition preserves the stronger append-only invariant."}, {"id": "branch-end-29", "status": "fixed", "evidence": "The report count independently recomputes."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "The recorder must now bind the reviewed SHA."}], "findings": [], "notes": ["Focused guards and review-edits passed; the detached-process limitation stays outside scope."]
     }
   ],
   "probes": [
@@ -1303,6 +1323,18 @@
       "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
       "result": "deferred-to-hook",
       "artifact": ""
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py -q --tb=short", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "package-tests", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "deferred-to-hook", "artifact": ""
     }
   ],
   "questions": [
@@ -1628,7 +1660,7 @@
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575",
       "origin_sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
       "raised_by": "audit-repair-review-codex, audit-repair-docs-codex, audit-repair-adversary-codex",
-      "resolved": null
+      "resolved": "fixed by this closing review checkpoint — reviewed_sha is bound to 92f9acfb and four passing round-24 verdicts"
     }
   ],
   "dispatch": [
