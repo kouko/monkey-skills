@@ -3082,8 +3082,8 @@ def is_push_command(command: str) -> bool:
     return False
 
 
-def is_pr_merge_command(command: str) -> bool:
-    """True when a shell segment merges a PR."""
+def is_pr_create_command(command: str) -> bool:
+    """True when a shell segment creates a PR."""
     for segment in SEGMENT_SPLIT.split(command):
         tokens = _strip_prefix(_tokenise(segment))
         if not tokens or Path(tokens[0]).name != "gh":
@@ -3092,28 +3092,70 @@ def is_pr_merge_command(command: str) -> bool:
         found = _subcommand_at(rest, GH_VALUE_OPTIONS)
         if found and found[1] == "pr":
             after = rest[found[0] + 1:]
-            if _subcommand(after, GH_VALUE_OPTIONS) == "merge":
+            if _subcommand(after, GH_VALUE_OPTIONS) == "create":
                 return True
     return False
 
 
-def is_canonical_pr_create_command(command: str) -> bool:
-    """True only for absolute-cd plus quote-all trusted-gh PR creation."""
+def github_repo_from_origin(repo: Path) -> str | None:
+    """Return GH_REPO syntax derived from the literal configured origin URL."""
+    url = git_maybe(repo, "config", "--get", "remote.origin.url")
+    if not url:
+        return None
+    match = re.fullmatch(r"https?://([^/]+)/([^/]+)/(.+?)(?:\.git)?", url)
+    if not match:
+        match = re.fullmatch(r"git@([^:]+):([^/]+)/(.+?)(?:\.git)?", url)
+    if not match:
+        match = re.fullmatch(r"ssh://git@([^/]+)/([^/]+)/(.+?)(?:\.git)?", url)
+    if not match:
+        return None
+    host, owner, name = match.groups()
+    return f"{owner}/{name}" if host == "github.com" else f"{host}/{owner}/{name}"
+
+
+def is_canonical_pr_create_command(repo: Path, command: str) -> bool:
+    """True only for one function-proof, origin-bound PR creation command."""
     trusted = shutil.which("gh")
-    if not trusted:
+    trusted_env = shutil.which("env")
+    gh_repo = github_repo_from_origin(repo)
+    if not trusted or not trusted_env or not gh_repo:
         return False
-    segments = [segment.strip() for segment in SEGMENT_SPLIT.split(command) if segment.strip()]
-    if len(segments) != 2:
+    marker = " && "
+    if command.count(marker) != 1:
         return False
-    cd_tokens = _tokenise(segments[0])
-    if len(cd_tokens) != 2 or cd_tokens[0] != "cd" or not Path(cd_tokens[1]).is_absolute():
+    cd_segment, gh_segment = command.split(marker)
+    cd_tokens = ["builtin", "cd", str(repo.resolve())]
+    if cd_segment != render_quote_all(cd_tokens):
         return False
-    gh_tokens = _tokenise(segments[1])
-    expected_prefix = ["command", str(Path(trusted).resolve()), "pr", "create"]
+    gh_tokens = _tokenise(gh_segment)
+    expected_prefix = [
+        "command", str(Path(trusted_env).resolve()), f"GH_REPO={gh_repo}",
+        str(Path(trusted).resolve()), "pr", "create",
+    ]
     return (
-        gh_tokens[:4] == expected_prefix
-        and segments[1] == render_quote_all(gh_tokens)
+        gh_tokens[:6] == expected_prefix
+        and gh_segment == render_quote_all(gh_tokens)
     )
+
+
+def canonical_pr_create_repo(command: str) -> Path | None:
+    """Return the selected repo only when the whole PR-create form is trusted."""
+    if command.count(" && ") != 1:
+        return None
+    cd_segment, _ = command.split(" && ")
+    tokens = _tokenise(cd_segment)
+    if len(tokens) != 3 or tokens[:2] != ["builtin", "cd"]:
+        return None
+    selected = Path(tokens[2])
+    if not selected.is_absolute() or not selected.is_dir():
+        return None
+    try:
+        repo = repo_root(selected.resolve())
+    except UsageError:
+        return None
+    if repo.resolve() != selected.resolve():
+        return None
+    return repo if is_canonical_pr_create_command(repo, command) else None
 
 
 def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
@@ -3411,8 +3453,18 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         rc = _cmd_push(["--head", immutable_head, "--require-live-head"] + rest, out, err)
         return 2 if rc == 1 else rc
 
-    # gh pr create/merge keep their existing repository-selection behavior.
-    push_cwd = git_dash_c_push_cwd(command, cwd)
+    # A metadata-only PR create carries its own function-proof repository
+    # selection. Other gh actions keep the existing conservative parser.
+    pr_create = is_pr_create_command(command)
+    canonical_pr_repo = canonical_pr_create_repo(command) if pr_create else None
+    if pr_create and canonical_pr_repo is None:
+        print(
+            "BLOCK push.reviewed-sha: PR creation must use the canonical "
+            "trusted-gh command from loom-code:ship",
+            file=err,
+        )
+        return 2
+    push_cwd = str(canonical_pr_repo) if canonical_pr_repo else git_dash_c_push_cwd(command, cwd)
     if push_cwd is None:
         print(
             "BLOCK push.review-only-head: ambiguous repository selection; "
@@ -3421,7 +3473,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
         return 2
     os.chdir(push_cwd)
-    if is_canonical_pr_create_command(command) and not is_pr_merge_command(command):
+    if pr_create:
         remote_error = check_pr_create_remote_head(Path.cwd(), command)
         if remote_error:
             print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
