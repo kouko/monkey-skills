@@ -3611,6 +3611,16 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # exit code cannot release a push if an executable moved HEAD, changed the
     # index/working tree, or retargeted a remote while the gate was observing it.
     live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
+    if require_live_head and live_head_before_probes != head_sha:
+        failures.append(
+            (
+                "push.reviewed-sha",
+                "the selected repository's live HEAD moved after command "
+                "validation and before executable probes; complete a fresh "
+                "branch-end review",
+            )
+        )
+        return report(failures, err)
     porcelain_before_probes = git_text(repo, "status", "--porcelain")
     # With no scope option, Git reads the effective configuration across scopes:
     # https://git-scm.com/docs/git-config#SCOPES
