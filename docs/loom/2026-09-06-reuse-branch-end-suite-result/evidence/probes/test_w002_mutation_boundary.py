@@ -1,6 +1,6 @@
 """Independent W0-02 abuse cases; execute from any checkout of this probe.
 
-Run: uv run --isolated --with pytest --with pyyaml python -m pytest
+Run: uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest
      docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q
 
 All mutations are confined to newly created temporary Git repositories.
@@ -21,11 +21,16 @@ if __name__ == "__main__":
         p for p in Path(__file__).resolve().parents
         if (p / "requirements-package-tests.lock").is_file()
     )
-    os.execvp(
+    bootstrap_env = os.environ.copy()
+    bootstrap_env.pop("PYTHONHOME", None)
+    bootstrap_env.pop("PYTHONPATH", None)
+    os.chdir(bootstrap_root)
+    os.execvpe(
         "uv",
         ["uv", "run", "--isolated", "--with-requirements",
          str(bootstrap_root / "requirements-package-tests.lock"),
          "python", "-m", "pytest", __file__, "-q", "--tb=line"],
+        bootstrap_env,
     )
 
 import pytest
@@ -244,7 +249,3 @@ def test_ship_presuitescript_absent():
         "python3 loom-code/scripts/check-skill-crossrefs.py",
     ):
         assert command in section, f"existing deterministic check removed: {command}"
-
-
-if __name__ == "__main__":
-    raise SystemExit(pytest.main([__file__, "-q", "--tb=short"]))

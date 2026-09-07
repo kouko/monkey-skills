@@ -18,11 +18,16 @@ if __name__ == "__main__":
         p for p in Path(__file__).resolve().parents
         if (p / "requirements-package-tests.lock").is_file()
     )
-    os.execvp(
+    bootstrap_env = os.environ.copy()
+    bootstrap_env.pop("PYTHONHOME", None)
+    bootstrap_env.pop("PYTHONPATH", None)
+    os.chdir(bootstrap_root)
+    os.execvpe(
         "uv",
         ["uv", "run", "--isolated", "--with-requirements",
          str(bootstrap_root / "requirements-package-tests.lock"),
          "python", "-m", "pytest", __file__, "-q", "--tb=line"],
+        bootstrap_env,
     )
 
 
