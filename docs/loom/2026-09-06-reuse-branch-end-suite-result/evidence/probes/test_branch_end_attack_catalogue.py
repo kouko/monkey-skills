@@ -7,10 +7,23 @@ failure boundaries.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+if __name__ == "__main__":
+    bootstrap_root = next(
+        p for p in Path(__file__).resolve().parents
+        if (p / "requirements-package-tests.lock").is_file()
+    )
+    os.execvp(
+        "uv",
+        ["uv", "run", "--isolated", "--with-requirements",
+         str(bootstrap_root / "requirements-package-tests.lock"),
+         "python", "-m", "pytest", __file__, "-q", "--tb=line"],
+    )
 
 
 ROOT = next(
