@@ -2423,6 +2423,45 @@ def test_gh_pr_merge_keeps_the_package_suite_gate(tmp_path: Path) -> None:
     assert "push.probes-package-tests" in blocked_rules(result)
 
 
+def test_gh_pr_create_cannot_exempt_a_later_merge_in_the_same_command(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": f"cd {repo} && gh pr create --fill; gh pr merge 12 --squash"
+            },
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.probes-package-tests" in blocked_rules(result)
+
+
+def test_gh_pr_create_blocks_attached_short_head_for_another_branch(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && gh pr create -Hother-branch --fill"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "PR head must be the current branch" in result.stderr
+
+
 def test_hook_mode_blocks_pushes_to_distinct_git_dash_c_directories(tmp_path: Path) -> None:
     (tmp_path / "first").mkdir()
     (tmp_path / "second").mkdir()

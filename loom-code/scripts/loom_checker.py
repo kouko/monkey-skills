@@ -3096,6 +3096,21 @@ def is_pr_create_command(command: str) -> bool:
     return False
 
 
+def is_pr_merge_command(command: str) -> bool:
+    """True when a shell segment merges a PR."""
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens or Path(tokens[0]).name != "gh":
+            continue
+        rest = tokens[1:]
+        found = _subcommand_at(rest, GH_VALUE_OPTIONS)
+        if found and found[1] == "pr":
+            after = rest[found[0] + 1:]
+            if _subcommand(after, GH_VALUE_OPTIONS) == "merge":
+                return True
+    return False
+
+
 def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
     """Require PR creation to reference the already-published current HEAD."""
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
@@ -3112,6 +3127,8 @@ def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
                 if tokens[index + 1] != branch:
                     return f"PR head must be the current branch {branch!r}"
             elif token.startswith("--head=") and token.split("=", 1)[1] != branch:
+                return f"PR head must be the current branch {branch!r}"
+            elif token.startswith("-H") and token != "-H" and token[2:] != branch:
                 return f"PR head must be the current branch {branch!r}"
 
     remote_ref = f"refs/heads/{branch}"
@@ -3399,7 +3416,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
         return 2
     os.chdir(push_cwd)
-    if is_pr_create_command(command):
+    if is_pr_create_command(command) and not is_pr_merge_command(command):
         remote_error = check_pr_create_remote_head(Path.cwd(), command)
         if remote_error:
             print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
