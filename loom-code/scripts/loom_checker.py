@@ -3193,6 +3193,8 @@ def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
     repo_parts = gh_repo.split("/")
     host, owner, name = repo_parts[0], repo_parts[-2], repo_parts[-1]
     try:
+        # GitHub CLI documents the endpoint form plus --hostname and --jq:
+        # https://cli.github.com/manual/gh_api
         observed = subprocess.run(
             [str(Path(trusted_gh).resolve()), "api", "--hostname", host,
              f"repos/{owner}/{name}/git/ref/heads/{quote(branch, safe='')}",
@@ -3343,6 +3345,8 @@ def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
 
 
 CANONICAL_PUSH_FLAGS = ["--no-follow-tags", "--recurse-submodules=no", "-u", "--no-verify"]
+# Git documents these push options and their effects:
+# https://git-scm.com/docs/git-push
 SAFE_REMOTE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
 
