@@ -929,6 +929,62 @@
       "previous_findings": [{"id": "branch-end-09", "status": "not-fixed", "evidence": "No round-21 docs verdict was recorded at the reviewed SHA."}, {"id": "branch-end-14", "status": "not-fixed", "evidence": "A detached child can retarget after hook success."}, {"id": "branch-end-15", "status": "fixed", "evidence": "The REST reference contract is cited."}, {"id": "branch-end-16", "status": "fixed", "evidence": "Direct global and worktree regressions passed."}, {"id": "branch-end-17", "status": "fixed", "evidence": "Dismissals name the dispatched blind runner."}, {"id": "branch-end-18", "status": "fixed", "evidence": "The dismissed replay concern is disclosed."}],
       "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3405", "text": "issue (security): The canonical parser accepts a configured remote other than literal origin.", "fix": "Require literal origin and add a permanent negative regression."}, {"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3580", "text": "issue (race): A detached child can retarget the symbolic remote after hook success and before the released Git command executes.", "fix": "Bind publication to the verified destination or explicitly narrow and disclose the guarantee."}, {"severity": "fatal", "dimension": "correctness", "anchor": "loom-code/scripts/loom_checker.py:3505", "text": "issue (boundary): PR remote-head equality is not recomputed after adversarial executables run.", "fix": "Recheck the remote HEAD after probes and add a permanent regression."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1335", "text": "issue (evidence): branch-end-09 lacks the required conforming docs-lens replacement.", "fix": "Record the replacement docs verdict before resolving it."}, {"severity": "important", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:17", "text": "issue (disclosure): The report claims literal origin while the checker accepts another configured remote.", "fix": "Enforce the origin boundary and refresh the report."}],
       "notes": ["Direct effective-config regressions passed; arbitrary-remote, delayed-retarget, and PR-head movement attacks reproduced. The full suite was not run."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "The final measurement recomputes to 14 versus 7 invocations and 45.2 percent lower median wait."}, {"id": "branch-end-20", "status": "not-fixed", "evidence": "The exact cumulative diff has 94 definitions, 77 unique names, and 26 historical unlabeled findings."}, {"id": "branch-end-21", "status": "fixed", "evidence": "The citation and permanent local, global, and worktree regressions are present."}, {"id": "branch-end-22", "status": "fixed", "evidence": "Literal origin enforcement and its regression pass."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The post-return boundary is disclosed without overclaiming containment."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "The confirmed-language nit remains disclosed."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue (blocking): The audit reports 91/74 tests and 23 unlabeled findings instead of 94/77 and 26.", "fix": "Refresh both populations against the exact reviewed SHA."}],
+      "notes": ["Targeted verification passed; the complete package suite was not run."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS_WITH_NOTES", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "Final measurement is rebound to 9cb6f7a4."}, {"id": "branch-end-20", "status": "fixed", "evidence": "The audit disclosures were present at the reviewed SHA."}, {"id": "branch-end-21", "status": "fixed", "evidence": "Effective config guard and citation verified."}, {"id": "branch-end-22", "status": "fixed", "evidence": "Origin enforcement and post-probe recheck verified."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The detached-process boundary is disclosed."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "The confirmed spec is unchanged."}],
+      "findings": [{"severity": "fatal", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:2", "text": "issue (blocking): The top-level reviewed_sha still names the previous accepted checkpoint while round 22 is in progress.", "fix": "Bind reviewed_sha to the final reviewed content when recording the closing verdicts."}],
+      "notes": ["The observed push.reviewed-sha failure is the expected mid-round state; historical verdict SHA fields remain append-only. No full suite was run because structural checks blocked first."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-docs-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "PASS_WITH_NOTES", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "All measurement figures recompute correctly."}, {"id": "branch-end-20", "status": "not-fixed", "evidence": "The test population is 94 definitions and 77 unique names."}, {"id": "branch-end-21", "status": "fixed", "evidence": "Citation and permanent regressions are present."}, {"id": "branch-end-22", "status": "fixed", "evidence": "Origin and remote-head boundaries are covered."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The post-return limitation is consistently disclosed."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "The language-policy nit is disclosed."}],
+      "findings": [{"severity": "nit", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59", "text": "nitpick: The test population is 94 definitions and 77 unique names rather than 91 and 74.", "fix": "Refresh the row while retaining 17 duplicate occurrences."}],
+      "notes": ["JSON and static contract checks passed; no complete package suite was run."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-adversary-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "adversarial-security",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "Final measurement is branch-reachable."}, {"id": "branch-end-20", "status": "fixed", "evidence": "The audit was refreshed, but nit findings should not be promoted to open findings."}, {"id": "branch-end-21", "status": "fixed", "evidence": "Effective configuration checks and regressions pass."}, {"id": "branch-end-22", "status": "not-fixed", "evidence": "The origin and PR-head fatals were conflated into one open finding."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The scoped limitation is disclosed."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "This nit should not be an open finding."}],
+      "findings": [{"severity": "important", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1478", "text": "issue (evidence): The literal-origin and post-probe PR-head findings need distinct open-finding entries.", "fix": "Record a separate resolved entry for the PR-head finding."}, {"severity": "important", "dimension": "inconsistency", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464", "text": "issue (evidence): Two round-21 nits were promoted into open findings.", "fix": "Remove the nit-derived entries while preserving immutable verdict history."}],
+      "notes": ["Seven targeted boundary cases passed; no complete package suite was run."]
     }
   ],
   "probes": [
@@ -1500,6 +1556,27 @@
         "reason": "The text is part of a user-confirmed spec fingerprint and changing only its language would reopen a human decision point without changing delivered behavior; the final review treats this as a documented historical artifact nit.",
         "by": "branch-end-blind-codex-cli"
       }
+    },
+    {
+      "id": "branch-end-25",
+      "anchor": "loom-code/scripts/loom_checker.py:3505",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-adversary-codex",
+      "resolved": "fixed by 9cb6f7a4 — the PR remote HEAD is recomputed after executable probes and the permanent movement regression passes"
+    },
+    {
+      "id": "branch-end-26",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57",
+      "origin_sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "raised_by": "final-evidence-review-codex",
+      "resolved": "fixed by the post-round-22 evidence refresh — the report now says 94 definitions, 77 unique names, and 26 immutable historical unlabeled findings"
+    },
+    {
+      "id": "branch-end-27",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:2",
+      "origin_sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "raised_by": "final-evidence-review-claude",
+      "resolved": "fixed by the closing review checkpoint, which binds reviewed_sha to the exact final reviewed content"
     }
   ],
   "dispatch": [
