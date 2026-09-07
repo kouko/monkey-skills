@@ -46,6 +46,11 @@ REMOTE_MUTATION = (
     "import subprocess\n"
     "subprocess.run(['git', 'remote', 'add', 'origin', 'https://example.invalid/other.git'], check=True)\n"
 )
+GLOBAL_REMOTE_MUTATION = (
+    "import subprocess\n"
+    "subprocess.run(['git', 'config', '--global', "
+    "'url.https://example.invalid/.insteadOf', 'https://github.com/'], check=True)\n"
+)
 UNTRACKED = "from pathlib import Path\nPath('unexpected.txt').write_text('new\\n')\n"
 STAGED = TRACKED + "import subprocess\nsubprocess.run(['git', 'add', 'a.py'], check=True)\n"
 WRITER = (
@@ -128,6 +133,23 @@ def test_push_packageremotemutation_rejected(tmp_path):
     result, detail = observed(repo)
     after = fixture.git(repo, "config", "--local", "--list", "--null")
     assert before != after, "attack did not mutate local Git config"
+    assert result.returncode != 0, detail
+
+
+def test_push_packageglobalconfigmutation_rejected(tmp_path, monkeypatch):
+    """A probe cannot retarget Git through the caller's global config."""
+    isolated_home = tmp_path / "home"
+    isolated_home.mkdir()
+    monkeypatch.setenv("HOME", str(isolated_home))
+    repo, _, _ = repository(
+        tmp_path,
+        package="python3 evidence/package.py",
+        scripts={"evidence/package.py": GLOBAL_REMOTE_MUTATION},
+    )
+    before = fixture.git(repo, "config", "--list", "--null")
+    result, detail = observed(repo)
+    after = fixture.git(repo, "config", "--list", "--null")
+    assert before != after, "attack did not mutate effective Git config"
     assert result.returncode != 0, detail
 
 

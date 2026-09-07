@@ -3195,6 +3195,8 @@ def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
     try:
         # GitHub CLI documents the endpoint form plus --hostname and --jq:
         # https://cli.github.com/manual/gh_api
+        # GitHub documents this reference endpoint and its object.sha response:
+        # https://docs.github.com/en/rest/git/refs#get-a-reference
         observed = subprocess.run(
             [str(Path(trusted_gh).resolve()), "api", "--hostname", host,
              f"repos/{owner}/{name}/git/ref/heads/{quote(branch, safe='')}",
@@ -3575,7 +3577,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # index/working tree, or retargeted a remote while the gate was observing it.
     live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
     porcelain_before_probes = git_text(repo, "status", "--porcelain")
-    local_config_before_probes = git_text(repo, "config", "--local", "--list", "--null")
+    effective_config_before_probes = git_text(repo, "config", "--list", "--null")
     if require_live_head and live_head_before_probes != head_sha:
         failures.append(
             (
@@ -3591,7 +3593,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
     live_head_after_probes = git_text(repo, "rev-parse", "HEAD")
     porcelain_after_probes = git_text(repo, "status", "--porcelain")
-    local_config_after_probes = git_text(repo, "config", "--local", "--list", "--null")
+    effective_config_after_probes = git_text(repo, "config", "--list", "--null")
     if (
         (
             live_head_after_probes != head_sha
@@ -3599,7 +3601,7 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             else live_head_after_probes != live_head_before_probes
         )
         or porcelain_after_probes != porcelain_before_probes
-        or local_config_after_probes != local_config_before_probes
+        or effective_config_after_probes != effective_config_before_probes
     ):
         changed = []
         if (
@@ -3610,8 +3612,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             changed.append("HEAD moved")
         if porcelain_after_probes != porcelain_before_probes:
             changed.append("git status --porcelain changed")
-        if local_config_after_probes != local_config_before_probes:
-            changed.append("local Git config changed")
+        if effective_config_after_probes != effective_config_before_probes:
+            changed.append("effective Git config changed")
         failures.append(
             (
                 "push.reviewed-sha",

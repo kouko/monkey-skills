@@ -186,7 +186,8 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
 
 
 def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None,
-               package_tests: str | None = None) -> Path:
+               package_tests: str | None = None,
+               scripts: dict[str, str] | None = None) -> Path:
     """A branch whose HEAD^ is the code commit and HEAD the review-only one."""
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -210,6 +211,8 @@ def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None,
     (repo / "evidence/abuse_regressed.py").write_text(
         "raise SystemExit(1)\n", encoding="utf-8"
     )
+    for relative, content in (scripts or {}).items():
+        (repo / relative).write_text(content, encoding="utf-8")
     kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
     kickoff.parent.mkdir(parents=True, exist_ok=True)
     kickoff.write_text(
@@ -1379,6 +1382,50 @@ def test_a_dirty_working_tree_blocks_the_probe(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert "push.probes-package-tests" in blocked_rules(result)
     assert "clean" in result.stderr
+
+
+def test_a_package_probe_cannot_retarget_push_through_global_config(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    isolated_home = tmp_path / "home"
+    isolated_home.mkdir()
+    monkeypatch.setenv("HOME", str(isolated_home))
+    command = "python3 evidence/retarget.py"
+    script = (
+        "import subprocess\n"
+        "subprocess.run(['git', 'config', '--global', "
+        "'remote.origin.pushurl', 'https://example.invalid/other.git'], check=True)\n"
+    )
+    repo = build_repo(
+        tmp_path, package_tests=command, scripts={"evidence/retarget.py": script}
+    )
+    body = rebuild(repo)
+    body["probes"][0]["command"] = command
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "effective Git config changed" in result.stderr
+
+
+def test_a_package_probe_cannot_retarget_push_through_worktree_config(
+    tmp_path: Path,
+) -> None:
+    command = "python3 evidence/retarget.py"
+    script = (
+        "import subprocess\n"
+        "subprocess.run(['git', 'config', '--worktree', "
+        "'remote.origin.pushurl', 'https://example.invalid/other.git'], check=True)\n"
+    )
+    repo = build_repo(
+        tmp_path, package_tests=command, scripts={"evidence/retarget.py": script}
+    )
+    git(repo, "config", "extensions.worktreeConfig", "true")
+    body = rebuild(repo)
+    body["probes"][0]["command"] = command
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "effective Git config changed" in result.stderr
 
 
 def test_missing_package_test_probe_blocks(tmp_path: Path) -> None:
