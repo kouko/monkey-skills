@@ -27,7 +27,7 @@ ROOT = next(
     for parent in Path(__file__).resolve().parents
     if (parent / "loom-code" / "skills" / "ship" / "SKILL.md").exists()
 )
-BASELINE = "9d009c49e02a52c4838dba30a88501e0bbe79ab0"
+BASELINE = "2ec1e3b7c9cf307cec206c1a740ee6ba474e4b75"
 CANDIDATE = "839f1884a0d839475f9276c228db70b546c218a2"
 SAMPLES = 7
 WORK_SECONDS = "0.080"
