@@ -31,10 +31,12 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+from urllib.parse import quote
 
 import yaml
 
@@ -3056,24 +3058,19 @@ def _subcommand(tokens: list[str], value_options: set[str]) -> str | None:
 
 def is_push_command(command: str) -> bool:
     """True when any segment of this shell line pushes or opens/merges a PR."""
+    if is_git_push_command(command):
+        return True
     for segment in SEGMENT_SPLIT.split(command):
         tokens = _strip_prefix(_tokenise(segment))
         if not tokens:
             continue
         program = Path(tokens[0]).name
         if program == "eval":
-            # `eval "git push"`: shlex already removed the quoting, so the
-            # payload is re-read as a shell line of its own.
             if is_push_command(" ".join(tokens[1:])):
                 return True
         elif program in SHELL_PROGRAMS and "-c" in tokens[1:]:
-            # `bash -c "git push"` / `sh -c` / `zsh -c` / `dash -c`: the
-            # argument after `-c` is itself a shell line, same as eval's.
             index = tokens.index("-c")
             if index + 1 < len(tokens) and is_push_command(tokens[index + 1]):
-                return True
-        elif program == "git":
-            if _subcommand(tokens[1:], GIT_VALUE_OPTIONS) == "push":
                 return True
         elif program == "gh":
             rest = tokens[1:]
@@ -3082,6 +3079,154 @@ def is_push_command(command: str) -> bool:
                 after = rest[found[0] + 1:]
                 if _subcommand(after, GH_VALUE_OPTIONS) in {"create", "merge"}:
                     return True
+    return False
+
+
+def is_pr_create_command(command: str) -> bool:
+    """True when a shell segment creates a PR."""
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens or Path(tokens[0]).name != "gh":
+            continue
+        rest = tokens[1:]
+        found = _subcommand_at(rest, GH_VALUE_OPTIONS)
+        if found and found[1] == "pr":
+            after = rest[found[0] + 1:]
+            if _subcommand(after, GH_VALUE_OPTIONS) == "create":
+                return True
+    return False
+
+
+def github_repo_from_origin(repo: Path) -> str | None:
+    """Return GH_REPO syntax derived from the literal configured origin URL."""
+    url = git_maybe(repo, "remote", "get-url", "origin")
+    if not url:
+        return None
+    match = re.fullmatch(r"https?://([^/]+)/([^/]+)/(.+?)(?:\.git)?", url)
+    if not match:
+        match = re.fullmatch(r"git@([^:]+):([^/]+)/(.+?)(?:\.git)?", url)
+    if not match:
+        match = re.fullmatch(r"ssh://git@([^/]+)/([^/]+)/(.+?)(?:\.git)?", url)
+    if not match:
+        return None
+    host, owner, name = match.groups()
+    return f"{host}/{owner}/{name}"
+
+
+def is_canonical_pr_create_command(repo: Path, command: str) -> bool:
+    """True only for one function-proof, origin-bound PR creation command."""
+    trusted = shutil.which("gh")
+    trusted_env = shutil.which("env")
+    gh_repo = github_repo_from_origin(repo)
+    if not trusted or not trusted_env or not gh_repo:
+        return False
+    gh_tokens = _tokenise(command)
+    expected_prefix = [
+        "command", str(Path(trusted_env).resolve()), f"LOOM_REPO_ROOT={repo.resolve()}",
+        f"GH_REPO={gh_repo}", str(Path(trusted).resolve()), "pr", "create",
+    ]
+    trailing = gh_tokens[7:]
+    repo_overrides = {"-R", "--repo", "--hostname"}
+    has_repo_override = any(
+        token in repo_overrides
+        or token.startswith("--repo=")
+        or token.startswith("--hostname=")
+        or (token.startswith("-R") and token != "-R")
+        for token in trailing
+    )
+    return (
+        gh_tokens[:7] == expected_prefix
+        and not has_repo_override
+        and command == render_quote_all(gh_tokens)
+    )
+
+
+def canonical_pr_create_repo(command: str) -> Path | None:
+    """Return the selected repo only when the whole PR-create form is trusted."""
+    tokens = _tokenise(command)
+    if len(tokens) < 7 or not tokens[2].startswith("LOOM_REPO_ROOT="):
+        return None
+    selected = Path(tokens[2].split("=", 1)[1])
+    if not selected.is_absolute() or not selected.is_dir():
+        return None
+    try:
+        repo = repo_root(selected.resolve())
+    except UsageError:
+        return None
+    if repo.resolve() != selected.resolve():
+        return None
+    return repo if is_canonical_pr_create_command(repo, command) else None
+
+
+def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
+    """Require PR creation to reference the already-published current HEAD."""
+    branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    head = git_maybe(repo, "rev-parse", "HEAD")
+    if not branch or not head:
+        return "PR creation requires a current symbolic branch and commit"
+
+    tokens = _tokenise(command)
+    head_values: list[str] = []
+    for index, token in enumerate(tokens):
+        if token in {"--head", "-H"} and index + 1 < len(tokens):
+            head_values.append(tokens[index + 1])
+        elif token.startswith("--head="):
+            head_values.append(token.split("=", 1)[1])
+        elif token.startswith("-H") and token != "-H":
+            head_values.append(token[2:])
+        if token == "--body-file" and (
+            index + 1 >= len(tokens) or not Path(tokens[index + 1]).is_absolute()
+        ):
+            return "PR body file must be an absolute path"
+        if token.startswith("--body-file=") and not Path(token.split("=", 1)[1]).is_absolute():
+            return "PR body file must be an absolute path"
+    if head_values != [branch]:
+        if not head_values:
+            return f"PR creation requires explicit current branch head {branch!r}"
+        else:
+            return f"PR head must be the current branch {branch!r}"
+
+    gh_repo = github_repo_from_origin(repo)
+    trusted_gh = shutil.which("gh")
+    if not gh_repo or not trusted_gh:
+        return "PR creation requires a trusted GitHub origin and gh executable"
+    repo_parts = gh_repo.split("/")
+    host, owner, name = repo_parts[0], repo_parts[-2], repo_parts[-1]
+    try:
+        # GitHub CLI documents the endpoint form plus --hostname and --jq:
+        # https://cli.github.com/manual/gh_api
+        # GitHub documents this reference endpoint and its object.sha response:
+        # https://docs.github.com/en/rest/git/refs#get-a-reference
+        observed = subprocess.run(
+            [str(Path(trusted_gh).resolve()), "api", "--hostname", host,
+             f"repos/{owner}/{name}/git/ref/heads/{quote(branch, safe='')}",
+             "--jq", ".object.sha"],
+            cwd=repo, capture_output=True, text=True, timeout=30,
+            env={**os.environ, "GH_REPO": gh_repo, "LOOM_REPO_ROOT": str(repo)},
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        observed = None
+    if observed is not None and observed.returncode == 0 and observed.stdout.strip() == head:
+        return None
+    return f"remote branch {branch!r} must already equal reviewed HEAD {head}"
+
+
+def is_git_push_command(command: str) -> bool:
+    """True when any shell segment can reach a Git push."""
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens:
+            continue
+        program = Path(tokens[0]).name
+        if program == "eval":
+            if is_git_push_command(" ".join(tokens[1:])):
+                return True
+        elif program in SHELL_PROGRAMS and "-c" in tokens[1:]:
+            index = tokens.index("-c")
+            if index + 1 < len(tokens) and is_git_push_command(tokens[index + 1]):
+                return True
+        elif program == "git" and _subcommand(tokens[1:], GIT_VALUE_OPTIONS) == "push":
+            return True
     return False
 
 
@@ -3201,6 +3346,78 @@ def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
     return next(iter(selected_roots)) if selected_roots else None
 
 
+CANONICAL_PUSH_FLAGS = ["--no-follow-tags", "--recurse-submodules=no", "-u", "--no-verify"]
+# Git documents these push options and their effects:
+# https://git-scm.com/docs/git-push
+SAFE_REMOTE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+
+
+def quote_all_shell_token(token: str) -> str:
+    """Render one argv token without leaving any shell expansion position."""
+    return "'" + token.replace("'", "'\"'\"'") + "'"
+
+
+def render_quote_all(tokens: list[str]) -> str:
+    return " ".join(quote_all_shell_token(token) for token in tokens)
+
+
+def canonical_git_push(
+    command: str, fallback: str
+) -> tuple[Path | None, str | None, str | None]:
+    """Validate the complete shell bytes for the one supported Git push."""
+    trusted = shutil.which("git")
+    if not trusted:
+        return None, None, "the hook environment has no trusted Git executable"
+    trusted_git = str(Path(trusted).resolve())
+    try:
+        tokens = shlex.split(command, posix=True)
+    except ValueError as exc:
+        return None, None, f"the Git push command has malformed quoting: {exc}"
+    if command != render_quote_all(tokens):
+        return None, None, "the entire Git push command must use canonical quote-all rendering"
+    if len(tokens) < 2 or tokens[0] != "command":
+        return None, None, "the Git push must begin with the standard command builtin"
+    if tokens[1] != trusted_git or not Path(tokens[1]).is_absolute():
+        return None, None, f"the Git executable must be the trusted absolute path {trusted_git!r}"
+
+    index = 2
+    selected = Path(fallback)
+    if index < len(tokens) and tokens[index] == "-C":
+        if index + 1 >= len(tokens) or not Path(tokens[index + 1]).is_absolute():
+            return None, None, "Git -C must name the selected repository by absolute path"
+        selected = Path(tokens[index + 1])
+        index += 2
+    try:
+        repo = repo_root(selected.resolve())
+    except UsageError as exc:
+        return None, None, str(exc)
+    if "-C" in tokens[1:index] and selected.resolve() != repo.resolve():
+        return None, None, "Git -C must name the selected repository root exactly"
+
+    required = ["push", *CANONICAL_PUSH_FLAGS]
+    if tokens[index:index + len(required)] != required:
+        return None, None, (
+            "Git push must use exactly --no-follow-tags --recurse-submodules=no -u --no-verify"
+        )
+    tail = tokens[index + len(required):]
+    if len(tail) != 2:
+        return None, None, "Git push must name one literal remote and one explicit refspec"
+    remote, refspec = tail
+    if not SAFE_REMOTE.fullmatch(remote):
+        return None, None, f"Git push remote {remote!r} is not a safe literal name"
+    if remote != "origin":
+        return None, None, "the Git push remote must be literal 'origin'"
+
+    head = git_text(repo, "rev-parse", "HEAD")
+    branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if not branch:
+        return None, None, "the selected repository has no current symbolic branch"
+    expected = f"{head}:refs/heads/{branch}"
+    if refspec != expected:
+        return None, None, f"Git push refspec must be exactly {expected!r}, got {refspec!r}"
+    return repo, head, None
+
+
 def read_hook_payload(stdin=sys.stdin) -> dict | None:
     """PreToolUse payload (Claude Code and Codex share the shape) when the
     checker is invoked as a hook; None when run from a terminal or with an
@@ -3234,10 +3451,50 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # The matcher is the tool name, so every Bash command arrives here; only
     # push-shaped commands are judged.
     command = str((payload.get("tool_input") or {}).get("command", ""))
-    if not is_push_command(command):
-        return 0
+    canonical_pr_repo = canonical_pr_create_repo(command)
+    push_shaped = canonical_pr_repo is not None or is_push_command(command)
+    git_push = is_git_push_command(command)
+    malformed_canonical_push = False
+    if not push_shaped:
+        # A malformed quote can defeat the permissive recogniser, but not a
+        # command that visibly starts with the canonical command trust root
+        # and trusted executable.
+        trusted = shutil.which("git")
+        trusted_prefix = (
+            f"{quote_all_shell_token('command')} "
+            f"{quote_all_shell_token(str(Path(trusted).resolve()))}"
+            if trusted
+            else ""
+        )
+        malformed_canonical_push = bool(
+            trusted_prefix
+            and command.startswith(trusted_prefix)
+            and quote_all_shell_token("push") in command
+        )
+        if not malformed_canonical_push:
+            return 0
     cwd = str(payload.get("cwd") or os.getcwd())
-    push_cwd = git_dash_c_push_cwd(command, cwd)
+    if git_push or malformed_canonical_push:
+        repo, immutable_head, refspec_error = canonical_git_push(command, cwd)
+        if refspec_error:
+            print(f"BLOCK push.reviewed-sha: {refspec_error}", file=err)
+            return 2
+        assert repo is not None and immutable_head is not None
+        os.chdir(repo)
+        rc = _cmd_push(["--head", immutable_head, "--require-live-head"] + rest, out, err)
+        return 2 if rc == 1 else rc
+
+    # A metadata-only PR create carries its own function-proof repository
+    # selection. Other gh actions keep the existing conservative parser.
+    pr_create = canonical_pr_repo is not None or is_pr_create_command(command)
+    if pr_create and canonical_pr_repo is None:
+        print(
+            "BLOCK push.reviewed-sha: PR creation must use the canonical "
+            "trusted-gh command from loom-code:ship",
+            file=err,
+        )
+        return 2
+    push_cwd = str(canonical_pr_repo) if canonical_pr_repo else git_dash_c_push_cwd(command, cwd)
     if push_cwd is None:
         print(
             "BLOCK push.review-only-head: ambiguous repository selection; "
@@ -3246,12 +3503,25 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
         return 2
     os.chdir(push_cwd)
+    if pr_create:
+        remote_error = check_pr_create_remote_head(Path.cwd(), command)
+        if remote_error:
+            print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
+            return 2
+        rest = ["--skip-package-tests", *rest]
     rc = _cmd_push(rest, out, err)
+    if pr_create and rc == 0:
+        remote_error = check_pr_create_remote_head(Path.cwd(), command)
+        if remote_error:
+            print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
+            return 2
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
 
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     head = "HEAD"
+    require_live_head = False
+    skip_package_tests = False
     rest = list(args)
     while rest:
         token = rest.pop(0)
@@ -3259,6 +3529,10 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             if not rest:
                 raise UsageError("--head needs a ref.")
             head = rest.pop(0)
+        elif token == "--require-live-head":
+            require_live_head = True
+        elif token == "--skip-package-tests":
+            skip_package_tests = True
         else:
             raise UsageError(f"unexpected argument {token!r}.")
 
@@ -3303,8 +3577,60 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         failures += check_plan_field_caps_at(manifest, repo, change_id)
         failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
         failures += check_review_round_append_only_at(manifest, repo, change_id)
-    failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
+    # Package and adversarial programs are untrusted executables. Snapshot the
+    # selected repository itself (not the hook caller's cwd) immediately before
+    # either kind runs, then recompute after both have finished. A successful
+    # exit code cannot release a push if an executable moved HEAD, changed the
+    # index/working tree, or retargeted a remote while the gate was observing it.
+    live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
+    porcelain_before_probes = git_text(repo, "status", "--porcelain")
+    # With no scope option, Git reads the effective configuration across scopes:
+    # https://git-scm.com/docs/git-config#SCOPES
+    effective_config_before_probes = git_text(repo, "config", "--list", "--null")
+    if require_live_head and live_head_before_probes != head_sha:
+        failures.append(
+            (
+                "push.reviewed-sha",
+                "the selected repository's live HEAD moved after command "
+                "validation and before executable probes; complete a fresh "
+                "branch-end review",
+            )
+        )
+        return report(failures, err)
+    if not skip_package_tests:
+        failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
+    live_head_after_probes = git_text(repo, "rev-parse", "HEAD")
+    porcelain_after_probes = git_text(repo, "status", "--porcelain")
+    effective_config_after_probes = git_text(repo, "config", "--list", "--null")
+    if (
+        (
+            live_head_after_probes != head_sha
+            if require_live_head
+            else live_head_after_probes != live_head_before_probes
+        )
+        or porcelain_after_probes != porcelain_before_probes
+        or effective_config_after_probes != effective_config_before_probes
+    ):
+        changed = []
+        if (
+            live_head_after_probes != head_sha
+            if require_live_head
+            else live_head_after_probes != live_head_before_probes
+        ):
+            changed.append("HEAD moved")
+        if porcelain_after_probes != porcelain_before_probes:
+            changed.append("git status --porcelain changed")
+        if effective_config_after_probes != effective_config_before_probes:
+            changed.append("effective Git config changed")
+        failures.append(
+            (
+                "push.reviewed-sha",
+                "executable probes changed the selected repository after "
+                f"validation ({' and '.join(changed)}); return to build and "
+                "complete a fresh branch-end review",
+            )
+        )
 
     # `dispatch[]` lives inside the review.json that was read out of the
     # reviewed commit's tree, so both identity rules -- and the standing-

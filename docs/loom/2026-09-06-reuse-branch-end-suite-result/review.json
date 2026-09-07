@@ -1,0 +1,2286 @@
+{
+  "reviewed_sha": "675f461c2a2155e50006e0c5773d213530427210",
+  "scope": "branch-end",
+  "second_vendor": "claude",
+  "vendors": [
+    "openai",
+    "anthropic"
+  ],
+  "verdicts": [
+    {
+      "round": 1,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "NEEDS_REVISION",
+      "sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "spec_sha": "dde4c70",
+      "dimension_scores": {
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "NEEDS_REVISION",
+        "design-conformance": "N/A — DESIGN.md is absent; KICKOFF-DEFAULTS.md:9 waives it for this repository.",
+        "principles-conformance": "NEEDS_REVISION",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "omission",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:23",
+          "text": "issue (blocking): The proposed move does not define an executable binding between an observed successful suite execution and the checkpoint Ship accepts. Git can prove commit contents and ancestry, but an agent-authored checkpoint with matching SHAs has the same observable shape whether the suite ran or was skipped; the current hook dispatches only push-shaped commands (loom-code/scripts/loom_checker.py:3234), and its observed execution is the guarantee being removed (loom-code/scripts/loom_checker.py:3998).",
+          "fix": "Specify the authoritative branch-end execution-to-checkpoint transition, its enforcement on both supported hosts, and how Ship rejects a fabricated, copied, legacy, or interrupted checkpoint without trusting result fields. Include a negative acceptance case with a schema-valid passing checkpoint for an unexecuted or failing suite. If Git-only state cannot establish execution under the selected trust model, resolve that design contradiction explicitly before implementation."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+          "text": "issue (blocking): REQ-1 blocks a missing declaration or unusable command, while the design decision at line 24 preserves existing fallback and error behaviour. Existing resolution accepts absent declarations through build markers (loom-code/scripts/loom_checker.py:3977), and an explicit package-tests: none succeeds without a run (loom-code/scripts/loom_checker.py:4014); the two readings produce different outcomes in adopting repositories.",
+          "fix": "Define separate outcomes for absent declaration with successful detection, absent declaration without detection, explicit none, malformed argv, missing executable, timeout, and non-zero exit. State whether the existing none exemption is preserved, and align REQ-1 and the UI flow with that decision."
+        },
+        {
+          "severity": "important",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:47",
+          "text": "issue (blocking): The suite runs before the blind run and adversarial work, but that work currently commits evidence before the final reviewers are dispatched (loom-code/skills/review/SKILL.md:157), including executable regression cases (loom-code/skills/review/SKILL.md:307). The spec does not settle whether those later commits invalidate the tested commit, cause another suite execution, or are exempted, so exactly once against the final implementation commit is not yet executable.",
+          "fix": "Place the single successful suite execution after all tree-changing branch-end work and before checkpoint creation, or define an equivalent precise ordering. Explicitly invalidate the run on later probe, evidence, nit, command-declaration, or other tracked-content changes; describe retry behaviour and the exact permitted close-record exceptions without introducing general safe-path exemptions."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
+          "text": "issue (blocking): The current checker does not create a clean worktree at the reviewed commit. It checks the existing working tree for cleanliness (loom-code/scripts/loom_checker.py:4050) and executes the declared command with cwd set to that repository (loom-code/scripts/loom_checker.py:4066); _cmd_push calls it directly without creating another checkout (loom-code/scripts/loom_checker.py:3306).",
+          "fix": "Correct Current state evidence to distinguish the documented claim from the actual execution directory. Specify whether the candidate will execute at the pinned commit in an isolated checkout or validate and use the existing checkout, including how it prevents HEAD movement and tracked changes during execution."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:17",
+          "text": "issue (blocking): The baseline count is fixed at two before measurement, but the existing Ship instructions call the push checker explicitly and then state that the host hook runs it again when pushing (loom-code/skills/ship/SKILL.md:238 and :247), in addition to the branch-end run (loom-code/skills/review/SKILL.md:317). A full unchanged workflow therefore has additional execution sites; a two-call replay requires an explicitly narrower scope.",
+          "fix": "Define the replay start and stop points and whether actual push-hook execution and Ship's preceding test checklist are included. Record the observed baseline invocation count rather than requiring two, then require one candidate execution over that identical scope, equal release verdicts, and lower measured wait."
+        }
+      ],
+      "notes": [
+        "The corrected reviewed SHA matches HEAD. All five Current state evidence sources were opened; findings above distinguish source text from executable behaviour.",
+        "PRINCIPLES.md:10 forbids trusting agent-authored gate claims. Its gate-only wording at PRINCIPLES.md:9 also still assigns package-test recomputation to push and needs reconciliation with the final ownership contract.",
+        "This is a pre-build static spec review. No blind run, suite execution, timing measurement, or repository modification was performed."
+      ]
+    },
+    {
+      "round": 2,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "NEEDS_REVISION",
+      "sha": "56024c091402ed2d8c886ea753f2bb579e0ddf87",
+      "spec_sha": "0b76fc1",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "NEEDS_REVISION",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "NEEDS_REVISION",
+        "design-conformance": "N/A — DESIGN.md is absent; the previously verified waiver remains applicable.",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+          "text": "issue (blocking): The fix changes ownership to the push hook but still references the unchanged intent, whose Acceptance #1 requires branch-end ownership and whose Out of scope forbids removing branch-end package tests (docs/loom/intent/2026-09-06-reuse-branch-end-suite-result.md:15 and :37). REQ-5 and REQ-6 additionally reference Acceptance #5 and #6, which do not exist.",
+          "fix": "Reconcile the authoritative intent and spec with the already approved ownership change, preserve the required history, and update the spec's intent reference so every REQ maps to an existing Acceptance line."
+        },
+        {
+          "severity": "important",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:55",
+          "text": "issue (blocking): spec-03 is only partly fixed: running the suite after tree-changing review work resolves ordering, but the new absolute rule invalidates the checkpoint after any tracked-content modification. Existing permitted Ship changes include acceptance entries in review.json and the intent close line (loom-code/skills/ship/SKILL.md:168), so this conflicts with preserving existing continuity checks at spec.md:50.",
+          "fix": "Explicitly preserve the existing mechanically validated review-only and intent-status-only close shapes, and state that all other tracked-content changes require a new branch-end checkpoint. Apply the same qualification to the design decision at line 33."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:33",
+          "text": "issue (blocking): spec-04's false isolated-worktree claim is corrected, but its execution-boundary issue remains: the spec says any later tracked change fails existing recomputation, while the current suite runner checks cleanliness before subprocess execution (loom-code/scripts/loom_checker.py:4050) and can return success afterward without checking whether the command changed HEAD or tracked files (loom-code/scripts/loom_checker.py:4095).",
+          "fix": "Define the candidate's execution directory and require the validated HEAD and tracked tree to remain unchanged through suite and probe execution before the hook releases the push; changes detected at that boundary must block and return to branch-end."
+        }
+      ],
+      "notes": [
+        "spec-01 fixed: execution remains in the blocking push transition, eliminating historical-result trust. spec-02 fixed: REQ-4 explicitly distinguishes fallback, none, invalid commands, timeout, interruption, dirty state, and failure.",
+        "spec-03 unfixed: ordering is corrected, but permitted closure exceptions remain unspecified. spec-04 unfixed: current-state evidence is corrected, but execution-time content changes remain unguarded by the stated existing checks. spec-05 fixed: measurement now has a defined Ship-to-push boundary and observes baseline counts.",
+        "HEAD matches the requested SHA. Reviewed only the fix delta, previous findings, and directly relevant sources; no probes, blind run, timing measurement, or repository modifications were performed."
+      ]
+    },
+    {
+      "round": 3,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "PASS",
+      "sha": "bdede55d5f8cf602d47577066596aa3e15dd3a1a",
+      "spec_sha": "1a156ed",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "PASS",
+        "design-conformance": "N/A — DESIGN.md is absent; the previously verified waiver remains applicable.",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "spec-06 fixed: the amended intent supplies all six Acceptance lines and assigns observed package execution to the local push gate; spec.md:2 references that amendment, and its requirements map to the updated Acceptance lines.",
+        "spec-03 fixed: spec.md:23, :36, and :59 explicitly preserve the existing mechanically validated review-only and intent-status-only close shapes while invalidating other tracked-content changes.",
+        "spec-04 fixed: spec.md:8 and :37 require pre/post execution HEAD and working-tree validation; :52 correctly identifies its absence from the current implementation. Design re-look: continue with the corrected design. HEAD matches; this verdict covers the specification fixes only, with no probes, blind run, implementation verification, or file modifications."
+      ]
+    },
+    {
+      "round": 4,
+      "scope": "spec",
+      "reviewer": "spec-risk-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "PASS",
+      "sha": "9bbf92dfbcb275adad2ee8e75165e9d04079e1d1",
+      "spec_sha": "aed53de",
+      "dimension_scores": {
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS",
+        "deletion-first": "PASS",
+        "spec-conformance": "PASS",
+        "design-conformance": "N/A — DESIGN.md is absent; the previously verified waiver remains applicable.",
+        "principles-conformance": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "HEAD matches. Excluding confirmed-behavior produces hash aed53de787edb5a5d63ca36e78340a944b5bcca3, matching the corrected metadata at spec.md:3.",
+        "The sole spec change since bdede55d is the confirmed-behavior hash. No visible behaviour changed; all prior dimension assessments remain standing.",
+        "The requested spec_sha records the confirmation-content hash; the full spec blob shown by Git is cf6d6440. No files were modified."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "NEEDS_REVISION",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "text": "issue (blocking): The final snapshot closes only the interval before the PreToolUse checker returns. A package command can launch a detached process that moves the branch or changes the tree after this comparison but before the intercepted named-branch push resolves its source; the committed adversarial case explicitly demonstrates the checker returning success before a delayed mutation.",
+          "fix": "Make the pushed source immutable across the hook-to-command boundary, for example by requiring and validating an explicit reviewed commit SHA refspec, or move the validation into an atomic push boundary that receives the exact refs. Add a delayed HEAD-moving attack proving that the network operation cannot publish a post-validation commit."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "text": "issue (blocking): The measurement does not replay either revision's real Ship-to-hook path. It searches Ship prose for one literal and directly runs a synthetic workload once or twice; it never invokes either revision's checker, hook adapter, checkpoint validation, adversarial probes, or release decision, and it constructs the verdict from those synthetic subprocess return codes.",
+          "fix": "Build the same accepted-checkpoint fixture for both revisions, execute the baseline explicit checker plus hook and the candidate hook through their versioned real entry points, instrument the declared package command, and measure the complete local boundary through the actual checker release or block result."
+        },
+        {
+          "severity": "important",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+          "text": "issue (blocking): The report says every repository mutation is blocked, but the branch-end attack catalogue records a deterministic counterexample in which the gate returns success and a detached writer then mutates the reviewed tree. This hides a release-safety gap from the user's acceptance material.",
+          "fix": "Report the detached-process counterexample as an unresolved limitation and mark Acceptance #1, #2, and #5 not yet satisfied until the hook-to-push race is closed."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59",
+          "text": "nitpick (non-blocking): The report claims 32 newly added test names, while the cumulative Python delta adds 40 test definitions representing 30 unique names because the graduated probe duplicates ten names.",
+          "fix": "State the counting method and replace 32 with the recomputed definition, unique-name, or collected-case count."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+          "text": "nitpick (non-blocking): The spec's UI-flow section is Traditional Chinese even though the repository's internal-artifact language rule requires English; the intent and blind-run report are exempt, but the spec is not.",
+          "fix": "Translate spec.md lines 58-71 into English without changing the confirmed behavior."
+        }
+      ],
+      "notes": [
+        "HEAD and merge-base were independently verified; the working tree was clean.",
+        "Every changed file and the relevant checker, hook, station, fixture, principles, and command-resolution paths were read directly.",
+        "Focused test execution was attempted but could not start because the read-only environment provided no writable temporary or uv cache directory; test-dependent scores therefore do not rely on recorded pass summaries."
+      ]
+    },
+    {
+      "round": 5,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "text": "issue (blocking): The final synchronous HEAD and porcelain snapshot does not contain detached descendants of a successful probe. The committed attack starts a detached writer, observes checker exit 0, and then observes the reviewed tree mutate, so the hook can release the network push before the final state boundary is actually stable.",
+          "fix": "Run package and adversarial commands inside an isolation boundary that cannot retain writers against the selected repository after the command returns, then verify that boundary has terminated before the final Git snapshot. Convert the detached-writer case into a permanent regression test requiring the checker to block."
+        },
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:140",
+          "text": "issue (blocking): The new concurrent-mutation case treats the unsafe release as its expected passing result: it requires checker exit 0 and only afterward confirms mutation. This documents the defect but does not protect the intended fail-closed behavior, and the case has not been graduated into the permanent checker suite.",
+          "fix": "After fixing process containment, change this case to require a non-zero checker result with the relevant BLOCK rule, graduate it into loom-code/scripts, and record the graduated probe in review.json."
+        },
+        {
+          "severity": "important",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "text": "issue (blocking): The timing replay does not execute either revision's Ship-to-hook gate. It searches Ship prose for a literal and directly runs a synthetic workload once or twice, then derives release solely from those workload return codes. Consequently the reported local-gate verdict and elapsed boundary exclude checker validation, adversarial probes, repository state checks, and hook dispatch.",
+          "fix": "Replay an accepted temporary checkpoint through each revision's actual checker and hook entry point, instrument only the resolved package command for invocation counts, and measure monotonically from the simulated Ship push request through the real hook release or block result."
+        },
+        {
+          "severity": "important",
+          "dimension": "principles-conformance",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51",
+          "text": "issue (blocking): The report says there are no blocking or important functional problems even though the same HEAD adds an executable probe and commit message showing that a detached writer escapes the final check. This could cause the user to accept an unsafe push gate.",
+          "fix": "Report the detached-writer escape as blocking, change Acceptance 1 and 5 to not-working until the regression is fixed, and regenerate the summary only after the corrected permanent probe passes."
+        }
+      ],
+      "notes": [
+        "Exact HEAD and merge-base were independently verified; the worktree remained clean and no files were modified.",
+        "Focused pytest execution was attempted without the complete package suite, but the read-only environment provided no writable temporary directory; recorded historical test results were therefore not treated as independently verified.",
+        "The deletion-first ownership simplification and repository-neutral command resolution are otherwise coherent; the release-boundary escape and invalid timing oracle prevent acceptance."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "status": "fixed",
+          "evidence": "c0a93c6f requires the literal full current object ID and current refs/heads destination, validates that same object, and the permanent local-remote case proves delayed HEAD movement cannot replace the published object."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "status": "fixed",
+          "evidence": "d13956e4 extracts both revisions' versioned checker and hook packages and replays baseline explicit checker plus hook against candidate hook-only on one accepted fixture."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+          "status": "fixed",
+          "evidence": "The report now discloses the detached-writer counterexample and states the narrower immutable-publication guarantee."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59",
+          "status": "fixed",
+          "evidence": "The report states its counting method and distinguishes 46 definitions from 36 unique names."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+          "status": "unfixed",
+          "evidence": "The Traditional Chinese UI-flow wording remains a non-blocking artifact-language nit so this fix does not alter the confirmed specification fingerprint."
+        }
+      ],
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:11",
+          "text": "nitpick (non-blocking): The evidence list names the retired test_ship_issues_named_branch_without_explicit_checker_preflight test instead of its current immutable-refspec name.",
+          "fix": "Update the evidence pointer to test_ship_issues_immutable_refspec_without_explicit_checker_preflight."
+        }
+      ],
+      "notes": [
+        "All prior blocking findings are fixed; the specification-language nit and stale evidence reference do not block this round.",
+        "No recorded probes or package suites were rerun under the fix-round procedure."
+      ]
+    },
+    {
+      "round": 6,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "status": "fixed",
+          "evidence": "The prescribed literal push binds the current full object ID to the current refs/heads destination and validates that same object; a new shell-expansion bypass is recorded separately."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:140",
+          "status": "fixed",
+          "evidence": "The change-specific cases now require mutable-source rejection and the reusable delayed cases are permanently graduated."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "status": "fixed",
+          "evidence": "The replacement harness executes the versioned real entry points and measures their actual return codes and instrumented package invocations."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51",
+          "status": "fixed",
+          "evidence": "The report discloses detached-writer behavior and limits its guarantee to immutable publication rather than process containment."
+        }
+      ],
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "security",
+          "anchor": "loom-code/scripts/loom_checker.py:3249",
+          "text": "issue (blocking): The immutable-refspec parser treats the first positional token as an opaque remote without proving it remains one runtime argument. Shell expansion can turn that token into a remote and an additional mutable refspec, publishing an unreviewed commit alongside the reviewed object.",
+          "fix": "Reject shell expansion, substitution, and glob syntax in every accepted push argument and require an argv-stable literal remote plus the single exact refspec, or execute the verified push from trusted argv. Add a permanent local-bare-remote regression proving no additional mutable ref can be published."
+        }
+      ],
+      "notes": [
+        "The immutable full-object strategy is sufficient for the prescribed literal push; process containment is not required for that path.",
+        "No recorded probes were rerun; the new finding comes from direct control-flow analysis of the fix delta."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "862ddaed865e3cb2ebce600dc5fb9b1e2dd43bdb",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3315",
+          "status": "fixed",
+          "evidence": "The immutable source remains bound through whole-command canonical quoting, trusted absolute Git, fixed implicit-publication flags, and both live HEAD snapshots."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+          "status": "fixed",
+          "evidence": "The real versioned-entrypoint harness now measures hardened candidate b197c123 with its canonical command."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+          "status": "fixed",
+          "evidence": "The report preserves the detached-writer disclosure and states only the canonical immutable-publication guarantee."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59",
+          "status": "fixed",
+          "evidence": "The report explicitly recomputes 60 definitions, 47 unique names, and 13 paired duplicates."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+          "status": "unfixed",
+          "evidence": "The artifact-language inconsistency remains a non-blocking nit so the confirmed behavior fingerprint is not changed."
+        },
+        {
+          "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:11",
+          "status": "unfixed",
+          "evidence": "The report points to the intermediate immutable-refspec test name, while the final test name adds canonical; this remains a non-blocking evidence-pointer nit."
+        }
+      ],
+      "findings": [],
+      "notes": [
+        "design re-look: continue fixing",
+        "All blocking findings previously raised by this reader remain fixed; the two artifact nits do not block."
+      ]
+    },
+    {
+      "round": 7,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "862ddaed865e3cb2ebce600dc5fb9b1e2dd43bdb",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "NEEDS_REVISION",
+        "external-surface-grounding": "NEEDS_REVISION",
+        "principles-conformance": "NEEDS_REVISION",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "NEEDS_REVISION",
+        "ambiguity": "PASS",
+        "inconsistency": "NEEDS_REVISION",
+        "incorrect-fact": "NEEDS_REVISION",
+        "missing-population": "PASS",
+        "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {
+          "anchor": "loom-code/scripts/loom_checker.py:3249",
+          "status": "unfixed",
+          "evidence": "Bash and zsh can resolve an inherited shell function named as the quoted absolute executable before the filesystem binary, and the permanent tests do not yet exercise that exact shadowing case."
+        }
+      ],
+      "findings": [],
+      "notes": [
+        "design re-look: continue fixing",
+        "The remaining gap can stay within this design if the accepted launch form and local-remote regression prove inherited functions cannot shadow the trusted executable.",
+        "The final real-entrypoint measurement otherwise preserves 14-to-7 calls, equal release verdicts, and lower median wait."
+      ]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
+      "dimension_scores": {
+        "security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3249", "status": "fixed", "evidence": "The standard command builtin bypasses the inherited absolute-executable function in the supported-shell boundary, with Bash and zsh regressions."},
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58", "status": "unfixed", "evidence": "The language inconsistency remains behaviorally consistent and nonblocking so the confirmed fingerprint is unchanged."},
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:11", "status": "fixed", "evidence": "The report now names the exact existing canonical immutable-refspec test."}
+      ],
+      "findings": [],
+      "notes": ["design re-look: continue fixing", "The implementation, regressions, measurement, report, and durable memory agree on the supported-shell trust boundary."]
+    },
+    {
+      "round": 8,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
+      "dimension_scores": {
+        "security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "user-judgment-leak": "PASS"
+      },
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3249", "status": "fixed", "evidence": "The command builtin and Bash/zsh regressions close inherited executable-function shadowing inside the declared supported-shell boundary."}
+      ],
+      "findings": [
+        {"severity": "blocking", "dimension": "security", "anchor": "loom-code/skills/ship/SKILL.md:260", "text": "The accepted Git command can still invoke a repository-configurable pre-push hook after the gate releases it; that hook can issue an unvalidated second push.", "fix": "Make --no-verify a fixed validated token, add Bash/zsh local-remote regressions, and refresh the final versioned-entrypoint measurement."}
+      ],
+      "notes": ["design re-look: continue fixing", "The command builtin fix closes branch-end-05, but the post-gate pre-push hook path remains open."]
+    },
+    {
+      "round": 12,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS_WITH_NOTES", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "PASS_WITH_NOTES", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:68", "status": "fixed", "evidence": "The probe now reaches package-induced HEAD mutation through the accepted canonical push and verifies the final snapshot blocks release."},
+        {"anchor": "loom-code/skills/ship/SKILL.md:260", "status": "fixed", "evidence": "The canonical no-verify publication boundary remains unchanged and reviewed."}
+      ],
+      "findings": [
+        {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe retains an unused shlex import.", "fix": "Remove it in a later non-behavioral cleanup."}
+      ],
+      "notes": ["design re-look: continue fixing", "No behavioral or security regression was found."]
+    },
+    {
+      "round": 12,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS_WITH_NOTES", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "loom-code/skills/ship/SKILL.md:260", "status": "fixed", "evidence": "The canonical command and no-verify containment remain unchanged."}
+      ],
+      "findings": [
+        {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe retains an unused shlex import.", "fix": "Remove it in a later non-behavioral cleanup."}
+      ],
+      "notes": ["design re-look: continue fixing", "The updated probe exercises the accepted command and the security conclusion is unchanged."]
+    },
+    {
+      "round": 14,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS_WITH_NOTES", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/plan.md", "status": "fixed", "evidence": "The plan is byte-identical to original commit 0b6ffff2."},
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json", "status": "fixed", "evidence": "The record names second_vendor as none and binds the rewritten candidate measurement."}
+      ],
+      "findings": [
+        {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe retains an unused shlex import.", "fix": "Remove it in a later non-behavioral cleanup."}
+      ],
+      "notes": ["design re-look: continue fixing", "No new behavioral, security, or production-tree regression was found; no tests were rerun for this binding check."]
+    },
+    {
+      "round": 14,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/plan.md", "status": "fixed", "evidence": "Plan, measurement, blind-run report, and candidate fixture match the previously reviewed corrected versions."},
+        {"anchor": "loom-code", "status": "fixed", "evidence": "The entire loom-code tree is identical to the previously reviewed tree; no unintended code changes were introduced."}
+      ],
+      "findings": [],
+      "notes": ["design re-look: continue fixing", "The only difference from the later reviewed tree is review.json audit history; no tests were rerun for this binding check."]
+    },
+    {
+      "round": 15,
+      "scope": "branch-end",
+      "reviewer": "final-independent-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3189", "status": "fixed", "evidence": "The remote SHA is queried through the same origin-derived GitHub API identity instead of redirectable Git transport."},
+        {"anchor": "loom-code/scripts/test_loom_checker_push.py:2427", "status": "fixed", "evidence": "The regression pins the complete hostname, endpoint, ref, and jq argv."}
+      ],
+      "findings": [],
+      "notes": ["The metadata-only PR-create exemption is bound to the reviewed repository, branch, SHA, and GitHub identity."]
+    },
+    {
+      "round": 15,
+      "scope": "branch-end",
+      "reviewer": "privacy-dispatch-measure8-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "adversarial-security",
+      "verdict": "PASS",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "loom-code/scripts/loom_checker.py:3124", "status": "fixed", "evidence": "The canonical form rejects shell, repository, host, head, body-path, and transport identity ambiguity."}
+      ],
+      "findings": [],
+      "notes": ["The final API argv coverage closed the only remaining non-blocking test note."]
+    },
+    {
+      "round": 16,
+      "scope": "branch-end",
+      "reviewer": "version-bump-final-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "loom-code/CHANGELOG.md:8", "status": "fixed", "evidence": "The release note now says body-file paths must be absolute only when the option is supplied."}],
+      "findings": [],
+      "notes": ["The 1.8.1 manifests and changelog accurately publish the reviewed behavior."]
+    },
+    {
+      "round": 16,
+      "scope": "branch-end",
+      "reviewer": "privacy-dispatch-measure8-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "adversarial-security",
+      "verdict": "PASS",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "loom-code/.claude-plugin/plugin.json:3", "status": "fixed", "evidence": "Both manifests advance together to 1.8.1 without changing executable behavior."}],
+      "findings": [],
+      "notes": ["No new security boundary was introduced by the release metadata update."]
+    },
+    {
+      "round": 17,
+      "scope": "branch-end",
+      "reviewer": "package-env-final-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "README.md:94", "status": "fixed", "evidence": "README now points to KICKOFF-DEFAULTS for the exact isolated package gate and describes CI as separate jobs."}],
+      "findings": [],
+      "notes": ["The locked isolated command preserves pytest target parity without relying on host Python state."]
+    },
+    {
+      "round": 17,
+      "scope": "branch-end",
+      "reviewer": "privacy-dispatch-measure8-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "adversarial-security",
+      "verdict": "PASS",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "requirements-package-tests.lock:1", "status": "fixed", "evidence": "The complete 11-package graph is version-pinned and SHA-256 hash-verified."}],
+      "findings": [],
+      "notes": ["The dependency-resolution reproducibility blocker is closed."]
+    },
+    {
+      "round": 18,
+      "scope": "branch-end",
+      "reviewer": "history-rewrite-review-rerun-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "docs",
+      "verdict": "PASS",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "cross-task-coherence": "PASS"},
+      "previous_findings": [{"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30", "status": "fixed", "evidence": "The baseline now names branch-reachable commit 2ec1e3b7; a no-tags single-branch clone excluded the obsolete object and the fixture passed."}],
+      "findings": [],
+      "notes": ["All rewritten commit subjects satisfy CI, active SHA references resolve from a branch-only clone, and the controlled replay still halves package-suite invocations with a 46.5 percent median wait reduction."]
+    },
+    {
+      "round": 18,
+      "scope": "branch-end",
+      "reviewer": "history-rewrite-review-b-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "findings": [
+        {"severity": "fatal", "dimension": "principles-conformance", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39", "text": "The user-selected Claude second reader was recorded as none and never used.", "fix": "Correct the immutable choice record and obtain a Claude verdict."},
+        {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:767", "text": "The existing round-18 docs verdict omits deletion-first and includes an out-of-lens score, so it cannot count.", "fix": "Obtain a conforming independent verdict for the repaired branch."},
+        {"severity": "fatal", "dimension": "external-surface-grounding", "anchor": "loom-code/scripts/loom_checker.py:3197", "text": "The new GitHub CLI API and Git push flag contracts lack authoritative citations.", "fix": "Cite the official GitHub CLI and Git manuals at the call sites."}
+      ],
+      "notes": ["The implementation tests, branch-only replay, tree-equivalence check, and permanent adversarial probes all passed."]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "reviewer": "second-vendor-repair-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS_WITH_NOTES", "tests": "NEEDS_REVISION", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "not-fixed", "evidence": "Claude was selected and dispatched but no Anthropic verdict was recorded yet."}, {"id": "branch-end-09", "status": "fixed", "evidence": "This fresh code-lens verdict contains all and only the required dimensions."}, {"id": "branch-end-10", "status": "not-fixed", "evidence": "The source citations were absent from the Codex mirror."}],
+      "findings": [{"severity": "fatal", "dimension": "external-surface-grounding", "anchor": ".codex/hooks/loom_checker.py:3197", "text": "The Codex mirror lacks the official citations and fails byte equivalence.", "fix": "Synchronize the mirror and rerun its exact-match test."}, {"severity": "nit", "dimension": "naming", "anchor": "loom-code/scripts/loom_checker.py:3512", "text": "The push handler exceeds the advisory function-length threshold.", "fix": "Extract probe-state handling if future behavioral work grows this function."}, {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe imports shlex without using it.", "fix": "Remove the unused import."}],
+      "notes": ["The official source citations themselves are accurate."]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "reviewer": "second-vendor-repair-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "dimension_scores": {"security": "PASS_WITH_NOTES", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "fixed", "evidence": "Claude completed this independent review and its verdict is now recorded."}, {"id": "branch-end-09", "status": "not-fixed", "evidence": "The malformed historical docs verdict still needed a conforming replacement."}, {"id": "branch-end-10", "status": "fixed", "evidence": "The source checker cites the official GitHub CLI and Git manuals."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:770", "text": "The historical docs-lens verdict is malformed and cannot count.", "fix": "Record a conforming independent verdict for the repaired branch."}, {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe imports shlex without using it.", "fix": "Remove the unused import."}],
+      "notes": ["Claude independently verified the two official documentation citations."]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "reviewer": "second-vendor-repair-adversary-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "adversarial-security",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "not-fixed", "evidence": "No Claude verdict was recorded at the reviewed SHA."}, {"id": "branch-end-09", "status": "not-fixed", "evidence": "Round 19 had dispatches but no verdicts yet."}, {"id": "branch-end-10", "status": "not-fixed", "evidence": "The Codex mirror remained stale."}],
+      "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3571", "text": "A successful probe can retarget the symbolic push remote through local Git config without dirtying the tree.", "fix": "Snapshot and compare local Git configuration around executable probes."}, {"severity": "fatal", "dimension": "tests", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30", "text": "The change-specific measurement replay depends on feature-branch commits.", "fix": "Make the fixture self-contained if post-merge replay is a required contract."}],
+      "notes": ["The post-merge replay concern is outside this change's stated change-specific evidence contract and is dismissed below."]
+    },
+    {
+      "round": 20,
+      "scope": "branch-end",
+      "reviewer": "final-repair-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS_WITH_NOTES", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "fixed", "evidence": "The round-19 Anthropic verdict records the selected second reader."}, {"id": "branch-end-09", "status": "not-fixed", "evidence": "A conforming docs-lens replacement was still absent."}, {"id": "branch-end-10", "status": "not-fixed", "evidence": "The generic gh manual did not ground the specific refs endpoint response."}, {"id": "branch-end-11", "status": "not-fixed", "evidence": "The local-only snapshot missed worktree and global scopes."}, {"id": "branch-end-12", "status": "dismissed", "evidence": "The disposition was substantively valid but named an undispatched reviewer."}, {"id": "branch-end-13", "status": "dismissed", "evidence": "The advisory nit disposition named an undispatched reviewer."}],
+      "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3578", "text": "The local-only configuration snapshot misses worktree-scoped retargeting.", "fix": "Compare Git's effective merged configuration and add a permanent regression."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1293", "text": "The malformed docs verdict lacks a conforming docs-lens replacement.", "fix": "Obtain one fresh docs-lens verdict."}, {"severity": "fatal", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1314", "text": "Two dismissals name an undispatched reviewer.", "fix": "Use the dispatched blind runner's exact identity."}, {"severity": "fatal", "dimension": "external-surface-grounding", "anchor": "loom-code/scripts/loom_checker.py:3200", "text": "The specific Git reference endpoint and object.sha response lack their official REST citation.", "fix": "Add the official GitHub REST reference endpoint citation."}, {"severity": "fatal", "dimension": "principles-conformance", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:125", "text": "The new retarget incident exists only in change-specific evidence.", "fix": "Graduate global and worktree variants into the permanent package suite."}],
+      "notes": ["The mirror identity and local-scope regression passed at the reviewed SHA."]
+    },
+    {
+      "round": 20,
+      "scope": "branch-end",
+      "reviewer": "final-repair-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-10", "status": "fixed", "evidence": "The source and mirror citations matched."}, {"id": "branch-end-11", "status": "not-fixed", "evidence": "A global url.insteadOf rule bypassed the local-only snapshot."}, {"id": "branch-end-12", "status": "dismissed", "evidence": "The plan does not require post-merge replay."}, {"id": "branch-end-13", "status": "dismissed", "evidence": "The function-size nit does not justify a new abstraction."}],
+      "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3578", "text": "Global Git configuration can retarget the push without changing the local snapshot.", "fix": "Snapshot effective merged Git configuration and add an isolated-home global regression."}],
+      "notes": ["The full package suite was intentionally left to the push hook."]
+    },
+    {
+      "round": 20,
+      "scope": "branch-end",
+      "reviewer": "final-repair-adversary-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "adversarial-security",
+      "verdict": "NEEDS_REVISION",
+      "sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "fixed", "evidence": "Anthropic participated."}, {"id": "branch-end-09", "status": "fixed", "evidence": "A conforming code verdict exists, while a docs replacement remains separately required."}, {"id": "branch-end-10", "status": "fixed", "evidence": "Mirror parity passed."}, {"id": "branch-end-11", "status": "not-fixed", "evidence": "A global pushurl rule bypassed the local snapshot."}, {"id": "branch-end-12", "status": "dismissed", "evidence": "Substantively accepted but mechanically misattributed."}, {"id": "branch-end-13", "status": "dismissed", "evidence": "Substantively accepted but mechanically misattributed."}],
+      "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3578", "text": "Global remote.origin.pushurl retargets the released push past the local-only guard.", "fix": "Compare effective configuration and add a permanent global regression."}, {"severity": "fatal", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1314", "text": "Dismissals name a nonexistent reviewer.", "fix": "Use a dispatched reviewing identity."}, {"severity": "important", "dimension": "omission", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:76", "text": "The report omits the dismissed fatal replay finding.", "fix": "Disclose the dismissal and rationale."}],
+      "notes": ["The post-merge replay concern is outside the explicit plan contract."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "effective-config-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "not-fixed", "evidence": "A code-lens verdict cannot replace the malformed docs-lens verdict."}, {"id": "branch-end-14", "status": "fixed", "evidence": "Targeted local, global, and worktree mutation cases pass."}, {"id": "branch-end-15", "status": "fixed", "evidence": "The REST refs citation grounds the endpoint and response."}, {"id": "branch-end-16", "status": "fixed", "evidence": "Global and worktree regressions are permanent."}, {"id": "branch-end-17", "status": "fixed", "evidence": "Both dispositions use the dispatched blind runner."}, {"id": "branch-end-18", "status": "fixed", "evidence": "The report discloses both dismissed findings."}],
+      "findings": [{"severity": "fatal", "dimension": "principles-conformance", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:125", "text": "issue (blocking): The local-config retarget incident remains only in change-specific evidence.", "fix": "Add the repository-local mutation case to the permanent package suite."}, {"severity": "fatal", "dimension": "external-surface-grounding", "anchor": "loom-code/scripts/loom_checker.py:3580", "text": "issue (blocking): The effective Git configuration snapshot lacks an official git-config citation.", "fix": "Cite the official git-config documentation and synchronize the mirror."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1331", "text": "issue (blocking): branch-end-09 is resolved by a code-lens verdict rather than a conforming docs-lens replacement.", "fix": "Keep it unresolved until the dispatched docs reviewer returns."}, {"severity": "important", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1338", "text": "issue: Two resolution records cite a commit that is not an ancestor after the history rewrite.", "fix": "Bind both records to branch-reachable repair commits."}],
+      "notes": ["Six targeted tests passed; the full package suite remained deferred to the push hook."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "effective-config-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "not-fixed", "evidence": "The conforming replacement docs verdict had not yet been recorded."}, {"id": "branch-end-14", "status": "fixed", "evidence": "Effective configuration mutations are detected."}, {"id": "branch-end-15", "status": "fixed", "evidence": "The official REST citation is present."}, {"id": "branch-end-16", "status": "fixed", "evidence": "Permanent regressions cover the repaired behavior."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1331", "text": "issue (blocking): branch-end-09 was claimed resolved before a conforming docs-lens replacement verdict existed.", "fix": "Record the dispatched docs verdict, then resolve the finding."}],
+      "notes": ["Implementation repairs passed targeted review; the full package suite remained deferred to the push hook."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "replacement-docs-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "docs",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "fixed", "evidence": "This replacement verdict contains all and only the six required docs-lens dimensions."}],
+      "findings": [{"severity": "fatal", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51", "text": "issue (blocking): The measurement predates the final effective-configuration implementation.", "fix": "Rerun the paired replay against the final implementation and refresh the report."}, {"severity": "nit", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59", "text": "nitpick: The displayed test-name population is stale.", "fix": "Replace the counts with recomputed values."}, {"severity": "nit", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "nitpick: The audit incorrectly says every historical finding has a Conventional Comments label.", "fix": "Disclose the immutable historical population and keep new findings conforming."}, {"severity": "nit", "dimension": "inconsistency", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58", "text": "nitpick: The confirmed spec contains a Traditional Chinese UI-flow section despite the repository artifact-language rule.", "fix": "Translate and reconfirm the fingerprint through the decision-point flow."}],
+      "notes": ["Static contract checks passed; the complete package suite was not run."]
+    },
+    {
+      "round": 21,
+      "scope": "branch-end",
+      "reviewer": "effective-config-adversary-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "adversarial-security",
+      "verdict": "NEEDS_REVISION",
+      "sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "NEEDS_REVISION", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "NEEDS_REVISION", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-09", "status": "not-fixed", "evidence": "No round-21 docs verdict was recorded at the reviewed SHA."}, {"id": "branch-end-14", "status": "not-fixed", "evidence": "A detached child can retarget after hook success."}, {"id": "branch-end-15", "status": "fixed", "evidence": "The REST reference contract is cited."}, {"id": "branch-end-16", "status": "fixed", "evidence": "Direct global and worktree regressions passed."}, {"id": "branch-end-17", "status": "fixed", "evidence": "Dismissals name the dispatched blind runner."}, {"id": "branch-end-18", "status": "fixed", "evidence": "The dismissed replay concern is disclosed."}],
+      "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3405", "text": "issue (security): The canonical parser accepts a configured remote other than literal origin.", "fix": "Require literal origin and add a permanent negative regression."}, {"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3580", "text": "issue (race): A detached child can retarget the symbolic remote after hook success and before the released Git command executes.", "fix": "Bind publication to the verified destination or explicitly narrow and disclose the guarantee."}, {"severity": "fatal", "dimension": "correctness", "anchor": "loom-code/scripts/loom_checker.py:3505", "text": "issue (boundary): PR remote-head equality is not recomputed after adversarial executables run.", "fix": "Recheck the remote HEAD after probes and add a permanent regression."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1335", "text": "issue (evidence): branch-end-09 lacks the required conforming docs-lens replacement.", "fix": "Record the replacement docs verdict before resolving it."}, {"severity": "important", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:17", "text": "issue (disclosure): The report claims literal origin while the checker accepts another configured remote.", "fix": "Enforce the origin boundary and refresh the report."}],
+      "notes": ["Direct effective-config regressions passed; arbitrary-remote, delayed-retarget, and PR-head movement attacks reproduced. The full suite was not run."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "The final measurement recomputes to 14 versus 7 invocations and 45.2 percent lower median wait."}, {"id": "branch-end-20", "status": "not-fixed", "evidence": "The exact cumulative diff has 94 definitions, 77 unique names, and 26 historical unlabeled findings."}, {"id": "branch-end-21", "status": "fixed", "evidence": "The citation and permanent local, global, and worktree regressions are present."}, {"id": "branch-end-22", "status": "fixed", "evidence": "Literal origin enforcement and its regression pass."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The post-return boundary is disclosed without overclaiming containment."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "The confirmed-language nit remains disclosed."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue (blocking): The audit reports 91/74 tests and 23 unlabeled findings instead of 94/77 and 26.", "fix": "Refresh both populations against the exact reviewed SHA."}],
+      "notes": ["Targeted verification passed; the complete package suite was not run."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS_WITH_NOTES", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "Final measurement is rebound to 9cb6f7a4."}, {"id": "branch-end-20", "status": "fixed", "evidence": "The audit disclosures were present at the reviewed SHA."}, {"id": "branch-end-21", "status": "fixed", "evidence": "Effective config guard and citation verified."}, {"id": "branch-end-22", "status": "fixed", "evidence": "Origin enforcement and post-probe recheck verified."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The detached-process boundary is disclosed."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "The confirmed spec is unchanged."}],
+      "findings": [{"severity": "fatal", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:2", "text": "issue (blocking): The top-level reviewed_sha still names the previous accepted checkpoint while round 22 is in progress.", "fix": "Bind reviewed_sha to the final reviewed content when recording the closing verdicts."}],
+      "notes": ["The observed push.reviewed-sha failure is the expected mid-round state; historical verdict SHA fields remain append-only. No full suite was run because structural checks blocked first."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-docs-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS_WITH_NOTES", "incorrect-fact": "PASS_WITH_NOTES", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "All measurement figures recompute correctly."}, {"id": "branch-end-20", "status": "not-fixed", "evidence": "The test population is 94 definitions and 77 unique names."}, {"id": "branch-end-21", "status": "fixed", "evidence": "Citation and permanent regressions are present."}, {"id": "branch-end-22", "status": "fixed", "evidence": "Origin and remote-head boundaries are covered."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The post-return limitation is consistently disclosed."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "The language-policy nit is disclosed."}],
+      "findings": [{"severity": "nit", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:59", "text": "nitpick: The test population is 94 definitions and 77 unique names rather than 91 and 74.", "fix": "Refresh the row while retaining 17 duplicate occurrences."}],
+      "notes": ["JSON and static contract checks passed; no complete package suite was run."]
+    },
+    {
+      "round": 22,
+      "scope": "branch-end",
+      "reviewer": "final-evidence-adversary-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "adversarial-security",
+      "verdict": "NEEDS_REVISION",
+      "sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-19", "status": "fixed", "evidence": "Final measurement is branch-reachable."}, {"id": "branch-end-20", "status": "fixed", "evidence": "The audit was refreshed, but nit findings should not be promoted to open findings."}, {"id": "branch-end-21", "status": "fixed", "evidence": "Effective configuration checks and regressions pass."}, {"id": "branch-end-22", "status": "not-fixed", "evidence": "The origin and PR-head fatals were conflated into one open finding."}, {"id": "branch-end-23", "status": "dismissed", "evidence": "The scoped limitation is disclosed."}, {"id": "branch-end-24", "status": "dismissed", "evidence": "This nit should not be an open finding."}],
+      "findings": [{"severity": "important", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1478", "text": "issue (evidence): The literal-origin and post-probe PR-head findings need distinct open-finding entries.", "fix": "Record a separate resolved entry for the PR-head finding."}, {"severity": "important", "dimension": "inconsistency", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464", "text": "issue (evidence): Two round-21 nits were promoted into open findings.", "fix": "Remove the nit-derived entries while preserving immutable verdict history."}],
+      "notes": ["Seven targeted boundary cases passed; no complete package suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-review-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "code", "verdict": "NEEDS_REVISION", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "The post-probe PR-head recheck and permanent regression pass."}, {"id": "branch-end-26", "status": "fixed", "evidence": "The test population recomputes to 94 definitions and 77 unique names."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The closing checkpoint does not exist at the reviewed dispatch SHA."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575", "text": "issue (blocking): branch-end-27 is marked resolved before the closing checkpoint exists.", "fix": "Leave it unresolved until the closing checkpoint binds reviewed_sha."}],
+      "notes": ["The focused PR-head regression passed; no full suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-review-claude", "vendor": "anthropic", "model": "claude-sonnet-5", "lens": "code", "verdict": "PASS_WITH_NOTES", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "Core destination protections pass targeted checks."}, {"id": "branch-end-26", "status": "not-fixed", "evidence": "The allowed-label recompute gives 23, not 26."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The final checkpoint is still in progress."}],
+      "findings": [{"severity": "important", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue: The allowed-label population is 23 rather than 26.", "fix": "Use the repository rule with optional label decorations and refresh the count."}],
+      "notes": ["The 94/77/17 test population and three core destination protections verified; no full suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-docs-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "docs", "verdict": "NEEDS_REVISION", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "The PR-head finding has a distinct entry."}, {"id": "branch-end-26", "status": "not-fixed", "evidence": "The correct unlabeled count is 23."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The closing checkpoint is not yet present."}],
+      "findings": [{"severity": "fatal", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue (blocking): The report says 26 unlabeled findings while the allowed-label rule yields 23.", "fix": "Refresh the report and branch-end-26 resolution to 23."}, {"severity": "fatal", "dimension": "inconsistency", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575", "text": "issue (blocking): branch-end-27 is prematurely resolved.", "fix": "Keep it unresolved until the closing checkpoint exists."}],
+      "notes": ["Measurement and test populations otherwise recompute; no full suite was run."]
+    },
+    {
+      "round": 23, "scope": "branch-end", "reviewer": "audit-repair-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "NEEDS_REVISION", "sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "NEEDS_REVISION", "ambiguity": "PASS", "inconsistency": "NEEDS_REVISION", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-25", "status": "fixed", "evidence": "Five focused destination tests pass."}, {"id": "branch-end-26", "status": "not-fixed", "evidence": "The correct historical unlabeled count is 23."}, {"id": "branch-end-27", "status": "not-fixed", "evidence": "The promised final checkpoint is not present."}],
+      "findings": [{"severity": "fatal", "dimension": "incorrect-fact", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57", "text": "issue (blocking): The unlabeled finding audit is 23, not 26.", "fix": "Correct the report and resolution evidence."}, {"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575", "text": "issue (blocking): A future closing checkpoint is recorded as already complete.", "fix": "Set branch-end-27 unresolved until that checkpoint is written."}, {"severity": "important", "dimension": "omission", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464", "text": "issue (evidence): The committed ledger contains two nit-derived open-finding entries without a disposition for the classification mistake.", "fix": "Record why append-only integrity requires retaining them."}],
+      "notes": ["Core destination protections pass; no full suite was run."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-review-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "code", "verdict": "PASS", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "The append-only rationale is valid."}, {"id": "branch-end-29", "status": "fixed", "evidence": "The allowed-label population recomputes to 23."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "Binding is intentionally pending this closing checkpoint."}], "findings": [], "notes": ["Five focused destination checks passed; no full suite was run."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-review-claude", "vendor": "anthropic", "model": "claude-sonnet-5", "lens": "code", "verdict": "PASS", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "Deleting committed ledger entries would violate append-only integrity."}, {"id": "branch-end-29", "status": "fixed", "evidence": "Independent recomputation yields 23."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "The closing binding is the recorder's remaining action."}], "findings": [], "notes": ["Counts and core protections verified without a full suite."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-docs-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "docs", "verdict": "PASS", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "The superseding entry preserves append-only history."}, {"id": "branch-end-29", "status": "fixed", "evidence": "Report and independent count both say 23."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "Expected pending state before the closing recorder."}], "findings": [], "notes": ["All counts and measurement figures recompute; no full suite was run."]
+    },
+    {
+      "round": 24, "scope": "branch-end", "reviewer": "ledger-close-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "PASS_WITH_NOTES", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-28", "status": "dismissed", "evidence": "The disposition preserves the stronger append-only invariant."}, {"id": "branch-end-29", "status": "fixed", "evidence": "The report count independently recomputes."}, {"id": "branch-end-30", "status": "not-fixed", "evidence": "The recorder must now bind the reviewed SHA."}], "findings": [], "notes": ["Focused guards and review-edits passed; the detached-process limitation stays outside scope."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-review-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "code", "verdict": "NEEDS_REVISION", "sha": "59416810", "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"}, "previous_findings": [], "findings": [{"severity": "fatal", "dimension": "correctness", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:19", "text": "issue (blocking): Direct replay inherits hostile caller cwd and Python module-search variables.", "fix": "Anchor cwd to the repository and sanitize PYTHONPATH and PYTHONHOME."}], "notes": ["Normal direct replay passed; no full suite was run."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-review-claude", "vendor": "anthropic", "model": "claude-sonnet-5", "lens": "code", "verdict": "NEEDS_REVISION", "sha": "59416810", "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS_WITH_NOTES", "tests": "PASS_WITH_NOTES", "refactoring": "NEEDS_REVISION", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "NEEDS_REVISION"}, "previous_findings": [], "findings": [{"severity": "important", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:249", "text": "issue: The probe retains an unreachable second __main__ block and stale unlocked run instructions.", "fix": "Delete the dead block and update the docstring to the locked command."}], "notes": ["Task trailers passed; no full suite was run."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-docs-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "docs", "verdict": "PASS", "sha": "59416810", "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "deletion-first": "PASS"}, "previous_findings": [], "findings": [], "notes": ["Counts, measurement, append-only history, and isolated direct replay passed; no full suite was run."]
+    },
+    {
+      "round": 25, "scope": "branch-end", "reviewer": "replay-bootstrap-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "NEEDS_REVISION", "sha": "59416810", "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "NEEDS_REVISION", "missing-population": "PASS", "user-judgment-leak": "PASS"}, "previous_findings": [], "findings": [{"severity": "fatal", "dimension": "security", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:16", "text": "issue (security): A hostile cwd pytest.py and PYTHONPATH can hijack direct replay before collection.", "fix": "Use a trusted cwd and sanitized child environment."}], "notes": ["The absolute lock path and nonrecursion passed; no full suite was run."]
+    },
+    {
+      "round": 26, "scope": "branch-end", "reviewer": "bootstrap-close-review-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "code", "verdict": "PASS", "sha": "675f461c2a2155e50006e0c5773d213530427210", "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"}, "previous_findings": [{"id": "branch-end-31", "status": "fixed", "evidence": "Hostile-cwd replay passes 9 plus 21 tests."}], "findings": [], "notes": ["Dispatch coverage, mirror, manifests, crossrefs, and citations passed; no full suite."]
+    },
+    {
+      "round": 26, "scope": "branch-end", "reviewer": "bootstrap-close-review-claude", "vendor": "anthropic", "model": "claude-sonnet-5", "lens": "code", "verdict": "PASS_WITH_NOTES", "sha": "675f461c2a2155e50006e0c5773d213530427210", "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS", "cross-task-coherence": "PASS_WITH_NOTES", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"}, "previous_findings": [{"id": "branch-end-31", "status": "fixed", "evidence": "All bootstrap hardening items verified."}], "findings": [], "notes": ["The recorder still had to append this verdict and bind reviewed_sha; no full suite."]
+    },
+    {
+      "round": 26, "scope": "branch-end", "reviewer": "bootstrap-close-docs-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "docs", "verdict": "PASS", "sha": "675f461c2a2155e50006e0c5773d213530427210", "dimension_scores": {"omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "deletion-first": "PASS"}, "previous_findings": [{"id": "branch-end-31", "status": "fixed", "evidence": "Direct replay and docs agree."}], "findings": [], "notes": ["Counts, measurement, append-only history, and equivalent historical references passed; no full suite."]
+    },
+    {
+      "round": 26, "scope": "branch-end", "reviewer": "bootstrap-close-adversary-codex", "vendor": "openai", "model": "gpt-5.6-sol", "lens": "adversarial-security", "verdict": "PASS", "sha": "675f461c2a2155e50006e0c5773d213530427210", "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"}, "previous_findings": [{"id": "branch-end-31", "status": "fixed", "evidence": "Poisoned cwd and environment cannot hijack direct replay."}], "findings": [], "notes": ["Exact lock, one bootstrap, core attack catalogue, and Task provenance passed; no full suite."]
+    }
+  ],
+  "probes": [
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:0",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "b0d90f7b1ccbf13e39aacfdbe86c511a145283a3",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "wave-end:1",
+      "command": "uv run --isolated --with pytest python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py -q --tb=line",
+      "sha": "17417d19",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:6",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:7",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "862ddaed865e3cb2ebce600dc5fb9b1e2dd43bdb",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:12",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:12",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:12",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:14",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:14",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:14",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:15",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:15",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:15",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:16",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:16",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:16",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:17",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:17",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:17",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py -q --tb=short",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest loom-code/scripts/test_loom_checker_push.py::test_reviewed_sha_review_only_commit_stacked_between_verdict_and_head_passes loom-code/scripts/test_loom_checker_push.py::test_reviewed_sha_extra_file_change_between_verdict_and_head_still_blocks loom-code/scripts/test_loom_checker_push.py::test_a_verdict_sha_pointing_to_an_older_commit_blocks loom-code/scripts/test_loom_checker_push.py::test_a_probe_for_another_commit_blocks loom-code/scripts/test_loom_checker_push.py::test_head_carrying_a_second_file_is_blocked -q --tb=line",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_loom_checker_push.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_two_commits_pure_appends_passes loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_earlier_verdict_value_changed_blocks_naming_rewrite loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_verdict_entry_deleted_blocks loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_probe_result_flipped_blocks_as_tampering loom-code/scripts/test_probes_charter_review_edits.py::test_review_edits_dispatch_started_edited_blocks -q --tb=line",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_probes_charter_review_edits.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "177a38b5821a7953f1dac395f0efa956b2424d94",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py -q --tb=short", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "package-tests", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q", "sha": "92f9acfb5fdf70c35fbb244a2a9d3ca869d0c2f9", "result": "deferred-to-hook", "artifact": ""
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py -q --tb=short", "sha": "675f461c2a2155e50006e0c5773d213530427210", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "python3 docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py", "sha": "675f461c2a2155e50006e0c5773d213530427210", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "adversarial", "scope": "branch-end", "command": "python3 docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py", "sha": "675f461c2a2155e50006e0c5773d213530427210", "result": "pass", "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "package-tests", "scope": "branch-end", "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q", "sha": "675f461c2a2155e50006e0c5773d213530427210", "result": "deferred-to-hook", "artifact": ""
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "當這個改動完成後，你希望達成什麼結果？例如：如果 Ship 的 HEAD 與 branch-end 已驗證的 commit 完全相同，就直接重用既有測試證據；只要程式或測試有任何變更，才重跑完整 suite。這是你要的嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "下一個要確認的是品質底線：哪些情況絕對不能重用舊結果？你希望還有哪些情況一定要強制重跑？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "對於沒有設定安全範圍的 repo，你是否同意預設仍重跑完整 suite，避免 Loom 自行猜測哪些變更『應該沒影響』？",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Claude 作為第二位讀者？會多花幾分鐘與一些額度。",
+      "type": "consequence"
+    },
+    {
+      "decision_point": 1,
+      "text": "請確認以上就是你要的範圍。",
+      "type": "what"
+    },
+    {
+      "decision_point": 1,
+      "text": "這會修正剛才 intent 的 Proposed outcome，但不改變你要的外部結果：完整 suite 仍只跑一次，品質底線不降低。確認改成這個方向嗎？",
+      "type": "what"
+    },
+    {
+      "decision_point": 2,
+      "text": "這個行為符合你的預期嗎？",
+      "type": "behaviour"
+    },
+    {
+      "decision_point": 2,
+      "text": "這就是你預期的修改後機制嗎？",
+      "type": "behaviour"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "spec-01",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:23",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "fixed by 1659125f — execution stays inside the blocking push transition"
+    },
+    {
+      "id": "spec-02",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "fixed by 1659125f — command resolution and failure outcomes are explicit"
+    },
+    {
+      "id": "spec-03",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:47",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "fixed by c988a3a5 — existing review-only and intent-close shapes are preserved explicitly"
+    },
+    {
+      "id": "spec-04",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "fixed by c988a3a5 — post-execution HEAD and working-tree recomputation is required"
+    },
+    {
+      "id": "spec-05",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:17",
+      "origin_sha": "112554aa5967e5f7a9f07471848dfa5b2e81bf7e",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "fixed by 1659125f — the measurement boundary observes baseline invocations"
+    },
+    {
+      "id": "spec-06",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:8",
+      "origin_sha": "56024c091402ed2d8c886ea753f2bb579e0ddf87",
+      "raised_by": "spec-risk-review-codex",
+      "resolved": "fixed by ddee7445 and c988a3a5 — amended intent and spec share the same six Acceptance outcomes"
+    },
+    {
+      "id": "W0-02-01",
+      "anchor": "loom-code/scripts/loom_checker.py:3306",
+      "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
+      "raised_by": "adv-w0-02-codex",
+      "resolved": "fixed by b0d90f7b — final selected-repository HEAD and porcelain are recomputed after all executable probes"
+    },
+    {
+      "id": "W0-02-02",
+      "anchor": "loom-code/skills/build/SKILL.md:289",
+      "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
+      "raised_by": "adv-w0-02-codex",
+      "resolved": "fixed by b0d90f7b — Build records the package command but leaves its complete execution to the local push hook"
+    },
+    {
+      "id": "W0-02-03",
+      "anchor": "loom-code/skills/ship/SKILL.md:231",
+      "origin_sha": "4e9074e3beed2fbc644a8b45a37cf85ff143ed7e",
+      "raised_by": "adv-w0-02-codex",
+      "resolved": "fixed by b0d90f7b — Ship keeps non-package deterministic checks and no longer runs a pre-hook pytest suite"
+    },
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/loom_checker.py:3315",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
+      "resolved": "fixed by 9798b435 and c0a93c6f — immutable-source regressions and checker binding prevent delayed HEAD movement from changing the published object"
+    },
+    {
+      "id": "branch-end-02",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:73",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
+      "resolved": "fixed by d13956e4 — both revisions' real versioned checker and hook paths are measured on one accepted fixture"
+    },
+    {
+      "id": "branch-end-03",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:38",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-a-codex-cli, branch-end-reader-b-codex-cli",
+      "resolved": "fixed by d13956e4 — the report discloses the counterexample and states only the proven immutable-publication guarantee"
+    },
+    {
+      "id": "branch-end-04",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:140",
+      "origin_sha": "8efb45879137e178bca380b4df6c9ae0baebc533",
+      "raised_by": "branch-end-reader-b-codex-cli",
+      "resolved": "fixed by 9798b435 and c0a93c6f — the unsafe-success case is graduated permanently and now proves immutable local-remote publication"
+    },
+    {
+      "id": "branch-end-05",
+      "anchor": "loom-code/scripts/loom_checker.py:3249",
+      "origin_sha": "b25f72772659324afa8fb72c35acab4193b0d5f8",
+      "raised_by": "branch-end-reader-b-codex-cli",
+      "resolved": "fixed by 7d06f948 and f6e58b72 — the standard command builtin bypasses inherited absolute-executable functions in Bash and zsh"
+    },
+    {
+      "id": "branch-end-06",
+      "anchor": "loom-code/skills/ship/SKILL.md:260",
+      "origin_sha": "3359f473953be82fae0b0d021297ce6ec42521bb",
+      "raised_by": "branch-end-reader-b-codex-cli",
+      "resolved": "fixed by 42739e14, 3ecac98e, and 1dbcd4a6 — the accepted command requires --no-verify, Bash and zsh regressions contain repository hooks, and the final candidate measurement was refreshed"
+    },
+    {
+      "id": "branch-end-07",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30",
+      "origin_sha": "e28991b3d8ebdb1630004a3466e597363fe6a581",
+      "raised_by": "history-rewrite-adversary-rerun-codex",
+      "resolved": "fixed by 177a38b5 — the replay baseline now resolves from a branch-only clone and the refreshed controlled measurement passes"
+    },
+    {
+      "id": "branch-end-08",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
+      "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "raised_by": "history-rewrite-review-b-codex",
+      "resolved": "fixed by the recorded round-19 Claude verdict"
+    },
+    {
+      "id": "branch-end-09",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:767",
+      "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "raised_by": "history-rewrite-review-b-codex",
+      "resolved": "fixed by the conforming round-21 replacement-docs-review-codex verdict"
+    },
+    {
+      "id": "branch-end-10",
+      "anchor": "loom-code/scripts/loom_checker.py:3197",
+      "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
+      "raised_by": "history-rewrite-review-b-codex",
+      "resolved": "fixed by adcf7436 — source and Codex mirror now carry the citations and pass the exact-match test"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "loom-code/scripts/loom_checker.py:3571",
+      "origin_sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "raised_by": "second-vendor-repair-adversary-codex",
+      "resolved": "fixed by adcf7436 — the gate snapshots local Git config and the permanent attack probe passes"
+    },
+    {
+      "id": "branch-end-12",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30",
+      "origin_sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "raised_by": "second-vendor-repair-adversary-codex",
+      "dismissed": {"reason": "The plan explicitly classifies timing as change-specific evidence and does not require post-merge replay; branch-only reproducibility before publication is already proven.", "by": "branch-end-blind-codex-cli"}
+    },
+    {
+      "id": "branch-end-13",
+      "anchor": "loom-code/scripts/loom_checker.py:3512",
+      "origin_sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "raised_by": "second-vendor-repair-review-codex",
+      "dismissed": {"reason": "Advisory size nit only; extracting the tightly coupled push transition would add abstraction without a second user and conflicts with deliberate simplification.", "by": "branch-end-blind-codex-cli"}
+    },
+    {
+      "id": "branch-end-14",
+      "anchor": "loom-code/scripts/loom_checker.py:3578",
+      "origin_sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "raised_by": "final-repair-review-claude, final-repair-adversary-codex",
+      "resolved": "fixed by 5e50e711 — effective merged Git config is compared and global plus worktree regressions pass"
+    },
+    {
+      "id": "branch-end-15",
+      "anchor": "loom-code/scripts/loom_checker.py:3200",
+      "origin_sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "raised_by": "final-repair-review-codex",
+      "resolved": "fixed by 5e50e711 — the official GitHub REST refs contract now grounds the endpoint and object.sha response"
+    },
+    {
+      "id": "branch-end-16",
+      "anchor": "loom-code/scripts/test_loom_checker_push.py:1390",
+      "origin_sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "raised_by": "final-repair-review-codex",
+      "resolved": "fixed by 5e50e711 — global and worktree retarget cases now run in the permanent package suite"
+    },
+    {
+      "id": "branch-end-17",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1314",
+      "origin_sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "raised_by": "final-repair-review-codex, final-repair-adversary-codex",
+      "resolved": "fixed in rewritten checkpoint a7e9e497 — both dispositions name the dispatched blind runner"
+    },
+    {
+      "id": "branch-end-18",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:76",
+      "origin_sha": "3732d1b3cf05b89844f900460910af773804e725",
+      "raised_by": "final-repair-adversary-codex",
+      "resolved": "fixed by 5e50e711 — the report discloses the dismissed fatal finding and rationale"
+    },
+    {
+      "id": "branch-end-19",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:51",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "replacement-docs-review-codex",
+      "resolved": "fixed by 504ad546 — the paired replay and report now cover the final functional commit"
+    },
+    {
+      "id": "branch-end-20",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "replacement-docs-review-codex",
+      "resolved": "fixed by 504ad546 — audit counts and the immutable historical-label limitation were refreshed"
+    },
+    {
+      "id": "branch-end-21",
+      "anchor": "loom-code/scripts/loom_checker.py:3580",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-review-codex",
+      "resolved": "fixed by 9cb6f7a4 — the local regression is permanent and the effective git-config call cites its official contract"
+    },
+    {
+      "id": "branch-end-22",
+      "anchor": "loom-code/scripts/loom_checker.py:3405",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-adversary-codex",
+      "resolved": "fixed by 9cb6f7a4 — literal origin is required and PR remote HEAD is recomputed after executable probes"
+    },
+    {
+      "id": "branch-end-23",
+      "anchor": "loom-code/scripts/loom_checker.py:3580",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-adversary-codex",
+      "dismissed": {
+        "reason": "The hook guarantees a pinned full-SHA source and verifies destination state through hook completion, but cannot contain a detached process after return without moving network publication into the checker; the report now states this boundary and that architectural expansion is outside this intent.",
+        "by": "branch-end-blind-codex-cli"
+      }
+    },
+    {
+      "id": "branch-end-24",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:58",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "replacement-docs-review-codex",
+      "dismissed": {
+        "reason": "The text is part of a user-confirmed spec fingerprint and changing only its language would reopen a human decision point without changing delivered behavior; the final review treats this as a documented historical artifact nit.",
+        "by": "branch-end-blind-codex-cli"
+      }
+    },
+    {
+      "id": "branch-end-25",
+      "anchor": "loom-code/scripts/loom_checker.py:3505",
+      "origin_sha": "301b55aa6417391a63c371c6e73aec984cad4917",
+      "raised_by": "effective-config-adversary-codex",
+      "resolved": "fixed by 9cb6f7a4 — the PR remote HEAD is recomputed after executable probes and the permanent movement regression passes"
+    },
+    {
+      "id": "branch-end-26",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57",
+      "origin_sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "raised_by": "final-evidence-review-codex",
+      "resolved": "fixed by the post-round-22 evidence refresh — the report now says 94 definitions, 77 unique names, and 26 immutable historical unlabeled findings"
+    },
+    {
+      "id": "branch-end-27",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:2",
+      "origin_sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "raised_by": "final-evidence-review-claude",
+      "resolved": "fixed by the closing review checkpoint, which binds reviewed_sha to the exact final reviewed content"
+    },
+    {
+      "id": "branch-end-28",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1464",
+      "origin_sha": "6c16b21606da5bdae9a116e07e53047728ca6e86",
+      "raised_by": "final-evidence-adversary-codex",
+      "dismissed": {
+        "reason": "The two nit-derived entries were already committed into the append-only review history before the classification error was identified; deleting or rewriting them would violate the stronger evidence-integrity invariant, and retaining resolved or dismissed extra entries changes no release behavior.",
+        "by": "branch-end-blind-codex-cli"
+      }
+    },
+    {
+      "id": "branch-end-29",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md:57",
+      "origin_sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "raised_by": "audit-repair-docs-codex, audit-repair-adversary-codex",
+      "resolved": "fixed by the post-round-23 evidence refresh — the report uses the repository rule with optional label decorations and correctly states 23"
+    },
+    {
+      "id": "branch-end-30",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:1575",
+      "origin_sha": "f8cfaa84565611bc514baa752d0137c998787f6b",
+      "raised_by": "audit-repair-review-codex, audit-repair-docs-codex, audit-repair-adversary-codex",
+      "resolved": "fixed by this closing review checkpoint — reviewed_sha is bound to 92f9acfb and four passing round-24 verdicts"
+    },
+    {
+      "id": "branch-end-31", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py:16", "origin_sha": "59416810", "raised_by": "replay-bootstrap-review-codex, replay-bootstrap-adversary-codex", "resolved": "fixed by 149e45e9 — direct replay uses the trusted repo cwd, sanitizes Python module-search variables, and passes from a hostile cwd"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "spec",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T23:45:14+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec-fix-round:2",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-06T23:58:53+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "spec-design-relook:3",
+      "role": "reviewer",
+      "agent_id": "spec-design-relook-codex",
+      "model": "gpt-6-astra-ultra",
+      "started": "2026-09-07T00:03:33+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "spec-fix-round:3",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T00:03:33+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "spec-fingerprint-confirmation:4",
+      "role": "reviewer",
+      "agent_id": "spec-risk-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T00:07:34+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T00:26:02+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-02",
+      "role": "adversary",
+      "agent_id": "adv-w0-02-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T00:45:11+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-02",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T00:52:54+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-01",
+      "role": "implementer",
+      "agent_id": "impl-w1-01-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T01:11:45+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W1-memory",
+      "role": "implementer",
+      "agent_id": "root",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T01:20:11+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "branch-end-adversary-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T01:24:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "branch-end-blind-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T01:24:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T01:24:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T01:24:18+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix:6",
+      "role": "adversary",
+      "agent_id": "adv-w0-02-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T01:44:00+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:6",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T01:49:05+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:6-evidence",
+      "role": "implementer",
+      "agent_id": "fix-measurement-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T02:02:25+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:6",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T02:16:46+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:6",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T02:16:46+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-design-relook:7",
+      "role": "reviewer",
+      "agent_id": "branch-end-design-relook-codex",
+      "model": "gpt-6-astra-ultra",
+      "started": "2026-09-07T02:24:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix:7",
+      "role": "adversary",
+      "agent_id": "adv-w0-02-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T02:29:44+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:7",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T02:40:54+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:7-evidence",
+      "role": "implementer",
+      "agent_id": "fix-measurement-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T02:59:58+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:7",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T03:09:52+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:7",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T03:09:52+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:8",
+      "role": "adversary",
+      "agent_id": "adv-w0-02-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T03:15:31+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:8",
+      "role": "implementer",
+      "agent_id": "impl-w0-02-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T03:18:20+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix:8-evidence",
+      "role": "implementer",
+      "agent_id": "fix-measurement-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T06:17:47+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:8",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T06:26:31+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:8",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T06:26:31+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:9",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T06:43:57+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:9",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T06:43:57+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:10",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T06:52:36+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:10",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T06:52:36+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:11",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T06:57:13+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:11",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T06:57:13+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:12",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T07:02:47+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:12",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T07:02:47+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:14",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-a-codex-cli",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T08:07:09+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:14",
+      "role": "reviewer",
+      "agent_id": "branch-end-reader-b-codex-cli",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T08:07:09+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:15",
+      "role": "reviewer",
+      "agent_id": "final-independent-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T10:04:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:15",
+      "role": "adversary",
+      "agent_id": "privacy-dispatch-measure8-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T09:34:00+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:16",
+      "role": "reviewer",
+      "agent_id": "version-bump-final-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T10:38:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:16",
+      "role": "adversary",
+      "agent_id": "privacy-dispatch-measure8-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T10:44:00+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:17",
+      "role": "reviewer",
+      "agent_id": "package-env-final-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T11:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:17",
+      "role": "adversary",
+      "agent_id": "privacy-dispatch-measure8-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T11:10:00+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:18",
+      "role": "reviewer",
+      "agent_id": "history-rewrite-review-rerun-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T11:41:27+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:18",
+      "role": "adversary",
+      "agent_id": "history-rewrite-adversary-rerun-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T11:41:27+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:18",
+      "role": "reviewer",
+      "agent_id": "history-rewrite-review-b-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T12:18:55+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:19",
+      "role": "reviewer",
+      "agent_id": "second-vendor-repair-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T12:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:19",
+      "role": "reviewer",
+      "agent_id": "second-vendor-repair-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T12:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:19",
+      "role": "adversary",
+      "agent_id": "second-vendor-repair-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T12:40:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:20",
+      "role": "reviewer",
+      "agent_id": "final-repair-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T13:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:20",
+      "role": "reviewer",
+      "agent_id": "final-repair-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T13:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:20",
+      "role": "adversary",
+      "agent_id": "final-repair-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T13:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:21",
+      "role": "reviewer",
+      "agent_id": "effective-config-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T13:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:21",
+      "role": "reviewer",
+      "agent_id": "effective-config-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T13:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:21",
+      "role": "reviewer",
+      "agent_id": "replacement-docs-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T13:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:21",
+      "role": "adversary",
+      "agent_id": "effective-config-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T13:20:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "reviewer",
+      "agent_id": "final-evidence-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "reviewer",
+      "agent_id": "final-evidence-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "reviewer",
+      "agent_id": "final-evidence-docs-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "adversary",
+      "agent_id": "final-evidence-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:23",
+      "role": "reviewer",
+      "agent_id": "audit-repair-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:23",
+      "role": "reviewer",
+      "agent_id": "audit-repair-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T14:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:23",
+      "role": "reviewer",
+      "agent_id": "audit-repair-docs-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:23",
+      "role": "adversary",
+      "agent_id": "audit-repair-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:30:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "reviewer", "agent_id": "ledger-close-review-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "reviewer", "agent_id": "ledger-close-review-claude", "model": "claude-sonnet-5", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "reviewer", "agent_id": "ledger-close-docs-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:24", "role": "adversary", "agent_id": "ledger-close-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T14:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "reviewer", "agent_id": "replay-bootstrap-review-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "reviewer", "agent_id": "replay-bootstrap-review-claude", "model": "claude-sonnet-5", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "reviewer", "agent_id": "replay-bootstrap-docs-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:25", "role": "adversary", "agent_id": "replay-bootstrap-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:20:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "reviewer", "agent_id": "bootstrap-close-review-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "reviewer", "agent_id": "bootstrap-close-review-claude", "model": "claude-sonnet-5", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "reviewer", "agent_id": "bootstrap-close-docs-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:26", "role": "adversary", "agent_id": "bootstrap-close-adversary-codex", "model": "gpt-5.6-sol", "started": "2026-09-07T15:50:00+08:00", "fresh_context": true
+    }
+  ],
+  "cost": {
+    "rounds": 26,
+    "dispatches": 79,
+    "cap_changes": [],
+    "hours_plan_to_pr": null
+  },
+  "charter": "1.0"
+}

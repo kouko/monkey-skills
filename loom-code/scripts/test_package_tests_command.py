@@ -78,6 +78,8 @@ def test_kickoff_and_ci_run_the_same_parallel_command() -> None:
     # KICKOFF drives the runner script (one pytest session per `--then` group);
     # the first group is the same argv CI's loom-code job passes to pytest.
     first_group = kickoff_command.split(" --then ")[0]
-    kickoff_tokens = tokens(first_group, {"-q", "scripts/run_package_tests.py"})
+    kickoff_argv = first_group.split()
+    runner_index = kickoff_argv.index("scripts/run_package_tests.py")
+    kickoff_tokens = ["python3", *tokens(" ".join(kickoff_argv[runner_index + 1:]), {"-q"})]
     ci_tokens = tokens(ci_command, {"-v", "-m", "pytest"})
     assert kickoff_tokens == ci_tokens

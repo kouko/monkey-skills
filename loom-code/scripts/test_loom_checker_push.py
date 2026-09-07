@@ -19,7 +19,10 @@ Since the W0 wave-end fixes, three things changed shape here:
 from __future__ import annotations
 
 import json
+import os
 import re
+import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -40,10 +43,74 @@ PASSING_COMMAND = "python3 -c pass"
 FAILING_COMMAND = "python3 -c 1/0"
 
 
+@pytest.fixture(autouse=True)
+def fake_gh_api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep remote-head checks offline while preserving GitHub identity."""
+    bin_dir = tmp_path / "fake-gh-bin"
+    bin_dir.mkdir()
+    gh = bin_dir / "gh"
+    gh.write_text(
+        "#!/bin/sh\n"
+        "if [ \"$1\" = api ]; then \n"
+        "  marker=$(git -C \"$LOOM_REPO_ROOT\" rev-parse --git-path loom-fake-gh-head) || exit\n"
+        "  printf '%s\\n' \"$@\" > \"$marker.args\"\n"
+        "  cat \"$marker\"; exit\n"
+        "fi\n"
+        "exit 0\n",
+        encoding="utf-8",
+    )
+    gh.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+
+
 def git(repo: Path, *args: str) -> str:
     return subprocess.run(
         ["git", "-C", str(repo), *args], capture_output=True, text=True, check=True
     ).stdout.strip()
+
+
+def configure_github_origin(repo: Path, remote: Path) -> None:
+    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+    configured = f"git@github.com:test-owner/{remote.stem}.git"
+    ssh_shim = remote.parent / f"ssh-{remote.stem}"
+    target = shlex.quote(str(remote.resolve()))
+    ssh_shim.write_text(
+        "#!/bin/sh\n"
+        "case \"$2\" in\n"
+        f"  git-upload-pack*) exec git-upload-pack {target} ;;\n"
+        f"  git-receive-pack*) exec git-receive-pack {target} ;;\n"
+        "  *) exit 2 ;;\n"
+        "esac\n",
+        encoding="utf-8",
+    )
+    ssh_shim.chmod(0o755)
+    git(repo, "config", "core.sshCommand", str(ssh_shim))
+    git(repo, "remote", "add", "origin", configured)
+
+
+def publish_current_head(repo: Path, remote: Path) -> None:
+    configure_github_origin(repo, remote)
+    branch = git(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    git(repo, "push", "-q", "origin", f"HEAD:refs/heads/{branch}")
+    marker = Path(git(repo, "rev-parse", "--git-path", "loom-fake-gh-head"))
+    if not marker.is_absolute():
+        marker = repo / marker
+    marker.write_text(git(repo, "rev-parse", "HEAD") + "\n")
+
+
+def canonical_pr_create(repo: Path, *extra: str) -> str:
+    trusted_env = str(Path(shutil.which("env")).resolve())
+    trusted_gh = str(Path(shutil.which("gh")).resolve())
+    gh_repo = loom_checker.github_repo_from_origin(repo)
+    assert gh_repo
+    branch = git(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    has_head = any(token in {"--head", "-H"} or token.startswith("--head=") or
+                   (token.startswith("-H") and token != "-H") for token in extra)
+    return loom_checker.render_quote_all([
+        "command", trusted_env, f"LOOM_REPO_ROOT={repo.resolve()}",
+        f"GH_REPO={gh_repo}", trusted_gh, "pr", "create", *extra,
+        *(() if has_head else ("--head", branch)),
+    ])
 
 
 def run_checker(*args: str, cwd: Path) -> subprocess.CompletedProcess:
@@ -119,7 +186,8 @@ def review_body(reviewed_sha: str, **overrides) -> dict:
 
 
 def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None,
-               package_tests: str | None = None) -> Path:
+               package_tests: str | None = None,
+               scripts: dict[str, str] | None = None) -> Path:
     """A branch whose HEAD^ is the code commit and HEAD the review-only one."""
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -143,6 +211,8 @@ def build_repo(tmp_path: Path, *, dispatch: list[dict] | None = None,
     (repo / "evidence/abuse_regressed.py").write_text(
         "raise SystemExit(1)\n", encoding="utf-8"
     )
+    for relative, content in (scripts or {}).items():
+        (repo / relative).write_text(content, encoding="utf-8")
     kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
     kickoff.parent.mkdir(parents=True, exist_ok=True)
     kickoff.write_text(
@@ -1314,6 +1384,70 @@ def test_a_dirty_working_tree_blocks_the_probe(tmp_path: Path) -> None:
     assert "clean" in result.stderr
 
 
+def test_a_package_probe_cannot_retarget_push_through_global_config(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    isolated_home = tmp_path / "home"
+    isolated_home.mkdir()
+    monkeypatch.setenv("HOME", str(isolated_home))
+    command = "python3 evidence/retarget.py"
+    script = (
+        "import subprocess\n"
+        "subprocess.run(['git', 'config', '--global', "
+        "'remote.origin.pushurl', 'https://example.invalid/other.git'], check=True)\n"
+    )
+    repo = build_repo(
+        tmp_path, package_tests=command, scripts={"evidence/retarget.py": script}
+    )
+    body = rebuild(repo)
+    body["probes"][0]["command"] = command
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "effective Git config changed" in result.stderr
+
+
+def test_a_package_probe_cannot_retarget_push_through_local_config(
+    tmp_path: Path,
+) -> None:
+    command = "python3 evidence/retarget.py"
+    script = (
+        "import subprocess\n"
+        "subprocess.run(['git', 'config', '--local', "
+        "'remote.origin.pushurl', 'https://example.invalid/other.git'], check=True)\n"
+    )
+    repo = build_repo(
+        tmp_path, package_tests=command, scripts={"evidence/retarget.py": script}
+    )
+    body = rebuild(repo)
+    body["probes"][0]["command"] = command
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "effective Git config changed" in result.stderr
+
+
+def test_a_package_probe_cannot_retarget_push_through_worktree_config(
+    tmp_path: Path,
+) -> None:
+    command = "python3 evidence/retarget.py"
+    script = (
+        "import subprocess\n"
+        "subprocess.run(['git', 'config', '--worktree', "
+        "'remote.origin.pushurl', 'https://example.invalid/other.git'], check=True)\n"
+    )
+    repo = build_repo(
+        tmp_path, package_tests=command, scripts={"evidence/retarget.py": script}
+    )
+    git(repo, "config", "extensions.worktreeConfig", "true")
+    body = rebuild(repo)
+    body["probes"][0]["command"] = command
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "effective Git config changed" in result.stderr
+
+
 def test_missing_package_test_probe_blocks(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
     parent = git(repo, "rev-parse", "HEAD~1")
@@ -2205,18 +2339,6 @@ PUSH_SHAPED = (
     "xargs git push",
 )
 
-AMBIGUOUS_PUSH_SHAPED = {
-    "cd sub && git push",
-    "git -C /tmp/other push",
-    "git --git-dir=/tmp/x/.git --work-tree=/tmp/x push",
-    'eval "git push"',
-    'bash -c "git push"',
-    'sh -c "git push"',
-    'zsh -c "git push"',
-    'dash -c "git push"',
-    "xargs git push",
-}
-
 NOT_PUSH_SHAPED = (
     "ls -la",
     "git pushd",
@@ -2238,10 +2360,12 @@ def test_hook_mode_recognises_every_push_shape(tmp_path: Path) -> None:
     for cmd in PUSH_SHAPED:
         result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
         assert result.returncode == 2, (cmd, result.stdout, result.stderr)
-        assert "push.review-only-head" in blocked_rules(result), cmd
-        assert ("ambiguous repository selection" in result.stderr) == (
-            cmd in AMBIGUOUS_PUSH_SHAPED
-        ), cmd
+        expected = (
+            "push.reviewed-sha"
+            if "gh pr create" in cmd or "gh pr" not in cmd
+            else "push.review-only-head"
+        )
+        assert expected in blocked_rules(result), cmd
 
 
 def test_hook_mode_lets_non_push_shapes_through(tmp_path: Path) -> None:
@@ -2256,8 +2380,55 @@ def test_hook_mode_lets_non_push_shapes_through(tmp_path: Path) -> None:
 
 def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
     repo = build_repo(tmp_path)
-    result = run_hook({"tool_name": "Bash", "tool_input": {"command": "git push"}, "cwd": str(repo)}, cwd=tmp_path)
+    head = git(repo, "rev-parse", "HEAD")
+    trusted_git = str(Path(shutil.which("git")).resolve())
+    command = loom_checker.render_quote_all([
+            "command", trusted_git, "push", "--no-follow-tags", "--recurse-submodules=no",
+            "-u", "--no-verify", "origin", f"{head}:refs/heads/work",
+    ])
+    result = run_hook({"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo)}, cwd=tmp_path)
     assert result.returncode == 0, result.stderr
+
+
+def test_canonical_push_rejects_a_non_origin_remote(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    trusted_git = str(Path(shutil.which("git")).resolve())
+    head = git(repo, "rev-parse", "HEAD")
+    command = loom_checker.render_quote_all([
+        "command", trusted_git, "-C", str(repo), "push",
+        *loom_checker.CANONICAL_PUSH_FLAGS, "attacker",
+        f"{head}:refs/heads/work",
+    ])
+    _repo, _head, error = loom_checker.canonical_git_push(command, str(repo))
+    assert error == "the Git push remote must be literal 'origin'"
+
+
+@pytest.mark.parametrize(
+    "unsafe",
+    [
+        "+{head}:refs/heads/work",
+        "--force origin {head}:refs/heads/work",
+        "-f origin {head}:refs/heads/work",
+        "--force-with-lease origin {head}:refs/heads/work",
+        "origin {head}:refs/heads/*",
+    ],
+)
+def test_hook_mode_blocks_force_and_wildcard_refspecs_before_probes(
+    tmp_path: Path, unsafe: str,
+) -> None:
+    repo = build_repo(tmp_path)
+    head = git(repo, "rev-parse", "HEAD")
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"git push {unsafe.format(head=head)}"},
+            "cwd": str(repo),
+        },
+        cwd=tmp_path,
+    )
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "observed exit code" not in result.stdout
 
 
 def test_hook_mode_honours_git_dash_c_over_payload_cwd(tmp_path: Path) -> None:
@@ -2276,7 +2447,13 @@ def test_hook_mode_honours_git_dash_c_over_payload_cwd(tmp_path: Path) -> None:
     (unrelated / "after.py").write_text("changed = True\n", encoding="utf-8")
     git(unrelated, "add", "after.py")
     git(unrelated, "commit", "-q", "-m", "feat(x): unreviewed change")
-    command = f"git -C {target} push origin HEAD"
+    head = git(target, "rev-parse", "HEAD")
+    trusted_git = str(Path(shutil.which("git")).resolve())
+    command = loom_checker.render_quote_all([
+        "command", trusted_git, "-C", str(target), "push", "--no-follow-tags",
+        "--recurse-submodules=no", "-u", "--no-verify", "origin",
+        f"{head}:refs/heads/work",
+    ])
 
     result = run_hook(
         {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(unrelated)},
@@ -2292,11 +2469,12 @@ def test_hook_mode_honours_absolute_cd_for_gh_pr_over_payload_cwd(tmp_path: Path
     target_root.mkdir()
     unrelated_root.mkdir()
     target = build_repo(target_root)
+    publish_current_head(target, tmp_path / "target.git")
     unrelated = build_repo(unrelated_root)
     (unrelated / "after.py").write_text("changed = True\n", encoding="utf-8")
     git(unrelated, "add", "after.py")
     git(unrelated, "commit", "-q", "-m", "feat(x): unreviewed change")
-    command = f"cd {target} && gh pr create --fill"
+    command = canonical_pr_create(target, "--fill")
 
     result = run_hook(
         {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(unrelated)},
@@ -2304,6 +2482,430 @@ def test_hook_mode_honours_absolute_cd_for_gh_pr_over_payload_cwd(tmp_path: Path
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_gh_pr_create_does_not_rerun_the_package_suite(tmp_path: Path) -> None:
+    """Opening PR metadata must not repeat the suite owned by Git push."""
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    command = canonical_pr_create(repo, "--fill")
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "package-tests" not in result.stdout
+    marker = Path(git(repo, "rev-parse", "--git-path", "loom-fake-gh-head"))
+    if not marker.is_absolute():
+        marker = repo / marker
+    assert Path(f"{marker}.args").read_text().splitlines() == [
+        "api", "--hostname", "github.com",
+        "repos/test-owner/remote/git/ref/heads/work", "--jq", ".object.sha",
+    ]
+
+
+@pytest.mark.parametrize(
+    "unsafe_create",
+    [
+        "gh pr create --fill",
+        "/tmp/gh pr create --fill",
+        "gh pr create --fill; ./publish.sh",
+    ],
+)
+def test_noncanonical_pr_create_does_not_receive_the_package_exemption(
+    tmp_path: Path, unsafe_create: str,
+) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && {unsafe_create}"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+@pytest.mark.parametrize(
+    "shell",
+    [shutil.which("bash"), shutil.which("zsh")],
+    ids=["bash", "zsh"],
+)
+def test_canonical_pr_create_bypasses_an_inherited_absolute_gh_function(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, shell: str | None,
+) -> None:
+    if shell is None:
+        pytest.skip("the requested shell is unavailable")
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q")
+    git(repo, "remote", "add", "origin", "https://github.com/test-owner/repo.git")
+    trusted_gh = tmp_path / "bin" / "gh"
+    trusted_gh.parent.mkdir()
+    trusted_gh.write_text(
+        "#!/bin/sh\nprintf '%s' \"$GH_REPO\" > .gh-repo\n"
+        "printf '%s' \"$GH_HOST\" > .gh-host\ntouch .trusted-gh\n",
+        encoding="utf-8",
+    )
+    trusted_gh.chmod(0o755)
+    original_which = shutil.which
+    monkeypatch.setattr(
+        loom_checker.shutil,
+        "which",
+        lambda name: str(trusted_gh) if name == "gh" else original_which(name),
+    )
+    trusted_env = str(Path(original_which("env")).resolve())
+    command = loom_checker.render_quote_all([
+        "command", trusted_env, f"LOOM_REPO_ROOT={repo.resolve()}",
+        "GH_REPO=github.com/test-owner/repo", str(trusted_gh),
+        "pr", "create", "--fill", "--head", "main",
+    ])
+    assert loom_checker.is_canonical_pr_create_command(repo, command)
+
+    preamble = "\n".join([
+        f"function {trusted_gh}() {{ touch .shadowed-gh; }}",
+        f"function {trusted_env}() {{ touch .shadowed-env; return 71; }}",
+    ])
+    env = dict(os.environ)
+    env["GH_REPO"] = "attacker/other"
+    env["GH_HOST"] = "enterprise.attacker.example"
+    env.pop("BASH_ENV", None)
+    env.pop("ENV", None)
+    result = subprocess.run(
+        [shell, "-f"], input=preamble + "\n" + command + "\n",
+        cwd=repo, env=env, capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (repo / ".trusted-gh").exists()
+    assert (repo / ".gh-repo").read_text() == "github.com/test-owner/repo"
+    assert (repo / ".gh-host").read_text() == "enterprise.attacker.example"
+    assert not (repo / ".shadowed-gh").exists()
+    assert not (repo / ".shadowed-env").exists()
+
+
+@pytest.mark.parametrize("repo_override", [
+    ("--repo", "other/target"), ("--repo=other/target",),
+    ("-R", "other/target"), ("-Rother/target",),
+])
+def test_pr_create_exemption_rejects_repository_overrides(
+    tmp_path: Path, repo_override: tuple[str, ...],
+) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": canonical_pr_create(repo, *repo_override)},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_pr_create_exemption_rejects_an_origin_rewritten_elsewhere(
+    tmp_path: Path,
+) -> None:
+    repo = build_repo(tmp_path)
+    remote = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+    configured = "https://github.com/test-owner/repo.git"
+    git(repo, "config", f"url.{remote}.insteadOf", configured)
+    git(repo, "remote", "add", "origin", configured)
+    branch = git(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    git(repo, "push", "-q", "origin", f"HEAD:refs/heads/{branch}")
+    trusted_env = str(Path(shutil.which("env")).resolve())
+    trusted_gh = str(Path(shutil.which("gh")).resolve())
+    command = loom_checker.render_quote_all([
+        "command", trusted_env, f"LOOM_REPO_ROOT={repo.resolve()}",
+        "GH_REPO=github.com/test-owner/repo", trusted_gh, "pr", "create",
+        "--fill", "--head", branch,
+    ])
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": command},
+         "cwd": str(tmp_path)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+@pytest.mark.parametrize("separator", [" | ", " & ", "; ", "\n"])
+def test_pr_create_exemption_requires_the_exact_and_separator(
+    tmp_path: Path, separator: str,
+) -> None:
+    repo = build_repo(tmp_path)
+    publish_current_head(repo, tmp_path / "remote.git")
+    command = canonical_pr_create(repo, "--fill") + separator + "'true'"
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_pr_create_exemption_allows_separator_text_inside_a_quoted_argument(
+    tmp_path: Path,
+) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": canonical_pr_create(repo, "--title", "safe && literal")},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "package-tests" not in result.stdout
+
+
+@pytest.mark.parametrize("head_flag", [("--head", "other"), ("-Hother",)])
+def test_quoted_separator_does_not_hide_a_mismatched_pr_head(
+    tmp_path: Path, head_flag: tuple[str, ...],
+) -> None:
+    repo = build_repo(tmp_path)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": canonical_pr_create(
+                repo, "--title", "safe && literal", *head_flag,
+            )},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_pr_create_exemption_requires_an_explicit_head(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    publish_current_head(repo, tmp_path / "remote.git")
+    command = canonical_pr_create(repo, "--fill")
+    tokens = loom_checker._tokenise(command)
+    del tokens[-2:]
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": loom_checker.render_quote_all(tokens)},
+         "cwd": str(tmp_path)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_pr_create_exemption_rejects_a_relative_body_file(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {"tool_name": "Bash", "tool_input": {
+            "command": canonical_pr_create(repo, "--body-file", "pr.md")},
+         "cwd": str(tmp_path)},
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_gh_pr_create_requires_the_reviewed_head_on_the_remote(tmp_path: Path) -> None:
+    """PR creation cannot become an unvalidated implicit publication path."""
+    repo = build_repo(tmp_path)
+    configure_github_origin(repo, tmp_path / "remote.git")
+    command = canonical_pr_create(repo, "--fill")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "remote branch" in result.stderr
+
+
+def test_gh_pr_create_blocks_when_the_remote_branch_is_stale(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    remote = tmp_path / "remote.git"
+    configure_github_origin(repo, remote)
+    git(repo, "push", "-q", "origin", "HEAD~1:refs/heads/work")
+    command = canonical_pr_create(repo, "--fill")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "remote branch" in result.stderr
+
+
+def test_gh_pr_merge_keeps_the_package_suite_gate(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && gh pr merge 12 --squash"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.probes-package-tests" in blocked_rules(result)
+
+
+def test_gh_pr_create_cannot_exempt_a_later_merge_in_the_same_command(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": f"cd {repo} && gh pr create --fill; gh pr merge 12 --squash"
+            },
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_gh_pr_create_rechecks_remote_head_after_adversarial_probes(
+    tmp_path: Path,
+) -> None:
+    mover = (
+        "import subprocess\n"
+        "from pathlib import Path\n"
+        "marker = Path(subprocess.check_output(['git', 'rev-parse', '--git-path', "
+        "'loom-fake-gh-head'], text=True).strip())\n"
+        "marker.write_text(subprocess.check_output(['git', 'rev-parse', 'HEAD~1'], "
+        "text=True), encoding='utf-8')\n"
+    )
+    repo = build_repo(tmp_path, scripts={"evidence/abuse_hostile.py": mover})
+    publish_current_head(repo, tmp_path / "remote.git")
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": canonical_pr_create(repo, "--fill")},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+@pytest.mark.parametrize(
+    "nested_merge",
+    [
+        "eval 'gh pr merge 12 --squash'",
+        "bash -c 'gh pr merge 12 --squash'",
+    ],
+)
+def test_gh_pr_create_cannot_exempt_a_nested_merge(
+    tmp_path: Path, nested_merge: str,
+) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": f"cd {repo} && gh pr create --fill; {nested_merge}"
+            },
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_gh_pr_create_blocks_attached_short_head_for_another_branch(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    command = canonical_pr_create(repo, "-Hother-branch", "--fill")
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "PR head must be the current branch" in result.stderr
 
 
 def test_hook_mode_blocks_pushes_to_distinct_git_dash_c_directories(tmp_path: Path) -> None:
@@ -2319,7 +2921,7 @@ def test_hook_mode_blocks_pushes_to_distinct_git_dash_c_directories(tmp_path: Pa
     )
 
     assert result.returncode == 2
-    assert "push.review-only-head" in blocked_rules(result)
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 def test_hook_mode_blocks_relative_git_dash_c_when_payload_cwd_is_untrusted(tmp_path: Path) -> None:
@@ -2333,7 +2935,7 @@ def test_hook_mode_blocks_relative_git_dash_c_when_payload_cwd_is_untrusted(tmp_
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 @pytest.mark.parametrize(
@@ -2362,7 +2964,7 @@ def test_hook_mode_blocks_indirect_push_repository_selection(
     )
 
     assert result.returncode == 2
-    assert "push.review-only-head" in blocked_rules(result)
+    assert blocked_rules(result) & {"push.review-only-head", "push.reviewed-sha"}
 
 
 @pytest.mark.parametrize(
@@ -2385,7 +2987,7 @@ def test_hook_mode_blocks_unsupported_git_directory_options(
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 @pytest.mark.parametrize("variable", ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"])
@@ -2409,7 +3011,7 @@ def test_hook_mode_blocks_git_repository_environment_override(
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 def test_hook_mode_blocks_gh_repo_environment_override(tmp_path: Path) -> None:
@@ -2425,7 +3027,7 @@ def test_hook_mode_blocks_gh_repo_environment_override(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "canonical trusted-gh command" in result.stderr
 
 
 def test_hook_mode_blocks_compact_env_chdir_before_push(tmp_path: Path) -> None:
@@ -2441,7 +3043,7 @@ def test_hook_mode_blocks_compact_env_chdir_before_push(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 @pytest.mark.parametrize(
@@ -2465,7 +3067,7 @@ def test_hook_mode_blocks_gh_repository_override_before_subcommand(
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "canonical trusted-gh command" in result.stderr
 
 
 def test_hook_mode_blocks_xargs_push_behind_another_prefix(tmp_path: Path) -> None:
@@ -2481,7 +3083,7 @@ def test_hook_mode_blocks_xargs_push_behind_another_prefix(tmp_path: Path) -> No
     )
 
     assert result.returncode == 2
-    assert "ambiguous repository selection" in result.stderr
+    assert "push.reviewed-sha" in blocked_rules(result)
 
 
 def test_hook_mode_malformed_payload_fails_closed(tmp_path: Path) -> None:

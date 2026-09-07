@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.1] — 2026-09-07 — single-owner PUSH & PR package gate
+
+- Keep the full package suite owned by the canonical local push gate while a
+  subsequent metadata-only PR creation reuses that exact pushed checkpoint.
+- Bind the exemption to the selected repository, origin-derived GitHub
+  identity, explicit branch, exact remote SHA, and trusted executables;
+  `--body-file`, when supplied, must use an absolute path.
+- Verify the remote branch through the matching GitHub API target so Git
+  transport rewrites cannot redirect the SHA check.
+- Keep the repository package gate reproducible with a hash-verified lock for
+  its complete isolated test dependency graph.
+
 All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/).

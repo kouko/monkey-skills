@@ -34,6 +34,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 1.0
 Exit 0 continue; non-zero stop and report the mismatch (`contract.requires`)
 — do not work around a contract that does not fit.
 
+A missing or inactive supported-host hook blocks Ship; use the host's setup
+or trust probe to prove activation. An unchecked manual network push is
+outside the Loom Ship.
+
 On Codex, if `.codex/hooks/loom_checker.py` does not exist, **stop**: run
 `loom-code:write-plan` step 0b (the scaffold and its trust probe; that station
 writes the procedure out in `codex-first-contact.md`, under its `references/`)
@@ -219,12 +223,12 @@ nit batch — fixing wording never substitutes for a passing probe run.
 
 ## 4. Push
 
-Before the push, walk this checklist once. It mirrors
-`.github/workflows/loom-code-ci.yml`'s jobs, command for command, so a
-red line here is red there too:
+Before the push, walk the remaining repository-local non-package deterministic
+safety checklist once. These
+non-package checks mirror their jobs in `.github/workflows/loom-code-ci.yml`;
+the complete package suite is intentionally absent because the hook owns it:
 
 ```
-python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v -n auto
 python3 scripts/check_plugin_boundaries.py loom-code
 python3 scripts/check_plugin_boundaries.py loom-design
 python3 scripts/sync_codex_manifests.py --check --all
@@ -235,38 +239,46 @@ git ls-files '*.md' | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(cod
 python3 loom-code/scripts/check-skill-crossrefs.py
 ```
 
-Run the checker explicitly, then push:
+The supported host's local push hook is the sole owner: its deterministic
+push checker runs the package-test command exactly once and
+re-runs adversarial probes. Never invoke it as a separate preflight.
+Resolve absolutely.
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py push
+python3 -c 'import shutil; from pathlib import Path; print(Path(shutil.which("git")).resolve(), Path(shutil.which("env")).resolve(), Path(shutil.which("gh")).resolve(), sep="\n")'
+git rev-parse --show-toplevel
+git rev-parse HEAD
+git symbolic-ref --quiet --short HEAD
 ```
 
-It re-runs the package tests and the adversarial probes recorded in
-`review.json` itself, in a clean tree at `reviewed_sha`, and believes only
-the exit codes it observes. Expect it to take minutes; that wait is the
-point of it. The same command runs again, unasked, from the host's
-PreToolUse hook the moment the push command is issued — running it here
-first only means you see the block before the tool call does.
-
-Exit 0 → push the branch, by name, never bare:
+Render each token as `"'" +
+token.replace("'", "'\"'\"'") + "'"` and join with one ASCII space. Use no
+variables, substitutions, or other shell syntax:
 
 ```
-git push -u origin <branch>
+'command' '<absolute-trusted-git>' '-C' '<absolute-selected-repository>' 'push' '--no-follow-tags' '--recurse-submodules=no' '-u' '--no-verify' 'origin' '<full-40-character-HEAD-SHA>:refs/heads/<current-symbolic-branch>'
 ```
 
-Any exit 1 prints `BLOCK <rule.id>: <reason>` on stderr. **Print that line
-verbatim to the user and stop.** Do not re-run with flags, do not
-`--no-verify`, do not adjust `review.json` to satisfy the rule — every rule
-recomputes its fact, so the only way past it is to make the fact true at
-the station that owns it:
+The standard `command` builtin is the supported-shell trust root: it suppresses
+aliases and bypasses absolute-executable functions. A malicious `command`
+replacement is outside this guarantee.
+
+Use the full 40-character object id as source—not `HEAD`, branch,
+abbreviation, or variable—and `refs/heads/<current-symbolic-branch>` as
+destination. Flags block tags, submodules, pre-push hooks.
+
+The hook validates that source in the selected repository; it may take minutes.
+Exit 0 releases the push. Exit 1 prints `BLOCK <rule.id>: <reason>` on stderr;
+**print that line verbatim and stop.** Do not re-run with flags, use
+`--no-verify`, or adjust `review.json`: every rule recomputes its fact.
 
 | BLOCK | What is actually wrong | Go back to |
 |---|---|---|
 | `push.review-only-head` | HEAD touches more than `review.json` | `loom-code:review` — a new checkpoint |
-| `push.reviewed-sha` | the branch moved after the review | `loom-code:review` |
+| `push.reviewed-sha` | branch moved, or push is not the canonical quote-all `command` form binding its current full object id and branch | `loom-code:review` |
 | `push.review-schema` | `review.json` lost a declared key | `loom-code:review` |
 | `push.open-findings-closed` | a finding is neither resolved nor dismissed | `loom-code:build` for the fix, then `loom-code:review` |
-| `push.probes-package-tests` | the recorded test run does not reproduce, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |
+| `push.probes-package-tests` | the recorded command fails in the hook, or is not this repo's own test command | `loom-code:build` — the suite is red, or `docs/loom/KICKOFF-DEFAULTS.md` never said what the command is |
 | `push.probes-adversarial` | fewer than 3 usable adversarial probes for this change's artifact types, or one exited non-zero when the checker ran it | back to `loom-code:review`, dispatch an adversary |
 | `push.dispatch-covers-tasks` | (i) a commit touching code/skill/gate carries no `Task:` trailer (spec/intent/plan/docs commits owe none); or (ii) a `Task:` trailer on this branch names a task no implementer entry claims | (i) `loom-code:build` — the task that owns the work amends or re-commits with the trailer; (ii) `loom-code:review` — the dispatch record lost a writer |
 | `push.second-vendor-honoured` | KICKOFF-DEFAULTS names a second vendor the round neither used nor recorded a `fallback` for | `loom-code:review` |
@@ -348,8 +360,10 @@ a single such line qualifies; a paragraph describing it does not.
 
 Then:
 
+Exact `origin` HEAD makes PR creation metadata-only.
+
 ```
-gh pr create --title "<title>" --body-file <path>
+'command' '<absolute-trusted-env>' 'LOOM_REPO_ROOT=<absolute-selected-repository>' 'GH_REPO=<origin-host/owner/repo>' '<absolute-trusted-gh>' 'pr' 'create' '--head' '<current-symbolic-branch>' '--title' '<title>' '--body-file' '<absolute-path>'
 PR_URL=<the url it printed>
 ```
 

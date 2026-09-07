@@ -314,23 +314,26 @@ a regression eval — it is a claim.
 
 ## 5. Package tests
 
-Run the repo's own test command at `HEAD` and record it:
+At branch-end, record the repository's resolved complete package-test command
+for the supported host's local push hook; that hook is the sole executor of
+the suite. Do not run the command at branch-end.
 
 ```json
-{"kind": "package-tests", "command": "python3 -m pytest loom-code/scripts/ -q", "sha": "<HEAD>", "result": "pass", "artifact": "", "scope": "branch-end"}
+{"kind": "package-tests", "command": "python3 -m pytest loom-code/scripts/ -q", "sha": "<HEAD>", "result": "deferred-to-hook", "artifact": "", "scope": "branch-end"}
 ```
 
-`build` supplies the command (a `package-tests:` line in
-`KICKOFF-DEFAULTS.md`, else detected from the repo) and it is recorded
-byte for byte — the checker compares it against the repo's own command and
-refuses a substitute. When `build` reports that the repo has no suite at
-all, the `package-tests: none — <why>` line it wrote is the record; note
-the gap in this round's findings so it is visible rather than absent, and
-record no run.
+Resolve the command through the repository-neutral contract: explicit
+`package-tests` wins, absence may use existing repository detection, and
+explicit `none` records the visible no-run exemption. Record a resolved
+command byte for byte so the checker can compare it against the repository's
+own command and refuse a substitute. When `build` reports that the repo has
+no suite at all, the `package-tests: none — <why>` line it wrote is the
+record; note the gap in this round's findings so it is visible rather than
+absent, and record no probe.
 
-Your `result` is a record and nothing more: at push the checker runs the
-command itself in a clean tree and believes only the exit code it sees
-(`push.probes-package-tests`).
+The deferred `result` is scheduling metadata and nothing more: at push the
+hook-triggered checker runs the command itself in a clean tree and believes
+only the exit code it sees (`push.probes-package-tests`).
 
 ## 6. Merging the verdicts
 

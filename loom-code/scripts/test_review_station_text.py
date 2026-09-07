@@ -829,6 +829,50 @@ def _section_4_adversarial() -> str:
     return text[start:end]
 
 
+def _section_5_package_tests() -> str:
+    text = _review_skill_text()
+    start = text.index("## 5. Package tests")
+    end = text.index("## 6. Merging the verdicts")
+    return text[start:end]
+
+
+# --- W0-01: the local hook is the sole package-suite owner -----------------
+
+
+def test_review_records_package_command_for_hook_without_branch_end_run() -> None:
+    """A1: branch-end records the command contract for the hook; it does not
+    execute the complete package suite itself."""
+    section = _section_5_package_tests()
+    hits = [
+        s for s in _flat_sentences(section)
+        if "record" in s.lower()
+        and "complete package-test command" in s.lower()
+        and "local push hook" in s.lower()
+        and "sole executor" in s.lower()
+        and not _has_negation(s)
+    ]
+    assert hits, (
+        "review/SKILL.md §5 has no affirmative sentence making the local "
+        "hook the sole executor of the recorded complete package-test command"
+    )
+    assert "Run the repo's own test command" not in section
+    assert '"result": "pass"' not in section
+
+
+def test_review_package_command_resolution_is_repository_neutral() -> None:
+    """A3: command resolution uses the existing repository contract and does
+    not introduce a source-path classification scheme."""
+    section = _section_5_package_tests()
+    flat = " ".join(section.split())
+    assert "repository-neutral contract" in flat
+    assert "explicit `package-tests` wins" in flat
+    assert "existing repository detection" in flat
+    assert "explicit `none`" in flat
+    assert "classif" not in flat.lower()
+    assert "filename extension" not in flat.lower()
+    assert "dependency graph" not in flat.lower()
+
+
 def test_lane_paragraph_names_three_declared_lanes_at_branch_end() -> None:
     hits = [
         s for s in _flat_sentences(_section_1_scope_and_type())

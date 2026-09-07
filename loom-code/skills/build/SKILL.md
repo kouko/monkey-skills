@@ -13,8 +13,10 @@ by wave, and dispatches one fresh-context `loom-code:implementer` per task.
 It writes no verdicts and reviews nothing itself. During Build, quality is
 checked by each task's positive and negative or boundary cases, followed by
 integration tests at dependency boundaries. Formal review belongs to
-`loom-code:review` and runs once, at branch end, after every task and the
-package suite pass (concept-model §6 — the writer is never the verifier).
+`loom-code:review` and runs once, at branch end, after every task and
+dependency-boundary integration check passes (concept-model §6 — the writer
+is never the verifier). The complete package suite runs later, once, inside
+the supported host's local push hook.
 
 A wave is a scheduling and integration boundary, not a review checkpoint.
 The default remains at most six tasks so failures stay local enough to
@@ -140,10 +142,10 @@ Dispatch `loom-code:implementer` (contract: `agents/implementer.md`). Pass
 - baseline: loom-code/references/engineering-baseline.md
 - repo root: <absolute path>
 - worktree / branch: <path> / <branch>
-- package test command: <the command from step 6>
+- package test command: <the command resolved in step 6 for the push hook>
 
 ### Acceptance criteria
-<the task's own test, named; plus: the package test command passes>
+<the task's own positive and negative or boundary cases, named>
 
 ### Report format
 <the implementer output contract — status, commits, test_results, self_review>
@@ -278,17 +280,18 @@ there is no formal review at wave end. Delta size and a legacy
 the branch-end review shape only.
 
 **Last wave of the plan.** Do not call `loom-code:review` here. Instead
-continue in order to §6 (package tests), then §6.5 (the memory step), and
+continue in order to §6 (package-test command), then §6.5 (the memory step), and
 only then call `loom-code:review` once, for the round that closes the
 plan. Section 7 names how that single closing round is recorded, so the
-reviewers read a tree with tests green and nothing left to graduate or
-store.
+reviewers read a tree whose task and integration tests are green and with
+nothing left to graduate or store.
 
 ## 6. Package tests
 
-The `package-tests` action runs once after all tasks and dependency-boundary
-integration tests pass, before the branch-end review, so reviewers read a
-tree whose tests are known green:
+Resolve the complete package-test command after all tasks and
+dependency-boundary integration tests pass. Build does not execute this
+command: the branch-end review records it, and the supported host's local
+push hook remains its sole execution owner.
 
 1. If `docs/loom/KICKOFF-DEFAULTS.md` carries a `package-tests:` line, that
    command is the command. No detection, no substitute.
@@ -304,26 +307,20 @@ tree whose tests are known green:
    review station records the gap at branch end. The push gate reads
    that same line and asks for no run; what it will not accept is silence.
 
-Whatever the source, the command that goes into the probe is the command
-above, byte for byte: `push.probes-package-tests` compares the recorded
-command against this repo's own and refuses anything else, because a
-command that exits 0 for another reason is not a test run.
-
-Run it from the fully integrated tree, and hand the command and its result to
-the review station — the probe entry in `review.json` is written there, and the
-checker re-runs the command itself on a clean tree at push time
-(`push.probes-package-tests`), so a result nobody actually produced is
-found. If the suite is red, fix it before branch-end review; reviewing a red
-tree wastes the branch-end reviewers.
+Whatever the source, hand the resolved command to the review station byte for
+byte. The review station records it as deferred in `review.json`, and
+`push.probes-package-tests` compares it against this repo's own command before
+the hook executes it on the final clean tree. A command that exits 0 for
+another reason cannot substitute for the repository's complete suite.
 
 ## 6.5 Memory step — before the branch-end review
 
-The order is: §6 package tests, then this memory step, then §5's single
+The order is: §6 package-test command resolution, then this memory step, then §5's single
 branch-end call to `loom-code:review` — never after it. When the last wave's
-tasks are integrated and package tests are green, do this station's
-memory work now, not later: a commit that lands after that round always
-costs a confirmation round and a re-created close commit, so this step
-precedes the round and ship finds nothing left to graduate or store.
+tasks and integration tests are complete and the package command is resolved,
+do this station's memory work now, not later: a commit that lands after that
+round always costs a confirmation round and a re-created close commit, so this
+step precedes the round and ship finds nothing left to graduate or store.
 
 **Probe graduation.** Copy this change's pytest probes under
 `evidence/probes/` into the repo's permanent test directory as byte
