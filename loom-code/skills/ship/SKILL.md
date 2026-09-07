@@ -242,10 +242,10 @@ python3 loom-code/scripts/check-skill-crossrefs.py
 The supported host's local push hook is the sole owner: its deterministic
 push checker runs the package-test command exactly once and
 re-runs adversarial probes. Never invoke it as a separate preflight.
+Resolve absolutely.
 
 ```
-python3 -c 'import shutil; from pathlib import Path; print(Path(shutil.which("git")).resolve())'
-command -v env gh
+python3 -c 'import shutil; from pathlib import Path; print(Path(shutil.which("git")).resolve(), Path(shutil.which("env")).resolve(), Path(shutil.which("gh")).resolve(), sep="\n")'
 git rev-parse --show-toplevel
 git rev-parse HEAD
 git symbolic-ref --quiet --short HEAD
@@ -363,7 +363,7 @@ Then:
 Exact `origin` HEAD makes PR creation metadata-only.
 
 ```
-'builtin' 'cd' '<absolute-selected-repository>' && 'command' '<absolute-trusted-env>' 'GH_REPO=<origin-owner/repo>' '<absolute-trusted-gh>' 'pr' 'create' '--title' '<title>' '--body-file' '<path>'
+'command' '<absolute-trusted-env>' 'LOOM_REPO_ROOT=<absolute-selected-repository>' 'GH_REPO=<origin-host/owner/repo>' '<absolute-trusted-gh>' 'pr' 'create' '--head' '<current-symbolic-branch>' '--title' '<title>' '--body-file' '<absolute-path>'
 PR_URL=<the url it printed>
 ```
 

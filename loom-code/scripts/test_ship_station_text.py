@@ -243,8 +243,10 @@ def test_pr_create_reuses_the_exact_remote_head_without_package_rerun() -> None:
     section = _unwrapped(_section_5_pull_request())
     assert "Exact `origin` HEAD" in section
     assert "metadata-only" in section
-    assert "'builtin' 'cd' '<absolute-selected-repository>'" in section
-    assert "'command' '<absolute-trusted-env>' 'GH_REPO=<origin-owner/repo>'" in section
+    assert "'command' '<absolute-trusted-env>' 'LOOM_REPO_ROOT=<absolute-selected-repository>'" in section
+    assert "'GH_REPO=<origin-host/owner/repo>' '<absolute-trusted-gh>'" in section
+    assert "'--head' '<current-symbolic-branch>'" in section
+    assert "'--body-file' '<absolute-path>'" in section
 
 
 def test_ship_older_pr_number_shape_still_accepted() -> None:

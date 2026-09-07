@@ -37,6 +37,7 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+from urllib.parse import quote
 
 import yaml
 
@@ -3099,7 +3100,7 @@ def is_pr_create_command(command: str) -> bool:
 
 def github_repo_from_origin(repo: Path) -> str | None:
     """Return GH_REPO syntax derived from the literal configured origin URL."""
-    url = git_maybe(repo, "config", "--get", "remote.origin.url")
+    url = git_maybe(repo, "remote", "get-url", "origin")
     if not url:
         return None
     match = re.fullmatch(r"https?://([^/]+)/([^/]+)/(.+?)(?:\.git)?", url)
@@ -3110,7 +3111,7 @@ def github_repo_from_origin(repo: Path) -> str | None:
     if not match:
         return None
     host, owner, name = match.groups()
-    return f"{owner}/{name}" if host == "github.com" else f"{host}/{owner}/{name}"
+    return f"{host}/{owner}/{name}"
 
 
 def is_canonical_pr_create_command(repo: Path, command: str) -> bool:
@@ -3120,33 +3121,33 @@ def is_canonical_pr_create_command(repo: Path, command: str) -> bool:
     gh_repo = github_repo_from_origin(repo)
     if not trusted or not trusted_env or not gh_repo:
         return False
-    marker = " && "
-    if command.count(marker) != 1:
-        return False
-    cd_segment, gh_segment = command.split(marker)
-    cd_tokens = ["builtin", "cd", str(repo.resolve())]
-    if cd_segment != render_quote_all(cd_tokens):
-        return False
-    gh_tokens = _tokenise(gh_segment)
+    gh_tokens = _tokenise(command)
     expected_prefix = [
-        "command", str(Path(trusted_env).resolve()), f"GH_REPO={gh_repo}",
-        str(Path(trusted).resolve()), "pr", "create",
+        "command", str(Path(trusted_env).resolve()), f"LOOM_REPO_ROOT={repo.resolve()}",
+        f"GH_REPO={gh_repo}", str(Path(trusted).resolve()), "pr", "create",
     ]
+    trailing = gh_tokens[7:]
+    repo_overrides = {"-R", "--repo", "--hostname"}
+    has_repo_override = any(
+        token in repo_overrides
+        or token.startswith("--repo=")
+        or token.startswith("--hostname=")
+        or (token.startswith("-R") and token != "-R")
+        for token in trailing
+    )
     return (
-        gh_tokens[:6] == expected_prefix
-        and gh_segment == render_quote_all(gh_tokens)
+        gh_tokens[:7] == expected_prefix
+        and not has_repo_override
+        and command == render_quote_all(gh_tokens)
     )
 
 
 def canonical_pr_create_repo(command: str) -> Path | None:
     """Return the selected repo only when the whole PR-create form is trusted."""
-    if command.count(" && ") != 1:
+    tokens = _tokenise(command)
+    if len(tokens) < 7 or not tokens[2].startswith("LOOM_REPO_ROOT="):
         return None
-    cd_segment, _ = command.split(" && ")
-    tokens = _tokenise(cd_segment)
-    if len(tokens) != 3 or tokens[:2] != ["builtin", "cd"]:
-        return None
-    selected = Path(tokens[2])
+    selected = Path(tokens[2].split("=", 1)[1])
     if not selected.is_absolute() or not selected.is_dir():
         return None
     try:
@@ -3165,22 +3166,44 @@ def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
     if not branch or not head:
         return "PR creation requires a current symbolic branch and commit"
 
-    for segment in SEGMENT_SPLIT.split(command):
-        tokens = _strip_prefix(_tokenise(segment))
-        if not tokens or Path(tokens[0]).name != "gh":
-            continue
-        for index, token in enumerate(tokens):
-            if token in {"--head", "-H"} and index + 1 < len(tokens):
-                if tokens[index + 1] != branch:
-                    return f"PR head must be the current branch {branch!r}"
-            elif token.startswith("--head=") and token.split("=", 1)[1] != branch:
-                return f"PR head must be the current branch {branch!r}"
-            elif token.startswith("-H") and token != "-H" and token[2:] != branch:
-                return f"PR head must be the current branch {branch!r}"
+    tokens = _tokenise(command)
+    head_values: list[str] = []
+    for index, token in enumerate(tokens):
+        if token in {"--head", "-H"} and index + 1 < len(tokens):
+            head_values.append(tokens[index + 1])
+        elif token.startswith("--head="):
+            head_values.append(token.split("=", 1)[1])
+        elif token.startswith("-H") and token != "-H":
+            head_values.append(token[2:])
+        if token == "--body-file" and (
+            index + 1 >= len(tokens) or not Path(tokens[index + 1]).is_absolute()
+        ):
+            return "PR body file must be an absolute path"
+        if token.startswith("--body-file=") and not Path(token.split("=", 1)[1]).is_absolute():
+            return "PR body file must be an absolute path"
+    if head_values != [branch]:
+        if not head_values:
+            return f"PR creation requires explicit current branch head {branch!r}"
+        else:
+            return f"PR head must be the current branch {branch!r}"
 
-    remote_ref = f"refs/heads/{branch}"
-    observed = git_maybe(repo, "ls-remote", "--heads", "origin", remote_ref)
-    if observed and observed.split()[0] == head:
+    gh_repo = github_repo_from_origin(repo)
+    trusted_gh = shutil.which("gh")
+    if not gh_repo or not trusted_gh:
+        return "PR creation requires a trusted GitHub origin and gh executable"
+    repo_parts = gh_repo.split("/")
+    host, owner, name = repo_parts[0], repo_parts[-2], repo_parts[-1]
+    try:
+        observed = subprocess.run(
+            [str(Path(trusted_gh).resolve()), "api", "--hostname", host,
+             f"repos/{owner}/{name}/git/ref/heads/{quote(branch, safe='')}",
+             "--jq", ".object.sha"],
+            cwd=repo, capture_output=True, text=True, timeout=30,
+            env={**os.environ, "GH_REPO": gh_repo, "LOOM_REPO_ROOT": str(repo)},
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        observed = None
+    if observed is not None and observed.returncode == 0 and observed.stdout.strip() == head:
         return None
     return f"remote branch {branch!r} must already equal reviewed HEAD {head}"
 
@@ -3421,7 +3444,8 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # The matcher is the tool name, so every Bash command arrives here; only
     # push-shaped commands are judged.
     command = str((payload.get("tool_input") or {}).get("command", ""))
-    push_shaped = is_push_command(command)
+    canonical_pr_repo = canonical_pr_create_repo(command)
+    push_shaped = canonical_pr_repo is not None or is_push_command(command)
     git_push = is_git_push_command(command)
     malformed_canonical_push = False
     if not push_shaped:
@@ -3455,8 +3479,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
     # A metadata-only PR create carries its own function-proof repository
     # selection. Other gh actions keep the existing conservative parser.
-    pr_create = is_pr_create_command(command)
-    canonical_pr_repo = canonical_pr_create_repo(command) if pr_create else None
+    pr_create = canonical_pr_repo is not None or is_pr_create_command(command)
     if pr_create and canonical_pr_repo is None:
         print(
             "BLOCK push.reviewed-sha: PR creation must use the canonical "
