@@ -1534,11 +1534,27 @@
       "model": "gpt-6-astra",
       "started": "2026-09-07T11:10:00+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:18",
+      "role": "reviewer",
+      "agent_id": "history-rewrite-review-rerun-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T11:41:27+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:18",
+      "role": "adversary",
+      "agent_id": "history-rewrite-adversary-rerun-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T11:41:27+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
     "rounds": 17,
-    "dispatches": 46,
+    "dispatches": 48,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
