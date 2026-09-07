@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+  "reviewed_sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
   "scope": "branch-end",
   "second_vendor": "claude",
   "vendors": [
@@ -632,6 +632,42 @@
         {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe retains an unused shlex import.", "fix": "Remove it in a later non-behavioral cleanup."}
       ],
       "notes": ["design re-look: continue fixing", "The updated probe exercises the accepted command and the security conclusion is unchanged."]
+    },
+    {
+      "round": 14,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-a-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS_WITH_NOTES",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS_WITH_NOTES", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/plan.md", "status": "fixed", "evidence": "The plan is byte-identical to original commit 0b6ffff2."},
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json", "status": "fixed", "evidence": "The record names second_vendor as none and binds the rewritten candidate measurement."}
+      ],
+      "findings": [
+        {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe retains an unused shlex import.", "fix": "Remove it in a later non-behavioral cleanup."}
+      ],
+      "notes": ["design re-look: continue fixing", "No new behavioral, security, or production-tree regression was found; no tests were rerun for this binding check."]
+    },
+    {
+      "round": 14,
+      "scope": "branch-end",
+      "reviewer": "branch-end-reader-b-codex-cli",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [
+        {"anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/plan.md", "status": "fixed", "evidence": "Plan, measurement, blind-run report, and candidate fixture match the previously reviewed corrected versions."},
+        {"anchor": "loom-code", "status": "fixed", "evidence": "The entire loom-code tree is identical to the previously reviewed tree; no unintended code changes were introduced."}
+      ],
+      "findings": [],
+      "notes": ["design re-look: continue fixing", "The only difference from the later reviewed tree is review.json audit history; no tests were rerun for this binding check."]
     }
   ],
   "probes": [
@@ -728,6 +764,46 @@
       "scope": "branch-end",
       "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
       "sha": "868d3c4621391d39b8a1846adbadf6b94274c37d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:14",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:14",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:14",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "10463da1e866f82fbd9c0da2d508678b8bb0fdb8",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
     }
@@ -1204,7 +1280,7 @@
     }
   ],
   "cost": {
-    "rounds": 12,
+    "rounds": 14,
     "dispatches": 40,
     "cap_changes": [],
     "hours_plan_to_pr": null
