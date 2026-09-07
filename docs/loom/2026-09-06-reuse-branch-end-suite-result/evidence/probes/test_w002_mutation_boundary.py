@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -43,6 +42,10 @@ def repository(tmp_path: Path, *, package="python3 -c pass", scripts=None):
 
 TRACKED = "from pathlib import Path\nPath('a.py').write_text('value = 999\\n')\n"
 HEADMOVE = "import subprocess\nsubprocess.run(['git', 'commit', '--allow-empty', '-qm', 'moved'], check=True)\n"
+REMOTE_MUTATION = (
+    "import subprocess\n"
+    "subprocess.run(['git', 'remote', 'add', 'origin', 'https://example.invalid/other.git'], check=True)\n"
+)
 UNTRACKED = "from pathlib import Path\nPath('unexpected.txt').write_text('new\\n')\n"
 STAGED = TRACKED + "import subprocess\nsubprocess.run(['git', 'add', 'a.py'], check=True)\n"
 WRITER = (
@@ -111,6 +114,20 @@ def test_push_packagetrackedmutation_rejected(tmp_path):
     repo, _, _ = repository(tmp_path, package="python3 evidence/package.py", scripts={"evidence/package.py": TRACKED})
     result, detail = observed(repo)
     assert fixture.git(repo, "status", "--porcelain")
+    assert result.returncode != 0, detail
+
+
+def test_push_packageremotemutation_rejected(tmp_path):
+    """A successful suite cannot silently retarget the released push."""
+    repo, _, _ = repository(
+        tmp_path,
+        package="python3 evidence/package.py",
+        scripts={"evidence/package.py": REMOTE_MUTATION},
+    )
+    before = fixture.git(repo, "config", "--local", "--list", "--null")
+    result, detail = observed(repo)
+    after = fixture.git(repo, "config", "--local", "--list", "--null")
+    assert before != after, "attack did not mutate local Git config"
     assert result.returncode != 0, detail
 
 
