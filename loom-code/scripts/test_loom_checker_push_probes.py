@@ -542,7 +542,8 @@ def test_probes_extra_file_change_between_probe_and_head_still_blocks(tmp_path: 
     review-only commit ALSO carries an unrelated file change (`b.py`) --
     a genuine content difference, not just review.json. Regression pin:
     `content_tree_id` excludes ONLY this change's review.json, so a real
-    file difference must still block both probe rules."""
+    file difference must still block both probe rules when checked directly.
+    Push itself stops at the unaccounted content commit before probes run."""
     repo = build_repo(tmp_path)
     code_sha = git(repo, "rev-parse", "HEAD~1")
     git(repo, "reset", "-q", "--hard", code_sha)
@@ -560,9 +561,17 @@ def test_probes_extra_file_change_between_probe_and_head_still_blocks(tmp_path: 
 
     result = run_checker("push", cwd=repo)
     assert result.returncode == 1
-    rules = blocked_rules(result)
-    assert "push.probes-package-tests" in rules
-    assert "push.probes-adversarial" in rules
+    assert blocked_rules(result) == {"push.dispatch-covers-tasks"}
+    # The preflight block must not mask a regression in content binding:
+    # exercise the original probe-rule rejection independently of push order.
+    package_failures = loom_checker.check_probes_package_tests(
+        repo, round_b, review_y, change_id=CHANGE,
+    )
+    adversarial_failures = loom_checker.check_probes_adversarial(
+        repo, round_b, review_y, change_id=CHANGE,
+    )
+    assert "push.probes-package-tests" in {rule for rule, _ in package_failures}
+    assert "push.probes-adversarial" in {rule for rule, _ in adversarial_failures}
 
 
 def test_probes_recorded_sha_not_resolving_still_blocks_with_existing_message(tmp_path: Path) -> None:

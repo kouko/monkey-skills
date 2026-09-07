@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.2] — 2026-09-08 — cheap PUSH checks before executable probes
+
+- Run deterministic push checks before the package suite and adversarial
+  probes, so an already-known metadata or ledger failure stops without paying
+  the executable-probe cost.
+- Recheck the live HEAD immediately before executable probes, preserving the
+  fail-closed protection against a concurrent branch move.
+
 ## [1.8.1] — 2026-09-07 — single-owner PUSH & PR package gate
 
 - Keep the full package suite owned by the canonical local push gate while a

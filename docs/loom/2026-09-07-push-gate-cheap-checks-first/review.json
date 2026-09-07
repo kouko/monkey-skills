@@ -1,0 +1,865 @@
+{
+  "reviewed_sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+  "scope": "branch-end",
+  "vendors": [
+    "openai",
+    "anthropic"
+  ],
+  "second_vendor": "claude",
+  "verdicts": [
+    {
+      "reviewer": "rev-codex-r1",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "NEEDS_REVISION",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "NEEDS_REVISION",
+        "naming": "PASS",
+        "tests": "NEEDS_REVISION",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "fatal",
+          "dimension": "correctness",
+          "anchor": "loom-code/scripts/loom_checker.py:3596",
+          "text": "issue (blocking): The live-HEAD preflight check and the pre-executable snapshot are separate reads. If HEAD moves between them, package tests and adversarial probes still start; the later recompute blocks the push, but REQ-1's no-execution guarantee is violated.",
+          "fix": "Use the same HEAD read for preflight validation and the before-probes snapshot, or recompare the snapshot with head_sha before either executable; add a regression test that moves HEAD between the reads and asserts zero executable starts."
+        }
+      ],
+      "notes": [
+        "Focused push-preflight tests and the amended accumulated-failure test passed: 5 passed.",
+        "The full package suite was not run because the push hook owns it.",
+        "No documentation-lens findings were identified."
+      ],
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35"
+    },
+    {
+      "reviewer": "rev-claude-r1",
+      "vendor": "anthropic",
+      "model": "claude-opus-5",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 1,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/test_push_preflight_before_executables.py:9",
+          "text": "nitpick (non-blocking): The json and pytest imports are unused in both copies of the probe.",
+          "fix": "Delete the unused imports from both probe copies."
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/spec.md:7",
+          "text": "nitpick (non-blocking): REQ-1 can be read more broadly than the implemented per-rule boundary because adversarial record-format failures are partly decidable before execution.",
+          "fix": "Narrow REQ-1 to rules that run no executable of their own, or track adversarial-format hoisting as a follow-up."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/plan.md:11",
+          "text": "nitpick (non-blocking): The branch changed test_loom_checker_push.py although W0-01 did not list that path.",
+          "fix": "List existing assertion files in future checker task Files lines when their behavior must change."
+        },
+        {
+          "severity": "nit",
+          "dimension": "naming",
+          "anchor": "loom-code/scripts/test_push_preflight_before_executables.py:29",
+          "text": "nitpick (non-blocking): The adversarial command suffix looks operative even though the checker executes the artifact path and the label is hard-coded by the fixture.",
+          "fix": "Drop the inert suffix or add a comment explaining it."
+        },
+        {
+          "severity": "nit",
+          "dimension": "incorrect-fact",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/blind-run-report.md:32",
+          "text": "nitpick (non-blocking): Acceptance 4 leads with the package-skip case, which does not itself prove language or path neutrality; the following generic-repository evidence does.",
+          "fix": "Lead with the generic-repository cases and present package skip as the secondary boundary."
+        }
+      ],
+      "notes": [
+        "No tests were executed by this reviewer.",
+        "The review record was still mid-round at the reviewed SHA.",
+        "The paired valid-path probe prevents the empty execution-log assertion from passing vacuously."
+      ],
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35"
+    },
+    {
+      "reviewer": "rev-codex-r1",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "branch-end-01 is fixed: the pre-executable snapshot is revalidated against the reviewed HEAD before any executable starts.",
+        "No probes were rerun in this fix round, as required by the fix-round protocol."
+      ],
+      "sha": "5de39a158046c4bf7fe9966c247031c66973d978"
+    },
+    {
+      "reviewer": "rev-claude-r1",
+      "vendor": "anthropic",
+      "model": "claude-opus-5",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 2,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS_WITH_NOTES",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/loom_checker.py:3596",
+          "text": "nitpick (non-blocking): The live-HEAD failure tuple is duplicated around the pre-executable snapshot.",
+          "fix": "Consider extracting the shared failure construction if this diagnostic changes again."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_push_preflight_before_executables.py:166",
+          "text": "nitpick (non-blocking): The race regression proves that no executable starts but does not also assert the push.reviewed-sha rule id.",
+          "fix": "Add a rule-id assertion if the diagnostic contract needs direct coverage."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/review.json:251",
+          "text": "nitpick (non-blocking): The same Claude reviewer is recorded as opus in the first dispatch and claude-opus-5 in the resumed dispatch.",
+          "fix": "Use the exact CLI model identifier consistently in future dispatch records."
+        }
+      ],
+      "notes": [
+        "branch-end-01 is fixed by the second live-HEAD comparison before executable probes.",
+        "No probes were rerun in this fix round, as required by the fix-round protocol."
+      ],
+      "sha": "5de39a158046c4bf7fe9966c247031c66973d978"
+    },
+    {
+      "reviewer": "rev-codex-r3",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS_WITH_NOTES",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS_WITH_NOTES",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/spec.md:7",
+          "text": "nitpick (non-blocking): REQ-1 still permits a broader reading than the implemented per-rule executable boundary.",
+          "fix": "State in a future wording pass that executable-record validation remains inside the two executable-owning rules."
+        },
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/test_push_preflight_before_executables.py:9",
+          "text": "nitpick (non-blocking): The json import remains unused in both the permanent and evidence probe copies.",
+          "fix": "Remove only the unused json import in a future cleanup."
+        }
+      ],
+      "notes": [
+        "No new blocking regression was found in the cumulative branch.",
+        "The source and scaffolded mirror differ only by the expected version-stamp line.",
+        "No tests were executed by this reviewer; the complete package suite remains owned by the push hook."
+      ],
+      "sha": "61543283ff2c76647c209026f96a4803ac211d4d"
+    },
+    {
+      "reviewer": "rev-claude-r3",
+      "vendor": "anthropic",
+      "model": "claude-fable-5-1",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 3,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS_WITH_NOTES",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS_WITH_NOTES",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS_WITH_NOTES",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/test_push_preflight_before_executables.py:9",
+          "text": "nitpick (non-blocking): json is imported but never used in both copies of the probe module.",
+          "fix": "Delete the unused json import from both copies in a future cleanup."
+        },
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/loom_checker.py:3596",
+          "text": "nitpick (non-blocking): The identical live-HEAD failure tuple is built twice around the pre-executable boundary.",
+          "fix": "Extract the diagnostic construction if its wording changes again."
+        },
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/spec.md:7",
+          "text": "nitpick (non-blocking): REQ-1 describes a per-condition boundary while the implementation intentionally uses a per-rule boundary.",
+          "fix": "Narrow the wording in a future documentation pass."
+        },
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/review.json:498",
+          "text": "nitpick (non-blocking): cost.rounds still reads 2 while the third-round dispatches are already present.",
+          "fix": "Set cost.rounds to 3 when recording this verdict."
+        }
+      ],
+      "notes": [
+        "The Claude CLI selected claude-fable-5-1 for this fresh-context review; the user confirmed that this model satisfies the second-vendor leg.",
+        "No blocking finding was identified and no tests were executed by this reviewer."
+      ],
+      "sha": "61543283ff2c76647c209026f96a4803ac211d4d"
+    },
+    {
+      "reviewer": "rev-codex-r3",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Both manifests change only 1.8.1 to 1.8.2 and both generated Codex hook files change only their matching version stamps.",
+        "No executable behavior changed and no complete suite was run by this confirmation reader."
+      ],
+      "sha": "b4672aba48bca335569f797ac2eec252592b92af"
+    },
+    {
+      "reviewer": "rev-claude-r3",
+      "vendor": "anthropic",
+      "model": "claude-fable-5-1",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 4,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS",
+        "architecture": "PASS",
+        "correctness": "PASS",
+        "naming": "PASS",
+        "tests": "PASS_WITH_NOTES",
+        "refactoring": "PASS",
+        "cross-task-coherence": "PASS",
+        "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS",
+        "deliberate-simplification": "PASS",
+        "deletion-first": "PASS",
+        "omission": "PASS",
+        "ambiguity": "PASS",
+        "inconsistency": "PASS_WITH_NOTES",
+        "incorrect-fact": "PASS",
+        "missing-population": "PASS"
+      },
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "inconsistency",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/review.json:641",
+          "text": "nitpick (non-blocking): cost.rounds reads 3 while the confirmation round is round 4.",
+          "fix": "Set cost.rounds to 4 when recording this verdict."
+        },
+        {
+          "severity": "nit",
+          "dimension": "tests",
+          "anchor": "docs/loom/2026-09-07-push-gate-cheap-checks-first/review.json:497",
+          "text": "nitpick (non-blocking): The newest package-tests record relies on content-tree equivalence across its review-only record commit.",
+          "fix": "No change required; the push hook re-runs the declared command on the exact reviewed tree."
+        }
+      ],
+      "notes": [
+        "Both manifests and generated hook stamps consistently report 1.8.2; hooks.json remains unchanged so Codex trust is preserved.",
+        "No rule text or control flow changed and no tests were executed by this reader."
+      ],
+      "sha": "b4672aba48bca335569f797ac2eec252592b92af"
+    },
+    {
+      "reviewer": "rev-codex-r5",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS", "architecture": "PASS", "correctness": "PASS",
+        "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS",
+        "cross-task-coherence": "PASS", "external-surface-grounding": "PASS",
+        "principles-conformance": "PASS", "deliberate-simplification": "PASS",
+        "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS",
+        "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "All three README language tables now report 1.8.2, matching both manifests, both tracked Codex hook stamps, and the CHANGELOG.",
+        "Focused manifest, mirror, and whitespace checks passed; the full package suite remains deferred to the push hook."
+      ],
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048"
+    },
+    {
+      "reviewer": "rev-claude-r5",
+      "vendor": "anthropic",
+      "model": "claude-fable-5-1",
+      "lens": "code+docs",
+      "scope": "branch-end",
+      "round": 5,
+      "verdict": "PASS",
+      "dimension_scores": {
+        "security": "PASS", "architecture": "PASS", "correctness": "PASS",
+        "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS",
+        "cross-task-coherence": "PASS", "external-surface-grounding": "N/A — the delta calls no external surface",
+        "principles-conformance": "PASS", "deliberate-simplification": "PASS",
+        "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS",
+        "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS"
+      },
+      "findings": [],
+      "notes": [
+        "Fable confirmed the two-line localized README fix and consistent 1.8.2 publication stamps at the exact reviewed SHA.",
+        "No full package suite was run by this reviewer."
+      ],
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048"
+    }
+  ],
+  "probes": [
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py::test_push_lateblocker_noexecutables -q",
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py::test_push_validpath_onceinorder -q",
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py::test_push_packageskip_adversarialruns -q",
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py::test_push_failedmutation_blockpreserved -q",
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q",
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/blind-run-report.md"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py::test_push_liveheadrace_noexecutables -q",
+      "sha": "14a2193a2a86fcfe1c92eb60188223a358abcfb1",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_lateblocker_noexecutables",
+      "sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_validpath_onceinorder",
+      "sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_packageskip_adversarialruns",
+      "sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_failedmutation_blockpreserved",
+      "sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py -q -k test_push_liveheadrace_noexecutables",
+      "sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "82e4b0f4515e2849a638bd318f28d6ed267da0ae",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py loom-code/scripts/test_loom_checker_push_probes.py::test_probes_extra_file_change_between_probe_and_head_still_blocks loom-code/scripts/test_probes_lanes_wave_end.py::test_push_gateonly_missing_package_tests_probe_still_blocked loom-code/scripts/test_loom_checker_push.py::test_every_failure_is_reported_not_just_the_first -q",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_single_owner_push_gate.py -q -k 'selectedrepomutation or packageheadmove or lastadversarymutation or firstadversarymutation or packagetrackedmutation or unchangedrepeat or existingguard'",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py -q -k test_push_liveheadrace_noexecutables",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest loom-code/scripts/test_push_preflight_before_executables.py loom-code/scripts/test_single_owner_push_gate.py::test_push_packageheadmove_rejected loom-code/scripts/test_single_owner_push_gate.py::test_push_lastadversarymutation_rejected loom-code/scripts/test_single_owner_push_gate.py::test_push_firstadversarymutation_rejected loom-code/scripts/test_single_owner_push_gate.py::test_push_packagetrackedmutation_rejected loom-code/scripts/test_loom_checker_push.py::test_every_failure_is_reported_not_just_the_first loom-code/scripts/test_loom_checker_push_probes.py::test_probes_extra_file_change_between_probe_and_head_still_blocks loom-code/scripts/test_probes_lanes_wave_end.py::test_push_gateonly_missing_package_tests_probe_still_blocked -vv -p no:cacheprovider",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/blind-run-report.md"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "07ad5971f6f3eabd4ed282e8f80df22bd2b6a8ac",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py loom-code/scripts/test_loom_checker_push_probes.py::test_probes_extra_file_change_between_probe_and_head_still_blocks loom-code/scripts/test_probes_lanes_wave_end.py::test_push_gateonly_missing_package_tests_probe_still_blocked loom-code/scripts/test_loom_checker_push.py::test_every_failure_is_reported_not_just_the_first -q",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_single_owner_push_gate.py -q -k 'selectedrepomutation or packageheadmove or lastadversarymutation or firstadversarymutation or packagetrackedmutation or unchangedrepeat or existingguard'",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_single_owner_push_gate.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py -q -k test_push_liveheadrace_noexecutables",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-07-push-gate-cheap-checks-first/evidence/probes/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "b2a688d27ab5155568bec49ca3b7a4a3d27b9367",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --with pytest --with pyyaml python -m pytest -q loom-code/scripts/test_codex_mirror_matches_checker.py loom-code/scripts/test_push_preflight_before_executables.py",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_lateblocker_noexecutables",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest loom-code/scripts/test_push_preflight_before_executables.py -q -k test_push_validpath_onceinorder",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+      "result": "pass",
+      "artifact": "loom-code/scripts/test_push_preflight_before_executables.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "6234039efe6b01d92046bb4ffa55c54e7f32e048",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    }
+  ],
+  "questions": [
+    {
+      "decision_point": 1,
+      "text": "這次要不要用 Claude 當第二位讀者？",
+      "type": "what"
+    },
+    {
+      "decision_point": 3,
+      "text": "你接受這份第一階段結果，讓我繼續處理 nit batch、最終 push gate 與 PR 準備嗎？",
+      "type": "done"
+    }
+  ],
+  "open_findings": [
+    {
+      "id": "branch-end-01",
+      "anchor": "loom-code/scripts/loom_checker.py:3596",
+      "origin_sha": "c97a9cd8abc0cc096b803aac6cc92ac08d8f1d35",
+      "raised_by": "rev-codex-r1",
+      "resolved": "fixed by 14a2193a — the pre-executable snapshot is revalidated against the reviewed HEAD; test_push_liveheadrace_noexecutables passes"
+    }
+  ],
+  "dispatch": [
+    {
+      "task": "W0-01",
+      "role": "adversary",
+      "agent_id": "adv-w0-01",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T21:37:29+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T22:04:07+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-memory",
+      "role": "implementer",
+      "agent_id": "orchestrator",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T22:16:35+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-branch-end-r1",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T22:30:38+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-branch-end-r1",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T22:30:38+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-codex-r1",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T22:30:38+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-claude-r1",
+      "model": "opus",
+      "started": "2026-09-07T22:30:38+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-fix-r1",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T22:53:20+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-codex-r1",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T23:05:26+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-claude-r1",
+      "model": "claude-opus-5",
+      "started": "2026-09-07T23:05:26+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "impl-w0-01-fix-r2",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T23:42:36+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-branch-end-r3",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T23:50:33+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "blind-runner",
+      "agent_id": "blind-branch-end-r3",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T23:50:33+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-codex-r3",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T23:50:33+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-claude-r3",
+      "model": "claude-opus-5",
+      "started": "2026-09-07T23:50:33+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "W0-01",
+      "role": "implementer",
+      "agent_id": "orchestrator-version-fix",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T06:33:18+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-branch-end-r3",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T06:35:39+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-codex-r3",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T06:35:39+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-claude-r3",
+      "model": "claude-fable-5-1",
+      "started": "2026-09-08T06:35:39+08:00",
+      "fresh_context": false
+    },
+    {
+      "task": "branch-end",
+      "role": "adversary",
+      "agent_id": "adv-release-r5",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T07:01:46+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-codex-r5",
+      "model": "gpt-6-astra",
+      "started": "2026-09-08T07:01:46+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end",
+      "role": "reviewer",
+      "agent_id": "rev-claude-r5",
+      "model": "claude-fable-5-1",
+      "started": "2026-09-08T07:01:46+08:00",
+      "fresh_context": true
+    }
+  ],
+  "cost": {
+    "rounds": 5,
+    "dispatches": 22,
+    "cap_changes": [],
+    "hours_plan_to_pr": 3.16
+  },
+  "charter": "1.0"
+}

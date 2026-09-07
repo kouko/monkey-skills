@@ -412,11 +412,10 @@ def _gateonly_docs_delta_repo(tmp_path: Path, change_id: str):
 
 
 def test_push_gateonly_missing_package_tests_probe_still_blocked(tmp_path: Path) -> None:
-    """A gate-only round with >=3 adversarial probes but NO package-tests
-    probe recorded -- `push.probes-package-tests` is unconditional on the
-    lane, and it must still block a zero-verdict round exactly like a
-    full-lane one. GREEN: the floor of 0 readers is not a floor of 0
-    everywhere."""
+    """A requested gate-only round with no package-tests record still blocks.
+    This fixture also changes a standing document, requiring full-lane
+    readers; push stops there before executable rules. The package rule
+    must independently reject the missing record, even with zero verdicts."""
     repo = _gateonly_docs_delta_repo(tmp_path, "2026-09-05-lane-no-pkgtests")
     change_id = "2026-09-05-lane-no-pkgtests"
     _write_evidence(repo)
@@ -441,7 +440,11 @@ def test_push_gateonly_missing_package_tests_probe_still_blocked(tmp_path: Path)
         "a gate-only, zero-verdict round with no package-tests probe must "
         f"still be blocked; it passed instead: {result.stdout}"
     )
-    assert "push.probes-package-tests" in blocked_rules(result)
+    assert blocked_rules(result) == {"push.verdicts-ge-2"}
+    failures = lc.check_probes_package_tests(
+        repo, body, reviewed_sha, change_id=change_id,
+    )
+    assert "push.probes-package-tests" in {rule for rule, _ in failures}
 
 
 def test_push_gateonly_dismissal_by_undispatched_name_still_blocked(tmp_path: Path) -> None:
