@@ -9,6 +9,8 @@
   `--body-file`, when supplied, must use an absolute path.
 - Verify the remote branch through the matching GitHub API target so Git
   transport rewrites cannot redirect the SHA check.
+- Keep the repository package gate reproducible with a hash-verified lock for
+  its complete isolated test dependency graph.
 
 All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be documented in this file.
 
