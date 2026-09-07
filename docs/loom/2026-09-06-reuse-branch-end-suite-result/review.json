@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+  "reviewed_sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
   "scope": "branch-end",
   "second_vendor": "claude",
   "vendors": [
@@ -701,6 +701,34 @@
       ],
       "findings": [],
       "notes": ["The final API argv coverage closed the only remaining non-blocking test note."]
+    },
+    {
+      "round": 16,
+      "scope": "branch-end",
+      "reviewer": "version-bump-final-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "loom-code/CHANGELOG.md:8", "status": "fixed", "evidence": "The release note now says body-file paths must be absolute only when the option is supplied."}],
+      "findings": [],
+      "notes": ["The 1.8.1 manifests and changelog accurately publish the reviewed behavior."]
+    },
+    {
+      "round": 16,
+      "scope": "branch-end",
+      "reviewer": "privacy-dispatch-measure8-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "adversarial-security",
+      "verdict": "PASS",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "loom-code/.claude-plugin/plugin.json:3", "status": "fixed", "evidence": "Both manifests advance together to 1.8.1 without changing executable behavior."}],
+      "findings": [],
+      "notes": ["No new security boundary was introduced by the release metadata update."]
     }
   ],
   "probes": [
@@ -877,6 +905,46 @@
       "scope": "branch-end",
       "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
       "sha": "20c089bf0aa960414069dc88b7e2dfeb4d6731ed",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:16",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:16",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:16",
+      "command": "uv run --isolated --with pytest --with pyyaml python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "python3 scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
     }
@@ -1366,11 +1434,27 @@
       "model": "gpt-6-astra",
       "started": "2026-09-07T09:34:00+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:16",
+      "role": "reviewer",
+      "agent_id": "version-bump-final-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T10:38:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:16",
+      "role": "adversary",
+      "agent_id": "privacy-dispatch-measure8-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T10:44:00+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
-    "rounds": 15,
-    "dispatches": 42,
+    "rounds": 16,
+    "dispatches": 44,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
