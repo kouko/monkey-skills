@@ -3,7 +3,8 @@
   "scope": "branch-end",
   "second_vendor": "claude",
   "vendors": [
-    "openai"
+    "openai",
+    "anthropic"
   ],
   "verdicts": [
     {
@@ -788,6 +789,48 @@
         {"severity": "fatal", "dimension": "external-surface-grounding", "anchor": "loom-code/scripts/loom_checker.py:3197", "text": "The new GitHub CLI API and Git push flag contracts lack authoritative citations.", "fix": "Cite the official GitHub CLI and Git manuals at the call sites."}
       ],
       "notes": ["The implementation tests, branch-only replay, tree-equivalence check, and permanent adversarial probes all passed."]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "reviewer": "second-vendor-repair-review-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS_WITH_NOTES", "tests": "NEEDS_REVISION", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "NEEDS_REVISION", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "not-fixed", "evidence": "Claude was selected and dispatched but no Anthropic verdict was recorded yet."}, {"id": "branch-end-09", "status": "fixed", "evidence": "This fresh code-lens verdict contains all and only the required dimensions."}, {"id": "branch-end-10", "status": "not-fixed", "evidence": "The source citations were absent from the Codex mirror."}],
+      "findings": [{"severity": "fatal", "dimension": "external-surface-grounding", "anchor": ".codex/hooks/loom_checker.py:3197", "text": "The Codex mirror lacks the official citations and fails byte equivalence.", "fix": "Synchronize the mirror and rerun its exact-match test."}, {"severity": "nit", "dimension": "naming", "anchor": "loom-code/scripts/loom_checker.py:3512", "text": "The push handler exceeds the advisory function-length threshold.", "fix": "Extract probe-state handling if future behavioral work grows this function."}, {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe imports shlex without using it.", "fix": "Remove the unused import."}],
+      "notes": ["The official source citations themselves are accurate."]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "reviewer": "second-vendor-repair-review-claude",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "dimension_scores": {"security": "PASS_WITH_NOTES", "architecture": "PASS", "correctness": "PASS_WITH_NOTES", "naming": "PASS", "tests": "PASS_WITH_NOTES", "refactoring": "PASS_WITH_NOTES", "cross-task-coherence": "NEEDS_REVISION", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "fixed", "evidence": "Claude completed this independent review and its verdict is now recorded."}, {"id": "branch-end-09", "status": "not-fixed", "evidence": "The malformed historical docs verdict still needed a conforming replacement."}, {"id": "branch-end-10", "status": "fixed", "evidence": "The source checker cites the official GitHub CLI and Git manuals."}],
+      "findings": [{"severity": "fatal", "dimension": "cross-task-coherence", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json:770", "text": "The historical docs-lens verdict is malformed and cannot count.", "fix": "Record a conforming independent verdict for the repaired branch."}, {"severity": "nit", "dimension": "refactoring", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py:13", "text": "The evidence probe imports shlex without using it.", "fix": "Remove the unused import."}],
+      "notes": ["Claude independently verified the two official documentation citations."]
+    },
+    {
+      "round": 19,
+      "scope": "branch-end",
+      "reviewer": "second-vendor-repair-adversary-codex",
+      "vendor": "openai",
+      "model": "gpt-5.6-sol",
+      "lens": "adversarial-security",
+      "verdict": "NEEDS_REVISION",
+      "sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "dimension_scores": {"security": "NEEDS_REVISION", "architecture": "PASS", "correctness": "NEEDS_REVISION", "naming": "PASS", "tests": "NEEDS_REVISION", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "NEEDS_REVISION", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"id": "branch-end-08", "status": "not-fixed", "evidence": "No Claude verdict was recorded at the reviewed SHA."}, {"id": "branch-end-09", "status": "not-fixed", "evidence": "Round 19 had dispatches but no verdicts yet."}, {"id": "branch-end-10", "status": "not-fixed", "evidence": "The Codex mirror remained stale."}],
+      "findings": [{"severity": "fatal", "dimension": "security", "anchor": "loom-code/scripts/loom_checker.py:3571", "text": "A successful probe can retarget the symbolic push remote through local Git config without dirtying the tree.", "fix": "Snapshot and compare local Git configuration around executable probes."}, {"severity": "fatal", "dimension": "tests", "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30", "text": "The change-specific measurement replay depends on feature-branch commits.", "fix": "Make the fixture self-contained if post-merge replay is a required contract."}],
+      "notes": ["The post-merge replay concern is outside this change's stated change-specific evidence contract and is dismissed below."]
     }
   ],
   "probes": [
@@ -1240,7 +1283,7 @@
       "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/spec.md:39",
       "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
       "raised_by": "history-rewrite-review-b-codex",
-      "resolved": null
+      "resolved": "fixed by the recorded round-19 Claude verdict"
     },
     {
       "id": "branch-end-09",
@@ -1254,7 +1297,28 @@
       "anchor": "loom-code/scripts/loom_checker.py:3197",
       "origin_sha": "22868dead958d3649beb2931165727c78fe80a71",
       "raised_by": "history-rewrite-review-b-codex",
-      "resolved": null
+      "resolved": "fixed by adcf7436 — source and Codex mirror now carry the citations and pass the exact-match test"
+    },
+    {
+      "id": "branch-end-11",
+      "anchor": "loom-code/scripts/loom_checker.py:3571",
+      "origin_sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "raised_by": "second-vendor-repair-adversary-codex",
+      "resolved": "fixed by adcf7436 — the gate snapshots local Git config and the permanent attack probe passes"
+    },
+    {
+      "id": "branch-end-12",
+      "anchor": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_single_owner_push_gate.py:30",
+      "origin_sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "raised_by": "second-vendor-repair-adversary-codex",
+      "dismissed": {"reason": "The plan explicitly classifies timing as change-specific evidence and does not require post-merge replay; branch-only reproducibility before publication is already proven.", "by": "branch-end-blind-codex-cli"}
+    },
+    {
+      "id": "branch-end-13",
+      "anchor": "loom-code/scripts/loom_checker.py:3512",
+      "origin_sha": "fd88937563477a65aa322b0ac4462cab2f0c0d4b",
+      "raised_by": "second-vendor-repair-review-codex",
+      "dismissed": {"reason": "Advisory size nit only; extracting the tightly coupled push transition would add abstraction without a second user and conflicts with deliberate simplification.", "by": "branch-end-blind-codex-cli"}
     }
   ],
   "dispatch": [
@@ -1673,11 +1737,35 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T12:40:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:20",
+      "role": "reviewer",
+      "agent_id": "final-repair-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T13:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:20",
+      "role": "reviewer",
+      "agent_id": "final-repair-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T13:00:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:20",
+      "role": "adversary",
+      "agent_id": "final-repair-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T13:00:00+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
-    "rounds": 19,
-    "dispatches": 52,
+    "rounds": 20,
+    "dispatches": 55,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
