@@ -1974,11 +1974,43 @@
       "model": "gpt-5.6-sol",
       "started": "2026-09-07T13:20:00+08:00",
       "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "reviewer",
+      "agent_id": "final-evidence-review-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "reviewer",
+      "agent_id": "final-evidence-review-claude",
+      "model": "claude-sonnet-5",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "reviewer",
+      "agent_id": "final-evidence-docs-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:22",
+      "role": "adversary",
+      "agent_id": "final-evidence-adversary-codex",
+      "model": "gpt-5.6-sol",
+      "started": "2026-09-07T14:10:00+08:00",
+      "fresh_context": true
     }
   ],
   "cost": {
-    "rounds": 21,
-    "dispatches": 59,
+    "rounds": 22,
+    "dispatches": 63,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
