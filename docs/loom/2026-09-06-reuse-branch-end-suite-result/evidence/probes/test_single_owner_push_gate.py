@@ -28,7 +28,7 @@ ROOT = next(
     if (parent / "loom-code" / "skills" / "ship" / "SKILL.md").exists()
 )
 BASELINE = "9d009c49e02a52c4838dba30a88501e0bbe79ab0"
-CANDIDATE = "3ecac98e2b54282f88414481fae7ed8981b8d0e3"
+CANDIDATE = "931b9f9364309727f7891d57c80bbe6b6ea08bba"
 SAMPLES = 7
 WORK_SECONDS = "0.080"
 CHANGE = "2026-09-02-a"
