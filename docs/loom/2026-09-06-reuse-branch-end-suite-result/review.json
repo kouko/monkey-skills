@@ -1,5 +1,5 @@
 {
-  "reviewed_sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+  "reviewed_sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
   "scope": "branch-end",
   "second_vendor": "claude",
   "vendors": [
@@ -729,6 +729,34 @@
       "previous_findings": [{"anchor": "loom-code/.claude-plugin/plugin.json:3", "status": "fixed", "evidence": "Both manifests advance together to 1.8.1 without changing executable behavior."}],
       "findings": [],
       "notes": ["No new security boundary was introduced by the release metadata update."]
+    },
+    {
+      "round": 17,
+      "scope": "branch-end",
+      "reviewer": "package-env-final-review-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code+skill+docs",
+      "verdict": "PASS",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "README.md:94", "status": "fixed", "evidence": "README now points to KICKOFF-DEFAULTS for the exact isolated package gate and describes CI as separate jobs."}],
+      "findings": [],
+      "notes": ["The locked isolated command preserves pytest target parity without relying on host Python state."]
+    },
+    {
+      "round": 17,
+      "scope": "branch-end",
+      "reviewer": "privacy-dispatch-measure8-codex",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "adversarial-security",
+      "verdict": "PASS",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "dimension_scores": {"security": "PASS", "architecture": "PASS", "correctness": "PASS", "naming": "PASS", "tests": "PASS", "refactoring": "PASS", "cross-task-coherence": "PASS", "external-surface-grounding": "PASS", "principles-conformance": "PASS", "deliberate-simplification": "PASS", "deletion-first": "PASS", "omission": "PASS", "ambiguity": "PASS", "inconsistency": "PASS", "incorrect-fact": "PASS", "missing-population": "PASS", "user-judgment-leak": "PASS"},
+      "previous_findings": [{"anchor": "requirements-package-tests.lock:1", "status": "fixed", "evidence": "The complete 11-package graph is version-pinned and SHA-256 hash-verified."}],
+      "findings": [],
+      "notes": ["The dependency-resolution reproducibility blocker is closed."]
     }
   ],
   "probes": [
@@ -945,6 +973,46 @@
       "scope": "branch-end",
       "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
       "sha": "ece1f0d99a5a2d70157f906be7e489a155f45f2d",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:17",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py -q --tb=short",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_shell_boundary.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:17",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py -q --tb=line",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_branch_end_attack_catalogue.py"
+    },
+    {
+      "kind": "adversarial",
+      "scope": "branch-end-fix:17",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python -m pytest docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py -q --tb=line",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "pass",
+      "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/probes/test_w002_mutation_boundary.py"
+    },
+    {
+      "kind": "package-tests",
+      "scope": "branch-end",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
+      "result": "deferred-to-hook",
+      "artifact": ""
+    },
+    {
+      "kind": "blind-run",
+      "scope": "branch-end",
+      "command": "see docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md",
+      "sha": "21a8d6baf95b9f132c9d56746aa4789eb53874f6",
       "result": "pass",
       "artifact": "docs/loom/2026-09-06-reuse-branch-end-suite-result/blind-run-report.md"
     }
@@ -1450,11 +1518,27 @@
       "model": "gpt-6-astra",
       "started": "2026-09-07T10:44:00+08:00",
       "fresh_context": false
+    },
+    {
+      "task": "branch-end-fix-review:17",
+      "role": "reviewer",
+      "agent_id": "package-env-final-review-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T11:10:00+08:00",
+      "fresh_context": true
+    },
+    {
+      "task": "branch-end-fix-review:17",
+      "role": "adversary",
+      "agent_id": "privacy-dispatch-measure8-codex",
+      "model": "gpt-6-astra",
+      "started": "2026-09-07T11:10:00+08:00",
+      "fresh_context": false
     }
   ],
   "cost": {
-    "rounds": 16,
-    "dispatches": 44,
+    "rounds": 17,
+    "dispatches": 46,
     "cap_changes": [],
     "hours_plan_to_pr": null
   },
