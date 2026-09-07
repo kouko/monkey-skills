@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: yes — push gate 在不同檢查結果下是否執行外部程式的多狀態行為會改變，現有規格未定義短路順序
 evidence: [docs/loom/2026-09-06-reuse-branch-end-suite-result/review.json, docs/loom/2026-09-06-reuse-branch-end-suite-result/evidence/measurement.md]
-status: confirmed 2026-09-07
+status: closed 2026-09-07 — branch codex/2026-09-07-push-gate-cheap-checks-first
 
 ## Problem
 Loom 的 push gate 會先執行完整 package suite 與 adversarial probes，才檢查 Task trailer、dispatch、verdict、第二位讀者等不需執行外部程式就能判斷的條件。後段條件失敗時，發布者已經付出完整 suite 的等待成本，修正帳務或證據後還必須再次執行同一套完整測試；採用 Loom 的其他 repository 也會承受相同成本。
