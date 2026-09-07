@@ -2283,7 +2283,8 @@ def test_every_failure_is_reported_not_just_the_first(tmp_path: Path) -> None:
         ),
     )
     rules = blocked_rules(run_checker("push", cwd=repo))
-    assert {"push.reviewed-sha", "push.probes-package-tests", "push.open-findings-closed"} <= rules
+    assert {"push.reviewed-sha", "push.open-findings-closed"} <= rules
+    assert "push.probes-package-tests" not in rules
 
 
 # --- hook mode is opt-in: `push --hook` ------------------------------------
