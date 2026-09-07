@@ -3578,16 +3578,40 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         failures += check_plan_field_caps_at(manifest, repo, change_id)
         failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
         failures += check_review_round_append_only_at(manifest, repo, change_id)
+
+    # `dispatch[]` lives inside the review.json that was read out of the
+    # reviewed commit's tree, so both identity rules -- and the standing-
+    # reviewer recompute inside check_verdicts, which needs the same
+    # dispatch-legitimate reviewer set to keep a ghost verdict from an
+    # earlier round from ever counting -- recompute from a committed
+    # record and never from the working tree (concept-model §2e).
+    implementers, reviewers, dispatch_error = parse_dispatch(review)
+    failures += check_verdicts(repo, review, reviewed_id, reviewers, change_id)
+    failures += check_second_vendor_honoured(repo, review, reviewed_id)
+    failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
+    failures += check_frozen_store_untouched(repo, reviewed_id)
+
+    failures += check_reviewer_ne_implementer(review, implementers, reviewers, dispatch_error)
+    failures += check_dismissed_by_reviewer(review, implementers, reviewers, dispatch_error)
+
+    if require_live_head and git_text(repo, "rev-parse", "HEAD") != head_sha:
+        failures.append(
+            (
+                "push.reviewed-sha",
+                "the selected repository's live HEAD moved after command "
+                "validation and before executable probes; complete a fresh "
+                "branch-end review",
+            )
+        )
+    if failures:
+        return report(failures, err)
+
     # Package and adversarial programs are untrusted executables. Snapshot the
     # selected repository itself (not the hook caller's cwd) immediately before
     # either kind runs, then recompute after both have finished. A successful
     # exit code cannot release a push if an executable moved HEAD, changed the
     # index/working tree, or retargeted a remote while the gate was observing it.
     live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
-    porcelain_before_probes = git_text(repo, "status", "--porcelain")
-    # With no scope option, Git reads the effective configuration across scopes:
-    # https://git-scm.com/docs/git-config#SCOPES
-    effective_config_before_probes = git_text(repo, "config", "--list", "--null")
     if require_live_head and live_head_before_probes != head_sha:
         failures.append(
             (
@@ -3598,6 +3622,10 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             )
         )
         return report(failures, err)
+    porcelain_before_probes = git_text(repo, "status", "--porcelain")
+    # With no scope option, Git reads the effective configuration across scopes:
+    # https://git-scm.com/docs/git-config#SCOPES
+    effective_config_before_probes = git_text(repo, "config", "--list", "--null")
     if not skip_package_tests:
         failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
@@ -3632,21 +3660,6 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
                 "complete a fresh branch-end review",
             )
         )
-
-    # `dispatch[]` lives inside the review.json that was read out of the
-    # reviewed commit's tree, so both identity rules -- and the standing-
-    # reviewer recompute inside check_verdicts, which needs the same
-    # dispatch-legitimate reviewer set to keep a ghost verdict from an
-    # earlier round from ever counting -- recompute from a committed
-    # record and never from the working tree (concept-model §2e).
-    implementers, reviewers, dispatch_error = parse_dispatch(review)
-    failures += check_verdicts(repo, review, reviewed_id, reviewers, change_id)
-    failures += check_second_vendor_honoured(repo, review, reviewed_id)
-    failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
-    failures += check_frozen_store_untouched(repo, reviewed_id)
-
-    failures += check_reviewer_ne_implementer(review, implementers, reviewers, dispatch_error)
-    failures += check_dismissed_by_reviewer(review, implementers, reviewers, dispatch_error)
     return report(failures, err)
 
 
