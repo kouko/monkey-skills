@@ -58,6 +58,13 @@ def _section_4_push() -> str:
     return text[start:end]
 
 
+def _section_5_pull_request() -> str:
+    text = SHIP_SKILL_MD.read_text(encoding="utf-8")
+    start = text.index("## 5. The pull request")
+    end = text.index("## 6. Merge, then verify")
+    return text[start:end]
+
+
 def _section_0_contract_check() -> str:
     text = SHIP_SKILL_MD.read_text(encoding="utf-8")
     start = text.index("## 0. Contract check")
@@ -230,6 +237,13 @@ def test_ship_push_review_only_head_admits_close_shape() -> None:
         "ship/SKILL.md §6 has no push.review-only-head admits-exactly-that-shape "
         "sentence"
     )
+
+
+def test_pr_create_reuses_the_exact_remote_head_without_package_rerun() -> None:
+    section = _unwrapped(_section_5_pull_request())
+    assert "remote branch" in section
+    assert "exactly equal" in section
+    assert "does not re-run the package suite" in section
 
 
 def test_ship_older_pr_number_shape_still_accepted() -> None:

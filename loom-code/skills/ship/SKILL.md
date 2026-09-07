@@ -361,6 +361,13 @@ a single such line qualifies; a paragraph describing it does not.
 
 Then:
 
+PR creation changes GitHub metadata; it does not publish another commit. The
+hook therefore requires the named remote branch to already exist and exactly
+equal the current reviewed `HEAD`, then reuses that publication boundary and
+does not re-run the package suite. A missing or stale remote branch blocks;
+return to §4 and use the canonical push rather than letting the PR command
+become an implicit publication path. Merge remains a separate gate.
+
 ```
 gh pr create --title "<title>" --body-file <path>
 PR_URL=<the url it printed>

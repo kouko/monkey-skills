@@ -47,6 +47,13 @@ def git(repo: Path, *args: str) -> str:
     ).stdout.strip()
 
 
+def publish_current_head(repo: Path, remote: Path) -> None:
+    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+    git(repo, "remote", "add", "origin", str(remote))
+    branch = git(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    git(repo, "push", "-q", "origin", f"HEAD:refs/heads/{branch}")
+
+
 def run_checker(*args: str, cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(CHECKER), *args], capture_output=True, text=True, cwd=str(cwd)
@@ -2227,7 +2234,11 @@ def test_hook_mode_recognises_every_push_shape(tmp_path: Path) -> None:
     for cmd in PUSH_SHAPED:
         result = run_hook({"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(repo)}, cwd=tmp_path)
         assert result.returncode == 2, (cmd, result.stdout, result.stderr)
-        expected = "push.review-only-head" if "gh pr" in cmd else "push.reviewed-sha"
+        expected = (
+            "push.reviewed-sha"
+            if "gh pr create" in cmd or "gh pr" not in cmd
+            else "push.review-only-head"
+        )
         assert expected in blocked_rules(result), cmd
 
 
@@ -2319,6 +2330,7 @@ def test_hook_mode_honours_absolute_cd_for_gh_pr_over_payload_cwd(tmp_path: Path
     target_root.mkdir()
     unrelated_root.mkdir()
     target = build_repo(target_root)
+    publish_current_head(target, tmp_path / "target.git")
     unrelated = build_repo(unrelated_root)
     (unrelated / "after.py").write_text("changed = True\n", encoding="utf-8")
     git(unrelated, "add", "after.py")
@@ -2331,6 +2343,84 @@ def test_hook_mode_honours_absolute_cd_for_gh_pr_over_payload_cwd(tmp_path: Path
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_gh_pr_create_does_not_rerun_the_package_suite(tmp_path: Path) -> None:
+    """Opening PR metadata must not repeat the suite owned by Git push."""
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+    publish_current_head(repo, tmp_path / "remote.git")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && gh pr create --fill"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "package-tests" not in result.stdout
+
+
+def test_gh_pr_create_requires_the_reviewed_head_on_the_remote(tmp_path: Path) -> None:
+    """PR creation cannot become an unvalidated implicit publication path."""
+    repo = build_repo(tmp_path)
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && gh pr create --fill"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+    assert "remote branch" in result.stderr
+
+
+def test_gh_pr_create_blocks_when_the_remote_branch_is_stale(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    remote = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+    git(repo, "remote", "add", "origin", str(remote))
+    git(repo, "push", "-q", "origin", "HEAD~1:refs/heads/work")
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && gh pr create --fill"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "remote branch" in result.stderr
+
+
+def test_gh_pr_merge_keeps_the_package_suite_gate(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path, package_tests=FAILING_COMMAND)
+    body = rebuild(repo)
+    body["probes"][0]["command"] = FAILING_COMMAND
+    recommit_review(repo, body)
+
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"cd {repo} && gh pr merge 12 --squash"},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 2
+    assert "push.probes-package-tests" in blocked_rules(result)
 
 
 def test_hook_mode_blocks_pushes_to_distinct_git_dash_c_directories(tmp_path: Path) -> None:

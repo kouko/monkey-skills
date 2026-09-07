@@ -3081,6 +3081,46 @@ def is_push_command(command: str) -> bool:
     return False
 
 
+def is_pr_create_command(command: str) -> bool:
+    """True when a shell segment creates PR metadata without publishing code."""
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens or Path(tokens[0]).name != "gh":
+            continue
+        rest = tokens[1:]
+        found = _subcommand_at(rest, GH_VALUE_OPTIONS)
+        if found and found[1] == "pr":
+            after = rest[found[0] + 1:]
+            if _subcommand(after, GH_VALUE_OPTIONS) == "create":
+                return True
+    return False
+
+
+def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
+    """Require PR creation to reference the already-published current HEAD."""
+    branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    head = git_maybe(repo, "rev-parse", "HEAD")
+    if not branch or not head:
+        return "PR creation requires a current symbolic branch and commit"
+
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens or Path(tokens[0]).name != "gh":
+            continue
+        for index, token in enumerate(tokens):
+            if token in {"--head", "-H"} and index + 1 < len(tokens):
+                if tokens[index + 1] != branch:
+                    return f"PR head must be the current branch {branch!r}"
+            elif token.startswith("--head=") and token.split("=", 1)[1] != branch:
+                return f"PR head must be the current branch {branch!r}"
+
+    remote_ref = f"refs/heads/{branch}"
+    observed = git_maybe(repo, "ls-remote", "--heads", "origin", remote_ref)
+    if observed and observed.split()[0] == head:
+        return None
+    return f"remote branch {branch!r} must already equal reviewed HEAD {head}"
+
+
 def is_git_push_command(command: str) -> bool:
     """True when any shell segment can reach a Git push."""
     for segment in SEGMENT_SPLIT.split(command):
@@ -3359,6 +3399,12 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         )
         return 2
     os.chdir(push_cwd)
+    if is_pr_create_command(command):
+        remote_error = check_pr_create_remote_head(Path.cwd(), command)
+        if remote_error:
+            print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
+            return 2
+        rest = ["--skip-package-tests", *rest]
     rc = _cmd_push(rest, out, err)
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
@@ -3366,6 +3412,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     head = "HEAD"
     require_live_head = False
+    skip_package_tests = False
     rest = list(args)
     while rest:
         token = rest.pop(0)
@@ -3375,6 +3422,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             head = rest.pop(0)
         elif token == "--require-live-head":
             require_live_head = True
+        elif token == "--skip-package-tests":
+            skip_package_tests = True
         else:
             raise UsageError(f"unexpected argument {token!r}.")
 
@@ -3436,7 +3485,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             )
         )
         return report(failures, err)
-    failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
+    if not skip_package_tests:
+        failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
     failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
     live_head_after_probes = git_text(repo, "rev-parse", "HEAD")
     porcelain_after_probes = git_text(repo, "status", "--porcelain")
