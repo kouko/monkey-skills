@@ -3406,6 +3406,8 @@ def canonical_git_push(
     remote, refspec = tail
     if not SAFE_REMOTE.fullmatch(remote):
         return None, None, f"Git push remote {remote!r} is not a safe literal name"
+    if remote != "origin":
+        return None, None, "the Git push remote must be literal 'origin'"
 
     head = git_text(repo, "rev-parse", "HEAD")
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
@@ -3509,6 +3511,11 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             return 2
         rest = ["--skip-package-tests", *rest]
     rc = _cmd_push(rest, out, err)
+    if pr_create and rc == 0:
+        remote_error = check_pr_create_remote_head(Path.cwd(), command)
+        if remote_error:
+            print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
+            return 2
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
 
@@ -3578,6 +3585,8 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # index/working tree, or retargeted a remote while the gate was observing it.
     live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
     porcelain_before_probes = git_text(repo, "status", "--porcelain")
+    # With no scope option, Git reads the effective configuration across scopes:
+    # https://git-scm.com/docs/git-config#SCOPES
     effective_config_before_probes = git_text(repo, "config", "--list", "--null")
     if require_live_head and live_head_before_probes != head_sha:
         failures.append(

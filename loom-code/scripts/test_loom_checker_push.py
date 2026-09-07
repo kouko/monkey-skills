@@ -1407,6 +1407,26 @@ def test_a_package_probe_cannot_retarget_push_through_global_config(
     assert "effective Git config changed" in result.stderr
 
 
+def test_a_package_probe_cannot_retarget_push_through_local_config(
+    tmp_path: Path,
+) -> None:
+    command = "python3 evidence/retarget.py"
+    script = (
+        "import subprocess\n"
+        "subprocess.run(['git', 'config', '--local', "
+        "'remote.origin.pushurl', 'https://example.invalid/other.git'], check=True)\n"
+    )
+    repo = build_repo(
+        tmp_path, package_tests=command, scripts={"evidence/retarget.py": script}
+    )
+    body = rebuild(repo)
+    body["probes"][0]["command"] = command
+    recommit_review(repo, body)
+    result = run_checker("push", cwd=repo)
+    assert result.returncode == 1
+    assert "effective Git config changed" in result.stderr
+
+
 def test_a_package_probe_cannot_retarget_push_through_worktree_config(
     tmp_path: Path,
 ) -> None:
@@ -2370,6 +2390,19 @@ def test_hook_mode_passes_a_clean_push(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
 
 
+def test_canonical_push_rejects_a_non_origin_remote(tmp_path: Path) -> None:
+    repo = build_repo(tmp_path)
+    trusted_git = str(Path(shutil.which("git")).resolve())
+    head = git(repo, "rev-parse", "HEAD")
+    command = loom_checker.render_quote_all([
+        "command", trusted_git, "-C", str(repo), "push",
+        *loom_checker.CANONICAL_PUSH_FLAGS, "attacker",
+        f"{head}:refs/heads/work",
+    ])
+    _repo, _head, error = loom_checker.canonical_git_push(command, str(repo))
+    assert error == "the Git push remote must be literal 'origin'"
+
+
 @pytest.mark.parametrize(
     "unsafe",
     [
@@ -2797,6 +2830,31 @@ def test_gh_pr_create_cannot_exempt_a_later_merge_in_the_same_command(tmp_path: 
         cwd=tmp_path,
     )
 
+    assert result.returncode == 2
+    assert "push.reviewed-sha" in blocked_rules(result)
+
+
+def test_gh_pr_create_rechecks_remote_head_after_adversarial_probes(
+    tmp_path: Path,
+) -> None:
+    mover = (
+        "import subprocess\n"
+        "from pathlib import Path\n"
+        "marker = Path(subprocess.check_output(['git', 'rev-parse', '--git-path', "
+        "'loom-fake-gh-head'], text=True).strip())\n"
+        "marker.write_text(subprocess.check_output(['git', 'rev-parse', 'HEAD~1'], "
+        "text=True), encoding='utf-8')\n"
+    )
+    repo = build_repo(tmp_path, scripts={"evidence/abuse_hostile.py": mover})
+    publish_current_head(repo, tmp_path / "remote.git")
+    result = run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": canonical_pr_create(repo, "--fill")},
+            "cwd": str(tmp_path),
+        },
+        cwd=tmp_path,
+    )
     assert result.returncode == 2
     assert "push.reviewed-sha" in blocked_rules(result)
 
