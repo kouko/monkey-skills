@@ -2,7 +2,7 @@
 name: review
 description: |
   Runs the one closing review over completed functional content, executes package and adversarial verification once, and generates a content-bound attestation. Use when Build is complete or a functional change invalidates prior evidence.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Review
@@ -36,11 +36,42 @@ code, skill, spec, or gate changes, create committed adversarial programs that
 exercise the relevant boundary and pass their paths and commands to
 `finalize-review`. Do not record a claimed result; finalization executes them.
 
-## 4. Fix functional findings once
+## 4. Converge within one bounded episode
 
-Any fatal or important finding returns to Build. Collect fixes into one batch,
-rerun only the checks affected by changed functional content, then obtain fresh
-passing verdicts. Wording-only publication edits do not reopen Review.
+A closing Review episode starts when fresh reviewers first evaluate completed
+functional content for one confirmed-intent commit. Only a newly confirmed
+intent starts another episode. The episode admits at most three distinct
+functional-content digests; changing the task, app, branch, reviewer, vendor,
+model, or technical design does not reset that limit.
+
+- **Round 1 — full review.** Review the cumulative functional content.
+- **Round 2 — fix verification.** Batch fatal and important findings, return to
+  Build, and resume the same reviewers over the functional fix delta.
+- **Round 3 — terminal verification.** If Round 2 still has blockers, first
+  stop local patching and perform a technical design re-look. The agent owns
+  that re-plan when it preserves requirements, visible behavior, and
+  guarantees. Review the resulting final digest once. `NEEDS_REVISION` ends
+  the episode as `NON_CONVERGENT`; never dispatch Round 4.
+
+Treat the episode as stuck when the same blocker survives two consecutive
+rounds, the blocker count does not decrease after a functional fix, or the fix
+repeats the same mechanism shape. Stop local patching at that point and use the
+next available round only after the technical design re-look.
+
+Do not ask the user whether to continue or which technical repair to choose.
+Ask only when resolving the blocker would change requirements, visible
+behavior, or guarantees; that change requires a newly confirmed intent rather
+than another round in this episode.
+
+A malformed response, unavailable executor, or other transient failure before
+a conforming verdict exists may retry once against the same functional-content
+digest. That retry is not a review round. A second executor failure ends the
+episode as `EXECUTION_FAILED`; a conforming `NEEDS_REVISION` always consumes
+the current round.
+
+Keep this episode in the active task context. Do not create a review-round
+ledger or committed state schema. Wording-only publication edits do not reopen
+Review.
 
 ## 5. Finalize
 

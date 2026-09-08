@@ -125,8 +125,8 @@ One `important` → `PASS_WITH_NOTES`. Only nits, or none → `PASS`.
 
 ## Fix rounds — when you are the resumed reader
 
-`NEEDS_REVISION` sends the change back for fix work, then this station
-dispatches again for the next round of the same checkpoint — resuming
+`NEEDS_REVISION` sends the change back for fix work, then this station may
+dispatch the next round of the same bounded Review episode — resuming
 **the same agent that wrote the previous round's verdict**, never a fresh
 one. You are given your own previous `findings` list and the delta since
 that round's reviewed commit (the fix commits only, not the whole
@@ -141,10 +141,12 @@ checkpoint again):
   execution. Functional fixes require a renewed finalization.
 - The orchestrator may rebut a finding with evidence; accept it and mark
   the finding `dismissed`, or hold your ground and say why.
-- A third round on the same checkpoint means the fix is not converging —
-  hand your finding history to a higher-tier agent for a one-question
-  design re-look before any further fix round, rather than iterating a
-  fourth time on the same wording.
+- Round 3 is terminal and occurs only after the orchestrator's technical
+  design re-look. If blockers remain, return `NEEDS_REVISION`; the orchestrator
+  records `NON_CONVERGENT` and must not dispatch Round 4, swap identities to
+  reset the episode, or ask the user whether to continue. A transient or
+  malformed invocation may retry once before a conforming verdict exists; a
+  second such failure is terminal `EXECUTION_FAILED` and is not your verdict.
 
 ## Output
 
