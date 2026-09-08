@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.3] — 2026-09-08 — worktree-safe direct merge
+
+- Always render an absolute repository selection for a user-authorized direct
+  PR merge, so the installed hook validates the feature worktree even when
+  Codex reports the task root as hook `cwd`.
+- Distinguish installed-plugin trust from absolute-path repository-local hook
+  trust, and keep new or modified definition review owned by the Codex host.
+- Add a permanent regression for the observed Codex payload shape without an
+  executor-workdir field; retain fail-closed repository selection.
+
 ## [2.0.2] — 2026-09-08 — bounded review convergence
 
 budget-exception: review.bounded-episode — replaces the unbounded fix-round
