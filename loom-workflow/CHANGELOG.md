@@ -4,6 +4,13 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.1.1] — 2026-09-08 — conditional semantic privacy review
+
+Patch. Always run deterministic secret detection, but invoke the semantic
+privacy judge only for ambiguous private-party text. Public repository and
+vendor identifiers pass without a model call; reasoned semantic false-positive
+bypasses are recorded in the carrier and never override secret findings.
+
 ## [4.1.0] — 2026-09-06 — memory-grep.sh in one git pass
 
 Minor. `memory-grep.sh` no longer spawns one subprocess chain per commit;

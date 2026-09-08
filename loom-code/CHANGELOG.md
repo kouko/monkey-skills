@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0] — 2026-09-08 — content-bound verification attestations
+
+- Generate one `attestation.json` from checker-owned package and adversarial
+  executions plus independent reviewer verdicts.
+- Reuse matching functional evidence across publication-only edits; the push
+  hook validates without replaying the suite or probes.
+- Retire branch-end `review.json` accounting, review-only commits, exact-SHA
+  alignment, dispatch/trailer coverage, round append rules, and repo-local
+  Codex checker scaffolds.
+- Always retain deterministic secret scanning while limiting semantic privacy
+  review to ambiguous private-party text with a reasoned false-positive path.
+
 ## [1.8.2] — 2026-09-08 — cheap PUSH checks before executable probes
 
 - Run deterministic push checks before the package suite and adversarial

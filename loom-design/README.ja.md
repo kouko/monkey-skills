@@ -85,11 +85,8 @@ claude plugin list | grep loom-design     # enabled と出れば OK
 
 ### Codex CLI
 
-Codex に marketplace は無いので、plugin は checkout から読み、loom-code の
-checker は `.codex/hooks/loom_checker.py` として repo 内に scaffold される。
-コマンドは loom-code の README を参照。`/hooks` を実行しろと言われたら実行する
-こと — 信頼されていない Codex hook は黙ってスキップされ、check が通ったのと
-見分けがつかない。
+Codex ではインストール済み loom-code plugin 内の checker と hook を直接使う。
+repo 内の checker コピーや trust probe は不要。
 
 ## テストの走らせ方
 

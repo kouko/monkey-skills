@@ -12,6 +12,7 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py intent <path> [--commit-msg <file>]
     loom_checker.py intake <station> <change-id>
     loom_checker.py push [--head <ref>] [--hook]
+    loom_checker.py finalize-review <change-id> --input <review-input.json>
     loom_checker.py standing <path-to-intent>
     loom_checker.py contract --require <major.minor>
 
@@ -34,6 +35,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import date
 from pathlib import Path
 from urllib.parse import quote
@@ -276,6 +278,26 @@ RULES: list[tuple[str, str]] = [
     ),
 ]
 
+# 1.1 replaces the branch-end ledger rules with one generated-evidence
+# validation. The old helpers remain below temporarily for pre-build spec
+# compatibility, but they are not gates and are intentionally absent from
+# the public rule inventory.
+_RETIRED_BRANCH_END_RULES = {
+    "push.dismissed-by-reviewer", "push.dispatch-covers-tasks",
+    "push.frozen-store-untouched", "push.open-findings-closed",
+    "push.probes-adversarial", "push.probes-package-tests",
+    "push.review-schema", "push.review-only-head", "push.reviewed-sha",
+    "push.second-vendor-honoured", "push.reviewer-ne-implementer",
+    "push.verdicts-ge-2", "review.round-append-only",
+}
+RULES = [rule for rule in RULES if rule[0] not in _RETIRED_BRANCH_END_RULES]
+RULES.append((
+    "push.attestation",
+    "The branch carries one generated attestation whose functional-content digest, "
+    "successful executions, command identities, and passing reviewer verdicts validate "
+    "without replaying package tests or adversarial probes.",
+))
+
 
 class UsageError(Exception):
     """Bad invocation or an unreadable operand -- exit 2, never exit 0."""
@@ -374,7 +396,40 @@ def git_ok(repo: Path, *args: str) -> bool:
     return git_maybe(repo, *args) is not None
 
 
-_CONTENT_TREE_CACHE: dict[tuple[str, str], str | None] = {}
+_CONTENT_TREE_CACHE: dict[tuple[str, str, tuple[str, ...]], str | None] = {}
+
+
+def functional_content_digest(
+    repo: Path, sha: str, change_id: str, manifest: dict | None = None
+) -> str | None:
+    """Return a Git-derived identity with only declared publication metadata
+    for this change excluded. The declaration is repo-neutral; replacing
+    ``<change-id>`` scopes every pattern so another change's evidence remains
+    ordinary functional content."""
+    contract = manifest if manifest is not None else load_manifest()
+    patterns = tuple(
+        str(pattern).replace("<change-id>", change_id)
+        for pattern in contract.get("publication_only_paths", [])
+    )
+    key = (sha, change_id, patterns)
+    if key in _CONTENT_TREE_CACHE:
+        return _CONTENT_TREE_CACHE[key]
+    listing = git_maybe(repo, "ls-tree", "-r", sha)
+    if listing is None:
+        _CONTENT_TREE_CACHE[key] = None
+        return None
+
+    matchers = [glob_to_regex(pattern) for pattern in patterns]
+    kept: list[str] = []
+    for line in listing.splitlines():
+        if not line or "\t" not in line:
+            continue
+        path = line.split("\t", 1)[1]
+        if not any(matcher.fullmatch(path) for matcher in matchers):
+            kept.append(line)
+    digest = _hash_object_stdin(repo, "\n".join(kept))
+    _CONTENT_TREE_CACHE[key] = digest
+    return digest
 
 
 def content_tree_id(repo: Path, sha: str, change_id: str) -> str | None:
@@ -394,18 +449,8 @@ def content_tree_id(repo: Path, sha: str, change_id: str) -> str | None:
     all. Memoised per (sha, change_id): one push evaluates the same pair
     across `push.reviewed-sha`, `push.probes-package-tests` and
     `push.probes-adversarial`."""
-    key = (sha, change_id)
-    if key in _CONTENT_TREE_CACHE:
-        return _CONTENT_TREE_CACHE[key]
-    listing = git_maybe(repo, "ls-tree", "-r", sha)
-    if listing is None:
-        _CONTENT_TREE_CACHE[key] = None
-        return None
-    suffix = f"\tdocs/loom/{change_id}/review.json"
-    kept = [line for line in listing.split("\n") if line and not line.endswith(suffix)]
-    digest = _hash_object_stdin(repo, "\n".join(kept))
-    _CONTENT_TREE_CACHE[key] = digest
-    return digest
+    # Compatibility wrapper for callers removed by the attestation migration.
+    return functional_content_digest(repo, sha, change_id)
 
 
 def _hash_object_stdin(repo: Path, content: str) -> str | None:
@@ -447,6 +492,87 @@ def same_reviewed_content(
     tree_a = content_tree_id(repo, a, change_id)
     tree_b = content_tree_id(repo, b, change_id)
     return tree_a is not None and tree_a == tree_b
+
+
+ATTESTATION_SCHEMA = "loom-attestation/v1"
+ATTESTATION_KEYS = {
+    "schema", "change_id", "content_digest", "executions", "verdicts", "findings"
+}
+
+
+def _command_digest(command: str) -> str:
+    return hashlib.sha256(command.encode("utf-8")).hexdigest()
+
+
+def validate_attestation(
+    repo: Path, head_sha: str, change_id: str, attestation: object,
+    manifest: dict | None = None,
+) -> list[tuple[str, str]]:
+    """Validate generated evidence without executing the recorded programs."""
+    rule = "push.attestation"
+    if not isinstance(attestation, dict) or set(attestation) != ATTESTATION_KEYS:
+        return [(rule, "attestation has an unknown or incomplete schema")]
+    if attestation.get("schema") != ATTESTATION_SCHEMA:
+        return [(rule, f"unsupported attestation schema {attestation.get('schema')!r}")]
+    if attestation.get("change_id") != change_id:
+        return [(rule, "attestation change_id does not match its path")]
+    expected = functional_content_digest(repo, head_sha, change_id, manifest)
+    if expected is None or attestation.get("content_digest") != expected:
+        return [(rule, "attestation functional content digest does not match the selected tree")]
+
+    executions = attestation.get("executions")
+    if not isinstance(executions, list) or not executions:
+        return [(rule, "attestation records no successful functional executions")]
+    package_runs = 0
+    adversarial_runs = 0
+    for execution in executions:
+        if not isinstance(execution, dict):
+            return [(rule, "attestation contains a malformed execution")]
+        command = execution.get("command")
+        if not isinstance(command, str) or not command.strip():
+            return [(rule, "attestation execution has no command")]
+        if execution.get("command_digest") != _command_digest(command):
+            return [(rule, "attestation execution command digest is forged or corrupted")]
+        if execution.get("result") != "pass":
+            return [(rule, "attestation contains a non-passing execution")]
+        if execution.get("kind") == "package-tests":
+            package_runs += 1
+            declared, _ = declared_test_command(repo)
+            if command != declared:
+                return [(rule, "package-tests execution does not match the declared package command")]
+        elif execution.get("kind") == "adversarial":
+            adversarial_runs += 1
+            artifact = execution.get("artifact")
+            if not isinstance(artifact, str) or not artifact.strip():
+                return [(rule, "adversarial execution names no artifact")]
+            if not command_names_artifact(command, artifact):
+                return [(rule, "adversarial command does not name its artifact")]
+            if not command_executes_artifact(command, artifact):
+                return [(rule, "adversarial command must execute the artifact directly")]
+            if not git_ok(repo, "cat-file", "-e", f"{head_sha}:{artifact}"):
+                return [(rule, "adversarial execution names no committed artifact")]
+        else:
+            return [(rule, "attestation contains an unknown execution kind")]
+    if package_runs != 1:
+        return [(rule, "attestation must record exactly one package-tests execution")]
+    if adversarial_runs < 1:
+        return [(rule, "attestation records no adversarial execution")]
+
+    verdicts = attestation.get("verdicts")
+    if not isinstance(verdicts, list) or not verdicts:
+        return [(rule, "attestation records no reviewer verdict")]
+    reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts if isinstance(v, dict)}
+    reviewers.discard("")
+    if len(reviewers) < 2:
+        return [(rule, "attestation needs two distinct reviewers")]
+    for verdict in verdicts:
+        if not isinstance(verdict, dict) or verdict.get("verdict") not in {
+            "PASS", "PASS_WITH_NOTES"
+        }:
+            return [(rule, "attestation contains a malformed or non-passing reviewer verdict")]
+    if not isinstance(attestation.get("findings"), list):
+        return [(rule, "attestation findings must be a list")]
+    return []
 
 
 def repo_root(start: Path) -> Path:
@@ -3542,6 +3668,36 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if not head_sha:
         raise UsageError(f"cannot resolve {head!r} in {repo}.")
 
+    # The 1.1 publication path reads one generated attestation from the
+    # branch delta. It validates content identity and recorded outcomes but
+    # deliberately does not replay functional executables.
+    attestation_template = manifest.get("artifacts", {}).get("attestation", {}).get("path")
+    if attestation_template:
+        matcher = glob_to_regex(attestation_template.replace("<change-id>", "*"))
+        candidates = sorted(path for path in changed_paths(repo) if matcher.fullmatch(path))
+        if len(candidates) != 1:
+            return report([(
+                "push.attestation",
+                f"branch must carry exactly one generated attestation; found {len(candidates)}",
+            )], err)
+        attestation_rel = candidates[0]
+        match = re.fullmatch(
+            re.escape(attestation_template).replace(re.escape("<change-id>"), r"(?P<change_id>[^/]+)"),
+            attestation_rel,
+        )
+        if match is None:
+            return report([("push.attestation", "cannot derive change id from attestation path")], err)
+        try:
+            attestation = json.loads(git_text(repo, "show", f"{head_sha}:{attestation_rel}"))
+        except (UsageError, json.JSONDecodeError) as exc:
+            return report([("push.attestation", f"cannot read generated attestation: {exc}")], err)
+        failures = validate_attestation(
+            repo, head_sha, match.group("change_id"), attestation, manifest
+        )
+        if require_live_head and git_text(repo, "rev-parse", "HEAD") != head_sha:
+            failures.append(("push.attestation", "live HEAD moved during publication validation"))
+        return report(failures, err)
+
     review_rel, failures, closes_intent_in_head = check_review_only_head(manifest, repo, head_sha)
     if review_rel is None:
         return report(failures, err)
@@ -4311,6 +4467,24 @@ def artifact_argv(repo: Path, artifact: str) -> list[str]:
         "carries no executable bit, so there is no way to execute the case it "
         "claims to be"
     )
+
+
+def command_executes_artifact(command: str, artifact: str) -> bool:
+    """True when argv directly executes the named Python, shell, or executable file."""
+    tokens = argv_for(command)
+    wanted = os.path.normpath(artifact)
+    suffix = Path(artifact).suffix.lower()
+    if suffix == ".py":
+        python = Path(tokens[0]).name.startswith("python")
+        direct = len(tokens) >= 2 and os.path.normpath(tokens[1]) == wanted
+        pytest_direct = (
+            len(tokens) >= 4 and tokens[1:3] == ["-m", "pytest"]
+            and os.path.normpath(tokens[3]) == wanted
+        )
+        return python and (direct or pytest_direct)
+    if suffix == ".sh":
+        return len(tokens) >= 2 and Path(tokens[0]).name in {"bash", "sh"} and os.path.normpath(tokens[1]) == wanted
+    return os.path.normpath(tokens[0]) in {wanted, os.path.join(".", wanted)}
 
 
 def declared_test_command(repo: Path) -> tuple[str | None, str]:
@@ -6484,6 +6658,108 @@ def cmd_contract(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return report([("contract.requires", reason)], err)
 
 
+def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """Run functional verification once and generate content-bound evidence."""
+    if not args:
+        raise UsageError("finalize-review needs a change-id.")
+    change_id, *rest = args
+    if len(rest) != 2 or rest[0] != "--input":
+        raise UsageError("finalize-review expects `--input <review-input.json>`.")
+    input_path = Path(rest[1])
+    try:
+        review_input = json.loads(read_text(input_path))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise UsageError(f"cannot read review input: {exc}") from exc
+    if not isinstance(review_input, dict):
+        raise UsageError("review input must be a JSON object.")
+    verdicts = review_input.get("verdicts")
+    findings = review_input.get("findings", [])
+    adversarial = review_input.get("adversarial", [])
+    if not isinstance(verdicts, list) or not verdicts:
+        return report([("finalize.verdicts", "review input has no verdicts")], err)
+    if any(not isinstance(v, dict) or v.get("verdict") not in {
+        "PASS", "PASS_WITH_NOTES"
+    } for v in verdicts):
+        return report([("finalize.verdicts", "every reviewer verdict must pass")], err)
+    reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts}
+    reviewers.discard("")
+    if len(reviewers) < 2:
+        return report([("finalize.verdicts", "two distinct reviewers are required")], err)
+    if not isinstance(findings, list) or not isinstance(adversarial, list):
+        return report([("finalize.schema", "findings and adversarial must be lists")], err)
+    if not adversarial:
+        return report([("finalize.adversarial", "at least one adversarial artifact is required")], err)
+
+    repo = repo_root(Path.cwd())
+    manifest = load_manifest()
+    head_sha = git_text(repo, "rev-parse", "HEAD")
+    status_before = git_text(repo, "status", "--porcelain")
+    if status_before:
+        return report([("finalize.clean-tree", "commit functional content before finalizing review")], err)
+    config_before = git_text(repo, "config", "--list", "--null")
+    package_command, source = declared_test_command(repo)
+    if package_command is None or package_command.strip().lower() == NO_PACKAGE_TESTS:
+        return report([("finalize.package-tests", f"no executable package command ({source})")], err)
+    work: list[tuple[str, str, str]] = [("package-tests", package_command, "")]
+    for item in adversarial:
+        if not isinstance(item, dict):
+            return report([("finalize.adversarial", "malformed adversarial input")], err)
+        command = str(item.get("command", "")).strip()
+        artifact = str(item.get("artifact", "")).strip()
+        if not command or not artifact:
+            return report([("finalize.adversarial", "adversarial input needs command and artifact")], err)
+        if not command_names_artifact(command, artifact):
+            return report([("finalize.adversarial", "command must name its artifact argument")], err)
+        if not command_executes_artifact(command, artifact):
+            return report([("finalize.adversarial", "command must execute the artifact directly")], err)
+        if not git_ok(repo, "cat-file", "-e", f"{head_sha}:{artifact}"):
+            return report([("finalize.adversarial", "artifact must exist in the selected commit")], err)
+        work.append(("adversarial", command, artifact))
+
+    executions: list[dict] = []
+    for kind, command, artifact in work:
+        try:
+            observed = subprocess.run(
+                argv_for(command), cwd=str(repo), capture_output=True, text=True,
+                timeout=PROBE_RUN_TIMEOUT,
+            ).returncode
+        except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+            return report([(f"finalize.{kind}", f"execution failed: {exc}")], err)
+        if observed != 0:
+            return report([(f"finalize.{kind}", f"`{command}` exited {observed}")], err)
+        executions.append({
+            "kind": kind, "command": command, "artifact": artifact,
+            "result": "pass", "command_digest": _command_digest(command),
+        })
+
+    if git_text(repo, "rev-parse", "HEAD") != head_sha:
+        return report([("finalize.stable-tree", "HEAD moved during functional verification")], err)
+    if git_text(repo, "status", "--porcelain") != status_before:
+        return report([("finalize.stable-tree", "working tree or index changed during functional verification")], err)
+    if git_text(repo, "config", "--list", "--null") != config_before:
+        return report([("finalize.stable-tree", "git configuration changed during functional verification")], err)
+
+    digest = functional_content_digest(repo, head_sha, change_id, manifest)
+    if digest is None:
+        return report([("finalize.digest", "cannot compute functional content digest")], err)
+    attestation = {
+        "schema": ATTESTATION_SCHEMA, "change_id": change_id,
+        "content_digest": digest, "executions": executions,
+        "verdicts": verdicts, "findings": findings,
+    }
+    target = artifact_path(manifest, "attestation", change_id, repo)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=target.parent, prefix=f".{target.name}.", delete=False,
+    ) as handle:
+        json.dump(attestation, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
+        temporary = Path(handle.name)
+    temporary.replace(target)
+    out.write(f"wrote {target.relative_to(repo)} for {digest}\n")
+    return 0
+
+
 COMMANDS = {
     "intent": cmd_intent,
     "intake": cmd_intake,
@@ -6494,6 +6770,7 @@ COMMANDS = {
     "plan": cmd_plan,
     "plan-edits": cmd_plan_edits,
     "review-edits": cmd_review_edits,
+    "finalize-review": cmd_finalize_review,
 }
 
 

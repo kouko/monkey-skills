@@ -23,11 +23,8 @@ literally wrong the text is:
   wrong part of it.
 - Any fatal → `NEEDS_REVISION`. Two or more important → `NEEDS_REVISION`.
   One important → `PASS_WITH_NOTES`. Only nits, or nothing →`PASS`.
-- **Nits never open a round.** They are recorded in `findings` like any
-  other finding, but never become an `open_findings` entry and never block
-  a verdict on their own. `ship` folds every open nit into one commit
-  before push; the reader who raised each one confirms the fix in a single
-  line, and that confirmation is not a new round.
+- **Nits do not trigger another formal review.** Record them in the closing
+  verdict; Ship may batch safe publication-only wording fixes.
 - A finding with no anchor is opaque and flips the whole verdict to
   `NEEDS_REVISION` however small it is: "naming is off somewhere" cannot be
   fixed by anyone.
@@ -45,7 +42,7 @@ literally wrong the text is:
 | architecture | Does the shape the change produces hold — responsibilities, dependency direction, boundaries | SOLID (Martin) |
 | correctness | Does it do what it claims, at the boundaries as well as the middle; is there RED→GREEN evidence in the history | the tests, run |
 | naming | Names say what the thing is; functions stay short — 20 lines soft, 50 hard, 100 is a finding on its own | Clean Code Ch.2–3 (Martin) |
-| tests | Every shipped behaviour has a test that failed first; F.I.R.S.T holds for the suite, not just the new file. Read `probes[]` too: each entry's `command` and `artifact`, not its `result` — a command that exits 0 without running the suite or the abuse case (a shell builtin, or one that never names its artifact) is a finding, not evidence | Beck, *Test-Driven Development* (2002) |
+| tests | Every shipped behaviour has focused RED→GREEN evidence; the package suite and committed adversarial artifacts must exercise the changed behavior rather than merely exit successfully | Beck, *Test-Driven Development* (2002) |
 | refactoring | Duplication and smells; Rule of Three — three sites doing the same thing is an extraction | Fowler, *Refactoring*; the Pragmatic Programmer's DRY |
 | cross-task-coherence | Only a whole-delta reviewer can see this: abstractions that disagree between tasks, logic duplicated because each task saw one slice, a task that quietly did more than its title | — |
 | external-surface-grounding | Every call into a surface the author does not own — HTTP API, SDK package, MCP tool, CLI flag, a sibling team's contract — carries a grounding citation. Missing on the first four is fatal; missing on a sibling contract is important; two tasks calling the same surface with conflicting shapes is important | — |
@@ -80,7 +77,7 @@ spec's REQ list, scored by the code lens.
 **Deletion-first for docs and skill.** A new paragraph, mechanism, reserved
 task or fallback path in station text or a contract shows in the delta
 what it replaced, or names the already-observed failure it prevents by
-citing a `review.json` line or a `docs/loom/memory` entry — otherwise it
+citing a concrete failure or a `docs/loom/memory` entry — otherwise it
 is a finding, and the finding names the smaller shape that does the same
 job, the same rule and severity-by-consequence as the code lens's
 `deletion-first` above. A `*_CAP` constant raised in the same file across

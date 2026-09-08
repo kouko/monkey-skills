@@ -58,12 +58,11 @@ the user's machine, with no `user-decided` mark, is `NEEDS_REVISION` (per
 `references/lenses.md`); an `agent-decided` mark settles it only when the
 option carries zero obligation and is reversible.
 
-The `tests` dimension reads `review.json`'s `probes[]` as well as the test
-files: each entry's `command` and `artifact`, never its `result`. A probe
-whose command is a shell builtin (`true`, `:`), or never names its
-artifact, exits 0 for unrelated reasons — score `tests`
-`NEEDS_REVISION` and raise a finding naming that probe. A recorded pass
-nobody can reproduce is the failure mode this dimension exists to catch.
+The `tests` dimension reads the committed tests and adversarial artifacts.
+An artifact whose command is a shell builtin (`true`, `:`), or whose command
+never names it, exits 0 for unrelated reasons — score `tests`
+`NEEDS_REVISION` and raise a finding naming that artifact. Finalization, not
+the reviewer, executes it and records the result.
 
 Score every dimension of your lens. A dimension with nothing to conform to
 — no `PRINCIPLES.md`, no `DESIGN.md` — scores `N/A` with the reason, which

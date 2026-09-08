@@ -255,15 +255,16 @@ the two-layer privacy check before it is used:
 1. **Layer 1 — deterministic scan.** Run
    `scripts/privacy-scan.py --text-file <composed>` (exit 0 = clean;
    exit 3 = secrets/deny-list findings printed as JSON).
-2. **Layer 2 — fresh-context judge.** Dispatch a fresh-context agent
-   over the same composed text per `protocols/privacy-judge-spec.md`
-   (the judge SSOT: the categories it inspects, its `PASS | BLOCK`
-   output schema, and its fail-closed contract). Do NOT inline the
-   judge's full rubric here — point at the spec.
-3. **Verdict.** Any layer-1 finding OR a layer-2 BLOCK → the PR body
+2. **Layer 2 — conditional semantic judge.** Apply
+   `protocols/privacy-judge-spec.md`: known public identifiers do not
+   dispatch; only ambiguous private-party identifying text does.
+3. **Verdict.** Any layer-1 finding OR a dispatched layer-2 BLOCK → the PR body
    is BLOCKED: surface findings, do not proceed, escalate to the
    human.
-4. **Fail-closed (explicit).** A layer-1 script error, a layer-2
+4. **Audited false-positive path.** A semantic BLOCK may proceed only with
+   `Privacy-Bypass-Reason: <specific reason>` in the local publication
+   record. It never bypasses a layer-1 secret finding.
+5. **Fail-closed (explicit).** A layer-1 script error, or a required layer-2
    dispatch failure, or a non-conforming judge output → treat as
    BLOCK (never as PASS). This is an explicit branch, not an emergent
    default.

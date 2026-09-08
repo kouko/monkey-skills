@@ -9,6 +9,7 @@ from pathlib import Path
 _GIT_MEMORY_ROOT = Path(__file__).parents[1]
 _COMMIT_PROTOCOL = _GIT_MEMORY_ROOT / "protocols" / "compose-commit.md"
 _PR_PROTOCOL = _GIT_MEMORY_ROOT / "protocols" / "compose-pr.md"
+_PRIVACY_SPEC = _GIT_MEMORY_ROOT / "protocols" / "privacy-judge-spec.md"
 
 
 def test_loom_closeout_delegation_does_not_reconfirm_authorized_publish() -> None:
@@ -36,3 +37,18 @@ def test_loom_closeout_delegation_does_not_reconfirm_authorized_publish() -> Non
     # Every non-delegated or non-authorized route still pauses for consent.
     assert "direct git-memory invocation" in commit_protocol
     assert "direct git-memory invocation" in pr_protocol
+
+
+def test_privacy_judge_only_runs_for_ambiguous_private_party_text() -> None:
+    spec = _PRIVACY_SPEC.read_text(encoding="utf-8")
+    assert re.search(r"public repository,\s+PR, issue, task, or vendor identifiers", spec)
+    assert "do not dispatch" in spec
+    assert "ambiguous private-party" in spec
+    assert "Privacy-Bypass-Reason:" in spec
+
+
+def test_bypass_never_applies_to_deterministic_secret_findings() -> None:
+    for path in (_COMMIT_PROTOCOL, _PR_PROTOCOL):
+        text = path.read_text(encoding="utf-8")
+        assert "Privacy-Bypass-Reason:" in text
+        assert "never bypasses a layer-1 secret finding" in text

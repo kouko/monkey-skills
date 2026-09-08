@@ -90,11 +90,8 @@ through another plugin's private `hooks/`, `skills/` or `scripts/` paths.
 
 ### Codex CLI
 
-There is no marketplace on Codex; the plugin is read from the checkout and
-loom-code's checker is scaffolded into the repo as
-`.codex/hooks/loom_checker.py`. See loom-code's README for the one command
-that writes it, and run `/hooks` when it tells you to — an untrusted Codex
-hook is skipped silently, which looks exactly like a passing check.
+Install the Codex plugin and use loom-code's installed checker and hook.
+Adopting repositories no longer keep a checker copy or hook-firing ledger.
 
 ## Running the tests
 

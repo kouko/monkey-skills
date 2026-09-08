@@ -69,7 +69,7 @@ def _sentences(text: str) -> list[str]:
 
 def _template_files():
     files = sorted(TEMPLATES_DIR.glob("*.md")) + sorted(TEMPLATES_DIR.glob("*.json"))
-    assert len(files) == 8, f"expected 8 template files, found {len(files)}: {files}"
+    assert len(files) == 9, f"expected 9 template files, found {len(files)}: {files}"
     return files
 
 
@@ -345,8 +345,8 @@ def test_checker_rulecount_pinned():
     assert result.returncode == 0, (
         f"loom_checker.py --list-rules exited {result.returncode}: {result.stderr}"
     )
-    assert len(lines) == 31, (
-        f"--list-rules printed {len(lines)} non-empty lines, expected 31:\n"
+    assert len(lines) == 19, (
+        f"--list-rules printed {len(lines)} non-empty lines, expected 19:\n"
         + "\n".join(lines)
     )
 

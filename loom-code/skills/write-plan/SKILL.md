@@ -21,13 +21,12 @@ When `loom-design` is installed, an upstream station (`capture-intent`)
 has already interviewed the user and confirmed the intent. When it is not
 installed, **you also run that confirmation yourself** — step 3 below.
 
-Two names for the same command, because the checker lives in different
-places on the two hosts:
+Resolve the checker from the installed plugin on both supported hosts:
 
 | Host | Command prefix |
 |---|---|
 | Claude Code | `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py` |
-| Codex CLI | `python3 .codex/hooks/loom_checker.py` (written into the repo by the scaffold, step 0b) |
+| Codex CLI | `python3 <injected loom-code plugin root>/scripts/loom_checker.py` |
 
 Below, the Claude Code form is written out. On Codex, substitute the other
 prefix; nothing else changes.
@@ -48,9 +47,9 @@ date, not the example's).
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
 | write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
-| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | task and integration tests; writes `dispatch[]`; a full-lane `code`- or `gate`-typed task is adversary-first | no formal review during Build; one `branch-end` review after every task and package test passes |
-| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` for branch end | fresh-context reviewers; one combined reviewer for a required spec, one in the small branch lane, two or more in the full branch lane; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | risk-triggered spec review; `branch-end` always runs |
-| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
+| review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
+| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③ | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
 ## What you will be asked, in plain words
@@ -89,9 +88,9 @@ shapes.
 | capture-intent | `docs/loom/intent/<change-id>.md` | User — **decision point ①** ("is this what you want?"). Absent `loom-design`: step 3 of this file does it | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` — when the intent is committed | none |
 | write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering and pre-build risk: agent-decided. Absent `loom-design`: step 4 writes the minimal spec and runs ② | `standing.product-principles-reject` blocks a product change with no ratified `PRINCIPLES.md`, when the spec is started | `required`: one fresh `spec+adversarial` reviewer and no blind run; `not-required`: none |
 | **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | before drafting: `intake.confirmed`, `intake.spec-pass`, `intake.confirmed-behavior`; after drafting: `intake.test-case-pair` and `plan.field-caps` | no formal plan review |
-| build | commits (the diff); one commit per task carrying a `Task: <id>` trailer | Agent | task tests and dependency-boundary integration checks | no formal review during Build; transition once to branch end after every task and package test passes |
-| review | `docs/loom/<change-id>/review.json`; never written by write-plan | Agent — one combined reviewer for a required spec; lane-defined fresh reviewers at branch end; disagreement is recorded, not averaged | none directly; it writes the record the push rules read | risk-triggered spec review and one mandatory branch-end review |
-| ship | pull request and merge (git) | User — **decision point ③**: they read the blind-run report, not the diff | `push.review-only-head`, `push.reviewed-sha`, `push.open-findings-closed`, `push.probes-package-tests`, `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.review-schema` — on `git push`, `gh pr create`, `gh pr merge` | the end-of-branch checkpoint must have passed first |
+| build | functional commits (the diff) | Agent | task tests and dependency-boundary integration checks | no formal review during Build; transition once after completed functional work |
+| review | generated `docs/loom/<change-id>/attestation.json`; never written by write-plan | Agent — lane-defined fresh reviewers at branch end | `finalize-review` runs and records functional verification once | after completed functional work |
+| ship | pull request and merge (git) | User — **decision point ③** | `push.attestation` and fast publication checks | matching evidence exists |
 | maintain | a new or updated `docs/loom/intent/<change-id>.md` | Agent turns an incident into an intent; the user then answers ① for that new change | `intent.schema` and the rest of the `intent.*` family, when that intent is committed | none |
 
 Two install shapes, one table: with `loom-design` the first two rows are
@@ -110,29 +109,11 @@ Exit 0: continue. Anything else, the rule is `contract.requires`: print
 what the checker printed, tell the user to update `loom-code`, and
 **stop**. Do not work around it.
 
-On Codex the checker copy this command runs does not exist until step 0b
-has written it, so on Codex do step 0b first and then this step; on Claude
-Code the order is as written. If `.codex/hooks/loom_checker.py` still does
-not exist after step 0b, **stop** — do not produce any artifact without the
-checker.
+## Step 0b — Codex only: installed hook check
 
-## Step 0b — Codex only: first contact with this repo
-
-Skip this on Claude Code. On Codex the checker lives inside the repo and is
-trusted once — an authorisation, not a decision point, once per repo. The
-procedure and the words to print: `references/codex-first-contact.md`.
-
-1. `python3 <loom-code>/scripts/codex_scaffold.py --repo .`, then commit its
-   output as `chore(loom): scaffold hooks <version>`. If it says the
-   sandbox protects `.codex/`, **stop**: the user runs it outside Codex.
-2. `python3 <loom-code>/scripts/codex_scaffold.py --self-test` proves the
-   copy runs — never that Codex trusts it.
-3. Run `--trusted`; any definition reading `never` means print the BLOCK
-   lines, ask for `/hooks` in Codex for this folder, and **stop**.
-4. Issue `git push loom-trust-probe HEAD` yourself, as an ordinary tool call.
-   `BLOCK push.` means the hook is live: continue. A git error means Codex
-   skipped it as untrusted — ask for one `/hooks` approval and **stop**:
-   write no artifact, there is no gate.
+Read `references/codex-first-contact.md`. Confirm the injected checker lists
+`push.attestation`. No repository-local scaffold, copied checker, probe remote,
+or firing ledger is created.
 
 ## Step 1 — Find the intent
 
@@ -221,7 +202,7 @@ twice.
    serious problems this system's own spec review found were caught by only
    one of the two vendors), and the standing `ask` question
    (「這次要不要用 Codex 當第二位讀者？」, asked every change, answer written
-   to `review.json`'s `second_vendor` at the first checkpoint). In the
+   to the intent's decision record). In the
    small lane there is only one reader, so `second-vendor: ask` is not
    asked and that field is omitted. If a `second-vendor:` line other than
    `ask` already exists, say nothing about it.
@@ -257,9 +238,7 @@ quality, task splitting, or review verdicts.
 point — every question put to the user at ①, and at ② if you run it here —
 as `{decision_point, text, type}` with `type` one of `what` / `behaviour` /
 `done` / `consequence`. It goes into the plan's `## Questions asked`
-section at step 5, and the review station copies it from there into
-`questions[]` in `review.json` at the first checkpoint, because that file
-does not exist yet while you are asking. The §11 measurement of how often
+section at step 5. The §11 measurement of how often
 loom interrupts the user reads exactly this list; a question asked and not
 recorded makes the flow look quieter than it is.
 
@@ -390,7 +369,7 @@ how long it will take.
 - Task ids are `W<n>-<nn>`, plus the reserved `W<n>-memory` on the last
   wave as the one named exception to that numeric form; both are
   **stable**: once written, an id is never renumbered, because commits
-  refer to it in their `Task: <id>` trailer.
+  name it in their hand-off when that helps trace a dependency.
 - Dependencies go on the task line as `after: <ids>`. Tasks in one wave
   with no dependency between them run in parallel — but disjoint files are
   not enough: a shared symbol, a doc that mirrors code, or a

@@ -35,9 +35,9 @@ one good way to produce them. Everything it writes is read back by
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
 | write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
-| build | diff — commits on the change branch, one `Task: <id>` trailer each | agent-decided | task and integration tests; writes `dispatch[]`; a full-lane `code`- or `gate`-typed task is adversary-first | no formal review during Build; one `branch-end` review after every task and package test passes |
-| review | review — `docs/loom/<change-id>/review.json`, and `docs/loom/<change-id>/blind-run-report.md` for branch end | fresh-context reviewers; one combined reviewer for a required spec, one in the small branch lane, two or more in the full branch lane; no averaging | `push.verdicts-ge-2`, `push.reviewer-ne-implementer`, `push.dismissed-by-reviewer`, `push.open-findings-closed`, `push.second-vendor-honoured` | risk-triggered spec review; `branch-end` always runs |
-| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③, reads the blind-run report | `push.review-only-head`, `push.reviewed-sha`, `push.review-schema`, `push.probes-package-tests`, `push.probes-adversarial`, `push.dispatch-covers-tasks`, and every review rule above, re-run at push | before push; a missing `branch-end` pass sends the change back to review |
+| build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
+| review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
+| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③ | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
 ## What you will be asked, in plain words
@@ -83,7 +83,7 @@ checkout on this host:
 | Host | Where `loom-code` lives |
 |---|---|
 | Claude Code | the plugin cache — `~/.claude/plugins/cache/<marketplace>/loom-code/<version>/`, one directory per installed version; take the newest |
-| Codex CLI | the scaffold copy `.codex/hooks/loom_checker.py` inside this repo, written by `loom-code`'s `write-plan` when it first met this repo — use it directly, no `/scripts/` suffix |
+| Codex CLI | the installed `loom-code` plugin directory; use its checker script |
 
 Then run, with that directory in place of `<loom-code>`:
 
@@ -96,17 +96,8 @@ what the checker printed, tell the user to update `loom-code`, and
 **stop**. Do not work around it and do not guess a path — if you cannot
 find the checkout, say so and ask the user where `loom-code` is installed.
 
-(Codex form: `python3 .codex/hooks/loom_checker.py contract --require 1.0` —
-the scaffold copy is the whole path, so do not append `/scripts/` to it.)
-
-If `.codex/hooks/loom_checker.py` does not exist on Codex, **stop**: run
-`loom-code`'s `write-plan` step 0b (the scaffold and its trust probe; that
-station writes the procedure out in `codex-first-contact.md` under its own
-`references/`, which this plugin cannot read — hand the change over rather
-than reproducing it here) first. Do not produce any
-artifact without the checker. The file existing is not proof the hook runs:
-an untrusted Codex hook is skipped in silence, and step 0b's trust probe is
-what tells the two apart.
+If the installed checker cannot be found on Codex, stop and ask the user to
+install or update `loom-code`; do not create a repository-local copy.
 
 ## Step 1 — Interview
 
@@ -357,23 +348,5 @@ stop until acceptance.
 
 ## On Codex CLI
 
-Every step above is the same. Only the checker prefix differs:
-`python3 .codex/hooks/loom_checker.py` — a copy that lives inside the repo
-because Codex has no plugin root.
-
-If this repo has no `.codex/hooks.json` yet, that copy does not exist and
-step 0 cannot run. Do not guess a path and do not install anything from
-here: the scaffold belongs to `loom-code`'s `write-plan` station, which
-writes it the first time it meets a repo and then asks the user, once, to
-trust it:
-
-> 我已幫這個 repo 裝好 loom 的檢查；請在 Codex 裡輸入 `/hooks` 按一次授權，我才會繼續。
->
-> (I have installed loom's checks for this repo; please type `/hooks` in
-> Codex and approve them once, then I will carry on.)
-
-Tell the user that the first `loom-code` station will do this, run the
-interview and write the intent meanwhile, and leave the checker runs for
-after the scaffold exists. That approval is an authorisation to run, not a
-decision about the work: it is not a decision point, and it happens once
-per repo, not once per change.
+Every step above is the same. Resolve `<loom-code>` to the installed plugin
+directory; never create or invoke a repository-local checker copy.

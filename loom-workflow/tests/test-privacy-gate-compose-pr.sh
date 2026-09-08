@@ -10,7 +10,7 @@
 #
 # The gate step must transcribe the pinned wording verbatim:
 #   1. Layer 1 — deterministic scan via scripts/privacy-scan.py
-#   2. Layer 2 — fresh-context judge dispatched per
+#   2. Layer 2 — conditional semantic judge dispatched per
 #      protocols/privacy-judge-spec.md (SSOT — rubric NOT inlined here)
 #   3. Verdict — any layer-1 finding OR layer-2 BLOCK -> BLOCKED,
 #      escalate to human
@@ -74,8 +74,10 @@ elif ! echo "$WIN1" | grep -qF "scripts/privacy-scan.py"; then
   fail "Privacy gate neighborhood missing layer-1 'scripts/privacy-scan.py' invocation"
 elif ! echo "$WIN1" | grep -qF "protocols/privacy-judge-spec.md"; then
   fail "Privacy gate neighborhood missing layer-2 pointer to 'protocols/privacy-judge-spec.md'"
-elif ! echo "$WIN1" | grep -qF "fresh-context"; then
-  fail "Privacy gate neighborhood missing the 'fresh-context' judge dispatch requirement"
+elif ! echo "$WIN1" | grep -qiF "conditional semantic judge"; then
+  fail "Privacy gate neighborhood missing the conditional semantic judge"
+elif ! echo "$WIN1" | grep -qiF "ambiguous private-party identifying text"; then
+  fail "Privacy gate neighborhood missing the conditional-dispatch trigger"
 else
   pass "Privacy gate neighborhood present (layer-1 script + layer-2 SSOT pointer)"
 fi

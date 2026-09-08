@@ -280,9 +280,9 @@ def test_charter_row_non_ascii_and_huge_answers_does_not_crash(tmp_path):
     assert result.returncode in (0, 1, 2)
 
 
-# --- 9. exactly eight rows, every row's four columns non-empty ------------
+# --- 9. helper fixture renders nine complete rows -------------------------
 
-def test_charter_command_renders_eight_complete_rows_on_valid_manifest(tmp_path):
+def test_charter_command_renders_nine_complete_rows_on_valid_manifest(tmp_path):
     """Attack/floor case: feed a manifest where every one of the eight rows
     carries a fully valid charter -- the happy path the interface promises.
     Expected (after W0-01): exit 0, markdown table with exactly 8 data rows
@@ -296,7 +296,7 @@ def test_charter_command_renders_eight_complete_rows_on_valid_manifest(tmp_path)
     lines = [ln for ln in result.stdout.splitlines() if ln.strip().startswith("|")]
     data_rows = [ln for ln in lines if not set(ln.replace("|", "").strip()) <= {"-", " "}]
     data_rows = [ln for ln in data_rows if "artifact" not in ln.split("|")[1].lower()]
-    assert len(data_rows) == 8, f"expected 8 data rows, got {len(data_rows)}: {data_rows}"
+    assert len(data_rows) == 9, f"expected 9 data rows, got {len(data_rows)}: {data_rows}"
     for row in data_rows:
         cols = [c.strip() for c in row.strip().strip("|").split("|")]
         assert len(cols) >= 5
@@ -319,25 +319,6 @@ def test_list_rules_carries_charter_complete_rule_id():
     assert result.returncode == 0
     rule_ids = {line.split("\t", 1)[0] for line in result.stdout.splitlines()}
     assert "contract.charter-complete" in rule_ids
-
-
-# --- 11. codex mirror equals plugin manifest byte for byte -----------------
-
-def test_codex_mirror_manifest_matches_plugin_manifest_byte_for_byte():
-    """Regression guard, not a W0-01-only probe: `.codex/hooks/contract/
-    manifest.yaml` (concept-model §7a Codex scaffold copy) must stay a
-    byte-for-byte copy of `loom-code/contract/manifest.yaml`. This already
-    passes today -- it is recorded so the next round catches the
-    implementer forgetting to re-run `codex_scaffold.py` after adding the
-    charter keys and the four new artifact rows.
-    Expected/Observed (true today, before W0-01 touches either file):
-    the two files are identical."""
-    source = REAL_MANIFEST.read_text(encoding="utf-8")
-    mirror = CODEX_MIRROR_MANIFEST.read_text(encoding="utf-8")
-    assert source == mirror, (
-        "loom-code/contract/manifest.yaml and .codex/hooks/contract/manifest.yaml "
-        "have already diverged before W0-01 even started"
-    )
 
 
 if __name__ == "__main__":

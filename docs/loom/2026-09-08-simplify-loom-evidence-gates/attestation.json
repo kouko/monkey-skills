@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-08-simplify-loom-evidence-gates",
+  "content_digest": "d4df3c9911b32598cd8c1401b467a782a474422d",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto --then loom-design/scripts/ -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "f45721dedaa2dfa39847db43f1abfc27a52219b9e1998baef24b39646bca904b"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_loom_attestation.py -q",
+      "artifact": "loom-code/scripts/test_loom_attestation.py",
+      "result": "pass",
+      "command_digest": "9b5c8bb8fffdc90c2ed7b778c58141e7308329905730bf9da4eff0d1421408bc"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "plan_document_reviewer",
+      "vendor": "openai",
+      "model": "fresh-context",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "final_code_review",
+      "vendor": "openai",
+      "model": "fresh-context-high",
+      "lens": "code-adversarial",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

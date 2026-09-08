@@ -12,6 +12,12 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [1.1.1] — 2026-09-08 — content-attestation station contract
+
+Patch. Synchronize every station summary and Codex instruction with
+loom-code's installed-plugin hook and generated content-attestation flow.
+Remove the retired repository-local checker scaffold guidance.
+
 ## [1.1.0] — 2026-09-06 — risk-triggered spec review
 
 `write-spec` now records `pre-build-review: required|not-required — <reason>`.

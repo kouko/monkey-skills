@@ -27,19 +27,7 @@ EXPECTED_RULE_IDS = [
     "intent.schema",
     "plan.edits-after-commit",
     "plan.field-caps",
-    "push.dismissed-by-reviewer",
-    "push.dispatch-covers-tasks",
-    "push.frozen-store-untouched",
-    "push.open-findings-closed",
-    "push.probes-adversarial",
-    "push.probes-package-tests",
-    "push.review-only-head",
-    "push.review-schema",
-    "push.reviewed-sha",
-    "push.reviewer-ne-implementer",
-    "push.second-vendor-honoured",
-    "push.verdicts-ge-2",
-    "review.round-append-only",
+    "push.attestation",
     "spec.req-grammar",
     "spec.ui-flows-recompute",
     "standing.product-principles-reject",
@@ -77,18 +65,6 @@ def test_list_rules_describes_the_closed_status_alternative() -> None:
     confirmed_line = next(line for line in lines if line.startswith("intake.confirmed\t"))
     assert "closed" in confirmed_line
     assert "PR #" in confirmed_line
-
-
-def test_list_rules_describes_the_branch_closed_form_too() -> None:
-    """W1-03: `intake.confirmed` and `push.review-only-head` both gained a
-    second closed form (`closed <date> — branch <name>`); their
-    descriptions must name it, not just the PR form."""
-    lines = run_checker("--list-rules").stdout.splitlines()
-    confirmed_line = next(line for line in lines if line.startswith("intake.confirmed\t"))
-    assert "branch <name>" in confirmed_line
-    review_only_line = next(line for line in lines if line.startswith("push.review-only-head\t"))
-    assert "branch <name>" in review_only_line
-    assert "review.json" in review_only_line
 
 
 def test_list_rules_covers_exactly_the_planned_population() -> None:
@@ -134,7 +110,7 @@ def test_hooks_probe_is_gone() -> None:
 
 
 def test_the_rule_population_is_twenty_eight() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 31
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 19
 
 
 # --- contract --require (spec G) -------------------------------------------
@@ -205,10 +181,7 @@ def test_internal_failure_fails_closed_with_exit_2(tmp_path: Path) -> None:
 # to the words that name its own mechanism.
 
 LOAD_BEARING_WORDS = {
-    "push.probes-package-tests": ["re-runs", "declared", "not trusted"],
-    "push.verdicts-ge-2": ["two distinct", "not passing"],
-    "push.dispatch-covers-tasks": ["Task:", "implementer dispatch"],
-    "push.frozen-store-untouched": ["frozen store", "ARCHIVED.md"],
+    "push.attestation": ["content digest", "without replaying"],
     "intake.spec-pass": ["spec_sha", "one passing", "two-reader", "adversarial"],
     "intake.test-case-pair": ["Acceptance", "positive", "negative or boundary"],
     "contract.requires": ["same major", "minor"],

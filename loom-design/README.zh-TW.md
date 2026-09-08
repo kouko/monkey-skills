@@ -81,10 +81,8 @@ skill 名稱（例如 `loom-design:write-spec`）、contract package，以及專
 
 ### Codex CLI
 
-Codex 沒有 marketplace，plugin 直接從 checkout 讀，loom-code 的 checker 會被
-scaffold 成 repo 內的 `.codex/hooks/loom_checker.py`。指令見 loom-code 的
-README；它叫你去跑 `/hooks` 就要去跑 —— 未授信的 Codex hook 會被靜默跳過，
-看起來跟檢查通過一模一樣。
+Codex 直接使用已安裝 loom-code plugin 內的 checker 與 hook；repo 不再保存
+checker 副本，也不需要 trust probe。
 
 ## 跑測試
 

@@ -17,8 +17,8 @@
 | 站 | 產物 | 內文 |
 |---|---|---|
 | `write-plan` | `docs/loom/<change-id>/plan.md` — 任務 DAG | [SKILL.md](skills/write-plan/SKILL.md) |
-| `build` | commit，一個任務一個，各帶 `Task: <id>` trailer | [SKILL.md](skills/build/SKILL.md) |
-| `review` | `docs/loom/<change-id>/review.json` — verdict、probe、finding | [SKILL.md](skills/review/SKILL.md) |
+| `build` | 功能 commit 與聚焦測試；不建立 dispatch ledger | [SKILL.md](skills/build/SKILL.md) |
+| `review` | 產生綁定功能內容的 `docs/loom/<change-id>/attestation.json` | [SKILL.md](skills/review/SKILL.md) |
 | `ship` | PR、memory trailer、合併 | [SKILL.md](skills/ship/SKILL.md) |
 | `maintain` | 把告警或事故變成一份 intent | [SKILL.md](skills/maintain/SKILL.md) |
 
@@ -71,19 +71,8 @@ claude plugin list | grep loom-code       # 預期：enabled
 
 ### Codex CLI
 
-Codex 沒有 plugin marketplace，所以 checker 是複製進 repo 的：
-
-```bash
-python3 scripts/codex_scaffold.py --repo .
-python3 scripts/codex_scaffold.py --self-test
-```
-
-前者寫出 `.codex/hooks.json` 與一份帶版本戳的 checker 副本；後者對那份副本
-發一次假 push，證明它跑得起來。兩者都證明不了 Codex 會去跑它 —— 未授信的
-hook 會被靜默跳過，只有 Codex 自己發出的指令才會經過它的 hook 引擎。真正的
-probe（一次注定失敗的 push，答案必須以 `BLOCK push.` 開頭）屬於站本身
-（`write-plan` step 0b）：當回答的是 git 而不是 checker，它就請使用者跑一次
-`/hooks`。
+安裝 `loom-code` plugin 後，Codex 直接使用 plugin 內的 hook 與 checker；repo
+不再保存 `.codex` checker 副本，也不需要 trust probe 或 hook-firing ledger。
 
 ## 授權
 
