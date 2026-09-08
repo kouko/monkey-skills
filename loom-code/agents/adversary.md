@@ -47,8 +47,7 @@ the per-type recipes and exact probe shape.
 ## What you return
 
 ```yaml
-probes: [{kind: adversarial, command: "<re-runnable command>", sha: "<sha>",
-          result: pass | fail, artifact: "<where the case now lives>"}]
+adversarial: [{command: "<re-runnable command>", artifact: "<where the case now lives>"}]
 findings: [{severity: fatal | important | nit, anchor: "<where>", text: "<label> (<decoration>): <what>", fix: "<what would close it>"}]
 ```
 

@@ -50,12 +50,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run loom-workflow/tests shell suite
-        run: |
-          for t in loom-workflow/tests/test-*.sh; do
-            echo "::group::$t"
-            bash "$t"
-            echo "::endgroup::"
-          done
+        run: python3 scripts/run_package_tests.py --loom-family --only workflow-shell
 
   # cot-explain ships two scripts whose contract is prose-heavy — a
   # leftover-markdown gate, a staleness stamp, a mermaid spec checker.
@@ -88,20 +83,4 @@ jobs:
       - name: Run cot-explain script tests
         env:
           PYTHONDONTWRITEBYTECODE: '1'
-        run: python3 -m pytest loom-workflow/tests/test_cot_explain_scripts.py -v
-
-      # Runs loom-workflow/scripts/test_*.py and every
-      # loom-workflow/skills/<skill>/scripts/test_*.py suite, one pytest
-      # invocation per directory (see header comment for why). Glob-driven
-      # so a skill added later is picked up with no edit to this file.
-      - name: Run loom-workflow skill script tests
-        env:
-          PYTHONDONTWRITEBYTECODE: '1'
-        run: |
-          for d in loom-workflow/scripts loom-workflow/skills/*/scripts; do
-            if find "$d" -maxdepth 1 -name 'test_*.py' -print -quit 2>/dev/null | grep -q .; then
-              echo "::group::pytest $d"
-              python3 -m pytest "$d" -v
-              echo "::endgroup::"
-            fi
-          done
+        run: python3 scripts/run_package_tests.py --loom-family --only workflow-python -v

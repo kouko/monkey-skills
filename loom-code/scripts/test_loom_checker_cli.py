@@ -18,14 +18,13 @@ EXPECTED_RULE_IDS = [
     "contract.requires",
     "intake.confirmed",
     "intake.confirmed-behavior",
-    "intake.spec-pass",
+    "intake.spec-ready",
     "intake.test-case-pair",
     "intent.kind-recompute",
     "intent.needs-design-reason",
     "intent.needs-design-recompute",
     "intent.product-no-identifiers",
     "intent.schema",
-    "plan.edits-after-commit",
     "plan.field-caps",
     "push.attestation",
     "spec.req-grammar",
@@ -109,41 +108,41 @@ def test_hooks_probe_is_gone() -> None:
     assert "hooks-probe" not in CHECKER.read_text(encoding="utf-8").split('"""')[1]
 
 
-def test_the_rule_population_is_twenty_eight() -> None:
-    assert len(run_checker("--list-rules").stdout.splitlines()) == 19
+def test_the_rule_population_is_eighteen() -> None:
+    assert len(run_checker("--list-rules").stdout.splitlines()) == 18
 
 
 # --- contract --require (spec G) -------------------------------------------
 
 
 def test_contract_require_accepts_a_met_floor() -> None:
-    assert run_checker("contract", "--require", "1.0").returncode == 0
+    assert run_checker("contract", "--require", "2.0").returncode == 0
 
 
 def test_contract_require_blocks_a_higher_minor() -> None:
-    result = run_checker("contract", "--require", "1.99")
+    result = run_checker("contract", "--require", "2.99")
     assert result.returncode == 1
     assert "BLOCK contract.requires:" in result.stderr
     assert "請更新 loom-code" in result.stderr
 
 
 def test_contract_require_blocks_a_different_major() -> None:
-    result = run_checker("contract", "--require", "2.0")
+    result = run_checker("contract", "--require", "1.0")
     assert result.returncode == 1
     assert "contract.requires" in result.stderr
 
 
 def test_contract_require_higher_major_still_says_update_loom_code() -> None:
-    """The shipped contract (major 1) is below a higher required major (2):
+    """The shipped contract (major 2) is below a higher required major (3):
     the checker itself is what's behind, so the old message direction
     ('please update loom-code') is correct and unchanged."""
-    result = run_checker("contract", "--require", "2.0")
+    result = run_checker("contract", "--require", "3.0")
     assert result.returncode == 1
     assert "請更新 loom-code" in result.stderr
 
 
 def test_contract_require_lower_major_blames_the_consuming_plugin() -> None:
-    """The shipped contract (major 1) is above a lower required major (0):
+    """The shipped contract (major 2) is above a lower required major (0):
     the CONSUMER declares an old contract major, not loom-code being behind
     -- the message must point at the consuming plugin, never say
     '請更新 loom-code'."""
@@ -182,7 +181,7 @@ def test_internal_failure_fails_closed_with_exit_2(tmp_path: Path) -> None:
 
 LOAD_BEARING_WORDS = {
     "push.attestation": ["content digest", "without replaying"],
-    "intake.spec-pass": ["spec_sha", "one passing", "two-reader", "adversarial"],
+    "intake.spec-ready": ["pre-build-review", "not persisted", "ledger"],
     "intake.test-case-pair": ["Acceptance", "positive", "negative or boundary"],
     "contract.requires": ["same major", "minor"],
     "spec.ui-flows-recompute": ["visible characters", "reviewer"],

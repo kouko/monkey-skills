@@ -7,7 +7,7 @@
 > because the quality comes from machines checking machines — the agent
 > that writes is never the agent that reviews.
 
-**Status**: v1.9.0 — 5 skills. See [CHANGELOG.md](CHANGELOG.md).
+**Status**: v2.0.0 — 5 skills. See [CHANGELOG.md](CHANGELOG.md).
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 

@@ -21,8 +21,7 @@ the remaining work.
 
 ## 2. Choose the risk lane
 
-- Small: one fresh-context reviewer.
-- Full: two fresh-context reviewers from distinct agents.
+- Every change: two fresh-context reviewers from distinct agents.
 - A configured second vendor remains required when the repository asks for it.
 
 Reviewer independence is a quality requirement, not a ledger field. Give each
@@ -69,8 +68,8 @@ python3 <loom-code>/scripts/loom_checker.py finalize-review <change-id> --input 
 The checker runs the declared package suite and each adversarial program once.
 Only after all executions and verdicts pass does it atomically generate the
 attestation bound to the functional-content digest. Commit the generated file
-with any remaining publication metadata; no review-only commit shape or SHA
-pinning is required.
+with any remaining publication metadata; publication validates that single
+attestation directly.
 
 ## Handoff
 

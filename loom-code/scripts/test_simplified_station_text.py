@@ -11,7 +11,7 @@ def test_review_generates_attestation_without_ledger_ceremony() -> None:
     assert "finalize-review" in REVIEW
     assert "attestation.json" in REVIEW
     assert "agents never edit that file by hand" in REVIEW
-    assert "review-only commit shape" in REVIEW
+    assert "validates that single\nattestation directly" in REVIEW
     assert "review.json" not in REVIEW
 
 

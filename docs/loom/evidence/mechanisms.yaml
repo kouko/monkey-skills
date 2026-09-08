@@ -110,9 +110,9 @@ mechanisms:
   - id: intake.test-case-pair
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py
-  - id: intake.spec-pass
+  - id: intake.spec-ready
     class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_intake.py::test_latest_round_all_passing_is_accepted
+    eval: loom-code/scripts/test_loom_checker_intake.py::test_invalid_pre_build_review_declaration_is_blocked
   - id: intent.kind-recompute
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intent.py::test_engineering_kind_over_an_interface_diff_is_blocked
@@ -131,9 +131,6 @@ mechanisms:
   - id: plan.field-caps
     class: checker-rule
     eval: loom-code/scripts/test_plan_field_caps.py::test_check_plan_field_caps_test_field_over_cap_names_task_and_field
-  - id: plan.edits-after-commit
-    class: checker-rule
-    eval: loom-code/scripts/test_plan_edits_after_commit.py::test_landed_task_files_change_blocks_even_with_reason
   - id: push.attestation
     class: checker-rule
     eval: loom-code/scripts/test_loom_attestation.py::test_push_reuses_matching_attestation_without_subprocesses
@@ -228,16 +225,6 @@ mechanisms:
   - {id: "artifact:plan.Task DAG",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:plan.Risks",                 class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:plan.Current State Evidence", class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.reviewed_sha",        class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.scope",               class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.vendors",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.verdicts",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.probes",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.open_findings",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.questions",           class: contract, eval: "loom-code/scripts/test_contract_manifest.py"}
-  - {id: "artifact:review.cost",                class: contract, eval: "loom-code/scripts/test_contract_manifest.py"}
-  - {id: "artifact:review.charter",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py"}
-
   - {id: "artifact:attestation.schema",         class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
   - {id: "artifact:attestation.change_id",      class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
   - {id: "artifact:attestation.content_digest", class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}

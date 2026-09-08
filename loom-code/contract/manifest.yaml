@@ -2,7 +2,7 @@
 # Consumers: loom-design and loom-workflow read this file; only loom-code writes it.
 # Recomputed by check_mechanisms.py: every station / tool / action / artifact
 # field below is a mechanism and must be listed in docs/loom/evidence/mechanisms.yaml.
-version: 1.0.0
+version: 2.0.0
 
 # Paths matched here are publication metadata. They do not change the
 # functional content identity that executions and reviews attest to.
@@ -97,7 +97,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "requirement-level behaviour", goes_to: spec}
         - {kind: "task split or file lists",     goes_to: plan}
         - {kind: "design rationale",             goes_to: spec}
-        - {kind: "build or review history",      goes_to: review}
+        - {kind: "verification history",         goes_to: attestation}
         - {kind: "lessons",                      goes_to: memory}
       signoff: capture-intent
       edits_after:
@@ -137,7 +137,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       must_not:
         - {kind: "the intent restated", goes_to: intent}
         - {kind: "task ordering",       goes_to: plan}
-        - {kind: "review findings",     goes_to: review}
+        - {kind: "review findings",     goes_to: attestation}
         - {kind: "lessons",             goes_to: memory}
       signoff: write-spec
       edits_after:
@@ -167,48 +167,18 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "behaviour or REQ restatement", goes_to: spec}
         - {kind: "scenario lists inside Test",    goes_to: spec}
         - {kind: "design rationale",              goes_to: spec}
-        - {kind: "build or review diary",         goes_to: review}
+        - {kind: "verification diary",             goes_to: attestation}
         - {kind: "lessons",                       goes_to: memory}
         - {kind: "verification identity",          goes_to: attestation}
       signoff: write-plan
       edits_after:
-        - {id: mark-claimed-or-blocked, text: "a task line gains a claimed or blocked mark"}
-        - {id: memory-task-appended,    text: "the W<n>-memory task is appended"}
-        - {id: unlanded-task-replaced-on-spec-change, text: "A task with no Task trailer in git is replaced when a spec requirement changed."}
-        - {id: unlanded-task-amended-with-reason,     text: "An un-landed task's Files, Test or Risk line is amended when a fact the plan relied on proved wrong, the reason stated in the commit message."}
-        - {id: questions-asked-appended, text: "a Questions asked line is appended"}
+        - {id: plan-maintained, text: "the agent keeps task state or scope current when implementation changes"}
     fields:
       - {name: intent, kind: frontmatter, required: true}
       - {name: spec,   kind: frontmatter, required: false}
       - {name: Task DAG, kind: section, required: true, grammar: "**<id> <title>** after: <ids> acceptance: <numbers>; Test: A<n> positive: <id>; negative|boundary: <id>"}
       - {name: Risks,    kind: section, required: true}
       - {name: Current State Evidence, kind: section, required: false, note: "required when needs-design: no"}
-  # Compatibility input for a risk-triggered pre-build spec review only.
-  # Branch-end Review and Ship never create, update, or read this artifact.
-  review:
-    path: docs/loom/<change-id>/review.json
-    template: review.json
-    charter:
-      answers: "whether a risk-triggered spec review passed"
-      readers: ["write-plan"]
-      must: ["reviewed_sha", "scope", "vendors", "verdicts", "probes", "open_findings"]
-      must_not:
-        - {kind: "design reasoning", goes_to: spec}
-        - {kind: "lessons", goes_to: memory}
-      signoff: review
-      edits_after:
-        - {id: prebuild-review-replaced, text: "a changed spec replaces its pre-build review input"}
-    fields:
-      - {name: reviewed_sha, kind: json, required: true}
-      - {name: scope, kind: json, required: true}
-      - {name: vendors, kind: json, required: true}
-      - {name: verdicts, kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback, spec_sha, sha}]"}
-      - {name: probes, kind: json, required: true, grammar: "[{kind, command, sha, result, artifact, scope}]"}
-      - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed}]"}
-      - {name: questions, kind: json, required: false}
-      - {name: cost, kind: json, required: false}
-      - {name: charter, kind: json, required: false}
-
   attestation:
     path: docs/loom/<change-id>/attestation.json
     template: attestation.json
@@ -253,10 +223,10 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       must_not:
         - {kind: "diff commentary", goes_to: memory}
         - {kind: "design rationale", goes_to: spec}
-        - {kind: "internal ids",     goes_to: review}
+        - {kind: "internal ids",     goes_to: attestation}
       signoff: ship
       edits_after:
-        - {id: later-round-rewrites-report, text: "a later round rewrites the whole report from review.json"}
+        - {id: regenerated-after-functional-change, text: "functional content changed after finalization"}
   memory:
     path: docs/loom/memory/<slug>.md
     template: memory-README.md
@@ -269,7 +239,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "the trigger"
         - "the correct path"
       must_not:
-        - {kind: "change narrative", goes_to: review}
+        - {kind: "change narrative", goes_to: intent}
         - {kind: "verification identity", goes_to: attestation}
         - {kind: "task lists",       goes_to: plan}
       signoff: build
@@ -287,7 +257,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       must:
         - "one line per key with value, reason and date"
       must_not:
-        - {kind: "per-change decisions", goes_to: review}
+        - {kind: "per-change decisions", goes_to: plan}
         - {kind: "lessons",              goes_to: memory}
       signoff: capture-intent
       edits_after:

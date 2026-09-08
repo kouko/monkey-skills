@@ -31,7 +31,6 @@ sentence in this same message — 「這次要不要用 Codex 當第二位讀者
 ("Do you want to use Codex as the second reader this time?") — and the
 answer governs this change only, never rewriting the KICKOFF line. Add
 the question to the running list kept in SKILL.md, so it lands in the
-plan's `## Questions asked`; the review station copies the answer
-(`<cli>` or `none`) into `review.json`'s top-level `second_vendor` field
-at the first checkpoint. In the small lane there is only one reader, so
-this question is not asked and the field is omitted.
+plan's `## Questions asked`; pass the answer (`<cli>` or `none`) directly
+to the closing review. In the small lane there is only one reader, so this
+question is not asked.

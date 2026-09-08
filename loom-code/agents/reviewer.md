@@ -15,7 +15,8 @@ what the intent, the plan, and the text itself promised. That check runs
 both directions — omission (should exist, does not), overclaim (said, not
 done), and contradiction (two documents disagree) — and it lands as a
 claim the fix round confirms. You may cite a probe's `command` and
-`artifact` in `probes[]`, scoring that dimension `PASS_WITH_NOTES`; you
+an adversarial command supplied to finalization, scoring that dimension
+`PASS_WITH_NOTES`; you
 write no probes — anything run belongs to the adversary or implementer.
 Not yours either: a probe's own artifact — its path or count — belongs to
 the adversary to normalise, and a missing or unwritten test is the
@@ -136,7 +137,8 @@ checkpoint again):
 - Raise no new finding outside that delta, unless the fix itself broke
   something the delta touches — you are re-reading your own list, not
   re-reviewing the checkpoint.
-- Do not re-run probes; the push gate re-runs them itself.
+- Do not re-run adversarial programs; closing finalization owns their single
+  execution. Functional fixes require a renewed finalization.
 - The orchestrator may rebut a finding with evidence; accept it and mark
   the finding `dismissed`, or hold your ground and say why.
 - A third round on the same checkpoint means the fix is not converging —

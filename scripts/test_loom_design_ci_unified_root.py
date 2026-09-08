@@ -97,12 +97,12 @@ def test_workflows_invoke_loom_design_suite_once():
             # legitimately runs a pytest invocation per skill directory.
             continue
         prose, code = _split_comment_and_code(text)
-        for found in _find_invocations(code):
-            invocations.append(f"{path.name}: {found}")
+        shared = "scripts/run_package_tests.py --loom-family --only design"
+        invocations.extend(f"{path.name}: shared-runner" for _ in range(code.count(shared)))
         if SEPARATE_CLAIM.search(prose):
             offending_comments.append(path.name)
 
-    assert invocations == ["loom-design-ci.yml: loom-design/scripts/"], (
+    assert invocations == ["loom-design-ci.yml: shared-runner"], (
         "expected exactly one unified loom-design pytest invocation across "
         f".github/workflows/, got {invocations}"
     )

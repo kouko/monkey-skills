@@ -112,7 +112,7 @@ jobs:
       - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v -n auto
+        run: python3 scripts/run_package_tests.py --loom-family --only code -v
 
       - name: Verify standalone plugin filesystem boundaries
         run: |

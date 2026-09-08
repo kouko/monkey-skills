@@ -36,20 +36,16 @@ does not repeat it; where they differ, the baseline wins.
    why — an unreported edit is the defect a checkpoint least sees.
 4. **Read-only inputs**: plan, spec, standing documents, baseline,
    sibling agent contracts.
-5. **Commit shape.** One commit for the task (RED/GREEN commits fine; the
-   last carries the trailer). Conventional Commits subject —
+5. **Commit shape.** One commit for the task (RED/GREEN commits fine).
+   Conventional Commits subject —
    `<type>(<scope>): <subject>`, `type` ∈ `{feat, fix, refactor, test,
-   docs, chore, ci}`, `scope` the kebab-case plugin or module name. Every commit
-   carries `Task: <task-id>` — the orchestrator reads
-   `git log --format=%B | grep '^Task: '`; a commit without it is
-   invisible. Common failure: `RED: test_foo` — no type/scope, CI-rejected.
+   docs, chore, ci}`, `scope` the kebab-case plugin or module name. Common
+   failure: `RED: test_foo` — no type/scope, CI-rejected.
    Write `test(loom-code): RED for foo helper`.
 6. **Never `git add -A`.** Add paths by name. No `git stash`;
    recover a file with `git show <ref>:<path>`.
-7. **Run the tests you claim.** Touched test files during the inner loop;
-   the package-level command once, after the last edit, before commit.
-   Did not run it? Say so: downgrade to `DONE_WITH_CONCERNS` with
-   `will verify by: <command>`.
+7. **Run the focused tests you claim.** Touched test files during the inner
+   loop. Closing Review owns the single package-level run.
 8. **Ask instead of guessing.** An ambiguity, or a task contradicting the
    spec, is `NEEDS_CONTEXT` with the question — a correct outcome, not a
    failure.
@@ -88,14 +84,14 @@ Paths, not file contents. An absent section is empty.
 - spec: {path, when the change has one}
 - baseline: loom-code/references/engineering-baseline.md
 - repo root / worktree / branch: {paths}
-- package test command: {the command the orchestrator resolved}
+- focused test command: {the task-specific command the orchestrator resolved}
 
 ### Acceptance criteria
-{the task's own test, named; plus the package test command passing}
+{the task's own focused test, named}
 ```
 
-If none was resolved for you, detect one (`pytest`, `npm test`, `cargo
-test`, `go test ./...`) and say which.
+If none was resolved for you, ask for the narrowest command that exercises
+the task; do not substitute the package suite.
 
 ## Output contract
 
@@ -112,9 +108,9 @@ open_questions:               # NEEDS_CONTEXT only
 unblock_step:                 # BLOCKED only — the action the orchestrator must take
 ```
 
-- **`DONE`** — new tests went RED then GREEN; the package suite ran green.
+- **`DONE`** — new focused tests went RED then GREEN.
 - **`DONE_WITH_CONCERNS`** — complete, but something wants a reviewer's
-  eye, or you did not run the package suite.
+  eye, or the focused verification is incomplete.
 - **`NEEDS_CONTEXT`** — a specific question blocks you.
 - **`BLOCKED`** — you cannot proceed at all (broken test infrastructure,
   missing dependency, the task needs splitting).
@@ -123,4 +119,4 @@ unblock_step:                 # BLOCKED only — the action the orchestrator mus
 
 `DONE` with empty `test_results`, on reasoned-about results, or after
 removing a test to reach green; edits to read-only inputs; calling a
-reviewer yourself; a commit with no `Task:` trailer.
+reviewer yourself.

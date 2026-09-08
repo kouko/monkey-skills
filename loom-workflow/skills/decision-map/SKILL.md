@@ -35,11 +35,10 @@ loom-workflow installed alone. Before the first delivery operation on a
 repo, run the contract check and stop on anything but exit 0:
 
 ```
-python3 <loom-code checkout>/scripts/loom_checker.py contract --require 1.0
+python3 <installed loom-code>/scripts/loom_checker.py contract --require 2.0
 ```
 
-(Codex form: `python3 .codex/hooks/loom_checker.py contract --require 1.0`.)
-Exit 1 means loom-code is missing or older than contract 1.0 — tell the
+Exit 1 means loom-code is missing or does not support contract 2.0 — tell the
 user to install or update loom-code; charting, grilling, research and
 prototype tickets do not need it.
 

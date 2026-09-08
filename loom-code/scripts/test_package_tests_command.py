@@ -42,15 +42,8 @@ def test_dev_requirements_declare_xdist_and_ci_installs_from_them() -> None:
 KICKOFF_DEFAULTS = REPO / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
 
 
-def test_kickoff_and_ci_run_the_same_parallel_command() -> None:
-    """W0-02 — KICKOFF-DEFAULTS' package-tests value and the CI pytest step
-    must both run with `-n auto`.
-
-    W1-05 added `loom-design/scripts/` to KICKOFF's package-tests command
-    (#791 went red in CI twice because it was missing) -- that path runs in
-    CI's separate loom-design job (loom-design-ci.yml), not the loom-code
-    job this test reads, so it is the one deliberate divergence. Modulo
-    that path and `-q`/`-v`, the two commands must still be the same."""
+def test_kickoff_and_ci_use_the_same_loom_family_inventory() -> None:
+    """Closing Review runs all Loom groups; CI selects from that inventory."""
     kickoff_text = KICKOFF_DEFAULTS.read_text(encoding="utf-8")
     kickoff_line = next(
         line
@@ -60,26 +53,12 @@ def test_kickoff_and_ci_run_the_same_parallel_command() -> None:
     kickoff_value = kickoff_line[len("- package-tests:") :]
     # Drop the trailing " — <reason> (<date>)" comment.
     kickoff_command = kickoff_value.split("—")[0].strip()
-    assert "-n auto" in kickoff_command
-    assert "loom-design/scripts/" in kickoff_command
+    assert "scripts/run_package_tests.py --loom-family" in kickoff_command
+    assert "--only" not in kickoff_command
 
     workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
     ci_run_line = next(
-        line
-        for line in workflow_text.splitlines()
-        if "run:" in line and "pytest" in line and "loom-code/scripts/" in line
+        line for line in workflow_text.splitlines()
+        if "run:" in line and "scripts/run_package_tests.py --loom-family" in line
     )
-    assert "-n auto" in ci_run_line
-    ci_command = ci_run_line.split("run:", 1)[1].strip()
-
-    def tokens(command: str, exclude: set[str]) -> list[str]:
-        return [tok for tok in command.split() if tok not in exclude]
-
-    # KICKOFF drives the runner script (one pytest session per `--then` group);
-    # the first group is the same argv CI's loom-code job passes to pytest.
-    first_group = kickoff_command.split(" --then ")[0]
-    kickoff_argv = first_group.split()
-    runner_index = kickoff_argv.index("scripts/run_package_tests.py")
-    kickoff_tokens = ["python3", *tokens(" ".join(kickoff_argv[runner_index + 1:]), {"-q"})]
-    ci_tokens = tokens(ci_command, {"-v", "-m", "pytest"})
-    assert kickoff_tokens == ci_tokens
+    assert "--only code" in ci_run_line

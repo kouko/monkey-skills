@@ -12,6 +12,12 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.0.0] — 2026-09-08 — ledger-free spec handoff
+
+Breaking. Require loom contract 2.0, keep risk-triggered review within the
+write-spec station, and hand plans a direct question record without creating
+or updating `review.json`.
+
 ## [1.1.1] — 2026-09-08 — content-attestation station contract
 
 Patch. Synchronize every station summary and Codex instruction with
