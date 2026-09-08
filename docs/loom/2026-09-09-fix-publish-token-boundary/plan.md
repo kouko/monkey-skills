@@ -28,6 +28,13 @@ charter: 1.0
 - Test: A4 positive: six-pr-status-map; negative: unrelated-confirmed-intent-unchanged.
 - Risk: agent-decided — close only intents with merge commits visible on current main.
 
+### Wave 2 — release integration
+
+**W2-01 Release the corrected classifier**  after: W1-01, W1-02, W1-03  acceptance: 3
+- Files: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md
+- Test: A3 positive: patch-version-visible; boundary: manifests-synchronized.
+- Risk: agent-decided — patch release only; use the existing manifest synchronization command.
+
 ## Questions asked
 1 — what — 依照你的建議做吧
 

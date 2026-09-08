@@ -3,7 +3,7 @@ originator: kouko
 kind: product
 needs-design: yes — 完整測試改由 review 後的本機 push gate 單次執行，且失敗後依是否修改 repository 內容決定回到 Build 或重試 push
 evidence: [docs/loom/2026-09-06-remove-build-time-reviews/review.json, docs/loom/2026-09-06-remove-build-time-reviews/blind-run-report.md]
-status: confirmed 2026-09-06
+status: closed 2026-09-06 — PR #803
 
 ## Problem
 Loom 的 branch-end 會執行完整測試，Ship 又先明確執行 push checker，而實際 `git push` 還會由本機 host hook 再觸發同一個 checker。發布者因此在沒有新實作變更時重複等待，卻沒有得到新的品質資訊；這項成本也會出現在採用 Loom 的其他語言、框架與 repository。

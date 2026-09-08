@@ -74,6 +74,17 @@ claude plugin list | grep loom-code       # 預期：enabled
 安裝 `loom-code` plugin 後，Codex 直接使用 plugin 內的 hook 與 checker；repo
 不再保存 `.codex` checker 副本，也不需要 trust probe 或 hook-firing ledger。
 
+若要安全更新，請依序執行：
+
+```bash
+codex plugin marketplace upgrade monkey-skills
+codex plugin add loom-code@monkey-skills
+codex plugin list
+```
+
+仍有 task 執行時，不要先移除已安裝的 plugin；執行中的 task 可能仍在使用該
+版本的 hook 路徑。
+
 ## 授權
 
 MIT，作為 `monkey-skills` 的一部分。

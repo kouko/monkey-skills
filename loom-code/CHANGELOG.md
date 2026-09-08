@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.4] — 2026-09-09 — quoted publication token boundaries
+
+- Treat shell operators inside quoted arguments as data, so read-only searches
+  that mention publication commands do not trigger the push gate.
+- Keep malformed quoting and dynamic command substitution on the conservative
+  detection path, while retaining direct and nested publisher recognition.
+- Document the safe Codex update order: refresh the marketplace, add the new
+  plugin version without removing the active one first, then verify it.
+- Close six delivered Loom intents against their merged pull requests.
+
 ## [2.0.3] — 2026-09-08 — worktree-safe direct merge
 
 budget-exception: write-plan.codex-installed-hook-trust-boundary — makes one

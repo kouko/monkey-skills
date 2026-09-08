@@ -2,7 +2,7 @@
 originator: kouko
 kind: engineering
 needs-design: yes — review 包含初審、修正、重新設計與終止等多狀態行為，目前沒有規格界定其轉換
-status: confirmed 2026-09-08
+status: closed 2026-09-08 — PR #808
 
 ## Problem
 Loom 的 reviewer 在修正後可能繼續提出新的問題，agent 也可能因為追求最安全的結果而不斷增加 review round。使用者難以判斷技術問題是否值得繼續，因此常選擇再修一輪，讓原本已完成的功能陷入長時間往返。

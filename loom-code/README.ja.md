@@ -82,6 +82,17 @@ contract package、そしてプロジェクト自身の `docs/loom/` 成果物�
 を直接使います。repo 内の `.codex` checker コピー、trust probe、hook-firing
 ledger は不要です。
 
+安全に更新するには、次の順序で実行します。
+
+```bash
+codex plugin marketplace upgrade monkey-skills
+codex plugin add loom-code@monkey-skills
+codex plugin list
+```
+
+task が動いている間は、先にインストール済み plugin を削除しないでください。
+動作中の task が、その version の hook path をまだ使っている可能性があります。
+
 ## ライセンス
 
 MIT（`monkey-skills` の一部として）。
