@@ -2558,12 +2558,17 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
 
 PUBLISH_REDIRECT_ENV = {
-    "GIT_DIR", "GIT_WORK_TREE", "GIT_NAMESPACE", "GIT_OBJECT_DIRECTORY",
+    "GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_NAMESPACE", "GIT_OBJECT_DIRECTORY",
     "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_EXEC_PATH", "GIT_SSH",
     "GIT_SSH_COMMAND", "GIT_PROXY_COMMAND", "GIT_CONFIG", "GIT_CONFIG_SYSTEM",
     "GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM", "GIT_CONFIG_COUNT",
     "GIT_CONFIG_PARAMETERS", "GH_HOST", "GH_REPO",
 }
+
+PUBLISH_REDIRECT_CONFIG = (
+    r"^(remote\.origin\.(pushurl|proxy|vcs|receivepack|uploadpack)"
+    r"|url\..*\.(push)?insteadof|core\.sshcommand)$"
+)
 
 PUBLISH_EXECUTABLE_DIRS = (
     Path("/usr/bin"), Path("/usr/local/bin"), Path("/opt/homebrew/bin"),
@@ -2592,6 +2597,23 @@ def _publish_usage(reason: str, err) -> int:
 
 def _publish_block(reason: str, err) -> int:
     return report([("push.attestation", reason)], err)
+
+
+def _publish_origin_state(repo: Path, expected_branch: str) -> tuple[str | None, str | None]:
+    """Return the single literal origin URL or a publication identity error."""
+    branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if branch != expected_branch:
+        return None, "symbolic branch changed before publication"
+    origin_urls = (git_maybe(repo, "config", "--get-all", "remote.origin.url") or "").splitlines()
+    if len(origin_urls) != 1:
+        return None, "literal origin must have exactly one fetch URL"
+    redirect_config = git_maybe(repo, "config", "--get-regexp", PUBLISH_REDIRECT_CONFIG)
+    if redirect_config:
+        return None, (
+            "origin redirection, transport, remote executable, pushurl, insteadOf, "
+            "sshCommand, or proxy configuration must be removed"
+        )
+    return origin_urls[0], None
 
 
 def _publish_args(args: list[str]) -> tuple[str, Path] | str:
@@ -2705,18 +2727,9 @@ def _cmd_publish_trusted(
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not head or not branch or not git_ok(repo, "check-ref-format", "--branch", branch):
         return _publish_block("publication requires a safe current symbolic branch and HEAD", err)
-    origin_urls = (git_maybe(repo, "config", "--get-all", "remote.origin.url") or "").splitlines()
-    if len(origin_urls) != 1:
-        return _publish_block("literal origin must have exactly one fetch URL", err)
-    redirect_config = git_maybe(
-        repo, "config", "--get-regexp",
-        r"^(remote\.origin\.pushurl|url\..*\.(push)?insteadof|core\.sshcommand|remote\.origin\.proxy)$",
-    )
-    if redirect_config:
-        return _publish_block(
-            "origin redirection, pushurl, insteadOf, sshCommand, or proxy configuration must be removed",
-            err,
-        )
+    origin_url, origin_error = _publish_origin_state(repo, branch)
+    if origin_error:
+        return _publish_block(origin_error, err)
     identity = github_repo_from_origin(repo)
     if not identity:
         return _publish_block("literal origin is not a supported GitHub repository URL", err)
@@ -2761,6 +2774,11 @@ def _cmd_publish_trusted(
 
     if git_text(repo, "rev-parse", "HEAD") != head:
         return _publish_block("live HEAD moved before push", err)
+    current_origin, origin_error = _publish_origin_state(repo, branch)
+    if origin_error or current_origin != origin_url:
+        return _publish_block(
+            f"publication identity changed before push: {origin_error or 'origin URL changed'}", err
+        )
     if remote_head != head:
         push_result = _external_or_block(
             [trusted_git, "-C", str(repo), "push", *CANONICAL_PUSH_FLAGS,
@@ -2781,6 +2799,12 @@ def _cmd_publish_trusted(
         return _publish_block("origin branch does not resolve to the selected HEAD after push", err)
     if git_text(repo, "rev-parse", "HEAD") != head:
         return _publish_block("live HEAD moved before PR creation", err)
+    current_origin, origin_error = _publish_origin_state(repo, branch)
+    if origin_error or current_origin != origin_url:
+        return _publish_block(
+            f"publication identity changed before PR creation: "
+            f"{origin_error or 'origin URL changed'}", err,
+        )
 
     host, owner, name = identity.split("/", 2)
     # GitHub's pulls endpoint exposes both head/base repository identity and SHA:

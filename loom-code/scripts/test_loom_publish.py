@@ -41,6 +41,9 @@ class ExternalCalls:
         self.move_remote_on_pr_list = False
         self.cross_repository_pr = False
         self.fail_create_once = False
+        self.change_pushurl_on_remote_read = False
+        self.switch_branch_on_remote_read = False
+        self.remote_reads = 0
         self.calls: list[list[str]] = []
 
     def __call__(self, argv, **kwargs):
@@ -49,6 +52,12 @@ class ExternalCalls:
         if "repo" in argv and "view" in argv:
             return subprocess.CompletedProcess(argv, 0, "main\n", "")
         if "ls-remote" in argv:
+            self.remote_reads += 1
+            if self.remote_reads == 1 and self.change_pushurl_on_remote_read:
+                git(Path(kwargs["cwd"]), "config", "remote.origin.pushurl",
+                    "git@github.com:attacker/project.git")
+            if self.remote_reads == 1 and self.switch_branch_on_remote_read:
+                git(Path(kwargs["cwd"]), "switch", "-q", "-c", "alternate")
             output = f"{self.remote_head}\trefs/heads/feature\n" if self.remote_head else ""
             return subprocess.CompletedProcess(argv, 0, output, "")
         if "push" in argv:
@@ -153,6 +162,25 @@ def test_publish_rejects_repository_redirecting_environment(tmp_path: Path, monk
     assert calls.calls == []
 
 
+def test_publish_rejects_git_common_dir_before_network(tmp_path: Path, monkeypatch) -> None:
+    calls = ExternalCalls("")
+    repo = repository(tmp_path)
+    body = tmp_path / "body.md"
+    body.write_text("body\n", encoding="utf-8")
+    monkeypatch.setenv("GIT_COMMON_DIR", str(tmp_path / "other.git"))
+    monkeypatch.chdir(repo)
+    monkeypatch.setattr(loom_checker, "run_publish_external", calls)
+    err_stream = StringIO()
+    rc = loom_checker.cmd_publish([
+        "--confirm-authorized", "--title", "feat(loom): safe",
+        "--body-file", str(body),
+    ], StringIO(), err_stream)
+    err = err_stream.getvalue()
+    assert rc == 2
+    assert "GIT_COMMON_DIR" in err
+    assert calls.calls == []
+
+
 def test_publish_does_not_replay_functional_executables(tmp_path: Path, monkeypatch) -> None:
     calls = ExternalCalls("")
     checked: list[list[str]] = []
@@ -223,6 +251,9 @@ def test_publish_rejects_git_redirect_config_before_push(tmp_path: Path, monkeyp
         "core.sshCommand": "/tmp/attacker-ssh",
         "url.https://attacker.example/.pushInsteadOf": "git@github.com:",
         "url.https://attacker.example/.insteadOf": "git@github.com:",
+        "remote.origin.vcs": "attacker",
+        "remote.origin.receivepack": "/tmp/attacker-receive-pack",
+        "remote.origin.uploadpack": "/tmp/attacker-upload-pack",
     }
     body = tmp_path / "body.md"
     body.write_text("body\n", encoding="utf-8")
@@ -243,6 +274,18 @@ def test_publish_rejects_git_redirect_config_before_push(tmp_path: Path, monkeyp
         assert "configuration" in err.getvalue(), key
         assert not any("push" in call for call in calls.calls), key
         git(repo, "config", "--unset-all", key)
+
+
+def test_publish_revalidates_origin_and_branch_before_push(tmp_path: Path, monkeypatch) -> None:
+    for mutation in ("change_pushurl_on_remote_read", "switch_branch_on_remote_read"):
+        case = tmp_path / mutation
+        case.mkdir()
+        calls = ExternalCalls("")
+        setattr(calls, mutation, True)
+        _, rc, _, err = invoke(case, monkeypatch, calls)
+        assert rc == 1, mutation
+        assert "changed before push" in err, mutation
+        assert not any("push" in call for call in calls.calls), mutation
 
 
 def test_publish_rejects_cross_repository_pr_match(tmp_path: Path, monkeypatch) -> None:
