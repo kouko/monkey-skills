@@ -42,3 +42,15 @@ def test_removed_package_replay_flag_is_rejected() -> None:
     )
     assert result.returncode == 2
     assert "unexpected argument '--skip-package-tests'" in result.stderr
+
+
+def test_live_consumers_require_contract_two() -> None:
+    consumers = [
+        ROOT / "loom-code/skills/write-plan/SKILL.md",
+        *(ROOT / "loom-design/skills").glob("*/SKILL.md"),
+    ]
+    for path in consumers:
+        text = path.read_text(encoding="utf-8")
+        if "contract --require" in text:
+            assert "contract --require 2.0" in text, path
+            assert "contract --require 1.0" not in text, path

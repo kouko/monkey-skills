@@ -51,6 +51,9 @@ def loom_family_commands(
 def main(argv: list[str]) -> int:
     if argv and argv[0] == "--loom-family":
         verbosity = "-v" if "-v" in argv[1:] else "-q"
+        if "--only" in argv and argv.index("--only") + 1 >= len(argv):
+            print("run_package_tests: --only needs a group", file=sys.stderr)
+            return 2
         only = argv[argv.index("--only") + 1] if "--only" in argv else None
         if only not in {None, "code", "design", "workflow-python", "workflow-shell"}:
             print(f"run_package_tests: unknown Loom group {only!r}", file=sys.stderr)

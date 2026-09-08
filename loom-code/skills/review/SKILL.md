@@ -21,8 +21,7 @@ the remaining work.
 
 ## 2. Choose the risk lane
 
-- Small: one fresh-context reviewer.
-- Full: two fresh-context reviewers from distinct agents.
+- Every change: two fresh-context reviewers from distinct agents.
 - A configured second vendor remains required when the repository asks for it.
 
 Reviewer independence is a quality requirement, not a ledger field. Give each

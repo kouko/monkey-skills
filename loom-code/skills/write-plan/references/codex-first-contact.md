@@ -7,7 +7,7 @@ ledger to approve and synchronize.
 At the start of a change:
 
 1. Resolve the injected plugin root and run
-   `python3 <plugin-root>/scripts/loom_checker.py contract --require 1.0`.
+   `python3 <plugin-root>/scripts/loom_checker.py contract --require 2.0`.
 2. Confirm `python3 <plugin-root>/scripts/loom_checker.py --list-rules`
    includes `push.attestation`.
 3. If Codex presents a trust prompt for the installed plugin hook, ask the

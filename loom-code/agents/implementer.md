@@ -44,10 +44,8 @@ does not repeat it; where they differ, the baseline wins.
    Write `test(loom-code): RED for foo helper`.
 6. **Never `git add -A`.** Add paths by name. No `git stash`;
    recover a file with `git show <ref>:<path>`.
-7. **Run the tests you claim.** Touched test files during the inner loop;
-   the package-level command once, after the last edit, before commit.
-   Did not run it? Say so: downgrade to `DONE_WITH_CONCERNS` with
-   `will verify by: <command>`.
+7. **Run the focused tests you claim.** Touched test files during the inner
+   loop. Closing Review owns the single package-level run.
 8. **Ask instead of guessing.** An ambiguity, or a task contradicting the
    spec, is `NEEDS_CONTEXT` with the question — a correct outcome, not a
    failure.

@@ -34,6 +34,16 @@ def test_runner_with_no_groups_exits_nonzero() -> None:
         assert result.returncode == 2, argv
 
 
+def test_loom_family_only_requires_a_group_name() -> None:
+    result = subprocess.run(
+        [sys.executable, str(RUNNER), "--loom-family", "--only"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert "--only needs a group" in result.stderr
+
+
 def test_loom_family_preset_covers_every_ci_test_surface() -> None:
     commands = loom_family_commands(REPO, verbosity="-q")
     rendered = [" ".join(command) for command in commands]

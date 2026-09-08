@@ -4,7 +4,7 @@
 Keys are declared in loom-code/contract/manifest.yaml `kickoff_defaults`;
 loom_checker.py reads this file. Absent key = default. -->
 
-- second-vendor: ask — kouko decides per change; asked once at decision point ① and recorded in review.json (2026-09-04)
+- second-vendor: ask — kouko decides per change; asked once at decision point ① and passed directly to closing Review (2026-09-08)
 - package-tests: uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q — the runner is the single inventory for every Loom pytest and shell-test surface; CI selects named groups from the same inventory while closing Review runs all groups once; isolated invocations preserve per-directory pytest configurations and module names; the hash-verified lock avoids host-Python drift; the code group retains pytest-xdist `-n auto`; a bare pytest at the repo root aborts on dbt-wiki collection (2026-09-08)
 - standing-docs: waived — DESIGN.md never applies to a plugin repo; PRINCIPLES.md exists and is ratified per change kind (2026-09-03)
 - session-start-baseline: 923fb84a 5278 — measured with `bash loom-code/hooks/session-start </dev/null | python3 -c 'import sys;print(len(sys.stdin.read().split()))'` in an empty git repo, merge-base of the loom 1.0 change (Python str.split — wc disagrees between macOS and GNU) (2026-09-03)

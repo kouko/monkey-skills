@@ -137,7 +137,8 @@ checkpoint again):
 - Raise no new finding outside that delta, unless the fix itself broke
   something the delta touches — you are re-reading your own list, not
   re-reviewing the checkpoint.
-- Do not re-run probes; the push gate re-runs them itself.
+- Do not re-run adversarial programs; closing finalization owns their single
+  execution. Functional fixes require a renewed finalization.
 - The orchestrator may rebut a finding with evidence; accept it and mark
   the finding `dismissed`, or hold your ground and say why.
 - A third round on the same checkpoint means the fix is not converging —

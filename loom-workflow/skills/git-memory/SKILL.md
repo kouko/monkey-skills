@@ -197,8 +197,9 @@ appropriate ignored note or secret manager instead.
 
 - **Secrets or sensitive context** — the compose protocols enforce a
   fail-closed privacy gate: `protocols/compose-commit.md` and
-  `protocols/compose-pr.md` run `scripts/privacy-scan.py` plus the judge in
-  `protocols/privacy-judge-spec.md`. Any failure stops publication.
+  `protocols/compose-pr.md` always run `scripts/privacy-scan.py` and invoke
+  the judge in `protocols/privacy-judge-spec.md` only for ambiguous
+  private-party text. Any required gate failure stops publication.
 
 ## Recall routing
 

@@ -102,7 +102,7 @@ file, and the user sees exactly the same questions.
 ## Step 0 — Check the contract version
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 1.0
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py contract --require 2.0
 ```
 
 Exit 0: continue. Anything else, the rule is `contract.requires`: print
