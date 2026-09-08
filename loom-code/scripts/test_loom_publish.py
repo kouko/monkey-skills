@@ -43,6 +43,8 @@ class ExternalCalls:
         self.fail_create_once = False
         self.change_pushurl_on_remote_read = False
         self.switch_branch_on_remote_read = False
+        self.change_pushurl_on_pr_list = False
+        self.change_uploadpack_on_final_remote_read = False
         self.remote_reads = 0
         self.calls: list[list[str]] = []
 
@@ -58,12 +60,18 @@ class ExternalCalls:
                     "git@github.com:attacker/project.git")
             if self.remote_reads == 1 and self.switch_branch_on_remote_read:
                 git(Path(kwargs["cwd"]), "switch", "-q", "-c", "alternate")
+            if self.remote_reads == 3 and self.change_uploadpack_on_final_remote_read:
+                git(Path(kwargs["cwd"]), "config", "remote.origin.uploadpack",
+                    "/tmp/attacker-upload-pack")
             output = f"{self.remote_head}\trefs/heads/feature\n" if self.remote_head else ""
             return subprocess.CompletedProcess(argv, 0, output, "")
         if "push" in argv:
             self.remote_head = self.head
             return subprocess.CompletedProcess(argv, 0, "", "")
         if "api" in argv and any("/pulls?" in token for token in argv):
+            if self.change_pushurl_on_pr_list:
+                git(Path(kwargs["cwd"]), "config", "remote.origin.pushurl",
+                    "git@github.com:attacker/project.git")
             if self.move_remote_on_pr_list:
                 self.remote_head = "e" * 40
             prs = []
@@ -118,6 +126,8 @@ def test_publish_pushes_exact_head_and_creates_one_pr(tmp_path: Path, monkeypatc
     assert create[create.index("--base") + 1] == "main"
     assert create[create.index("--head") + 1] == "feature"
     assert "https://github.com/example/project/pull/1" in out
+    assert f"Attestation validated for {head}" in out
+    assert "Publication target: github.com/example/project base main" in out
 
 
 def test_publish_reuses_existing_pr_without_push_or_create(tmp_path: Path, monkeypatch) -> None:
@@ -286,6 +296,18 @@ def test_publish_revalidates_origin_and_branch_before_push(tmp_path: Path, monke
         assert rc == 1, mutation
         assert "changed before push" in err, mutation
         assert not any("push" in call for call in calls.calls), mutation
+
+
+def test_publish_revalidates_identity_around_final_remote_read(tmp_path: Path, monkeypatch) -> None:
+    for mutation in ("change_pushurl_on_pr_list", "change_uploadpack_on_final_remote_read"):
+        case = tmp_path / mutation
+        case.mkdir()
+        calls = ExternalCalls("")
+        setattr(calls, mutation, True)
+        _, rc, _, err = invoke(case, monkeypatch, calls)
+        assert rc == 1, mutation
+        assert "before PR creation" in err, mutation
+        assert not any("create" in call for call in calls.calls), mutation
 
 
 def test_publish_rejects_cross_repository_pr_match(tmp_path: Path, monkeypatch) -> None:

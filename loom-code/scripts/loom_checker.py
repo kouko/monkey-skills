@@ -2737,6 +2737,7 @@ def _cmd_publish_trusted(
 
     if _cmd_push(["--head", head, "--require-live-head"], out, err) != 0:
         return 1
+    out.write(f"Attestation validated for {head}\n")
 
     base_result = _external_or_block(
         # gh repo view accepts [HOST/]OWNER/REPO and exposes defaultBranchRef:
@@ -2750,6 +2751,7 @@ def _cmd_publish_trusted(
     base = base_result.stdout.strip()
     if not base or base == branch or not git_ok(repo, "check-ref-format", "--branch", base):
         return _publish_block("origin default branch is missing, unsafe, or equals the head branch", err)
+    out.write(f"Publication target: {identity} base {base}\n")
 
     remote_result = _external_or_block(
         # Git documents ls-remote as the read-only remote-ref query:
@@ -2846,6 +2848,12 @@ def _cmd_publish_trusted(
     if len(urls) > 1:
         return _publish_block("multiple open pull requests match the current branch", err)
 
+    current_origin, origin_error = _publish_origin_state(repo, branch)
+    if origin_error or current_origin != origin_url:
+        return _publish_block(
+            f"publication identity changed before PR creation: "
+            f"{origin_error or 'origin URL changed'}", err,
+        )
     pre_create_remote = _external_or_block(
         [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
          f"refs/heads/{branch}"], repo=repo, env=env, err=err,
@@ -2859,6 +2867,12 @@ def _cmd_publish_trusted(
         return _publish_block("remote branch moved before PR creation", err)
     if git_text(repo, "rev-parse", "HEAD") != head:
         return _publish_block("live HEAD moved before PR creation", err)
+    current_origin, origin_error = _publish_origin_state(repo, branch)
+    if origin_error or current_origin != origin_url:
+        return _publish_block(
+            f"publication identity changed before PR creation: "
+            f"{origin_error or 'origin URL changed'}", err,
+        )
 
     if urls:
         out.write(f"PR already exists: {urls[0]}\n")
