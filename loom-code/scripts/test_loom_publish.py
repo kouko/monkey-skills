@@ -215,25 +215,34 @@ def test_publish_rejects_git_config_parameters_before_network(tmp_path: Path, mo
     assert calls.calls == []
 
 
-def test_publish_rejects_origin_pushurl_before_push(tmp_path: Path, monkeypatch) -> None:
+def test_publish_rejects_git_redirect_config_before_push(tmp_path: Path, monkeypatch) -> None:
     calls = ExternalCalls("")
     repo = repository(tmp_path)
-    git(repo, "config", "remote.origin.pushurl", "git@github.com:attacker/project.git")
+    redirects = {
+        "remote.origin.pushurl": "git@github.com:attacker/project.git",
+        "core.sshCommand": "/tmp/attacker-ssh",
+        "url.https://attacker.example/.pushInsteadOf": "git@github.com:",
+        "url.https://attacker.example/.insteadOf": "git@github.com:",
+    }
     body = tmp_path / "body.md"
     body.write_text("body\n", encoding="utf-8")
-    calls.head = git(repo, "rev-parse", "HEAD")
-    monkeypatch.chdir(repo)
-    monkeypatch.setattr(loom_checker, "run_publish_external", calls)
-    monkeypatch.setattr(loom_checker, "_cmd_push", lambda *args, **kwargs: 0)
-    monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
-    err = StringIO()
-    rc = loom_checker.cmd_publish([
-        "--confirm-authorized", "--title", "feat(loom): safe",
-        "--body-file", str(body),
-    ], StringIO(), err)
-    assert rc == 1
-    assert "pushurl" in err.getvalue()
-    assert not any("push" in call for call in calls.calls)
+    for key, value in redirects.items():
+        git(repo, "config", key, value)
+        calls.head = git(repo, "rev-parse", "HEAD")
+        calls.calls.clear()
+        monkeypatch.chdir(repo)
+        monkeypatch.setattr(loom_checker, "run_publish_external", calls)
+        monkeypatch.setattr(loom_checker, "_cmd_push", lambda *args, **kwargs: 0)
+        monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
+        err = StringIO()
+        rc = loom_checker.cmd_publish([
+            "--confirm-authorized", "--title", "feat(loom): safe",
+            "--body-file", str(body),
+        ], StringIO(), err)
+        assert rc == 1, key
+        assert "configuration" in err.getvalue(), key
+        assert not any("push" in call for call in calls.calls), key
+        git(repo, "config", "--unset-all", key)
 
 
 def test_publish_rejects_cross_repository_pr_match(tmp_path: Path, monkeypatch) -> None:

@@ -5,12 +5,15 @@ from __future__ import annotations
 
 import inspect
 import os
+import subprocess
 import sys
+import tempfile
 from io import StringIO
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
+SCRIPT = Path(__file__).resolve()
 sys.path.insert(0, str(ROOT / "loom-code/scripts"))
 
 import loom_checker  # noqa: E402
@@ -50,15 +53,43 @@ def main() -> int:
         def forbid_network(*args, **kwargs):
             raise AssertionError("stale attestation reached a network command")
 
-        loom_checker.run_publish_external = forbid_network
-        os.chdir(ROOT)
-        error = StringIO()
-        rc = loom_checker.cmd_publish([
-            "--confirm-authorized", "--title", "feat(loom): adversarial",
-            "--body-file", str(Path(__file__).resolve()),
-        ], StringIO(), error)
-        assert rc == 1
-        assert "push.attestation" in error.getvalue()
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary) / "repo"
+            repo.mkdir()
+            subprocess.run(["git", "-C", str(repo), "init", "-q"], check=True)
+            subprocess.run(
+                ["git", "-C", str(repo), "config", "user.email", "probe@example.com"],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(repo), "config", "user.name", "Probe"], check=True
+            )
+            (repo / "probe.txt").write_text("probe\n", encoding="utf-8")
+            subprocess.run(["git", "-C", str(repo), "add", "probe.txt"], check=True)
+            subprocess.run(
+                ["git", "-C", str(repo), "commit", "-q", "-m", "probe"], check=True
+            )
+            subprocess.run(["git", "-C", str(repo), "branch", "-M", "main"], check=True)
+            subprocess.run(["git", "-C", str(repo), "switch", "-q", "-c", "probe"], check=True)
+            (repo / "probe.txt").write_text("probe changed\n", encoding="utf-8")
+            subprocess.run(["git", "-C", str(repo), "add", "probe.txt"], check=True)
+            subprocess.run(
+                ["git", "-C", str(repo), "commit", "-q", "-m", "probe change"], check=True
+            )
+            subprocess.run(
+                ["git", "-C", str(repo), "remote", "add", "origin",
+                 "git@github.com:example/probe.git"],
+                check=True,
+            )
+            loom_checker.run_publish_external = forbid_network
+            os.chdir(repo)
+            error = StringIO()
+            rc = loom_checker.cmd_publish([
+                "--confirm-authorized", "--title", "feat(loom): adversarial",
+                "--body-file", str(SCRIPT),
+            ], StringIO(), error)
+            assert rc == 1
+            assert "push.attestation" in error.getvalue()
     finally:
         os.chdir(cwd)
         loom_checker.run_publish_external = external

@@ -2705,16 +2705,16 @@ def _cmd_publish_trusted(
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not head or not branch or not git_ok(repo, "check-ref-format", "--branch", branch):
         return _publish_block("publication requires a safe current symbolic branch and HEAD", err)
-    origin_urls = git_text(repo, "config", "--get-all", "remote.origin.url").splitlines()
+    origin_urls = (git_maybe(repo, "config", "--get-all", "remote.origin.url") or "").splitlines()
     if len(origin_urls) != 1:
         return _publish_block("literal origin must have exactly one fetch URL", err)
     redirect_config = git_maybe(
         repo, "config", "--get-regexp",
-        r"^(remote\.origin\.pushurl|url\..*\.pushInsteadOf|core\.sshCommand|remote\.origin\.proxy)$",
+        r"^(remote\.origin\.pushurl|url\..*\.(push)?insteadof|core\.sshcommand|remote\.origin\.proxy)$",
     )
     if redirect_config:
         return _publish_block(
-            "origin pushurl, pushInsteadOf, sshCommand, or proxy configuration must be removed",
+            "origin redirection, pushurl, insteadOf, sshCommand, or proxy configuration must be removed",
             err,
         )
     identity = github_repo_from_origin(repo)
