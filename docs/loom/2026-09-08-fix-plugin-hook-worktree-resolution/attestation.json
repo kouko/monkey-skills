@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-08-fix-plugin-hook-worktree-resolution",
+  "content_digest": "30c8ee1ce19551aee5891f3827f2935dc3ca3688",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_ship_worktree_merge.py -q",
+      "artifact": "loom-code/scripts/test_ship_worktree_merge.py",
+      "result": "pass",
+      "command_digest": "bf02b60f54f67d15ac7afa152ef3351debe2c278e37a9b10f8527ecc9027998d"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-fresh-context",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-fable-fresh-context",
+      "vendor": "anthropic",
+      "model": "claude-fable-5",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
