@@ -9,7 +9,7 @@
 #
 # Requires, in one neighborhood after the composed-message steps:
 #   1. layer-1 deterministic scan invocation (scripts/privacy-scan.py)
-#   2. layer-2 fresh-context judge pointing at protocols/privacy-judge-spec.md
+#   2. layer-2 conditional semantic judge pointing at protocols/privacy-judge-spec.md
 #   3. an explicit fail-closed -> BLOCK branch (not an emergent default)
 #   4. the compose-commit-only quality_note advisory (non-blocking)
 #
@@ -73,17 +73,19 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# Check 2 — the layer-2 fresh-context judge is dispatched and points at
-# the SSOT spec file rather than duplicating its rubric.
+# Check 2 — the layer-2 semantic judge is conditional and points at the
+# SSOT spec file rather than duplicating its rubric.
 
 if [ -z "$WIN" ]; then
   fail "cannot check layer-2 judge — neighborhood window empty"
-elif ! echo "$WIN" | grep -qiF "fresh-context"; then
-  fail "Privacy gate neighborhood missing the layer-2 'fresh-context' judge dispatch"
+elif ! echo "$WIN" | grep -qiF "conditional semantic judge"; then
+  fail "Privacy gate neighborhood missing the layer-2 conditional semantic judge"
+elif ! echo "$WIN" | grep -qiF "ambiguous private-party identifying text"; then
+  fail "Privacy gate neighborhood missing the conditional-dispatch trigger"
 elif ! echo "$WIN" | grep -qF "privacy-judge-spec.md"; then
   fail "Privacy gate neighborhood missing the pointer to protocols/privacy-judge-spec.md"
 else
-  pass "Privacy gate neighborhood dispatches the layer-2 fresh-context judge via privacy-judge-spec.md"
+  pass "Privacy gate neighborhood conditionally dispatches the layer-2 judge via privacy-judge-spec.md"
 fi
 
 # -------------------------------------------------------------------------

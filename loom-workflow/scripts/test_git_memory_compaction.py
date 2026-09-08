@@ -5,8 +5,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SKILL = REPO_ROOT / "loom-workflow/skills/git-memory/SKILL.md"
 UNCHANGED_CONTRACTS = {
-    "protocols/compose-commit.md": "eba707ef71a7d019f3aca4029a5ceb72db885ebeb3bfe0bfd2663fbc01d2786f",
-    "protocols/compose-pr.md": "1dd7cc63dacbcb61dabe876263ef957b29ce546438dfe28622e5a6a2930d2ab6",
+    "protocols/compose-commit.md": "ceb84ca490d70dcce253319608939668cce98b884334485f94e37e9812a29e1a",
+    "protocols/compose-pr.md": "55b199f1e6e7238b677f416a1900a0ef0e2a3f4ed3274d63ae51fc105a7fdf46",
     "protocols/recall.md": "47844bd6ac0084495ef5ee342b1562d3b3de620ad240767711e34303286209b6",
     "standards/memory-conventions.md": "585ca6c1205d12311f90f836ad08a2fa08253f765a8f2fe4d754fe98630d96c2",
 }
