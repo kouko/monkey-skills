@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import sys
+from io import StringIO
 from pathlib import Path
 
 import loom_checker
@@ -247,3 +248,29 @@ def test_push_reuses_matching_attestation_without_subprocesses(
     monkeypatch.chdir(repo)
     assert loom_checker._cmd_push([]) == 0
     assert functional_head
+
+
+def test_finalize_surfaces_failed_command_output(tmp_path: Path, monkeypatch) -> None:
+    repo = repo_with_content(tmp_path)
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    (repo / "fail.py").write_text(
+        'print("PACKAGE_SENTINEL")\nraise SystemExit(7)\n', encoding="utf-8"
+    )
+    kickoff.write_text(
+        "- package-tests: python3 fail.py — fixture (2026-09-08)\n",
+        encoding="utf-8",
+    )
+    commit(repo, "set failing package command")
+    review_input = tmp_path / "review-input.json"
+    review_input.write_text(json.dumps({
+        "verdicts": [
+            {"reviewer": "r1", "vendor": "openai", "model": "test", "lens": "code", "verdict": "PASS", "findings": []},
+            {"reviewer": "r2", "vendor": "openai", "model": "test", "lens": "skill", "verdict": "PASS", "findings": []},
+        ],
+        "findings": [],
+        "adversarial": [{"command": "python3 src.py", "artifact": "src.py"}],
+    }), encoding="utf-8")
+    monkeypatch.chdir(repo)
+    error = StringIO()
+    assert loom_checker.cmd_finalize_review([CHANGE, "--input", str(review_input)], err=error) == 1
+    assert "PACKAGE_SENTINEL" in error.getvalue()

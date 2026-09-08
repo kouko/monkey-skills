@@ -3425,14 +3425,19 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     executions: list[dict] = []
     for kind, command, artifact in work:
         try:
-            observed = subprocess.run(
+            completed = subprocess.run(
                 argv_for(command), cwd=str(repo), capture_output=True, text=True,
                 timeout=PROBE_RUN_TIMEOUT,
-            ).returncode
+            )
         except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
             return report([(f"finalize.{kind}", f"execution failed: {exc}")], err)
-        if observed != 0:
-            return report([(f"finalize.{kind}", f"`{command}` exited {observed}")], err)
+        if completed.returncode != 0:
+            detail = (completed.stdout + completed.stderr).strip()
+            suffix = f"\n{detail[-4000:]}" if detail else ""
+            return report([(
+                f"finalize.{kind}",
+                f"`{command}` exited {completed.returncode}{suffix}",
+            )], err)
         executions.append({
             "kind": kind, "command": command, "artifact": artifact,
             "result": "pass", "command_digest": _command_digest(command),
