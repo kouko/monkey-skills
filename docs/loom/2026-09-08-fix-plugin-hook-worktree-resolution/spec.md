@@ -4,7 +4,7 @@ pre-build-review: required — this changes the installed publication hook's rep
 
 ## Requirements
 REQ-1 — Make the selected worktree explicit
-  WHEN Loom issues an authorized direct PR-merge command from a repository that differs from the hook payload's top-level `cwd`, Loom shall render an absolute `cd` to the selected repository in the same command so the installed hook validates the executor-selected worktree without relying on unavailable executor metadata → Acceptance #1
+  WHEN Loom issues an authorized direct PR-merge command, Loom shall always render an absolute `cd` to the selected repository root in the same command because the hook's top-level `cwd` is not observable when the command is rendered, so the installed hook validates the executor-selected worktree without relying on unavailable executor metadata → Acceptance #1
 
 REQ-2 — Preserve explicit repository selection
   WHEN a publication command selects a repository with an absolute `cd` or the supported canonical Git `-C` form, the publication hook shall keep that explicit selection authoritative over the top-level hook `cwd`; a `-C` without a directory argument, a nonexistent selected directory, or ambiguous, relative, or conflicting selectors shall remain blocked, while a command with no selector shall use top-level `cwd` as today → Acceptance #2
