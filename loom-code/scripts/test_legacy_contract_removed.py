@@ -48,9 +48,17 @@ def test_live_consumers_require_contract_two() -> None:
     consumers = [
         ROOT / "loom-code/skills/write-plan/SKILL.md",
         *(ROOT / "loom-design/skills").glob("*/SKILL.md"),
+        ROOT / "loom-workflow/skills/decision-map/SKILL.md",
     ]
     for path in consumers:
         text = path.read_text(encoding="utf-8")
         if "contract --require" in text:
             assert "contract --require 2.0" in text, path
             assert "contract --require 1.0" not in text, path
+
+
+def test_implementer_runs_focused_tests_not_the_package_suite() -> None:
+    text = (ROOT / "loom-code/agents/implementer.md").read_text(encoding="utf-8")
+    assert "Closing Review owns the single package-level run" in text
+    assert "plus the package test command passing" not in text
+    assert "the package suite ran green" not in text

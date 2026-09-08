@@ -84,14 +84,14 @@ Paths, not file contents. An absent section is empty.
 - spec: {path, when the change has one}
 - baseline: loom-code/references/engineering-baseline.md
 - repo root / worktree / branch: {paths}
-- package test command: {the command the orchestrator resolved}
+- focused test command: {the task-specific command the orchestrator resolved}
 
 ### Acceptance criteria
-{the task's own test, named; plus the package test command passing}
+{the task's own focused test, named}
 ```
 
-If none was resolved for you, detect one (`pytest`, `npm test`, `cargo
-test`, `go test ./...`) and say which.
+If none was resolved for you, ask for the narrowest command that exercises
+the task; do not substitute the package suite.
 
 ## Output contract
 
@@ -108,9 +108,9 @@ open_questions:               # NEEDS_CONTEXT only
 unblock_step:                 # BLOCKED only — the action the orchestrator must take
 ```
 
-- **`DONE`** — new tests went RED then GREEN; the package suite ran green.
+- **`DONE`** — new focused tests went RED then GREEN.
 - **`DONE_WITH_CONCERNS`** — complete, but something wants a reviewer's
-  eye, or you did not run the package suite.
+  eye, or the focused verification is incomplete.
 - **`NEEDS_CONTEXT`** — a specific question blocks you.
 - **`BLOCKED`** — you cannot proceed at all (broken test infrastructure,
   missing dependency, the task needs splitting).
