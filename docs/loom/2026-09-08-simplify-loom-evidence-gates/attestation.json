@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-08-simplify-loom-evidence-gates",
-  "content_digest": "bda1f7dfa66d426ae79d77db769566823436abe3",
+  "content_digest": "a098a15aa79160fbb39bbbc124ecdf2399920f95",
   "executions": [
     {
       "kind": "package-tests",
