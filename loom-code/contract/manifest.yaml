@@ -4,12 +4,17 @@
 # field below is a mechanism and must be listed in docs/loom/evidence/mechanisms.yaml.
 version: 1.0.0
 
+# Paths matched here are publication metadata. They do not change the
+# functional content identity that executions and reviews attest to.
+publication_only_paths:
+  - docs/loom/<change-id>/attestation.json
+
 stations:            # produce one per-change artifact each (§3)
   - {name: capture-intent, owner: loom-design, produces: intent,  decision_point: 1}
   - {name: write-spec,     owner: loom-design, produces: spec,    decision_point: 2}   # product only
   - {name: write-plan,     owner: loom-code,   produces: plan,    decision_point: 1}   # code-only path runs ① itself
   - {name: build,          owner: loom-code,   produces: diff}
-  - {name: review,         owner: loom-code,   produces: review}
+  - {name: review,         owner: loom-code,   produces: attestation}
   - {name: ship,           owner: loom-code,   produces: diff,    decision_point: 3}   # acceptance = blind-run report
   - {name: maintain,       owner: loom-code,   produces: intent}
 
@@ -180,54 +185,33 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       - {name: Task DAG, kind: section, required: true, grammar: "**<id> <title>** after: <ids> acceptance: <numbers>; Test: A<n> positive: <id>; negative|boundary: <id>"}
       - {name: Risks,    kind: section, required: true}
       - {name: Current State Evidence, kind: section, required: false, note: "required when needs-design: no"}
-  review:
-    path: docs/loom/<change-id>/review.json
-    template: review.json
+  attestation:
+    path: docs/loom/<change-id>/attestation.json
+    template: attestation.json
     charter:
-      answers: "what was checked, by whom, and with what result"
-      readers: ["ship", "the push rules", "the next review round"]
+      answers: "which functional content was checked, by whom, and with what result"
+      readers: ["ship", "the publication gate"]
       must:
-        - "reviewed_sha"
-        - "scope"
-        - "vendors"
+        - "schema"
+        - "change_id"
+        - "content_digest"
+        - "executions"
         - "verdicts"
-        - "probes"
-        - "open_findings"
-        - "dispatch"
-        - "questions"
-        - "cost"
-        - "second_vendor when KICKOFF says ask"
+        - "findings"
       must_not:
         - {kind: "design reasoning", goes_to: spec}
-        - {kind: "fix narrative",    goes_to: dispatch}
+        - {kind: "process accounting", goes_to: memory}
         - {kind: "lessons",          goes_to: memory}
       signoff: review
       edits_after:
-        - {id: verdicts-probes-findings-dispatch-gain-entries, text: "verdicts, probes, open_findings and dispatch gain entries"}
-        - {id: reviewed-sha-scope-cost-replaced,                text: "reviewed_sha, scope and cost are replaced"}
-        - {id: open-finding-resolved-or-dismissed-in-place,     text: "an open finding is resolved or dismissed in place"}
-        - {id: questions-gain-entries,                          text: "questions gains entries, one per decision-point question asked; earlier entries unchanged"}
-        - {id: second-vendor-set-once,                          text: "second_vendor is set once"}
-        - {id: vendors-gain-entries,                            text: "vendors gains entries"}
+        - {id: regenerate-after-functional-change, text: "the checker replaces the whole attestation after functional content changes and verification passes again"}
     fields:
-      - {name: reviewed_sha,  kind: json, required: true}
-      - {name: scope,         kind: json, required: true}
-      - {name: vendors,       kind: json, required: true}
-      - {name: verdicts,      kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback, spec_sha, sha}]", note: "scope says what the round reviewed; spec_sha (optional) is the blob sha of the spec this verdict read, which intake.spec-pass compares against the spec on disk; fallback records a named second vendor that was unavailable, grammar `<cli> missing at <YYYY-MM-DD>`; sha is the commit this verdict reviewed and must equal reviewed_sha (push.reviewed-sha), no scope exempt"}
-      - {name: probes,        kind: json, required: true, grammar: "[{kind, command, sha, result, artifact, scope}]", note: "scope says what the probe attacked; the spec gate accepts an adversarial probe only with scope: spec"}
-      - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed: <reason> by <agent_id>}]"}
-      - {name: questions, kind: json, required: false, grammar: "[{decision_point, text, type: what|behaviour|done|consequence}]"}
-      - {name: dispatch,      kind: json, required: true, grammar: "[{task, role: implementer|reviewer|blind-runner|adversary, agent_id, model, started, fresh_context}]"}
-      - {name: cost,          kind: json, required: false, grammar: "rounds: <int>, dispatches: <int>, cap_changes: [<str>], hours_plan_to_pr: <float> | null", note: "process-cost record for this change (W1-05); the review station (W1-02) is what populates and updates it at every checkpoint, so an older or in-flight review.json may not carry it yet"}
-      - {name: charter,       kind: json, required: false, note: "review.json's own charter-round stamp (W1-03); a round with no charter key is pre-charter and review.round-append-only skips it entirely"}
-      # second_vendor (W0-02, optional top-level field, grammar "<cli> | none"):
-      # the per-change answer to KICKOFF's `second-vendor: ask`, recorded once
-      # at decision point ①. Not in `fields:` above -- unlike every field
-      # there, it is deliberately absent from templates/review.json (the
-      # template is an interface surface this change does not touch; the
-      # field is optional and read only when KICKOFF declares `ask`).
-      # push.second-vendor-honoured reads it instead of KICKOFF-DEFAULTS when
-      # the KICKOFF value is `ask`, and never requires it in the small lane.
+      - {name: schema,         kind: json, required: true}
+      - {name: change_id,      kind: json, required: true}
+      - {name: content_digest, kind: json, required: true}
+      - {name: executions,     kind: json, required: true, grammar: "[{kind, command, artifact, result, command_digest}]"}
+      - {name: verdicts,       kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, verdict, findings}]"}
+      - {name: findings,       kind: json, required: true, grammar: "[{id, anchor, raised_by, resolution}]"}
 
   blind-run-report:
     path: docs/loom/<change-id>/blind-run-report.md

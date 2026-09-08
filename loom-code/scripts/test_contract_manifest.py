@@ -25,7 +25,7 @@ STATIONS = {
     "maintain": "loom-code",
 }
 ARTIFACTS = {
-    "intent", "spec", "plan", "review",
+    "intent", "spec", "plan", "attestation",
     "blind-run-report", "memory", "kickoff-defaults", "dispatch",
 }
 # The four W0-01 additions declare no `fields:` schema of their own (their
@@ -102,12 +102,11 @@ def test_markdown_templates_carry_declared_fields(manifest):
             assert key in tmpl, f"{name}: field {key!r} not in template {schema['template']}"
 
 
-def test_dispatch_is_a_field_of_review_not_a_separate_artifact(manifest):
-    """concept-model §2e folded the dispatch record into review.json, so
-    the separate artifact, its template and its path are all gone."""
+def test_dispatch_is_not_part_of_generated_attestation(manifest):
+    """Process accounting is not publication evidence."""
     assert "review-dispatch" not in manifest["artifacts"]
-    names = [f["name"] for f in manifest["artifacts"]["review"]["fields"]]
-    assert "dispatch" in names
+    names = [f["name"] for f in manifest["artifacts"]["attestation"]["fields"]]
+    assert "dispatch" not in names
     assert not (TEMPLATES / "review-dispatch.json").exists()
     assert "review.json.dispatch" not in MANIFEST.read_text(encoding="utf-8")
 
@@ -124,3 +123,17 @@ def test_kickoff_defaults_keys_declared(manifest):
     keys = {k["name"] for k in manifest["kickoff_defaults"]}
     assert {"second-vendor", "standing-docs", "session-start-baseline",
             "interface-surfaces", "artifact-types"} <= keys
+
+
+def test_manifest_declares_publication_only_paths(manifest):
+    patterns = manifest["publication_only_paths"]
+    assert patterns == ["docs/loom/<change-id>/attestation.json"]
+
+
+def test_manifest_declares_generated_attestation(manifest):
+    schema = manifest["artifacts"]["attestation"]
+    assert schema["path"] == "docs/loom/<change-id>/attestation.json"
+    assert schema["template"] == "attestation.json"
+    names = [field["name"] for field in schema["fields"]]
+    assert names == ["schema", "change_id", "content_digest", "executions", "verdicts", "findings"]
+    assert "review" not in manifest["artifacts"]

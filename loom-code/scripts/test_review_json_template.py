@@ -14,6 +14,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 TEMPLATE = REPO / "loom-code" / "contract" / "templates" / "review.json"
+ATTESTATION_TEMPLATE = REPO / "loom-code" / "contract" / "templates" / "attestation.json"
 
 
 def _template() -> dict:
@@ -52,3 +53,11 @@ def test_every_review_record_cost_block_has_exactly_the_declared_shape() -> None
         assert all(isinstance(item, str) for item in cost["cap_changes"]), path
         hours = cost["hours_plan_to_pr"]
         assert hours is None or type(hours) in (int, float), path
+
+
+def test_attestation_has_only_generated_evidence_fields() -> None:
+    document = json.loads(ATTESTATION_TEMPLATE.read_text(encoding="utf-8"))
+    assert list(document) == [
+        "schema", "change_id", "content_digest", "executions", "verdicts", "findings"
+    ]
+    assert not ({"reviewed_sha", "scope", "dispatch", "cost", "questions", "charter"} & document.keys())
