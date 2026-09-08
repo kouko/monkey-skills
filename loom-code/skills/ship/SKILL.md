@@ -27,27 +27,32 @@ private-party text does. A semantic false positive needs an audited
 Publication-only edits do not change the functional digest and do not return to
 Review. Functional edits invalidate the attestation and do.
 
-## 3. Validate the publication
+## 3. Publish once
 
-Run the installed plugin checker against the selected HEAD:
+After the user accepts the outcome at decision point ③, run the installed
+plugin's one publication command with the prepared PR text:
 
 ```text
-python3 <loom-code>/scripts/loom_checker.py push --head HEAD --require-live-head
+python3 <loom-code>/scripts/loom_checker.py publish --confirm-authorized --title <title> --body-file <absolute-path>
 ```
 
-The fast gate verifies exactly one branch attestation, its schema, content
-digest, execution identities/results, reviewer verdicts, and live HEAD.
+The command verifies exactly one branch attestation, its schema, content
+digest, execution identities/results, reviewer verdicts, and live HEAD. It
+then derives the origin repository, default base, current branch, and exact
+refspec; performs a non-forced push; and opens or reuses one PR. Do not run a
+separate attestation preflight or construct Git push or PR-create commands.
 
 The installed plugin's `PreToolUse` hook applies the same check automatically
-to canonical `git push` and PR commands and retains destination/refspec safety.
-No repository-local checker scaffold or hook-firing ledger is required.
+to direct raw publication commands and retains destination/refspec safety for
+callers that bypass `publish`. No repository-local checker scaffold or
+hook-firing ledger is required.
 
-## 4. Publish and observe CI
+## 4. Observe CI
 
-Push the exact selected HEAD to its current branch, open one PR, and report its
-URL. CI is the external trust boundary: inspect every required check and fix a
-real functional failure through Build → Review. A PR-text, version, or other
-publication-only failure is fixed in place and reuses the matching attestation.
+Report the returned PR URL. CI is the external trust boundary: inspect every
+required check and fix a real functional failure through Build → Review. A
+PR-text, version, or other publication-only failure is fixed in place and
+reuses the matching attestation.
 
 Do not merge without the user's explicit authorization.
 

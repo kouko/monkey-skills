@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.1] — 2026-09-08 — one-command publication
+
+- Add `loom_checker.py publish` to validate the matching attestation, push the
+  exact current HEAD without force, and create or reuse one origin-bound PR.
+- Make Ship invoke that wrapper after acceptance instead of constructing
+  separate canonical push and PR commands.
+- Validate the final PR title in a small edit-aware workflow instead of
+  checking every disposable intermediate commit.
+
 ## [2.0.0] — 2026-09-08 — attestation-only contract
 
 - Remove the executable `review.json` compatibility path, probe replay,
