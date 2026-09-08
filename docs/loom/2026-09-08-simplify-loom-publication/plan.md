@@ -1,6 +1,6 @@
 # Simplify Loom publication — plan
 intent: 2026-09-08-simplify-loom-publication@efc84ee28
-spec: docs/loom/2026-09-08-simplify-loom-publication/spec.md@d6c2e23eb
+spec: docs/loom/2026-09-08-simplify-loom-publication/spec.md@e3692c696
 charter: 1.0
 
 ## Task DAG
@@ -8,7 +8,7 @@ charter: 1.0
 ### Wave 1 — publication boundaries
 
 **W1-01 Validate only the final PR title**  after: none  acceptance: 1, 2
-- Files: `.github/workflows/skill-structure.yml`, `scripts/test_conventional_commits_workflow.py`
+- Files: `.github/workflows/conventional-pr-title.yml`, `.github/workflows/skill-structure.yml`, `scripts/test_conventional_commits_workflow.py`
 - Test: A1 positive: valid-title-with-invalid-intermediate; boundary: title-edit-trigger. A2 positive: valid-final-title; negative: invalid-final-title-message.
 - Risk: Keep the required-check display name unchanged and pass untrusted title text through env; agent-decided per spec REQ-1.
 
