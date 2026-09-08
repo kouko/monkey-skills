@@ -9,9 +9,9 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | Plugin | Version | Skills | Commands | Description |
 |--------|---------|-------:|---------:|-------------|
 | [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skills — planning, code, design, research, copywriting with checkpoint-based quality gates. |
-| [`loom-code`](loom-code/) | 1.8.2 | 5 | 0 | Five stations — write-plan, build, review, ship, maintain — carry one change from plan to merged PR, with paired task tests and one complete branch-end review. Claude Code + Codex. |
-| [`loom-design`](loom-design/) | 1.1.0 | 4 | 0 | Two stations — capture-intent, write-spec — turn a rough idea into a confirmed intent and a risk-declared spec, plus two tools: product-principles and design-system. Reads loom-code's contract package. Claude Code + Codex. |
-| [`loom-workflow`](loom-workflow/) | 4.1.1 | 10 | 4 | Loom workflow tools for git-backed project memory, `critique` (proposal / complexity), recap, handoff, session distill, `goal-create`, `independent-advisor` cross-executor second opinion, and long-term Outcome Maps whose delivery arcs are intents. |
+| [`loom-code`](loom-code/) | 2.0.0 | 5 | 0 | Five stations — write-plan, build, review, ship, maintain — carry one change from plan to merged PR, with paired task tests and one complete branch-end review. Claude Code + Codex. |
+| [`loom-design`](loom-design/) | 2.0.0 | 4 | 0 | Two stations — capture-intent, write-spec — turn a rough idea into a confirmed intent and a risk-declared spec, plus two tools: product-principles and design-system. Reads loom-code's contract package. Claude Code + Codex. |
+| [`loom-workflow`](loom-workflow/) | 4.1.2 | 10 | 4 | Loom workflow tools for git-backed project memory, `critique` (proposal / complexity), recap, handoff, session distill, `goal-create`, `independent-advisor` cross-executor second opinion, and long-term Outcome Maps whose delivery arcs are intents. |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | Philosophical thinking frameworks for problem clarification and deeper reasoning. |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | Investing research toolkit — macro regime diagnosis (US/JP/TW/KR/CN), DCF, screener, equity snapshots via primary-source adapters. |
@@ -91,7 +91,7 @@ To run the test suite from a clean checkout:
 git clone https://github.com/kouko/monkey-skills.git && cd monkey-skills
 python3 -m venv .venv && source .venv/bin/activate
 python3 -m pip install -r requirements-dev.txt
-python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q -n auto
+python3 scripts/run_package_tests.py --loom-family -q
 ```
 
 With uv instead: `uv venv .venv && source .venv/bin/activate`, then
