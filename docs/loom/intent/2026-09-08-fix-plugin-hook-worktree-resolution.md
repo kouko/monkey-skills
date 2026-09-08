@@ -31,4 +31,4 @@ Codex Desktop 從 feature worktree 執行發布命令時，plugin hook 可能仍
 - 清理既有 worktree 或全域 Codex 設定。
 
 ## Open questions
-- 使用者先前看到的手動承認提示，是否能由可重現的 Codex host 行為確定其觸發邊界。
+- none
