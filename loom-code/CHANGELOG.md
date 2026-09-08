@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.2] — 2026-09-08 — bounded review convergence
+
+- Bound one closing Review episode to two fix rounds plus one terminal
+  verification round; changing executor identity or technical design cannot
+  reset the limit.
+- Detect repeated blockers before the terminal round and make the agent own
+  the technical design re-look unless product requirements must change.
+- Separate one same-content executor retry from review rounds, then end as
+  `EXECUTION_FAILED` or `NON_CONVERGENT` instead of offering another round.
+- Keep convergence state in the active task context, with no new committed
+  ledger or checker schema.
+
 ## [2.0.1] — 2026-09-08 — one-command publication
 
 - Add `loom_checker.py publish` to validate the matching attestation, push the
