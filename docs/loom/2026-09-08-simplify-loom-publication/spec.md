@@ -56,4 +56,4 @@ REQ-6 — Ship invokes the wrapper
 - CI error: the job prints the rejected PR title, the `<type>(<scope>): <subject>` shape, and the specific mismatch or trailing-period reason, then exits one.
 - Piped output: status and the final PR URL are line-oriented plain text; diagnostics go to stderr and success output goes to stdout.
 
-principles lens: N/A — no PRINCIPLES.md
+principles lens: conforming — the wrapper preserves machine-owned quality, explicit user publication authorization, recomputed gates, no net mechanism increase, and no mutation of user data.
