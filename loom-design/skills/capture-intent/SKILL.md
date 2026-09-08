@@ -350,9 +350,3 @@ stop until acceptance.
 
 Every step above is the same. Resolve `<loom-code>` to the installed plugin
 directory; never create or invoke a repository-local checker copy.
-
-Tell the user that the first `loom-code` station will do this, run the
-interview and write the intent meanwhile, and leave the checker runs for
-after the scaffold exists. That approval is an authorisation to run, not a
-decision about the work: it is not a decision point, and it happens once
-per repo, not once per change.

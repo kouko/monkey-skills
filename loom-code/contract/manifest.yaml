@@ -8,7 +8,6 @@ version: 1.0.0
 # functional content identity that executions and reviews attest to.
 publication_only_paths:
   - docs/loom/<change-id>/attestation.json
-  - docs/loom/intent/<change-id>.md
   - docs/loom/memory/**
 
 stations:            # produce one per-change artifact each (§3)

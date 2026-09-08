@@ -6681,8 +6681,14 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         "PASS", "PASS_WITH_NOTES"
     } for v in verdicts):
         return report([("finalize.verdicts", "every reviewer verdict must pass")], err)
+    reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts}
+    reviewers.discard("")
+    if len(reviewers) < 2:
+        return report([("finalize.verdicts", "two distinct reviewers are required")], err)
     if not isinstance(findings, list) or not isinstance(adversarial, list):
         return report([("finalize.schema", "findings and adversarial must be lists")], err)
+    if not adversarial:
+        return report([("finalize.adversarial", "at least one adversarial artifact is required")], err)
 
     repo = repo_root(Path.cwd())
     manifest = load_manifest()
