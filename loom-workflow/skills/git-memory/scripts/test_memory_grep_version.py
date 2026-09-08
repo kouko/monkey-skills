@@ -1,9 +1,9 @@
 """W2-01: version bump, changelog entry, and minimum git version documented.
 
 Regression contract for the housekeeping task that follows the memory-grep.sh
-single-pass rewrite (W1-02/W1-03): the plugin version bumped, the CHANGELOG's
-top entry names the measured before/after durations, and the script's header
-comment states the minimum git version this rewrite now requires.
+single-pass rewrite (W1-02/W1-03): the plugin version bumped, the rewrite's
+CHANGELOG entry names the measured before/after durations, and the script's
+header comment states the minimum git version this rewrite now requires.
 """
 
 from __future__ import annotations
@@ -36,6 +36,18 @@ def _changelog_top_entry() -> tuple[str, str]:
     return first.group("version"), text[first.start() : end]
 
 
+def _changelog_entry(version: str) -> str:
+    """Return one version's body text from the changelog."""
+    text = _CHANGELOG.read_text(encoding="utf-8")
+    matches = list(_CHANGELOG_HEADING_RE.finditer(text))
+    for index, match in enumerate(matches):
+        if match.group("version") != version:
+            continue
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        return text[match.start() : end]
+    raise AssertionError(f"CHANGELOG.md has no {version!r} entry")
+
+
 def test_changelog_top_entry_version_matches_plugin_json() -> None:
     version, _ = _changelog_top_entry()
     assert version == _plugin_version(), (
@@ -43,8 +55,8 @@ def test_changelog_top_entry_version_matches_plugin_json() -> None:
     )
 
 
-def test_changelog_top_entry_names_measurement_command_and_both_durations() -> None:
-    _, entry = _changelog_top_entry()
+def test_single_pass_changelog_entry_names_measurement_command_and_both_durations() -> None:
+    entry = _changelog_entry("4.1.0")
     durations = _DURATION_RE.findall(entry)
     assert len(durations) >= 2, (
         f"expected at least two measured durations (before/after) in the top "
