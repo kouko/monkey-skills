@@ -2,9 +2,12 @@
 
 ## [2.0.2] — 2026-09-08 — bounded review convergence
 
-- Bound one closing Review episode to two fix rounds plus one terminal
-  verification round; changing executor identity or technical design cannot
-  reset the limit.
+budget-exception: review.bounded-episode — replaces the unbounded fix-round
+paragraph with one explicit terminal gate.
+
+- Bound one closing Review episode to one full review, one fix-verification
+  round, and one terminal verification after a technical design re-look;
+  changing executor identity or technical design cannot reset the limit.
 - Detect repeated blockers before the terminal round and make the agent own
   the technical design re-look unless product requirements must change.
 - Separate one same-content executor retry from review rounds, then end as

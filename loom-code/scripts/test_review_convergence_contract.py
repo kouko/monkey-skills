@@ -9,6 +9,8 @@ CONTRACT = " ".join((REVIEW + "\n" + REVIEWER).split())
 
 
 def test_review_episode_has_three_distinct_content_rounds_and_no_identity_reset() -> None:
+    assert "<!-- gate: review.bounded-episode -->" in REVIEW
+    assert "<!-- /gate -->" in REVIEW
     assert "three distinct functional-content digests" in REVIEW_WORDS
     assert "does not reset" in REVIEW_WORDS
     for identity in ("reviewer", "vendor", "model", "task", "app", "branch"):
@@ -44,6 +46,11 @@ def test_same_content_executor_retry_is_bounded_and_not_a_round() -> None:
 def test_contract_adds_no_review_round_ledger_or_schema() -> None:
     forbidden = ("review-round.json", "rounds.json", "review_episode.json")
     assert not any(name in CONTRACT for name in forbidden)
+
+
+def test_round_four_is_forbidden_in_context() -> None:
+    assert "never dispatch Round 4" in REVIEW_WORDS
+    assert "must not dispatch Round 4" in CONTRACT
 
 
 def test_reviewer_yaml_is_converted_to_finalization_json() -> None:

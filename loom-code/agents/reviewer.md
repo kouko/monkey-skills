@@ -144,9 +144,7 @@ checkpoint again):
 - Round 3 is terminal and occurs only after the orchestrator's technical
   design re-look. If blockers remain, return `NEEDS_REVISION`; the orchestrator
   records `NON_CONVERGENT` and must not dispatch Round 4, swap identities to
-  reset the episode, or ask the user whether to continue. A transient or
-  malformed invocation may retry once before a conforming verdict exists; a
-  second such failure is terminal `EXECUTION_FAILED` and is not your verdict.
+  reset the episode, or ask the user whether to continue.
 
 ## Output
 
