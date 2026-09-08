@@ -48,6 +48,7 @@ def main() -> int:
     assert '["--head", head, "--require-live-head"]' in source
 
     external = loom_checker.run_publish_external
+    resolver = loom_checker.resolve_publish_executable
     cwd = Path.cwd()
     try:
         def forbid_network(*args, **kwargs):
@@ -82,6 +83,7 @@ def main() -> int:
                 check=True,
             )
             loom_checker.run_publish_external = forbid_network
+            loom_checker.resolve_publish_executable = lambda _name: "/usr/bin/git"
             os.chdir(repo)
             error = StringIO()
             rc = loom_checker.cmd_publish([
@@ -89,10 +91,11 @@ def main() -> int:
                 "--body-file", str(SCRIPT),
             ], StringIO(), error)
             assert rc == 1
-            assert "push.attestation" in error.getvalue()
+            assert "branch must carry exactly one generated attestation; found 0" in error.getvalue()
     finally:
         os.chdir(cwd)
         loom_checker.run_publish_external = external
+        loom_checker.resolve_publish_executable = resolver
     return 0
 
 
