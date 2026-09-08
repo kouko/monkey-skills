@@ -44,3 +44,9 @@ def test_same_content_executor_retry_is_bounded_and_not_a_round() -> None:
 def test_contract_adds_no_review_round_ledger_or_schema() -> None:
     forbidden = ("review-round.json", "rounds.json", "review_episode.json")
     assert not any(name in CONTRACT for name in forbidden)
+
+
+def test_reviewer_yaml_is_converted_to_finalization_json() -> None:
+    assert "structured YAML" in REVIEW_WORDS
+    assert "convert" in REVIEW_WORDS
+    assert "temporary JSON" in REVIEW_WORDS

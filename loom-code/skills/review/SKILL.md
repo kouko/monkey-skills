@@ -26,8 +26,9 @@ the remaining work.
 
 Reviewer independence is a quality requirement, not a ledger field. Give each
 reviewer the branch base, changed paths, intent, spec when present, plan, and
-the applicable lens from `references/lenses.md`. Reviewers return structured
-JSON containing reviewer, vendor, model, lens, verdict, and findings.
+the applicable lens from `references/lenses.md`. Reviewers return the
+structured YAML required by `agents/reviewer.md`; the orchestrator converts
+the accepted fields to the temporary JSON consumed by finalization.
 
 ## 3. Run blind and adversarial checks
 
