@@ -102,14 +102,9 @@ Role boundaries enforced by behavior, not reading restrictions:
   `--measure` instead prints the skill count, the artifact-type count and the
   session-start injection word count, and exits 1 when the word count exceeds
   the `session-start-baseline:` recorded in `docs/loom/KICKOFF-DEFAULTS.md`.
-- **Scaffold the Codex hook package into an adopting repo** (one-time, done
-  by the station itself):
-  `python3 loom-code/scripts/codex_scaffold.py <repo-root>` — writes
-  `.codex/hooks.json` plus the checker copy it needs (`loom-checker` shim,
-  `loom_checker.py`, `git_exec.py`, `contract/`). The command string in
-  `hooks.json` is a fixed relative path carrying no version, so a checker
-  upgrade does not re-trigger Codex's trust prompt; the version stamp lives
-  inside the copied files.
+- **Use the installed Codex plugin hook**: adopting repos no longer receive a
+  `.codex` checker copy, trust probe, or hook-firing ledger. Review generates
+  a content-bound attestation; the installed hook validates it at publish time.
 - **Check runtime prose contracts cite nothing repo-local** (CI gate):
   `python3 loom-code/scripts/check_contract_citations.py` — a runtime prose
   contract under the loom skill/agent trees must not cite this repository's
@@ -143,21 +138,20 @@ capture-intent ─► write-spec ─┐            (loom-design; only when needs
                         maintain ◄────────────────┘  (an incident becomes a new intent)
 ```
 
-- **Artifacts** (five, plus git): `docs/loom/intent/<change-id>.md`,
-  and inside `docs/loom/<change-id>/`: `spec.md`, `plan.md`, `review.json`,
-  `evidence/`. Nothing else is a per-change artifact. Store layout and the
+- **Artifacts**: `docs/loom/intent/<change-id>.md`, and inside
+  `docs/loom/<change-id>/`: `spec.md`, `plan.md`, generated
+  `attestation.json`, plus a blind-run report when required. Store layout and the
   frozen pre-1.0 stores: `docs/loom/README.md`.
 - **Three human decision points, and no others**: ① restate-and-confirm the
   intent (one-way-door questions folded in), ② for a product change, confirm
   the user-visible behaviour in the spec, ③ accept the blind-run report.
   Everything else the agent decides and records as `agent-decided`.
 - **Quality comes from three verification actions only** — read (≥2
-  fresh-context reviewers), blind run, adversarial probes — run at a
-  checkpoint review, never as a per-task three-arm ceremony. Verdicts land in
-  `review.json`.
-- **One deterministic gate**: `loom_checker.py`, invoked by host hooks
-  (Claude Code plugin hooks; on Codex, a scaffolded `.codex/hooks.json` plus a
-  checker copy). Every rule is a recompute. `--list-rules` is the rule SSOT.
+  fresh-context reviewers), blind run, adversarial programs — run once at
+  closing review. Outcomes land in a generated content-bound attestation.
+- **One deterministic gate**: `loom_checker.py`, invoked by installed plugin
+  hooks. Publication validates the attestation and safety state without
+  replaying functional executables. `--list-rules` is the rule SSOT.
 - **Prose is advisory**: only a paragraph marked `<!-- gate: <id> -->` counts
   as a gate, and unmarked prose may not be used as one.
 - Concept model (the design this shape came from):

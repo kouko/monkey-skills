@@ -88,7 +88,7 @@ shapes.
 | capture-intent | `docs/loom/intent/<change-id>.md` | User — **decision point ①** ("is this what you want?"). Absent `loom-design`: step 3 of this file does it | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` — when the intent is committed | none |
 | write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering and pre-build risk: agent-decided. Absent `loom-design`: step 4 writes the minimal spec and runs ② | `standing.product-principles-reject` blocks a product change with no ratified `PRINCIPLES.md`, when the spec is started | `required`: one fresh `spec+adversarial` reviewer and no blind run; `not-required`: none |
 | **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | before drafting: `intake.confirmed`, `intake.spec-pass`, `intake.confirmed-behavior`; after drafting: `intake.test-case-pair` and `plan.field-caps` | no formal plan review |
-| build | commits (the diff); one commit per task carrying a `Task: <id>` trailer | Agent | task tests and dependency-boundary integration checks | no formal review during Build; transition once to branch end after every task and package test passes |
+| build | functional commits (the diff) | Agent | task tests and dependency-boundary integration checks | no formal review during Build; transition once after completed functional work |
 | review | generated `docs/loom/<change-id>/attestation.json`; never written by write-plan | Agent — lane-defined fresh reviewers at branch end | `finalize-review` runs and records functional verification once | after completed functional work |
 | ship | pull request and merge (git) | User — **decision point ③** | `push.attestation` and fast publication checks | matching evidence exists |
 | maintain | a new or updated `docs/loom/intent/<change-id>.md` | Agent turns an incident into an intent; the user then answers ① for that new change | `intent.schema` and the rest of the `intent.*` family, when that intent is committed | none |
@@ -369,7 +369,7 @@ how long it will take.
 - Task ids are `W<n>-<nn>`, plus the reserved `W<n>-memory` on the last
   wave as the one named exception to that numeric form; both are
   **stable**: once written, an id is never renumbered, because commits
-  refer to it in their `Task: <id>` trailer.
+  name it in their hand-off when that helps trace a dependency.
 - Dependencies go on the task line as `after: <ids>`. Tasks in one wave
   with no dependency between them run in parallel — but disjoint files are
   not enough: a shared symbol, a doc that mirrors code, or a

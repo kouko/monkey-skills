@@ -524,6 +524,7 @@ def validate_attestation(
     if not isinstance(executions, list) or not executions:
         return [(rule, "attestation records no successful functional executions")]
     package_runs = 0
+    adversarial_runs = 0
     for execution in executions:
         if not isinstance(execution, dict):
             return [(rule, "attestation contains a malformed execution")]
@@ -536,22 +537,34 @@ def validate_attestation(
             return [(rule, "attestation contains a non-passing execution")]
         if execution.get("kind") == "package-tests":
             package_runs += 1
+            declared, _ = declared_test_command(repo)
+            if command != declared:
+                return [(rule, "package-tests execution does not match the declared package command")]
         elif execution.get("kind") == "adversarial":
+            adversarial_runs += 1
             artifact = execution.get("artifact")
             if not isinstance(artifact, str) or not artifact.strip():
                 return [(rule, "adversarial execution names no artifact")]
             if not command_names_artifact(command, artifact):
                 return [(rule, "adversarial command does not name its artifact")]
+            if not command_executes_artifact(command, artifact):
+                return [(rule, "adversarial command must execute the artifact directly")]
             if not git_ok(repo, "cat-file", "-e", f"{head_sha}:{artifact}"):
                 return [(rule, "adversarial execution names no committed artifact")]
         else:
             return [(rule, "attestation contains an unknown execution kind")]
     if package_runs != 1:
         return [(rule, "attestation must record exactly one package-tests execution")]
+    if adversarial_runs < 1:
+        return [(rule, "attestation records no adversarial execution")]
 
     verdicts = attestation.get("verdicts")
     if not isinstance(verdicts, list) or not verdicts:
         return [(rule, "attestation records no reviewer verdict")]
+    reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts if isinstance(v, dict)}
+    reviewers.discard("")
+    if len(reviewers) < 2:
+        return [(rule, "attestation needs two distinct reviewers")]
     for verdict in verdicts:
         if not isinstance(verdict, dict) or verdict.get("verdict") not in {
             "PASS", "PASS_WITH_NOTES"
@@ -4456,6 +4469,18 @@ def artifact_argv(repo: Path, artifact: str) -> list[str]:
     )
 
 
+def command_executes_artifact(command: str, artifact: str) -> bool:
+    """True when argv directly executes the named Python, shell, or executable file."""
+    tokens = argv_for(command)
+    wanted = os.path.normpath(artifact)
+    suffix = Path(artifact).suffix.lower()
+    if suffix == ".py":
+        return len(tokens) >= 2 and Path(tokens[0]).name.startswith("python") and os.path.normpath(tokens[1]) == wanted
+    if suffix == ".sh":
+        return len(tokens) >= 2 and Path(tokens[0]).name in {"bash", "sh"} and os.path.normpath(tokens[1]) == wanted
+    return os.path.normpath(tokens[0]) in {wanted, os.path.join(".", wanted)}
+
+
 def declared_test_command(repo: Path) -> tuple[str | None, str]:
     """The repo's own package-test command, and where it was read from.
 
@@ -6656,6 +6681,10 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     repo = repo_root(Path.cwd())
     manifest = load_manifest()
     head_sha = git_text(repo, "rev-parse", "HEAD")
+    status_before = git_text(repo, "status", "--porcelain")
+    if status_before:
+        return report([("finalize.clean-tree", "commit functional content before finalizing review")], err)
+    config_before = git_text(repo, "config", "--list", "--null")
     package_command, source = declared_test_command(repo)
     if package_command is None or package_command.strip().lower() == NO_PACKAGE_TESTS:
         return report([("finalize.package-tests", f"no executable package command ({source})")], err)
@@ -6669,6 +6698,8 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             return report([("finalize.adversarial", "adversarial input needs command and artifact")], err)
         if not command_names_artifact(command, artifact):
             return report([("finalize.adversarial", "command must name its artifact argument")], err)
+        if not command_executes_artifact(command, artifact):
+            return report([("finalize.adversarial", "command must execute the artifact directly")], err)
         if not git_ok(repo, "cat-file", "-e", f"{head_sha}:{artifact}"):
             return report([("finalize.adversarial", "artifact must exist in the selected commit")], err)
         work.append(("adversarial", command, artifact))
@@ -6688,6 +6719,13 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             "kind": kind, "command": command, "artifact": artifact,
             "result": "pass", "command_digest": _command_digest(command),
         })
+
+    if git_text(repo, "rev-parse", "HEAD") != head_sha:
+        return report([("finalize.stable-tree", "HEAD moved during functional verification")], err)
+    if git_text(repo, "status", "--porcelain") != status_before:
+        return report([("finalize.stable-tree", "working tree or index changed during functional verification")], err)
+    if git_text(repo, "config", "--list", "--null") != config_before:
+        return report([("finalize.stable-tree", "git configuration changed during functional verification")], err)
 
     digest = functional_content_digest(repo, head_sha, change_id, manifest)
     if digest is None:

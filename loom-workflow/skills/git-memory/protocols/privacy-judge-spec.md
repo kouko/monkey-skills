@@ -15,8 +15,9 @@ ambiguous private-party identifying text, an internal-only codename, or an
 organization whose public status cannot be established.
 
 For an audited semantic false positive, the carrier may proceed with
-`Privacy-Bypass-Reason: <specific reason>`. The reason is part of the local
-publication record. This bypass never applies to a deterministic secret
+`Privacy-Bypass-Reason: <specific reason>`. Put that line in the exact commit
+message or PR body being scanned so the exception is reviewable in the carrier
+itself. This bypass never applies to a deterministic secret
 finding. A judge failure blocks only the carrier under review; it does not
 invalidate an unchanged functional-content attestation.
 

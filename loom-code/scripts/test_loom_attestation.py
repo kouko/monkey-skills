@@ -32,6 +32,9 @@ def repo_with_content(tmp_path: Path) -> Path:
     git(repo, "config", "user.email", "test@example.com")
     git(repo, "config", "user.name", "Test")
     (repo / "src.py").write_text("VALUE = 1\n", encoding="utf-8")
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.parent.mkdir(parents=True, exist_ok=True)
+    kickoff.write_text("- package-tests: python3 -m pytest -q — fixture (2026-09-08)\n")
     commit(repo, "initial")
     return repo
 
@@ -76,6 +79,7 @@ def test_another_changes_attestation_is_functional_content(tmp_path: Path) -> No
 
 def matching_attestation(repo: Path) -> dict:
     command = "python3 -m pytest -q"
+    adversarial = "python3 src.py"
     return {
         "schema": "loom-attestation/v1",
         "change_id": CHANGE,
@@ -85,9 +89,15 @@ def matching_attestation(repo: Path) -> dict:
         "executions": [{
             "kind": "package-tests", "command": command, "artifact": "",
             "result": "pass", "command_digest": hashlib.sha256(command.encode()).hexdigest(),
+        }, {
+            "kind": "adversarial", "command": adversarial, "artifact": "src.py",
+            "result": "pass", "command_digest": hashlib.sha256(adversarial.encode()).hexdigest(),
         }],
         "verdicts": [{
             "reviewer": "reviewer-1", "vendor": "openai", "model": "test",
+            "lens": "code", "verdict": "PASS", "findings": [],
+        }, {
+            "reviewer": "reviewer-2", "vendor": "other", "model": "test",
             "lens": "code", "verdict": "PASS", "findings": [],
         }],
         "findings": [],
@@ -110,6 +120,33 @@ def test_well_formed_forged_attestation_fails_closed(tmp_path: Path) -> None:
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     )
     assert any("command digest" in reason for _, reason in failures)
+
+
+def test_package_execution_must_match_declared_command(tmp_path: Path) -> None:
+    repo = repo_with_content(tmp_path)
+    attestation = matching_attestation(repo)
+    attestation["executions"][0]["command"] = "true"
+    attestation["executions"][0]["command_digest"] = hashlib.sha256(b"true").hexdigest()
+    failures = loom_checker.validate_attestation(
+        repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
+    )
+    assert any("declared package command" in reason for _, reason in failures)
+
+
+def test_attestation_requires_two_reviewers_and_adversarial_execution(tmp_path: Path) -> None:
+    repo = repo_with_content(tmp_path)
+    attestation = matching_attestation(repo)
+    attestation["verdicts"] = attestation["verdicts"][:1]
+    failures = loom_checker.validate_attestation(
+        repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
+    )
+    assert any("two distinct reviewers" in reason for _, reason in failures)
+    attestation = matching_attestation(repo)
+    attestation["executions"] = attestation["executions"][:1]
+    failures = loom_checker.validate_attestation(
+        repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
+    )
+    assert any("adversarial execution" in reason for _, reason in failures)
 
 
 def test_stale_attestation_fails_closed(tmp_path: Path) -> None:
@@ -135,10 +172,23 @@ def test_adversarial_execution_must_name_a_committed_artifact(tmp_path: Path) ->
     assert any("committed artifact" in reason for _, reason in failures)
 
 
+def test_adversarial_wrapper_cannot_fake_execution(tmp_path: Path) -> None:
+    repo = repo_with_content(tmp_path)
+    attestation = matching_attestation(repo)
+    command = "true src.py"
+    attestation["executions"][1].update({
+        "command": command,
+        "command_digest": hashlib.sha256(command.encode()).hexdigest(),
+    })
+    failures = loom_checker.validate_attestation(
+        repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
+    )
+    assert any("execute the artifact directly" in reason for _, reason in failures)
+
+
 def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
     kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
-    kickoff.parent.mkdir(parents=True)
     kickoff.write_text("- package-tests: python3 -c pass — fixture (2026-09-08)\n")
     commit(repo, "declare tests")
     review_input = tmp_path / "review-input.json"
@@ -146,9 +196,12 @@ def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) ->
         "verdicts": [{
             "reviewer": "reviewer-1", "vendor": "openai", "model": "test",
             "lens": "code", "verdict": "PASS", "findings": [],
+        }, {
+            "reviewer": "reviewer-2", "vendor": "other", "model": "test",
+            "lens": "code", "verdict": "PASS", "findings": [],
         }],
         "findings": [],
-        "adversarial": [],
+        "adversarial": [{"command": "python3 src.py", "artifact": "src.py"}],
     }), encoding="utf-8")
     checker = Path(loom_checker.__file__)
     result = subprocess.run(
@@ -161,7 +214,9 @@ def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) ->
     assert loom_checker.validate_attestation(
         repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
     ) == []
-    assert [run["kind"] for run in attestation["executions"]] == ["package-tests"]
+    assert [run["kind"] for run in attestation["executions"]] == [
+        "package-tests", "adversarial"
+    ]
 
 
 def test_push_reuses_matching_attestation_without_subprocesses(

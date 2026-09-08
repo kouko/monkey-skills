@@ -1,7 +1,7 @@
 {
   "name": "loom-code",
   "version": "1.9.0",
-  "description": "Five stations — write-plan, build, review, ship, maintain — carry one change from plan to merged PR, with paired task tests and one complete branch-end review. Claude Code + Codex.",
+  "description": "Five stations carry one change from plan to PR with content-bound verification, one closing review, and a fast publication gate. Claude Code + Codex.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -28,7 +28,7 @@
   "interface": {
     "displayName": "loom-code",
     "shortDescription": "Five-station coding flow with a deterministic push gate, for Codex CLI",
-    "longDescription": "Carries one change from a confirmed intent to a merged pull request through five stations — write-plan, build, review, ship, maintain. The user answers three questions: is this what I want, is this the behaviour I want (product changes only), and did it work; quality comes from machines instead — at least two fresh-context reviewers per checkpoint, an agent that never wrote the code running it blind in a clean tree, and an adversary trying to break it. A single checker recomputes every claim before a push: that the reviewed tree is the pushed tree, that the recorded test run and abuse cases still pass when it runs them itself, and that nobody reviewed their own work. On Codex the checker is scaffolded into the repo as .codex/hooks/loom-checker, trusted once per repo. loom-design and loom-workflow are optional and read this plugin's versioned contract package.",
+    "longDescription": "Carries one change from a confirmed intent to a pull request through five stations. Review runs the package suite and adversarial programs once, then generates an attestation bound to functional content. The installed plugin hook validates that attestation and publication safety without replaying functional work. Publication-only fixes reuse matching evidence; functional edits invalidate it. loom-design and loom-workflow are optional and read this plugin's versioned contract package.",
     "developerName": "kouko",
     "category": "Coding",
     "capabilities": [

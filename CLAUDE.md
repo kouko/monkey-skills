@@ -67,7 +67,7 @@ repository's development records under `docs/`.
 
 | 動作 | 誰做 | 產出 |
 |---|---|---|
-| **讀** | ≥2 個 fresh-context reviewer，按型別選鏡頭（code 11 維／docs 5 維／spec-conformance／design-conformance／principles-conformance） | verdict → `review.json` |
+| **讀** | ≥2 個 fresh-context reviewer，按型別選鏡頭（code 11 維／docs 5 維／spec-conformance／design-conformance／principles-conformance） | verdict → generated attestation |
 | **盲跑** | 乾淨環境照 intent 的 Acceptance 逐條試，寫成使用者看得懂的盲跑報告 | 報告 ＋ `probes[]` |
 | **對抗** | mutation／fuzz，或對抗 agent 自寫 ≥3 個可執行的 abuse／邊界案例並逐筆自跑 | `probes[]`（`kind: adversarial`） |
 
@@ -87,10 +87,8 @@ repository's development records under `docs/`.
 ### Agent Behavioral Rules
 - worker：produces artifacts, does NOT produce gate verdicts
 - evaluator：produces verdicts, does NOT modify artifacts
-- **reviewer ≠ implementer 是重算出來的，不是宣告出來的**：checker 從 `review.json`
-  的 `dispatch[]` 記錄比對，任何 reviewer／blind-runner／adversary 同時是 implementer
-  就擋（規則 `push.reviewer-ne-implementer`）。writer≠judge 靠 fresh-context 派工記錄保證，
-  不靠「不改檔案」保證
+- **writer ≠ judge 由流程保證**：closing review 使用 fresh-context reviewer；
+  產生的 attestation 綁定功能內容與 reviewer identity，不維護 dispatch ledger
 - Knowledge access is open（行為限制，非閱讀限制）
 
 ### Agent Launch Convention
