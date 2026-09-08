@@ -95,11 +95,11 @@ python3 scripts/run_package_tests.py --loom-family -q
 ```
 
 With uv instead: `uv venv .venv && source .venv/bin/activate`, then
-`uv pip install -r requirements-dev.txt`, then the same pytest line.
+`uv pip install -r requirements-dev.txt`, then the same test command.
 
 For the exact isolated package gate, use the `package-tests:` line in
-[`docs/loom/KICKOFF-DEFAULTS.md`](docs/loom/KICKOFF-DEFAULTS.md). It runs both
-test groups from the hash-verified lock; CI covers the same paths in separate
+[`docs/loom/KICKOFF-DEFAULTS.md`](docs/loom/KICKOFF-DEFAULTS.md). It runs all
+Loom test groups from the hash-verified lock; CI covers the same paths in separate
 jobs.
 
 ## License
