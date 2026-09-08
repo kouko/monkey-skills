@@ -173,16 +173,17 @@ Git is public-by-default. After composing any commit message or PR body, follow
 the exact two-layer privacy gate in its compose protocol:
 
 1. Run `scripts/privacy-scan.py --text-file <composed>`.
-2. Dispatch the fresh-context judge specified by
-   `protocols/privacy-judge-spec.md` over the same text.
-3. Continue only when the deterministic scan is clean and the judge returns a
-   conforming `PASS`.
+2. Layer 2 is conditional: known public identifiers do not dispatch. Only
+   ambiguous private-party identifying text follows the fresh-context judge
+   procedure in `protocols/privacy-judge-spec.md` over the same text.
+3. Continue when the deterministic scan is clean and either no judge is
+   required or the dispatched judge returns a conforming `PASS`.
 
-Any finding, judge `BLOCK`, script error, dispatch failure, or malformed judge
-result makes the carrier **BLOCKED**. Surface the findings, stop, and escalate
-to the human. Delegated close-out consent never overrides this stop. The
-commit protocol's optional quality note is advisory only; it cannot turn a
-privacy failure into a pass.
+Any deterministic finding, dispatched judge `BLOCK`, script error, required
+dispatch failure, or malformed required judge result makes the carrier
+**BLOCKED**. Surface the findings, stop, and escalate to the human. Delegated
+close-out consent never overrides this stop. The commit protocol's optional
+quality note is advisory only; it cannot turn a privacy failure into a pass.
 
 Run the gate over the exact final text that would be committed or sent to
 GitHub, not an earlier excerpt. Do not manually waive a deterministic match or

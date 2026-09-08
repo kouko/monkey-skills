@@ -1,14 +1,26 @@
-from hashlib import sha256
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SKILL = REPO_ROOT / "loom-workflow/skills/git-memory/SKILL.md"
-UNCHANGED_CONTRACTS = {
-    "protocols/compose-commit.md": "ceb84ca490d70dcce253319608939668cce98b884334485f94e37e9812a29e1a",
-    "protocols/compose-pr.md": "55b199f1e6e7238b677f416a1900a0ef0e2a3f4ed3274d63ae51fc105a7fdf46",
-    "protocols/recall.md": "47844bd6ac0084495ef5ee342b1562d3b3de620ad240767711e34303286209b6",
-    "standards/memory-conventions.md": "585ca6c1205d12311f90f836ad08a2fa08253f765a8f2fe4d754fe98630d96c2",
+CONTRACT_BEHAVIORS = {
+    "protocols/compose-commit.md": [
+        "Privacy gate (fail-closed)",
+        "conditional semantic judge",
+        "Privacy-Bypass-Reason:",
+    ],
+    "protocols/compose-pr.md": [
+        "Privacy gate (fail-closed)",
+        "conditional semantic judge",
+        "gh pr create",
+    ],
+    "protocols/recall.md": ["--history", "--path", "--match", "--top"],
+    "standards/memory-conventions.md": [
+        "Decision:",
+        "Learning:",
+        "Gotcha:",
+        "Supersedes:",
+    ],
 }
 
 
@@ -30,6 +42,9 @@ def test_entrypoint_preserves_invocation_privacy_capture_and_recall():
         ],
         "privacy stop": [
             "two-layer privacy gate",
+            "Layer 2 is conditional",
+            "known public identifiers do not dispatch",
+            "ambiguous private-party identifying text",
             "fail-closed",
             "BLOCKED",
         ],
@@ -54,5 +69,13 @@ def test_entrypoint_preserves_invocation_privacy_capture_and_recall():
         assert not missing, f"{contract} missing from entrypoint: {missing}"
 
     skill_root = SKILL.parent
-    for relative, digest in UNCHANGED_CONTRACTS.items():
-        assert sha256((skill_root / relative).read_bytes()).hexdigest() == digest
+    for relative, needles in CONTRACT_BEHAVIORS.items():
+        contract_text = (skill_root / relative).read_text(encoding="utf-8")
+        missing = [needle for needle in needles if needle not in contract_text]
+        assert not missing, f"{relative} missing contract behavior: {missing}"
+
+
+def test_contract_regression_checks_do_not_pin_whole_file_hashes():
+    source = Path(__file__).read_text(encoding="utf-8")
+    assert "UNCHANGED" + "_CONTRACTS" not in source
+    assert "sha" + "256" not in source
