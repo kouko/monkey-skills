@@ -7,14 +7,23 @@ file defines the dispatch, the categories, the output schema, the
 advisory `quality_note` field, and the fail-closed contract. Neither
 protocol duplicates this rubric; each links here instead.
 
-Layer 1 (the deterministic `scripts/privacy-scan.*` regex) runs first
-and covers secrets/credentials. This layer-2 judge covers what a regex
-structurally cannot: names, organizations, codenames, and leaks that
-require reading the text for meaning.
+Layer 1 (the deterministic `scripts/privacy-scan.*` regex) always runs first
+and covers secrets/credentials. Layer 2 is conditional: public repository,
+PR, issue, task, or vendor identifiers are expected publication context and
+do not dispatch a judge. Dispatch only when deterministic inspection leaves
+ambiguous private-party identifying text, an internal-only codename, or an
+organization whose public status cannot be established.
+
+For an audited semantic false positive, the carrier may proceed with
+`Privacy-Bypass-Reason: <specific reason>`. The reason is part of the local
+publication record. This bypass never applies to a deterministic secret
+finding. A judge failure blocks only the carrier under review; it does not
+invalidate an unchanged functional-content attestation.
 
 ## Dispatch instruction
 
-Dispatch a **fresh-context** agent — one with no memory of this
+For text classified as ambiguous private-party content, dispatch a
+**fresh-context** agent — one with no memory of this
 conversation's other content — over the composed TEXT under review
 (commit subject + body + trailers, or PR title + body). Fresh context
 matters: an agent carrying the conversation's own context may

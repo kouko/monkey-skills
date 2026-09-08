@@ -121,6 +121,20 @@ def test_stale_attestation_fails_closed(tmp_path: Path) -> None:
     assert any("functional content digest" in reason for _, reason in failures)
 
 
+def test_adversarial_execution_must_name_a_committed_artifact(tmp_path: Path) -> None:
+    repo = repo_with_content(tmp_path)
+    attestation = matching_attestation(repo)
+    command = "python3 missing.py"
+    attestation["executions"].append({
+        "kind": "adversarial", "command": command, "artifact": "missing.py",
+        "result": "pass", "command_digest": hashlib.sha256(command.encode()).hexdigest(),
+    })
+    failures = loom_checker.validate_attestation(
+        repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
+    )
+    assert any("committed artifact" in reason for _, reason in failures)
+
+
 def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
     kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"

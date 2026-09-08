@@ -19,8 +19,8 @@
 | ステーション | 産出物 | 本文 |
 |---|---|---|
 | `write-plan` | `docs/loom/<change-id>/plan.md` — タスク DAG | [SKILL.md](skills/write-plan/SKILL.md) |
-| `build` | コミット。1 タスク 1 コミット、各々 `Task: <id>` trailer 付き | [SKILL.md](skills/build/SKILL.md) |
-| `review` | `docs/loom/<change-id>/review.json` — verdict・probe・finding | [SKILL.md](skills/review/SKILL.md) |
+| `build` | 機能コミットと focused test。dispatch ledger は作らない | [SKILL.md](skills/build/SKILL.md) |
+| `review` | 機能内容に結び付く `docs/loom/<change-id>/attestation.json` を生成 | [SKILL.md](skills/review/SKILL.md) |
 | `ship` | PR、memory trailer、マージ | [SKILL.md](skills/ship/SKILL.md) |
 | `maintain` | アラートや障害から intent を起こす | [SKILL.md](skills/maintain/SKILL.md) |
 
@@ -78,21 +78,9 @@ contract package、そしてプロジェクト自身の `docs/loom/` 成果物�
 
 ### Codex CLI
 
-Codex には plugin マーケットプレースがないため、checker をリポジトリ内に
-複製します：
-
-```bash
-python3 scripts/codex_scaffold.py --repo .
-python3 scripts/codex_scaffold.py --self-test
-```
-
-前者は `.codex/hooks.json` とバージョン刻印付きの checker のコピーを書き、
-後者はそのコピーに偽の push を撃ち込んで「動くこと」を確かめます。どちらも
-Codex がそれを実行するかどうかは証明しません — 未信頼の hook は黙って飛ば
-され、Codex 自身が発したコマンドだけがその hook エンジンを通るからです。
-その本当の probe（必ず失敗する push、答えが `BLOCK push.` で始まること）は
-station 側（`write-plan` step 0b）にあり、checker ではなく git が答えた場合
-に一度だけ `/hooks` の実行をユーザーに求めます。
+`loom-code` plugin をインストールすると、Codex は plugin 内の hook と checker
+を直接使います。repo 内の `.codex` checker コピー、trust probe、hook-firing
+ledger は不要です。
 
 ## ライセンス
 

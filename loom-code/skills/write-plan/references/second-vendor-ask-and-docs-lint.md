@@ -42,13 +42,11 @@ plain sentence, in the same decision-point-① message as everything else:
 > (Do you want to use Codex as the second reader this time?)
 
 Add the question to the running list kept in step 3, so it lands in the
-plan's `## Questions asked` section. The review station copies the answer
-(`<cli>` or `none`) into `review.json`'s top-level `second_vendor` field at
-the first checkpoint — that field is per-change, unlike the KICKOFF line.
+plan's `## Questions asked` section and the intent's decision record. That
+answer (`<cli>` or `none`) is per-change, unlike the KICKOFF line.
 
 **In the small lane**, there is only one reader, so this question is not
-asked at all, and the `second_vendor` field is omitted from `review.json`
-rather than written as `none`.
+asked at all.
 
 The existing `<cli>` / `none` values behave exactly as they did before this
 line existed: a fixed answer, asked once, never revisited.

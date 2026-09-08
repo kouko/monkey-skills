@@ -62,7 +62,7 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
   - id: maintain
     class: skill
-    eval: loom-code/scripts/test_maintain_intent_dedupe.py
+    eval: loom-code/scripts/test_simplified_station_text.py
   - id: product-principles
     class: skill
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
@@ -109,7 +109,7 @@ mechanisms:
     eval: loom-code/scripts/test_loom_checker_intake.py::test_product_spec_without_confirmed_behavior_is_blocked
   - id: intake.test-case-pair
     class: checker-rule
-    eval: loom-code/scripts/test_probes_review_reduction.py::test_plan_uncovered_rejected
+    eval: loom-code/scripts/test_loom_checker_intake.py
   - id: intake.spec-pass
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_latest_round_all_passing_is_accepted
@@ -134,45 +134,9 @@ mechanisms:
   - id: plan.edits-after-commit
     class: checker-rule
     eval: loom-code/scripts/test_plan_edits_after_commit.py::test_landed_task_files_change_blocks_even_with_reason
-  - id: push.dismissed-by-reviewer
+  - id: push.attestation
     class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_a_dismissal_by_the_implementer_blocks
-  - id: push.dispatch-covers-tasks
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_hardening.py::test_a_task_with_no_implementer_dispatch_blocks
-  - id: push.frozen-store-untouched
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_a_write_into_a_frozen_store_blocks
-  - id: push.open-findings-closed
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_an_unresolved_finding_blocks
-  - id: push.probes-adversarial
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_two_adversarial_probes_do_not_meet_the_floor
-  - id: push.probes-package-tests
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_missing_package_test_probe_blocks
-  - id: push.review-only-head
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_head_carrying_a_second_file_is_blocked
-  - id: push.review-schema
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_a_missing_review_key_blocks
-  - id: push.reviewed-sha
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_reviewed_sha_pointing_elsewhere_is_blocked
-  - id: push.second-vendor-honoured
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_hardening.py::test_a_named_second_vendor_absent_from_the_round_blocks
-  - id: push.reviewer-ne-implementer
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_a_reviewer_who_also_implemented_blocks
-  - id: push.verdicts-ge-2
-    class: checker-rule
-    eval: loom-code/scripts/test_loom_checker_push.py::test_one_reviewer_blocks
-  - id: review.round-append-only
-    class: checker-rule
-    eval: loom-code/scripts/test_review_round_append_only.py::test_review_edits_ungrandfathered_verdict_flip_blocks_naming_rewrite
+    eval: loom-code/scripts/test_loom_attestation.py::test_push_reuses_matching_attestation_without_subprocesses
   - id: spec.req-grammar
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_a_skipped_req_number_is_blocked
@@ -195,7 +159,7 @@ mechanisms:
     eval: loom-code/scripts/test_session_start_words.py
   - id: "PreToolUse:Bash:loom_checker.py"
     class: hook
-    eval: loom-code/scripts/test_loom_checker_push.py::test_hook_mode_recognises_every_push_shape
+    eval: loom-code/scripts/test_loom_attestation.py::test_push_reuses_matching_attestation_without_subprocesses
   - id: "PostToolUse:Skill:language-anchor.py"
     class: host-hygiene   # excluded from the net count — language-anchor is
                           # host infrastructure outside the loom flow, but a
@@ -228,7 +192,6 @@ mechanisms:
   - {id: "action:package-tests",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:parallel-dispatch",   class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:worktree",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
-  - {id: "action:dispatch-record",     class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:read",                class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:blind-run",           class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:adversarial",         class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
@@ -271,25 +234,19 @@ mechanisms:
   - {id: "artifact:review.verdicts",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:review.probes",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:review.open_findings",       class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.questions",           class: contract, eval: "loom-code/scripts/test_loom_checker_push.py::test_a_questions_entry_with_an_unknown_type_blocks"}
-  - {id: "artifact:review.dispatch",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
-  - {id: "artifact:review.cost",                class: contract, eval: "loom-code/scripts/test_review_json_template.py::test_template_carries_a_cost_block_with_the_declared_shape"}
-  - {id: "artifact:review.charter",              class: contract, eval: "loom-code/scripts/test_review_round_append_only.py::test_review_edits_no_charter_stamp_skips_a_rewritten_verdict"}
+  - {id: "artifact:review.questions",           class: contract, eval: "loom-code/scripts/test_contract_manifest.py"}
+  - {id: "artifact:review.cost",                class: contract, eval: "loom-code/scripts/test_contract_manifest.py"}
+  - {id: "artifact:review.charter",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py"}
+
+  - {id: "artifact:attestation.schema",         class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
+  - {id: "artifact:attestation.change_id",      class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
+  - {id: "artifact:attestation.content_digest", class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
+  - {id: "artifact:attestation.executions",     class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
+  - {id: "artifact:attestation.verdicts",       class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
+  - {id: "artifact:attestation.findings",       class: contract, eval: "loom-code/scripts/test_loom_attestation.py"}
 
   # --- prose-gate: landed stations mark their real `<!-- gate: … -->`
   #     paragraphs in W1/W2, W3-06 §11 recomputes ---
-  - id: "maintain.dedupe"
-    class: prose-gate
-    eval: loom-code/scripts/test_maintain_intent_dedupe.py
-  - id: "build.no-dispatch-without-a-record"
-    class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
-  - id: "build.task-tests-before-dependent-task"
-    class: prose-gate
-    eval: "loom-code/scripts/test_build_station_text.py::test_step4_requires_paired_cases_before_dependents_advance"
-  - id: "build.rehearsal-before-graduation"
-    class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-05-graduated-probes-independent-of-local-history/blind-run-report.md"  # executable twin: loom-code/scripts/test_build_station_text.py::test_rehearsal_paragraph_is_a_registered_prose_gate
   - id: "write-plan.no-plan-without-confirmed-intent"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
@@ -298,25 +255,7 @@ mechanisms:
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/cold-read-A.md"
   - id: "write-plan.post-decision-conservative-default"
     class: prose-gate
-    eval: loom-code/scripts/test_write_plan_intake.py
-  - id: "review.two-fresh-reviewers"
-    class: prose-gate
-    eval: loom-code/scripts/test_loom_checker_push.py::test_one_reviewer_blocks
-  - id: "review.reviewer-not-implementer"
-    class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
-  - id: "review.no-averaging"
-    class: prose-gate
-    eval: loom-code/scripts/test_reviewer_agent_single_contract.py
-  - id: "review.review-only-commit"
-    class: prose-gate
-    eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w1-checkpoint-reviews.md"
-  - id: "ship.no-push-before-acceptance"
-    class: prose-gate
-    eval: loom-code/scripts/test_ship_pr_body.py
-  - id: "ship.pr-body-carries-trailer-footer"
-    class: prose-gate
-    eval: loom-code/scripts/test_ship_pr_body.py
+    eval: loom-code/scripts/test_simplified_station_text.py
   - id: "capture-intent.no-confirmed-without-restatement"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"
@@ -337,4 +276,4 @@ mechanisms:
     eval: loom-code/scripts/test_loom_checker_standing.py::test_missing_design_never_rejects
   - id: "charter.plan-omission-narrow"
     class: prose-gate
-    eval: loom-code/scripts/test_review_station_text.py::test_lenses_plan_omission_narrow_gate_present
+    eval: loom-code/scripts/test_simplified_station_text.py

@@ -25,13 +25,13 @@ STATIONS = {
     "maintain": "loom-code",
 }
 ARTIFACTS = {
-    "intent", "spec", "plan", "attestation",
-    "blind-run-report", "memory", "kickoff-defaults", "dispatch",
+    "intent", "spec", "plan", "review", "attestation",
+    "blind-run-report", "memory", "kickoff-defaults",
 }
 # The four W0-01 additions declare no `fields:` schema of their own (their
 # content is free-form prose / an existing sub-key of review.json, not a
 # frontmatter/section/json-key schema) and two of them (blind-run-report,
-# dispatch) have no template file at all -- they are per-change artifact
+# blind-run-report has no template file -- it is a per-change artifact
 # charter rows, not new template-backed schemas.
 ARTIFACTS_WITHOUT_FIELDS_SCHEMA = {"blind-run-report", "memory", "kickoff-defaults", "dispatch"}
 ID_RE = re.compile(r"^[a-z][a-z0-9-]*$")
@@ -136,4 +136,4 @@ def test_manifest_declares_generated_attestation(manifest):
     assert schema["template"] == "attestation.json"
     names = [field["name"] for field in schema["fields"]]
     assert names == ["schema", "change_id", "content_digest", "executions", "verdicts", "findings"]
-    assert "review" not in manifest["artifacts"]
+    assert manifest["artifacts"]["review"]["charter"]["readers"] == ["write-plan"]

@@ -47,17 +47,14 @@ actions:             # executable steps inside a station; not skills (§3)
     owner: write-plan
     summary: "code-only install, kind product, no ratified PRINCIPLES.md — run templates/PRINCIPLES-interview.md inside decision point ①; user confirms, agent writes ratified-by."
   - name: package-tests
-    owner: build
-    summary: "run the package-level test command; result is recorded as a probe in review.json."
+    owner: review
+    summary: "run the package-level test command once during finalize-review; the generated attestation binds its result to functional content."
   - name: parallel-dispatch
     owner: build
-    summary: "independent tasks of one wave run as parallel implementer dispatches; one dispatch record per task."
+    summary: "independent tasks may run in parallel when their file sets do not overlap; no dispatch ledger is required."
   - name: worktree
     owner: build
-    summary: "each implementer works in its own git worktree; the wave merges back before the checkpoint."
-  - name: dispatch-record
-    owner: build
-    summary: "append one entry per dispatch to review.json dispatch[] (schema below); the push rules reviewer≠implementer and dismissed-by-reviewer read it."
+    summary: "parallel implementers may use isolated git worktrees; the branch integrates before closing review."
   - name: read
     owner: review
     summary: "≥2 fresh-context reviewers apply the lens for the artifact type (code 11 dims / docs 5 dims / spec- design- principles-conformance)."
@@ -66,10 +63,10 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "an agent that never touched the change builds/runs it in a clean environment and writes the blind-run report against every Acceptance line (plus UI flows for product)."
   - name: adversarial
     owner: review
-    summary: "mutation / fuzz / abuse cases for code, red-team for spec, gate-attack catalogue for skills; results land in review.json."
+    summary: "mutation / fuzz / abuse cases for code, red-team for spec, and gate attacks for skills; execution results land in the generated attestation."
   - name: checkpoint
     owner: review
-    summary: "one branch-end review after Build package tests and memory work; no automatic after-task or wave-end formal review; fix rounds continue that checkpoint until PASS / PASS_WITH_NOTES, when reviewed_sha advances."
+    summary: "one closing review after Build; fixes return to Build, and finalize-review generates a fresh content-bound attestation only after reviewers and checks pass."
   - name: memory
     owner: ship
     summary: "git-memory trailers on the commit plus docs/loom/memory/ entries (templates/memory-README.md) before push."
@@ -171,7 +168,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "design rationale",              goes_to: spec}
         - {kind: "build or review diary",         goes_to: review}
         - {kind: "lessons",                       goes_to: memory}
-        - {kind: "landed commit shas",            goes_to: dispatch}
+        - {kind: "verification identity",          goes_to: attestation}
       signoff: write-plan
       edits_after:
         - {id: mark-claimed-or-blocked, text: "a task line gains a claimed or blocked mark"}
@@ -185,6 +182,32 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       - {name: Task DAG, kind: section, required: true, grammar: "**<id> <title>** after: <ids> acceptance: <numbers>; Test: A<n> positive: <id>; negative|boundary: <id>"}
       - {name: Risks,    kind: section, required: true}
       - {name: Current State Evidence, kind: section, required: false, note: "required when needs-design: no"}
+  # Compatibility input for a risk-triggered pre-build spec review only.
+  # Branch-end Review and Ship never create, update, or read this artifact.
+  review:
+    path: docs/loom/<change-id>/review.json
+    template: review.json
+    charter:
+      answers: "whether a risk-triggered spec review passed"
+      readers: ["write-plan"]
+      must: ["reviewed_sha", "scope", "vendors", "verdicts", "probes", "open_findings"]
+      must_not:
+        - {kind: "design reasoning", goes_to: spec}
+        - {kind: "lessons", goes_to: memory}
+      signoff: review
+      edits_after:
+        - {id: prebuild-review-replaced, text: "a changed spec replaces its pre-build review input"}
+    fields:
+      - {name: reviewed_sha, kind: json, required: true}
+      - {name: scope, kind: json, required: true}
+      - {name: vendors, kind: json, required: true}
+      - {name: verdicts, kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, scope, round, verdict, dimension_scores, findings, fallback, spec_sha, sha}]"}
+      - {name: probes, kind: json, required: true, grammar: "[{kind, command, sha, result, artifact, scope}]"}
+      - {name: open_findings, kind: json, required: true, grammar: "[{id, anchor, origin_sha, raised_by, resolved | dismissed}]"}
+      - {name: questions, kind: json, required: false}
+      - {name: cost, kind: json, required: false}
+      - {name: charter, kind: json, required: false}
+
   attestation:
     path: docs/loom/<change-id>/attestation.json
     template: attestation.json
@@ -227,7 +250,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "What this did to existing data"
         - "I decided for you"
       must_not:
-        - {kind: "diff commentary", goes_to: dispatch}
+        - {kind: "diff commentary", goes_to: memory}
         - {kind: "design rationale", goes_to: spec}
         - {kind: "internal ids",     goes_to: review}
       signoff: ship
@@ -246,7 +269,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "the correct path"
       must_not:
         - {kind: "change narrative", goes_to: review}
-        - {kind: "restated diff",    goes_to: dispatch}
+        - {kind: "verification identity", goes_to: attestation}
         - {kind: "task lists",       goes_to: plan}
       signoff: build
       edits_after:
@@ -269,28 +292,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       edits_after:
         - {id: kickoff-line-replaced-with-value-reason-date, text: "a line is replaced with a new value, reason and date"}
         - {id: kickoff-key-removed-with-dated-reason,        text: "a key is removed only with a dated reason line"}
-  dispatch:
-    path: "docs/loom/<change-id>/review.json#dispatch"
-    template: null
-    fields: []
-    charter:
-      answers: "who did what, fresh-context or not, and when"
-      readers: ["push rules", "reviewers"]
-      must:
-        - "task"
-        - "role"
-        - "agent_id"
-        - "model"
-        - "started"
-        - "fresh_context"
-      must_not:
-        - {kind: "outcomes or verdicts", goes_to: review}
-        - {kind: "narrative",            goes_to: review}
-      signoff: build
-      edits_after:
-        - {id: dispatch-entries-appended,          text: "entries are appended"}
-        - {id: dispatch-existing-entry-never-edited, text: "an existing entry is never edited"}
-
 standing_docs:       # not per-change (§2a, §8)
   - {name: PRINCIPLES.md,       tool: product-principles, ratified_by: required, reject_when: "kind: product and missing"}
   - {name: DESIGN.md,           tool: design-system,      ratified_by: required, reject_when: never}
@@ -300,7 +301,7 @@ standing_docs:       # not per-change (§2a, §8)
     # one shape for the checker to read (wave-end:0-05).
 
 kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
-  - {name: second-vendor,          grammar: "<cli> | none | ask", note: "`ask` defers the choice to review.json's per-change `second_vendor` field (W0-02); the small lane never asks"}
+  - {name: second-vendor,          grammar: "<cli> | none | ask", note: "`ask` defers the choice to the confirmed intent or plan; the small lane never asks"}
   - {name: docs-lint,              grammar: "<command> | none", note: "declared, not a blocker (W0-02): a declared command runs in CI for its report only; reviewer contract reads it to decide whether style findings are allowed at all"}
   - {name: package-tests,          grammar: "<command> | none", note: "the command push.probes-package-tests compares the recorded run against; absent = recomputed from the repo's build markers"}
   - {name: standing-docs,          grammar: "waived"}

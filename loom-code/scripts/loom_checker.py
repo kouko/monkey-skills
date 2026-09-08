@@ -278,6 +278,26 @@ RULES: list[tuple[str, str]] = [
     ),
 ]
 
+# 1.1 replaces the branch-end ledger rules with one generated-evidence
+# validation. The old helpers remain below temporarily for pre-build spec
+# compatibility, but they are not gates and are intentionally absent from
+# the public rule inventory.
+_RETIRED_BRANCH_END_RULES = {
+    "push.dismissed-by-reviewer", "push.dispatch-covers-tasks",
+    "push.frozen-store-untouched", "push.open-findings-closed",
+    "push.probes-adversarial", "push.probes-package-tests",
+    "push.review-schema", "push.review-only-head", "push.reviewed-sha",
+    "push.second-vendor-honoured", "push.reviewer-ne-implementer",
+    "push.verdicts-ge-2", "review.round-append-only",
+}
+RULES = [rule for rule in RULES if rule[0] not in _RETIRED_BRANCH_END_RULES]
+RULES.append((
+    "push.attestation",
+    "The branch carries one generated attestation whose functional-content digest, "
+    "successful executions, command identities, and passing reviewer verdicts validate "
+    "without replaying package tests or adversarial probes.",
+))
+
 
 class UsageError(Exception):
     """Bad invocation or an unreadable operand -- exit 2, never exit 0."""
@@ -516,6 +536,16 @@ def validate_attestation(
             return [(rule, "attestation contains a non-passing execution")]
         if execution.get("kind") == "package-tests":
             package_runs += 1
+        elif execution.get("kind") == "adversarial":
+            artifact = execution.get("artifact")
+            if not isinstance(artifact, str) or not artifact.strip():
+                return [(rule, "adversarial execution names no artifact")]
+            if not command_names_artifact(command, artifact):
+                return [(rule, "adversarial command does not name its artifact")]
+            if not git_ok(repo, "cat-file", "-e", f"{head_sha}:{artifact}"):
+                return [(rule, "adversarial execution names no committed artifact")]
+        else:
+            return [(rule, "attestation contains an unknown execution kind")]
     if package_runs != 1:
         return [(rule, "attestation must record exactly one package-tests execution")]
 
@@ -6637,6 +6667,10 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         artifact = str(item.get("artifact", "")).strip()
         if not command or not artifact:
             return report([("finalize.adversarial", "adversarial input needs command and artifact")], err)
+        if not command_names_artifact(command, artifact):
+            return report([("finalize.adversarial", "command must name its artifact argument")], err)
+        if not git_ok(repo, "cat-file", "-e", f"{head_sha}:{artifact}"):
+            return report([("finalize.adversarial", "artifact must exist in the selected commit")], err)
         work.append(("adversarial", command, artifact))
 
     executions: list[dict] = []

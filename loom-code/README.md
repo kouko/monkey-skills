@@ -1,14 +1,13 @@
 # loom-code
 
 > **Five stations that carry one change from a plan to a merged pull
-> request, and a checker that refuses a push whose review never happened.**
+> request, with functional verification reused until functional content changes.**
 > loom-code assumes you know basic software engineering, not this plugin:
 > it asks you three questions per change and decides the rest itself,
 > because the quality comes from machines checking machines — the agent
 > that writes is never the agent that reviews.
 
-**Status**: v1.0.0 — 5 skills. Breaking: the pre-1.0 skills, agents and
-scripts were deleted, not renamed. See [CHANGELOG.md](CHANGELOG.md).
+**Status**: v1.9.0 — 5 skills. See [CHANGELOG.md](CHANGELOG.md).
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
@@ -19,8 +18,8 @@ scripts were deleted, not renamed. See [CHANGELOG.md](CHANGELOG.md).
 | Station | Produces | Read it |
 |---|---|---|
 | `write-plan` | `docs/loom/<change-id>/plan.md` — a task DAG | [SKILL.md](skills/write-plan/SKILL.md) |
-| `build` | commits, one per task, each carrying a `Task: <id>` trailer | [SKILL.md](skills/build/SKILL.md) |
-| `review` | `docs/loom/<change-id>/review.json` — verdicts, probes, findings | [SKILL.md](skills/review/SKILL.md) |
+| `build` | tested functional commits | [SKILL.md](skills/build/SKILL.md) |
+| `review` | generated `docs/loom/<change-id>/attestation.json` | [SKILL.md](skills/review/SKILL.md) |
 | `ship` | the pull request, the memory trailers, the merge | [SKILL.md](skills/ship/SKILL.md) |
 | `maintain` | an intent, out of an alert or an incident | [SKILL.md](skills/maintain/SKILL.md) |
 
@@ -46,7 +45,7 @@ consequence.
 ## The contract package
 
 `contract/manifest.yaml` declares the stations, the actions, and every
-field of the four artifacts — intent, spec, plan, review. `loom-design`
+field of the operative artifacts — intent, spec, plan, and attestation. `loom-design`
 reads it and declares `requires-contract`; `loom-workflow` does not —
 only its `decision-map` skill runs `contract --require` before a
 delivery. Only loom-code writes it. `contract/templates/` holds the
@@ -54,11 +53,10 @@ blank of each.
 
 ## The checker
 
-`scripts/loom_checker.py` is the whole deterministic layer — 31 rules (`--list-rules` is the source of truth),
-listed by `--list-rules`. It runs on the SessionStart hook and before
-`git push` / `gh pr create` / `gh pr merge`, and it recomputes rather than
-believes: it re-runs the package-test and adversarial probes itself and
-reads the exit code. It stops a slip, not a determined cheat.
+`scripts/loom_checker.py` is the deterministic layer (`--list-rules` is the
+source of truth). `finalize-review` runs functional verification once and
+generates content-bound evidence. The publication hook later recomputes the
+digest and validates that evidence without replaying package tests or probes.
 
 ## Install
 
@@ -79,23 +77,11 @@ They compose only through plugin-qualified skill names such as
 `docs/loom/` artifacts — never through another plugin's private `hooks/`,
 `skills/` or `scripts/` paths.
 
-### Codex CLI
+### Codex
 
-Codex has no plugin marketplace, so the checker is copied into the repo
-instead:
-
-```bash
-python3 scripts/codex_scaffold.py --repo .
-python3 scripts/codex_scaffold.py --self-test
-```
-
-The first writes `.codex/hooks.json` and a stamped copy of the checker; the
-second fires a fake push at that copy to prove it runs. Neither proves
-Codex will run it: an untrusted hook is skipped in silence, and only a
-command Codex itself issues goes through its hook engine. That probe — a
-doomed push whose answer must start with `BLOCK push.` — belongs to the
-station (`write-plan` step 0b), which tells the user to run `/hooks` once
-when git answers instead of the checker.
+Install `loom-code` through the Codex plugin marketplace. Its installed
+`PreToolUse` hook owns publication interception; adopting repositories no
+longer carry a checker copy, copied contract, or trust ledger.
 
 ## Licence
 
