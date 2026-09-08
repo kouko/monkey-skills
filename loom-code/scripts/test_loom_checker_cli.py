@@ -99,6 +99,13 @@ def test_no_arguments_exits_2() -> None:
     assert result.stderr.strip()
 
 
+def test_publish_is_a_declared_cli_command() -> None:
+    import loom_checker
+
+    assert loom_checker.COMMANDS["publish"] is loom_checker.cmd_publish
+    assert "loom_checker.py publish --confirm-authorized" in loom_checker.__doc__
+
+
 def test_hooks_probe_is_gone() -> None:
     """`--self-test` in codex_scaffold.py owns the copy check; the reserved
     checker sub-command that never grew a body is deleted, not kept."""

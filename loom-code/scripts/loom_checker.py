@@ -12,6 +12,7 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py intent <path> [--commit-msg <file>]
     loom_checker.py intake <station> <change-id>
     loom_checker.py push [--head <ref>] [--hook]
+    loom_checker.py publish --confirm-authorized --title <text> --body-file <absolute-path>
     loom_checker.py finalize-review <change-id> --input <review-input.json>
     loom_checker.py standing <path-to-intent>
     loom_checker.py contract --require <major.minor>
@@ -2556,6 +2557,224 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
 
+PUBLISH_REDIRECT_ENV = {
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_NAMESPACE", "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_EXEC_PATH", "GIT_SSH",
+    "GIT_SSH_COMMAND", "GIT_PROXY_COMMAND", "GIT_CONFIG", "GIT_CONFIG_SYSTEM",
+    "GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM", "GIT_CONFIG_COUNT",
+    "GH_HOST", "GH_REPO",
+}
+
+
+def run_publish_external(argv: list[str], **kwargs) -> subprocess.CompletedProcess:
+    """Run one trusted publication argv; kept as a seam for isolated tests."""
+    return subprocess.run(argv, capture_output=True, text=True, timeout=30, **kwargs)
+
+
+def _publish_usage(reason: str, err) -> int:
+    err.write(f"publish: {reason}\n")
+    return 2
+
+
+def _publish_block(reason: str, err) -> int:
+    return report([("push.attestation", reason)], err)
+
+
+def _publish_args(args: list[str]) -> tuple[str, Path] | str:
+    authorized = False
+    title: str | None = None
+    body_file: Path | None = None
+    rest = list(args)
+    while rest:
+        token = rest.pop(0)
+        if token == "--confirm-authorized":
+            if authorized:
+                return "--confirm-authorized may appear only once"
+            authorized = True
+        elif token in {"--title", "--body-file"}:
+            if not rest:
+                return f"{token} needs a value"
+            value = rest.pop(0)
+            if token == "--title":
+                if title is not None:
+                    return "--title may appear only once"
+                title = value
+            else:
+                if body_file is not None:
+                    return "--body-file may appear only once"
+                body_file = Path(value)
+        else:
+            return f"unexpected argument {token!r}"
+    if not authorized:
+        return "--confirm-authorized is required after Ship decision point ③"
+    if not title or not title.strip():
+        return "--title needs non-empty text"
+    if body_file is None or not body_file.is_absolute():
+        return "--body-file must name an absolute path"
+    if not body_file.is_file() or not os.access(body_file, os.R_OK):
+        return f"--body-file is not a readable file: {body_file}"
+    return title, body_file
+
+
+def _publish_env(repo_identity: str, repo: Path) -> dict[str, str]:
+    env = {
+        key: value for key, value in os.environ.items()
+        if key not in PUBLISH_REDIRECT_ENV and not key.startswith("GIT_CONFIG_KEY_")
+        and not key.startswith("GIT_CONFIG_VALUE_")
+    }
+    env.update({"GH_REPO": repo_identity, "LOOM_REPO_ROOT": str(repo)})
+    return env
+
+
+def _external_or_block(argv: list[str], *, repo: Path, env: dict[str, str], err):
+    try:
+        result = run_publish_external(argv, cwd=repo, env=env)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        _publish_block(f"publication command could not run: {type(exc).__name__}: {exc}", err)
+        return None
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or f"exit {result.returncode}").strip()
+        _publish_block(f"publication command failed: {detail}", err)
+        return None
+    return result
+
+
+def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """Validate and publish one reviewed HEAD without caller-built shell text."""
+    parsed = _publish_args(args)
+    if isinstance(parsed, str):
+        return _publish_usage(parsed, err)
+    title, body_file = parsed
+
+    redirected = sorted(
+        key for key in os.environ
+        if key in PUBLISH_REDIRECT_ENV
+        or key.startswith("GIT_CONFIG_KEY_") or key.startswith("GIT_CONFIG_VALUE_")
+    )
+    if redirected:
+        return _publish_usage(
+            "remove repository or host redirect environment variables: "
+            + ", ".join(redirected), err,
+        )
+
+    try:
+        repo = repo_root(Path.cwd()).resolve()
+    except UsageError as exc:
+        return _publish_block(str(exc), err)
+    trusted_git = shutil.which("git")
+    trusted_gh = shutil.which("gh")
+    if not trusted_git or not trusted_gh:
+        return _publish_block("publication requires trusted git and gh executables", err)
+    trusted_git = str(Path(trusted_git).resolve())
+    trusted_gh = str(Path(trusted_gh).resolve())
+
+    head = git_maybe(repo, "rev-parse", "HEAD")
+    branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if not head or not branch or not git_ok(repo, "check-ref-format", "--branch", branch):
+        return _publish_block("publication requires a safe current symbolic branch and HEAD", err)
+    identity = github_repo_from_origin(repo)
+    if not identity:
+        return _publish_block("literal origin is not a supported GitHub repository URL", err)
+    env = _publish_env(identity, repo)
+
+    if _cmd_push(["--head", head, "--require-live-head"], out, err) != 0:
+        return 1
+
+    base_result = _external_or_block(
+        [trusted_gh, "repo", "view", identity, "--json", "defaultBranchRef",
+         "--jq", ".defaultBranchRef.name"],
+        repo=repo, env=env, err=err,
+    )
+    if base_result is None:
+        return 1
+    base = base_result.stdout.strip()
+    if not base or base == branch or not git_ok(repo, "check-ref-format", "--branch", base):
+        return _publish_block("origin default branch is missing, unsafe, or equals the head branch", err)
+
+    remote_result = _external_or_block(
+        [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+         f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+    )
+    if remote_result is None:
+        return 1
+    remote_lines = [line for line in remote_result.stdout.splitlines() if line.strip()]
+    if len(remote_lines) > 1:
+        return _publish_block("origin returned multiple remote branch identities", err)
+    remote_head = remote_lines[0].split()[0] if remote_lines else None
+    if remote_head and remote_head != head:
+        if not git_ok(repo, "cat-file", "-e", f"{remote_head}^{{commit}}") or not git_ok(
+            repo, "merge-base", "--is-ancestor", remote_head, head
+        ):
+            return _publish_block(
+                "remote branch is unknown or diverged; fetch and reconcile it before publishing",
+                err,
+            )
+
+    if git_text(repo, "rev-parse", "HEAD") != head:
+        return _publish_block("live HEAD moved before push", err)
+    if remote_head != head:
+        push_result = _external_or_block(
+            [trusted_git, "-C", str(repo), "push", *CANONICAL_PUSH_FLAGS,
+             "origin", f"{head}:refs/heads/{branch}"],
+            repo=repo, env=env, err=err,
+        )
+        if push_result is None:
+            return 1
+
+    verify_result = _external_or_block(
+        [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+         f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+    )
+    if verify_result is None:
+        return 1
+    verified = [line.split()[0] for line in verify_result.stdout.splitlines() if line.strip()]
+    if verified != [head]:
+        return _publish_block("origin branch does not resolve to the selected HEAD after push", err)
+    if git_text(repo, "rev-parse", "HEAD") != head:
+        return _publish_block("live HEAD moved before PR creation", err)
+
+    list_result = _external_or_block(
+        [trusted_gh, "pr", "list", "--state", "open", "--head", branch,
+         "--json", "url", "--jq", ".[].url"],
+        repo=repo, env=env, err=err,
+    )
+    if list_result is None:
+        return 1
+    urls = [line.strip() for line in list_result.stdout.splitlines() if line.strip()]
+    if len(urls) > 1:
+        return _publish_block("multiple open pull requests match the current branch", err)
+    if urls:
+        out.write(f"PR already exists: {urls[0]}\n")
+        return 0
+
+    pre_create_remote = _external_or_block(
+        [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+         f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+    )
+    if pre_create_remote is None:
+        return 1
+    current_remote = [
+        line.split()[0] for line in pre_create_remote.stdout.splitlines() if line.strip()
+    ]
+    if current_remote != [head]:
+        return _publish_block("remote branch moved before PR creation", err)
+    if git_text(repo, "rev-parse", "HEAD") != head:
+        return _publish_block("live HEAD moved before PR creation", err)
+
+    create_result = _external_or_block(
+        [trusted_gh, "pr", "create", "--base", base, "--head", branch,
+         "--title", title, "--body-file", str(body_file)],
+        repo=repo, env=env, err=err,
+    )
+    if create_result is None:
+        return 1
+    url = create_result.stdout.strip()
+    if not url:
+        return _publish_block("gh pr create returned no pull request URL", err)
+    out.write(f"Published PR: {url}\n")
+    return 0
+
+
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     head = "HEAD"
     require_live_head = False
@@ -3475,6 +3694,7 @@ COMMANDS = {
     "intent": cmd_intent,
     "intake": cmd_intake,
     "push": cmd_push,
+    "publish": cmd_publish,
     "standing": cmd_standing,
     "contract": cmd_contract,
     "charter": cmd_charter,
