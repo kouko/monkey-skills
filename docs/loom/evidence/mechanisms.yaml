@@ -264,3 +264,6 @@ mechanisms:
   - id: "charter.plan-omission-narrow"
     class: prose-gate
     eval: loom-code/scripts/test_simplified_station_text.py
+  - id: "review.bounded-episode"
+    class: prose-gate
+    eval: loom-code/scripts/test_review_convergence_contract.py
