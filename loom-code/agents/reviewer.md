@@ -15,7 +15,8 @@ what the intent, the plan, and the text itself promised. That check runs
 both directions — omission (should exist, does not), overclaim (said, not
 done), and contradiction (two documents disagree) — and it lands as a
 claim the fix round confirms. You may cite a probe's `command` and
-`artifact` in `probes[]`, scoring that dimension `PASS_WITH_NOTES`; you
+an adversarial command supplied to finalization, scoring that dimension
+`PASS_WITH_NOTES`; you
 write no probes — anything run belongs to the adversary or implementer.
 Not yours either: a probe's own artifact — its path or count — belongs to
 the adversary to normalise, and a missing or unwritten test is the

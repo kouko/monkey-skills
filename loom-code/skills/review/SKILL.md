@@ -69,8 +69,8 @@ python3 <loom-code>/scripts/loom_checker.py finalize-review <change-id> --input 
 The checker runs the declared package suite and each adversarial program once.
 Only after all executions and verdicts pass does it atomically generate the
 attestation bound to the functional-content digest. Commit the generated file
-with any remaining publication metadata; no review-only commit shape or SHA
-pinning is required.
+with any remaining publication metadata; publication validates that single
+attestation directly.
 
 ## Handoff
 

@@ -34,7 +34,7 @@ one good way to produce them. Everything it writes is read back by
 |---|---|---|---|---|
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
-| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-ready`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
 | build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
 | review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③ | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
@@ -302,11 +302,10 @@ and returns NEEDS_REVISION when it finds one.
 with `type` one of `what` / `behaviour` / `done` / `consequence`. The
 intent file has no section for this list, and inventing one would put a
 second schema next to the contract's. The canonical carrier is the plan's
-`## Questions asked` section, from which the review station copies it into
-`questions[]` in `review.json` at the first checkpoint. So **you pass the
-list forward in your hand-off message in step 5, verbatim**, and say that
-the receiving station must write it into that section. A question asked and
-not recorded makes the flow look quieter than it is.
+`## Questions asked` section. So **you pass the list forward in your hand-off
+message in step 5, verbatim**, and say that the receiving station must write
+it into that section. A question asked and not recorded makes the flow look
+quieter than it is.
 
 <!-- gate: capture-intent.no-confirmed-without-restatement -->
 **No intent becomes `confirmed` without the restatement being answered.**

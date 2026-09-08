@@ -4,6 +4,12 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.1.2] — 2026-09-08 — lower-cost local gates
+
+Patch. Route every Loom CI group through one declared package-suite runner,
+keep semantic privacy review conditional, and replace brittle whole-file
+contract hashes with behavior assertions.
+
 ## [4.1.1] — 2026-09-08 — conditional semantic privacy review
 
 Patch. Always run deterministic secret detection, but invoke the semantic

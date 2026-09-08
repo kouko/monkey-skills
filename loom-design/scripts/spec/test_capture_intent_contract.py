@@ -200,7 +200,7 @@ def test_second_vendor_evidence_number_present() -> None:
 
 def test_plugin_declares_requires_contract() -> None:
     data = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))
-    assert data["requires-contract"] == ">=1.0"
+    assert data["requires-contract"] == ">=2.0"
 
 
 def test_interview_reference_within_word_cap() -> None:

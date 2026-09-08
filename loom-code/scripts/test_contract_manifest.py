@@ -25,12 +25,12 @@ STATIONS = {
     "maintain": "loom-code",
 }
 ARTIFACTS = {
-    "intent", "spec", "plan", "review", "attestation",
+    "intent", "spec", "plan", "attestation",
     "blind-run-report", "memory", "kickoff-defaults",
 }
 # The four W0-01 additions declare no `fields:` schema of their own (their
-# content is free-form prose / an existing sub-key of review.json, not a
-# frontmatter/section/json-key schema) and two of them (blind-run-report,
+# content is free-form prose rather than a frontmatter/section/json-key
+# schema) and two of them (blind-run-report,
 # blind-run-report has no template file -- it is a per-change artifact
 # charter rows, not new template-backed schemas.
 ARTIFACTS_WITHOUT_FIELDS_SCHEMA = {"blind-run-report", "memory", "kickoff-defaults", "dispatch"}
@@ -91,7 +91,7 @@ def test_markdown_templates_carry_declared_fields(manifest):
     """Every frontmatter field / section the schema declares appears in the
     template, so the template and the schema cannot drift apart. Skips an
     artifact with no template file at all (`template: null` -- W0-01's
-    blind-run-report and dispatch, which are prose / a review.json sub-key,
+    blind-run-report and dispatch, which are prose rather than
     not a template-backed schema)."""
     for name, schema in manifest["artifacts"].items():
         if schema.get("template") is None:
@@ -139,4 +139,4 @@ def test_manifest_declares_generated_attestation(manifest):
     assert schema["template"] == "attestation.json"
     names = [field["name"] for field in schema["fields"]]
     assert names == ["schema", "change_id", "content_digest", "executions", "verdicts", "findings"]
-    assert manifest["artifacts"]["review"]["charter"]["readers"] == ["write-plan"]
+    assert "review" not in manifest["artifacts"]

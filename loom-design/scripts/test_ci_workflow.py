@@ -58,8 +58,8 @@ def test_workflow_paths():
                 f"{trigger_name}.paths missing {expected_path!r}"
             )
 
-    assert "python3 -m pytest loom-design/scripts/ -q" in text, (
-        "workflow must run the unified loom-design/scripts/ pytest suite"
+    assert "python3 scripts/run_package_tests.py --loom-family --only design -q" in text, (
+        "workflow must run the shared Loom-family suite selector"
     )
 
 

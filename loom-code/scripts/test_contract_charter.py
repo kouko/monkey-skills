@@ -20,7 +20,7 @@ CHECKER = REPO_ROOT / "loom-code" / "scripts" / "loom_checker.py"
 MANIFEST = REPO_ROOT / "loom-code" / "contract" / "manifest.yaml"
 
 EXPECTED_ARTIFACTS = [
-    "intent", "spec", "plan", "review", "attestation",
+    "intent", "spec", "plan", "attestation",
     "blind-run-report", "memory", "kickoff-defaults",
 ]
 

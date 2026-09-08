@@ -44,12 +44,11 @@ NEW_ARTIFACTS = {
     "blind-run-report": {"path": "docs/loom/<change-id>/blind-run-report.md"},
     "memory": {"path": "docs/loom/memory/<slug>.md"},
     "kickoff-defaults": {"path": "docs/loom/KICKOFF-DEFAULTS.md"},
-    "dispatch": {"path": "docs/loom/<change-id>/review.json#dispatch"},
 }
 
 ALL_ROWS = [
-    "intent", "spec", "plan", "review",
-    "blind-run-report", "memory", "kickoff-defaults", "dispatch",
+    "intent", "spec", "plan", "attestation",
+    "blind-run-report", "memory", "kickoff-defaults",
 ]
 
 
@@ -77,7 +76,7 @@ def _manifest_with_charter(tmp_path: Path, mutate=None, omit_row: str | None = N
     for name, extra in NEW_ARTIFACTS.items():
         data["artifacts"][name] = dict(extra)
     for name in ALL_ROWS:
-        goes_to = "plan" if name == "review" else "review"
+        goes_to = "plan" if name == "attestation" else "attestation"
         data["artifacts"][name]["charter"] = _valid_row(name, goes_to)
     if omit_row:
         del data["artifacts"][omit_row]["charter"]
@@ -165,11 +164,11 @@ def test_charter_row_goes_to_self_blocked(tmp_path):
     passes a naive 'names another artifact in the table' membership check
     but violates 'goes to ANOTHER artifact'.
     Expected (after W0-01): BLOCK contract.charter-complete naming
-    `dispatch.must_not` (self-reference rejected).
+    `attestation.must_not` (self-reference rejected).
     Observed (before W0-01): unknown sub-command, exit 2, no BLOCK line."""
     def mutate(data):
-        data["artifacts"]["dispatch"]["charter"]["must_not"] = [
-            {"kind": "code", "goes_to": "dispatch"}
+        data["artifacts"]["attestation"]["charter"]["must_not"] = [
+            {"kind": "code", "goes_to": "attestation"}
         ]
 
     manifest = _manifest_with_charter(tmp_path, mutate=mutate)
@@ -280,14 +279,13 @@ def test_charter_row_non_ascii_and_huge_answers_does_not_crash(tmp_path):
     assert result.returncode in (0, 1, 2)
 
 
-# --- 9. helper fixture renders nine complete rows -------------------------
+# --- helper fixture renders every complete row ----------------------------
 
-def test_charter_command_renders_nine_complete_rows_on_valid_manifest(tmp_path):
-    """Attack/floor case: feed a manifest where every one of the eight rows
+def test_charter_command_renders_complete_rows_on_valid_manifest(tmp_path):
+    """Attack/floor case: feed a manifest where every row
     carries a fully valid charter -- the happy path the interface promises.
     Expected (after W0-01): exit 0, markdown table with exactly 8 data rows
-    (one per artifact: intent, spec, plan, review, blind-run-report,
-    memory, kickoff-defaults, dispatch), and each row's must / must-not+
+    (one per artifact), and each row's must / must-not+
     goes-to / sign-off / edits-after columns non-empty.
     Observed (before W0-01): unknown sub-command, exit 2, no table at all."""
     manifest = _manifest_with_charter(tmp_path)
@@ -296,7 +294,7 @@ def test_charter_command_renders_nine_complete_rows_on_valid_manifest(tmp_path):
     lines = [ln for ln in result.stdout.splitlines() if ln.strip().startswith("|")]
     data_rows = [ln for ln in lines if not set(ln.replace("|", "").strip()) <= {"-", " "}]
     data_rows = [ln for ln in data_rows if "artifact" not in ln.split("|")[1].lower()]
-    assert len(data_rows) == 9, f"expected 9 data rows, got {len(data_rows)}: {data_rows}"
+    assert len(data_rows) == 7, f"expected 7 data rows, got {len(data_rows)}: {data_rows}"
     for row in data_rows:
         cols = [c.strip() for c in row.strip().strip("|").split("|")]
         assert len(cols) >= 5

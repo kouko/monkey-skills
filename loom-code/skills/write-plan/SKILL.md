@@ -46,7 +46,7 @@ date, not the example's).
 |---|---|---|---|---|
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
-| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-ready`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
 | build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
 | review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③ | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
@@ -87,7 +87,7 @@ shapes.
 |---|---|---|---|---|
 | capture-intent | `docs/loom/intent/<change-id>.md` | User — **decision point ①** ("is this what you want?"). Absent `loom-design`: step 3 of this file does it | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` — when the intent is committed | none |
 | write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering and pre-build risk: agent-decided. Absent `loom-design`: step 4 writes the minimal spec and runs ② | `standing.product-principles-reject` blocks a product change with no ratified `PRINCIPLES.md`, when the spec is started | `required`: one fresh `spec+adversarial` reviewer and no blind run; `not-required`: none |
-| **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | before drafting: `intake.confirmed`, `intake.spec-pass`, `intake.confirmed-behavior`; after drafting: `intake.test-case-pair` and `plan.field-caps` | no formal plan review |
+| **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | before drafting: `intake.confirmed`, `intake.spec-ready`, `intake.confirmed-behavior`; after drafting: `intake.test-case-pair` and `plan.field-caps` | no formal plan review |
 | build | functional commits (the diff) | Agent | task tests and dependency-boundary integration checks | no formal review during Build; transition once after completed functional work |
 | review | generated `docs/loom/<change-id>/attestation.json`; never written by write-plan | Agent — lane-defined fresh reviewers at branch end | `finalize-review` runs and records functional verification once | after completed functional work |
 | ship | pull request and merge (git) | User — **decision point ③** | `push.attestation` and fast publication checks | matching evidence exists |
@@ -344,9 +344,9 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py intake write-plan <change-
 ```
 
 Fix and re-run until it exits 0. At this point it checks
-`intake.confirmed`, `intake.spec-pass`, and `intake.confirmed-behavior` —
-whether the intent, visible-behaviour confirmation, and any risk-triggered
-spec review are ready. When `needs-design: no`, only intent readiness can
+`intake.confirmed`, `intake.spec-ready`, and `intake.confirmed-behavior` —
+whether the intent, spec declaration, and visible-behaviour confirmation are
+ready. When `needs-design: no`, only intent readiness can
 block before the plan exists.
 
 ## Step 5 — Write the plan
@@ -366,10 +366,8 @@ how long it will take.
 - Group tasks into **waves** as dependency and integration boundaries. Waves
   do not schedule formal review; after all tasks and package tests pass,
   Build transitions once to the closing `branch-end` review.
-- Task ids are `W<n>-<nn>`, plus the reserved `W<n>-memory` on the last
-  wave as the one named exception to that numeric form; both are
-  **stable**: once written, an id is never renumbered, because commits
-  name it in their hand-off when that helps trace a dependency.
+- Task ids are `W<n>-<nn>` and remain stable once written so hand-offs can
+  refer to dependencies without ambiguity.
 - Dependencies go on the task line as `after: <ids>`. Tasks in one wave
   with no dependency between them run in parallel — but disjoint files are
   not enough: a shared symbol, a doc that mirrors code, or a
@@ -384,16 +382,8 @@ how long it will take.
   charter (`contract/manifest.yaml`, `artifacts.plan.charter`, rendered by
   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py charter`). Run
   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py plan
-  docs/loom/<change-id>/plan.md` before the plan commit. After that commit,
-  the plan file changes only by the charter's `edits_after` policies,
-  recomputed by `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py
-  plan-edits <change-id>`.
-- Every plan's last wave ends with a memory-step task, id `W<n>-memory`
-  (n = the last wave number): Files are the graduated probe copies and
-  the `docs/loom/memory/` entries, Test is the store integrity check
-  plus the graduated copies passing, and its implementer is the
-  orchestrator itself (`fresh_context: false`, dispatch entry written
-  before the work) — build's §6.5 uses this id.
+  docs/loom/<change-id>/plan.md` before the plan commit. Keep the plan useful
+  when implementation changes; no separate plan-history ledger is required.
 
 **Sections.**
 

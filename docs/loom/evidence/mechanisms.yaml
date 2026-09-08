@@ -131,9 +131,6 @@ mechanisms:
   - id: plan.field-caps
     class: checker-rule
     eval: loom-code/scripts/test_plan_field_caps.py::test_check_plan_field_caps_test_field_over_cap_names_task_and_field
-  - id: plan.edits-after-commit
-    class: checker-rule
-    eval: loom-code/scripts/test_plan_edits_after_commit.py::test_landed_task_files_change_blocks_even_with_reason
   - id: push.attestation
     class: checker-rule
     eval: loom-code/scripts/test_loom_attestation.py::test_push_reuses_matching_attestation_without_subprocesses

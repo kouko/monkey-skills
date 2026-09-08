@@ -2,7 +2,7 @@
 """The loom checker -- the single deterministic layer of the loom flow.
 
 Every rule here RECOMPUTES its fact from the repository (the intent file,
-the manifest, the git diff, review.json, the dispatch record). No rule
+the manifest, the git diff, or the generated attestation). No rule
 trusts an agent's claim about itself; concept-model §7 is explicit that
 this layer stops missed steps, not a goal-directed agent.
 
@@ -94,11 +94,10 @@ RULES: list[tuple[str, str]] = [
         "and each named line has positive plus negative or boundary test cases.",
     ),
     (
-        "intake.spec-pass",
-        "write-plan accepts a needs-design: yes change according to its pre-build-review "
-        "declaration: not-required skips formal review, required needs one passing independent "
-        "spec + adversarial reviewer, and an undeclared legacy spec retains the former two-reader "
-        "plus adversarial-probe floor; every counted verdict names the current spec_sha identity.",
+        "intake.spec-ready",
+        "write-plan accepts a needs-design: yes change only when its spec exists and carries "
+        "an explicit `pre-build-review: required|not-required — <reason>` declaration. Review "
+        "independence is enforced by the write-spec station, not persisted in a ledger.",
     ),
     (
         "intent.kind-recompute",
@@ -131,125 +130,6 @@ RULES: list[tuple[str, str]] = [
         "Risk line blocks too. A plan with no `charter:` line is skipped entirely.",
     ),
     (
-        "plan.edits-after-commit",
-        "A plan whose frontmatter carries a `charter:` key admits only the charter's "
-        "`edits_after` edits once its own plan commit (subject `docs(loom): plan "
-        "<change-id>`, the earliest such commit reachable from HEAD) has landed: a "
-        "claimed/blocked mark on a task title, an appended `W<n>-memory` task, a "
-        "change to a task with no `Task: <id>` trailer among the commits since that "
-        "carries a stated reason, or an appended `## Questions asked` line. Every "
-        "other edit -- a landed task's fields, `## Risks`, `## Current State "
-        "Evidence`, the frontmatter, or a new section -- blocks. A plan with no "
-        "`charter:` line is skipped entirely.",
-    ),
-    (
-        "push.frozen-store-untouched",
-        "No commit between the branch base and reviewed_sha writes into a frozen store "
-        "(docs/loom/plans, specs, backlog, design or archive); only each store's own "
-        "ARCHIVED.md marker stays writable.",
-    ),
-    (
-        "push.dismissed-by-reviewer",
-        "Every dismissed finding names a dispatch reviewer, blind-runner or adversary who never implemented it.",
-    ),
-    (
-        "push.dispatch-covers-tasks",
-        "Every commit between the branch base and reviewed_sha that touches code, skill "
-        "or gate work carries a `Task:` trailer (spec is exempt, like intent and plan), and "
-        "every id those trailers name is claimed by an implementer dispatch entry, except an "
-        "id whose trailered commits touch only evidence paths, which an adversary dispatch "
-        "entry for that id covers instead.",
-    ),
-    (
-        "push.open-findings-closed",
-        "Every open_findings entry in review.json is resolved or dismissed.",
-    ),
-    (
-        "push.probes-adversarial",
-        "A change carrying a code / spec / skill / gate artifact, OR whose effective lane "
-        "is express or gate-only regardless of artifact type, records at least three "
-        "adversarial probe records against the reviewed content -- the reviewed commit, "
-        "or any commit whose tree matches it once this change's own review.json is set "
-        "aside; a file referenced by several records is executed once, and every record "
-        "of a failing file is unusable.",
-    ),
-    (
-        "push.probes-package-tests",
-        "The checker re-runs the package-test command KICKOFF-DEFAULTS declares, at the "
-        "reviewed tree, and believes its own exit code: the recorded result is not trusted, "
-        "the probe's sha must name the reviewed content -- the reviewed commit, or any "
-        "commit whose tree matches it once this change's own review.json is set aside -- "
-        "and its recorded command must be the declared one.",
-    ),
-    (
-        "push.review-schema",
-        "review.json carries every key the contract manifest declares, with the container type its template shows.",
-    ),
-    (
-        "push.review-only-head",
-        "HEAD is a review-only commit that touches nothing but docs/loom/<change-id>/review.json, "
-        "optionally together with that change's own intent file when the intent's ENTIRE diff is "
-        "its sole `status:` line flipping to a closed form (`closed <date> — PR #<N>` or "
-        "`closed <date> — branch <name>`) -- any other intent-file edit riding along still blocks. "
-        "When instead HEAD^ turns an intent's status to closed as a commit of its own, its shape "
-        "is recomputed too: it must touch only that intent file, change exactly its status line, "
-        "and sit on a checkpoint whose own review.json vouches for HEAD^^^. "
-        "Hook mode also uses this rule when it cannot prove that a publish command targets one "
-        "local repository.",
-    ),
-    (
-        "push.reviewed-sha",
-        "review.json reviewed_sha names HEAD^'s content -- the commit itself, or any commit "
-        "whose tree matches it once this change's own review.json is set aside -- so the "
-        "reviewed tree is the pushed tree; every verdict of the latest round names that "
-        "same content.",
-    ),
-    (
-        "push.second-vendor-honoured",
-        "A second vendor named in KICKOFF-DEFAULTS either appears in the latest "
-        "round's verdicts or that round records why it could not; when KICKOFF names "
-        "`ask`, this defers to review.json's top-level `second_vendor` answer instead "
-        "(never required in the small lane).",
-    ),
-    (
-        "push.reviewer-ne-implementer",
-        "No reviewer, blind-runner or adversary in the dispatch record also implemented the change.",
-    ),
-    (
-        "push.verdicts-ge-2",
-        "The latest round of the checkpoint's own scope carries at least as many distinct "
-        "fresh-context reviewers as the change's lane requires -- two distinct in the full "
-        "lane, one in the small lane, one in the express lane, zero in the gate-only lane, "
-        "with gate-only granted only when the raw recompute is already the small lane "
-        "(a raw full for any reason at all, standing document included, is never eligible); "
-        "any declared or switched `lane:` value at all -- express, gate-only, or a switch "
-        "back to full -- is honoured only when the commit that last changed the `lane:` line "
-        "states that exact line, verbatim, in its own message, else it is ignored and the "
-        "raw recompute governs instead (small stays small, full stays full); a `from wave <n>` "
-        "switch or a plain declared value applies to any (scope, round) not already recorded "
-        "before the declaration, and a `from round <n>` switch applies to every round numbered "
-        "strictly greater than n; where a later round of that scope may also count a "
-        "non-returning previous-round reviewer whose earlier passing verdict still stands, "
-        "provided every path the fix touched sits inside the anchor of an open finding raised "
-        "by a reviewer who did return AND every reviewer named in that prior round has a "
-        "dispatch[] entry as reviewer, blind-runner or adversary in some round -- a single "
-        "undispatched name anywhere in that round poisons the whole round for standing, so no "
-        "one from it stands -- and blocks when any verdict in the latest round is not passing.",
-    ),
-    (
-        "review.round-append-only",
-        "Once a review.json round carries a top-level `charter` key, a later round may only "
-        "accrete per the charter's `edits_after` policy ids: verdicts, probes, open_findings "
-        "and dispatch gain entries with every pre-existing entry byte-equal (an open_findings "
-        "entry may additionally gain exactly one of resolved/dismissed in place); "
-        "reviewed_sha, scope and cost are replaced freely; questions moves from empty to "
-        "non-empty exactly once and second_vendor is set exactly once, then both are "
-        "immutable; vendors gains entries only under its own policy id and is otherwise byte-equal; no top-level key "
-        "is ever removed and no key outside the template plus second_vendor and charter is "
-        "ever added. A round with no `charter` key is skipped entirely. An unsupported policy "
-        "id on the manifest's review row fails closed.",
-    ),
-    (
         "spec.req-grammar",
         "Every Requirements entry reads `REQ-<n> — <name>` with n contiguous from 1, "
         "unique, and points at an Acceptance number the intent actually carries.",
@@ -260,8 +140,7 @@ RULES: list[tuple[str, str]] = [
         "carries at least one prose line (outside fences, indented code and HTML comments) with an arrow and "
         "at least four visible characters on each side. This is a structural floor only -- "
         "whether the flow says anything true or useful is the reviewer lens's job, not a "
-        "keyword list's. Runs at write-plan intake only; spec changes after that are caught "
-        "by intake.spec-pass freshness, not re-checked at push.",
+        "keyword list's. Runs at write-plan intake only.",
     ),
     (
         "standing.product-principles-reject",
@@ -278,19 +157,6 @@ RULES: list[tuple[str, str]] = [
     ),
 ]
 
-# 1.1 replaces the branch-end ledger rules with one generated-evidence
-# validation. The old helpers remain below temporarily for pre-build spec
-# compatibility, but they are not gates and are intentionally absent from
-# the public rule inventory.
-_RETIRED_BRANCH_END_RULES = {
-    "push.dismissed-by-reviewer", "push.dispatch-covers-tasks",
-    "push.frozen-store-untouched", "push.open-findings-closed",
-    "push.probes-adversarial", "push.probes-package-tests",
-    "push.review-schema", "push.review-only-head", "push.reviewed-sha",
-    "push.second-vendor-honoured", "push.reviewer-ne-implementer",
-    "push.verdicts-ge-2", "review.round-append-only",
-}
-RULES = [rule for rule in RULES if rule[0] not in _RETIRED_BRANCH_END_RULES]
 RULES.append((
     "push.attestation",
     "The branch carries one generated attestation whose functional-content digest, "
@@ -315,28 +181,10 @@ def report(failures: list[tuple[str, str]], err=sys.stderr) -> int:
     return 1 if failures else 0
 
 
-PASSING_VERDICTS = {"PASS", "PASS_WITH_NOTES"}
 
 _COMMENT = re.compile(r"\s+#\s.*$")
 _FRONTMATTER_LINE = re.compile(r"^([A-Za-z][\w-]*):\s*(.*)$")
 _ANNOTATION = re.compile(r"[【\[(].*$")
-
-# `docs/loom/<change-id>/review.json`'s own template path (manifest.yaml's
-# `review` artifact) -- the one file every checkpoint commit touches on
-# purpose, so a fix-round diff crossing it is never itself a fix delta.
-REVIEW_JSON_PATH = re.compile(r"docs/loom/(?P<change_id>[^/]+)/review\.json")
-
-
-def _is_this_changes_review_json(path: str, change_id: str | None) -> bool:
-    """True only for THIS change's own `docs/loom/<change_id>/review.json`
-    -- another change's review.json is ordinary content and must stay in
-    a fix-delta path listing, exactly as `content_tree_id` only sets aside
-    the one review.json belonging to the change being pushed."""
-    if not change_id:
-        return False
-    match = REVIEW_JSON_PATH.fullmatch(path)
-    return match is not None and match.group("change_id") == change_id
-
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="surrogateescape")
@@ -371,24 +219,6 @@ def git_text(repo: Path, *args: str) -> str:
     return output
 
 
-def git_raw_text(repo: Path, *args: str) -> str:
-    """Like `git_text`, but UNSTRIPPED -- for reading a blob's exact bytes
-    (e.g. `git show <sha>:<path>`), where `git_text`'s trailing-newline
-    strip would silently drop the file's real trailing newline and make
-    every byte-for-byte blob comparison (`check_close_commit_shape` step
-    c) compare against the wrong content. Reads via `run_git`'s
-    `text=False` (raw bytes) path and decodes here, rather than the
-    default `text=True` path `git_text` uses -- `subprocess.run(text=True)`
-    always applies universal-newline translation (`\\r\\n` -> `\\n`)
-    regardless of the `encoding`/`errors` passed alongside it, with no way
-    to opt out through that path, so a CRLF blob would silently lose its
-    `\\r` before this function ever saw it (spec REQ-1, W0-04 round-5
-    finding). Decoding raw bytes ourselves keeps every byte, `\\r`
-    included."""
-    output = run_git(repo, *args, timeout=GIT_TIMEOUT, text=False)
-    if output is None:
-        raise UsageError(f"`git {' '.join(args)}` failed or timed out in {repo}.")
-    return output.decode("utf-8", "surrogateescape")
 
 
 def git_ok(repo: Path, *args: str) -> bool:
@@ -432,25 +262,6 @@ def functional_content_digest(
     return digest
 
 
-def content_tree_id(repo: Path, sha: str, change_id: str) -> str | None:
-    """The content identity of `sha`'s tree with THIS change's own
-    `docs/loom/<change_id>/review.json` set aside -- a review-only commit
-    stacked on top of the commit a probe or verdict actually names (or a
-    message-only "trailer" rewrite that leaves every blob untouched) must
-    not read as different content from one whose only difference is that
-    one file, or a commit id that never moved at all. Built from real git
-    plumbing: `git ls-tree -r` (the mode/type/blob-id/path of every file
-    `sha`'s tree holds, recursively) with the one line naming that path
-    dropped, folded into a single id via `git hash-object --stdin` so two
-    shas with identical remaining listings always agree. Excludes only
-    THIS change's review.json -- another change's
-    `docs/loom/<other-id>/review.json` is ordinary content and stays in
-    the listing. Returns None when `sha` does not resolve to a tree at
-    all. Memoised per (sha, change_id): one push evaluates the same pair
-    across `push.reviewed-sha`, `push.probes-package-tests` and
-    `push.probes-adversarial`."""
-    # Compatibility wrapper for callers removed by the attestation migration.
-    return functional_content_digest(repo, sha, change_id)
 
 
 def _hash_object_stdin(repo: Path, content: str) -> str | None:
@@ -472,26 +283,6 @@ def _hash_object_stdin(repo: Path, content: str) -> str | None:
     return result.stdout.strip()
 
 
-def same_reviewed_content(
-    repo: Path, a: str | None, b: str | None, change_id: str | None
-) -> bool:
-    """True when `a` and `b` name the same commit outright, or -- when
-    both resolve and `change_id` is known -- the same content once this
-    change's own review.json is set aside (`content_tree_id`). Never true
-    when either id is missing or unresolved: an absent id stays a
-    failure regardless of content. `change_id` is None only when the
-    caller (a direct unit-test call, never the real push path) never
-    learned one; that keeps the fast commit-id-equal path exact and
-    degrades content comparison to "no match" rather than guessing."""
-    if a is None or b is None:
-        return False
-    if a == b:
-        return True
-    if change_id is None:
-        return False
-    tree_a = content_tree_id(repo, a, change_id)
-    tree_b = content_tree_id(repo, b, change_id)
-    return tree_a is not None and tree_a == tree_b
 
 
 ATTESTATION_SCHEMA = "loom-attestation/v1"
@@ -624,45 +415,6 @@ def artifact_path(manifest, artifact: str, change_id: str, repo: Path) -> Path:
     return repo / template.replace("<change-id>", change_id)
 
 
-def latest_round(verdicts: list[dict], scope: str | None = None) -> tuple[int, list[dict]]:
-    """Only the newest round decides; earlier NEEDS_REVISION rounds are the
-    history that produced it (concept-model §5 state machine).
-
-    When `scope` is given (the record's top-level `scope` line), a verdict
-    that names a DIFFERENT scope of its own is excluded first -- otherwise a
-    wave-end round 3 could outrank the branch-end round 1 that follows it,
-    since round numbers restart per checkpoint (memory-step gotcha,
-    2026-09-05). A verdict that names no scope at all is legacy shape and
-    stays eligible only as a FALLBACK: when at least one verdict explicitly
-    names the current scope, only those explicitly-scoped entries are
-    scored -- an unscoped legacy round must never outrank a scoped current
-    round just because it carries a higher round number, since round
-    numbers restart per checkpoint and an older unscoped round 3 sitting
-    next to a current scoped round 1 would otherwise win on round number
-    alone and hide that round's own verdict (wave-end:1-02). When NEITHER
-    an explicitly-scoped nor a legacy unscoped verdict exists -- every
-    verdict names some OTHER scope -- the result is the empty list, never
-    the original unfiltered `verdicts`: a brand-new checkpoint starts with
-    no verdicts of its own, and falling through to the unfiltered list
-    would let a stale round from a different scope (e.g. an earlier
-    wave-end round) satisfy the current checkpoint's floor."""
-    if scope:
-        explicit = [
-            entry for entry in verdicts
-            if str(entry.get("scope", "")).strip() == scope
-        ]
-        if explicit:
-            verdicts = explicit
-        else:
-            verdicts = [
-                entry for entry in verdicts
-                if not str(entry.get("scope", "")).strip()
-            ]
-    if not verdicts:
-        return 0, []
-    numbered = [(int(entry.get("round", 1)), entry) for entry in verdicts]
-    newest = max(number for number, _ in numbered)
-    return newest, [entry for number, entry in numbered if number == newest]
 
 
 def _squeeze(text: str) -> str:
@@ -756,8 +508,8 @@ TRUNK_BRANCH_NAMES = frozenset({"main", "master"})
 # as the change's diff (W4-02 finding F3). This is scoped to those specific
 # files, not to the whole `.codex/hooks/` directory: an adopting repo may
 # keep its own gate scripts there too (R22-O3, this repo does), and a
-# directory-wide exemption made that real gate code invisible to
-# push.probes-adversarial and the intent recomputes.
+# directory-wide exemption made that real gate code invisible to the intent
+# recomputes.
 HOST_PLUMBING_FILES = frozenset(
     {
         ".codex/hooks/loom-checker",  # codex_scaffold.SHIM_COMMAND
@@ -1296,93 +1048,8 @@ def check_lane_reason(
     return []
 
 
-def declared_lane(repo: Path, change_id: str) -> tuple[str, str, int | None, str | None]:
-    """`(lane, origin, from_round, unit)` -- the lane the intent declares
-    for `change_id`, or the repo default in its silence.
-
-    `lane` is one of `full`/`express`/`gate-only`. `origin` is `"intent"`
-    when the intent's own `lane:` line decided it, `"kickoff"` when
-    KICKOFF-DEFAULTS' `default-lane` decided it because the intent carries
-    no `lane:` line, or `"default"` when neither exists (full).
-    `parse_document` already keeps only the LAST `lane:` line (it
-    overwrites the frontmatter dict on each match), so "the last line
-    wins" needs no extra logic here. `unit` is `"round"`/`"wave"` for a
-    switch suffix, or `None` for the declared (day-one) suffix -- kept
-    alongside `from_round` so `effective_lane_detail` can tell a `from
-    round <n>` switch (continuous-numbering comparison) apart from a
-    `from wave <n>` switch or a plain declaration (both use `_earlier_
-    lane_pairs` instead, wave-end:1 adversary finding 3). `from_round` is
-    the round number named by a `from round <n>` switch suffix only; a
-    `from wave <n>` suffix and a plain declared suffix both yield `None`
-    (there is no round number to compare against inside a wave, or at
-    all, for a day-one declaration).
-
-    This re-runs `check_lane_schema` itself and fails CLOSED: a `lane:`
-    line that would not pass the intent-time schema gate (most commonly a
-    BARE name with no dated-attribution suffix at all, wave-end:1
-    adversary finding 1-01) is never honoured here either, even if it
-    somehow reached a commit without going through that gate -- it falls
-    through to the repo default exactly as if no `lane:` line existed."""
-    manifest = load_manifest()
-    intent_path = artifact_path(manifest, "intent", change_id, repo)
-    front: dict[str, str] = {}
-    if intent_path.is_file():
-        front, _sections = parse_document(read_text(intent_path))
-    raw = front.get("lane", "").strip()
-    if raw and not check_lane_schema(front):
-        match = LANE_GRAMMAR.match(raw)
-        if match:
-            unit, number = match.group("unit"), match.group("n")
-            from_round = int(number) if unit == "round" and number else None
-            return match.group("name"), "intent", from_round, unit
-    default = kickoff_defaults(repo).get("default-lane", "").strip()
-    if default in ("full", "express", "gate-only"):
-        return default, "kickoff", None, None
-    return "full", "default", None, None
 
 
-def _lane_declaration_stated_by_its_commit(repo: Path, change_id: str) -> tuple[bool, str]:
-    """Does the commit that last changed the intent's `lane:` line carry
-    that exact line, verbatim, in its own message? (wave-end:1-r3)
-
-    Only `effective_lane_detail` calls this, and only when `declared_lane`
-    already found a schema-valid, intent-origin declaration -- `push`
-    never wired `check_lane_reason` itself in (finding 2, 029925d0: doing
-    so retroactively re-derives history that predates the checker knowing
-    to require it, breaking existing green fixtures), but a declaration
-    honoured at push without ANY provenance check at all is the same gap
-    from the other direction. `deciding_commit`/`_decides_in_frontmatter`
-    (the same mechanism `check_lane_reason` and `check_needs_design_
-    reason` use) find the commit; its message must contain `lane: <raw>`
-    verbatim, squeezed the same way `check_lane_reason` squeezes it.
-
-    Returns `(True, sha7)` when the line is stated, `(False, detail)`
-    otherwise -- `detail` is the short sha when a deciding commit was
-    found but its message omits the line, or a literal explanation when
-    no deciding commit could be found at all (fail closed either way:
-    both are "not stated")."""
-    manifest = load_manifest()
-    intent_path = artifact_path(manifest, "intent", change_id, repo)
-    if not intent_path.is_file():
-        return False, "no intent file"
-    front, _sections = parse_document(read_text(intent_path))
-    raw = front.get("lane", "").strip()
-    if not raw:
-        return True, ""
-    try:
-        relative = intent_path.resolve().relative_to(repo.resolve()).as_posix()
-    except ValueError:
-        return False, "intent path is outside the repo"
-    sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
-    if sha is None:
-        return False, "no commit decides the `lane:` line"
-    message = git_maybe(repo, "show", "-s", "--format=%B", sha)
-    if message is None:
-        return False, sha[:7]
-    line = f"lane: {raw}"
-    if _squeeze(line) not in _squeeze(message):
-        return False, sha[:7]
-    return True, sha[:7]
 
 
 TEMPLATES_GLOB = "**/templates/**"
@@ -1473,8 +1140,7 @@ CHANGE_ID = re.compile(r"[A-Za-z0-9._-]+")
 # `status:` grammar (contract/manifest.yaml, contract/templates/intent.md):
 # `open | confirmed <date> | closed <date> — PR #<N> | closed <date> —
 # branch <name> | withdrawn — <reason>`, each alternative allowing a
-# trailing ` #...` comment -- shared by intake.confirmed (below) and the
-# closed-commit shape push.review-only-head recomputes (W0-04, W1-03).
+# trailing ` #...` comment, shared by intake.confirmed and intent validation.
 # Groups: 1=confirmed date, 2=PR-form closed date, 3=PR number,
 # 4=branch-form closed date, 5=branch name. Only one of (2,3)/(4,5) is
 # ever non-None on a match -- `_status_closed_info` picks the pair that fired.
@@ -1691,7 +1357,7 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     failures += check_req_grammar(manifest, repo, change_id, sections)
 
     if yes_at_write_plan:
-        failures += check_spec_pass(manifest, repo, change_id, err)
+        failures += check_spec_ready(manifest, repo, change_id)
         failures += check_ui_flows_recompute(manifest, repo, change_id, touched)
         if kind == "product":
             failures += check_confirmed_behavior(manifest, repo, change_id, err)
@@ -1720,7 +1386,7 @@ def check_req_grammar(manifest, repo: Path, change_id: str, intent_sections):
     the start; until now nothing read it."""
     spec_path = artifact_path(manifest, "spec", change_id, repo)
     if not spec_path.is_file():
-        return []  # a missing spec is intake.spec-pass's business, not this rule
+        return []  # a missing spec is intake.spec-ready's business, not this rule
     _front, sections = parse_document(read_text(spec_path))
     if "Requirements" not in sections:
         return []  # already reported as a schema gap by the spec's own review
@@ -2211,16 +1877,11 @@ def check_plan_field_caps_at(manifest, repo: Path, change_id: str) -> list[tuple
 
 # --- plan.edits-after-commit (W1-02) ----------------------------------------
 
-PLAN_COMMIT_SUBJECT = "docs(loom): plan {}"
-MARK_START = re.compile(r"(\*\*)\s*(claimed|blocked)\(")
 # Only the explicit `landed: <sha>` annotation counts. A bare hex-looking
 # token is not enough: ordinary words spelt from hex letters ("defaced",
 # "cafe") would otherwise send an unauthorised addition to `dispatch`
 # instead of `spec` (round-5 finding).
-LANDED_SHA = re.compile(r"landed:\s*[0-9a-f]{7,40}\b", re.IGNORECASE)
 MEMORY_TASK_ID = re.compile(r"^W\d+-memory$", re.IGNORECASE)
-TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$")
-KNOWN_PLAN_SECTIONS = {"Task DAG", "Risks", "Current State Evidence", "Questions asked"}
 
 # The plan charter's `edits_after` policy ids this rule actually
 # implements (W1-02 fix round): recomputed against
@@ -2228,831 +1889,83 @@ KNOWN_PLAN_SECTIONS = {"Task DAG", "Risks", "Current State Evidence", "Questions
 # assumed, so a manifest id with no matching branch here fails closed
 # instead of silently drifting from the code (the "second drift surface"
 # named in the design finding).
-IMPLEMENTED_EDITS_AFTER_IDS = {
-    "mark-claimed-or-blocked",
-    "memory-task-appended",
-    "unlanded-task-replaced-on-spec-change",
-    "unlanded-task-amended-with-reason",
-    "questions-asked-appended",
-}
-
-
-def find_plan_commit_sha(repo: Path, change_id: str, head: str = "HEAD") -> str | None:
-    """The earliest commit reachable from `head` whose subject is exactly
-    `docs(loom): plan <change-id>` -- `git log --reverse` walks oldest
-    first, so the first hit is the earliest one, pinning a tie to the
-    first plan commit ever made rather than a later re-stamp."""
-    log = git_maybe(repo, "log", "--reverse", "--format=%H\x01%s", head)
-    if not log:
-        return None
-    wanted = PLAN_COMMIT_SUBJECT.format(change_id)
-    for line in log.split("\n"):
-        if "\x01" not in line:
-            continue
-        sha, subject = line.split("\x01", 1)
-        if subject == wanted:
-            return sha
-    return None
-
-
-def _commits_between(repo: Path, baseline_sha: str, head: str = "HEAD", *paths: str) -> list[str]:
-    log = git_maybe(repo, "log", "--format=%H", f"{baseline_sha}..{head}", *(["--", *paths] if paths else []))
-    if not log:
-        return []
-    return log.splitlines()
-
-
-def _commit_message(repo: Path, sha: str) -> str:
-    return git_maybe(repo, "log", "-1", "--format=%B", sha) or ""
-
-
-def _landed_task_ids(repo: Path, commits: list[str]) -> set[str]:
-    ids: set[str] = set()
-    for sha in commits:
-        for line in _commit_message(repo, sha).splitlines():
-            match = TASK_TRAILER.match(line.strip())
-            if match:
-                ids.add(match.group(1))
-    return ids
-
-
-def _block(section: str, detail: str, goes_to: str) -> tuple[str, str]:
-    return ("plan.edits-after-commit", f"{section} {detail}; goes to {goes_to}")
-
-
-def _strip_task_mark(title: str) -> tuple[str, str | None]:
-    """Strip a `claimed(...)` / `blocked(...)` mark right after the closing
-    `**` -- the one addition the charter allows on a task title line --
-    so an otherwise-identical title compares equal. `landed(...)` (or any
-    other annotation) is deliberately NOT stripped: it is not on the
-    allow-list, so it must keep reading as a real change.
-
-    Balances nested parentheses inside the mark (`blocked(waiting on
-    upstream (see #42))` strips cleanly) rather than stopping at the
-    first `)`. Returns `(normalized_title, None)` when there is no mark
-    or it strips cleanly; returns `(title, mark_text)` UNCHANGED when a
-    `claimed(`/`blocked(` mark starts but its parentheses never balance,
-    so the caller can BLOCK on the malformed mark instead of silently
-    leaving stray text behind in the comparison."""
-    match = MARK_START.search(title)
-    if not match:
-        return title, None
-    open_paren = match.end() - 1
-    depth = 0
-    close_paren = None
-    for i in range(open_paren, len(title)):
-        ch = title[i]
-        if ch == "(":
-            depth += 1
-        elif ch == ")":
-            depth -= 1
-            if depth == 0:
-                close_paren = i
-                break
-    if close_paren is None:
-        return title, title[match.start(2):]
-    head_end = match.start(1) + len(match.group(1))
-    return title[:head_end] + title[close_paren + 1:], None
-
-
-def _mentioned_token(task_id: str, message: str) -> bool:
-    """`task_id` counts as mentioned only as a whole token bounded by
-    non-id characters, so `W1-10` never satisfies a check for `W1-1`."""
-    pattern = r"(?<![A-Za-z0-9-])" + re.escape(task_id) + r"(?![A-Za-z0-9-])"
-    return re.search(pattern, message) is not None
-
-
-def _goes_to_for_unauthorised(title: str) -> str:
-    """An unauthorised add/change whose title line carries a landed-sha
-    annotation (`landed: <7-40 hex chars>`, or a bare 7-40 hex token) goes
-    to `dispatch` per the charter's must_not row for landed commit shas;
-    an ordinary unauthorised edit still goes to `spec`."""
-    return "dispatch" if LANDED_SHA.search(title) else "spec"
-
 
-def _parse_task_dag(text: str) -> dict[str, dict[str, str | None]]:
-    tasks: dict[str, dict[str, str | None]] = {}
-    current_id: str | None = None
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        header = TASK_LINE.match(line)
-        if header:
-            current_id = header.group("id")
-            tasks[current_id] = {"title": line, "Files": None, "Test": None, "Risk": None}
-            continue
-        if current_id is None:
-            continue
-        field_match = TASK_FIELD_LINE.match(line)
-        if field_match:
-            tasks[current_id][field_match.group(1)] = field_match.group(2)
-    return tasks
-
-
-def _check_task_dag(
-    baseline_text: str, current_text: str, landed_ids: set[str],
-    plan_touch_messages: list[str], enabled_ids: set[str],
-) -> list[tuple[str, str]]:
-    baseline_tasks = _parse_task_dag(baseline_text)
-    current_tasks = _parse_task_dag(current_text)
-    failures: list[tuple[str, str]] = []
-
-    allow_mark = "mark-claimed-or-blocked" in enabled_ids
-    allow_memory = "memory-task-appended" in enabled_ids
-    allow_replaced = "unlanded-task-replaced-on-spec-change" in enabled_ids
-    allow_amended = "unlanded-task-amended-with-reason" in enabled_ids
-
-    def mentioned(task_id: str) -> bool:
-        return any(_mentioned_token(task_id, message) for message in plan_touch_messages)
-
-    def normalized_title(title: str) -> tuple[str, str | None]:
-        if not allow_mark:
-            return title, None
-        return _strip_task_mark(title)
-
-    all_ids = list(dict.fromkeys([*baseline_tasks, *current_tasks]))
-    for task_id in all_ids:
-        in_baseline = task_id in baseline_tasks
-        in_current = task_id in current_tasks
-        if in_baseline and in_current:
-            before, after = baseline_tasks[task_id], current_tasks[task_id]
-            before_title, before_mark_error = normalized_title(before["title"])
-            after_title, after_mark_error = normalized_title(after["title"])
-            mark_error = before_mark_error or after_mark_error
-            if mark_error is not None:
-                failures.append((
-                    "plan.edits-after-commit",
-                    f"{task_id} carries an unbalanced claimed/blocked mark {mark_error!r}.",
-                ))
-                continue
-            title_changed = before_title != after_title
-            fields_changed = any(before[field] != after[field] for field in ("Files", "Test", "Risk"))
-            if not title_changed and not fields_changed:
-                continue
-            if task_id in landed_ids:
-                failures.append(_block(task_id, "changed after landing", "git history"))
-                continue
-            allowed = allow_replaced if title_changed else allow_amended
-            if not allowed or not mentioned(task_id):
-                failures.append(_block(task_id, "changed", _goes_to_for_unauthorised(after["title"])))
-        elif in_baseline and not in_current:
-            if task_id in landed_ids:
-                failures.append(_block(task_id, "removed after landing", "git history"))
-            elif not allow_replaced or not mentioned(task_id):
-                failures.append(_block(task_id, "removed", "spec"))
-        else:  # added since the plan commit
-            if MEMORY_TASK_ID.match(task_id) and allow_memory:
-                continue
-            if not allow_replaced or not mentioned(task_id):
-                failures.append(
-                    _block(task_id, "added", _goes_to_for_unauthorised(current_tasks[task_id]["title"]))
-                )
-    return failures
-
-
-def _check_risks(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
-    if baseline_text.strip() == current_text.strip():
-        return []
-    return [_block("Risks", "section changed", "review")]
-
-
-def _check_cse(baseline_text: str, current_text: str) -> list[tuple[str, str]]:
-    if baseline_text.strip() == current_text.strip():
-        return []
-    return [_block("Current State Evidence", "section changed", "spec")]
-
-
-def _check_questions_asked(
-    baseline_text: str, current_text: str, allow_append: bool
-) -> list[tuple[str, str]]:
-    baseline_lines = [line.strip() for line in baseline_text.splitlines() if line.strip()]
-    current_lines = [line.strip() for line in current_text.splitlines() if line.strip()]
-    if current_lines == baseline_lines:
-        return []
-    if allow_append and current_lines[: len(baseline_lines)] == baseline_lines:
-        return []
-    return [_block("Questions asked", "changed", "spec")]
-
-
-def _check_frontmatter(baseline_front: dict[str, str], current_front: dict[str, str]) -> list[tuple[str, str]]:
-    if baseline_front == current_front:
-        return []
-    keys = sorted(
-        key for key in {*baseline_front, *current_front}
-        if baseline_front.get(key) != current_front.get(key)
-    )
-    return [_block("frontmatter", f"{', '.join(keys)} changed", "spec")]
-
-
-def _check_other_sections(
-    baseline_sections: dict[str, str], current_sections: dict[str, str]
-) -> list[tuple[str, str]]:
-    failures: list[tuple[str, str]] = []
-    baseline_other = {k: v for k, v in baseline_sections.items() if k not in KNOWN_PLAN_SECTIONS}
-    current_other = {k: v for k, v in current_sections.items() if k not in KNOWN_PLAN_SECTIONS}
-    for name in sorted({*baseline_other, *current_other}):
-        if baseline_other.get(name) == current_other.get(name):
-            continue
-        goes_to = "memory" if "lesson" in name.lower() else "spec"
-        if name not in baseline_other:
-            detail = "section added"
-        elif name not in current_other:
-            detail = "section removed"
-        else:
-            detail = "section changed"
-        failures.append(_block(name, detail, goes_to))
-    return failures
-
-
-def _plan_edits_after_ids(manifest) -> list[str]:
-    """The `id`s declared on `artifacts.plan.charter.edits_after`, in
-    manifest order -- ids missing or blank are dropped (contract.charter
-    -complete separately requires every entry to carry one)."""
-    entries = (
-        (manifest.get("artifacts") or {}).get("plan", {}).get("charter", {}).get("edits_after")
-        or []
-    )
-    return [
-        str(entry["id"]).strip()
-        for entry in entries
-        if isinstance(entry, dict) and str(entry.get("id", "")).strip()
-    ]
-
-
-def check_plan_edits_after_commit(
-    repo: Path, plan_path: Path, change_id: str, manifest
-) -> list[tuple[str, str]]:
-    """Recomputed per-edit charter enforcement on a charter-stamped plan
-    (W1-02): once the plan's own `docs(loom): plan <change-id>` commit
-    lands, only the charter's `edits_after` list may still touch it --
-    everything else blocks, naming where the content belongs instead.
-
-    The allow-list is recomputed from `manifest.artifacts.plan.charter.
-    edits_after` by stable policy id (not hard-coded) every run: an id
-    with no matching branch in `IMPLEMENTED_EDITS_AFTER_IDS` fails closed
-    instead of silently drifting from the manifest."""
-    ids = _plan_edits_after_ids(manifest)
-    unsupported = [pid for pid in ids if pid not in IMPLEMENTED_EDITS_AFTER_IDS]
-    if unsupported:
-        return [
-            ("plan.edits-after-commit", f"unsupported policy id {pid!r}.")
-            for pid in unsupported
-        ]
-    enabled_ids = set(ids)
-
-    text = read_text(plan_path)
-    front, sections = parse_document(text)
-    if "charter" not in front:
-        return []
-
-    baseline_sha = find_plan_commit_sha(repo, change_id)
-    if baseline_sha is None:
-        return [("plan.edits-after-commit", "no plan commit found")]
-
-    plan_rel = plan_path.relative_to(repo).as_posix()
-    baseline_text = git_maybe(repo, "show", f"{baseline_sha}:{plan_rel}")
-    if baseline_text is None:
-        return [("plan.edits-after-commit", "no plan commit found")]
-
-    baseline_front, baseline_sections = parse_document(baseline_text)
-    if baseline_front == front and baseline_sections == sections:
-        return []
-
-    commits = _commits_between(repo, baseline_sha)
-    landed_ids = _landed_task_ids(repo, commits)
-    plan_touch_shas = _commits_between(repo, baseline_sha, "HEAD", plan_rel)
-    plan_touch_messages = [_commit_message(repo, sha) for sha in plan_touch_shas]
-
-    failures: list[tuple[str, str]] = []
-    failures += _check_frontmatter(baseline_front, front)
-    failures += _check_task_dag(
-        baseline_sections.get("Task DAG", ""), sections.get("Task DAG", ""),
-        landed_ids, plan_touch_messages, enabled_ids,
-    )
-    failures += _check_risks(baseline_sections.get("Risks", ""), sections.get("Risks", ""))
-    failures += _check_cse(
-        baseline_sections.get("Current State Evidence", ""),
-        sections.get("Current State Evidence", ""),
-    )
-    failures += _check_questions_asked(
-        baseline_sections.get("Questions asked", ""), sections.get("Questions asked", ""),
-        "questions-asked-appended" in enabled_ids,
-    )
-    failures += _check_other_sections(baseline_sections, sections)
-    return failures
-
-
-def check_plan_edits_after_commit_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
-    """Same rule, applied to a change's own `plan.md` when it exists --
-    skipped silently when there is no plan file yet (push's shape)."""
-    plan_path = artifact_path(manifest, "plan", change_id, repo)
-    if not plan_path.is_file():
-        return []
-    return check_plan_edits_after_commit(repo, plan_path, change_id, manifest)
-
-
-# --- review.round-append-only (W1-03) ---------------------------------------
-
-# The review charter's `edits_after` policy ids this rule actually
-# implements, recomputed against `manifest.artifacts.review.charter.
-# edits_after` at every run -- same fail-closed shape as
-# `IMPLEMENTED_EDITS_AFTER_IDS` above.
-IMPLEMENTED_REVIEW_EDITS_AFTER_IDS = {
-    "verdicts-probes-findings-dispatch-gain-entries",
-    "vendors-gain-entries",
-    "reviewed-sha-scope-cost-replaced",
-    "open-finding-resolved-or-dismissed-in-place",
-    "questions-gain-entries",
-    "second-vendor-set-once",
-}
-
-REVIEW_ACCRETING_ARRAYS = ("verdicts", "probes", "open_findings", "dispatch", "vendors")
-REVIEW_REPLACE_SET_FIELDS = ("reviewed_sha", "scope", "cost")
-OPEN_FINDING_MOVABLE_KEYS = ("resolved", "dismissed")
-
-
-def _review_edits_after_ids(manifest) -> list[str]:
-    """The `id`s declared on `artifacts.review.charter.edits_after`, in
-    manifest order -- same shape as `_plan_edits_after_ids`."""
-    entries = (
-        (manifest.get("artifacts") or {}).get("review", {}).get("charter", {}).get("edits_after")
-        or []
-    )
-    return [
-        str(entry["id"]).strip()
-        for entry in entries
-        if isinstance(entry, dict) and str(entry.get("id", "")).strip()
-    ]
-
-
-def _review_json_history(repo: Path, review_rel: str, head: str = "HEAD") -> list[str]:
-    """Every commit reachable from `head` that touches `review_rel`, oldest
-    first -- the first entry is the commit that created the file."""
-    log = git_maybe(repo, "log", "--reverse", "--format=%H", head, "--", review_rel)
-    if not log:
-        return []
-    return log.splitlines()
-
-
-def _review_doc_at(repo: Path, sha: str, review_rel: str) -> dict | None:
-    raw = git_maybe(repo, "show", f"{sha}:{review_rel}")
-    if raw is None:
-        return None
-    try:
-        doc = json.loads(raw)
-    except json.JSONDecodeError:
-        return None
-    return doc if isinstance(doc, dict) else None
-
-
-def _review_block(path_label: str, detail: str, goes_to: str = "review") -> tuple[str, str]:
-    return ("review.round-append-only", f"{path_label} {detail}; goes to {goes_to}")
-
-
-def _review_norm(value) -> str:
-    return json.dumps(value, sort_keys=True)
-
-
-def _open_finding_gained_resolution_only(earlier, later) -> bool:
-    """True when `later` differs from `earlier` only by gaining exactly one
-    of `resolved`/`dismissed` (absent or null in `earlier`, populated in
-    `later`), every other key on the entry unchanged."""
-    if not isinstance(earlier, dict) or not isinstance(later, dict):
-        return False
-    other_keys = (set(earlier) | set(later)) - set(OPEN_FINDING_MOVABLE_KEYS)
-    if any(earlier.get(key) != later.get(key) for key in other_keys):
-        return False
-    if any(bool(earlier.get(key)) for key in OPEN_FINDING_MOVABLE_KEYS):
-        return False
-    gained = [
-        key for key in OPEN_FINDING_MOVABLE_KEYS
-        if not earlier.get(key) and bool(later.get(key))
-    ]
-    return (
-        len(gained) == 1
-        and sum(bool(later.get(key)) for key in OPEN_FINDING_MOVABLE_KEYS) == 1
-    )
-
-
-def _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier_doc: dict, later_doc: dict) -> bool:
-    """True when the only difference between two verdict entries is `sha`,
-    and that `sha` tracked the top-level `reviewed_sha` on both sides --
-    `push.reviewed-sha` requires every verdict's `sha` to equal the current
-    `reviewed_sha`, so an earlier verdict's `sha` moves in lockstep when
-    `reviewed_sha` is replaced (reviewed-sha-scope-cost-replaced), never on
-    its own."""
-    if not isinstance(e_entry, dict) or not isinstance(l_entry, dict):
-        return False
-    if set(e_entry) != set(l_entry):
-        return False
-    diffs = [key for key in e_entry if e_entry.get(key) != l_entry.get(key)]
-    if diffs != ["sha"]:
-        return False
-    return (
-        e_entry.get("sha") == earlier_doc.get("reviewed_sha")
-        and l_entry.get("sha") == later_doc.get("reviewed_sha")
-    )
-
-
-def _probe_only_result_changed(earlier, later) -> bool:
-    if not isinstance(earlier, dict) or not isinstance(later, dict):
-        return False
-    if set(earlier) != set(later):
-        return False
-    diffs = [key for key in earlier if earlier.get(key) != later.get(key)]
-    return diffs == ["result"]
-
-
-def _compare_review_round(
-    earlier: dict, later: dict, enabled_ids: set[str], known_top_level_keys: set[str], label: str,
-) -> list[tuple[str, str]]:
-    """One consecutive pair of review.json rounds: `earlier` may only
-    differ from `later` per the charter's enabled policy ids -- skipped
-    entirely when `earlier` carries no top-level `charter` key
-    (grandfathering). Every known top-level key is checked here; a key
-    absent from this function's own categories below (accreting array,
-    replace-set, questions, second_vendor, charter) blocks on any
-    difference by falling through to the catch-all at the end -- there
-    is no key this function silently ignores."""
-    if "charter" not in earlier:
-        return []
-
-    allow_gain = "verdicts-probes-findings-dispatch-gain-entries" in enabled_ids
-    allow_vendor_gain = "vendors-gain-entries" in enabled_ids
-    allow_resolve = "open-finding-resolved-or-dismissed-in-place" in enabled_ids
-    allow_replace = "reviewed-sha-scope-cost-replaced" in enabled_ids
-    allow_questions_gain = "questions-gain-entries" in enabled_ids
-    allow_second_vendor_set = "second-vendor-set-once" in enabled_ids
-
-    failures: list[tuple[str, str]] = []
-
-    earlier_keys, later_keys = set(earlier), set(later)
-    for key in sorted(earlier_keys - later_keys):
-        failures.append(_review_block(f"{label}.{key}", "key removed"))
-    for key in sorted(later_keys - earlier_keys):
-        if key not in known_top_level_keys:
-            failures.append(_review_block(f"{label}.{key}", "unknown key added"))
-
-    for key in sorted((earlier_keys | later_keys) & known_top_level_keys):
-        if key in earlier_keys - later_keys:
-            continue  # already reported as "key removed" above
-
-        if key == "charter":
-            if _review_norm(earlier.get("charter")) != _review_norm(later.get("charter")):
-                failures.append(_review_block(f"{label}.charter", "charter stamp changed"))
-            continue
-
-        if key in REVIEW_ACCRETING_ARRAYS:
-            e_list, l_list = earlier.get(key), later.get(key)
-            if not isinstance(e_list, list) or not isinstance(l_list, list):
-                if _review_norm(e_list) != _review_norm(l_list):
-                    failures.append(_review_block(f"{label}.{key}", "array type changed"))
-                continue
-            if len(l_list) < len(e_list):
-                failures.append(_review_block(f"{label}.{key}", "earlier round rewritten"))
-                continue
-            for index, e_entry in enumerate(e_list):
-                l_entry = l_list[index]
-                if _review_norm(e_entry) == _review_norm(l_entry):
-                    continue
-                if (
-                    key == "open_findings"
-                    and allow_resolve
-                    and _open_finding_gained_resolution_only(e_entry, l_entry)
-                ):
-                    continue
-                if (
-                    key == "verdicts"
-                    and allow_replace
-                    and _verdict_sha_synced_with_reviewed_sha(e_entry, l_entry, earlier, later)
-                ):
-                    continue
-                if key == "probes" and _probe_only_result_changed(e_entry, l_entry):
-                    failures.append(_review_block(f"{label}.{key}[{index}]", "evidence tampering"))
-                    continue
-                failures.append(_review_block(f"{label}.{key}[{index}]", "earlier round rewritten"))
-            gain_allowed = allow_vendor_gain if key == "vendors" else allow_gain
-            if len(l_list) > len(e_list) and not gain_allowed:
-                failures.append(
-                    _review_block(f"{label}.{key}", "gained entries with no charter allowance")
-                )
-            continue
-
-        if key in REVIEW_REPLACE_SET_FIELDS:
-            if not allow_replace:
-                if _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
-                    failures.append(_review_block(f"{label}.{key}", "changed"))
-                continue
-            e_val, l_val = earlier.get(key), later.get(key)
-            expected_type = dict if key == "cost" else str
-            if isinstance(e_val, expected_type) and not isinstance(l_val, expected_type):
-                failures.append(_review_block(f"{label}.{key}", "replace-set type changed"))
-            continue
-
-        if key == "questions":
-            e_q, l_q = earlier.get("questions", []), later.get("questions", [])
-            if _review_norm(e_q) != _review_norm(l_q):
-                # Decision-point questions accrete: ① is copied in at the
-                # first checkpoint, ③ is appended by ship into the review-only
-                # commit it amends. The earlier list must be a byte-equal
-                # prefix of the later one; anything else is a rewritten
-                # record of what the user was asked.
-                grown = (
-                    isinstance(e_q, list) and isinstance(l_q, list)
-                    and len(l_q) > len(e_q)
-                    and _review_norm(l_q[: len(e_q)]) == _review_norm(e_q)
-                )
-                if not (allow_questions_gain and grown):
-                    failures.append(_review_block(f"{label}.questions", "changed"))
-            continue
-
-        if key == "second_vendor":
-            e_sv, l_sv = earlier.get("second_vendor"), later.get("second_vendor")
-            if e_sv != l_sv:
-                if not (allow_second_vendor_set and e_sv is None and l_sv is not None):
-                    failures.append(_review_block(f"{label}.second_vendor", "changed"))
-            continue
-
-        # Any other known top-level key: block on any difference.
-        if _review_norm(earlier.get(key)) != _review_norm(later.get(key)):
-            failures.append(_review_block(f"{label}.{key}", "changed"))
-
-    return failures
-
-
-def check_review_round_append_only(
-    repo: Path, review_path: Path, change_id: str, manifest,
-) -> list[tuple[str, str]]:
-    """Recomputed per-round charter enforcement on a charter-stamped
-    review.json (W1-03): once a round carries a top-level `charter` key,
-    only the charter's `edits_after` policy ids let a later round differ
-    from it -- everything else blocks, naming what changed. An id with no
-    matching branch in `IMPLEMENTED_REVIEW_EDITS_AFTER_IDS` fails closed,
-    mirroring `check_plan_edits_after_commit`."""
-    ids = _review_edits_after_ids(manifest)
-    unsupported = [pid for pid in ids if pid not in IMPLEMENTED_REVIEW_EDITS_AFTER_IDS]
-    if unsupported:
-        return [
-            ("review.round-append-only", f"unsupported policy id {pid!r}.")
-            for pid in unsupported
-        ]
-    enabled_ids = set(ids)
-    known_top_level_keys = set(review_container_types(manifest)) | {"second_vendor", "charter"}
-
-    review_rel = review_path.relative_to(repo).as_posix()
-    history = _review_json_history(repo, review_rel)
-    if not history:
-        return []
-
-    docs: list[dict] = []
-    for sha in history:
-        doc = _review_doc_at(repo, sha, review_rel)
-        if doc is not None:
-            docs.append(doc)
-
-    failures: list[tuple[str, str]] = []
-    for earlier, later in zip(docs, docs[1:]):
-        failures += _compare_review_round(earlier, later, enabled_ids, known_top_level_keys, review_rel)
-
-    if review_path.is_file() and docs:
-        try:
-            working_doc = json.loads(read_text(review_path))
-        except json.JSONDecodeError:
-            working_doc = None
-        if isinstance(working_doc, dict) and _review_norm(docs[-1]) != _review_norm(working_doc):
-            failures += _compare_review_round(
-                docs[-1], working_doc, enabled_ids, known_top_level_keys, review_rel
-            )
-
-    return failures
-
-
-def check_review_round_append_only_at(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
-    """Same rule, applied to a change's own `review.json` when it exists --
-    skipped silently when there is no review.json yet (push's shape,
-    mirroring `check_plan_edits_after_commit_at`)."""
-    review_path = artifact_path(manifest, "review", change_id, repo)
-    if not review_path.is_file():
-        return []
-    return check_review_round_append_only(repo, review_path, change_id, manifest)
-
-
-SPEC_LENSES = {"spec", "docs", "spec-adversarial", "spec+adversarial"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 PRE_BUILD_REVIEW = re.compile(
     r"^(required|not-required)\s*(?:—|–|--)\s*(\S.*)$", re.IGNORECASE
 )
 
 
-def spec_scoped_verdicts(review) -> tuple[list[dict], str | None]:
-    """The verdicts that reviewed the SPEC, out of a file that accumulates.
-
-    review.json holds every round of a change, and each round overwrites the
-    file-level `scope` line. Reading the newest round alone lets a passing
-    wave-end round answer for a spec nobody reviewed, and lets a failing one
-    block a spec that passed. A round says what it looked at on its own
-    verdicts (`scope: spec…`); records written before rounds carried a scope
-    fall back to the file-level line plus the reviewer's lens."""
-    entries = [entry for entry in review.get("verdicts", []) if isinstance(entry, dict)]
-    explicit = [
-        entry
-        for entry in entries
-        if str(entry.get("scope", "")).strip().lower().startswith("spec")
-    ]
-    if explicit:
-        return explicit, None
-    unscoped = [entry for entry in entries if not str(entry.get("scope", "")).strip()]
-    if not unscoped:
-        return [], (
-            "review.json records no round scoped to the spec; every round it "
-            "carries reviewed something else."
-        )
-    if "spec" not in str(review.get("scope", "")).lower():
-        return [], "review.json scope does not cover the spec."
-    by_lens = [
-        entry for entry in unscoped
-        if str(entry.get("lens", "")).strip().lower() in SPEC_LENSES
-    ]
-    if not by_lens:
-        return [], (
-            "review.json carries no verdict from a spec-side lens "
-            f"({', '.join(sorted(SPEC_LENSES))}); the spec was not what was reviewed."
-        )
-    return by_lens, None
 
 
-def is_spec_adversarial_probe(probe) -> bool:
-    """The red-team half of the spec lens, and only that half.
-
-    review.json accumulates every round of a change, so an unscoped
-    adversarial probe -- one recorded against the code, or against nothing
-    in particular -- used to answer for a spec no adversary ever attacked.
-    The probe says what it attacked on itself now: `scope: spec`, or it is
-    not the spec's red team."""
-    if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
-        return False
-    return str(probe.get("scope", "")).strip().lower().startswith("spec")
 
 
-def check_spec_pass(manifest, repo: Path, change_id: str, err=sys.stderr) -> list[tuple[str, str]]:
-    """Apply the spec's risk-triggered review declaration at write-plan.
-
-    A missing declaration is the legacy marker: it deliberately keeps the
-    former two-reader plus adversarial-probe floor. New templates always emit
-    a declaration, so omitting it never weakens the gate."""
+def check_spec_ready(manifest, repo: Path, change_id: str) -> list[tuple[str, str]]:
+    """Require the spec and its explicit risk decision, without a review ledger."""
     spec_path = artifact_path(manifest, "spec", change_id, repo)
     if not spec_path.is_file():
-        return [("intake.spec-pass", f"needs-design: yes but no spec at {spec_path.relative_to(repo)}.")]
+        return [("intake.spec-ready", f"needs-design: yes but no spec at {spec_path.relative_to(repo)}.")]
     spec_front, _ = parse_document(read_text(spec_path))
     declaration = spec_front.get("pre-build-review", "").strip()
-    declaration_match = PRE_BUILD_REVIEW.fullmatch(declaration) if declaration else None
-    if declaration and declaration_match is None:
-        return [
-            (
-                "intake.spec-pass",
-                "`pre-build-review` must be `required|not-required — <reason>`.",
-            )
-        ]
-    if declaration_match and declaration_match.group(1).lower() == "not-required":
-        return []
-
-    review_path = artifact_path(manifest, "review", change_id, repo)
-    if not review_path.is_file():
-        return [
-            (
-                "intake.spec-pass",
-                f"no review.json at {review_path.relative_to(repo)}; the spec was never reviewed.",
-            )
-        ]
-    review = json.loads(read_text(review_path))
-    spec_verdicts, selection_failure = spec_scoped_verdicts(review)
-    if selection_failure:
-        return [("intake.spec-pass", selection_failure)]
-    round_number, verdicts = latest_round(spec_verdicts)
-    reviewers = {
-        str(entry.get("reviewer", "")).strip()
-        for entry in verdicts
-        if str(entry.get("reviewer", "")).strip()
-    }
-    required_review = bool(
-        declaration_match and declaration_match.group(1).lower() == "required"
-    )
-    minimum_reviewers = 1 if required_review else 2
-    if len(reviewers) < minimum_reviewers:
-        return [
-            (
-                "intake.spec-pass",
-                f"the latest spec review round ({round_number}) carries "
-                f"{len(reviewers)} reviewer(s); {minimum_reviewers} independent "
-                f"reviewer(s) are required.",
-            )
-        ]
-    failed = [
-        f"{entry.get('reviewer')}={entry.get('verdict')}"
-        for entry in verdicts
-        if str(entry.get("verdict")) not in PASSING_VERDICTS
-    ]
-    if failed:
-        return [
-            (
-                "intake.spec-pass",
-                f"the latest spec review round ({round_number}) is not passing: "
-                f"{', '.join(failed)}.",
-            )
-        ]
-    implementers = {
-        str(entry.get("agent_id", "")).strip()
-        for entry in review.get("dispatch", [])
-        if str(entry.get("role", "")).strip() == "implementer"
-    }
-    reviewer_dispatches = {
-        str(entry.get("agent_id", "")).strip()
-        for entry in review.get("dispatch", [])
-        if str(entry.get("role", "")).strip() == "reviewer"
-        and entry.get("fresh_context") is True
-    }
-    combined_reviewers = {
-        str(entry.get("reviewer", "")).strip()
-        for entry in verdicts
-        if str(entry.get("lens", "")).strip().lower() == "spec+adversarial"
-    }
-    independent_combined_reviewers = (
-        combined_reviewers & reviewer_dispatches
-    ) - implementers
-    has_combined_lens = bool(independent_combined_reviewers)
-    has_legacy_floor = len(reviewers) >= 2 and any(
-        is_spec_adversarial_probe(probe) for probe in review.get("probes", [])
-    )
-    if required_review and not (has_combined_lens or has_legacy_floor):
-        return [
-            (
-                "intake.spec-pass",
-                "a required pre-build review needs one reviewer with "
-                "`lens: spec+adversarial`; an already-recorded legacy two-reader "
-                "round plus spec adversarial probe also remains valid.",
-            )
-        ]
-    # An undeclared legacy spec retains the old read + separate adversarial
-    # contract. This is the safe compatibility default, never a skip.
-    if not required_review and not any(
-        is_spec_adversarial_probe(probe) for probe in review.get("probes", [])
-    ):
-        return [
-            (
-                "intake.spec-pass",
-                "no `adversarial` probe carrying `scope: spec` is recorded; the "
-                "spec lens is read + adversarial, and an unscoped probe does not "
-                "say the spec was what it attacked.",
-            )
-        ]
-    return check_spec_freshness(repo, spec_path, review, verdicts, round_number, err)
-
-
-def check_spec_freshness(repo, spec_path, review, verdicts, round_number, err):
-    """A pass is a pass over a particular text.
-
-    Rewrite the spec after its round and the verdict is about a document that
-    no longer exists, and the only freshness rule that used to exist
-    (`push.reviewed-sha`) fires at push -- after the plan and the whole build
-    (W2 adversary P09). There is one way to answer the question and no
-    fallback: the round's own verdicts carry `spec_sha`, or the round cannot
-    say what it read and does not pass (W2 re-review F3/F4)."""
-    current = spec_identity(spec_path)
-    relative = spec_path.relative_to(repo).as_posix()
-    # EVERY reviewer of the round, not any of them: two reviewers who read
-    # different texts are not two readings of this spec, and one reviewer who
-    # recorded nothing leaves their own verdict unattached to any text.
-    silent = [
-        str(entry.get("reviewer", "?"))
-        for entry in verdicts
-        if not str(entry.get("spec_sha", "")).strip()
-    ]
-    if silent:
-        return [
-            (
-                "intake.spec-pass",
-                f"{', '.join(sorted(set(silent)))} recorded no `spec_sha` in "
-                f"spec review round {round_number}, so nothing says which text "
-                f"they read -- the spec could have been rewritten afterwards "
-                f"and nothing would notice. Record spec_sha in the spec round "
-                f"({current[:7]} for {relative} as it stands); "
-                f"{recompute_command(relative)}.",
-            )
-        ]
-    stale = [
-        f"{entry.get('reviewer', '?')}={str(entry['spec_sha']).strip()[:7]}"
-        for entry in verdicts
-        if not sha_agrees(str(entry["spec_sha"]).strip(), current)
-    ]
-    if stale:
-        return [
-            (
-                "intake.spec-pass",
-                f"spec review round {round_number} read {', '.join(stale)} but "
-                f"{relative} is now {current[:7]} -- spec changed after "
-                f"review; send it round again. To check the value yourself, "
-                f"{recompute_command(relative)}.",
-            )
-        ]
+    if not declaration or PRE_BUILD_REVIEW.fullmatch(declaration) is None:
+        return [(
+            "intake.spec-ready",
+            "`pre-build-review` must be `required|not-required — <reason>`.",
+        )]
     return []
+
+
+
+
 
 
 def check_confirmed_behavior(
@@ -3603,7 +2516,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if git_push or malformed_canonical_push:
         repo, immutable_head, refspec_error = canonical_git_push(command, cwd)
         if refspec_error:
-            print(f"BLOCK push.reviewed-sha: {refspec_error}", file=err)
+            print(f"BLOCK push.attestation: {refspec_error}", file=err)
             return 2
         assert repo is not None and immutable_head is not None
         os.chdir(repo)
@@ -3615,7 +2528,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     pr_create = canonical_pr_repo is not None or is_pr_create_command(command)
     if pr_create and canonical_pr_repo is None:
         print(
-            "BLOCK push.reviewed-sha: PR creation must use the canonical "
+            "BLOCK push.attestation: PR creation must use the canonical "
             "trusted-gh command from loom-code:ship",
             file=err,
         )
@@ -3623,7 +2536,7 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     push_cwd = str(canonical_pr_repo) if canonical_pr_repo else git_dash_c_push_cwd(command, cwd)
     if push_cwd is None:
         print(
-            "BLOCK push.review-only-head: ambiguous repository selection; "
+            "BLOCK push.attestation: ambiguous repository selection; "
             "use one absolute git -C path, or cd to one absolute path first",
             file=err,
         )
@@ -3632,14 +2545,13 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if pr_create:
         remote_error = check_pr_create_remote_head(Path.cwd(), command)
         if remote_error:
-            print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
+            print(f"BLOCK push.attestation: {remote_error}", file=err)
             return 2
-        rest = ["--skip-package-tests", *rest]
     rc = _cmd_push(rest, out, err)
     if pr_create and rc == 0:
         remote_error = check_pr_create_remote_head(Path.cwd(), command)
         if remote_error:
-            print(f"BLOCK push.reviewed-sha: {remote_error}", file=err)
+            print(f"BLOCK push.attestation: {remote_error}", file=err)
             return 2
     return 2 if rc == 1 else rc   # hosts block on exit 2
 
@@ -3647,7 +2559,6 @@ def cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     head = "HEAD"
     require_live_head = False
-    skip_package_tests = False
     rest = list(args)
     while rest:
         token = rest.pop(0)
@@ -3657,8 +2568,6 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             head = rest.pop(0)
         elif token == "--require-live-head":
             require_live_head = True
-        elif token == "--skip-package-tests":
-            skip_package_tests = True
         else:
             raise UsageError(f"unexpected argument {token!r}.")
 
@@ -3672,267 +2581,40 @@ def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     # branch delta. It validates content identity and recorded outcomes but
     # deliberately does not replay functional executables.
     attestation_template = manifest.get("artifacts", {}).get("attestation", {}).get("path")
-    if attestation_template:
-        matcher = glob_to_regex(attestation_template.replace("<change-id>", "*"))
-        candidates = sorted(path for path in changed_paths(repo) if matcher.fullmatch(path))
-        if len(candidates) != 1:
-            return report([(
-                "push.attestation",
-                f"branch must carry exactly one generated attestation; found {len(candidates)}",
-            )], err)
-        attestation_rel = candidates[0]
-        match = re.fullmatch(
-            re.escape(attestation_template).replace(re.escape("<change-id>"), r"(?P<change_id>[^/]+)"),
-            attestation_rel,
-        )
-        if match is None:
-            return report([("push.attestation", "cannot derive change id from attestation path")], err)
-        try:
-            attestation = json.loads(git_text(repo, "show", f"{head_sha}:{attestation_rel}"))
-        except (UsageError, json.JSONDecodeError) as exc:
-            return report([("push.attestation", f"cannot read generated attestation: {exc}")], err)
-        failures = validate_attestation(
-            repo, head_sha, match.group("change_id"), attestation, manifest
-        )
-        if require_live_head and git_text(repo, "rev-parse", "HEAD") != head_sha:
-            failures.append(("push.attestation", "live HEAD moved during publication validation"))
-        return report(failures, err)
-
-    review_rel, failures, closes_intent_in_head = check_review_only_head(manifest, repo, head_sha)
-    if review_rel is None:
-        return report(failures, err)
-    # When HEAD itself already carries a validated close line (W1-03), the
-    # OLD shape's HEAD^-must-be-a-close-commit recompute is not this
-    # commit's business -- HEAD^ never claimed to be a close commit, and
-    # forcing it through that shape would block an ordinary commit that
-    # merely happens to have introduced (or last touched) the intent file.
-    if not closes_intent_in_head:
-        failures += check_close_commit_shape(manifest, repo, head_sha)
-
-    raw = git_text(repo, "show", f"{head_sha}:{review_rel}")
-    try:
-        review = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        return report([("push.review-schema", f"{review_rel} is not valid JSON: {exc}")], err)
-    if not isinstance(review, dict):
-        return report([("push.review-schema", f"{review_rel} is not a JSON object.")], err)
-
-    failures += check_review_schema(manifest, review, review_rel)
-    recorded = str(review.get("reviewed_sha", "")).strip()
-    reviewed_id = (
-        git_maybe(repo, "rev-parse", "--verify", f"{recorded}^{{commit}}")
-        if SHA_HEX.fullmatch(recorded)
-        else None
+    if not attestation_template:
+        raise UsageError("contract manifest declares no attestation artifact.")
+    matcher = glob_to_regex(attestation_template.replace("<change-id>", "*"))
+    candidates = sorted(path for path in changed_paths(repo) if matcher.fullmatch(path))
+    if len(candidates) != 1:
+        return report([(
+            "push.attestation",
+            f"branch must carry exactly one generated attestation; found {len(candidates)}",
+        )], err)
+    attestation_rel = candidates[0]
+    match = re.fullmatch(
+        re.escape(attestation_template).replace(re.escape("<change-id>"), r"(?P<change_id>[^/]+)"),
+        attestation_rel,
     )
-    change_id_match = REVIEW_JSON_PATH.fullmatch(review_rel)
-    change_id = change_id_match.group("change_id") if change_id_match else None
-
-    failures += check_reviewed_sha(repo, head_sha, recorded, reviewed_id, review, change_id)
-    failures += check_open_findings_closed(review)
-    if change_id:
-        failures += check_plan_field_caps_at(manifest, repo, change_id)
-        failures += check_plan_edits_after_commit_at(manifest, repo, change_id)
-        failures += check_review_round_append_only_at(manifest, repo, change_id)
-
-    # `dispatch[]` lives inside the review.json that was read out of the
-    # reviewed commit's tree, so both identity rules -- and the standing-
-    # reviewer recompute inside check_verdicts, which needs the same
-    # dispatch-legitimate reviewer set to keep a ghost verdict from an
-    # earlier round from ever counting -- recompute from a committed
-    # record and never from the working tree (concept-model §2e).
-    implementers, reviewers, dispatch_error = parse_dispatch(review)
-    failures += check_verdicts(repo, review, reviewed_id, reviewers, change_id)
-    failures += check_second_vendor_honoured(repo, review, reviewed_id)
-    failures += check_dispatch_covers_tasks(repo, review, reviewed_id)
-    failures += check_frozen_store_untouched(repo, reviewed_id)
-
-    failures += check_reviewer_ne_implementer(review, implementers, reviewers, dispatch_error)
-    failures += check_dismissed_by_reviewer(review, implementers, reviewers, dispatch_error)
-
+    if match is None:
+        return report([("push.attestation", "cannot derive change id from attestation path")], err)
+    try:
+        attestation = json.loads(git_text(repo, "show", f"{head_sha}:{attestation_rel}"))
+    except (UsageError, json.JSONDecodeError) as exc:
+        return report([("push.attestation", f"cannot read generated attestation: {exc}")], err)
+    failures = validate_attestation(
+        repo, head_sha, match.group("change_id"), attestation, manifest
+    )
     if require_live_head and git_text(repo, "rev-parse", "HEAD") != head_sha:
-        failures.append(
-            (
-                "push.reviewed-sha",
-                "the selected repository's live HEAD moved after command "
-                "validation and before executable probes; complete a fresh "
-                "branch-end review",
-            )
-        )
-    if failures:
-        return report(failures, err)
-
-    # Package and adversarial programs are untrusted executables. Snapshot the
-    # selected repository itself (not the hook caller's cwd) immediately before
-    # either kind runs, then recompute after both have finished. A successful
-    # exit code cannot release a push if an executable moved HEAD, changed the
-    # index/working tree, or retargeted a remote while the gate was observing it.
-    live_head_before_probes = git_text(repo, "rev-parse", "HEAD")
-    if require_live_head and live_head_before_probes != head_sha:
-        failures.append(
-            (
-                "push.reviewed-sha",
-                "the selected repository's live HEAD moved after command "
-                "validation and before executable probes; complete a fresh "
-                "branch-end review",
-            )
-        )
-        return report(failures, err)
-    porcelain_before_probes = git_text(repo, "status", "--porcelain")
-    # With no scope option, Git reads the effective configuration across scopes:
-    # https://git-scm.com/docs/git-config#SCOPES
-    effective_config_before_probes = git_text(repo, "config", "--list", "--null")
-    if not skip_package_tests:
-        failures += check_probes_package_tests(repo, review, reviewed_id, out, change_id)
-    failures += check_probes_adversarial(repo, review, reviewed_id, out, change_id)
-    live_head_after_probes = git_text(repo, "rev-parse", "HEAD")
-    porcelain_after_probes = git_text(repo, "status", "--porcelain")
-    effective_config_after_probes = git_text(repo, "config", "--list", "--null")
-    if (
-        (
-            live_head_after_probes != head_sha
-            if require_live_head
-            else live_head_after_probes != live_head_before_probes
-        )
-        or porcelain_after_probes != porcelain_before_probes
-        or effective_config_after_probes != effective_config_before_probes
-    ):
-        changed = []
-        if (
-            live_head_after_probes != head_sha
-            if require_live_head
-            else live_head_after_probes != live_head_before_probes
-        ):
-            changed.append("HEAD moved")
-        if porcelain_after_probes != porcelain_before_probes:
-            changed.append("git status --porcelain changed")
-        if effective_config_after_probes != effective_config_before_probes:
-            changed.append("effective Git config changed")
-        failures.append(
-            (
-                "push.reviewed-sha",
-                "executable probes changed the selected repository after "
-                f"validation ({' and '.join(changed)}); return to build and "
-                "complete a fresh branch-end review",
-            )
-        )
+        failures.append(("push.attestation", "live HEAD moved during publication validation"))
     return report(failures, err)
 
 
-SHA_HEX = re.compile(r"[0-9a-f]{7,40}")
 
 
-def check_review_only_head(manifest, repo: Path, head_sha: str):
-    """A checkpoint push rides on a review-only commit: touching nothing
-    but this change's review.json, OR that file together with the SAME
-    change's intent file when the intent's entire diff is its sole
-    `status:` line flipping to a closed form -- the close line riding
-    along with the checkpoint commit itself (spec REQ-1, W1-03). Any
-    other second file, or any other edit inside the intent file, falls
-    through to the same blanket failure below (concept-model §2e).
-
-    Returns `(review_rel, failures, closes_intent_in_head)`: `review_rel`
-    is None on failure; `closes_intent_in_head` is True only on the new
-    combined-shape success path, telling `_cmd_push` that HEAD^ never
-    claimed to be a close commit of its own and so must not be forced
-    through `check_close_commit_shape`."""
-    # `--name-only` lets rename detection collapse a delete and an add into
-    # one path, so a commit that renames a tracked file INTO the review path
-    # deletes that file while the gate counts one path. `--raw
-    # --no-renames` reports the delete and the add separately, which is what
-    # "touches nothing but review.json" has to mean.
-    listing = git_text(
-        repo, "show", "--raw", "--no-renames", "--pretty=format:", head_sha
-    )
-    touched = sorted(
-        {
-            line.split("\t", 1)[1].strip()
-            for line in listing.splitlines()
-            if "\t" in line and line.startswith(":")
-        }
-    )
-    template = manifest["artifacts"]["review"]["path"]
-    is_review = glob_to_regex(template.replace("<change-id>", "*"))
-    reviews = [path for path in touched if is_review.match(path)]
-    if len(touched) == 1 and reviews:
-        return reviews[0], [], False
-
-    if len(touched) == 2 and len(reviews) == 1:
-        review_rel = reviews[0]
-        change_id_match = REVIEW_JSON_PATH.fullmatch(review_rel)
-        if change_id_match is not None:
-            expected_intent = INTENT_PATH_TEMPLATE.replace(
-                "<change-id>", change_id_match.group("change_id")
-            )
-            other = next(path for path in touched if path != review_rel)
-            if other == expected_intent and _review_only_head_closes_intent(
-                repo, head_sha, other
-            ):
-                return review_rel, [], True
-
-    detail = ", ".join(touched) if touched else "nothing"
-    return None, [
-        (
-            "push.review-only-head",
-            f"HEAD must touch only {template}; it touches {detail}.",
-        )
-    ], False
 
 
-def _review_only_head_closes_intent(repo: Path, head_sha: str, intent_rel: str) -> bool:
-    """True when `head_sha`'s diff on `intent_rel` is exactly its sole
-    `status:` line changing to a closed form -- the close line riding
-    along with a review-only commit (spec REQ-1, W1-03). Reuses
-    `_regenerated_closed_text`'s regeneration so nothing else in the file
-    is trusted to have stayed put; a mismatch here is never reported on
-    its own -- `check_review_only_head` falls through to its generic
-    failure instead."""
-    parent_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^")
-    if parent_sha is None:
-        return False
-    entries = _raw_diff_entries(repo, parent_sha, head_sha)
-    intent_entries = [entry for entry in entries if entry[1] == intent_rel]
-    if len(intent_entries) != 1:
-        return False
-    status, _path, old_mode, new_mode = intent_entries[0]
-    if status != "M" or old_mode != _REGULAR_FILE_MODE or new_mode != _REGULAR_FILE_MODE:
-        return False
-    before_text = git_raw_text(repo, "show", f"{parent_sha}:{intent_rel}")
-    after_text = git_raw_text(repo, "show", f"{head_sha}:{intent_rel}")
-    if len(_status_line_positions(before_text)) != 1:
-        return False
-    if len(_status_line_positions(after_text)) != 1:
-        return False
-    front, _sections = parse_document(after_text)
-    match = STATUS.fullmatch(front.get("status", "").strip())
-    if match is None:
-        return False
-    info = _status_closed_info(match)
-    if info is None:
-        return False
-    date, kind, identifier = info
-    regenerated = _regenerated_closed_text(before_text, date, kind, identifier)
-    if regenerated is None:
-        return False
-    return regenerated == after_text
 
 
-def _raw_diff_entries(repo: Path, base_sha: str, target_sha: str) -> list[tuple[str, str, str, str]]:
-    """`(status, path, old_mode, new_mode)` tuples a first-parent diff
-    touches, `--raw --no-renames` like `check_review_only_head`'s own
-    listing (a merge collapses to the same two-endpoint diff since
-    `base_sha` is already the first parent). `--no-renames` keeps status a
-    single A/M/D/T letter, never a rename percentage; the modes let a
-    typechange (e.g. a symlink swapped in for the regular file, `T`) be
-    caught by its mode rather than trusted by its status letter alone."""
-    listing = git_text(repo, "diff", "--raw", "--no-renames", base_sha, target_sha)
-    entries: list[tuple[str, str, str, str]] = []
-    for line in listing.splitlines():
-        if not line.startswith(":") or "\t" not in line:
-            continue
-        meta, path = line.split("\t", 1)
-        fields = meta.split()
-        entries.append((fields[-1], path.strip(), fields[0][1:], fields[1]))
-    return sorted(entries, key=lambda entry: entry[1])
 
 
 _EMPTY_TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # git's constant empty-tree object
@@ -3943,442 +2625,42 @@ _REGULAR_FILE_MODE = "100644"
 # a path matcher -- manifest drift must fail closed, not silently match
 # nothing (or something wider than intended) (spec REQ-1, W0-04 round-3
 # addition).
-INTENT_PATH_TEMPLATE = "docs/loom/intent/<change-id>.md"
 
 
-def _not_a_close_commit(rule: str, close_sha: str, closing_path: str,
-                        expected: str, got: str) -> tuple[str, str]:
-    """The one diagnostic shape for every way a commit touching an intent
-    path fails to be a legitimate close commit (spec REQ-1, W0-04
-    round-3): no content is trusted to tell them apart, only the raw diff
-    shape, so the message is the same regardless of which structural
-    check tripped it."""
-    return (
-        rule,
-        f"the reviewed commit {close_sha[:8]} edits an intent file "
-        f"({closing_path}) but is not a close commit (expected {expected}, "
-        f"got {got}); move other intent edits to an earlier commit.",
-    )
 
 
-def _intent_path_matcher() -> re.Pattern:
-    """`INTENT_PATH_TEMPLATE` as a glob matcher. `check_close_commit_shape`
-    has already required the live manifest to equal that constant before
-    calling this, so there is exactly one copy of the glob to keep in
-    sync (the constant), not two."""
-    return glob_to_regex(INTENT_PATH_TEMPLATE.replace("<change-id>", "*"))
 
 
-def _status_line_positions(text: str) -> list[int]:
-    """0-based indices of every raw line starting with the literal bytes
-    `status:`, anywhere in `text` (not scoped to frontmatter). Guards
-    step (b) and step (c) of `check_close_commit_shape` against
-    `parse_document`'s last-wins behaviour on a duplicated or
-    headingless-and-decoyed `status:` key (spec REQ-1, W0-04 round-3
-    finding)."""
-    return [index for index, line in enumerate(text.splitlines()) if line.startswith("status:")]
 
 
-def _regenerated_closed_text(before_text: str, date: str, kind: str, identifier: str) -> str | None:
-    """Step (c): `before_text` with ONLY its sole `status:` line's value
-    replaced by the closed alternative named by `kind`/`identifier` --
-    `closed <date> — PR #<identifier>` when `kind == "PR"`, `closed <date>
-    — branch <identifier>` otherwise -- no trailing comment, everything
-    else byte-identical. None when `before_text` does not have exactly one
-    raw `status:` line to regenerate from."""
-    positions = _status_line_positions(before_text)
-    if len(positions) != 1:
-        return None
-    lines = before_text.splitlines(keepends=True)
-    index = positions[0]
-    stripped = lines[index].rstrip("\r\n")
-    ending = lines[index][len(stripped):]
-    descriptor = _status_closed_descriptor(kind, identifier)
-    lines[index] = f"status: closed {date} — {descriptor}{ending}"
-    return "".join(lines)
 
 
-def _close_after_status_match(repo: Path, close_sha: str, closing_path: str,
-                              rule: str) -> tuple[re.Match | None, list[tuple[str, str]]]:
-    """Condition (b): HEAD^'s file has exactly one raw `status:` line, and
-    `parse_document`'s frontmatter value for it is a closed alternative
-    (PR form or branch form). Returns the match (`_status_closed_info`
-    reads date/kind/identifier off it) or the failure explaining why not."""
-    after_text = git_raw_text(repo, "show", f"{close_sha}:{closing_path}")
-    after_positions = _status_line_positions(after_text)
-    if len(after_positions) != 1:
-        return None, [_not_a_close_commit(
-            rule, close_sha, closing_path,
-            "exactly one `status:` line in HEAD^'s file",
-            str(len(after_positions)),
-        )]
-    front, _sections = parse_document(after_text)
-    match = STATUS.fullmatch(front.get("status", "").strip())
-    if not match or _status_closed_info(match) is None:
-        return None, [_not_a_close_commit(
-            rule, close_sha, closing_path,
-            "HEAD^'s frontmatter `status:` value to be the closed alternative",
-            repr(front.get("status", "")),
-        )]
-    return match, []
 
 
-def _close_blob_failures(repo: Path, diff_base: str, close_sha: str, closing_path: str,
-                         match: re.Match, rule: str) -> list[tuple[str, str]]:
-    """Condition (c): REGENERATE HEAD^^'s file with only the status
-    line's value replaced by the closed alternative `match` just found,
-    and require it to hash to the exact blob HEAD^ committed."""
-    before_text = git_raw_text(repo, "show", f"{diff_base}:{closing_path}")
-    before_positions = _status_line_positions(before_text)
-    if len(before_positions) != 1:
-        return [_not_a_close_commit(
-            rule, close_sha, closing_path,
-            "exactly one `status:` line in HEAD^^'s file to regenerate from",
-            str(len(before_positions)),
-        )]
-    date, kind, identifier = _status_closed_info(match)
-    regenerated = _regenerated_closed_text(before_text, date, kind, identifier)
-    # `before_text` (and therefore `regenerated`) came from `git_raw_text`,
-    # which decodes blob bytes with `errors="surrogateescape"` so a
-    # non-UTF-8 byte round-trips as a lone surrogate rather than being
-    # lost or raising on decode. Re-encoding here must use the same
-    # `errors="surrogateescape"` -- a strict `.encode("utf-8")` raises
-    # UnicodeEncodeError on that surrogate, which would BLOCK (or crash) a
-    # legitimate close commit whose UNCHANGED body happens to contain a
-    # non-UTF-8 byte, before the blob comparison even runs (spec REQ-1,
-    # W0-04 round-6 finding).
-    expected_blob = blob_sha(regenerated.encode("utf-8", "surrogateescape"))
-    actual_blob = git_text(repo, "rev-parse", f"{close_sha}:{closing_path}").strip()
-    if expected_blob != actual_blob:
-        return [_not_a_close_commit(
-            rule, close_sha, closing_path,
-            f"HEAD^'s blob to equal the regenerated closed blob {expected_blob[:8]}",
-            f"HEAD^'s actual blob {actual_blob[:8]}",
-        )]
-    return []
 
 
-def check_close_commit_shape(manifest, repo: Path, head_sha: str) -> list[tuple[str, str]]:
-    """When HEAD^'s first-parent diff (`HEAD^^..HEAD^`) touches ANY path
-    matching the intent artifact template, HEAD^ must recompute as a
-    legitimate close commit (spec REQ-1, W0-04): (a) the raw listing is
-    exactly one entry -- this path, status `M`, mode `100644` on both
-    sides; (b) HEAD^'s file has exactly one raw `status:` line, whose
-    `parse_document`-parsed frontmatter value `STATUS.fullmatch`es the
-    closed alternative; (c) REGENERATE -- HEAD^^'s file with ONLY that
-    status line's value replaced by the closed alternative just matched
-    must hash to the exact blob HEAD^ committed, so ANY other byte
-    difference (a BOM, a CRLF, a second `status:` line, a body edit, a
-    stray trailing comment) makes the blobs differ and fails; (d) HEAD^^
-    is itself a checkpoint vouching for HEAD^^^, so no commit can sit
-    between the last checkpoint and the close commit unseen. No step
-    trusts content parsed ahead of the raw-listing and raw-line-count
-    guards -- a before/after "did status become closed" parse used to
-    gate the OLD trigger, and a BOM hidden right before the key made
-    `parse_document` miss it, so the whole recompute silently never ran
-    (spec REQ-1, W0-04 round-3 finding); firing on every touch and
-    requiring an exact regenerated blob closes that off structurally. The
-    diff is read against HEAD^^ (its first parent), never `git show`,
-    which prints nothing for a merge commit and would let a merge at
-    HEAD^ carry the edit unseen. An ordinary commit at HEAD^ -- one that
-    touches no intent path at all -- is untouched by this recompute.
-    Because (a) requires status `M`, a root commit at HEAD^ (which can
-    only ever ADD a path, never modify one, relative to git's empty tree)
-    always fails there -- (d)'s `pre_close_sha is None` case is therefore
-    unreachable and kept only as a defensive guard."""
-    rule = "push.review-only-head"
-    live_template = manifest.get("artifacts", {}).get("intent", {}).get("path")
-    if live_template != INTENT_PATH_TEMPLATE:
-        return [(
-            rule,
-            "the manifest's intent artifact path has drifted from the "
-            f"checker's own expected template; expected {INTENT_PATH_TEMPLATE!r}, "
-            f"got {live_template!r}.",
-        )]
-
-    close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^")
-    if close_sha is None:
-        return []  # HEAD is root; push.reviewed-sha already reports it.
-
-    pre_close_sha = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^^")
-    diff_base = pre_close_sha if pre_close_sha is not None else _EMPTY_TREE_SHA
-
-    entries = _raw_diff_entries(repo, diff_base, close_sha)
-    is_intent = _intent_path_matcher()
-    intent_entries = [entry for entry in entries if is_intent.match(entry[1])]
-    if not intent_entries:
-        return []  # HEAD^ touches no intent path; nothing to recompute here.
-
-    closing_path = intent_entries[0][1]
-    touched = [path for _status, path, _old, _new in entries]
-
-    # (a) the raw listing is exactly this one path, modified, mode
-    # 100644 on both sides -- a delete, an add, a second path, a rename
-    # half, or a mode change (a symlink typechange included) all fail.
-    if len(entries) != 1:
-        return [_not_a_close_commit(
-            rule, close_sha, closing_path,
-            f"exactly one changed path ({closing_path}), status M, mode "
-            f"`{_REGULAR_FILE_MODE}` on both sides",
-            f"{len(touched)}: {', '.join(touched)}",
-        )]
-    status, _path, old_mode, new_mode = entries[0]
-    if status != "M" or old_mode != _REGULAR_FILE_MODE or new_mode != _REGULAR_FILE_MODE:
-        return [_not_a_close_commit(
-            rule, close_sha, closing_path,
-            f"status M and mode `{_REGULAR_FILE_MODE}` on both sides",
-            f"status {status}, old {old_mode} / new {new_mode}",
-        )]
-
-    # (b) HEAD^'s file has exactly one raw `status:` line, and
-    # `parse_document`'s frontmatter value for it is the closed alternative.
-    match, failures = _close_after_status_match(repo, close_sha, closing_path, rule)
-    if failures:
-        return failures
-
-    # (c) REGENERATE HEAD^^'s file with only the status value replaced,
-    # and require it to hash to the exact blob HEAD^ committed.
-    failures = _close_blob_failures(repo, diff_base, close_sha, closing_path, match, rule)
-    if failures:
-        return failures
-
-    # (d) HEAD^^ is itself a checkpoint: touches only review.json, and its
-    # review.json's reviewed_sha resolves to HEAD^^^ -- unreachable with
-    # pre_close_sha is None (see docstring), kept as a defensive guard.
-    if pre_close_sha is None:
-        return [(
-            rule,
-            f"HEAD^ ({close_sha[:8]}) is the root commit and edits an "
-            "intent file; expected a HEAD^^ checkpoint commit to exist "
-            "between the last review and the close commit, got none.",
-        )]
-
-    return _checkpoint_parent_failures(manifest, repo, pre_close_sha, rule)
 
 
-def _checkpoint_parent_failures(
-    manifest, repo: Path, pre_close_sha: str, rule: str
-) -> list[tuple[str, str]]:
-    """Condition (3) of `check_close_commit_shape`: HEAD^^ (`pre_close_sha`)
-    must itself be a checkpoint -- touching only review.json -- whose
-    reviewed_sha resolves to HEAD^^^, so no commit can sit between the last
-    review and the close commit unseen (spec REQ-1, W0-04)."""
-    checkpoint_rel, checkpoint_failures, _closes_intent = check_review_only_head(
-        manifest, repo, pre_close_sha
-    )
-    if checkpoint_rel is None:
-        # `checkpoint_failures` carries `check_review_only_head`'s own
-        # computed detail (the actual touched paths); surface it instead
-        # of discarding it -- the round-6 diagnostic used to say only
-        # "touches something else" with no `got` value at all.
-        detail = checkpoint_failures[0][1] if checkpoint_failures else "it touches something else."
-        return [
-            (
-                rule,
-                f"HEAD^^ ({pre_close_sha[:8]}) is not itself a checkpoint; expected "
-                f"HEAD^^ ({pre_close_sha[:8]}) to touch only review.json; {detail}",
-            )
-        ]
-
-    pre_pre_sha = git_maybe(repo, "rev-parse", "--verify", f"{pre_close_sha}^")
-    raw = git_maybe(repo, "show", f"{pre_close_sha}:{checkpoint_rel}")
-    checkpoint_review = None
-    if raw is not None:
-        try:
-            checkpoint_review = json.loads(raw)
-        except json.JSONDecodeError:
-            checkpoint_review = None
-    recorded = (
-        str(checkpoint_review.get("reviewed_sha", "")).strip()
-        if isinstance(checkpoint_review, dict)
-        else ""
-    )
-    recorded_id = (
-        git_maybe(repo, "rev-parse", "--verify", f"{recorded}^{{commit}}")
-        if SHA_HEX.fullmatch(recorded)
-        else None
-    )
-    if pre_pre_sha is None or recorded_id is None or recorded_id != pre_pre_sha:
-        return [
-            (
-                rule,
-                f"HEAD^^ ({pre_close_sha[:8]})'s {checkpoint_rel} reviewed_sha "
-                f"must resolve to HEAD^^^; expected reviewed_sha of "
-                f"{pre_close_sha[:8]} to resolve to "
-                f"{(pre_pre_sha or '(none)')[:8]}, got {recorded or '(empty)'}.",
-            )
-        ]
-
-    return []
 
 
-def review_container_types(manifest) -> dict[str, type]:
-    """The declared container per key, taken from the artifact's own
-    template -- the schema is declared once, in the contract package."""
-    template = MANIFEST_PATH.parent / "templates" / manifest["artifacts"]["review"]["template"]
-    return {key: type(value) for key, value in json.loads(read_text(template)).items()}
 
 
-def check_review_schema(manifest, review, review_rel: str) -> list[tuple[str, str]]:
-    """Nothing downstream may read a key that was never checked to exist."""
-    types = review_container_types(manifest)
-    failures = []
-    for field in manifest["artifacts"]["review"]["fields"]:
-        if not field.get("required"):
-            continue
-        name = field["name"]
-        if name not in review:
-            failures.append(("push.review-schema", f"{review_rel} has no `{name}` key."))
-            continue
-        expected = types.get(name)
-        if expected is not None and not isinstance(review[name], expected):
-            failures.append(
-                (
-                    "push.review-schema",
-                    f"`{name}` is {type(review[name]).__name__}, not "
-                    f"{expected.__name__} as the template declares.",
-                )
-            )
-    recorded = str(review.get("reviewed_sha", "")).strip()
-    if recorded and not SHA_HEX.fullmatch(recorded):
-        failures.append(
-            (
-                "push.review-schema",
-                f"`reviewed_sha: {recorded}` is not 7-40 lowercase hex digits.",
-            )
-        )
-    failures += check_questions(review, review_rel)
-    return failures
 
 
 # `questions[]` records what the user was asked at a decision point. It is
 # optional -- a change with no fork asks nothing -- but a present one is
 # checked, because an unchecked optional key is a key nobody may read.
-QUESTION_TYPES = frozenset({"what", "behaviour", "done", "consequence"})
 
 
-def check_questions(review, review_rel: str) -> list[tuple[str, str]]:
-    if "questions" not in review:
-        return []
-    entries = review["questions"]
-    if not isinstance(entries, list):
-        return [
-            (
-                "push.review-schema",
-                f"`questions` is {type(entries).__name__}, not list as the "
-                "template declares.",
-            )
-        ]
-    failures = []
-    for index, entry in enumerate(entries):
-        where = f"{review_rel} questions[{index}]"
-        if not isinstance(entry, dict):
-            failures.append(("push.review-schema", f"{where} is not an object."))
-            continue
-        if not isinstance(entry.get("decision_point"), int):
-            failures.append(
-                ("push.review-schema", f"{where} has no integer `decision_point`.")
-            )
-        if not str(entry.get("text", "")).strip():
-            failures.append(("push.review-schema", f"{where} has no `text`."))
-        kind = str(entry.get("type", ""))
-        if kind not in QUESTION_TYPES:
-            failures.append(
-                (
-                    "push.review-schema",
-                    f"{where} `type: {kind or '(absent)'}` is not one of "
-                    f"{'|'.join(sorted(QUESTION_TYPES))}.",
-                )
-            )
-    return failures
 
 
-def check_reviewed_sha(
-    repo: Path, head_sha: str, recorded: str, reviewed_id: str | None, review: dict,
-    change_id: str | None = None,
-):
-    """The reviewed tree must be the tree being pushed. Compared as
-    content -- `same_reviewed_content`, exact commit id first, then the
-    same tree with this change's own review.json set aside -- never as
-    strings: a prefix compare accepts a reviewed_sha that names no commit
-    at all, and a bare commit-id compare would block a review-only commit
-    stacked one level higher, or a commit whose message alone was
-    rewritten, even though nothing a reviewer looked at moved.
-
-    Also ties every verdict of the latest round (`scored_verdicts`, the same
-    round `check_verdicts` scores) to that same content: each one must carry
-    a `sha` that resolves, as a git object id, to `reviewed_id`'s content --
-    no scope is exempt, `scope: spec` included. A round with zero usable
-    verdicts reports nothing here; that is `push.verdicts-ge-2`'s job."""
-    parent = git_maybe(repo, "rev-parse", "--verify", f"{head_sha}^{{commit}}^")
-    if not parent:
-        return [("push.reviewed-sha", "HEAD has no parent commit to have reviewed.")]
-    if reviewed_id is None:
-        return [
-            (
-                "push.reviewed-sha",
-                f"reviewed_sha {recorded or '(empty)'} names no commit in this repo.",
-            )
-        ]
-    if not same_reviewed_content(repo, reviewed_id, parent, change_id):
-        return [
-            (
-                "push.reviewed-sha",
-                f"reviewed_sha resolves to {reviewed_id[:8]} but HEAD^ is {parent[:8]}; "
-                "the reviewed commit is not the one being pushed.",
-            )
-        ]
-    failures = []
-    _, verdicts = scored_verdicts(review)
-    for entry in verdicts:
-        reviewer = str(entry.get("reviewer", "")).strip() or "<no reviewer>"
-        verdict_sha = str(entry.get("sha", "")).strip()
-        verdict_id = (
-            git_maybe(repo, "rev-parse", "--verify", f"{verdict_sha}^{{commit}}")
-            if SHA_HEX.fullmatch(verdict_sha)
-            else None
-        )
-        if verdict_id is None:
-            failures.append(
-                (
-                    "push.reviewed-sha",
-                    f"{reviewer}'s verdict names sha {verdict_sha or '(empty)'}, "
-                    f"which does not resolve to a commit; expected reviewed_sha "
-                    f"{reviewed_id[:8]}.",
-                )
-            )
-        elif not same_reviewed_content(repo, verdict_id, reviewed_id, change_id):
-            failures.append(
-                (
-                    "push.reviewed-sha",
-                    f"{reviewer}'s verdict sha resolves to {verdict_id[:8]}, not "
-                    f"reviewed_sha {reviewed_id[:8]}.",
-                )
-            )
-    return failures
 
 
-def check_open_findings_closed(review) -> list[tuple[str, str]]:
-    open_ones = [
-        str(entry.get("id", "<no id>"))
-        for entry in review.get("open_findings", [])
-        if isinstance(entry, dict) and not entry.get("resolved") and not entry.get("dismissed")
-    ]
-    if open_ones:
-        return [
-            (
-                "push.open-findings-closed",
-                f"{len(open_ones)} finding(s) neither resolved nor dismissed: "
-                f"{', '.join(open_ones)}.",
-            )
-        ]
-    return []
 
 
 # A command that exits 0 for reasons unrelated to the thing it claims to
 # have run. `true` is the whole attack: it is a real command, it really
 # exits 0, and it tests nothing.
-TRIVIAL_COMMANDS = frozenset({"true", ":", "/bin/true", "/usr/bin/true", "exit"})
 
 # How a repo's package-test command is recomputed when KICKOFF-DEFAULTS
 # does not name one: first marker present wins, in this order (the build
@@ -4393,16 +2675,6 @@ TEST_COMMAND_MARKERS: tuple[tuple[tuple[str, ...], str], ...] = (
 NO_PACKAGE_TESTS = "none"
 
 
-def is_trivial_command(command: str) -> bool:
-    """True when the command's exit code says nothing about any artifact."""
-    stripped = command.strip()
-    if not stripped:
-        return True
-    head = stripped.split()[0]
-    if head in TRIVIAL_COMMANDS:
-        return True
-    # `test -f x`, `[ -f x ]` -- shell predicates, not runs of anything.
-    return head in {"test", "["}
 
 
 def command_names_artifact(command: str, artifact: str) -> bool:
@@ -4445,28 +2717,6 @@ def argv_for(command: str) -> list[str]:
     return tokens
 
 
-def artifact_argv(repo: Path, artifact: str) -> list[str]:
-    """How to RUN `artifact`, chosen from the file rather than from prose.
-
-    The recorded command is a record of what an agent says it did; running
-    it hands the exit code to a shell pipeline the agent wrote, and
-    `python3 case.py ; true` then exits 0 whatever the case does. The
-    checker runs the file itself, so the exit code it observes is the
-    file's.
-    """
-    path = repo / artifact
-    suffix = Path(artifact).suffix.lower()
-    if suffix == ".py":
-        return [sys.executable, artifact]
-    if suffix == ".sh":
-        return ["bash", artifact]
-    if path.is_file() and os.access(path, os.X_OK):
-        return [os.path.join(".", artifact)]
-    raise ValueError(
-        f"{artifact} is not runnable: it is neither a .py nor a .sh file, and "
-        "carries no executable bit, so there is no way to execute the case it "
-        "claims to be"
-    )
 
 
 def command_executes_artifact(command: str, artifact: str) -> bool:
@@ -4506,139 +2756,12 @@ def declared_test_command(repo: Path) -> tuple[str | None, str]:
     return None, ""
 
 
-def check_probes_package_tests(repo: Path, review, reviewed_id: str | None,
-                               out=sys.stdout, change_id: str | None = None):
-    """A recorded test run is not evidence -- the RUN is. The record only
-    says which commit was tested and what to type; the checker then types it
-    itself in a clean tree that is the reviewed tree, and the exit code it
-    observes decides (concept-model §7). The agent's own `result` is kept as
-    a record and never believed."""
-    expected, source = declared_test_command(repo)
-    if expected is None:
-        return [
-            (
-                "push.probes-package-tests",
-                "this repo declares no package-test command and none can be "
-                "recomputed from it; record `- package-tests: <command>` (or "
-                "`- package-tests: none — <why>`) in docs/loom/KICKOFF-DEFAULTS.md "
-                "so the recorded run has something to be checked against",
-            )
-        ]
-    if expected.strip().lower() == NO_PACKAGE_TESTS:
-        out.write(
-            f"package-tests: none — declared in {source}; no run is owed and "
-            "the review station records the gap\n"
-        )
-        return []
-
-    reasons: list[str] = []
-    for probe in review.get("probes", []):
-        if not isinstance(probe, dict) or str(probe.get("kind")) != "package-tests":
-            continue
-        command = str(probe.get("command", "")).strip()
-        label = command or "<no command>"
-        if not command:
-            reasons.append("a package-tests probe records no command")
-            continue
-        if _squeeze(command) != _squeeze(expected):
-            reasons.append(
-                f"`{label}` is not this repo's test command `{expected}` "
-                f"({source}); a command that exits 0 for another reason is not "
-                "a test run"
-            )
-            continue
-        sha = str(probe.get("sha", "")).strip()
-        probe_id = (
-            git_maybe(repo, "rev-parse", "--verify", f"{sha}^{{commit}}")
-            if SHA_HEX.fullmatch(sha)
-            else None
-        )
-        if not same_reviewed_content(repo, probe_id, reviewed_id, change_id):
-            reasons.append(f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed content")
-            continue
-        artifact = str(probe.get("artifact", "")).strip()
-        if artifact and not git_ok(repo, "cat-file", "-e", f"{reviewed_id}:{artifact}"):
-            reasons.append(f"`{label}` names artifact {artifact}, absent from the reviewed tree")
-            continue
-        if git_text(repo, "status", "--porcelain").strip():
-            reasons.append(
-                f"`{label}` cannot be re-run: the working tree is not clean, so what "
-                "would be tested is not the reviewed tree"
-            )
-            continue
-        # What runs is the DECLARED command, read as argv and executed with
-        # no shell: the recorded string has already been checked to equal
-        # it, and handing a shell a string an agent wrote hands it the
-        # exit code too.
-        try:
-            argv = argv_for(expected)
-        except ValueError as exc:
-            reasons.append(f"the declared command `{expected}` cannot be run: {exc}")
-            break
-        try:
-            observed = subprocess.run(
-                argv, cwd=str(repo), capture_output=True,
-                text=True, timeout=PROBE_RUN_TIMEOUT,
-            ).returncode
-        except FileNotFoundError:
-            reasons.append(f"the declared command `{expected}` names no program on PATH")
-            break
-        except subprocess.TimeoutExpired:
-            reasons.append(f"`{expected}` did not finish within {PROBE_RUN_TIMEOUT}s")
-            continue
-        out.write(
-            f"package-tests `{expected}`: observed exit code {observed} "
-            f"(recorded result: {probe.get('result')!r})\n"
-        )
-        if observed != 0:
-            advice = (
-                ""
-                if source == "docs/loom/KICKOFF-DEFAULTS.md"
-                else (
-                    " — this command was not declared but recomputed from "
-                    f"{source}; if it is the wrong one, declare "
-                    "`package-tests:` in docs/loom/KICKOFF-DEFAULTS.md rather "
-                    "than leaving the gate guessing"
-                )
-            )
-            reasons.append(
-                f"`{label}` exited {observed} when the checker ran it{advice}"
-            )
-            continue
-        return []
-    detail = "; ".join(reasons) if reasons else "no package-tests probe recorded at all"
-    return [("push.probes-package-tests", f"no usable package-tests probe: {detail}.")]
 
 
 # The artifact types whose review demands the adversarial action
 # (concept-model §6: code -> mutation/fuzz or >=3 abuse cases, spec ->
 # red-team, skill/gate -> the attack catalogue). A change touching none of
 # them -- documentation, memory, evidence -- owes no adversarial probe.
-ADVERSARIAL_TYPES = frozenset({"code", "spec", "skill", "gate"})
-
-ADVERSARIAL_FLOOR = 3
-
-# The artifact types that owe a `Task:` trailer under push.dispatch-covers-
-# tasks. spec.md is owned by the write-spec station (like intent.md and
-# plan.md): its edits are user re-confirmations, not planned tasks, and its
-# freshness is recomputed via spec_sha / confirmed-behavior instead. This is
-# deliberately narrower than ADVERSARIAL_TYPES -- adversarial probes still
-# count spec.
-TRAILER_DUTY_TYPES = frozenset({"code", "skill", "gate"})
-
-
-def artifact_types(manifest, paths) -> set[str]:
-    """The §6 type of each changed path: first matching glob in the
-    manifest's declared order wins, which is why `**` sits last there."""
-    rules = [(glob_to_regex(entry["glob"]), entry["type"])
-             for entry in manifest["artifact_types"]]
-    found = set()
-    for path in paths:
-        for pattern, kind in rules:
-            if pattern.match(path):
-                found.add(kind)
-                break
-    return found
 
 
 def _artifact_type_for(manifest, path: str) -> str | None:
@@ -4656,62 +2779,16 @@ def _artifact_type_for(manifest, path: str) -> str | None:
 # deliberately excluded: intent point 1 and PRINCIPLES.md non-negotiable 2
 # say the small lane touches no standing document (PRINCIPLES.md, DESIGN.md,
 # docs/loom/KICKOFF-DEFAULTS.md -- KICKOFF lines are gate inputs).
-SMALL_LANE_ARTIFACT_TYPES = frozenset({"docs", "memory", "evidence", "intent", "plan"})
 
 _TEST_NAME_RE = re.compile(r"(?:test_[^/]*|[^/]*_test)\.py\Z")
 _REQUIREMENTS_NAME_RE = re.compile(r"requirements[^/]*\.txt\Z")
 _CI_CONFIG_EXT_RE = re.compile(r"\.(?:toml|ya?ml|json)\Z")
 
 
-def _is_small_lane_test_path(path: str) -> bool:
-    """Name-based only, on purpose (plan risk 1's grammar is name-only, not
-    location-based): `test_*.py`, `*_test.py`, or any `tests/` segment."""
-    name = path.rsplit("/", 1)[-1]
-    if _TEST_NAME_RE.match(name):
-        return True
-    return "tests" in path.split("/")[:-1]
 
 
-def _is_small_lane_ci_config_path(path: str) -> bool:
-    """CI/config: `.github/**`, `requirements*.txt`, `*.toml`/`*.yml`/
-    `*.yaml`/`*.json` -- except under any `contract/` directory (those are
-    interface-shaped, not throwaway config) and never `hooks.json`."""
-    if path.startswith(".github/"):
-        return True
-    name = path.rsplit("/", 1)[-1]
-    if _REQUIREMENTS_NAME_RE.match(name):
-        return True
-    if name == "hooks.json":
-        return False
-    if _CI_CONFIG_EXT_RE.search(name) and "contract" not in path.split("/")[:-1]:
-        return True
-    return False
 
 
-def _small_lane_record_patterns(manifest) -> list[re.Pattern[str]]:
-    """This change's own store folder -- every path under
-    `docs/loom/<change-id>/` (plan.md, spec.md, review.json, evidence/**,
-    blind-run-report.md, and any future record kind) plus
-    `docs/loom/intent/**` -- is never counted against the lane (intent
-    point 1 / plan W0-02 risk). One wildcarded glob per change-id, derived
-    from the manifest's own `plan` artifact path, not an enumerated file
-    list -- a fix-round finding pinned this after `spec.md` alone was
-    missed by an earlier, file-by-file version.
-
-    Built as a direct regex, not via `glob_to_regex`'s trailing-`/**`
-    zero-match convenience: that convenience would make the `<change-id>`
-    wildcard swallow a bare docs/loom/<file> (e.g. KICKOFF-DEFAULTS.md) as
-    if it were an empty change folder -- a standing document is never a
-    change's own record (branch-end fix, W0-02)."""
-    change_folder = manifest["artifacts"]["plan"]["path"].rsplit("/", 1)[0]
-    change_folder_pattern = re.compile(
-        re.escape(change_folder).replace(re.escape("<change-id>"), "[^/]+")
-        + r"/.+\Z"
-    )
-    return [
-        change_folder_pattern,
-        glob_to_regex("docs/loom/intent/**"),
-    ]
 
 
 # Cross-cutting store roots, never one plugin's own tree: `docs/` holds the
@@ -4719,700 +2796,44 @@ def _small_lane_record_patterns(manifest) -> list[re.Pattern[str]]:
 # plugin, and a repo-root `evidence/` directory is checkpoint scratch, not
 # code. Neither should force a two-plugin verdict alongside a real plugin
 # directory like `loom-code/`.
-NON_PLUGIN_TOP_LEVEL_DIRS = frozenset({"docs", "evidence"})
-
-
-def _top_level_plugin_dir(path: str) -> str | None:
-    """The first path segment, or None for a path with no directory at all
-    (e.g. `README.md`), a cross-cutting store root, or a dot-directory
-    (`.github`, `.claude`, `.codex`, ...) -- all "count as none" per the
-    plan, not as a plugin of its own (fix round: `.github/workflows/x.yml`
-    was wrongly counted as its own plugin alongside a real one)."""
-    head, sep, _rest = path.partition("/")
-    if not sep or head in NON_PLUGIN_TOP_LEVEL_DIRS or head.startswith("."):
-        return None
-    return head
-
-
-def _small_lane_changed_paths(repo: Path, manifest, reviewed_id: str | None) -> list[str]:
-    """This change's diff, minus its own store records -- the population
-    `change_lane_detail` classifies path by path."""
-    base = branch_base(repo)
-    target = reviewed_id or git_maybe(repo, "rev-parse", "HEAD") or "HEAD"
-    changed = {
-        line.strip()
-        for line in git_text(repo, "diff", "--name-only", base, target).splitlines()
-        if line.strip()
-    }
-    record_patterns = _small_lane_record_patterns(manifest)
-    return sorted(
-        path for path in changed
-        if not any(pattern.match(path) for pattern in record_patterns)
-    )
-
-
-def _small_lane_path_reason(manifest, surface_patterns, path: str) -> str | None:
-    """None when `path` is small-lane safe; else the reason it forces full."""
-    if any(pattern.match(path) for pattern in surface_patterns):
-        return f"{path} is a declared interface surface."
-    kind = _artifact_type_for(manifest, path)
-    if kind in SMALL_LANE_ARTIFACT_TYPES:
-        return None
-    if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
-        return None
-    if kind == "code":
-        return f"{path} is non-test code"
-    if kind == "standing":
-        return f"{path} is a standing document."
-    return f"{path} is {kind or 'unclassified'}-typed"
-
-
-def change_lane_detail(repo: Path, reviewed_id: str | None) -> tuple[str, str]:
-    """`("small"|"full", reason)` -- the mechanical recompute behind the
-    verdict floor and the `second-vendor: ask` question (plan W0-02).
-
-    Small iff every changed path, minus this change's own store records, is
-    docs/memory/evidence/intent/plan-typed, a test file by name, or
-    CI/config; AND no path is a declared interface surface; AND every
-    remaining path sits under at most one top-level plugin directory. A
-    standing document (PRINCIPLES.md, DESIGN.md, docs/loom/KICKOFF-DEFAULTS.md)
-    always forces the full lane. Anything else is full, with the reason
-    naming the first path (or the plugin-count) that forced it."""
-    manifest = load_manifest()
-    remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
-
-    plugin_dirs = {
-        top for path in remaining
-        if (top := _top_level_plugin_dir(path)) is not None
-    }
-    if len(plugin_dirs) > 1:
-        return "full", (
-            f"touches {len(plugin_dirs)} plugin directories "
-            f"({', '.join(sorted(plugin_dirs))}); the small lane allows at most one."
-        )
-
-    surfaces, _origin = interface_surfaces(repo, manifest)
-    surface_patterns = [glob_to_regex(glob) for glob in surfaces]
-    for path in remaining:
-        reason = _small_lane_path_reason(manifest, surface_patterns, path)
-        if reason is not None:
-            return "full", reason
-
-    return "small", (
-        "every changed path (minus this change's own records) is "
-        "docs/memory/evidence/intent/plan, a test file, or CI/config, "
-        "in at most one plugin directory."
-    )
-
-
-def _evidence_masked_kind(manifest, path: str) -> str | None:
-    """`_artifact_type_for` walks `manifest.yaml`'s `artifact_types` in
-    order and stops at the first match; `**/evidence/**` sits ahead of
-    `**/SKILL.md`/`**/agents/*.md`/`**/hooks/**`/`**/scripts/check_*`, so a
-    skill or gate file with an `evidence` directory segment ANYWHERE in
-    its path -- not only inside this change's own store folder -- is
-    classified `evidence` no matter what the file actually is (wave-end:1
-    adversary finding 1: `loom-code/skills/x/evidence/SKILL.md`,
-    `loom-code/scripts/evidence/check_y.py`).
-
-    This does not reorder the manifest or change `_artifact_type_for`'s
-    answer -- every OTHER consumer of that function (adversarial-probe
-    typing, trailer duty, `artifact_types()`) keeps reading these paths as
-    `evidence`, exactly as documented. It answers a narrower question for
-    `_lane_forcing_paths` alone: dropping ONE path segment literally named
-    `evidence`, would what is left match a `gate` or `skill` glob? A `gate`
-    hit wins over a `skill` hit (gate forbids both express and gate-only;
-    skill only narrows gate-only), so this returns `"gate"` the moment one
-    is found and otherwise the last `"skill"` hit, or `None`."""
-    segments = path.split("/")
-    found_skill = None
-    for index, segment in enumerate(segments):
-        if segment != "evidence":
-            continue
-        candidate = "/".join(segments[:index] + segments[index + 1:])
-        if not candidate:
-            continue
-        kind = _artifact_type_for(manifest, candidate)
-        if kind == "gate":
-            return "gate"
-        if kind == "skill":
-            found_skill = "skill"
-    return found_skill
-
-
-def _lane_forcing_paths(
-    repo: Path, reviewed_id: str | None, manifest,
-) -> tuple[list[str], list[str]]:
-    """`(hard, skill)` -- every reason `change_lane_detail` would force
-    `full` for, walked to the END of the delta rather than stopping at the
-    first hit (`change_lane_detail` only needs one reason; the declared-
-    lane eligibility below needs to know if a `skill`-typed path is the
-    ONLY reason, since that is the one case `gate-only` excludes but
-    `express` does not).
-
-    `hard` names paths (or the multi-plugin count) that force `full`
-    whatever a declared lane says: a declared interface surface, more than
-    one plugin directory, or non-test code (the manifest's `code`/`gate`
-    §6 types) -- this is what the plan calls a "gate-typed path". `skill`
-    names `SKILL.md`/`loom-code/agents/*.md` paths (§6 type `skill`) --
-    these force `gate-only` back to `full` (its own eligibility excludes
-    them) but never block `express`. A `standing` document (PRINCIPLES.md,
-    DESIGN.md, `docs/loom/KICKOFF-DEFAULTS.md`) forces neither: the
-    express/gate-only eligibility text names only a gate path and a
-    skill/agent-contract path, so a standing-doc-only delta -- including
-    the very KICKOFF-DEFAULTS.md commit that declares a `default-lane:` --
-    never blocks a declared lane (adversary probe (i)). An `evidence`-typed
-    path that `_evidence_masked_kind` shows is really a skill or gate file
-    one directory deeper is treated as that real type instead of being
-    skipped (adversary finding 1)."""
-    remaining = _small_lane_changed_paths(repo, manifest, reviewed_id)
-    hard: list[str] = []
-    plugin_dirs = {
-        top for path in remaining
-        if (top := _top_level_plugin_dir(path)) is not None
-    }
-    if len(plugin_dirs) > 1:
-        hard.append(
-            f"touches {len(plugin_dirs)} plugin directories "
-            f"({', '.join(sorted(plugin_dirs))}); the small lane allows at most one."
-        )
-    surfaces, _origin = interface_surfaces(repo, manifest)
-    surface_patterns = [glob_to_regex(glob) for glob in surfaces]
-    skill: list[str] = []
-    for path in remaining:
-        if any(pattern.match(path) for pattern in surface_patterns):
-            hard.append(f"{path} is a declared interface surface.")
-            continue
-        kind = _artifact_type_for(manifest, path)
-        if kind == "evidence":
-            masked = _evidence_masked_kind(manifest, path)
-            if masked == "gate":
-                hard.append(
-                    f"{path} is gate-typed once its `evidence` directory "
-                    "segment is set aside."
-                )
-                continue
-            if masked == "skill":
-                skill.append(path)
-                continue
-        # gate/skill kinds are decided BEFORE the tests/CI-path exemption
-        # below (wave-end:1 adversary finding wave-end:1-02): a genuine
-        # gate or skill file that also happens to sit under a `tests/`
-        # path segment (`loom-code/hooks/tests/push.py`,
-        # `loom-code/skills/example/tests/SKILL.md`) must still force the
-        # lane its OWN type demands -- checking the tests/CI exemption
-        # first would wave it through as small-lane-safe, exactly the
-        # class of bug `_evidence_masked_kind` closed for `evidence/`.
-        if kind == "gate":
-            hard.append(f"{path} is gate-typed")
-            continue
-        if kind == "skill":
-            skill.append(path)
-            continue
-        if kind in SMALL_LANE_ARTIFACT_TYPES:
-            continue
-        if _is_small_lane_test_path(path) or _is_small_lane_ci_config_path(path):
-            continue
-        if kind == "standing":
-            continue
-        hard.append(
-            f"{path} is non-test code" if kind == "code"
-            else f"{path} is {kind or 'unclassified'}-typed"
-        )
-    return hard, skill
-
-
-def effective_lane_detail(
-    repo: Path, reviewed_id: str | None, change_id: str | None, round_number: int,
-    earlier_pairs: frozenset[tuple[str, int]] = frozenset(),
-    current_scope: str = "",
-) -> tuple[str, str]:
-    """`(lane, reason)` -- the lane `check_verdicts`' floor actually uses
-    (plan W1-02, ratified follow-up PRINCIPLES.md 56a4dc4c / intent
-    48114098).
-
-    Recompute first: `change_lane_detail`'s own `small`/`full` call
-    always runs first, and the declaration's TIMING is always checked
-    before its content -- a declaration or switch not yet in force must
-    never promote anything, whatever the raw recompute says.
-
-    Two DIFFERENT timing checks, picked by `unit` (wave-end:1 adversary
-    finding 3 -- the two must not share one mechanism, or one of them
-    over- or under-blocks):
-
-    - `unit == "round"` (an explicit `from round <n>` switch): plain
-      numeric comparison in continuous numbering -- `round_number > n`.
-      When it is not strictly after, the pre-switch `full` lane still
-      governs THIS round (there is no way to recover a lane older than
-      the switch from the grammar, so the safe fallback is `full`, not
-      whatever came before).
-    - `unit == "wave"` (a `from wave <n>` switch) OR `unit is None` (a
-      plain declared suffix, no round/wave reference at all): NEITHER
-      carries a round number to compare against, and a plain numeric
-      "block every round from here on once any history exists" reading
-      (what an earlier round of this fix tried) over-blocks forever,
-      never letting a later checkpoint's fresh rounds -- or even later
-      rounds of the SAME checkpoint -- pick up the new lane once any
-      review history exists anywhere. The correct check is membership:
-      `earlier_pairs` (from `_earlier_lane_pairs` -- the real historical
-      `(scope, round)` pairs at the declaring commit's tree when that can
-      be read, else every pair the CURRENT review already carries except
-      the one being decided, fail closed) names every pair that existed
-      BEFORE the declaration; the declared lane applies to any `(scope,
-      round)` NOT in that set. Only the one round genuinely already in
-      flight when the switch landed -- or, for a plain declared suffix,
-      no round at all in the true day-one case -- stays under the old
-      lane.
-
-    Provenance (wave-end:1-r3, made unconditional after a follow-up
-    adversary probe pinned the gate-only direction too -- an earlier
-    version of this check applied only to granting `express`, reasoning
-    that only that step widens the floor past the raw recompute; that
-    reasoning missed that an unstated `gate-only` declaration on a raw
-    `small` delta still drops a real floor of 1 to 0, the more dangerous
-    direction of the two): EVERY intent-origin declaration -- `express`,
-    `gate-only`, or a switch back to `full` -- is honoured only when the
-    commit that last changed the `lane:` line states that exact line,
-    verbatim, in its own message (`_lane_declaration_stated_by_its_
-    commit`, the same mechanism `check_lane_reason`/`check_needs_design_
-    reason` use). A declaration that reached this schema-valid but never
-    confirmed by its own deciding commit (or whose deciding commit cannot
-    be found at all) is ignored outright, BEFORE the timing check and
-    before the raw/declared combination below ever run -- the lane is
-    simply the raw recompute, with a reason naming the commit.
-
-    Once provenance and timing both clear, the RAW recompute and the
-    declaration combine differently per declared value:
-
-    - `gate-only` is the small lane with the reader floor waived, not a
-      separate, narrower thing: it is eligible ONLY when the raw recompute
-      is already `small` (floor 0 replaces small's floor 1) -- a raw
-      `full`, for ANY reason at all (a standing document, a second plugin
-      directory, non-test code, a gate/skill/agent-contract path, a
-      declared interface surface), means the declaration is ignored
-      outright and the delta falls back to `full`. This never consults
-      `_lane_forcing_paths` -- a path that would make `_lane_forcing_paths`
-      call something `hard` already made the RAW recompute `full` first
-      (the same manifest §6 types), and a skill/agent-contract path
-      likewise never reaches raw `small` (skill is not one of `change_
-      lane_detail`'s small-lane types), so the old separate skill-path
-      exclusion is now unreachable dead weight, superseded by this.
-    - `express` is UNCHANGED from before the gate-only/small ratification:
-      eligible whenever the raw recompute is `full` and `_lane_forcing_
-      paths` found no hard (gate-typed) reason -- a standing document
-      stays soft for express specifically (`_lane_forcing_paths`' own
-      `kind == "standing"` exemption), and a raw `small` recompute means
-      express was never reachable in the first place (declaring `express`
-      on an already-small delta leaves it `small`, whose floor is the
-      same 1 express would have given it).
-    - a declared (or default) `full` always stays `full`, whatever the raw
-      recompute said."""
-    manifest = load_manifest()
-    raw_lane, raw_reason = change_lane_detail(repo, reviewed_id)
-    declared, origin, from_round, unit = (
-        declared_lane(repo, change_id) if change_id else ("full", "default", None, None)
-    )
-    if origin == "intent" and change_id is not None:
-        stated, detail = _lane_declaration_stated_by_its_commit(repo, change_id)
-        if not stated:
-            return raw_lane, f"lane declaration not stated by its commit {detail}"
-    if unit == "round":
-        if from_round is not None and not (round_number > from_round):
-            return "full", (
-                f"declared `lane: {declared}` switches from round {from_round}, but "
-                f"round {round_number} is not strictly after it -- the pre-switch "
-                "full lane still applies."
-            )
-    elif origin == "intent" and (current_scope, round_number) in earlier_pairs:
-        return "full", (
-            f"declared `lane: {declared}` ({origin}) but round {round_number} of "
-            f"scope {current_scope!r} was already on the board before the "
-            "declaration -- the pre-declaration full lane still applies to it."
-        )
-
-    if raw_lane == "small":
-        if declared == "gate-only":
-            return "gate-only", (
-                f"raw recompute is small; declared `lane: gate-only` ({origin}) "
-                "waives the reader floor -- gate-only is the small lane with "
-                "reviewers waived."
-            )
-        return "small", raw_reason
-
-    if declared == "full":
-        return "full", raw_reason
-    if declared == "gate-only":
-        return "full", f"gate-only needs a small-lane delta: {raw_reason}"
-    hard, _skill = _lane_forcing_paths(repo, reviewed_id, manifest)
-    if hard:
-        return "full", f"declared `lane: {declared}` ({origin}) but {hard[0]}"
-    return "express", (
-        f"declared `lane: express` ({origin}); no gate-typed path in the delta."
-    )
-
-
-def change_lane(repo: Path, reviewed_id: str | None) -> str:
-    """`"small"` or `"full"` -- see `change_lane_detail` for the reason."""
-    lane, _reason = change_lane_detail(repo, reviewed_id)
-    return lane
-
-
-def check_probes_adversarial(repo: Path, review, reviewed_id: str | None,
-                             out=sys.stdout, change_id: str | None = None):
-    """Same discipline as the package-tests rule: the record says which
-    commit was attacked and what to type, and the checker types it itself.
-    An adversarial case that only ran in the adversary's head is not
-    evidence, and one that no longer passes is not a regression eval.
-
-    The floor is normally owed only when the delta's own §6 types
-    intersect `ADVERSARIAL_TYPES` (code/spec/skill/gate) -- but every one
-    of those types either forces `full` on its own (code, spec, gate are
-    `_lane_forcing_paths`-hard) or is excluded from `gate-only` outright
-    (skill), so a delta actually eligible for `express`/`gate-only` -- by
-    definition, none of those types -- could never owe the floor at all.
-    The intent (Proposed outcome points 2-3) states it unconditionally for
-    both of those lanes ("仍有 ≥3 探針", always at least 3 probes, even
-    with zero readers on the board), so this recomputes the effective lane
-    once more here and keeps the floor live regardless of `kinds` for
-    `express`/`gate-only` (wave-end:1 adversary finding 4)."""
-    try:
-        manifest = load_manifest()
-        changed = changed_paths(repo)
-    except (UsageError, OSError, KeyError) as exc:
-        return [("push.probes-adversarial", f"cannot recompute artifact types: {exc}")]
-
-    # The review file is the output of reviewing, never part of what is
-    # reviewed; left in, its `.json` extension falls through to `code` and
-    # every change on earth would owe an adversary.
-    is_review = glob_to_regex(manifest["artifacts"]["review"]["path"].replace("<change-id>", "*"))
-    changed = {path for path in changed if not is_review.match(path)}
-
-    kinds = artifact_types(manifest, changed) & ADVERSARIAL_TYPES
-    round_number, _scoped = scored_verdicts(review)
-    current_scope = str(review.get("scope", "")).strip()
-    try:
-        earlier_pairs = _earlier_lane_pairs(
-            repo, review, change_id, current_scope, round_number
-        )
-        lane, _lane_reason = effective_lane_detail(
-            repo, reviewed_id, change_id, round_number, earlier_pairs, current_scope
-        )
-    except (UsageError, OSError, KeyError):
-        lane = "full"
-    lane_unconditional = lane in ("express", "gate-only")
-    if not kinds and not lane_unconditional:
-        return []
-
-    usable = 0
-    reasons: list[str] = []
-    # Every format check below (command present, not trivial, artifact
-    # present in the reviewed tree, command names its artifact, sha matches
-    # the reviewed commit, tree clean) still runs once per record -- only
-    # the subprocess execution that follows is deduped by artifact path, so
-    # a file named by many records is attacked once and that one verdict is
-    # applied to every record naming it.
-    pending: dict[str, list[dict]] = {}
-    for probe in review.get("probes", []):
-        if not isinstance(probe, dict) or str(probe.get("kind")) != "adversarial":
-            continue
-        command = str(probe.get("command", "")).strip()
-        label = command or "<no command>"
-        if not command:
-            reasons.append("an adversarial probe records no command")
-            continue
-        if is_trivial_command(command):
-            reasons.append(
-                f"`{label}` exits 0 without running anything; an adversarial "
-                "case is a file the checker can execute, not a shell builtin"
-            )
-            continue
-        artifact = str(probe.get("artifact", "")).strip()
-        if not artifact:
-            reasons.append(
-                f"`{label}` names no artifact; the case must be a committed file"
-            )
-            continue
-        if reviewed_id is None or not git_ok(
-            repo, "cat-file", "-e", f"{reviewed_id}:{artifact}"
-        ):
-            reasons.append(
-                f"`{label}` names artifact {artifact}, absent from the reviewed tree"
-            )
-            continue
-        try:
-            named = command_names_artifact(command, artifact)
-        except ValueError as exc:
-            reasons.append(f"`{label}` is not a parseable command line: {exc}")
-            continue
-        if not named:
-            reasons.append(
-                f"`{label}` passes its artifact {artifact} to nothing — no "
-                "argument of the command is that path, so a mention in a "
-                "trailing comment or in an unrelated word is all there is, "
-                "and what actually ran cannot be recomputed from the record"
-            )
-            continue
-        sha = str(probe.get("sha", "")).strip()
-        probe_id = (
-            git_maybe(repo, "rev-parse", "--verify", f"{sha}^{{commit}}")
-            if SHA_HEX.fullmatch(sha)
-            else None
-        )
-        if not same_reviewed_content(repo, probe_id, reviewed_id, change_id):
-            reasons.append(
-                f"`{label}` ran against sha {sha or '(absent)'}, not the reviewed content"
-            )
-            continue
-        if git_text(repo, "status", "--porcelain").strip():
-            reasons.append(
-                f"`{label}` cannot be re-run: the working tree is not clean, so what "
-                "would be attacked is not the reviewed tree"
-            )
-            continue
-        pending.setdefault(os.path.normpath(artifact), []).append(
-            {"label": label, "result": probe.get("result")}
-        )
-
-    for artifact, records in pending.items():
-        count = len(records)
-        label = records[0]["label"]
-        result = records[0]["result"]
-        try:
-            argv = artifact_argv(repo, artifact)
-        except ValueError as exc:
-            reasons.append(str(exc))
-            continue
-        try:
-            observed = subprocess.run(
-                argv, cwd=str(repo), capture_output=True,
-                text=True, timeout=PROBE_RUN_TIMEOUT,
-            ).returncode
-        except (FileNotFoundError, PermissionError) as exc:
-            reasons.append(f"{artifact} could not be executed: {exc}")
-            continue
-        except subprocess.TimeoutExpired:
-            reasons.append(f"{artifact} did not finish within {PROBE_RUN_TIMEOUT}s")
-            continue
-        out.write(
-            f"adversarial {artifact}: observed exit code {observed} "
-            f"(recorded command: {label!r}, recorded result: {result!r}), "
-            f"referenced by {count} records\n"
-        )
-        if observed != 0:
-            reasons.append(
-                f"{artifact} exited {observed} when the checker ran it — a case "
-                "that no longer passes is not a regression eval, whatever the "
-                "recorded command wraps it in"
-            )
-            continue
-        usable += count
-
-    if usable >= ADVERSARIAL_FLOOR:
-        return []
-    detail = "; ".join(reasons) if reasons else "none recorded"
-    owed = (
-        f"touches {', '.join(sorted(kinds))}, which needs"
-        if kinds
-        else f"is declared `{lane}`, whose floor is unconditionally"
-    )
-    return [
-        (
-            "push.probes-adversarial",
-            f"this change {owed} "
-            f"{ADVERSARIAL_FLOOR} adversarial probes; {usable} are usable ({detail}).",
-        )
-    ]
-
-
-TASK_TRAILER = re.compile(r"^Task:\s*(\S+)\s*$", re.MULTILINE)
-
-
-def commit_paths(repo: Path, sha: str) -> set[str]:
-    """Every path one commit touches, with rename detection off."""
-    listing = git_text(repo, "show", "--raw", "--no-renames", "--pretty=format:", sha)
-    return {
-        line.split("\t", 1)[1].strip()
-        for line in listing.splitlines()
-        if "\t" in line and line.startswith(":")
-    }
-
-
-def _plumbing_canonical_dir() -> Path | None:
-    """The source tree this RUNNING checker itself lives in, when it may
-    exempt a host-plumbing path from `push.dispatch-covers-tasks` -- else
-    None (Design decision "Content-bound plumbing exemption", REQ-3).
-
-    Identifies itself by the path it was INVOKED as -- `Path(__file__)`,
-    never `.resolve()`'d -- because a symlinked `.codex/hooks/loom_checker.py`
-    pointing at a genuine canonical would otherwise resolve outside
-    `.codex/hooks/` and misclassify itself as canonical (round 5 spec-R20).
-    None when: the invoked path's own directory is `.codex/hooks` (this
-    checker IS the copy Codex runs -- there is no external canonical to
-    compare against, ever); or no sibling `../contract/manifest.yaml` sits
-    beside it (a stray copy or symlink placed anywhere else, or a repo that
-    never shipped one)."""
-    checker_dir = Path(__file__).parent
-    if checker_dir.parts[-2:] == (".codex", "hooks"):
-        return None
-    if not (checker_dir.parent / "contract" / "manifest.yaml").is_file():
-        return None
-    return checker_dir
-
-
-def _load_codex_scaffold():
-    """Sibling import from the running checker's own directory (the same
-    trick `git_exec.py` already uses) -- lazy, because the `.codex/hooks/`
-    copy never ships `codex_scaffold.py` and must import fine without it."""
-    try:
-        import codex_scaffold
-    except ImportError:
-        return None
-    return codex_scaffold
-
-
-def _canonical_file_mode(path: Path) -> str:
-    return "100755" if path.stat().st_mode & 0o111 else "100644"
-
-
-def _git_ls_tree_entry(repo: Path, sha: str, path: str) -> tuple[str, str] | None:
-    """`(mode, blob sha)` for `path` in the TREE at `sha`, or None when it
-    has no entry there -- a deleted path included, since a deletion is in
-    `commit_paths()` with no blob at the commit (spec REQ-3)."""
-    line = (git_maybe(repo, "ls-tree", sha, "--", path) or "").strip()
-    if not line:
-        return None
-    mode, _obj_type, rest = line.split(None, 2)
-    blob_sha, _sep, _entry_path = rest.partition("\t")
-    return mode, blob_sha
-
-
-def _plumbing_stamp_reason(repo: Path, sha: str, scaffold_mod) -> str | None:
-    """None when the COMMITTED `.codex/hooks/loom_checker.py`'s stamp line
-    names this running checker's own version (`codex_scaffold.
-    plugin_version()`); else the reason no plumbing path in this commit
-    can be exempt. Gated once per commit -- BEFORE any per-path canonical
-    byte comparison is even attempted, not merely before the blob is
-    fetched -- because a version mismatch on the checker copy invalidates
-    every OTHER plumbing path in the same commit too (Design decision
-    "Content-bound plumbing exemption", REQ-3): the copy absent at this
-    commit, a symlink or any mode other than a plain `100644` file
-    (round-2 after-task finding -- a symlink whose target's first line
-    happens to spell the right stamp must never satisfy this gate, and
-    neither may an executable-bit copy), carrying no stamp line at all,
-    or naming a version other than this one."""
-    entry = _git_ls_tree_entry(repo, sha, scaffold_mod.CHECKER_COPY)
-    if entry is None:
-        return "the checker copy is absent at this commit"
-    mode, _blob = entry
-    if mode == "120000":
-        return "the checker copy is a symlink"
-    if mode != "100644":
-        return f"the checker copy mode mismatch (got {mode}, expected 100644)"
-    content = git_raw_text(repo, "show", f"{sha}:{scaffold_mod.CHECKER_COPY}")
-    lines = content.splitlines(keepends=True)
-    stamp_index = next(
-        (i for i, line in enumerate(lines) if line.startswith(scaffold_mod.STAMP_PREFIX)),
-        None,
-    )
-    if stamp_index is None:
-        return "the checker copy carries no version stamp"
-    version = lines[stamp_index][len(scaffold_mod.STAMP_PREFIX):].rstrip("\n")
-    expected = scaffold_mod.plugin_version()
-    if version != expected:
-        return f"version mismatch (got {version!r}, expected {expected!r})"
-    return None
-
-
-def _strip_stamp_line(content: str, stamp_prefix: str) -> str | None:
-    """`content` with its version stamp line removed, or None when it
-    carries no stamp line to strip."""
-    lines = content.splitlines(keepends=True)
-    stamp_index = next(
-        (i for i, line in enumerate(lines) if line.startswith(stamp_prefix)), None
-    )
-    if stamp_index is None:
-        return None
-    del lines[stamp_index]
-    return "".join(lines)
-
-
-def _matches_canonical_file(
-    repo: Path, sha: str, path: str, expected_mode: str, expected_bytes: str,
-    *, transform=None,
-) -> str | None:
-    """Mode-and-blob comparison shared by every canonical-rendering
-    plumbing path (the shim, the checker copy, its sibling modules, each
-    contract file): None when `path`'s tree entry at `sha` has mode
-    `expected_mode` and its committed blob -- passed through `transform`
-    first when the caller supplies one (the checker copy strips its own
-    stamp line before comparing) -- equals `expected_bytes`. Else the
-    reason it does not: deleted, a symlink (mode `120000` never matches a
-    canonical `100644`/`100755`), a mode mismatch, or a blob that
-    differs."""
-    entry = _git_ls_tree_entry(repo, sha, path)
-    if entry is None:
-        return "deleted at this commit"
-    mode, _blob = entry
-    if mode == "120000":
-        return "symlink (mode 120000 is never exempt)"
-    if mode != expected_mode:
-        return f"mode mismatch (got {mode}, expected {expected_mode})"
-    actual = git_raw_text(repo, "show", f"{sha}:{path}")
-    if transform is not None:
-        actual = transform(actual)
-        if actual is None:
-            return "checker copy carries no version stamp"
-    return None if actual == expected_bytes else "blob differs"
-
-
-def _plumbing_path_rejection(
-    repo: Path, sha: str, path: str, canonical_dir: Path, scaffold_mod
-) -> str | None:
-    """Which canonical rendering `path` -- one `_is_host_plumbing()`
-    already said yes to, in a commit whose checker-copy stamp
-    `_plumbing_stamp_reason` already gated -- must match, routed to
-    `_matches_canonical_file` for the mode-and-blob comparison every kind
-    shares. None when it matches; else the reason it does not."""
-    if path == scaffold_mod.MARKER:
-        return "no canonical (marker file is never exempt)"
-
-    if path == scaffold_mod.SHIM_COMMAND:
-        expected = scaffold_mod.SHIM_TEMPLATE.format(
-            stamp=scaffold_mod.stamp_line(scaffold_mod.plugin_version()),
-            checker_name=Path(scaffold_mod.CHECKER_COPY).name,
-            shim_command=scaffold_mod.SHIM_COMMAND,
-        )
-        return _matches_canonical_file(repo, sha, path, "100755", expected)
-
-    if path == scaffold_mod.CHECKER_COPY:
-        canonical_file = canonical_dir / "loom_checker.py"
-        if not canonical_file.is_file():
-            return "no canonical counterpart for this path"
-        return _matches_canonical_file(
-            repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file),
-            transform=lambda content: _strip_stamp_line(content, scaffold_mod.STAMP_PREFIX),
-        )
-
-    for name in scaffold_mod.SIBLING_MODULES:
-        if path == f"{scaffold_mod.HOOK_DIR}/{name}":
-            canonical_file = canonical_dir / name
-            if not canonical_file.is_file():
-                return "no canonical counterpart for this path"
-            return _matches_canonical_file(
-                repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file)
-            )
-
-    contract_prefix = f"{scaffold_mod.CONTRACT_COPY}/"
-    if path.startswith(contract_prefix):
-        rel = path[len(contract_prefix):]
-        canonical_file = canonical_dir.parent / "contract" / rel
-        if not canonical_file.is_file():
-            return "no canonical counterpart for this path"
-        return _matches_canonical_file(
-            repo, sha, path, _canonical_file_mode(canonical_file), read_text(canonical_file)
-        )
-
-    return "no canonical counterpart for this path"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 _NO_CANONICAL_TREE = (
@@ -5421,743 +2842,61 @@ _NO_CANONICAL_TREE = (
 )
 
 
-def _filter_exempt_plumbing_paths(
-    repo: Path, sha: str, paths: set[str], canonical_dir: Path | None, scaffold_mod
-) -> tuple[set[str], dict[str, str]]:
-    """`paths` with every exempt host-plumbing path removed, and a
-    `{path: reason}` map for the host-plumbing paths that stayed because
-    they are NOT exempt -- both fold straight into the caller's
-    diagnostic. `canonical_dir` is None when there is no canonical tree
-    to compare against at all (this checker IS the `.codex/hooks/` copy,
-    or no sibling contract package sits beside it): every host-plumbing
-    path is rejected uniformly, with no per-path comparison attempted.
-    Otherwise the checker-copy stamp is gated once for the WHOLE commit
-    (`_plumbing_stamp_reason`) before any per-path comparison runs, per
-    REQ-3 -- a stamp mismatch invalidates every plumbing path in this
-    commit, not just the checker copy."""
-    stamp_reason = (
-        _plumbing_stamp_reason(repo, sha, scaffold_mod) if canonical_dir is not None else None
-    )
-    kept: set[str] = set()
-    rejected: dict[str, str] = {}
-    for path in paths:
-        if not _is_host_plumbing(path):
-            kept.add(path)
-            continue
-        if canonical_dir is None:
-            reason = _NO_CANONICAL_TREE
-        else:
-            reason = stamp_reason or _plumbing_path_rejection(
-                repo, sha, path, canonical_dir, scaffold_mod
-            )
-        if reason is None:
-            continue
-        kept.add(path)
-        rejected[path] = reason
-    return kept, rejected
 
 
-def _collect_untrailered_commits(
-    repo: Path, manifest, is_review, shas: list[str], canonical_dir: Path | None, scaffold_mod
-) -> tuple[set[str], list[tuple[str, str]], dict[str, set[str]]]:
-    """The per-commit half of `push.dispatch-covers-tasks`: every `Task:`
-    id any commit in `shas` claims, the `(short sha, message)` pairs for
-    commits that change `TRAILER_DUTY_TYPES`-typed work -- once exempt
-    host-plumbing paths are filtered out (`_filter_exempt_plumbing_paths`)
-    -- with no `Task:` trailer of their own, and (per claimed id) the full
-    union of §6 kinds its trailered commits touch, used to tell an
-    evidence-only task (adversary-first, e.g. W0-01) apart from one that
-    also did ordinary work."""
-    claimed: set[str] = set()
-    untrailered: list[tuple[str, str]] = []
-    id_kinds: dict[str, set[str]] = {}
-    for sha in shas:
-        paths = {path for path in commit_paths(repo, sha) if not is_review.match(path)}
-        paths, plumbing_reasons = _filter_exempt_plumbing_paths(
-            repo, sha, paths, canonical_dir, scaffold_mod
-        )
-        all_kinds = artifact_types(manifest, paths)
-        kinds = all_kinds & TRAILER_DUTY_TYPES
-        message = git_text(repo, "log", "-1", "--format=%B", sha)
-        ids = {match.group(1) for match in TASK_TRAILER.finditer(message)}
-        claimed |= ids
-        for task_id in ids:
-            id_kinds.setdefault(task_id, set()).update(all_kinds)
-        if kinds and not ids:
-            kind_list = ", ".join(sorted(kinds))
-            if plumbing_reasons:
-                detail = "; ".join(
-                    f"{path} ({reason})" for path, reason in sorted(plumbing_reasons.items())
-                )
-                kind_list += f"; plumbing not exempt: {detail}"
-            untrailered.append((sha[:8], kind_list))
-    return claimed, untrailered, id_kinds
 
 
-def check_dispatch_covers_tasks(repo: Path, review, reviewed_id: str | None):
-    """Every commit that changes real work names the task it belongs to.
-
-    `Task: <id>` trailers are how progress is derived (concept-model §2d)
-    and `dispatch[]` is how "who wrote this" is recomputed (§2e). The pair
-    only holds if the trailer is on the commit that did the work: a trailer
-    parked on a docs commit while the code commit carries none leaves that
-    code belonging to no task, and no dispatch entry can be checked against
-    it. A commit touching only documentation, the review record, the intent,
-    the plan, the spec or evidence owes no trailer -- none of it is
-    dispatched work (the spec is a user re-confirmation owned by the
-    write-spec station, not a planned task).
-
-    A host-plumbing path (`_is_host_plumbing()`) is ALSO exempt, but only
-    when it is byte-and-mode identical, at that commit, to what THIS
-    running checker's own tree would scaffold there -- content-bound, not
-    a blanket directory exemption (Design decision "Content-bound plumbing
-    exemption", REQ-3). The exemption is per-path: a commit mixing a
-    genuine plumbing refresh with an ordinary code file still owes a
-    trailer for the code file.
-    """
-    if reviewed_id is None:
-        return []
-    try:
-        base = branch_base(repo)
-        manifest = load_manifest()
-    except (UsageError, OSError, KeyError) as exc:
-        return [("push.dispatch-covers-tasks", f"cannot recompute the branch base: {exc}")]
-
-    is_review = glob_to_regex(
-        manifest["artifacts"]["review"]["path"].replace("<change-id>", "*")
-    )
-    shas = [
-        line.strip()
-        for line in git_text(repo, "log", "--format=%H", f"{base}..{reviewed_id}").splitlines()
-        if line.strip()
-    ]
-
-    canonical_dir = _plumbing_canonical_dir()
-    scaffold_mod = _load_codex_scaffold() if canonical_dir is not None else None
-
-    claimed, untrailered, id_kinds = _collect_untrailered_commits(
-        repo, manifest, is_review, shas, canonical_dir, scaffold_mod
-    )
-
-    return _dispatch_coverage_failures(claimed, untrailered, id_kinds, review)
 
 
-def _evidence_only_ids_covered_by_adversary(
-    claimed: set[str], id_kinds: dict[str, set[str]], review
-) -> set[str]:
-    """Adversary-first tasks (e.g. W0-01): a claimed id whose trailered
-    commits touch nothing but `evidence`-typed paths is covered by a
-    dispatch entry of role `adversary` for that same id -- an implementer
-    entry still covers it too, but is not required. Any non-evidence path
-    on the id keeps the implementer requirement (Design decision, W0-02
-    push-gate fix)."""
-    adversary_ids = {
-        str(entry.get("task", "")).strip()
-        for entry in review.get("dispatch", [])
-        if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "adversary"
-    }
-    return {
-        task_id
-        for task_id in claimed
-        if id_kinds.get(task_id) and id_kinds[task_id] <= {"evidence"}
-        and task_id in adversary_ids
-    }
 
 
-def _dispatch_coverage_failures(
-    claimed: set[str], untrailered: list[tuple[str, str]],
-    id_kinds: dict[str, set[str]], review,
-):
-    """The trailer/dispatch-coverage matching half of `push.dispatch-
-    covers-tasks`: an untrailered commit that changes dispatched work
-    blocks outright; otherwise every `claimed` task id must name an
-    `implementer` entry in `review["dispatch"]` -- or be evidence-only and
-    covered by an `adversary` entry instead
-    (`_evidence_only_ids_covered_by_adversary`) -- or the commits that
-    lost a writer are named. `[]` when both hold."""
-    if untrailered:
-        listing = "; ".join(f"{sha} touches {kinds}" for sha, kinds in untrailered)
-        return [
-            (
-                "push.dispatch-covers-tasks",
-                f"no `Task:` trailer on {len(untrailered)} commit(s) that change "
-                f"dispatched work: {listing}. Progress is derived from those "
-                "trailers, so this work belongs to no planned task.",
-            )
-        ]
-    if not claimed:
-        return []
-
-    dispatched = {
-        str(entry.get("task", "")).strip()
-        for entry in review.get("dispatch", [])
-        if isinstance(entry, dict) and str(entry.get("role", "")).strip() == "implementer"
-    }
-    dispatched |= _evidence_only_ids_covered_by_adversary(claimed, id_kinds, review)
-    missing = sorted(claimed - dispatched)
-    if missing:
-        return [
-            (
-                "push.dispatch-covers-tasks",
-                f"{len(claimed)} task(s) carry a `Task:` trailer on this branch but "
-                f"{', '.join(missing)} name no implementer dispatch entry; the "
-                "record lost a writer or the work was never dispatched.",
-            )
-        ]
-    return []
 
 
 # The stores loom 1.0 froze: old plans, specs, briefs, backlog and design
 # notes stay where they are and are never converted (concept-model §10, the
 # hard switch). Their own ARCHIVED.md marker is the one file a change may
 # still write, because closing a store is how a store gets frozen.
-FROZEN_STORES = ("plans", "specs", "backlog", "design", "archive")
-FROZEN_STORE_RE = re.compile(
-    r"^docs/loom/(?:" + "|".join(FROZEN_STORES) + r")/(?P<name>.+)$"
-)
 # The only file a frozen store may still receive is its OWN marker, at the
 # store root -- an ARCHIVED.md nested anywhere deeper is content, not a marker.
 
 
-def check_frozen_store_untouched(repo: Path, reviewed_id: str | None):
-    """A frozen store is frozen in fact, not in prose.
-
-    `docs/loom/BACKLOG.md` said "no reads, no writes" and nothing recomputed
-    it, so a station could keep writing plans into the store the switch
-    retired and every reader would go on trusting it (W3 adversary P07). The
-    diff between the branch base and the reviewed commit is the fact."""
-    if reviewed_id is None:
-        return []
-    try:
-        base = branch_base(repo)
-    except (UsageError, OSError) as exc:
-        return [("push.frozen-store-untouched", f"cannot recompute the branch base: {exc}")]
-    touched = sorted({
-        line.strip()
-        for line in git_text(
-            repo, "diff", "--name-only", base, reviewed_id
-        ).splitlines()
-        if line.strip()
-    })
-    written = [
-        path for path in touched
-        if (match := FROZEN_STORE_RE.match(path)) and match.group("name") != "ARCHIVED.md"
-    ]
-    if not written:
-        return []
-    return [
-        (
-            "push.frozen-store-untouched",
-            f"{len(written)} path(s) under a frozen store changed on this branch: "
-            f"{', '.join(written[:5])}. Loom 1.0 froze docs/loom/"
-            f"{{{','.join(FROZEN_STORES)}}}/ in place -- nothing converts them and "
-            "nothing writes to them; only each store's ARCHIVED.md marker stays "
-            "writable. New work belongs in docs/loom/intent/ and "
-            "docs/loom/<change-id>/.",
-        )
-    ]
 
 
 # The vendor behind each CLI a repo can name as its second opinion.
-VENDOR_OF_CLI = {"codex": "openai", "gemini": "google", "claude": "anthropic"}
 
 
-def _resolve_second_vendor_ask(repo: Path, review, reviewed_id: str | None):
-    """`second-vendor: ask`'s answer, deferred to review.json (W0-02).
-
-    Returns `(cli_source, None)` when a cli is owed, `(None, [])` when the
-    round owes nothing (small lane, or the answer was `"none"`), or
-    `(None, failures)` when the answer is missing or the lane cannot be
-    recomputed."""
-    try:
-        lane, _reason = change_lane_detail(repo, reviewed_id)
-    except (UsageError, OSError, KeyError) as exc:
-        return None, [
-            (
-                "push.second-vendor-honoured",
-                f"cannot recompute the change lane for `second-vendor: ask`: {exc}",
-            )
-        ]
-    if lane == "small":
-        return None, []
-    answer = review.get("second_vendor")
-    answer = str(answer).strip() if answer is not None else ""
-    if not answer:
-        return None, [
-            (
-                "push.second-vendor-honoured",
-                "second-vendor: ask but review.json records no `second_vendor` "
-                "answer.",
-            )
-        ]
-    if answer.lower() == "none":
-        return None, []
-    return answer, None
 
 
-def check_second_vendor_honoured(repo: Path, review, reviewed_id: str | None = None):
-    """A second vendor the repo chose is used, or the round says why not.
-
-    Choosing a second vendor is the user's call (concept-model §5) and the
-    checker does not require one. What it does require is that a recorded
-    choice is not silently dropped: either that vendor reviewed this round,
-    or the round carries `fallback: <cli> missing at <date>` and everyone
-    can see the review ran single-vendor.
-
-    W0-02: `second-vendor: ask` defers the choice to review.json's top-level
-    `second_vendor` field, answered once per change at decision point ①.
-    The small lane never asks (intent point 1), so a missing answer there is
-    not a violation; elsewhere a missing answer blocks, `"none"` means the
-    single-vendor round was the choice, and `"<cli>"` is honoured exactly
-    like a KICKOFF-declared cli."""
-    declared = kickoff_defaults(repo).get("second-vendor", "").strip()
-    if not declared or declared.lower() == "none":
-        return []
-    if declared.lower() == "ask":
-        cli_source, failures = _resolve_second_vendor_ask(repo, review, reviewed_id)
-        if cli_source is None:
-            return failures
-    else:
-        cli_source = declared
-    cli = cli_source.split()[0].lower()
-    wanted = VENDOR_OF_CLI.get(cli, cli)
-    _round, verdicts = latest_round(
-        [entry for entry in review.get("verdicts", []) if isinstance(entry, dict)]
-    )
-    if not verdicts:
-        return []
-    used = {str(entry.get("vendor", "")).strip().lower() for entry in verdicts}
-    if wanted in used:
-        return []
-    # The fallback is a dated statement about THIS cli, not a free-text
-    # field: `n/a` is not a reason the second opinion is missing, and a
-    # fallback naming some other tool explains nothing about this one.
-    grammar = re.compile(rf"{re.escape(cli)} missing at \d{{4}}-\d{{2}}-\d{{2}}")
-    written = [
-        str(entry.get("fallback", "")).strip()
-        for entry in verdicts
-        if str(entry.get("fallback", "")).strip()
-    ]
-    if any(grammar.fullmatch(value) for value in written):
-        return []
-    saw = f"; it records fallback {written[0]!r}" if written else ""
-    origin = (
-        f"review.json's `second_vendor: {cli_source}` answer to `second-vendor: ask`"
-        if declared.lower() == "ask"
-        else f"KICKOFF-DEFAULTS `second-vendor: {declared}`"
-    )
-    return [
-        (
-            "push.second-vendor-honoured",
-            f"{origin} names {wanted}, but the "
-            f"latest round used {', '.join(sorted(used)) or 'nothing'} and no verdict "
-            f"records `fallback: \"{cli} missing at <YYYY-MM-DD>\"`{saw}.",
-        )
-    ]
 
 
-def usable_verdicts(review) -> list[dict]:
-    """Every verdict entry that names a reviewer and carries a verdict --
-    an unreadable entry is not a second opinion, in any round."""
-    return [
-        entry
-        for entry in review.get("verdicts", [])
-        if isinstance(entry, dict)
-        and str(entry.get("reviewer", "")).strip()
-        and str(entry.get("verdict", "")).strip()
-    ]
 
 
-def scored_verdicts(review) -> tuple[int, list[dict]]:
-    """The latest round's verdicts, scoped to the record's own top-level
-    `scope` line (see `latest_round`)."""
-    scope = str(review.get("scope", "")).strip()
-    return latest_round(usable_verdicts(review), scope or None)
 
 
-def _review_verdict_pairs(review) -> set[tuple[str, int]]:
-    """Every `(scope, round)` pair `review["verdicts"]` records, read
-    straight off the entries -- no filtering, no "latest round" scoping."""
-    pairs = set()
-    for entry in review.get("verdicts", []):
-        if isinstance(entry, dict):
-            round_value, scope_value = entry.get("round"), entry.get("scope")
-            if isinstance(round_value, int) and isinstance(scope_value, str):
-                pairs.add((scope_value, round_value))
-    return pairs
 
 
-def _earlier_lane_pairs(
-    repo: Path, review, change_id: str | None, current_scope: str, round_number: int,
-) -> frozenset[tuple[str, int]]:
-    """`(scope, round)` pairs that count as "review history that predates
-    a bare `lane:` declaration" -- keyed to the pair, not the bare round
-    number, because round numbers RESTART at every new checkpoint
-    (`latest_round`'s own docstring, the memory-step gotcha): a plain
-    `round < round_number` comparison is blind to a declaration that lands
-    on round 1 of a brand-new checkpoint right after an earlier checkpoint
-    already ran real rounds (wave-end:1 adversary follow-up on finding 2).
-
-    Preferred source: `review.json`'s own content AT THE TREE of the
-    commit that last changed the intent's `lane:` line -- `deciding_
-    commit`, the same mechanism `check_needs_design_reason` uses -- read
-    via `git show <sha>:<review-path>`. That is the actual historical
-    record of what had already been reviewed when the line was written,
-    and every `(scope, round)` pair it carries counts as earlier,
-    regardless of what the CURRENT review.json goes on to record later.
-
-    That historical read is often unresolvable: no commit ever decided
-    the line, the file did not exist yet at that tree (review.json is
-    frequently committed once, at the very end, rather than incrementally
-    per round), or its content is not the shape expected. Any of those
-    fails CLOSED: it falls back to every `(scope, round)` pair the
-    CURRENT review.json's own `verdicts[]` already carries, other than
-    the one being decided right now -- so a bare declaration is honoured
-    immediately only when NO other round, of any scope, has ever been
-    recorded for this change at all; the moment any has, the declaration
-    defers to the next round exactly like an explicit `from round <n>`
-    switch would."""
-    if change_id is not None:
-        try:
-            manifest = load_manifest()
-            intent_path = artifact_path(manifest, "intent", change_id, repo)
-            relative = intent_path.resolve().relative_to(repo.resolve()).as_posix()
-            sha = deciding_commit(repo, relative, prefixes=LANE_LINE_PREFIX)
-            if sha is not None:
-                review_rel = manifest["artifacts"]["review"]["path"].replace(
-                    "<change-id>", change_id
-                )
-                raw = git_maybe(repo, "show", f"{sha}:{review_rel}")
-                if raw is not None:
-                    try:
-                        historical = json.loads(raw)
-                    except json.JSONDecodeError:
-                        historical = None
-                    if isinstance(historical, dict):
-                        return frozenset(_review_verdict_pairs(historical))
-        except (UsageError, OSError, KeyError, ValueError):
-            pass
-    # Fail closed: no resolvable historical tree -- use the current
-    # review's own record of every OTHER round, of any scope.
-    current = (current_scope, round_number)
-    return frozenset(_review_verdict_pairs(review) - {current})
 
 
-def _split_names(raw) -> list[str]:
-    return [name.strip() for name in str(raw or "").split(",") if name.strip()]
 
 
-def _anchor_paths(anchor) -> set[str]:
-    """The bare file path an anchor names -- exact equality, never a prefix.
-
-    An anchor may be a plain `path[:line]`, or a `path :: verbatim quote`
-    pair -- the review skill's only documented anchor shapes (SKILL.md,
-    lenses.md; comma-separated multi-path anchors appear nowhere in that
-    documentation, so this never splits on comma). The ` :: ` form MUST be
-    recognized before any other split: everything after ` :: ` is quote
-    text, never a path, and that quote can itself contain a comma or a
-    colon -- splitting on those first (as an earlier version did) misreads
-    `docs/a.md :: quoted clause, src/unrelated.py` as authorizing two
-    paths when only `docs/a.md` was ever named (wave-end:1-03)."""
-    segment = str(anchor or "").strip()
-    if not segment:
-        return set()
-    double = segment.find(" :: ")
-    if double != -1:
-        path = segment[:double]
-    else:
-        single = segment.find(":")
-        path = segment[:single] if single != -1 else segment
-    path = path.strip()
-    return {path} if path else set()
 
 
-def _standing_reviewers(repo: Path, review, scope: str, round_number: int,
-                        current_verdicts: list[dict],
-                        dispatch_reviewers: set[str],
-                        change_id: str | None) -> set[str]:
-    """A later round of the same scope is a fix round: a previous-round
-    reviewer who is not named in any still-open finding's `raised_by` need
-    not return -- PROVIDED every path the fix delta actually touched sits
-    inside the anchor of an open finding raised by a reviewer who did
-    return. Any path outside those anchors, or an unresolvable sha, drops
-    that reviewer back to the floor as before.
-
-    A standing candidate must also actually BE a dispatched reviewer:
-    `dispatch_reviewers` names every agent_id `parse_dispatch` recorded
-    under role reviewer/blind-runner/adversary, in ANY round -- a name
-    whose only verdict entry is a ghost with no dispatch[] entry at all
-    can never stand, no matter which round planted it or which anchor its
-    fabricated PASS happens to sit inside (finding F-WE-1: the anchor
-    safety net checked paths, never dispatch legitimacy). More than that:
-    a single undispatched name found ANYWHERE in the prior round poisons
-    that whole round for standing purposes -- if an attacker could forge
-    one phantom entry into it, nothing else that round claims is provable
-    either, so a legitimate co-reviewer sitting right next to a ghost gets
-    no exemption from it this round; the reviewer floor falls back to a
-    plain headcount of who actually returned."""
-    all_verdicts = usable_verdicts(review)
-    scoped = [
-        entry for entry in all_verdicts
-        if not str(entry.get("scope", "")).strip()
-        or str(entry.get("scope", "")).strip() == scope
-    ]
-    prior = [entry for entry in scoped if int(entry.get("round", 1)) < round_number]
-    if not prior:
-        return set()
-    prev_round_number = max(int(entry.get("round", 1)) for entry in prior)
-    prev_round_verdicts = [
-        entry for entry in prior if int(entry.get("round", 1)) == prev_round_number
-    ]
-    prev_round_names = {str(entry["reviewer"]).strip() for entry in prev_round_verdicts}
-    if not prev_round_names <= dispatch_reviewers:
-        return set()
-    prev_reviewers = {
-        str(entry["reviewer"]).strip()
-        for entry in prev_round_verdicts
-        if str(entry.get("verdict", "")) in PASSING_VERDICTS
-    }
-    all_findings = [
-        entry for entry in review.get("open_findings", []) if isinstance(entry, dict)
-    ]
-    still_open = [
-        entry for entry in all_findings if not entry.get("resolved") and not entry.get("dismissed")
-    ]
-    required = set()
-    for entry in still_open:
-        required |= set(_split_names(entry.get("raised_by")))
-    candidates = (prev_reviewers - required) & dispatch_reviewers
-    if not candidates:
-        return set()
-    # The anchor safety net looks at every finding a returning reviewer ever
-    # raised, not only the ones still open now -- a finding this very round
-    # resolves is exactly what the fix delta is supposed to be about.
-    current_reviewers = {str(entry["reviewer"]).strip() for entry in current_verdicts}
-    returning_anchor_paths: set[str] = set()
-    for entry in all_findings:
-        if set(_split_names(entry.get("raised_by"))) & current_reviewers:
-            returning_anchor_paths |= _anchor_paths(entry.get("anchor"))
-    current_sha = str(current_verdicts[0].get("sha", "")).strip() if current_verdicts else ""
-    standing = set()
-    for name in candidates:
-        prev_sha = next(
-            (
-                str(entry.get("sha", "")).strip()
-                for entry in prev_round_verdicts
-                if str(entry["reviewer"]).strip() == name
-            ),
-            "",
-        )
-        if not prev_sha or not current_sha:
-            continue
-        changed = git_maybe(repo, "diff", "--name-only", f"{prev_sha}..{current_sha}")
-        if changed is None:
-            continue
-        # The two shas being diffed are round-boundary commits, so the span
-        # between them always crosses the review-only commit that landed
-        # the round in between -- THIS change's own review.json is not
-        # part of the fix. Excluding every `docs/loom/*/review.json` path
-        # (any change's) was too broad: a fix delta that legitimately
-        # touches ANOTHER change's own review.json would have that real
-        # change set aside for free (wave-end:1-04); only the path this
-        # change's own manifest artifact names is excluded, mirroring
-        # `content_tree_id`'s change-scoped exclusion.
-        changed_paths = [
-            line.strip()
-            for line in changed.splitlines()
-            if line.strip() and not _is_this_changes_review_json(line.strip(), change_id)
-        ]
-        if all(path in returning_anchor_paths for path in changed_paths):
-            standing.add(name)
-    return standing
 
 
-LANE_VERDICT_FLOOR = {"full": 2, "small": 1, "express": 1, "gate-only": 0}
 
 
-def check_verdicts(repo: Path, review, reviewed_id: str | None,
-                    dispatch_reviewers: set[str],
-                    change_id: str | None = None) -> list[tuple[str, str]]:
-    """The reviewer-count floor, lane-dependent since W0-02 and lane-aware
-    since W1-02: `full` 2 / `small` 1 / `express` 1 / `gate-only` 0
-    (`effective_lane_detail` -- recompute first, then the declared lane's
-    own eligibility, then the switch's `from_round` timing). A `gate-only`
-    round with a floor of 0 may carry no verdicts at all and still count
-    as the latest passing round -- `push.reviewed-sha`, `push.review-only-
-    head` and `push.open-findings-closed` already tolerate an empty
-    `verdicts[]` for their own scope (they never require a NON-empty
-    round; see their own docstrings), so this floor is the only place a
-    zero-verdict round needed a decision at all. A fix round of the same
-    scope may also count a non-returning previous-round reviewer whose
-    earlier PASS still stands (see `_standing_reviewers`) -- but only when
-    that reviewer is itself a dispatched reviewer (`dispatch_reviewers`,
-    from `parse_dispatch`); a name with no dispatch[] entry at all can
-    never stand, however old its ghost PASS. `change_id` (the change
-    actually being pushed) is threaded through to `_standing_reviewers` so
-    its fix-delta exclusion sets aside only THIS change's own review.json,
-    never another change's, and to `effective_lane_detail` so it can read
-    THIS change's own declared lane."""
-    round_number, verdicts = scored_verdicts(review)
-    reviewers = {str(entry["reviewer"]).strip() for entry in verdicts}
-    scope = str(review.get("scope", "")).strip()
-    reviewers |= _standing_reviewers(repo, review, scope, round_number, verdicts,
-                                      dispatch_reviewers, change_id)
-    try:
-        earlier_pairs = _earlier_lane_pairs(repo, review, change_id, scope, round_number)
-        lane, lane_reason = effective_lane_detail(
-            repo, reviewed_id, change_id, round_number, earlier_pairs, scope
-        )
-    except (UsageError, OSError, KeyError) as exc:
-        lane, lane_reason = "full", f"cannot recompute the change lane: {exc}"
-    floor = LANE_VERDICT_FLOOR.get(lane, 2)
-    failures = []
-    if len(reviewers) < floor:
-        detail = f" ({lane_reason})" if lane == "full" else ""
-        failures.append(
-            (
-                "push.verdicts-ge-2",
-                f"{lane} lane: review round {round_number} carries {len(reviewers)} "
-                f"distinct reviewer(s) with a readable verdict; {floor} required"
-                f"{detail}.",
-            )
-        )
-    not_passing = [
-        f"{entry['reviewer']}={entry['verdict']}"
-        for entry in verdicts
-        if str(entry["verdict"]) not in PASSING_VERDICTS
-    ]
-    if not_passing:
-        failures.append(
-            (
-                "push.verdicts-ge-2",
-                f"review round {round_number} is not passing: {', '.join(not_passing)}.",
-            )
-        )
-    return failures
 
 
-REVIEWING_ROLES = {"reviewer", "blind-runner", "adversary"}
-DISPATCH_KEYS = ("task", "role", "agent_id", "model", "started")
 
 
-def parse_dispatch(review) -> tuple[set[str], set[str], str | None]:
-    """Split `review["dispatch"]` into implementer and reviewing agent ids.
-
-    §0 is explicit that a FORGED record is out of scope; an absent, empty or
-    unreadable one is not -- it makes both identity rules undecidable, and an
-    undecidable rule blocks. `fresh_context` is a record field, not a
-    recomputable condition (concept-model §7), so nothing here reads it."""
-    entries = review.get("dispatch")
-    if not isinstance(entries, list) or not entries:
-        return set(), set(), (
-            "review.json carries no `dispatch` entries; who reviewed and who "
-            "implemented cannot be recomputed."
-        )
-    implementers: set[str] = set()
-    reviewers: set[str] = set()
-    for number, entry in enumerate(entries, start=1):
-        if not isinstance(entry, dict):
-            return set(), set(), f"dispatch entry {number} is not an object."
-        missing = [key for key in DISPATCH_KEYS if not str(entry.get(key, "")).strip()]
-        if missing:
-            return set(), set(), (
-                f"dispatch entry {number} is missing {', '.join(missing)}; "
-                "the record cannot be recomputed."
-            )
-        agent, role = str(entry["agent_id"]), str(entry["role"])
-        if role == "implementer":
-            implementers.add(agent)
-        elif role in REVIEWING_ROLES:
-            reviewers.add(agent)
-    return implementers, reviewers, None
 
 
-def check_reviewer_ne_implementer(review, implementers: set[str], reviewers: set[str],
-                                  dispatch_error: str | None):
-    if dispatch_error:
-        return [("push.reviewer-ne-implementer", dispatch_error)]
-    if not reviewers:
-        return [
-            (
-                "push.reviewer-ne-implementer",
-                "review.json dispatch[] records no reviewer, blind-runner or adversary.",
-            )
-        ]
-    both = sorted(implementers & reviewers)
-    if both:
-        return [
-            (
-                "push.reviewer-ne-implementer",
-                f"agent(s) {', '.join(both)} both implemented and reviewed this change.",
-            )
-        ]
-    _round, verdicts = scored_verdicts(review)
-    unknown = sorted({str(entry["reviewer"]).strip() for entry in verdicts} - reviewers)
-    if unknown:
-        return [
-            (
-                "push.reviewer-ne-implementer",
-                f"verdict reviewer(s) {', '.join(unknown)} were never dispatched as "
-                "reviewer, blind-runner or adversary in review.json dispatch[].",
-            )
-        ]
-    return []
 
 
-DISMISSED_BY = re.compile(r"\bby\s+(\S+)\s*$")
 
 
-def dismissed_by(entry: dict) -> str | None:
-    """Who dismissed this finding. `dismissed` may be an object carrying
-    `by`, or the prose form concept-model §2e writes,
-    `dismissed: "<reason> by <who>"` -- both name the same field."""
-    value = entry.get("dismissed")
-    if isinstance(value, dict) and str(value.get("by", "")).strip():
-        return str(value["by"]).strip()
-    if str(entry.get("by", "")).strip():
-        return str(entry["by"]).strip()
-    if isinstance(value, str):
-        match = DISMISSED_BY.search(value.strip())
-        if match:
-            return match.group(1)
-    return None
 
 
-def check_dismissed_by_reviewer(review, implementers: set[str], reviewers: set[str],
-                                dispatch_error: str | None):
-    """Only a non-implementing reviewer may wave a finding away
-    (concept-model §5); the checker recomputes that from dispatch[]."""
-    dismissals = [
-        entry
-        for entry in review.get("open_findings", [])
-        if isinstance(entry, dict) and entry.get("dismissed")
-    ]
-    if not dismissals:
-        return []
-    if dispatch_error:
-        return [("push.dismissed-by-reviewer", dispatch_error)]
-    failures = []
-    for entry in dismissals:
-        finding = str(entry.get("id", "<no id>"))
-        who = dismissed_by(entry)
-        if not who:
-            failures.append(
-                (
-                    "push.dismissed-by-reviewer",
-                    f"finding {finding} is dismissed but names nobody; write "
-                    "`dismissed: \"<reason> by <agent_id>\"`.",
-                )
-            )
-            continue
-        if who in implementers or who not in reviewers:
-            failures.append(
-                (
-                    "push.dismissed-by-reviewer",
-                    f"finding {finding} was dismissed by {who}, who is not a "
-                    "non-implementing reviewer, blind-runner or adversary in dispatch[].",
-                )
-            )
-    return failures
 
 
 STANDING_WARN = (
@@ -6570,41 +3309,8 @@ def cmd_plan(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     return report(check_plan_field_caps(text), err)
 
 
-def cmd_plan_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
-    """`loom_checker.py plan-edits <change-id>` -- runs `plan.edits-after-commit`
-    against that change's own `plan.md`. Exit 2 when the plan file is
-    missing (there is nothing to check, and never a silent 0 or 1)."""
-    if not args:
-        raise UsageError("plan-edits needs a change-id.")
-    if len(args) > 1:
-        raise UsageError(f"unexpected argument {args[1]!r}.")
-    change_id = args[0]
-    manifest = load_manifest()
-    repo = repo_root(Path.cwd())
-    plan_path = artifact_path(manifest, "plan", change_id, repo)
-    if not plan_path.is_file():
-        err.write(f"no plan file at {plan_path} for change {change_id!r}.\n")
-        return 2
-    return report(check_plan_edits_after_commit(repo, plan_path, change_id, manifest), err)
 
 
-def cmd_review_edits(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
-    """`loom_checker.py review-edits <change-id>` -- runs
-    `review.round-append-only` against that change's own `review.json`.
-    Exit 2 when the review file is missing (there is nothing to check,
-    and never a silent 0 or 1), mirroring `cmd_plan_edits`."""
-    if not args:
-        raise UsageError("review-edits needs a change-id.")
-    if len(args) > 1:
-        raise UsageError(f"unexpected argument {args[1]!r}.")
-    change_id = args[0]
-    manifest = load_manifest()
-    repo = repo_root(Path.cwd())
-    review_path = artifact_path(manifest, "review", change_id, repo)
-    if not review_path.is_file():
-        err.write(f"no review file at {review_path} for change {change_id!r}.\n")
-        return 2
-    return report(check_review_round_append_only(repo, review_path, change_id, manifest), err)
 
 
 REQUIRED_VERSION = re.compile(r"(\d+)\.(\d+)")
@@ -6768,8 +3474,6 @@ COMMANDS = {
     "contract": cmd_contract,
     "charter": cmd_charter,
     "plan": cmd_plan,
-    "plan-edits": cmd_plan_edits,
-    "review-edits": cmd_review_edits,
     "finalize-review": cmd_finalize_review,
 }
 

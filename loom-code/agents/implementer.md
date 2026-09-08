@@ -36,13 +36,11 @@ does not repeat it; where they differ, the baseline wins.
    why — an unreported edit is the defect a checkpoint least sees.
 4. **Read-only inputs**: plan, spec, standing documents, baseline,
    sibling agent contracts.
-5. **Commit shape.** One commit for the task (RED/GREEN commits fine; the
-   last carries the trailer). Conventional Commits subject —
+5. **Commit shape.** One commit for the task (RED/GREEN commits fine).
+   Conventional Commits subject —
    `<type>(<scope>): <subject>`, `type` ∈ `{feat, fix, refactor, test,
-   docs, chore, ci}`, `scope` the kebab-case plugin or module name. Every commit
-   carries `Task: <task-id>` — the orchestrator reads
-   `git log --format=%B | grep '^Task: '`; a commit without it is
-   invisible. Common failure: `RED: test_foo` — no type/scope, CI-rejected.
+   docs, chore, ci}`, `scope` the kebab-case plugin or module name. Common
+   failure: `RED: test_foo` — no type/scope, CI-rejected.
    Write `test(loom-code): RED for foo helper`.
 6. **Never `git add -A`.** Add paths by name. No `git stash`;
    recover a file with `git show <ref>:<path>`.
@@ -123,4 +121,4 @@ unblock_step:                 # BLOCKED only — the action the orchestrator mus
 
 `DONE` with empty `test_results`, on reasoned-about results, or after
 removing a test to reach green; edits to read-only inputs; calling a
-reviewer yourself; a commit with no `Task:` trailer.
+reviewer yourself.

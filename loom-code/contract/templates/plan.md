@@ -18,15 +18,9 @@ charter: 1.0
 - Test: A<n> positive: <case-id>; negative|boundary: <case-id>.  <!-- one pair per referenced Acceptance; ≤40 words -->
 - Risk: <risk and the default choice; mark agent-decided>  <!-- ≤40 words -->
 
-**<Wn-memory> Memory step — graduated probes and store entries**  after: <last task ids>
-- Files: <graduated probe copies under the repo's permanent test directory; docs/loom/memory/ entries>
-- Test: <the store integrity check; the graduated copies passing>
-- Risk: <risk and the default choice; mark agent-decided>
-
 ## Questions asked                        # every question asked at decision point ① (and at ② when it runs here)
 <decision point id> — <what|behaviour|done|consequence> — <verbatim quote>
-<!-- the review station copies this section into review.json's questions[]
-     at the first checkpoint -->
+<!-- this is the durable record; closing review reads it directly -->
 
 ## Risks
 <!-- each numbered item ≤40 words (checker rule plan.field-caps) -->

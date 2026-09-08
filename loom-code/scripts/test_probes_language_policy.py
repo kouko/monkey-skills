@@ -69,7 +69,7 @@ def _sentences(text: str) -> list[str]:
 
 def _template_files():
     files = sorted(TEMPLATES_DIR.glob("*.md")) + sorted(TEMPLATES_DIR.glob("*.json"))
-    assert len(files) == 9, f"expected 9 template files, found {len(files)}: {files}"
+    assert len(files) == 8, f"expected 8 template files, found {len(files)}: {files}"
     return files
 
 
@@ -83,7 +83,7 @@ def test_templates_cjk_absent(path: Path):
     today (at W0-01) on intent.md (76 CJK chars), plan.md (112),
     spec-minimal.md (141), PRINCIPLES-interview.md (200) — each carries CJK
     field comments; already GREEN today on KICKOFF-DEFAULTS.md,
-    memory-README.md, PURPOSE.md, review.json (already English/JSON-only).
+    memory-README.md, PURPOSE.md, and attestation.json (already English/JSON-only).
     Turns fully GREEN at W1-01, which translates the four RED files — this
     test asserts only the desired end state, so it turns GREEN on its own
     once W1-01 lands, with no change needed here."""
@@ -345,8 +345,8 @@ def test_checker_rulecount_pinned():
     assert result.returncode == 0, (
         f"loom_checker.py --list-rules exited {result.returncode}: {result.stderr}"
     )
-    assert len(lines) == 19, (
-        f"--list-rules printed {len(lines)} non-empty lines, expected 19:\n"
+    assert len(lines) == 18, (
+        f"--list-rules printed {len(lines)} non-empty lines, expected 18:\n"
         + "\n".join(lines)
     )
 

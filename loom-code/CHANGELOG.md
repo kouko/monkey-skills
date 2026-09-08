@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.0] — 2026-09-08 — attestation-only contract
+
+- Remove the executable `review.json` compatibility path, probe replay,
+  review-only commit shape, task trailers, dispatch accounting, and plan
+  mutation ledger.
+- Make generated content-bound attestations the only publication contract;
+  publish checks validate evidence without rerunning functional executables.
+- Keep risk-triggered pre-build review inside `write-spec` without persisting a
+  second review ledger.
+
 ## [1.9.0] — 2026-09-08 — content-bound verification attestations
 
 - Generate one `attestation.json` from checker-owned package and adversarial

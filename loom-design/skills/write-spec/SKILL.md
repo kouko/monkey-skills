@@ -33,7 +33,7 @@ good way to produce them. The shapes below are not negotiable.
 |---|---|---|---|---|
 | capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
-| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-pass`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
+| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-ready`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
 | build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
 | review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
 | ship | diff / PR — the pushed change branch and its pull request | user — decision point ③ | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
@@ -275,12 +275,9 @@ the user's behalf.
 `type` one of `what` / `behaviour` / `done` / `consequence`. The spec has
 no section for this list and inventing one would put a second schema next
 to the contract's. The canonical carrier is the plan's `## Questions asked`
-section, from which the review station copies it into `questions[]` in
-`review.json`. So carry the list forward **verbatim in your hand-off
-message** in step 4, together with anything `capture-intent` handed you,
-and say it belongs in that section. When review is required, its spec-scope
-record copies the list before a plan exists; when review is not required,
-`write-plan` carries it until the branch-end record is created.
+section. Carry the list forward **verbatim in your hand-off message** in step
+4, together with anything `capture-intent` handed you, and say it belongs in
+that section.
 
 ## Step 4 — Commit, conditionally review, hand off
 
@@ -300,9 +297,9 @@ record copies the list before a plan exists; when review is not required,
    python3 <loom-code>/scripts/loom_checker.py intake write-plan <change-id>
    ```
 
-   `intake.spec-pass` reads the risk declaration and, when required, the
-   latest spec round; for a product change `intake.confirmed-behavior` reads
-   the confirmation line.
+   `intake.spec-ready` reads the risk declaration. Review independence is
+   enforced in this station without creating a persistent review ledger; for
+   a product change `intake.confirmed-behavior` reads the confirmation line.
 5. Hand the change to **`loom-code:write-plan`**, naming the change-id and
    pasting the question list. Say that decision point ② has happened and
    is not to be run again, and that the plan itself is agent-decided —
