@@ -186,6 +186,12 @@ def test_adversarial_wrapper_cannot_fake_execution(tmp_path: Path) -> None:
     assert any("execute the artifact directly" in reason for _, reason in failures)
 
 
+def test_pytest_runner_directly_executes_named_artifact() -> None:
+    assert loom_checker.command_executes_artifact(
+        "python3 -m pytest tests/probe.py -q", "tests/probe.py"
+    )
+
+
 def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
     kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"

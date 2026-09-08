@@ -4475,7 +4475,13 @@ def command_executes_artifact(command: str, artifact: str) -> bool:
     wanted = os.path.normpath(artifact)
     suffix = Path(artifact).suffix.lower()
     if suffix == ".py":
-        return len(tokens) >= 2 and Path(tokens[0]).name.startswith("python") and os.path.normpath(tokens[1]) == wanted
+        python = Path(tokens[0]).name.startswith("python")
+        direct = len(tokens) >= 2 and os.path.normpath(tokens[1]) == wanted
+        pytest_direct = (
+            len(tokens) >= 4 and tokens[1:3] == ["-m", "pytest"]
+            and os.path.normpath(tokens[3]) == wanted
+        )
+        return python and (direct or pytest_direct)
     if suffix == ".sh":
         return len(tokens) >= 2 and Path(tokens[0]).name in {"bash", "sh"} and os.path.normpath(tokens[1]) == wanted
     return os.path.normpath(tokens[0]) in {wanted, os.path.join(".", wanted)}
