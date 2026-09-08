@@ -8,14 +8,14 @@ charter: 1.0
 ### Wave 0 — Explicit publication identity
 
 **W0-01 Render and verify a worktree-bound direct merge command**  acceptance: 1,2,3,6
-- Files: loom-code/skills/ship/SKILL.md, loom-code/scripts/test_ship_worktree_merge.py
+- Files: loom-code/skills/ship/SKILL.md, loom-code/scripts/loom_checker.py, loom-code/scripts/test_ship_worktree_merge.py
 - Test: A1 positive: absolute-cd-merge; boundary: main-cwd. A2 positive: explicit-selector; negative: relative-selector. A3 positive: captured-payload-shape; negative: main-fallback. A6 positive: ordinary-pass; negative: unsafe-publication.
 - Risk: agent-decided — change only Ship's authorized direct-merge rendering; reuse the existing explicit-cd parser and retain every attestation, HEAD, destination, and refspec check.
 
 ### Wave 1 — Trust boundary and release
 
 **W1-01 Separate installed Loom trust from repository-local hook trust**  after: W0-01  acceptance: 4,5
-- Files: loom-code/skills/write-plan/references/codex-first-contact.md, loom-code/scripts/test_codex_hook_trust_contract.py, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md
+- Files: loom-code/skills/write-plan/references/codex-first-contact.md, loom-code/scripts/test_codex_hook_trust_contract.py, docs/loom/evidence/mechanisms.yaml, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md
 - Test: A4 positive: plugin-key-stable; negative: repo-key-distinct. A5 positive: new-or-modified-review; negative: no-private-state-or-bypass.
 - Risk: agent-decided — document observed Codex 0.153.4 behavior without promising host internals; release as patch 2.0.3 and keep unrelated repository hooks unchanged.
 

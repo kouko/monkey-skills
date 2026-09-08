@@ -55,8 +55,10 @@ PR-text, version, or other publication-only failure is fixed in place and
 reuses the matching attestation.
 
 Do not merge without the user's explicit authorization.
-Once that authorization exists, resolve the selected repository root and issue
-the direct merge as one Bash command:
+Once that authorization exists, take the root of the worktree whose branch
+carries the attestation — `git rev-parse --show-toplevel` run from that
+worktree, never the task or main checkout — and issue the direct merge as one
+Bash command:
 
 ```text
 cd '<absolute-repository-root>' && gh pr merge <number> --squash

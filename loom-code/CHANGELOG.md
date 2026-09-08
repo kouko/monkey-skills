@@ -2,6 +2,10 @@
 
 ## [2.0.3] — 2026-09-08 — worktree-safe direct merge
 
+budget-exception: write-plan.codex-installed-hook-trust-boundary — makes one
+host-owned approval boundary explicit and replaces unsupported per-worktree
+trust inference; the direct-merge guarantee stays inside push.attestation.
+
 - Always render an absolute repository selection for a user-authorized direct
   PR merge, so the installed hook validates the feature worktree even when
   Codex reports the task root as hook `cwd`.
