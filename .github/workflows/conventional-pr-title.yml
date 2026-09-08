@@ -1,0 +1,45 @@
+name: conventional-pr-title
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-commits:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          title = os.environ["PR_TITLE"]
+          pattern = re.compile(
+              r"^(refactor|feat|fix|chore|docs|test|ci)"
+              r"\(([a-z][a-z0-9-]*(?:/[a-z0-9-]+)?)\)!?:\s+"
+              r"(\S.+?)$"
+          )
+          match = pattern.match(title)
+          reason = None
+          if not match:
+              reason = "does not match <type>(<scope>): <subject> format"
+          elif match.group(3).endswith("."):
+              reason = "subject ends with a period"
+
+          if reason:
+              print(f"Rejected PR title: {title}")
+              print(f"Reason: {reason}")
+              print("Expected: <type>(<scope>): <subject>")
+              sys.exit(1)
+
+          print(f"Accepted PR title: {title}")
+          PY

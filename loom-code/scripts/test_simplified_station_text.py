@@ -28,6 +28,13 @@ def test_ship_keeps_publication_safety() -> None:
     assert "cannot be bypassed" in SHIP
 
 
+def test_ship_uses_one_publish_command_after_acceptance() -> None:
+    assert "publish --confirm-authorized" in SHIP
+    assert "one publication command" in SHIP
+    assert "push --head HEAD --require-live-head" not in SHIP
+    assert "canonical `git push` and PR commands" not in SHIP
+
+
 def test_build_has_no_evidence_accounting() -> None:
     assert "no dispatch ledger is created" in BUILD
     assert "finalize-review" in BUILD

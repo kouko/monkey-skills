@@ -1,0 +1,45 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-08-simplify-loom-publication",
+  "content_digest": "d7a83b5afa544dcee241b79bdd435b2d51619224",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-08-simplify-loom-publication/adversarial_publish.py",
+      "artifact": "docs/loom/2026-09-08-simplify-loom-publication/adversarial_publish.py",
+      "result": "pass",
+      "command_digest": "30823f78cf2a4632d36d4e2ea21900de7fe25b7f048bee39848789bdee794c42"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-final-2018831c4",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-final-2018831c4",
+      "vendor": "anthropic",
+      "model": "claude-opus-5",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "note",
+          "issue": "Repeated identity checks are a maintainability opportunity, not a correctness defect."
+        }
+      ]
+    }
+  ],
+  "findings": []
+}
