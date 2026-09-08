@@ -243,6 +243,9 @@ mechanisms:
   - id: "write-plan.post-decision-conservative-default"
     class: prose-gate
     eval: loom-code/scripts/test_simplified_station_text.py
+  - id: "write-plan.codex-installed-hook-trust-boundary"
+    class: prose-gate
+    eval: loom-code/scripts/test_codex_hook_trust_contract.py
   - id: "capture-intent.no-confirmed-without-restatement"
     class: prose-gate
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"

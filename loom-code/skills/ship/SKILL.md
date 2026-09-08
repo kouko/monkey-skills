@@ -55,6 +55,18 @@ PR-text, version, or other publication-only failure is fixed in place and
 reuses the matching attestation.
 
 Do not merge without the user's explicit authorization.
+Once that authorization exists, take the root of the worktree whose branch
+carries the attestation — `git rev-parse --show-toplevel` run from that
+worktree, never the task or main checkout — and issue the direct merge as one
+Bash command:
+
+```text
+cd '<absolute-repository-root>' && gh pr merge <number> --squash
+```
+
+Always render that absolute `cd`; never rely on the Bash tool's workdir,
+because Codex may report the task root rather than the executor worktree to the
+installed publication hook.
 
 ## Handoff
 

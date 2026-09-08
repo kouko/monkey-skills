@@ -2137,6 +2137,21 @@ def is_pr_create_command(command: str) -> bool:
     return False
 
 
+def is_pr_merge_command(command: str) -> bool:
+    """True when a shell segment merges a PR."""
+    for segment in SEGMENT_SPLIT.split(command):
+        tokens = _strip_prefix(_tokenise(segment))
+        if not tokens or Path(tokens[0]).name != "gh":
+            continue
+        rest = tokens[1:]
+        found = _subcommand_at(rest, GH_VALUE_OPTIONS)
+        if found and found[1] == "pr":
+            after = rest[found[0] + 1:]
+            if _subcommand(after, GH_VALUE_OPTIONS) == "merge":
+                return True
+    return False
+
+
 def github_repo_from_origin(repo: Path) -> str | None:
     """Return GH_REPO syntax derived from the literal configured origin URL."""
     url = git_maybe(repo, "remote", "get-url", "origin")
@@ -2342,6 +2357,8 @@ def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
                 or token.startswith("--repo=")
                 for token in tokens[1:]
             ):
+                return None
+            if is_pr_merge_command(segment) and shell_root is None:
                 return None
             root = shell_root if shell_root is not None else Path(fallback)
             selected_roots.add(str(root.resolve()))
