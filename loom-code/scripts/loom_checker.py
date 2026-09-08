@@ -2562,8 +2562,22 @@ PUBLISH_REDIRECT_ENV = {
     "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_EXEC_PATH", "GIT_SSH",
     "GIT_SSH_COMMAND", "GIT_PROXY_COMMAND", "GIT_CONFIG", "GIT_CONFIG_SYSTEM",
     "GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM", "GIT_CONFIG_COUNT",
-    "GH_HOST", "GH_REPO",
+    "GIT_CONFIG_PARAMETERS", "GH_HOST", "GH_REPO",
 }
+
+PUBLISH_EXECUTABLE_DIRS = (
+    Path("/usr/bin"), Path("/usr/local/bin"), Path("/opt/homebrew/bin"),
+    Path("/home/linuxbrew/.linuxbrew/bin"),
+)
+
+
+def resolve_publish_executable(name: str) -> str | None:
+    """Resolve publication tools from host install roots, never caller PATH."""
+    for directory in PUBLISH_EXECUTABLE_DIRS:
+        candidate = directory / name
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate.resolve())
+    return None
 
 
 def run_publish_external(argv: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -2616,13 +2630,16 @@ def _publish_args(args: list[str]) -> tuple[str, Path] | str:
     return title, body_file
 
 
-def _publish_env(repo_identity: str, repo: Path) -> dict[str, str]:
+def _publish_env(repo_identity: str, repo: Path, trusted_paths: tuple[str, str]) -> dict[str, str]:
     env = {
         key: value for key, value in os.environ.items()
         if key not in PUBLISH_REDIRECT_ENV and not key.startswith("GIT_CONFIG_KEY_")
         and not key.startswith("GIT_CONFIG_VALUE_")
     }
-    env.update({"GH_REPO": repo_identity, "LOOM_REPO_ROOT": str(repo)})
+    safe_path = os.pathsep.join(dict.fromkeys(
+        [str(Path(path).parent) for path in trusted_paths] + ["/usr/bin", "/bin"]
+    ))
+    env.update({"GH_REPO": repo_identity, "LOOM_REPO_ROOT": str(repo), "PATH": safe_path})
     return env
 
 
@@ -2657,30 +2674,60 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             + ", ".join(redirected), err,
         )
 
+    trusted_git = resolve_publish_executable("git")
+    trusted_gh = resolve_publish_executable("gh")
+    if not trusted_git or not trusted_gh:
+        return _publish_block("publication requires trusted git and gh executables", err)
+
+    previous_path = os.environ.get("PATH")
+    os.environ["PATH"] = os.pathsep.join(dict.fromkeys(
+        [str(Path(trusted_git).parent), str(Path(trusted_gh).parent), "/usr/bin", "/bin"]
+    ))
+    try:
+        return _cmd_publish_trusted(title, body_file, trusted_git, trusted_gh, out, err)
+    finally:
+        if previous_path is None:
+            os.environ.pop("PATH", None)
+        else:
+            os.environ["PATH"] = previous_path
+
+
+def _cmd_publish_trusted(
+    title: str, body_file: Path, trusted_git: str, trusted_gh: str,
+    out=sys.stdout, err=sys.stderr,
+) -> int:
     try:
         repo = repo_root(Path.cwd()).resolve()
     except UsageError as exc:
         return _publish_block(str(exc), err)
-    trusted_git = shutil.which("git")
-    trusted_gh = shutil.which("gh")
-    if not trusted_git or not trusted_gh:
-        return _publish_block("publication requires trusted git and gh executables", err)
-    trusted_git = str(Path(trusted_git).resolve())
-    trusted_gh = str(Path(trusted_gh).resolve())
 
     head = git_maybe(repo, "rev-parse", "HEAD")
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not head or not branch or not git_ok(repo, "check-ref-format", "--branch", branch):
         return _publish_block("publication requires a safe current symbolic branch and HEAD", err)
+    origin_urls = git_text(repo, "config", "--get-all", "remote.origin.url").splitlines()
+    if len(origin_urls) != 1:
+        return _publish_block("literal origin must have exactly one fetch URL", err)
+    redirect_config = git_maybe(
+        repo, "config", "--get-regexp",
+        r"^(remote\.origin\.pushurl|url\..*\.pushInsteadOf|core\.sshCommand|remote\.origin\.proxy)$",
+    )
+    if redirect_config:
+        return _publish_block(
+            "origin pushurl, pushInsteadOf, sshCommand, or proxy configuration must be removed",
+            err,
+        )
     identity = github_repo_from_origin(repo)
     if not identity:
         return _publish_block("literal origin is not a supported GitHub repository URL", err)
-    env = _publish_env(identity, repo)
+    env = _publish_env(identity, repo, (trusted_git, trusted_gh))
 
     if _cmd_push(["--head", head, "--require-live-head"], out, err) != 0:
         return 1
 
     base_result = _external_or_block(
+        # gh repo view accepts [HOST/]OWNER/REPO and exposes defaultBranchRef:
+        # https://cli.github.com/manual/gh_repo_view
         [trusted_gh, "repo", "view", identity, "--json", "defaultBranchRef",
          "--jq", ".defaultBranchRef.name"],
         repo=repo, env=env, err=err,
@@ -2692,6 +2739,8 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         return _publish_block("origin default branch is missing, unsafe, or equals the head branch", err)
 
     remote_result = _external_or_block(
+        # Git documents ls-remote as the read-only remote-ref query:
+        # https://git-scm.com/docs/git-ls-remote
         [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
          f"refs/heads/{branch}"], repo=repo, env=env, err=err,
     )
@@ -2733,19 +2782,45 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if git_text(repo, "rev-parse", "HEAD") != head:
         return _publish_block("live HEAD moved before PR creation", err)
 
+    host, owner, name = identity.split("/", 2)
+    # GitHub's pulls endpoint exposes both head/base repository identity and SHA:
+    # https://docs.github.com/en/rest/pulls/pulls#list-pull-requests
+    pulls_endpoint = (
+        f"repos/{quote(owner, safe='')}/{quote(name, safe='')}/pulls"
+        f"?state=open&head={quote(f'{owner}:{branch}', safe='')}"
+    )
     list_result = _external_or_block(
-        [trusted_gh, "pr", "list", "--state", "open", "--head", branch,
-         "--json", "url", "--jq", ".[].url"],
+        [trusted_gh, "api", "--hostname", host, pulls_endpoint],
         repo=repo, env=env, err=err,
     )
     if list_result is None:
         return 1
-    urls = [line.strip() for line in list_result.stdout.splitlines() if line.strip()]
+    try:
+        candidates = json.loads(list_result.stdout)
+    except json.JSONDecodeError as exc:
+        return _publish_block(f"cannot decode existing PR response: {exc}", err)
+    if not isinstance(candidates, list):
+        return _publish_block("existing PR response is not a list", err)
+    urls: list[str] = []
+    expected_repo = f"{owner}/{name}"
+    for candidate in candidates:
+        try:
+            candidate_url = candidate["html_url"]
+            head_data, base_data = candidate["head"], candidate["base"]
+            matches = (
+                head_data["sha"] == head
+                and head_data["repo"]["full_name"].casefold() == expected_repo.casefold()
+                and base_data["ref"] == base
+                and base_data["repo"]["full_name"].casefold() == expected_repo.casefold()
+                and isinstance(candidate_url, str) and candidate_url.startswith("https://")
+            )
+        except (KeyError, TypeError, AttributeError):
+            matches = False
+        if not matches:
+            return _publish_block("existing pull request identity does not match origin, HEAD, and base", err)
+        urls.append(candidate_url)
     if len(urls) > 1:
         return _publish_block("multiple open pull requests match the current branch", err)
-    if urls:
-        out.write(f"PR already exists: {urls[0]}\n")
-        return 0
 
     pre_create_remote = _external_or_block(
         [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
@@ -2760,6 +2835,10 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         return _publish_block("remote branch moved before PR creation", err)
     if git_text(repo, "rev-parse", "HEAD") != head:
         return _publish_block("live HEAD moved before PR creation", err)
+
+    if urls:
+        out.write(f"PR already exists: {urls[0]}\n")
+        return 0
 
     create_result = _external_or_block(
         [trusted_gh, "pr", "create", "--base", base, "--head", branch,

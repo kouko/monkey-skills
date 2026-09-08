@@ -1,3 +1,8 @@
+import os
+import re
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 
@@ -10,6 +15,15 @@ def conventional_job() -> str:
     text = WORKFLOW.read_text(encoding="utf-8")
     start = text.index("  conventional-commits:")
     return text[start:]
+
+
+def run_title_check(title: str) -> subprocess.CompletedProcess:
+    match = re.search(r"python3 - <<'PY'\n(?P<body>.*?)\n\s+PY", conventional_job(), re.S)
+    assert match
+    return subprocess.run(
+        [sys.executable, "-c", textwrap.dedent(match.group("body"))],
+        capture_output=True, text=True, env={**os.environ, "PR_TITLE": title},
+    )
 
 
 def test_job_rechecks_when_pr_title_is_edited() -> None:
@@ -36,3 +50,18 @@ def test_job_keeps_required_check_name_and_useful_errors() -> None:
     assert "Rejected PR title:" in job
     assert "<type>(<scope>): <subject>" in job
     assert "subject ends with a period" in job
+
+
+def test_title_program_accepts_valid_final_title() -> None:
+    result = run_title_check("feat(loom-code): publish once")
+    assert result.returncode == 0
+    assert "Accepted PR title" in result.stdout
+
+
+def test_title_program_rejects_missing_scope_and_period() -> None:
+    missing_scope = run_title_check("docs: temporary checkpoint")
+    trailing_period = run_title_check("docs(loom): final title.")
+    assert missing_scope.returncode == 1
+    assert "does not match" in missing_scope.stdout
+    assert trailing_period.returncode == 1
+    assert "subject ends with a period" in trailing_period.stdout

@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import inspect
+import os
 import sys
+from io import StringIO
 from pathlib import Path
 
 
@@ -32,13 +34,34 @@ def main() -> int:
     assert "GIT_DIR" in loom_checker.PUBLISH_REDIRECT_ENV
     assert "GIT_SSH_COMMAND" in loom_checker.PUBLISH_REDIRECT_ENV
 
-    source = inspect.getsource(loom_checker.cmd_publish)
+    source = inspect.getsource(loom_checker.cmd_publish) + inspect.getsource(
+        loom_checker._cmd_publish_trusted
+    )
     assert "shell=True" not in source
     assert "check_probes" not in source
     assert "declared_test_command" not in source
     assert "--force" not in source
     assert "--force-with-lease" not in source
     assert '["--head", head, "--require-live-head"]' in source
+
+    external = loom_checker.run_publish_external
+    cwd = Path.cwd()
+    try:
+        def forbid_network(*args, **kwargs):
+            raise AssertionError("stale attestation reached a network command")
+
+        loom_checker.run_publish_external = forbid_network
+        os.chdir(ROOT)
+        error = StringIO()
+        rc = loom_checker.cmd_publish([
+            "--confirm-authorized", "--title", "feat(loom): adversarial",
+            "--body-file", str(Path(__file__).resolve()),
+        ], StringIO(), error)
+        assert rc == 1
+        assert "push.attestation" in error.getvalue()
+    finally:
+        os.chdir(cwd)
+        loom_checker.run_publish_external = external
     return 0
 
 
