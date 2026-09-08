@@ -20,8 +20,7 @@ LOCK = REPO / "requirements-package-tests.lock"
 
 EXPECTED_COMMAND = (
     "uv run --isolated --with-requirements requirements-package-tests.lock "
-    "python scripts/run_package_tests.py loom-code/scripts/ scripts/ "
-    ".claude/hooks/ -q -n auto --then loom-design/scripts/ -q"
+    "python scripts/run_package_tests.py --loom-family -q"
 )
 
 
@@ -34,7 +33,7 @@ def _command_and_note() -> tuple[str, str]:
     raise AssertionError("KICKOFF-DEFAULTS.md carries no `- package-tests:` line")
 
 
-def test_package_tests_command_covers_loom_design_scripts() -> None:
+def test_package_tests_command_uses_the_complete_loom_family_preset() -> None:
     command, _ = _command_and_note()
     assert command == EXPECTED_COMMAND
 
@@ -53,7 +52,8 @@ def test_package_test_lock_pins_and_hashes_the_complete_graph() -> None:
 def test_trailing_note_no_longer_claims_ci_runs_the_same_paths() -> None:
     _, note = _command_and_note()
     assert "CI runs the same test paths" not in note
-    assert "loom-design" in note
+    assert "single inventory" in note
+    assert "CI selects named groups" in note
     # the `-n auto` rationale and the dbt-wiki abort note must survive.
     assert "pytest-xdist" in note
     assert "dbt-wiki" in note
