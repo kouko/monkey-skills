@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-08-remove-legacy-loom-contract",
+  "content_digest": "1105740d43bb7d0762aa48446f20176200418284",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-08-remove-legacy-loom-contract/evidence/probes/attestation_only.py",
+      "artifact": "docs/loom/2026-09-08-remove-legacy-loom-contract/evidence/probes/attestation_only.py",
+      "result": "pass",
+      "command_digest": "311cdad6c1ea6fcd58764512f78ef19b1e88e76e2a077a60db63ccc005a73bfb"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-review-code",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "closing-review-skill",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
