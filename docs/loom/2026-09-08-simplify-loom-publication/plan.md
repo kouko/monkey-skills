@@ -1,6 +1,6 @@
 # Simplify Loom publication — plan
 intent: 2026-09-08-simplify-loom-publication@efc84ee28
-spec: docs/loom/2026-09-08-simplify-loom-publication/spec.md@e3692c696
+spec: docs/loom/2026-09-08-simplify-loom-publication/spec.md@ec30f2c0a
 charter: 1.0
 
 ## Task DAG
