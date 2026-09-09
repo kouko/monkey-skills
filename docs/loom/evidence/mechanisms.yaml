@@ -94,7 +94,7 @@ mechanisms:
     class: skill
     eval: "loom-workflow/scripts/test_critique_compaction.py"
 
-  # --- checker-rule (31; loom_checker.py --list-rules) ---
+  # --- checker-rule (19; loom_checker.py --list-rules) ---
   - id: contract.charter-complete
     class: checker-rule
     eval: loom-code/scripts/test_contract_charter.py::test_charter_command_every_column_of_every_row_is_non_empty
