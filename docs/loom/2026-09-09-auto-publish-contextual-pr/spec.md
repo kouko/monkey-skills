@@ -1,6 +1,6 @@
 # Automatic contextual pull-request publication — spec
-intent: 2026-09-09-auto-publish-contextual-pr@cc1631346d0d44e29ee964c47064fca0e07bcd02
-confirmed-behavior: 2026-09-09 @4e82d08
+intent: 2026-09-09-auto-publish-contextual-pr@dcdd58b1668b95d877d42ba92f48c3de77d4f943
+confirmed-behavior: 2026-09-09 @32564d5
 pre-build-review: required — changes Loom's public Ship contract, outward publication authorization, privacy boundary, and cross-plugin PR composition
 
 ## Requirements

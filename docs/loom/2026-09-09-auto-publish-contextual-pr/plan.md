@@ -1,6 +1,6 @@
 # Automatic contextual pull-request publication — plan
-intent: 2026-09-09-auto-publish-contextual-pr@cc1631346d0d44e29ee964c47064fca0e07bcd02
-spec: docs/loom/2026-09-09-auto-publish-contextual-pr/spec.md@24b46b688
+intent: 2026-09-09-auto-publish-contextual-pr@dcdd58b1668b95d877d42ba92f48c3de77d4f943
+spec: docs/loom/2026-09-09-auto-publish-contextual-pr/spec.md@4b2055ad2d060abc6b5ab16c9990ec731efa692a
 charter: 1.0
 
 ## Task DAG
