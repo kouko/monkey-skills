@@ -235,6 +235,53 @@ def test_floor_invocation_line_names_the_script():
     )
 
 
+def test_session_activates_codex_only_after_lint_and_reports_host_evidence():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+
+    assert "create_goal" in session_body
+    assert "complete four-field condition" in session_body
+    assert "host-provided success" in session_body
+    assert "not active" in session_body
+    assert "`/goal clear`" in session_body
+    assert "run `goal-create SESSION` again" in session_body
+
+
+def test_session_uses_a_faithful_bounded_claude_proposal():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+    normalized = _normalize_ws(session_body)
+
+    assert "ProposeGoal" in session_body
+    assert "500 characters" in normalized
+    for required_part in (
+        "Outcome",
+        "every behavior-changing Constraint",
+        "Verification",
+        "Stop-when",
+    ):
+        assert required_part in normalized
+    assert "exact reference" in normalized
+    assert "skip `ProposeGoal`" in normalized
+
+
+def test_session_confirmation_and_replacement_follow_user_intent():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+    normalized = _normalize_ws(session_body)
+
+    assert "explicit authorization to replace" in normalized
+    assert "without a separate replacement confirmation" in normalized
+    assert "inferred" in normalized and "materially changed" in normalized
+    assert "ask_user: false" in session_body
+
+
+def test_session_falls_back_without_starting_another_process():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+
+    assert "does not expose `ProposeGoal`" in session_body
+    assert "one copyable `/goal <condition>` command" in session_body
+    assert "replaces any active Goal" in session_body
+    assert "Do not invoke `claude -p`" in session_body
+
+
 def test_arc_points_at_the_purpose_template_without_restating_it():
     text = _read_skill_md()
     arc_body = _section(text, "ARC mode")

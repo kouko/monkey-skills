@@ -101,6 +101,12 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
         "The budget must be stated in characters."
     )
 
+    # 1,500 is a compression prompt, never another validity boundary.
+    assert "1,500" in content
+    assert "advisory" in content_lower
+    assert "one compression pass" in content_lower
+    assert "not an error" in content_lower
+
     # --- file-pointer rule for goals exceeding the budget ---
     assert re.search(r"points? (at|to) a file", content_lower), (
         "A goal exceeding the budget must point at a file rather than inlining detail."
