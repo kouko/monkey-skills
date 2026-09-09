@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.5] — 2026-09-09 — command substitution and update guidance
+
+- Detect real push and PR commands inside `$()` even when the substitution
+  contains no shell operator, while keeping single-quoted substitutions literal.
+- Correct the Codex update guidance from live observation: `plugin add` may
+  replace an active task's versioned hook path, so restart immediately after it
+  succeeds and before running another command.
+- Record a controlled Claude Code dogfood run in which all four harmless
+  publisher-text commands executed without Loom-hook or permission denial.
+
 ## [2.0.4] — 2026-09-09 — quoted publication token boundaries
 
 - Treat shell operators inside quoted arguments as data, so read-only searches

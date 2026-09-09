@@ -90,8 +90,10 @@ codex plugin add loom-code@monkey-skills
 codex plugin list
 ```
 
-task が動いている間は、先にインストール済み plugin を削除しないでください。
-動作中の task が、その version の hook path をまだ使っている可能性があります。
+`plugin add` はインストール済み version の cache を置き換えるため、動作中の
+task が保持している version 付き hook path を削除する場合があります。成功後は、
+別の tool や command を実行する前に Codex を直ちに再起動してください。先に
+plugin を削除しても、同じ path 不在期間が早く始まるだけなので行いません。
 
 ## ライセンス
 
