@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-09-auto-publish-contextual-pr",
-  "content_digest": "ac603469a421a74a53fb6f2e8be84434a34718c4",
+  "content_digest": "251fabeff03efe14a15bf6ac0ff2de091e9fd298",
   "executions": [
     {
       "kind": "package-tests",
