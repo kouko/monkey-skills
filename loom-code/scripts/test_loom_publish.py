@@ -114,9 +114,9 @@ def invoke(tmp_path: Path, monkeypatch, calls: ExternalCalls, *extra: str):
     return repo, rc, out.getvalue(), err.getvalue()
 
 
-def publication_intent(repo: Path, *, automatic: bool) -> Path:
-    intent = repo / "docs" / "loom" / "intent" / "change.md"
-    intent.parent.mkdir(parents=True)
+def publication_intent(repo: Path, *, automatic: bool, change_id: str = "change") -> Path:
+    intent = repo / "docs" / "loom" / "intent" / f"{change_id}.md"
+    intent.parent.mkdir(parents=True, exist_ok=True)
     outcome = (
         "Confirmation of the intent authorizes Loom to publish the completed "
         "branch automatically."
@@ -131,12 +131,23 @@ def publication_intent(repo: Path, *, automatic: bool) -> Path:
     return intent
 
 
+def attestation(repo: Path, change_id: str = "change") -> Path:
+    target = repo / "docs" / "loom" / change_id / "attestation.json"
+    target.parent.mkdir(parents=True)
+    target.write_text(json.dumps({"change_id": change_id}), encoding="utf-8")
+    return target
+
+
 def test_confirmed_current_intent_publishes_without_ship_reask(
     tmp_path: Path, monkeypatch
 ) -> None:
     calls = ExternalCalls("")
     repo = repository(tmp_path)
+    git(repo, "branch", "main")
     intent = publication_intent(repo, automatic=True)
+    attestation(repo)
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "authorize publication")
     body = tmp_path / "body.md"
     body.write_text("body\n", encoding="utf-8")
     calls.head = git(repo, "rev-parse", "HEAD")
@@ -162,7 +173,11 @@ def test_legacy_intent_requires_one_publication_decision(
 ) -> None:
     calls = ExternalCalls("")
     repo = repository(tmp_path)
+    git(repo, "branch", "main")
     intent = publication_intent(repo, automatic=False)
+    attestation(repo)
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "legacy evidence")
     body = tmp_path / "body.md"
     body.write_text("body\n", encoding="utf-8")
     calls.head = git(repo, "rev-parse", "HEAD")
@@ -180,6 +195,66 @@ def test_legacy_intent_requires_one_publication_decision(
     assert rc == 2
     assert "publication decision" in err.getvalue()
     assert calls.calls == []
+
+
+def test_unrelated_intent_cannot_authorize_attested_change(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    repo = repository(tmp_path)
+    git(repo, "branch", "main")
+    publication_intent(repo, automatic=False)
+    unrelated = publication_intent(repo, automatic=True, change_id="unrelated")
+    attestation(repo)
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "attest change")
+    body = tmp_path / "body.md"
+    body.write_text("body\n", encoding="utf-8")
+    monkeypatch.chdir(repo)
+    monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
+    monkeypatch.setattr(loom_checker, "run_publish_external", calls)
+
+    err = StringIO()
+    rc = loom_checker.cmd_publish([
+        "--intent", str(unrelated), "--title", "feat(loom): safe",
+        "--body-file", str(body),
+    ], StringIO(), err)
+
+    assert rc == 2
+    assert "attested change" in err.getvalue()
+    assert calls.calls == []
+
+
+def test_untracked_or_mutated_intent_cannot_authorize(
+    tmp_path: Path, monkeypatch
+) -> None:
+    for state in ("untracked", "mutated"):
+        case = tmp_path / state
+        case.mkdir()
+        calls = ExternalCalls("")
+        repo = repository(case)
+        git(repo, "branch", "main")
+        if state == "mutated":
+            publication_intent(repo, automatic=False)
+        attestation(repo)
+        git(repo, "add", ".")
+        git(repo, "commit", "-q", "-m", "attest change")
+        intent = publication_intent(repo, automatic=True)
+        body = case / "body.md"
+        body.write_text("body\n", encoding="utf-8")
+        monkeypatch.chdir(repo)
+        monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
+        monkeypatch.setattr(loom_checker, "run_publish_external", calls)
+
+        err = StringIO()
+        rc = loom_checker.cmd_publish([
+            "--intent", str(intent), "--title", "feat(loom): safe",
+            "--body-file", str(body),
+        ], StringIO(), err)
+
+        assert rc == 2, state
+        assert "committed intent" in err.getvalue(), state
+        assert calls.calls == [], state
 
 
 def test_publish_pushes_exact_head_and_creates_one_pr(tmp_path: Path, monkeypatch) -> None:

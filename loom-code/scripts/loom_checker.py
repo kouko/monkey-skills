@@ -2728,22 +2728,61 @@ def _publish_args(args: list[str]) -> tuple[str, Path, Path | None, bool] | str:
     return title, body_file, intent_file, authorized
 
 
-def _intent_authorizes_publication(repo: Path, intent_file: Path) -> bool:
-    """Accept only confirmed intents carrying explicit automatic-publication prose."""
+def _publication_change_id(repo: Path) -> tuple[str | None, str | None]:
+    """Derive the publication identity from the sole attestation in the branch."""
+    manifest = load_manifest()
+    template = manifest.get("artifacts", {}).get("attestation", {}).get("path")
+    if not template:
+        return None, "contract manifest declares no attestation artifact"
+    matcher = glob_to_regex(template.replace("<change-id>", "*"))
+    candidates = sorted(path for path in changed_paths(repo) if matcher.fullmatch(path))
+    if len(candidates) != 1:
+        return None, f"branch must carry exactly one attested change; found {len(candidates)}"
+    match = re.fullmatch(
+        re.escape(template).replace(re.escape("<change-id>"), r"(?P<change_id>[^/]+)"),
+        candidates[0],
+    )
+    if match is None:
+        return None, "cannot derive attested change id"
+    change_id = match.group("change_id")
     try:
-        intent_file.resolve().relative_to(repo)
-    except ValueError:
-        return False
-    front, sections = parse_document(read_text(intent_file))
+        payload = json.loads(git_text(repo, "show", f"HEAD:{candidates[0]}"))
+    except (UsageError, json.JSONDecodeError):
+        return None, "attestation must be committed at HEAD"
+    if not isinstance(payload, dict) or payload.get("change_id") != change_id:
+        return None, "attestation change_id does not match its path"
+    return change_id, None
+
+
+def _intent_authorizes_publication(
+    repo: Path, intent_file: Path
+) -> tuple[bool, str | None]:
+    """Trust only the attested change's canonical intent as committed at HEAD."""
+    change_id, error = _publication_change_id(repo)
+    if error:
+        return False, error
+    manifest = load_manifest()
+    canonical = artifact_path(manifest, "intent", change_id, repo).resolve()
+    if intent_file.resolve() != canonical:
+        return False, "intent path does not match the attested change"
+    intent_rel = canonical.relative_to(repo)
+    try:
+        committed = git_text(repo, "show", f"HEAD:{intent_rel}")
+    except UsageError:
+        return False, "automatic publication requires a committed intent at HEAD"
+    front, sections = parse_document(committed)
     if not re.fullmatch(r"confirmed \d{4}-\d{2}-\d{2}", front.get("status", "")):
-        return False
+        return False, "committed intent is not confirmed"
     outcome = " ".join(sections.get("Proposed outcome", "").split())
-    return bool(re.search(
+    authorized = bool(re.search(
         r"\bconfirmation of (?:the|this) intent authorizes Loom to publish\b"
         r".*\bautomatically\b",
         outcome,
         flags=re.IGNORECASE,
     ))
+    if not authorized:
+        return False, "committed intent has no automatic-publication authorization"
+    return True, None
 
 
 def _publish_env(repo_identity: str, repo: Path, trusted_paths: tuple[str, str]) -> dict[str, str]:
@@ -2820,11 +2859,13 @@ def _cmd_publish_trusted(
     except UsageError as exc:
         return _publish_block(str(exc), err)
 
-    if not authorized and (
-        intent_file is None or not _intent_authorizes_publication(repo, intent_file)
-    ):
+    intent_error: str | None = None
+    if not authorized and intent_file is not None:
+        intent_authorized, intent_error = _intent_authorizes_publication(repo, intent_file)
+        authorized = intent_authorized
+    if not authorized:
         return _publish_usage(
-            "intent has no confirmed automatic-publication authorization; "
+            f"{intent_error or 'intent has no confirmed automatic-publication authorization'}; "
             "obtain one publication decision and pass --confirm-authorized",
             err,
         )
