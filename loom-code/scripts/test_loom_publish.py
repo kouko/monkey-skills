@@ -47,6 +47,7 @@ class ExternalCalls:
         self.change_uploadpack_on_final_remote_read = False
         self.remote_reads = 0
         self.required_checks = [[{"name": "gate", "state": "SUCCESS", "bucket": "pass"}]]
+        self.required_check_returncodes: list[int] = []
         self.calls: list[list[str]] = []
 
     def __call__(self, argv, **kwargs):
@@ -93,7 +94,13 @@ class ExternalCalls:
             return subprocess.CompletedProcess(argv, 0, f"{self.existing_pr}\n", "")
         if "pr" in argv and "checks" in argv:
             snapshot = self.required_checks.pop(0)
-            return subprocess.CompletedProcess(argv, 0, json.dumps(snapshot), "")
+            return subprocess.CompletedProcess(
+                argv,
+                self.required_check_returncodes.pop(0)
+                if self.required_check_returncodes else 0,
+                snapshot if isinstance(snapshot, str) else json.dumps(snapshot),
+                "CI observation failed",
+            )
         raise AssertionError(argv)
 
 
@@ -296,6 +303,7 @@ def test_publish_reuses_existing_pr_without_push_or_create(tmp_path: Path, monke
     assert rc == 0, err.getvalue()
     assert not any("push" in call for call in calls.calls)
     assert not any("create" in call for call in calls.calls)
+    assert sum("checks" in call for call in calls.calls) == 1
     assert "pull/7" in out.getvalue()
 
 
@@ -552,3 +560,92 @@ def test_publish_stops_on_required_ci_terminal_blockers(
         assert message in err.casefold(), state
         assert waits == [], state
         assert "Required CI passed" not in out, state
+
+
+def test_publish_accepts_gh_pending_exit_code_eight(tmp_path: Path, monkeypatch) -> None:
+    calls = ExternalCalls("")
+    calls.required_checks = [
+        [{"name": "gate", "state": "IN_PROGRESS", "bucket": "pending"}],
+        [{"name": "gate", "state": "SUCCESS", "bucket": "pass"}],
+    ]
+    calls.required_check_returncodes = [8, 0]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, _, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    assert waits == [30]
+
+
+def test_publish_blocks_unexpected_gh_checks_exit_and_malformed_json(
+    tmp_path: Path, monkeypatch
+) -> None:
+    cases = (("exit", "[]", 2, "CI observation failed"),
+             ("json", "not-json", 0, "cannot decode"))
+    for name, payload, returncode, message in cases:
+        case = tmp_path / name
+        case.mkdir()
+        calls = ExternalCalls("")
+        calls.required_checks = [payload]
+        calls.required_check_returncodes = [returncode]
+
+        _, rc, _, err = invoke(case, monkeypatch, calls)
+
+        assert rc == 1, name
+        assert message.casefold() in err.casefold(), name
+
+
+def test_publish_rechecks_an_initial_empty_required_set_before_pass(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    calls.required_checks = [
+        [],
+        [{"name": "gate", "state": "SUCCESS", "bucket": "pass"}],
+    ]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    assert waits == [30]
+    assert "Required CI passed" in out
+
+
+def test_publish_reports_two_empty_required_sets_as_no_checks_registered(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    calls.required_checks = [[], []]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    assert waits == [30]
+    assert "no required checks registered" in out.casefold()
+    assert "Required CI passed" not in out
+
+
+def test_publish_stops_permanent_pending_after_sixty_minutes_without_resume_state(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    pending = [{"name": "gate", "state": "IN_PROGRESS", "bucket": "pending"}]
+    calls.required_checks = [pending] * 121
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+    before = set(tmp_path.rglob("*"))
+
+    _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 1
+    assert "requires user action" in err.casefold()
+    assert "reliable terminal result" in err.casefold()
+    assert waits == [30] * 120
+    assert "pending" not in out.casefold()
+    created = set(tmp_path.rglob("*")) - before
+    assert not any(path.name.endswith((".pid", ".state", ".resume")) for path in created)

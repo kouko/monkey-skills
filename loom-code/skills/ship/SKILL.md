@@ -120,6 +120,12 @@ or GitHub reports that user action is required. Optional checks do not keep the
 command alive. Unchanged pending snapshots produce no repeated user-facing
 output.
 
+If checks remain pending after 120 polling intervals (60 minutes), stop and
+report that a reliable terminal result could not be obtained. Treat an initial
+empty required-check snapshot as registration delay and check once more after
+30 seconds; if it is still empty, report that no required checks are registered
+and finish successfully.
+
 Observation belongs only to the active publication process. Do not create a
 scheduler, daemon, persistent polling record, or restart recovery mechanism.
 Stopping the task or Desktop app stops observation.
