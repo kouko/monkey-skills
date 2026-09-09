@@ -1,4 +1,4 @@
-"""The 2.0 runtime has one publication contract: generated attestation."""
+"""The 2.0 runtime has no legacy publication ledgers or replay gates."""
 
 from pathlib import Path
 import subprocess
@@ -17,7 +17,7 @@ def test_manifest_declares_no_review_ledger() -> None:
     assert not (ROOT / "loom-code/contract/templates/review.json").exists()
 
 
-def test_public_rule_inventory_has_only_attestation_for_publication() -> None:
+def test_public_rule_inventory_has_only_current_publication_contracts() -> None:
     result = subprocess.run(
         ["python3", str(CHECKER), "--list-rules"],
         cwd=ROOT,
@@ -30,7 +30,7 @@ def test_public_rule_inventory_has_only_attestation_for_publication() -> None:
         for line in result.stdout.splitlines()
         if line.startswith("push.")
     }
-    assert push_rules == {"push.attestation"}
+    assert push_rules == {"push.attestation", "push.contextual-body"}
 
 
 def test_removed_package_replay_flag_is_rejected() -> None:
