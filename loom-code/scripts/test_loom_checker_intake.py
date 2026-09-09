@@ -102,7 +102,7 @@ def write_attestation(repo: Path, *, payload: dict | None = None, change: str = 
                 "content_digest": "historical-digest",
                 "executions": [{
                     "kind": "package-tests", "command": "pytest", "artifact": "",
-                    "result": "pass", "command_digest": "fixture",
+                    "result": "pass", "command_digest": "0" * 64,
                 }],
                 "verdicts": [{
                     "reviewer": "fixture", "vendor": "test", "model": "test",
@@ -797,6 +797,62 @@ def test_worktree_only_attestation_does_not_prove_delivery(tmp_path: Path) -> No
             "verdicts": [],
             "findings": [],
         },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": None, "command": None, "artifact": None,
+                "result": None, "command_digest": None,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "fail", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": [], "findings": [],
+            }],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": {},
+        },
     ],
 )
 def test_partial_unsupported_or_mismatched_remote_witness_stays_active(
@@ -867,6 +923,34 @@ def test_unresolved_remote_default_blocks_intake_as_indeterminate(tmp_path: Path
     assert result.returncode == 1
     assert "intake.confirmed" in blocked_rules(result)
     assert "indeterminate" in result.stderr
+
+
+@pytest.mark.parametrize("failing_path", ["intent", "attestation"])
+def test_remote_snapshot_read_failure_is_indeterminate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_path: str
+) -> None:
+    import loom_checker as lc
+
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    publish_remote_default_snapshot(repo)
+    real_run_git = lc.run_git
+    suffix = (
+        f"docs/loom/intent/{CHANGE}.md"
+        if failing_path == "intent"
+        else f"docs/loom/{CHANGE}/attestation.json"
+    )
+
+    def fail_selected_read(repo_path: Path, *args: str, **kwargs):
+        if args and args[0] in {"ls-tree", "show"} and args[-1].endswith(suffix):
+            raise subprocess.TimeoutExpired(["git", *args], timeout=1)
+        return real_run_git(repo_path, *args, **kwargs)
+
+    monkeypatch.setattr(lc, "run_git", fail_selected_read)
+
+    state, detail = lc.intent_delivery_state(repo, CHANGE)
+    assert state == "indeterminate"
+    assert "read" in detail
 
 
 # --- intake.confirmed: closed is terminal (W0-01) ---------------------------

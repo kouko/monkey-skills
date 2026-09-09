@@ -41,7 +41,7 @@ def write_delivery(repo: Path) -> None:
                 "content_digest": "historical",
                 "executions": [{
                     "kind": "package-tests", "command": "pytest", "artifact": "",
-                    "result": "pass", "command_digest": "fixture",
+                    "result": "pass", "command_digest": "0" * 64,
                 }],
                 "verdicts": [{
                     "reviewer": "fixture", "vendor": "test", "model": "test",

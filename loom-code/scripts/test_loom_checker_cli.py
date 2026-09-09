@@ -100,7 +100,7 @@ Fixture.
                     "content_digest": "historical",
                     "executions": [{
                         "kind": "package-tests", "command": "pytest", "artifact": "",
-                        "result": "pass", "command_digest": "fixture",
+                        "result": "pass", "command_digest": "0" * 64,
                     }],
                     "verdicts": [{
                         "reviewer": "fixture", "vendor": "test", "model": "test",
@@ -214,7 +214,18 @@ def test_intents_reports_one_delivered_intent_with_optional_metadata(tmp_path: P
     assert result.stdout.startswith("2026-09-09-example\tdelivered")
     assert f"commit={remote_head}" in result.stdout
     assert "pr=#123" in result.stdout
-    assert "merged_at=" in result.stdout
+    assert "committed_at=" in result.stdout
+    assert "merged_at=" not in result.stdout
+
+
+def test_intents_explains_why_one_intent_is_active(tmp_path: Path) -> None:
+    repo, _ = make_intent_state_repo(tmp_path, delivered=False)
+
+    result = run_checker("intents", "2026-09-09-example", cwd=repo)
+
+    assert result.returncode == 0
+    assert result.stdout.startswith("2026-09-09-example\tactive\t")
+    assert "attestation is absent" in result.stdout
 
 
 def test_intents_reports_indeterminate_without_remote_default(tmp_path: Path) -> None:
@@ -225,6 +236,7 @@ def test_intents_reports_indeterminate_without_remote_default(tmp_path: Path) ->
 
     assert result.returncode == 1
     assert "2026-09-09-example\tindeterminate" in result.stdout
+    assert "refresh the selected remote-default ref" in result.stdout
 
 
 def test_intents_rejects_an_unsafe_remote_name(tmp_path: Path) -> None:

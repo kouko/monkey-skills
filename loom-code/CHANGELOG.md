@@ -5,7 +5,7 @@
 - Derive `active`, `delivered`, `closed`, or `indeterminate` from canonical
   intent and attestation evidence on the selected remote-default snapshot.
 - List active intents and inspect one intent with optional repository-derived
-  merge metadata through the existing checker instead of a separate script.
+  pull-request and delivery-commit metadata through the existing checker.
 - Block duplicate intake after delivery and when the remote-default snapshot
   is unavailable, without trusting feature branches or local trunk fallbacks.
 - Keep legacy closed intents readable while removing the current-contract

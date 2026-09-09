@@ -1216,18 +1216,44 @@ def _status_closed_descriptor_from_text(text: str) -> str | None:
 REMOTE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
 
-def remote_default_ref(repo: Path, remote: str = "origin") -> tuple[str | None, str]:
-    """The locally available snapshot of one remote's advertised default branch."""
+def remote_default_snapshot(
+    repo: Path, remote: str = "origin"
+) -> tuple[str | None, str | None, str]:
+    """The immutable commit selected by one remote's local default-branch ref."""
     if not REMOTE_NAME.fullmatch(remote):
-        return None, f"remote name {remote!r} is not a safe literal"
+        return None, None, f"remote name {remote!r} is not a safe literal"
     head = f"refs/remotes/{remote}/HEAD"
+    # `symbolic-ref` follows chained symbolic refs by default and returns a
+    # non-zero status when the name is not symbolic:
+    # https://git-scm.com/docs/git-symbolic-ref
     target = git_maybe(repo, "symbolic-ref", "--quiet", head)
     prefix = f"refs/remotes/{remote}/"
     if target is None or not target.startswith(prefix) or target == prefix + "HEAD":
-        return None, f"{head} is missing or does not select a branch on remote {remote!r}"
-    if git_maybe(repo, "rev-parse", "--verify", f"{target}^{{commit}}") is None:
-        return None, f"{target} does not resolve to a committed snapshot"
-    return target, ""
+        return None, None, f"{head} is missing or does not select a branch on remote {remote!r}"
+    commit = git_maybe(repo, "rev-parse", "--verify", f"{target}^{{commit}}")
+    if commit is None:
+        return None, None, f"{target} does not resolve to a committed snapshot"
+    return target, commit, ""
+
+
+def _committed_text(repo: Path, commit: str, relative: Path) -> tuple[str, str]:
+    """Return present text, confirmed absence, or an explicit read error."""
+    try:
+        listing = run_git(
+            repo, "ls-tree", "--name-only", commit, "--", str(relative),
+            timeout=GIT_TIMEOUT, check=True,
+        )
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        return "error", f"cannot read {relative} from remote-default snapshot: {type(exc).__name__}"
+    if listing != str(relative):
+        return "absent", ""
+    try:
+        content = run_git(
+            repo, "show", f"{commit}:{relative}", timeout=GIT_TIMEOUT, check=True,
+        )
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        return "error", f"cannot read {relative} from remote-default snapshot: {type(exc).__name__}"
+    return "present", content
 
 
 def _delivery_witness_valid(attestation: object, change_id: str) -> bool:
@@ -1247,15 +1273,32 @@ def _delivery_witness_valid(attestation: object, change_id: str) -> bool:
     if not isinstance(attestation.get("findings"), list):
         return False
     execution_fields = {"kind", "command", "artifact", "result", "command_digest"}
-    if any(not isinstance(item, dict) or not execution_fields <= set(item) for item in executions):
-        return False
+    for item in executions:
+        if not isinstance(item, dict) or not execution_fields <= set(item):
+            return False
+        kind = item.get("kind")
+        if not isinstance(kind, str) or kind not in {"package-tests", "adversarial"}:
+            return False
+        if not isinstance(item.get("command"), str) or not item["command"].strip():
+            return False
+        if not isinstance(item.get("artifact"), str) or item.get("result") != "pass":
+            return False
+        digest = item.get("command_digest")
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            return False
     verdict_fields = {"reviewer", "vendor", "model", "lens", "verdict", "findings"}
-    return all(
-        isinstance(item, dict)
-        and verdict_fields <= set(item)
-        and item.get("verdict") in {"PASS", "PASS_WITH_NOTES"}
-        for item in verdicts
-    )
+    for item in verdicts:
+        if not isinstance(item, dict) or not verdict_fields <= set(item):
+            return False
+        if any(not isinstance(item.get(key), str) or not item[key].strip()
+               for key in ("reviewer", "vendor", "model", "lens")):
+            return False
+        verdict = item.get("verdict")
+        if not isinstance(verdict, str) or verdict not in {"PASS", "PASS_WITH_NOTES"}:
+            return False
+        if not isinstance(item.get("findings"), list):
+            return False
+    return all(isinstance(finding, dict) for finding in attestation["findings"])
 
 
 def intent_delivery_state(
@@ -1269,13 +1312,15 @@ def intent_delivery_state(
         if descriptor is not None:
             return "closed", descriptor
 
-    default_ref, error = remote_default_ref(repo, remote)
-    if default_ref is None:
+    default_ref, snapshot, error = remote_default_snapshot(repo, remote)
+    if default_ref is None or snapshot is None:
         return "indeterminate", error
 
     intent_rel = artifact_path(contract, "intent", change_id, repo).relative_to(repo)
-    remote_intent = git_maybe(repo, "show", f"{default_ref}:{intent_rel}")
-    if remote_intent is None:
+    intent_read, remote_intent = _committed_text(repo, snapshot, intent_rel)
+    if intent_read == "error":
+        return "indeterminate", remote_intent
+    if intent_read == "absent":
         return "active", "canonical intent is absent from the remote-default snapshot"
     descriptor = _status_closed_descriptor_from_text(remote_intent)
     if descriptor is not None:
@@ -1286,8 +1331,10 @@ def intent_delivery_state(
         return "active", "canonical remote-default intent is not confirmed"
 
     attestation_rel = artifact_path(contract, "attestation", change_id, repo).relative_to(repo)
-    raw_attestation = git_maybe(repo, "show", f"{default_ref}:{attestation_rel}")
-    if raw_attestation is None:
+    attestation_read, raw_attestation = _committed_text(repo, snapshot, attestation_rel)
+    if attestation_read == "error":
+        return "indeterminate", raw_attestation
+    if attestation_read == "absent":
         return "active", "canonical attestation is absent from the remote-default snapshot"
     try:
         attestation = json.loads(raw_attestation)
@@ -1302,28 +1349,33 @@ def _intent_delivery_metadata(
     repo: Path, change_id: str, remote: str, manifest: dict
 ) -> list[str]:
     """Optional repository-only metadata for the commit that added the witness."""
-    default_ref, _ = remote_default_ref(repo, remote)
-    if default_ref is None:
+    default_ref, snapshot, _ = remote_default_snapshot(repo, remote)
+    if default_ref is None or snapshot is None:
         return []
     attestation_rel = artifact_path(manifest, "attestation", change_id, repo).relative_to(repo)
+    # `--diff-filter=A` selects an added path, while `%cI` is strictly the
+    # committer date rather than a merge timestamp:
+    # https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-filterACDMRTUXB82308203
+    # https://git-scm.com/docs/pretty-formats.html
+    # https://git-scm.com/docs/git-log#Documentation/git-log.txt---first-parent
     history = git_maybe(
         repo,
         "log",
         "--first-parent",
         "--diff-filter=A",
         "--format=%H%x09%cI%x09%s",
-        default_ref,
+        snapshot,
         "--",
         str(attestation_rel),
     )
     entries = [line for line in (history or "").splitlines() if line.strip()]
     if not entries:
         return []
-    commit, merged_at, subject = entries[-1].split("\t", 2)
+    commit, committed_at, subject = entries[-1].split("\t", 2)
     fields = [f"commit={commit}"]
     if match := re.search(r"\(#(\d+)\)\s*$", subject):
         fields.append(f"pr=#{match.group(1)}")
-    fields.append(f"merged_at={merged_at}")
+    fields.append(f"committed_at={committed_at}")
     return fields
 
 
@@ -1384,8 +1436,10 @@ def cmd_intents(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         fields = [candidate, state]
         if metadata and state == "delivered":
             fields += _intent_delivery_metadata(repo, candidate, remote, manifest)
-        elif state == "indeterminate":
+        elif change_id is not None and state == "active":
             fields.append(detail)
+        elif state == "indeterminate":
+            fields.append(detail + "; refresh the selected remote-default ref")
             rc = 1
         out.write("\t".join(fields) + "\n")
     return rc
