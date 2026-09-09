@@ -2822,8 +2822,6 @@ def _observe_required_ci(
     poll_intervals = 0
     saw_empty_snapshot = False
     while True:
-        # GitHub CLI documents --required, JSON fields, and exit 8 for pending:
-        # https://cli.github.com/manual/gh_pr_checks
         argv = [
             trusted_gh, "pr", "checks", pr_url, "--required",
             "--json", "name,state,bucket",

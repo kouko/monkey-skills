@@ -563,6 +563,10 @@ def test_publish_stops_on_required_ci_terminal_blockers(
 
 
 def test_publish_accepts_gh_pending_exit_code_eight(tmp_path: Path, monkeypatch) -> None:
+    """Ground --required, JSON fields, and pending rc=8.
+
+    https://cli.github.com/manual/gh_pr_checks
+    """
     calls = ExternalCalls("")
     calls.required_checks = [
         [{"name": "gate", "state": "IN_PROGRESS", "bucket": "pending"}],
