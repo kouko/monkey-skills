@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.7] — 2026-09-09 — derived intent delivery state
+
+- Derive `active`, `delivered`, `closed`, or `indeterminate` from canonical
+  intent and attestation evidence on the selected remote-default snapshot.
+- List active intents and inspect one intent with optional repository-derived
+  merge metadata through the existing checker instead of a separate script.
+- Block duplicate intake after delivery and when the remote-default snapshot
+  is unavailable, without trusting feature branches or local trunk fallbacks.
+- Keep legacy closed intents readable while removing the current-contract
+  promise that Ship writes a post-merge close transition.
+
 ## [2.0.6] — 2026-09-09 — automatic contextual pull-request publication
 
 budget-exception: push.contextual-body — replaces unenforced PR prose with one

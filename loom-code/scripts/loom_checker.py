@@ -10,6 +10,7 @@ Sub-commands (the CLI contract other stations depend on):
 
     loom_checker.py --list-rules
     loom_checker.py intent <path> [--commit-msg <file>]
+    loom_checker.py intents [<change-id>] [--remote <name>] [--metadata]
     loom_checker.py intake <station> <change-id>
     loom_checker.py push [--head <ref>] [--hook]
     loom_checker.py publish --intent <absolute-path> --title <text> --body-file <absolute-path>
@@ -82,9 +83,9 @@ RULES: list[tuple[str, str]] = [
         "write-spec / write-plan accept only an intent whose status line reads `confirmed <date>` "
         "with a date the calendar has; `closed <date> — PR #<N>` or `closed <date> — branch <name>` "
         "is blocked -- that change is closed and a new change starts from a new intent. closed is "
-        "terminal either way: reopening it -- reverting the status line, or branching from a trunk "
-        "that already carries the close -- is blocked the same way, recomputed from the branch's "
-        "own history and the trunk's copy of the file, not from the status line alone.",
+        "terminal either way, and a confirmed intent is also blocked after canonical delivery evidence "
+        "appears on the selected remote-default snapshot. Local branches and worktree evidence never "
+        "prove delivery; an unresolved remote default is indeterminate and blocks intake.",
     ),
     (
         "intake.confirmed-behavior",
@@ -1212,21 +1213,186 @@ def _status_closed_descriptor_from_text(text: str) -> str | None:
     return _status_closed_descriptor(kind, identifier)
 
 
-def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str, out) -> tuple[str, str] | None:
-    """`intake.confirmed`'s terminal rule (REQ-2, W0-02): a reopen is caught
-    even when the intent file's OWN current status line has been changed
-    back to `confirmed`, by recomputing two things the file's current
-    content cannot hide:
+REMOTE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
-    (i) the branch's own history of the file -- `git log -G` for a line
-        that ever read `status: closed ...` -- so reverting the status
-        line back to `confirmed` does not un-close the change; and
-    (ii) the trunk's current copy of the file -- so a branch cut before the
-         close, from a trunk that already carries it, is caught too.
 
-    Neither is a flag an agent writes; both are recomputed from the
-    repository. When no trunk ref resolves at all, case (ii) is reported as
-    absent (not as a pass) rather than silently skipped."""
+def remote_default_ref(repo: Path, remote: str = "origin") -> tuple[str | None, str]:
+    """The locally available snapshot of one remote's advertised default branch."""
+    if not REMOTE_NAME.fullmatch(remote):
+        return None, f"remote name {remote!r} is not a safe literal"
+    head = f"refs/remotes/{remote}/HEAD"
+    target = git_maybe(repo, "symbolic-ref", "--quiet", head)
+    prefix = f"refs/remotes/{remote}/"
+    if target is None or not target.startswith(prefix) or target == prefix + "HEAD":
+        return None, f"{head} is missing or does not select a branch on remote {remote!r}"
+    if git_maybe(repo, "rev-parse", "--verify", f"{target}^{{commit}}") is None:
+        return None, f"{target} does not resolve to a committed snapshot"
+    return target, ""
+
+
+def _delivery_witness_valid(attestation: object, change_id: str) -> bool:
+    """Validate stable witness shape without comparing it to a later tree."""
+    if not isinstance(attestation, dict) or set(attestation) != ATTESTATION_KEYS:
+        return False
+    if attestation.get("schema") != ATTESTATION_SCHEMA or attestation.get("change_id") != change_id:
+        return False
+    if not isinstance(attestation.get("content_digest"), str) or not attestation["content_digest"].strip():
+        return False
+    executions = attestation.get("executions")
+    verdicts = attestation.get("verdicts")
+    if not isinstance(executions, list) or not executions:
+        return False
+    if not isinstance(verdicts, list) or not verdicts:
+        return False
+    if not isinstance(attestation.get("findings"), list):
+        return False
+    execution_fields = {"kind", "command", "artifact", "result", "command_digest"}
+    if any(not isinstance(item, dict) or not execution_fields <= set(item) for item in executions):
+        return False
+    verdict_fields = {"reviewer", "vendor", "model", "lens", "verdict", "findings"}
+    return all(
+        isinstance(item, dict)
+        and verdict_fields <= set(item)
+        and item.get("verdict") in {"PASS", "PASS_WITH_NOTES"}
+        for item in verdicts
+    )
+
+
+def intent_delivery_state(
+    repo: Path, change_id: str, *, remote: str = "origin", manifest: dict | None = None
+) -> tuple[str, str]:
+    """Return active, delivered, closed, or indeterminate from repository evidence."""
+    contract = manifest if manifest is not None else load_manifest()
+    intent_path = artifact_path(contract, "intent", change_id, repo)
+    if intent_path.is_file():
+        descriptor = _status_closed_descriptor_from_text(read_text(intent_path))
+        if descriptor is not None:
+            return "closed", descriptor
+
+    default_ref, error = remote_default_ref(repo, remote)
+    if default_ref is None:
+        return "indeterminate", error
+
+    intent_rel = artifact_path(contract, "intent", change_id, repo).relative_to(repo)
+    remote_intent = git_maybe(repo, "show", f"{default_ref}:{intent_rel}")
+    if remote_intent is None:
+        return "active", "canonical intent is absent from the remote-default snapshot"
+    descriptor = _status_closed_descriptor_from_text(remote_intent)
+    if descriptor is not None:
+        return "closed", descriptor
+    remote_front, _ = parse_document(remote_intent)
+    remote_status = STATUS.fullmatch(remote_front.get("status", "").strip())
+    if remote_status is None or remote_status.group(1) is None:
+        return "active", "canonical remote-default intent is not confirmed"
+
+    attestation_rel = artifact_path(contract, "attestation", change_id, repo).relative_to(repo)
+    raw_attestation = git_maybe(repo, "show", f"{default_ref}:{attestation_rel}")
+    if raw_attestation is None:
+        return "active", "canonical attestation is absent from the remote-default snapshot"
+    try:
+        attestation = json.loads(raw_attestation)
+    except json.JSONDecodeError:
+        return "active", "canonical attestation is malformed JSON"
+    if not _delivery_witness_valid(attestation, change_id):
+        return "active", "canonical attestation has an unsupported or incomplete witness shape"
+    return "delivered", default_ref
+
+
+def _intent_delivery_metadata(
+    repo: Path, change_id: str, remote: str, manifest: dict
+) -> list[str]:
+    """Optional repository-only metadata for the commit that added the witness."""
+    default_ref, _ = remote_default_ref(repo, remote)
+    if default_ref is None:
+        return []
+    attestation_rel = artifact_path(manifest, "attestation", change_id, repo).relative_to(repo)
+    history = git_maybe(
+        repo,
+        "log",
+        "--first-parent",
+        "--diff-filter=A",
+        "--format=%H%x09%cI%x09%s",
+        default_ref,
+        "--",
+        str(attestation_rel),
+    )
+    entries = [line for line in (history or "").splitlines() if line.strip()]
+    if not entries:
+        return []
+    commit, merged_at, subject = entries[-1].split("\t", 2)
+    fields = [f"commit={commit}"]
+    if match := re.search(r"\(#(\d+)\)\s*$", subject):
+        fields.append(f"pr=#{match.group(1)}")
+    fields.append(f"merged_at={merged_at}")
+    return fields
+
+
+def _parse_intents_args(args: list[str]) -> tuple[str | None, str, bool]:
+    change_id: str | None = None
+    remote = "origin"
+    metadata = False
+    rest = list(args)
+    while rest:
+        token = rest.pop(0)
+        if token == "--remote":
+            if not rest:
+                raise UsageError("--remote needs a name.")
+            remote = rest.pop(0)
+        elif token == "--metadata":
+            metadata = True
+        elif change_id is None:
+            change_id = token
+        else:
+            raise UsageError(f"unexpected argument {token!r}.")
+    if not REMOTE_NAME.fullmatch(remote):
+        raise UsageError(f"remote name {remote!r} is not a safe literal.")
+    if change_id is not None and not CHANGE_ID.fullmatch(change_id):
+        raise UsageError(f"{change_id!r} is not a valid change-id.")
+    if metadata and change_id is None:
+        raise UsageError("--metadata requires one change-id.")
+    return change_id, remote, metadata
+
+
+def _confirmed_intent_ids(repo: Path, manifest: dict) -> list[str]:
+    template = manifest["artifacts"]["intent"]["path"]
+    change_ids: list[str] = []
+    for path in sorted(repo.glob(template.replace("<change-id>", "*"))):
+        candidate = path.stem
+        front, _ = parse_document(read_text(path))
+        match = STATUS.fullmatch(front.get("status", "").strip())
+        if CHANGE_ID.fullmatch(candidate) and match is not None and match.group(1) is not None:
+            change_ids.append(candidate)
+    return change_ids
+
+
+def cmd_intents(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """List active confirmed intents, or report one intent's derived state."""
+    change_id, remote, metadata = _parse_intents_args(args)
+    manifest = load_manifest()
+    repo = repo_root(Path.cwd())
+    if change_id is not None:
+        intent_path = artifact_path(manifest, "intent", change_id, repo)
+        if not intent_path.is_file():
+            raise UsageError(f"no intent file at {intent_path.relative_to(repo)}.")
+    change_ids = [change_id] if change_id is not None else _confirmed_intent_ids(repo, manifest)
+
+    rc = 0
+    for candidate in change_ids:
+        state, detail = intent_delivery_state(repo, candidate, remote=remote, manifest=manifest)
+        if change_id is None and state not in {"active", "indeterminate"}:
+            continue
+        fields = [candidate, state]
+        if metadata and state == "delivered":
+            fields += _intent_delivery_metadata(repo, candidate, remote, manifest)
+        elif state == "indeterminate":
+            fields.append(detail)
+            rc = 1
+        out.write("\t".join(fields) + "\n")
+    return rc
+
+
+def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str) -> tuple[str, str] | None:
+    """Catch a legacy close in this branch's own history after a local reopen."""
     intent_rel = intent_path.relative_to(repo)
     log_output = git_maybe(repo, "log", "--format=%H", f"-G{REOPEN_LOG_PATTERN}", "--", str(intent_rel))
     for commit in (log_output or "").splitlines():
@@ -1244,24 +1410,6 @@ def check_intent_not_reopened(repo: Path, intent_path: Path, change_id: str, out
                 "are not reopened; start a new intent",
             )
 
-    for candidate in REOPEN_TRUNK_CANDIDATES:
-        if git_maybe(repo, "rev-parse", "--verify", f"{candidate}^{{commit}}") is None:
-            continue
-        content = git_maybe(repo, "show", f"{candidate}:{intent_rel}")
-        if content is not None:
-            descriptor = _status_closed_descriptor_from_text(content)
-            if descriptor is not None:
-                return (
-                    "intake.confirmed",
-                    f"{change_id} was closed ({descriptor}) and closed intents "
-                    "are not reopened; start a new intent",
-                )
-        break
-    else:
-        out.write(
-            "intake.confirmed: no trunk ref resolves among "
-            f"{', '.join(REOPEN_TRUNK_CANDIDATES)}; the trunk copy check is absent.\n"
-        )
     return None
 
 
@@ -1321,7 +1469,7 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
             ],
             err,
         )
-    reopen_failure = check_intent_not_reopened(repo, intent_path, change_id, out)
+    reopen_failure = check_intent_not_reopened(repo, intent_path, change_id)
     if reopen_failure is not None:
         return report([reopen_failure], err)
 
@@ -1345,6 +1493,36 @@ def cmd_intake(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
                     "that is not a real date.",
                 )
             ],
+            err,
+        )
+
+    delivery_state, delivery_detail = intent_delivery_state(
+        repo, change_id, manifest=manifest
+    )
+    if delivery_state == "delivered":
+        return report(
+            [(
+                "intake.confirmed",
+                f"{change_id} is delivered on {delivery_detail}; start a new intent",
+            )],
+            err,
+        )
+    if delivery_state == "closed":
+        return report(
+            [(
+                "intake.confirmed",
+                f"{change_id} was closed ({delivery_detail}) and closed intents "
+                "are not reopened; start a new intent",
+            )],
+            err,
+        )
+    if delivery_state == "indeterminate":
+        return report(
+            [(
+                "intake.confirmed",
+                f"{change_id} delivery is indeterminate: {delivery_detail}; "
+                "refresh the selected remote-default ref before intake",
+            )],
             err,
         )
 
@@ -4197,6 +4375,7 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
 COMMANDS = {
     "intent": cmd_intent,
+    "intents": cmd_intents,
     "intake": cmd_intake,
     "push": cmd_push,
     "publish": cmd_publish,
