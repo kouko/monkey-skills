@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: no — internal checker, test, and workflow maintenance with no new user-facing interface
 evidence: [docs/loom/intent/2026-09-08-simplify-loom-evidence-gates.md]
-status: confirmed 2026-09-08
+status: closed 2026-09-08 — PR #806
 
 ## Problem
 上一輪已改用內容綁定的 attestation，但完整驗證與 CI 仍有不同測試範圍，隱私規則在入口與細部協議中說法不一致，部分測試仍靠整份文件雜湊，checker 也保留不再使用的舊 contract 路徑。結果是本機驗證通過後仍可能在 CI 才發現問題，維護者也必須分辨新舊兩套行為。

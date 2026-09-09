@@ -2048,6 +2048,54 @@ PREFIX_WORDS = {"sudo", "command", "env", "nohup", "time", "nice", "builtin", "e
 SHELL_PROGRAMS = {"bash", "sh", "zsh", "dash"}
 
 
+def _shell_segments(command: str) -> list[str]:
+    """Split on shell operators outside quotes; malformed input stays strict."""
+    segments: list[str] = []
+    conservative_command = list(command)
+    start = 0
+    quote: str | None = None
+    escaped = False
+    dynamic = False
+    index = 0
+    while index < len(command):
+        character = command[index]
+        if escaped:
+            escaped = False
+        elif character == "\\" and quote != "'":
+            escaped = True
+        elif (
+            character == "$"
+            and quote != "'"
+            and index + 1 < len(command)
+            and command[index + 1] == "("
+        ):
+            dynamic = True
+            conservative_command[index] = "\n"
+            conservative_command[index + 1] = "\n"
+        elif character == "`" and quote != "'":
+            dynamic = True
+            conservative_command[index] = "\n"
+        elif quote:
+            if character == quote:
+                quote = None
+        elif character in {"'", '"'}:
+            quote = character
+        elif character in ";\n|&":
+            segments.append(command[start:index])
+            if (
+                character in "|&"
+                and index + 1 < len(command)
+                and command[index + 1] == character
+            ):
+                index += 1
+            start = index + 1
+        index += 1
+    if quote or escaped or dynamic:
+        return SEGMENT_SPLIT.split("".join(conservative_command))
+    segments.append(command[start:])
+    return segments
+
+
 def _tokenise(segment: str) -> list[str]:
     try:
         return shlex.split(segment)
@@ -2100,7 +2148,7 @@ def is_push_command(command: str) -> bool:
     """True when any segment of this shell line pushes or opens/merges a PR."""
     if is_git_push_command(command):
         return True
-    for segment in SEGMENT_SPLIT.split(command):
+    for segment in _shell_segments(command):
         tokens = _strip_prefix(_tokenise(segment))
         if not tokens:
             continue
@@ -2124,7 +2172,7 @@ def is_push_command(command: str) -> bool:
 
 def is_pr_create_command(command: str) -> bool:
     """True when a shell segment creates a PR."""
-    for segment in SEGMENT_SPLIT.split(command):
+    for segment in _shell_segments(command):
         tokens = _strip_prefix(_tokenise(segment))
         if not tokens or Path(tokens[0]).name != "gh":
             continue
@@ -2139,7 +2187,7 @@ def is_pr_create_command(command: str) -> bool:
 
 def is_pr_merge_command(command: str) -> bool:
     """True when a shell segment merges a PR."""
-    for segment in SEGMENT_SPLIT.split(command):
+    for segment in _shell_segments(command):
         tokens = _strip_prefix(_tokenise(segment))
         if not tokens or Path(tokens[0]).name != "gh":
             continue
@@ -2268,7 +2316,7 @@ def check_pr_create_remote_head(repo: Path, command: str) -> str | None:
 
 def is_git_push_command(command: str) -> bool:
     """True when any shell segment can reach a Git push."""
-    for segment in SEGMENT_SPLIT.split(command):
+    for segment in _shell_segments(command):
         tokens = _strip_prefix(_tokenise(segment))
         if not tokens:
             continue
@@ -2297,7 +2345,7 @@ def git_dash_c_push_cwd(command: str, fallback: str) -> str | None:
     selected_roots: set[str] = set()
     shell_root: Path | None = None
     repository_env_changed = False
-    for segment in SEGMENT_SPLIT.split(command):
+    for segment in _shell_segments(command):
         raw_tokens = _tokenise(segment)
         tokens = _strip_prefix(raw_tokens)
         if not tokens:

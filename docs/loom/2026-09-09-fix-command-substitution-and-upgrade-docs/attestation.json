@@ -1,0 +1,54 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-fix-command-substitution-and-upgrade-docs",
+  "content_digest": "e5a29876f6ce22621ee53de845b22d5c47f0ac8c",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "/usr/bin/python3 -m pytest loom-code/scripts/test_publish_command_detection.py -q",
+      "artifact": "loom-code/scripts/test_publish_command_detection.py",
+      "result": "pass",
+      "command_digest": "c857da749f9e99cb68d4e30103dd2ebe8d27ce60e90968272dd078327bf9af75"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-fresh-context-1",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "important",
+          "dimension": "tests",
+          "anchor": "loom-code/scripts/test_publish_command_detection.py:35",
+          "text": "RED and GREEN are evidenced in the active run rather than separate commits."
+        }
+      ]
+    },
+    {
+      "reviewer": "codex-fresh-context-2",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "important",
+      "dimension": "tests",
+      "anchor": "loom-code/scripts/test_publish_command_detection.py:35",
+      "text": "RED and GREEN are evidenced in the active run rather than separate commits."
+    }
+  ]
+}

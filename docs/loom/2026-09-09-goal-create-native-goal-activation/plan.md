@@ -26,6 +26,13 @@ charter: 1.0
 - Test: A1 positive: patch-version-visible; boundary: root-version-aligned. A2 positive: claude-manifest-synced; negative: manifest-drift. A3 positive: fallback-changelog; boundary: conditional-capability. A4 positive: honest-state-noted; negative: success-overclaim. A5 positive: package-suite-passes; boundary: ARC-regression.
 - Risk: agent-decided — use a patch bump because behavior improves without changing invocation syntax; generate the Codex manifest from the Claude SSOT and avoid editing the sync script.
 
+### Wave 3 — Publication-gate correction
+
+**W3-01 Place the mechanism budget exception in its checker-owned release section**  after: W2-01  acceptance: 4,5
+- Files: loom-code/CHANGELOG.md, loom-workflow/CHANGELOG.md
+- Test: Existing permanent gate: `python3 loom-code/scripts/check_mechanisms.py --baseline origin/main`; negative reproduced in PR CI when the exception existed only in the feature plugin changelog, positive requires the exception in the current loom-code release section.
+- Risk: agent-decided — move the existing exception instead of adding another checker or duplicating it across plugin changelogs; the central mechanism checker remains the single owner.
+
 ## Questions asked
 2 — behaviour — 你確認上述行為與選項 A 嗎？
 2 — behaviour — 如果以上正確，請回覆「確認」，我就會把這一版標記為已確認並送回同一位規格審查者。

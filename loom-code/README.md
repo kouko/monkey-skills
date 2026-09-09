@@ -83,6 +83,19 @@ Install `loom-code` through the Codex plugin marketplace. Its installed
 `PreToolUse` hook owns publication interception; adopting repositories no
 longer carry a checker copy, copied contract, or trust ledger.
 
+To update safely:
+
+```bash
+codex plugin marketplace upgrade monkey-skills
+codex plugin add loom-code@monkey-skills
+codex plugin list
+```
+
+`plugin add` replaces the installed version cache and can remove the versioned
+hook path held by an active task. After it succeeds, restart Codex immediately
+before running another tool or command. Do not remove the plugin first; that
+only creates the same broken-path window earlier.
+
 ## Licence
 
 MIT, as part of `monkey-skills`.

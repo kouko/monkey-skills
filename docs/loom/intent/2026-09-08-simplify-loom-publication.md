@@ -2,7 +2,7 @@
 originator: kouko
 kind: engineering
 needs-design: yes — adds a user-invoked publication command and changes its visible output and failure behaviour
-status: confirmed 2026-09-08
+status: closed 2026-09-08 — PR #807
 
 ## Problem
 Loom catches functional problems before publication, but publishing still costs unnecessary retries: CI rejects temporary commit titles that squash merge discards, and agents must manually construct a fragile canonical push and PR command.

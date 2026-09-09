@@ -15,10 +15,6 @@ transport limit. Existing Goals are replaced by the named SESSION request
 where the host permits it, while Codex reports its current clear-and-retry
 limitation without claiming activation.
 
-budget-exception: goal-create.session-activation — native activation is a new
-host-side effect whose authorization, fallback, and success boundary must be
-recomputed as one executable skill gate.
-
 ## [4.1.2] — 2026-09-08 — lower-cost local gates
 
 Patch. Route every Loom CI group through one declared package-suite runner,
