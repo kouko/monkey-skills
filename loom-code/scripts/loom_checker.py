@@ -2995,9 +2995,14 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         [str(Path(trusted_git).parent), str(Path(trusted_gh).parent), "/usr/bin", "/bin"]
     ))
     try:
-        return _cmd_publish_trusted(
-            title, body_file, intent_file, authorized, trusted_git, trusted_gh, out, err
-        )
+        with tempfile.TemporaryDirectory(prefix="loom-publish-") as snapshot_dir:
+            body_snapshot = Path(snapshot_dir) / "pr-body.md"
+            body_snapshot.write_text(body, encoding="utf-8")
+            body_snapshot.chmod(0o600)
+            return _cmd_publish_trusted(
+                title, body_snapshot, intent_file, authorized,
+                trusted_git, trusted_gh, out, err,
+            )
     finally:
         if previous_path is None:
             os.environ.pop("PATH", None)

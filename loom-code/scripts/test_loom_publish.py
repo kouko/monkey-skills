@@ -78,6 +78,11 @@ class ExternalCalls:
         self.move_head_on_ready = False
         self.move_remote_on_ready = False
         self.change_pushurl_on_ready = False
+        self.mutate_body_on_repo_view = False
+        self.original_body: Path | None = None
+        self.published_bodies: list[str] = []
+        self.published_body_paths: list[Path] = []
+        self.published_body_modes: list[int] = []
         self.change_pushurl_on_remote_read = False
         self.switch_branch_on_remote_read = False
         self.change_pushurl_on_pr_list = False
@@ -91,6 +96,9 @@ class ExternalCalls:
         argv = [str(value) for value in argv]
         self.calls.append(argv)
         if "repo" in argv and "view" in argv:
+            if self.mutate_body_on_repo_view:
+                assert self.original_body is not None
+                self.original_body.write_text("replaced after validation\n", encoding="utf-8")
             return subprocess.CompletedProcess(argv, 0, "main\n", "")
         if "ls-remote" in argv:
             self.remote_reads += 1
@@ -125,6 +133,10 @@ class ExternalCalls:
             output = json.dumps(prs)
             return subprocess.CompletedProcess(argv, 0, output, "")
         if "pr" in argv and "create" in argv:
+            body_path = Path(argv[argv.index("--body-file") + 1])
+            self.published_bodies.append(body_path.read_text(encoding="utf-8"))
+            self.published_body_paths.append(body_path)
+            self.published_body_modes.append(body_path.stat().st_mode & 0o777)
             if self.fail_create_once:
                 self.fail_create_once = False
                 return subprocess.CompletedProcess(argv, 1, "", "temporary failure")
@@ -138,6 +150,10 @@ class ExternalCalls:
             self.existing_pr = "https://github.com/example/project/pull/1"
             return subprocess.CompletedProcess(argv, 0, f"{self.existing_pr}\n", "")
         if "pr" in argv and "edit" in argv:
+            body_path = Path(argv[argv.index("--body-file") + 1])
+            self.published_bodies.append(body_path.read_text(encoding="utf-8"))
+            self.published_body_paths.append(body_path)
+            self.published_body_modes.append(body_path.stat().st_mode & 0o777)
             if self.fail_update:
                 return subprocess.CompletedProcess(argv, 1, "", "update failed")
             if self.move_head_on_update:
@@ -173,6 +189,7 @@ def invoke(tmp_path: Path, monkeypatch, calls: ExternalCalls, *extra: str):
     repo = repository(tmp_path)
     body = tmp_path / "body.md"
     body.write_text(contextual_body(), encoding="utf-8")
+    calls.original_body = body
     calls.head = git(repo, "rev-parse", "HEAD")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -368,6 +385,23 @@ def test_publish_revalidates_head_remote_and_identity_after_new_pr_creation(
         assert not any("checks" in call for call in calls.calls)
 
 
+def test_new_pr_uses_validated_body_snapshot_when_source_changes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    calls.mutate_body_on_repo_view = True
+
+    _, rc, _, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    assert calls.original_body is not None
+    assert calls.original_body.read_text(encoding="utf-8") == "replaced after validation\n"
+    assert calls.published_bodies == [contextual_body()]
+    assert calls.published_body_modes == [0o600]
+    assert calls.published_body_paths != [calls.original_body]
+    assert all(not path.exists() for path in calls.published_body_paths)
+
+
 def test_contextual_body_gate_rejects_malformed_or_unsafe_schema() -> None:
     valid = contextual_body()
     cases = {
@@ -481,9 +515,27 @@ def test_publish_reuses_existing_pr_and_replaces_title_and_body(tmp_path: Path, 
     assert not any("create" in call for call in calls.calls)
     edit = next(call for call in calls.calls if "edit" in call)
     assert edit[edit.index("--title") + 1] == "feat(loom): safe"
-    assert edit[edit.index("--body-file") + 1] == str(body)
+    assert edit[edit.index("--body-file") + 1] != str(body)
+    assert calls.published_bodies == [contextual_body()]
     assert sum("checks" in call for call in calls.calls) == 1
     assert "pull/7" in out.getvalue()
+
+
+def test_existing_pr_update_uses_validated_body_snapshot_when_source_changes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("", "https://github.com/example/project/pull/7")
+    calls.mutate_body_on_repo_view = True
+
+    _, rc, _, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    assert calls.original_body is not None
+    assert calls.original_body.read_text(encoding="utf-8") == "replaced after validation\n"
+    assert calls.published_bodies == [contextual_body()]
+    assert calls.published_body_modes == [0o600]
+    assert calls.published_body_paths != [calls.original_body]
+    assert all(not path.exists() for path in calls.published_body_paths)
 
 
 def test_publish_marks_matching_draft_ready_after_context_update(
