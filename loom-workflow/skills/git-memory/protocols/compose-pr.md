@@ -1,12 +1,19 @@
-# Protocol: Composing a PR body with `## Memory` section
+# Protocol: Contributing durable memory to a PR body
 
-When you are about to open a PR (`gh pr create`), decide whether to add
-a `## Memory` section on top of Claude Code's standard template.
+When you are about to open a PR (`gh pr create`), classify whether the change
+has durable memory. Ship owns the top-level PR body schema for Loom changes;
+git-memory contributes earned Decision, Learning, and Gotcha content; it does not own
+or create a competing top-level schema.
 
-## Step 1 — Assemble CC's standard template first
+## Step 1 — Identify the caller's body schema
 
-Claude Code's default `gh pr create` template is stable and should not
-be modified:
+For a Loom change, preserve Ship's complete contextual headings and place
+durable material in the corresponding `## Decisions` section. Learning and
+Gotcha material may appear there or in the most relevant contextual section.
+Do not add a second Summary/Test-plan/Memory hierarchy.
+
+For a non-Loom caller without an owning schema, use its repository-provided PR
+template. If none exists, a minimal body may use:
 
 ```markdown
 ## Summary
@@ -18,8 +25,7 @@ be modified:
 🤖 Generated with [Claude Code]...
 ```
 
-Do not rewrite, reorder, or merge memory content into `## Summary` or
-`## Test plan`. The `## Memory` section is **additive**.
+Do not rewrite or reorder a caller-owned body merely to carry memory.
 
 ## Step 2 — Decide if the PR is memory-worthy
 
@@ -35,20 +41,23 @@ A PR is memory-worthy if **any** of these is true:
 - The PR touches architecture / flow / state in a way a diagram would
   clarify
 
-**If any apply, the PR is memory-worthy and `## Memory` is REQUIRED**
-— not optional. A memory-worthy PR that closes with no `## Memory`
-section (and no memory trailers on its commits) is the exact failure
-this protocol exists to prevent: the substrate ships empty and the
-"why" is lost.
+If any apply, the PR is memory-worthy. For a Loom PR, contribute the material
+to Ship's contextual schema, primarily `## Decisions`, and keep the raw memory
+footer described below. Do not create a `## Memory` top-level section. For a
+non-Loom PR whose caller has no place for durable rationale, `## Memory` is
+required. A memory-worthy PR that closes with neither contextual memory nor
+memory trailers is the exact failure this protocol exists to prevent: the
+substrate ships empty and the "why" is lost.
 
-If **none** apply, the PR is not memory-worthy — skip `## Memory`
-entirely. A non-memory-worthy PR without `## Memory` is the correct
-signal that the diff speaks for itself. See "When to skip" below for
-the legitimate skip cases.
+If none apply, the PR is not memory-worthy. Add neither memory prose nor raw
+memory trailers; the diff speaks for itself.
 
-## Step 3 — Draft the `## Memory` section
+## Step 3 — Draft the durable contribution
 
-Layout with sub-headings — omit any sub that has nothing to say.
+For Loom, express the chosen option, alternatives, evidence, trade-offs, and
+outcome under Ship's `## Decisions`; place earned Learning or Gotcha content in
+the most relevant existing section. For a non-Loom body without an owning
+location, use this layout and omit any sub that has nothing to say:
 
 ```markdown
 ## Memory
@@ -92,9 +101,10 @@ Guidelines per sub-heading:
 Two carriers land in the PR body, in this exact order — **both are
 mandatory** for a memory-worthy PR:
 
-1. **`## Memory` prose section** — inserted **after `## Test plan`**
-   (or after the last CC standard section) and **before the
-   `🤖 Generated with` footer**.
+1. **Prose carrier** — for Loom, the content already placed in Ship's
+   contextual sections; for non-Loom, a `## Memory` prose section inserted
+   after the caller's last standard section and before any generated-attribution
+   footer.
 2. **Raw trailer footer** — a blank-line-separated raw trailer block
    (`Decision:` / `Learning:` / `Gotcha:` — unbolded, one key per
    line) as the **absolute last block in the PR body**, placed
@@ -119,7 +129,7 @@ mandatory** for a memory-worthy PR:
    keep each trailer line short — a wrapped continuation without
    leading whitespace breaks trailer parsing too.
 
-Anchor rule for the `## Memory` section (carrier 1 above):
+Anchor rule for a non-Loom `## Memory` section (carrier 1 above):
 
 1. Search PR body for the line starting with `🤖 Generated with`
 2. Insert one blank line + `## Memory` section + one blank line,
@@ -129,8 +139,8 @@ Anchor rule for the `## Memory` section (carrier 1 above):
 
 Anchor rule for the raw trailer footer (carrier 2 above):
 
-1. After everything else is assembled (Summary, Test plan,
-   `## Memory`, the `🤖 Generated with` footer), append one blank
+1. After everything else is assembled (including Ship's contextual sections
+   or a non-Loom `## Memory`, plus any generated footer), append one blank
    line, then the raw trailer block, with **nothing after it**.
 2. The trailer block is blank-line-separated from the prose above
    it — not internally; its own lines run consecutively.
