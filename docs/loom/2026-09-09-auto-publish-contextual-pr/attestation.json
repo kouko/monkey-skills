@@ -1,0 +1,54 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-auto-publish-contextual-pr",
+  "content_digest": "ac603469a421a74a53fb6f2e8be84434a34718c4",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 loom-code/scripts/loom_checker.py --list-rules",
+      "artifact": "loom-code/scripts/loom_checker.py",
+      "result": "pass",
+      "command_digest": "b7da2230c9e1420839f1d60abc60c6cdcbd76bb5de5652a35b61e5cc9a61a4cf"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 loom-code/scripts/check_mechanisms.py --baseline origin/main",
+      "artifact": "loom-code/scripts/check_mechanisms.py",
+      "result": "pass",
+      "command_digest": "c43a658301482aeb74b7a75718736c03507e803302b76d9f2bf4945c86ce0c75"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 loom-code/scripts/check_contract_citations.py",
+      "artifact": "loom-code/scripts/check_contract_citations.py",
+      "result": "pass",
+      "command_digest": "19fbf1bb07be26ebd7e06cc17c1eb9a4a6d0880031c5f1707bd18f97608e11c6"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-code-review",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "closing-skill-review",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
