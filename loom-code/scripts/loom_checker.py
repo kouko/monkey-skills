@@ -3137,6 +3137,26 @@ def _cmd_publish_trusted(
             )
             if ready_result is None:
                 return 1
+            if git_text(repo, "rev-parse", "HEAD") != head:
+                return _publish_block("live HEAD moved after PR readiness", err)
+            current_origin, origin_error = _publish_origin_state(repo, branch)
+            if origin_error or current_origin != origin_url:
+                return _publish_block(
+                    f"publication identity changed after PR readiness: "
+                    f"{origin_error or 'origin URL changed'}", err,
+                )
+            post_ready_remote = _external_or_block(
+                [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+                 f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+            )
+            if post_ready_remote is None:
+                return 1
+            ready_remote = [
+                line.split()[0] for line in post_ready_remote.stdout.splitlines()
+                if line.strip()
+            ]
+            if ready_remote != [head]:
+                return _publish_block("remote branch moved after PR readiness", err)
         out.write(f"PR updated and ready: {pr_url}\n")
         return _observe_required_ci(
             pr_url, trusted_gh=trusted_gh, repo=repo, env=env, out=out, err=err

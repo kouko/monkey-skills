@@ -48,6 +48,9 @@ class ExternalCalls:
         self.existing_pr_draft = draft
         self.move_head_on_update = False
         self.move_remote_on_update = False
+        self.move_head_on_ready = False
+        self.move_remote_on_ready = False
+        self.change_pushurl_on_ready = False
         self.change_pushurl_on_remote_read = False
         self.switch_branch_on_remote_read = False
         self.change_pushurl_on_pr_list = False
@@ -111,6 +114,13 @@ class ExternalCalls:
         if "pr" in argv and "ready" in argv:
             if self.fail_ready:
                 return subprocess.CompletedProcess(argv, 1, "", "ready failed")
+            if self.move_head_on_ready:
+                git(Path(kwargs["cwd"]), "commit", "--allow-empty", "-q", "-m", "moved")
+            if self.move_remote_on_ready:
+                self.remote_head = "c" * 40
+            if self.change_pushurl_on_ready:
+                git(Path(kwargs["cwd"]), "config", "remote.origin.pushurl",
+                    "git@github.com:attacker/project.git")
             self.existing_pr_draft = False
             return subprocess.CompletedProcess(argv, 0, "", "")
         if "pr" in argv and "checks" in argv:
@@ -306,6 +316,10 @@ def test_publish_pushes_exact_head_and_creates_one_pr(tmp_path: Path, monkeypatc
 
 
 def test_publish_reuses_existing_pr_and_replaces_title_and_body(tmp_path: Path, monkeypatch) -> None:
+    """Ground gh pr edit URL, --title, and --body-file.
+
+    https://cli.github.com/manual/gh_pr_edit
+    """
     calls = ExternalCalls("", "https://github.com/example/project/pull/7")
     repo = repository(tmp_path)
     calls.head = git(repo, "rev-parse", "HEAD")
@@ -334,6 +348,10 @@ def test_publish_reuses_existing_pr_and_replaces_title_and_body(tmp_path: Path, 
 def test_publish_marks_matching_draft_ready_after_context_update(
     tmp_path: Path, monkeypatch
 ) -> None:
+    """Ground gh pr ready <url>.
+
+    https://cli.github.com/manual/gh_pr_ready
+    """
     calls = ExternalCalls(
         "", "https://github.com/example/project/pull/7", draft=True
     )
@@ -386,6 +404,29 @@ def test_publish_revalidates_live_head_and_remote_after_existing_pr_update(
         assert rc == 1, mutation
         assert message in err, mutation
         assert not any("ready" in call or "checks" in call for call in calls.calls)
+
+
+def test_publish_revalidates_head_remote_and_identity_after_draft_ready(
+    tmp_path: Path, monkeypatch
+) -> None:
+    cases = {
+        "move_head_on_ready": "live HEAD moved after PR readiness",
+        "move_remote_on_ready": "remote branch moved after PR readiness",
+        "change_pushurl_on_ready": "publication identity changed after PR readiness",
+    }
+    for mutation, message in cases.items():
+        case = tmp_path / mutation
+        case.mkdir()
+        calls = ExternalCalls(
+            "", "https://github.com/example/project/pull/7", draft=True
+        )
+        setattr(calls, mutation, True)
+
+        _, rc, _, err = invoke(case, monkeypatch, calls)
+
+        assert rc == 1, mutation
+        assert message in err, mutation
+        assert not any("checks" in call for call in calls.calls)
 
 
 def test_publish_requires_authorization_and_absolute_body(tmp_path: Path, monkeypatch) -> None:
