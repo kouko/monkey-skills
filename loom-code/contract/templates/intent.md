@@ -5,6 +5,7 @@ needs-design: yes | no — <reason>
 map: <map-id>                # optional
 evidence: [<paths>]          # optional; write-spec/review must read it
 status: open                 # open | confirmed <date> | closed <date> — PR #<N> | withdrawn — <reason>; absent = open
+publication: automatic — authorized <YYYY-MM-DD> by <name> # optional; only after the user explicitly authorizes automatic publication
 lane: express | gate-only    # optional; absent = repo default (KICKOFF-DEFAULTS.md default-lane); a bare name is never legal — declared form: `lane: <name> — declared <YYYY-MM-DD> by <name>`; switch form: `lane: <name> — switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>`; last line wins; only the user writes it
 
 ## Problem

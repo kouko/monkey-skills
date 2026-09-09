@@ -105,6 +105,15 @@ def test_current_surfaces_do_not_restore_legacy_publication_ledgers() -> None:
         assert "probe ledger" not in surface
 
 
+def test_git_memory_defers_loom_consent_and_schema_to_ship() -> None:
+    assert "git-memory never re-confirms a Loom publication" in MEMORY_PR
+    assert "canonical intent authorization" in MEMORY_PR
+    assert "single legacy Ship decision" in MEMORY_PR
+    assert "loom-code:finishing-a-development-branch" not in MEMORY_PR
+    assert "For a Loom change" in MEMORY_PR
+    assert "follow Ship's conditional Mermaid rule" in MEMORY_PR
+
+
 def test_build_has_no_evidence_accounting() -> None:
     assert "no dispatch ledger is created" in BUILD
     assert "finalize-review" in BUILD

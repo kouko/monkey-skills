@@ -166,6 +166,12 @@ RULES.append((
     "successful executions, command identities, and passing reviewer verdicts validate "
     "without replaying package tests or adversarial probes.",
 ))
+RULES.append((
+    "push.contextual-body",
+    "The exact pull-request body carries Ship's nine top-level contextual headings "
+    "exactly once and in order, with no competing Memory heading or explicit claim "
+    "to expose private or hidden chain-of-thought.",
+))
 
 
 class UsageError(Exception):
@@ -2669,6 +2675,29 @@ def _publish_block(reason: str, err) -> int:
     return report([("push.attestation", reason)], err)
 
 
+CONTEXTUAL_PR_HEADINGS = (
+    "Context", "Intended outcome", "Scope", "Decisions", "Implementation",
+    "Behaviour change", "Verification", "Risks and rollback", "Follow-ups",
+)
+
+
+def validate_contextual_pr_body(body: str) -> str | None:
+    """Recompute the structural PR-body floor; semantic truth stays review-owned."""
+    headings = re.findall(r"^## ([^#\n].*)$", body, flags=re.MULTILINE)
+    if headings != list(CONTEXTUAL_PR_HEADINGS):
+        return (
+            "PR body must contain Ship's nine top-level contextual headings "
+            "exactly once and in order, with no competing top-level heading"
+        )
+    if re.search(
+        r"\b(?:private|hidden)(?:\s+or\s+(?:private|hidden))?\s+chain-of-thought\b",
+        body,
+        flags=re.IGNORECASE,
+    ):
+        return "PR body must not claim to expose private or hidden chain-of-thought"
+    return None
+
+
 def _publish_origin_state(repo: Path, expected_branch: str) -> tuple[str | None, str | None]:
     """Return the single literal origin URL or a publication identity error."""
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
@@ -2774,18 +2803,16 @@ def _intent_authorizes_publication(
         committed = git_text(repo, "show", f"HEAD:{intent_rel}")
     except UsageError:
         return False, "automatic publication requires a committed intent at HEAD"
-    front, sections = parse_document(committed)
+    front, _sections = parse_document(committed)
     if not re.fullmatch(r"confirmed \d{4}-\d{2}-\d{2}", front.get("status", "")):
         return False, "committed intent is not confirmed"
-    outcome = " ".join(sections.get("Proposed outcome", "").split())
-    authorized = bool(re.search(
-        r"\bconfirmation of (?:the|this) intent authorizes Loom to publish\b"
-        r".*\bautomatically\b",
-        outcome,
-        flags=re.IGNORECASE,
-    ))
-    if not authorized:
-        return False, "committed intent has no automatic-publication authorization"
+    publication = front.get("publication", "")
+    match = re.fullmatch(
+        r"automatic — authorized (\d{4}-\d{2}-\d{2}) by (\S(?:.*\S)?)",
+        publication,
+    )
+    if match is None or not is_real_date(match.group(1)):
+        return False, "committed intent has no valid automatic-publication authorization"
     return True, None
 
 
@@ -2898,6 +2925,14 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     if isinstance(parsed, str):
         return _publish_usage(parsed, err)
     title, body_file, intent_file, authorized = parsed
+
+    try:
+        body = body_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return _publish_usage(f"cannot read PR body as UTF-8: {exc}", err)
+    body_error = validate_contextual_pr_body(body)
+    if body_error:
+        return report([("push.contextual-body", body_error)], err)
 
     redirected = sorted(
         key for key in os.environ
@@ -3172,6 +3207,25 @@ def _cmd_publish_trusted(
     url = create_result.stdout.strip()
     if not url:
         return _publish_block("gh pr create returned no pull request URL", err)
+    if git_text(repo, "rev-parse", "HEAD") != head:
+        return _publish_block("live HEAD moved after PR creation", err)
+    current_origin, origin_error = _publish_origin_state(repo, branch)
+    if origin_error or current_origin != origin_url:
+        return _publish_block(
+            f"publication identity changed after PR creation: "
+            f"{origin_error or 'origin URL changed'}", err,
+        )
+    post_create_remote = _external_or_block(
+        [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+         f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+    )
+    if post_create_remote is None:
+        return 1
+    created_remote = [
+        line.split()[0] for line in post_create_remote.stdout.splitlines() if line.strip()
+    ]
+    if created_remote != [head]:
+        return _publish_block("remote branch moved after PR creation", err)
     out.write(f"Published PR: {url}\n")
     return _observe_required_ci(
         url, trusted_gh=trusted_gh, repo=repo, env=env, out=out, err=err

@@ -244,7 +244,10 @@ recorded makes the flow look quieter than it is.
 
 **On "yes":**
 
-1. Write `status: confirmed <date>` into the intent.
+1. Write `status: confirmed <date>` into the intent. When the confirmed
+   restatement explicitly authorizes automatic publication, also write
+   `publication: automatic — authorized <date> by <name>`; never derive it
+   from status or prose.
 2. Commit it. The message is `docs(loom): intent <change-id> confirmed`,
    and its body **must contain the `needs-design:` line verbatim** — the
    checker compares the two strings character for character.

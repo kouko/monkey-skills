@@ -134,6 +134,9 @@ mechanisms:
   - id: push.attestation
     class: checker-rule
     eval: loom-code/scripts/test_loom_attestation.py::test_push_reuses_matching_attestation_without_subprocesses
+  - id: push.contextual-body
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_publish.py::test_contextual_body_gate_rejects_malformed_or_unsafe_schema
   - id: spec.req-grammar
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_intake.py::test_a_skipped_req_number_is_blocked
@@ -205,6 +208,7 @@ mechanisms:
   - {id: "artifact:intent.map",                 class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:intent.evidence",            class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:intent.status",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
+  - {id: "artifact:intent.publication",         class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_intent_contract_declares_machine_readable_publication_authorization"}
   - {id: "artifact:intent.Problem",             class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:intent.Proposed outcome",    class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}
   - {id: "artifact:intent.Acceptance",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_markdown_templates_carry_declared_fields"}

@@ -42,8 +42,9 @@ A PR is memory-worthy if **any** of these is true:
   clarify
 
 If any apply, the PR is memory-worthy. For a Loom PR, contribute the material
-to Ship's contextual schema, primarily `## Decisions`, and keep the raw memory
-footer described below. Do not create a `## Memory` top-level section. For a
+to Ship's contextual schema, primarily `## Decisions`; Ship owns the complete
+body and publication boundary. Do not create a `## Memory` top-level section or
+append a second raw-footer contract. For a
 non-Loom PR whose caller has no place for durable rationale, `## Memory` is
 required. A memory-worthy PR that closes with neither contextual memory nor
 memory trailers is the exact failure this protocol exists to prevent: the
@@ -96,13 +97,12 @@ Guidelines per sub-heading:
   changes. Prefix with a one-sentence prose description so screen
   readers have context.
 
-## Step 4 — Placement and anchoring
+## Step 4 — Non-Loom placement and anchoring
 
-Two carriers land in the PR body, in this exact order — **both are
-mandatory** for a memory-worthy PR:
+This step applies only to a non-Loom caller without an owning schema. Two
+carriers land in that PR body, in this exact order:
 
-1. **Prose carrier** — for Loom, the content already placed in Ship's
-   contextual sections; for non-Loom, a `## Memory` prose section inserted
+1. **Prose carrier** — a `## Memory` prose section inserted
    after the caller's last standard section and before any generated-attribution
    footer.
 2. **Raw trailer footer** — a blank-line-separated raw trailer block
@@ -139,8 +139,8 @@ Anchor rule for a non-Loom `## Memory` section (carrier 1 above):
 
 Anchor rule for the raw trailer footer (carrier 2 above):
 
-1. After everything else is assembled (including Ship's contextual sections
-   or a non-Loom `## Memory`, plus any generated footer), append one blank
+1. After everything else is assembled (including the non-Loom `## Memory`
+   and any generated footer), append one blank
    line, then the raw trailer block, with **nothing after it**.
 2. The trailer block is blank-line-separated from the prose above
    it — not internally; its own lines run consecutively.
@@ -177,14 +177,15 @@ Learning: Google Auth Console 2025-01 UI relabels scopes
 
 ## Step 5 — Diagram venue choice
 
-Use the decision tree from `standards/memory-conventions.md`:
+For a Loom change, follow Ship's conditional Mermaid rule exactly. For a
+non-Loom caller, use the decision tree from `standards/memory-conventions.md`:
 
 - PR body → **Mermaid** preferred (GitHub renders it natively)
 - Complex diagrams (class / ER / sequence / gantt) → Mermaid only
 - For very small diagrams (< 4 nodes, pure flow), ASCII also fine
   — but Mermaid is the default for PR body
 
-## Example — a complete memory-worthy PR body
+## Example — a complete non-Loom memory-worthy PR body
 
 ```markdown
 ## Summary
@@ -279,57 +280,18 @@ the two-layer privacy check before it is used:
    BLOCK (never as PASS). This is an explicit branch, not an emergent
    default.
 
-## Step 7 — Determine whether confirmation is needed
+## Step 7 — Apply caller-owned consent
 
-### Delegated loom close-out exception
+For a Loom Ship caller, git-memory never re-confirms a Loom publication. Ship
+passes either canonical intent authorization or a single legacy Ship decision;
+git-memory only contributes content and runs the privacy gate. A privacy BLOCK
+still stops publication.
 
-Evaluate this condition before any confirmation action. When
-`loom-code:finishing-a-development-branch` delegates this protocol and the
-initiating request already authorizes the commit and PR, the close-out
-orchestrator owns consent. Git-memory drafts the memory carrier and does not
-re-confirm that authorized publish action. It may proceed only after the
-privacy gate PASSes. Privacy BLOCK remains a required human stop; delegation
-never authorizes a blocked PR body.
-
-### All other calls — confirm before opening
-
-Otherwise — including a direct git-memory invocation, a non-loom caller, or a
-loom close-out whose initiating request does not authorize publication — before
-firing `gh pr create`, summarize the `## Memory` draft for the user:
+An independent non-Loom caller without prior publication authorization must
+confirm before firing `gh pr create`. Summarize the `## Memory` draft:
 
 > "PR body includes a `## Memory` section with 1 Decision, 1 Learning,
 > 1 Gotcha, and a before/after architecture diagram. OK to open?"
 
 Adjust based on user feedback. Err on the side of less — deleting a
 sub-heading is cheaper than over-drafting.
-
-## Step 8 — Verify substrate survival before the branch closes
-
-The confirmed root cause of lost memory is **authoring-time
-under-recording**: a memory-worthy PR closing with an empty
-substrate (no commit trailer, no `## Memory`) and **no signal that
-it's empty**. Composing the section is not enough — verify it is
-actually retrievable from **both** carriers before the branch closes
-/ the PR merges.
-
-This verify is **enforced as an executable gate by
-`loom-code:finishing-a-development-branch`**: its Default-flow close-out
-runs `--verify HEAD` and STOPs on a memory-worthy branch whose commit
-carrier is empty. The checks below describe what that gate executes.
-
-For a memory-worthy PR (Step 2), the orchestrator runs both checks:
-
-1. **Commit carrier** — run
-   `scripts/memory-grep.sh --verify <merge-commit-or-ref>` against the
-   commit that carries the memory to main (the squash/merge commit, or
-   the close-out commit). It exits **0** if a
-   `Decision:`/`Learning:`/`Gotcha:` trailer is retrievable from that
-   ref's message body, **4** if the substrate is empty.
-2. **PR carrier** — confirm the PR `## Memory` section is present
-   (`gh pr view` / `memory-grep.sh` already extracts it).
-
-An empty result — `--verify` exits **4** **and** no `## Memory`
-section — is a flag to **fix before merge**, not to ignore. Re-author
-the missing carrier (add the trailers and/or the `## Memory` section),
-then re-run the verify. Do not close a memory-worthy branch on an
-empty substrate.

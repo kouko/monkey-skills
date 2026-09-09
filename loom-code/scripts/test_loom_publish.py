@@ -8,6 +8,18 @@ from pathlib import Path
 
 import loom_checker
 
+CONTEXT_HEADINGS = (
+    "Context", "Intended outcome", "Scope", "Decisions", "Implementation",
+    "Behaviour change", "Verification", "Risks and rollback", "Follow-ups",
+)
+
+
+def contextual_body(*, mermaid: bool = False) -> str:
+    body = "\n\n".join(f"## {heading}\nEvidence." for heading in CONTEXT_HEADINGS)
+    if mermaid:
+        body += "\n\n```mermaid\nflowchart LR\n  A --> B\n```"
+    return body + "\n"
+
 
 def trusted_executable(name: str) -> str:
     return "/usr/bin/git" if name == "git" else "/usr/local/bin/gh"
@@ -43,6 +55,9 @@ class ExternalCalls:
         self.move_remote_on_pr_list = False
         self.cross_repository_pr = False
         self.fail_create_once = False
+        self.move_head_on_create = False
+        self.move_remote_on_create = False
+        self.change_pushurl_on_create = False
         self.fail_update = False
         self.fail_ready = False
         self.existing_pr_draft = draft
@@ -101,6 +116,13 @@ class ExternalCalls:
             if self.fail_create_once:
                 self.fail_create_once = False
                 return subprocess.CompletedProcess(argv, 1, "", "temporary failure")
+            if self.move_head_on_create:
+                git(Path(kwargs["cwd"]), "commit", "--allow-empty", "-q", "-m", "moved")
+            if self.move_remote_on_create:
+                self.remote_head = "b" * 40
+            if self.change_pushurl_on_create:
+                git(Path(kwargs["cwd"]), "config", "remote.origin.pushurl",
+                    "git@github.com:attacker/project.git")
             self.existing_pr = "https://github.com/example/project/pull/1"
             return subprocess.CompletedProcess(argv, 0, f"{self.existing_pr}\n", "")
         if "pr" in argv and "edit" in argv:
@@ -138,7 +160,7 @@ class ExternalCalls:
 def invoke(tmp_path: Path, monkeypatch, calls: ExternalCalls, *extra: str):
     repo = repository(tmp_path)
     body = tmp_path / "body.md"
-    body.write_text("## Summary\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     calls.head = git(repo, "rev-parse", "HEAD")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -159,15 +181,13 @@ def invoke(tmp_path: Path, monkeypatch, calls: ExternalCalls, *extra: str):
 def publication_intent(repo: Path, *, automatic: bool, change_id: str = "change") -> Path:
     intent = repo / "docs" / "loom" / "intent" / f"{change_id}.md"
     intent.parent.mkdir(parents=True, exist_ok=True)
-    outcome = (
-        "Confirmation of the intent authorizes Loom to publish the completed "
-        "branch automatically."
-        if automatic
-        else "Publish the completed branch after a separate Ship decision."
+    publication = (
+        "publication: automatic — authorized 2026-09-09 by Test\n"
+        if automatic else ""
     )
     intent.write_text(
-        "# Change\nstatus: confirmed 2026-09-09\n\n"
-        f"## Proposed outcome\n{outcome}\n",
+        "# Change\nstatus: confirmed 2026-09-09\n"
+        f"{publication}\n## Proposed outcome\n任何語言的敘述都不控制發布授權。\n",
         encoding="utf-8",
     )
     return intent
@@ -191,7 +211,7 @@ def test_confirmed_current_intent_publishes_without_ship_reask(
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "authorize publication")
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     calls.head = git(repo, "rev-parse", "HEAD")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -221,7 +241,7 @@ def test_legacy_intent_requires_one_publication_decision(
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "legacy evidence")
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     calls.head = git(repo, "rev-parse", "HEAD")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -251,7 +271,7 @@ def test_unrelated_intent_cannot_authorize_attested_change(
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "attest change")
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -283,7 +303,7 @@ def test_untracked_or_mutated_intent_cannot_authorize(
         git(repo, "commit", "-q", "-m", "attest change")
         intent = publication_intent(repo, automatic=True)
         body = case / "body.md"
-        body.write_text("body\n", encoding="utf-8")
+        body.write_text(contextual_body(), encoding="utf-8")
         monkeypatch.chdir(repo)
         monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
         monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -315,6 +335,70 @@ def test_publish_pushes_exact_head_and_creates_one_pr(tmp_path: Path, monkeypatc
     assert "Publication target: github.com/example/project base main" in out
 
 
+def test_publish_revalidates_head_remote_and_identity_after_new_pr_creation(
+    tmp_path: Path, monkeypatch
+) -> None:
+    cases = {
+        "move_head_on_create": "live HEAD moved after PR creation",
+        "move_remote_on_create": "remote branch moved after PR creation",
+        "change_pushurl_on_create": "publication identity changed after PR creation",
+    }
+    for mutation, message in cases.items():
+        case = tmp_path / mutation
+        case.mkdir()
+        calls = ExternalCalls("")
+        setattr(calls, mutation, True)
+
+        _, rc, _, err = invoke(case, monkeypatch, calls)
+
+        assert rc == 1, mutation
+        assert message in err, mutation
+        assert not any("checks" in call for call in calls.calls)
+
+
+def test_contextual_body_gate_rejects_malformed_or_unsafe_schema() -> None:
+    valid = contextual_body()
+    cases = {
+        "missing": valid.replace("## Scope\nEvidence.\n\n", ""),
+        "duplicate": valid + "\n## Context\nAgain.\n",
+        "out-of-order": valid.replace(
+            "## Context\nEvidence.\n\n## Intended outcome\nEvidence.",
+            "## Intended outcome\nEvidence.\n\n## Context\nEvidence.",
+        ),
+        "competing": valid + "\n## Memory\nLegacy.\n",
+        "hidden-cot": valid.replace("Evidence.", "private chain-of-thought", 1),
+    }
+    for name, body in cases.items():
+        assert loom_checker.validate_contextual_pr_body(body) is not None, name
+
+
+def test_contextual_body_gate_accepts_simple_and_mermaid_bodies() -> None:
+    assert loom_checker.validate_contextual_pr_body(contextual_body()) is None
+    assert loom_checker.validate_contextual_pr_body(contextual_body(mermaid=True)) is None
+
+
+def test_publish_rejects_invalid_contextual_body_before_network(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    repo = repository(tmp_path)
+    body = tmp_path / "body.md"
+    body.write_text("## Context\nIncomplete.\n", encoding="utf-8")
+    monkeypatch.chdir(repo)
+    monkeypatch.setattr(loom_checker, "run_publish_external", calls)
+    monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
+    err = StringIO()
+
+    rc = loom_checker.cmd_publish([
+        "--confirm-authorized", "--title", "feat(loom): safe",
+        "--body-file", str(body),
+    ], StringIO(), err)
+
+    assert rc == 1
+    assert "push.contextual-body" in err.getvalue()
+    assert calls.calls == []
+
+
 def test_publish_reuses_existing_pr_and_replaces_title_and_body(tmp_path: Path, monkeypatch) -> None:
     """Ground gh pr edit URL, --title, and --body-file.
 
@@ -325,7 +409,7 @@ def test_publish_reuses_existing_pr_and_replaces_title_and_body(tmp_path: Path, 
     calls.head = git(repo, "rev-parse", "HEAD")
     calls.remote_head = calls.head
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
     monkeypatch.setattr(loom_checker, "_cmd_push", lambda *args, **kwargs: 0)
@@ -453,7 +537,7 @@ def test_publish_rejects_git_common_dir_before_network(tmp_path: Path, monkeypat
     calls = ExternalCalls("")
     repo = repository(tmp_path)
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     monkeypatch.setenv("GIT_COMMON_DIR", str(tmp_path / "other.git"))
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -478,7 +562,7 @@ def test_publish_does_not_replay_functional_executables(tmp_path: Path, monkeypa
 
     repo = repository(tmp_path)
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     calls.head = git(repo, "rev-parse", "HEAD")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
@@ -497,7 +581,7 @@ def test_publish_rejects_diverged_remote_before_push(tmp_path: Path, monkeypatch
     calls.head = git(repo, "rev-parse", "HEAD")
     calls.remote_head = "f" * 40
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     monkeypatch.chdir(repo)
     monkeypatch.setattr(loom_checker, "run_publish_external", calls)
     monkeypatch.setattr(loom_checker, "_cmd_push", lambda *args, **kwargs: 0)
@@ -543,7 +627,7 @@ def test_publish_rejects_git_redirect_config_before_push(tmp_path: Path, monkeyp
         "remote.origin.uploadpack": "/tmp/attacker-upload-pack",
     }
     body = tmp_path / "body.md"
-    body.write_text("body\n", encoding="utf-8")
+    body.write_text(contextual_body(), encoding="utf-8")
     for key, value in redirects.items():
         git(repo, "config", key, value)
         calls.head = git(repo, "rev-parse", "HEAD")

@@ -17,9 +17,10 @@ remain English.
 ## 1. Confirm acceptance
 
 Read the intent and blind-run report when one was required. A confirmed intent
-that explicitly says its confirmation authorizes automatic publication carries
-that decision into Ship; do not ask again. A legacy intent without that positive
-evidence requires one publication decision before anything leaves the machine.
+with `publication: automatic — authorized <YYYY-MM-DD> by <name>` carries that
+decision into Ship; do not ask again. Intent prose, status, or contract version
+never implies authorization. A legacy intent without that machine-readable field
+requires one publication decision before anything leaves the machine.
 The user may still explicitly stop publication before the outward action.
 
 ## 2. Prepare publication text

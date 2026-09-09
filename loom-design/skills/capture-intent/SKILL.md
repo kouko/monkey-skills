@@ -315,7 +315,10 @@ the intent and restate again; there is no limit on rounds here.
 
 **On "yes":**
 
-1. Write `status: confirmed <date>` into the intent, and, when step 3 ran,
+1. Write `status: confirmed <date>` into the intent. When the confirmed
+   restatement explicitly authorizes automatic publication, also write
+   `publication: automatic — authorized <date> by <name>`; never derive it
+   from status or prose. When step 3 ran, write
    `ratified-by: <name> <date>` into `PRINCIPLES.md`.
 2. Commit with the message `docs(loom): intent <change-id> confirmed`. Its
    body **must contain the `needs-design:` line verbatim** — the checker

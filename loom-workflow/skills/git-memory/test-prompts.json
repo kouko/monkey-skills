@@ -14,8 +14,8 @@
     {
       "id": 2,
       "category": "edge-case",
-      "prompt": "Compose a PR body for a refactor that touched 23 files across 4 modules. The change extracts a shared validation helper. Include a ## Memory section documenting the alternatives considered (inline duplication / per-module helpers / shared library) and why we chose shared library.",
-      "expected_behavior": "Skill produces PR body with summary + test plan + ## Memory section listing the 3 alternatives considered with one-line rationale each, and the chosen path with explanation. The ## Memory section uses the standard structure (Decision / Learning / Gotcha conventions where applicable).",
+      "prompt": "For a non-Loom repository with no PR template, compose a PR body for a refactor that touched 23 files across 4 modules. The change extracts a shared validation helper. Include a ## Memory section documenting the alternatives considered (inline duplication / per-module helpers / shared library) and why we chose shared library.",
+      "expected_behavior": "For this independent non-Loom caller, the skill produces a PR body with summary + test plan + ## Memory section listing the 3 alternatives considered with one-line rationale each, and the chosen path with explanation. The ## Memory section uses the generic Decision / Learning / Gotcha structure where applicable.",
       "edge_case_dimensions": ["large-scale change", "alternatives memory", "PR body discipline"]
     },
     {

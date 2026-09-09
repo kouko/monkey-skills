@@ -95,17 +95,20 @@ minimum useful trailers.
 ### PR create
 
 Before `gh pr create`, read `protocols/compose-pr.md`. For a memory-worthy PR,
-both carriers are mandatory:
+the caller owns the body schema and publication consent. For Loom, contribute
+earned rationale inside Ship's contextual sections; never add `## Memory`, a
+second footer contract, or another confirmation. For a non-Loom caller without
+an owning schema, both generic carriers are used:
 
 1. a rendered `## Memory` section after the standard test-plan content and
    before the generated-attribution footer; and
 2. an unbolded raw `Decision:`/`Learning:`/`Gotcha:` footer as the absolute
    last authored block.
 
-For a routine PR, omit both. Do not alter the standard Summary or Test plan to
-smuggle memory content into them.
+For a routine non-Loom PR, omit both. Do not alter a caller-owned schema to
+smuggle memory content into it.
 
-The rendered section and raw footer serve different readers. The section can
+For non-Loom callers, the rendered section and raw footer serve different readers. The section can
 explain alternatives, learnings, gotchas, and architecture in readable prose.
 The raw footer keeps short keys available to git retrieval. Memory-worthy means
 both are required; neither substitutes for the other. Place Mermaid diagrams
@@ -114,24 +117,20 @@ messages may use a small ASCII diagram, but routine changes need no diagram.
 
 ### Merge and capture verification
 
-Before a memory-worthy PR closes, verify the capture rather than assuming the
-authoring step worked:
+For a non-Loom PR using the generic carriers, verify capture rather than
+assuming the authoring step worked:
 
 - Run `scripts/memory-grep.sh --verify <ref>` for the commit carrier. Exit `0`
   means at least one memory key is text-retrievable; exit `4` means empty.
-- Confirm the PR `## Memory` section is present.
+- Confirm its PR `## Memory` section is present.
 - Use `--verify-merged <ref>` after merge to catch a heading whose keys were
   silently dropped, including a title-only squash result.
 - Use `--verify-strict <ref>` only as a footer-parse diagnostic; it is not the
   durable-lesson path.
 
-An empty result is a flag to fix **before** merge. Branch close-out enforces
-this through `loom-code:finishing-a-development-branch`; verification proves
-that commit-bound capture landed, not that a durable lesson was filed.
-
-This verification is **enforced as an executable gate by
-`loom-code:finishing-a-development-branch`**. The raw-footer mandate itself is
-owned by `protocols/compose-pr.md`; the close-out gate verifies its result.
+An empty result is a flag for that non-Loom caller to fix **before** merge.
+This verification proves commit-bound capture landed; it does not create a
+Loom lifecycle gate or mean that a durable lesson was filed.
 
 Interpret the checks narrowly. Plain `--verify` proves a key is visible in the
 message text, including the mid-body produced by squash. `--verify-merged`
@@ -153,7 +152,8 @@ parsing through `%(trailers)` or
 the PR body followed the best-effort placement mandate.
 
 `git log --grep` and `memory-grep.sh --verify` still find keys that begin at a
-line start. The PR `## Memory` section remains human-readable on GitHub. Both
+line start. A non-Loom PR's `## Memory` section remains human-readable on
+GitHub. Both
 are commit-bound evidence; the committed memory store remains authoritative.
 Never promise that a raw PR trailer footer guarantees structured parsing. Its
 guaranteed floor is grep-level retrieval. A merge commit is also valid when

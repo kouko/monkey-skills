@@ -4,6 +4,7 @@ kind: product
 needs-design: yes — Ship behaviour and the pull-request content visible on GitHub both change, and no current UI-flow document defines the contextual PR structure
 evidence: [loom-code/skills/ship/SKILL.md, loom-workflow/skills/git-memory/protocols/compose-pr.md]
 status: confirmed 2026-09-09
+publication: automatic — authorized 2026-09-09 by kouko
 
 ## Problem
 Loom can finish implementation and verification, but still asks the user again before pushing and opening a pull request. By that point the user may also have forgotten the original problem, decisions, trade-offs, and validation history, while the pull request does not consistently reconstruct that context for a new reader.

@@ -2,6 +2,11 @@
 
 ## [2.0.6] — 2026-09-09 — automatic contextual pull-request publication
 
+budget-exception: push.contextual-body — replaces unenforced PR prose with one
+publish-time structural validation of the exact public body
+budget-exception: artifact:intent.publication — records the user's existing
+publication choice without language-dependent prose inference
+
 - Carry confirmed automatic-publication intent through Ship so a reviewed
   branch is pushed and opened as a ready pull request without a second
   publication prompt, while merge remains separately authorized.
