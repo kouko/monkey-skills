@@ -11,7 +11,8 @@ publication choice without language-dependent prose inference
   branch is pushed and opened as a ready pull request without a second
   publication prompt, while merge remains separately authorized.
 - Compose one self-contained contextual PR body with conditional Mermaid
-  diagrams and no dependency on retired review, probe, or trailer ledgers.
+  diagrams and no dependency on retired review, probe, or trailer ledgers;
+  ignore fenced-code headings while rejecting structurally empty sections.
 - Update a matching existing PR's title and body, convert a draft only after
   publication checks pass, and block on create, update, readiness, repository,
   remote, or live-HEAD failures.

@@ -183,6 +183,14 @@ twice.
    > (You want ___, and when it is done you will be able to ___, ___ and
    > ___. Is that right?)
 
+   For the current contract, automatic publication is the default. This same
+   restatement explicitly says that answering yes authorizes a later non-forced
+   push and Ready PR after Review and publication checks pass, while merge
+   remains a separate decision. Say that the user may explicitly opt out before
+   publication. Write
+   `publication: automatic — authorized <date> by <name>` only after that
+   informed yes; an opt-out leaves the field absent.
+
 2. **The one-way doors found so far**, in consequence form, per
    `references/one-way-door.md` — load that file before deciding whether a
    fork is one; the five classes and the four gates (check, measure,

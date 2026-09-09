@@ -221,11 +221,14 @@ twice, and this is the only stop this station makes.
    > (You want ___, and when it is done you will be able to ___, ___ and
    > ___. Is that right?)
 
-   When automatic publication is proposed, this same restatement explicitly
-   says that answering yes authorizes a later non-forced push and Ready PR
-   after Review and publication checks pass, while merge remains a separate
-   decision. Do not hide that consequence in mechanism language or add it
-   after the user has answered.
+   For the current contract, automatic publication is the default. This same
+   restatement explicitly says that answering yes authorizes a later non-forced
+   push and Ready PR after Review and publication checks pass, while merge
+   remains a separate decision. Say that the user may explicitly opt out before
+   publication. Do not hide that consequence in mechanism language or add it
+   after the user has answered. Write
+   `publication: automatic — authorized <date> by <name>` only after that
+   informed yes; an opt-out leaves the field absent.
 
 2. **The one-way doors found so far**, in consequence form. A one-way door
    is a choice that is expensive or impossible to undo. The reference that

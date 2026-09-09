@@ -119,10 +119,14 @@ def test_git_memory_defers_loom_consent_and_schema_to_ship() -> None:
 
 
 def test_intent_confirmation_discloses_publication_and_separate_merge() -> None:
-    assert "non-forced push" in CAPTURE_PROSE
-    assert "Ready PR" in CAPTURE_PROSE
-    assert "merge remains a separate decision" in CAPTURE_PROSE
-    assert "publication: automatic — authorized <date> by <name>" in CAPTURE
+    for station, prose in ((CAPTURE, CAPTURE_PROSE), (PLAN, PLAN_PROSE)):
+        assert "automatic publication is the default" in prose
+        assert "non-forced push" in prose
+        assert "Ready PR" in prose
+        assert "explicitly opt out" in prose
+        assert "merge remains a separate decision" in prose
+        assert "publication: automatic — authorized <date> by <name>" in station
+        assert "only after that informed yes" in prose
 
 
 def test_station_summaries_distinguish_current_and_legacy_ship_ownership() -> None:

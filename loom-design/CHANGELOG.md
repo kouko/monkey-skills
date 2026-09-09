@@ -17,6 +17,8 @@ is the whole record. Their version numbers never continued here —
 Patch. When the user confirms automatic publication with the intent,
 capture-intent records that choice in the contract's language-independent
 `publication:` field instead of leaving Ship to infer authority from prose.
+The restatement discloses the default non-forced push and Ready PR, explicit
+opt-out, and separate merge choice before that confirmation.
 
 ## [2.0.0] — 2026-09-08 — ledger-free spec handoff
 

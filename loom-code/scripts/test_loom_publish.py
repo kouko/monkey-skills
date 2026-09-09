@@ -391,14 +391,28 @@ def test_contextual_body_gate_accepts_simple_and_mermaid_bodies() -> None:
     assert loom_checker.validate_contextual_pr_body(contextual_body(mermaid=True)) is None
 
 
-def test_contextual_body_gate_rejects_empty_or_placeholder_sections() -> None:
-    placeholders = ("", "  \n\t", "TBD", "TODO", "<describe this section>")
+def test_contextual_body_gate_rejects_structurally_empty_sections() -> None:
+    placeholders = (
+        "", "  \n\t", "...", "Evidence.", "<!-- details later -->",
+        "```text\nplaceholder words inside a fence\n```",
+    )
     for heading in CONTEXT_HEADINGS:
         for placeholder in placeholders:
             body = contextual_body(overrides={heading: placeholder})
             reason = loom_checker.validate_contextual_pr_body(body)
             assert reason is not None, (heading, placeholder)
             assert heading in reason, (heading, placeholder)
+
+
+def test_contextual_body_gate_ignores_headings_inside_fenced_code() -> None:
+    body = contextual_body(overrides={
+        "Implementation": (
+            "The wrapper publishes one reviewed branch.\n\n"
+            "```markdown\n## Summary\nexample only\n## Example\nexample only\n```"
+        ),
+    })
+
+    assert loom_checker.validate_contextual_pr_body(body) is None
 
 
 def test_publish_rejects_invalid_contextual_body_before_network(

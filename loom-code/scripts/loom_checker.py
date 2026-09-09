@@ -2683,26 +2683,48 @@ CONTEXTUAL_PR_HEADINGS = (
 
 def validate_contextual_pr_body(body: str) -> str | None:
     """Recompute the structural PR-body floor; semantic truth stays review-owned."""
-    matches = list(re.finditer(r"^## ([^#\n].*)$", body, flags=re.MULTILINE))
-    if [match.group(1) for match in matches] != list(CONTEXTUAL_PR_HEADINGS):
+    sections: list[tuple[str, list[str]]] = []
+    outside_fences: list[str] = []
+    fence: str | None = None
+    for line in body.splitlines():
+        marker = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = token[0]
+            elif token[0] == fence:
+                fence = None
+            continue
+        if fence is not None:
+            continue
+        outside_fences.append(line)
+        heading = re.fullmatch(r"## ([^#\n].*)", line)
+        if heading:
+            sections.append((heading.group(1), []))
+        elif sections:
+            sections[-1][1].append(line)
+
+    if [heading for heading, _content in sections] != list(CONTEXTUAL_PR_HEADINGS):
         return (
             "PR body must contain Ship's nine top-level contextual headings "
             "exactly once and in order, with no competing top-level heading"
         )
-    placeholders = {"tbd", "todo", "placeholder", "n/a"}
-    for index, match in enumerate(matches):
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(body)
-        content = body[match.end():end].strip()
-        normalized = content.casefold().rstrip(".:").strip()
-        if (
-            not content
-            or normalized in placeholders
-            or re.fullmatch(r"<[^>\n]+>", content) is not None
-        ):
-            return f"PR body section {match.group(1)!r} is empty or a placeholder"
+    for heading, lines in sections:
+        content = "\n".join(lines)
+        visible = re.sub(r"<!--.*?-->", " ", content, flags=re.DOTALL)
+        words = re.findall(r"[^\W_]+", visible, flags=re.UNICODE)
+        sentinel = (
+            heading == "Follow-ups"
+            and re.sub(r"[\W_]+", "", visible).casefold() == "none"
+        )
+        if len(words) < 2 and not sentinel:
+            return f"PR body section {heading!r} has no substantive content"
+    visible_body = re.sub(
+        r"<!--.*?-->", " ", "\n".join(outside_fences), flags=re.DOTALL
+    )
     if re.search(
         r"\b(?:private|hidden)(?:\s+or\s+(?:private|hidden))?\s+chain-of-thought\b",
-        body,
+        visible_body,
         flags=re.IGNORECASE,
     ):
         return "PR body must not claim to expose private or hidden chain-of-thought"
