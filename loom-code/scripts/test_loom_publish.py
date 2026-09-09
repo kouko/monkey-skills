@@ -114,6 +114,74 @@ def invoke(tmp_path: Path, monkeypatch, calls: ExternalCalls, *extra: str):
     return repo, rc, out.getvalue(), err.getvalue()
 
 
+def publication_intent(repo: Path, *, automatic: bool) -> Path:
+    intent = repo / "docs" / "loom" / "intent" / "change.md"
+    intent.parent.mkdir(parents=True)
+    outcome = (
+        "Confirmation of the intent authorizes Loom to publish the completed "
+        "branch automatically."
+        if automatic
+        else "Publish the completed branch after a separate Ship decision."
+    )
+    intent.write_text(
+        "# Change\nstatus: confirmed 2026-09-09\n\n"
+        f"## Proposed outcome\n{outcome}\n",
+        encoding="utf-8",
+    )
+    return intent
+
+
+def test_confirmed_current_intent_publishes_without_ship_reask(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    repo = repository(tmp_path)
+    intent = publication_intent(repo, automatic=True)
+    body = tmp_path / "body.md"
+    body.write_text("body\n", encoding="utf-8")
+    calls.head = git(repo, "rev-parse", "HEAD")
+    monkeypatch.chdir(repo)
+    monkeypatch.setattr(loom_checker, "run_publish_external", calls)
+    monkeypatch.setattr(loom_checker, "_cmd_push", lambda *args, **kwargs: 0)
+    monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
+
+    err = StringIO()
+    rc = loom_checker.cmd_publish([
+        "--intent", str(intent), "--title", "feat(loom): safe",
+        "--body-file", str(body),
+    ], StringIO(), err)
+
+    assert rc == 0, err.getvalue()
+    assert any("push" in call for call in calls.calls)
+    assert any("pr" in call and "create" in call for call in calls.calls)
+    assert not any("merge" in call for call in calls.calls)
+
+
+def test_legacy_intent_requires_one_publication_decision(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    repo = repository(tmp_path)
+    intent = publication_intent(repo, automatic=False)
+    body = tmp_path / "body.md"
+    body.write_text("body\n", encoding="utf-8")
+    calls.head = git(repo, "rev-parse", "HEAD")
+    monkeypatch.chdir(repo)
+    monkeypatch.setattr(loom_checker, "run_publish_external", calls)
+    monkeypatch.setattr(loom_checker, "_cmd_push", lambda *args, **kwargs: 0)
+    monkeypatch.setattr(loom_checker, "resolve_publish_executable", trusted_executable)
+
+    err = StringIO()
+    rc = loom_checker.cmd_publish([
+        "--intent", str(intent), "--title", "feat(loom): safe",
+        "--body-file", str(body),
+    ], StringIO(), err)
+
+    assert rc == 2
+    assert "publication decision" in err.getvalue()
+    assert calls.calls == []
+
+
 def test_publish_pushes_exact_head_and_creates_one_pr(tmp_path: Path, monkeypatch) -> None:
     calls = ExternalCalls("")
     repo, rc, out, err = invoke(tmp_path, monkeypatch, calls)

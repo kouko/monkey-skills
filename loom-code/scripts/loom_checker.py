@@ -12,6 +12,7 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py intent <path> [--commit-msg <file>]
     loom_checker.py intake <station> <change-id>
     loom_checker.py push [--head <ref>] [--hook]
+    loom_checker.py publish --intent <absolute-path> --title <text> --body-file <absolute-path>
     loom_checker.py publish --confirm-authorized --title <text> --body-file <absolute-path>
     loom_checker.py finalize-review <change-id> --input <review-input.json>
     loom_checker.py standing <path-to-intent>
@@ -2681,10 +2682,11 @@ def _publish_origin_state(repo: Path, expected_branch: str) -> tuple[str | None,
     return origin_urls[0], None
 
 
-def _publish_args(args: list[str]) -> tuple[str, Path] | str:
+def _publish_args(args: list[str]) -> tuple[str, Path, Path | None, bool] | str:
     authorized = False
     title: str | None = None
     body_file: Path | None = None
+    intent_file: Path | None = None
     rest = list(args)
     while rest:
         token = rest.pop(0)
@@ -2692,7 +2694,7 @@ def _publish_args(args: list[str]) -> tuple[str, Path] | str:
             if authorized:
                 return "--confirm-authorized may appear only once"
             authorized = True
-        elif token in {"--title", "--body-file"}:
+        elif token in {"--title", "--body-file", "--intent"}:
             if not rest:
                 return f"{token} needs a value"
             value = rest.pop(0)
@@ -2700,21 +2702,48 @@ def _publish_args(args: list[str]) -> tuple[str, Path] | str:
                 if title is not None:
                     return "--title may appear only once"
                 title = value
-            else:
+            elif token == "--body-file":
                 if body_file is not None:
                     return "--body-file may appear only once"
                 body_file = Path(value)
+            else:
+                if intent_file is not None:
+                    return "--intent may appear only once"
+                intent_file = Path(value)
         else:
             return f"unexpected argument {token!r}"
-    if not authorized:
-        return "--confirm-authorized is required after Ship decision point ③"
+    if not authorized and intent_file is None:
+        return "--intent or --confirm-authorized is required for publication authorization"
     if not title or not title.strip():
         return "--title needs non-empty text"
     if body_file is None or not body_file.is_absolute():
         return "--body-file must name an absolute path"
     if not body_file.is_file() or not os.access(body_file, os.R_OK):
         return f"--body-file is not a readable file: {body_file}"
-    return title, body_file
+    if intent_file is not None:
+        if not intent_file.is_absolute():
+            return "--intent must name an absolute path"
+        if not intent_file.is_file() or not os.access(intent_file, os.R_OK):
+            return f"--intent is not a readable file: {intent_file}"
+    return title, body_file, intent_file, authorized
+
+
+def _intent_authorizes_publication(repo: Path, intent_file: Path) -> bool:
+    """Accept only confirmed intents carrying explicit automatic-publication prose."""
+    try:
+        intent_file.resolve().relative_to(repo)
+    except ValueError:
+        return False
+    front, sections = parse_document(read_text(intent_file))
+    if not re.fullmatch(r"confirmed \d{4}-\d{2}-\d{2}", front.get("status", "")):
+        return False
+    outcome = " ".join(sections.get("Proposed outcome", "").split())
+    return bool(re.search(
+        r"\bconfirmation of (?:the|this) intent authorizes Loom to publish\b"
+        r".*\bautomatically\b",
+        outcome,
+        flags=re.IGNORECASE,
+    ))
 
 
 def _publish_env(repo_identity: str, repo: Path, trusted_paths: tuple[str, str]) -> dict[str, str]:
@@ -2748,7 +2777,7 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     parsed = _publish_args(args)
     if isinstance(parsed, str):
         return _publish_usage(parsed, err)
-    title, body_file = parsed
+    title, body_file, intent_file, authorized = parsed
 
     redirected = sorted(
         key for key in os.environ
@@ -2771,7 +2800,9 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         [str(Path(trusted_git).parent), str(Path(trusted_gh).parent), "/usr/bin", "/bin"]
     ))
     try:
-        return _cmd_publish_trusted(title, body_file, trusted_git, trusted_gh, out, err)
+        return _cmd_publish_trusted(
+            title, body_file, intent_file, authorized, trusted_git, trusted_gh, out, err
+        )
     finally:
         if previous_path is None:
             os.environ.pop("PATH", None)
@@ -2780,13 +2811,23 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
 
 def _cmd_publish_trusted(
-    title: str, body_file: Path, trusted_git: str, trusted_gh: str,
+    title: str, body_file: Path, intent_file: Path | None, authorized: bool,
+    trusted_git: str, trusted_gh: str,
     out=sys.stdout, err=sys.stderr,
 ) -> int:
     try:
         repo = repo_root(Path.cwd()).resolve()
     except UsageError as exc:
         return _publish_block(str(exc), err)
+
+    if not authorized and (
+        intent_file is None or not _intent_authorizes_publication(repo, intent_file)
+    ):
+        return _publish_usage(
+            "intent has no confirmed automatic-publication authorization; "
+            "obtain one publication decision and pass --confirm-authorized",
+            err,
+        )
 
     head = git_maybe(repo, "rev-parse", "HEAD")
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")

@@ -13,8 +13,11 @@ PR bodies and publication reports are written in English.
 
 ## 1. Confirm acceptance
 
-Read the intent and blind-run report when one was required. Present the outcome
-to the user and obtain decision point ③ before anything leaves the machine.
+Read the intent and blind-run report when one was required. A confirmed intent
+that explicitly says its confirmation authorizes automatic publication carries
+that decision into Ship; do not ask again. A legacy intent without that positive
+evidence requires one publication decision before anything leaves the machine.
+The user may still explicitly stop publication before the outward action.
 
 ## 2. Prepare publication text
 
@@ -29,8 +32,14 @@ Review. Functional edits invalidate the attestation and do.
 
 ## 3. Publish once
 
-After the user accepts the outcome at decision point ③, run the installed
-plugin's one publication command with the prepared PR text:
+For an intent carrying automatic-publication authorization, pass its absolute
+path to the installed plugin's one publication command:
+
+```text
+python3 <loom-code>/scripts/loom_checker.py publish --intent <absolute-intent-path> --title <title> --body-file <absolute-path>
+```
+
+For a legacy intent, obtain one publication decision and acknowledge it with:
 
 ```text
 python3 <loom-code>/scripts/loom_checker.py publish --confirm-authorized --title <title> --body-file <absolute-path>
@@ -54,7 +63,8 @@ required check and fix a real functional failure through Build → Review. A
 PR-text, version, or other publication-only failure is fixed in place and
 reuses the matching attestation.
 
-Do not merge without the user's explicit authorization.
+Publication never authorizes or invokes merge. Do not merge without the user's
+separate explicit authorization.
 Once that authorization exists, take the root of the worktree whose branch
 carries the attestation — `git rev-parse --show-toplevel` run from that
 worktree, never the task or main checkout — and issue the direct merge as one
