@@ -1,6 +1,9 @@
 # Codex first contact
 
-Codex uses the installed `loom-code` plugin's `PreToolUse` publication hook.
+Codex uses the installed `loom-code` plugin's `PreToolUse` publication hook
+from `hooks/hooks-codex.json`. The Codex manifest selects that file, so Codex
+does not also load `hooks/hooks.json`; its command uses Codex's native
+`${PLUGIN_ROOT}` hook variable rather than Claude Code's compatibility name.
 There is no repository-local checker scaffold, copied contract, or firing
 ledger to approve and synchronize.
 
@@ -30,3 +33,8 @@ The hook activates only for publication-shaped Bash commands. Normal shell
 commands pass through without running repository verification. Canonical push
 validation pins the selected repository, HEAD, remote, and refspec before the
 fast attestation check.
+
+If a live task loses the versioned checker path after a plugin update, the
+retained command permits only its closed read-only recovery set. Every other
+command is blocked with a restart instruction; it never searches another
+cache version or `PATH` for a substitute checker.

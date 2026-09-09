@@ -31,6 +31,11 @@ Resolve the checker from the installed plugin on both supported hosts:
 Below, the Claude Code form is written out. On Codex, substitute the other
 prefix; nothing else changes.
 
+`${CLAUDE_PLUGIN_ROOT}` is substituted by Claude Code inside plugin skills.
+`PLUGIN_ROOT` is provided to Codex plugin hook commands; it is not a general
+skill-shell variable, so Codex stations use the injected skill path shown by
+the host instead of copying Claude's substitution contract.
+
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees
 happen. `kind: engineering` is everything else: refactors, internal
