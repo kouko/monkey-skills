@@ -1,7 +1,7 @@
 # goal-create native Goal activation — spec
 intent: 2026-09-09-goal-create-native-goal-activation@a1b7e31be6739ca92cc7307b577cdc5457e30321
 pre-build-review: required — conditional Claude Code capability plus Codex activation creates a cross-host public behavior contract
-confirmed-behavior: 2026-09-09 @ded0a0f
+confirmed-behavior: 2026-09-09 @ebdc63f
 
 ## Requirements
 REQ-1 — Activate a Codex Goal
@@ -60,7 +60,7 @@ Update the skill and plugin-facing descriptions in all three maintained language
 ## Current state evidence
 - Forward: `loom-workflow/skills/goal-create/SKILL.md:14` starts SESSION mode in the committed baseline, which drafts and lints a condition but contains no native host activation step.
 - Reverse: `loom-workflow/skills/handoff/SKILL.md:89` presents `loom-workflow:goal-create` as the named way to add a session acceptance condition.
-- Error: `loom-workflow/skills/goal-create/SKILL.md:40` ends the committed SESSION path at "a draft is never shown to the user until it exits 0"; no activation result or recovery state exists after that anchor.
+- Error: `loom-workflow/skills/goal-create/SKILL.md:41` is the committed SESSION path's final user-visible behavior; no activation result or recovery state exists after that anchor.
 - Data: `loom-workflow/skills/goal-create/references/goal-shape.md:7` owns the ordered Outcome, Constraints, Verification, and Stop-when condition with a portable 4,000-character budget.
 - Boundary: `loom-workflow/skills/goal-create/SKILL.md:43` starts ARC mode in the committed baseline, which remains outside the host activation change.
 
