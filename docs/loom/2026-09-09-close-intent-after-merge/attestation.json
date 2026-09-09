@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-close-intent-after-merge",
+  "content_digest": "1b5825e966edcba3bd2fc62f90bb3071a343f165",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-09-close-intent-after-merge/evidence/test_intent_delivery_boundaries.py",
+      "artifact": "docs/loom/2026-09-09-close-intent-after-merge/evidence/test_intent_delivery_boundaries.py",
+      "result": "pass",
+      "command_digest": "b7c24824428b0a12f5ccd7ad26a872d02705d86abc6a661a19792c73ab5cb509"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "delivery_closing_code",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "delivery_closing_conformance",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "spec+adversarial",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
