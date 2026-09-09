@@ -82,10 +82,51 @@ def make_repo(tmp_path: Path) -> Path:
     (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
     git(repo, "add", "seed.txt")
     git(repo, "commit", "-q", "-m", "seed")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main")
     # Every fixture works on a branch: on the trunk itself `merge-base HEAD
     # main` is HEAD, and branch_base() refuses to hand a rule an empty diff.
     git(repo, "checkout", "-q", "-b", "work")
     return repo
+
+
+def write_attestation(repo: Path, *, payload: dict | None = None, change: str = CHANGE) -> None:
+    path = repo / "docs/loom" / change / "attestation.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            payload
+            or {
+                "schema": "loom-attestation/v1",
+                "change_id": change,
+                "content_digest": "historical-digest",
+                "executions": [{
+                    "kind": "package-tests", "command": "pytest", "artifact": "",
+                    "result": "pass", "command_digest": "0" * 64,
+                }],
+                "verdicts": [{
+                    "reviewer": "fixture", "vendor": "test", "model": "test",
+                    "lens": "code", "verdict": "PASS", "findings": [],
+                }],
+                "findings": [],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def publish_remote_default_snapshot(repo: Path, *, with_attestation: bool = True) -> str:
+    git(repo, "checkout", "-q", "-b", "delivered-snapshot")
+    if with_attestation:
+        write_attestation(repo)
+        git(repo, "add", f"docs/loom/{CHANGE}/attestation.json")
+        git(repo, "commit", "-q", "-m", "deliver fixture (#123)")
+    snapshot = git(repo, "rev-parse", "HEAD")
+    git(repo, "update-ref", "refs/remotes/origin/main", snapshot)
+    git(repo, "checkout", "-q", "work")
+    git(repo, "branch", "-D", "delivered-snapshot")
+    return snapshot
 
 
 def write_intent(
@@ -713,6 +754,257 @@ def test_a_real_confirmed_status_date_is_accepted(tmp_path: Path) -> None:
     assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
 
 
+# --- intake.confirmed: delivered is derived from remote-default evidence ---
+
+
+def test_remote_default_delivery_blocks_duplicate_intake(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    publish_remote_default_snapshot(repo)
+
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "delivered" in result.stderr
+
+
+def test_worktree_only_attestation_does_not_prove_delivery(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo)
+    write_attestation(repo)
+
+    assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"change_id": CHANGE},
+        {
+            "schema": "loom-attestation/v999",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [],
+            "verdicts": [],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": "another-change",
+            "content_digest": "historical-digest",
+            "executions": [],
+            "verdicts": [],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": None, "command": None, "artifact": None,
+                "result": None, "command_digest": None,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "fail", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": [], "findings": [],
+            }],
+            "findings": [],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": {},
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [{}],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [{
+                "id": "incomplete", "anchor": "fixture.py:1", "raised_by": "fixture",
+            }],
+        },
+    ],
+)
+def test_partial_unsupported_or_mismatched_remote_witness_stays_active(
+    tmp_path: Path, payload: dict
+) -> None:
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    git(repo, "checkout", "-q", "-b", "invalid-snapshot")
+    write_attestation(repo, payload=payload)
+    git(repo, "add", f"docs/loom/{CHANGE}/attestation.json")
+    git(repo, "commit", "-q", "-m", "invalid witness")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "checkout", "-q", "work")
+
+    assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
+
+
+def test_later_unrelated_remote_commit_does_not_reopen_delivery(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    snapshot = publish_remote_default_snapshot(repo)
+    git(repo, "checkout", "-q", "-b", "later", snapshot)
+    (repo / "later.txt").write_text("unrelated\n", encoding="utf-8")
+    git(repo, "add", "later.txt")
+    git(repo, "commit", "-q", "-m", "unrelated later change")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "checkout", "-q", "work")
+
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "delivered" in result.stderr
+
+
+def test_remote_attestation_without_canonical_intent_stays_active(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo)
+    git(repo, "checkout", "-q", "main")
+    write_attestation(repo)
+    git(repo, "add", f"docs/loom/{CHANGE}/attestation.json")
+    git(repo, "commit", "-q", "-m", "orphan witness")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "checkout", "-q", "work")
+
+    assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
+
+
+def test_complete_historical_review_note_finding_still_delivers(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    git(repo, "checkout", "-q", "-b", "finding-snapshot")
+    write_attestation(repo)
+    path = repo / "docs/loom" / CHANGE / "attestation.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["findings"] = [{
+        "severity": "important", "dimension": "tests", "anchor": "fixture.py:1",
+        "text": "note: execution evidence stayed in the active run",
+    }]
+    write_attestation(repo, payload=payload)
+    git(repo, "add", str(path.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", "delivery with review note")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "checkout", "-q", "work")
+
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "delivered" in result.stderr
+
+
+def test_legacy_closed_on_remote_default_still_blocks_intake(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    git(repo, "checkout", "-q", "-b", "closed-snapshot")
+    commit_intent(repo, "status: closed 2026-09-03 — PR #42")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "checkout", "-q", "work")
+
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "closed (PR #42)" in result.stderr
+
+
+def test_unresolved_remote_default_blocks_intake_as_indeterminate(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    write_intent(repo)
+    git(repo, "symbolic-ref", "--delete", "refs/remotes/origin/HEAD")
+    git(repo, "update-ref", "-d", "refs/remotes/origin/main")
+
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+
+    assert result.returncode == 1
+    assert "intake.confirmed" in blocked_rules(result)
+    assert "indeterminate" in result.stderr
+
+
+@pytest.mark.parametrize("failing_path", ["intent", "attestation"])
+def test_remote_snapshot_read_failure_is_indeterminate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failing_path: str
+) -> None:
+    import loom_checker as lc
+
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    publish_remote_default_snapshot(repo)
+    real_run_git = lc.run_git
+    suffix = (
+        f"docs/loom/intent/{CHANGE}.md"
+        if failing_path == "intent"
+        else f"docs/loom/{CHANGE}/attestation.json"
+    )
+
+    def fail_selected_read(repo_path: Path, *args: str, **kwargs):
+        if args and args[0] in {"ls-tree", "show"} and args[-1].endswith(suffix):
+            raise subprocess.TimeoutExpired(["git", *args], timeout=1)
+        return real_run_git(repo_path, *args, **kwargs)
+
+    monkeypatch.setattr(lc, "run_git", fail_selected_read)
+
+    state, detail = lc.intent_delivery_state(repo, CHANGE)
+    assert state == "indeterminate"
+    assert "read" in detail
+
+
 # --- intake.confirmed: closed is terminal (W0-01) ---------------------------
 
 
@@ -757,30 +1049,22 @@ def test_reopen_blocked_when_branch_history_shows_a_closed_status(tmp_path: Path
     assert "PR #7" in result.stderr
 
 
-def test_reopen_blocked_when_the_local_trunk_copy_is_closed(tmp_path: Path) -> None:
+def test_local_trunk_close_does_not_override_remote_default(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)  # on "work", branched from main at the seed commit
     commit_intent(repo, "status: confirmed 2026-09-02")  # work's own history stays clean
     git(repo, "checkout", "-q", "main")
     commit_intent(repo, "status: closed 2026-09-03 — PR #42")
     git(repo, "checkout", "-q", "work")
-    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
-    assert result.returncode == 1
-    assert "intake.confirmed" in blocked_rules(result)
-    assert "not reopened" in result.stderr
-    assert "PR #42" in result.stderr
+    assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
 
 
-def test_reopen_trunk_check_is_absent_without_any_trunk_ref(tmp_path: Path) -> None:
+def test_local_trunk_absence_does_not_hide_the_remote_default(tmp_path: Path) -> None:
     repo = make_repo(tmp_path)
     git(repo, "branch", "-D", "main")
-    # kind=product with needs-design=no keeps cmd_intake off
-    # touched_interface_surfaces/branch_base entirely -- this test is about
-    # the reopen recompute having no trunk ref, not about the unrelated
-    # "no branch base resolves" failure branch_base() raises on its own.
     write_intent(repo, kind="product", status="status: confirmed 2026-09-02")
     result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
     assert result.returncode == 0, result.stderr
-    assert "absent" in result.stdout
+    assert result.stdout == ""
 
 
 def test_reopen_log_pattern_derives_from_the_status_closed_alternative() -> None:

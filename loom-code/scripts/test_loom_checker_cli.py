@@ -7,6 +7,7 @@ rename is a deliberate, visible edit rather than silent drift.
 """
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -45,6 +46,81 @@ def run_checker(*args: str, cwd: Path | None = None) -> subprocess.CompletedProc
     )
 
 
+def git(repo: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args], capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+
+def make_intent_state_repo(tmp_path: Path, *, delivered: bool) -> tuple[Path, str]:
+    repo = tmp_path / "intent-state-repo"
+    repo.mkdir(parents=True)
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "user.email", "t@example.com")
+    git(repo, "config", "user.name", "T")
+    intent = repo / "docs/loom/intent/2026-09-09-example.md"
+    intent.parent.mkdir(parents=True)
+    intent.write_text(
+        """# Example
+originator: tester
+kind: engineering
+needs-design: no — fixture
+status: confirmed 2026-09-09
+
+## Problem
+Fixture.
+
+## Proposed outcome
+Fixture.
+
+## Acceptance
+1. Fixture passes.
+
+## Constraints
+- none
+
+## Out of scope
+- none
+
+## Open questions
+- none
+""",
+        encoding="utf-8",
+    )
+    git(repo, "add", str(intent.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", "confirmed intent")
+    if delivered:
+        attestation = repo / "docs/loom/2026-09-09-example/attestation.json"
+        attestation.parent.mkdir(parents=True)
+        attestation.write_text(
+            json.dumps(
+                {
+                    "schema": "loom-attestation/v1",
+                    "change_id": "2026-09-09-example",
+                    "content_digest": "historical",
+                    "executions": [{
+                        "kind": "package-tests", "command": "pytest", "artifact": "",
+                        "result": "pass", "command_digest": "0" * 64,
+                    }],
+                    "verdicts": [{
+                        "reviewer": "fixture", "vendor": "test", "model": "test",
+                        "lens": "code", "verdict": "PASS", "findings": [],
+                    }],
+                    "findings": [],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        git(repo, "add", str(attestation.relative_to(repo)))
+        git(repo, "commit", "-q", "-m", "deliver example (#123)")
+    remote_head = git(repo, "rev-parse", "HEAD")
+    git(repo, "update-ref", "refs/remotes/origin/trunk", remote_head)
+    git(repo, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk")
+    git(repo, "checkout", "-q", "-b", "work")
+    return repo, remote_head
+
+
 def test_list_rules_exits_zero() -> None:
     assert run_checker("--list-rules").returncode == 0
 
@@ -65,6 +141,8 @@ def test_list_rules_describes_the_closed_status_alternative() -> None:
     confirmed_line = next(line for line in lines if line.startswith("intake.confirmed\t"))
     assert "closed" in confirmed_line
     assert "PR #" in confirmed_line
+    assert "remote-default" in confirmed_line
+    assert "indeterminate" in confirmed_line
 
 
 def test_list_rules_covers_exactly_the_planned_population() -> None:
@@ -105,6 +183,69 @@ def test_publish_is_a_declared_cli_command() -> None:
 
     assert loom_checker.COMMANDS["publish"] is loom_checker.cmd_publish
     assert "loom_checker.py publish --confirm-authorized" in loom_checker.__doc__
+
+
+def test_intents_is_a_declared_cli_command() -> None:
+    import loom_checker
+
+    assert loom_checker.COMMANDS["intents"] is loom_checker.cmd_intents
+    assert "loom_checker.py intents" in loom_checker.__doc__
+
+
+def test_intents_lists_only_active_confirmed_intents_by_default(tmp_path: Path) -> None:
+    active_repo, _ = make_intent_state_repo(tmp_path / "active", delivered=False)
+    delivered_repo, _ = make_intent_state_repo(tmp_path / "delivered", delivered=True)
+
+    active = run_checker("intents", cwd=active_repo)
+    delivered = run_checker("intents", cwd=delivered_repo)
+
+    assert active.returncode == 0
+    assert active.stdout == "2026-09-09-example\tactive\n"
+    assert delivered.returncode == 0
+    assert delivered.stdout == ""
+
+
+def test_intents_reports_one_delivered_intent_with_optional_metadata(tmp_path: Path) -> None:
+    repo, remote_head = make_intent_state_repo(tmp_path, delivered=True)
+
+    result = run_checker("intents", "2026-09-09-example", "--metadata", cwd=repo)
+
+    assert result.returncode == 0
+    assert result.stdout.startswith("2026-09-09-example\tdelivered")
+    assert f"commit={remote_head}" in result.stdout
+    assert "pr=#123" in result.stdout
+    assert "committed_at=" in result.stdout
+    assert "merged_at=" not in result.stdout
+
+
+def test_intents_explains_why_one_intent_is_active(tmp_path: Path) -> None:
+    repo, _ = make_intent_state_repo(tmp_path, delivered=False)
+
+    result = run_checker("intents", "2026-09-09-example", cwd=repo)
+
+    assert result.returncode == 0
+    assert result.stdout.startswith("2026-09-09-example\tactive\t")
+    assert "attestation is absent" in result.stdout
+
+
+def test_intents_reports_indeterminate_without_remote_default(tmp_path: Path) -> None:
+    repo, _ = make_intent_state_repo(tmp_path, delivered=False)
+    git(repo, "symbolic-ref", "--delete", "refs/remotes/origin/HEAD")
+
+    result = run_checker("intents", "2026-09-09-example", cwd=repo)
+
+    assert result.returncode == 1
+    assert "2026-09-09-example\tindeterminate" in result.stdout
+    assert "refresh the selected remote-default ref" in result.stdout
+
+
+def test_intents_rejects_an_unsafe_remote_name(tmp_path: Path) -> None:
+    repo, _ = make_intent_state_repo(tmp_path, delivered=False)
+
+    result = run_checker("intents", "--remote", "../origin", cwd=repo)
+
+    assert result.returncode == 2
+    assert "safe literal" in result.stderr
 
 
 def test_hooks_probe_is_gone() -> None:

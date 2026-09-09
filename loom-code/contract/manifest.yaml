@@ -101,7 +101,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "lessons",                      goes_to: memory}
       signoff: capture-intent
       edits_after:
-        - {id: ship-closes-status-line,     text: "ship flips the status line to closed"}
+        - {id: delivery-derived-from-default, text: "delivery is derived from canonical evidence on the selected remote-default snapshot; the intent remains confirmed"}
         - {id: maintain-appends-evidence,   text: "maintain appends an evidence path"}
         - {id: other-change-starts-new-intent, text: "any other change starts a new intent"}
     fields:
@@ -206,7 +206,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       - {name: content_digest, kind: json, required: true}
       - {name: executions,     kind: json, required: true, grammar: "[{kind, command, artifact, result, command_digest}]"}
       - {name: verdicts,       kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, verdict, findings}]"}
-      - {name: findings,       kind: json, required: true, grammar: "[{id, anchor, raised_by, resolution}]"}
+      - {name: findings,       kind: json, required: true, grammar: "[{id, anchor, raised_by, resolution} | {severity, dimension, anchor, text}]"}
 
   blind-run-report:
     path: docs/loom/<change-id>/blind-run-report.md
