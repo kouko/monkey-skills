@@ -2,8 +2,8 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Create a goal condition. **SESSION** activates the four-field goal in the
-> current host when supported, with an honest manual command otherwise;
+> Create a goal condition. **SESSION** activates the four-field goal when
+> accepted by the current host, with an honest recovery action otherwise;
 > **ARC** drafts a repository's purpose artifact for the user to land.
 
 ---
@@ -23,7 +23,9 @@ never by the agent guessing from context.
   Before presenting a draft, the skill runs it through a mechanical floor,
   `scripts/goal_lint.py` — structure only, never a judgment call on
   whether the prose actually reads as decidable. It then activates the native
-  Goal when supported or labels one manual `/goal` command as not yet active.
+  Goal when accepted or labels the recovery as not yet active. In Codex, an
+  unfinished Goal requires `/goal clear` and then running the skill again;
+  other unavailable paths provide one manual `/goal` command.
 
 - **ARC mode** produces a draft `Why` and `Done when` for the
   repository's purpose artifact, `docs/loom/PURPOSE.md`. It never writes
