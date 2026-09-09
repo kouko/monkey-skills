@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.0.6] — 2026-09-09 — automatic contextual pull-request publication
+
+- Carry confirmed automatic-publication intent through Ship so a reviewed
+  branch is pushed and opened as a ready pull request without a second
+  publication prompt, while merge remains separately authorized.
+- Compose one self-contained contextual PR body with conditional Mermaid
+  diagrams and no dependency on retired review, probe, or trailer ledgers.
+- Update a matching existing PR's title and body, convert a draft only after
+  publication checks pass, and block on create, update, readiness, repository,
+  remote, or live-HEAD failures.
+- Observe required CI immediately and every 30 seconds without pending-status
+  spam, stopping at a terminal result or after the 60-minute pending cap.
+
 ## [2.0.5] — 2026-09-09 — command substitution and update guidance
 
 budget-exception: goal-create.session-activation — native Goal activation is

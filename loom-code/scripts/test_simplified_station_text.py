@@ -8,6 +8,7 @@ BUILD = (ROOT / "loom-code/skills/build/SKILL.md").read_text(encoding="utf-8")
 MEMORY_PR = (
     ROOT / "loom-workflow/skills/git-memory/protocols/compose-pr.md"
 ).read_text(encoding="utf-8")
+SHIP_PROSE = " ".join(SHIP.split())
 
 
 def test_review_generates_attestation_without_ledger_ceremony() -> None:
@@ -50,7 +51,7 @@ def test_ship_owns_one_self_contained_contextual_pr_body() -> None:
         "## Risks and rollback",
         "## Follow-ups",
     ):
-        assert heading in SHIP
+        assert SHIP.count(heading) == 1
     for source in ("intent", "plan", "Git change", "attestation", "available CI evidence"):
         assert source in SHIP
     assert "one top-level PR body schema" in SHIP
@@ -72,9 +73,9 @@ def test_ship_uses_mermaid_only_when_relationships_carry_information() -> None:
         "state transitions",
         "before-and-after behaviour flows",
     ):
-        assert relationship in SHIP
+        assert relationship in SHIP_PROSE
     assert "Mermaid" in SHIP
-    assert "Simple changes omit diagrams" in SHIP
+    assert "Simple changes must omit Mermaid diagrams" in SHIP_PROSE
 
 
 def test_git_memory_contributes_without_competing_top_level_schema() -> None:
@@ -82,6 +83,26 @@ def test_git_memory_contributes_without_competing_top_level_schema() -> None:
     assert "Decision, Learning, and Gotcha" in MEMORY_PR
     assert "does not own" in MEMORY_PR
     assert "Claude Code's standard" not in MEMORY_PR
+    contextual = (
+        "## Context", "## Intended outcome", "## Scope", "## Decisions",
+        "## Implementation", "## Behaviour change", "## Verification",
+        "## Risks and rollback", "## Follow-ups",
+    )
+    assert not all(any(line == heading for line in MEMORY_PR.splitlines())
+                   for heading in contextual)
+    assert "For a non-Loom caller" in MEMORY_PR
+
+
+def test_ship_diagram_contract_has_mutually_exclusive_outcomes() -> None:
+    assert "Graph-bearing changes require a Mermaid diagram" in SHIP_PROSE
+    assert "Simple changes must omit Mermaid diagrams" in SHIP_PROSE
+    assert "exactly one of those outcomes applies" in SHIP_PROSE
+
+
+def test_current_surfaces_do_not_restore_legacy_publication_ledgers() -> None:
+    for surface in (SHIP, MEMORY_PR):
+        assert "review.json" not in surface
+        assert "probe ledger" not in surface
 
 
 def test_build_has_no_evidence_accounting() -> None:

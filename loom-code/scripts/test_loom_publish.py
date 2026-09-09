@@ -34,13 +34,20 @@ def repository(tmp_path: Path) -> Path:
 
 
 class ExternalCalls:
-    def __init__(self, head: str, existing_pr: str | None = None) -> None:
+    def __init__(
+        self, head: str, existing_pr: str | None = None, *, draft: bool = False
+    ) -> None:
         self.head = head
         self.remote_head: str | None = None
         self.existing_pr = existing_pr
         self.move_remote_on_pr_list = False
         self.cross_repository_pr = False
         self.fail_create_once = False
+        self.fail_update = False
+        self.fail_ready = False
+        self.existing_pr_draft = draft
+        self.move_head_on_update = False
+        self.move_remote_on_update = False
         self.change_pushurl_on_remote_read = False
         self.switch_branch_on_remote_read = False
         self.change_pushurl_on_pr_list = False
@@ -81,6 +88,7 @@ class ExternalCalls:
                 full_name = "attacker/project" if self.cross_repository_pr else "example/project"
                 prs.append({
                     "html_url": self.existing_pr,
+                    "draft": self.existing_pr_draft,
                     "head": {"sha": self.head, "repo": {"full_name": full_name}},
                     "base": {"ref": "main", "repo": {"full_name": "example/project"}},
                 })
@@ -92,6 +100,19 @@ class ExternalCalls:
                 return subprocess.CompletedProcess(argv, 1, "", "temporary failure")
             self.existing_pr = "https://github.com/example/project/pull/1"
             return subprocess.CompletedProcess(argv, 0, f"{self.existing_pr}\n", "")
+        if "pr" in argv and "edit" in argv:
+            if self.fail_update:
+                return subprocess.CompletedProcess(argv, 1, "", "update failed")
+            if self.move_head_on_update:
+                git(Path(kwargs["cwd"]), "commit", "--allow-empty", "-q", "-m", "moved")
+            if self.move_remote_on_update:
+                self.remote_head = "d" * 40
+            return subprocess.CompletedProcess(argv, 0, "", "")
+        if "pr" in argv and "ready" in argv:
+            if self.fail_ready:
+                return subprocess.CompletedProcess(argv, 1, "", "ready failed")
+            self.existing_pr_draft = False
+            return subprocess.CompletedProcess(argv, 0, "", "")
         if "pr" in argv and "checks" in argv:
             snapshot = self.required_checks.pop(0)
             return subprocess.CompletedProcess(
@@ -284,7 +305,7 @@ def test_publish_pushes_exact_head_and_creates_one_pr(tmp_path: Path, monkeypatc
     assert "Publication target: github.com/example/project base main" in out
 
 
-def test_publish_reuses_existing_pr_without_push_or_create(tmp_path: Path, monkeypatch) -> None:
+def test_publish_reuses_existing_pr_and_replaces_title_and_body(tmp_path: Path, monkeypatch) -> None:
     calls = ExternalCalls("", "https://github.com/example/project/pull/7")
     repo = repository(tmp_path)
     calls.head = git(repo, "rev-parse", "HEAD")
@@ -303,8 +324,68 @@ def test_publish_reuses_existing_pr_without_push_or_create(tmp_path: Path, monke
     assert rc == 0, err.getvalue()
     assert not any("push" in call for call in calls.calls)
     assert not any("create" in call for call in calls.calls)
+    edit = next(call for call in calls.calls if "edit" in call)
+    assert edit[edit.index("--title") + 1] == "feat(loom): safe"
+    assert edit[edit.index("--body-file") + 1] == str(body)
     assert sum("checks" in call for call in calls.calls) == 1
     assert "pull/7" in out.getvalue()
+
+
+def test_publish_marks_matching_draft_ready_after_context_update(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls(
+        "", "https://github.com/example/project/pull/7", draft=True
+    )
+
+    _, rc, _, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    edit_index = next(i for i, call in enumerate(calls.calls) if "edit" in call)
+    ready_index = next(i for i, call in enumerate(calls.calls) if "ready" in call)
+    checks_index = next(i for i, call in enumerate(calls.calls) if "checks" in call)
+    assert edit_index < ready_index < checks_index
+
+
+def test_publish_blocks_existing_pr_update_and_ready_failures(
+    tmp_path: Path, monkeypatch
+) -> None:
+    for failure in ("fail_update", "fail_ready"):
+        case = tmp_path / failure
+        case.mkdir()
+        calls = ExternalCalls(
+            "", "https://github.com/example/project/pull/7", draft=True
+        )
+        setattr(calls, failure, True)
+
+        _, rc, out, err = invoke(case, monkeypatch, calls)
+
+        assert rc == 1, failure
+        assert failure.removeprefix("fail_") in err, failure
+        assert "Required CI passed" not in out, failure
+        assert not any("checks" in call for call in calls.calls), failure
+
+
+def test_publish_revalidates_live_head_and_remote_after_existing_pr_update(
+    tmp_path: Path, monkeypatch
+) -> None:
+    cases = {
+        "move_head_on_update": "live HEAD moved after PR update",
+        "move_remote_on_update": "remote branch moved after PR update",
+    }
+    for mutation, message in cases.items():
+        case = tmp_path / mutation
+        case.mkdir()
+        calls = ExternalCalls(
+            "", "https://github.com/example/project/pull/7", draft=True
+        )
+        setattr(calls, mutation, True)
+
+        _, rc, _, err = invoke(case, monkeypatch, calls)
+
+        assert rc == 1, mutation
+        assert message in err, mutation
+        assert not any("ready" in call or "checks" in call for call in calls.calls)
 
 
 def test_publish_requires_authorization_and_absolute_body(tmp_path: Path, monkeypatch) -> None:

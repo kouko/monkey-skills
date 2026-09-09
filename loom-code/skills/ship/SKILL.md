@@ -62,12 +62,13 @@ trade-offs, supporting evidence, and observed or expected outcome. This is an
 auditable rationale, never private or hidden chain-of-thought. Omit or label
 unsupported claims as limitations instead of inventing an explanation.
 
-Use Mermaid for meaningful decision branches and component interactions. Also
-use it for state transitions or before-and-after behaviour flows when the
-relationship carries information.
+Graph-bearing changes require a Mermaid diagram when they contain meaningful
+decision branches, component interactions, state transitions, or
+before-and-after behaviour flows and the relationship carries information.
 Select the matching decision, architecture, sequence, state, or comparison
-diagram and introduce it with accessible prose. Simple changes omit diagrams;
-never add a fixed diagram count or decorative graph.
+diagram and introduce it with accessible prose. Simple changes must omit
+Mermaid diagrams; exactly one of those outcomes applies. Never add a fixed
+diagram count or decorative graph.
 
 Use `loom-workflow:git-memory` to classify the change and contribute durable
 Decision, Learning, and Gotcha material inside this schema when earned. It does
