@@ -25,6 +25,7 @@
     "loom-design"
   ],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks-codex.json",
   "interface": {
     "displayName": "loom-code",
     "shortDescription": "Five-station coding flow with a deterministic push gate, for Codex CLI",

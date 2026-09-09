@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"${PLUGIN_ROOT}/scripts/loom_checker.py\" ]; then exec python3 \"${PLUGIN_ROOT}/scripts/loom_checker.py\" push --hook; else exec python3 -c 'import json, os, shlex, sys\nchecker = os.path.join(os.environ.get(\"PLUGIN_ROOT\", \"\"), \"scripts\", \"loom_checker.py\")\ndef deny():\n print(f\"BLOCK push.attestation: installed checker is unavailable at {checker}; restart Codex to load the installed plugin version\", file=sys.stderr)\n raise SystemExit(2)\ntry:\n payload = json.load(sys.stdin)\n command = payload[\"tool_input\"][\"command\"]\n if not isinstance(payload, dict) or payload.get(\"tool_name\") != \"Bash\" or not isinstance(command, str) or not command.strip(): deny()\n tokens = shlex.split(command)\nexcept Exception:\n deny()\nif not tokens or any(ch in command for ch in \"\\n;&|<>$`()\"): deny()\nname = os.path.basename(tokens[0])\nunsafe = {\"-exec\", \"-execdir\", \"-ok\", \"-okdir\", \"-delete\", \"-fprint\", \"-fprint0\", \"-fprintf\", \"--pre\", \"--pre-glob\"}\nif any(token in unsafe or token.startswith(\"--output\") for token in tokens[1:]): deny()\nallowed = False\nif name == \"git\":\n index = 1\n if len(tokens) > 2 and tokens[1] == \"-C\": index = 3\n if len(tokens) <= index: deny()\n sub = tokens[index]\n allowed = sub in {\"status\", \"log\", \"diff\", \"show\"}\n if sub == \"branch\": allowed = len(tokens) == index + 1 or (len(tokens) > index + 1 and tokens[index + 1] == \"--list\")\nelif name in {\"ls\", \"cat\", \"rg\", \"find\"}:\n allowed = True\nif not allowed: deny()' ; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
