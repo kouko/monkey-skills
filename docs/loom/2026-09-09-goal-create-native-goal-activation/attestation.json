@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-09-goal-create-native-goal-activation",
-  "content_digest": "5927da9756529b42b0df7ca5b293599460a13c76",
+  "content_digest": "a7076df9b820026b2b916aeba1dd266c24c389ab",
   "executions": [
     {
       "kind": "package-tests",
