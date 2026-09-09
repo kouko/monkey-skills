@@ -161,6 +161,34 @@ class TestRecompute:
             "PreToolUse:Bash:loom_checker.py",
         }
 
+    def test_hooks_include_host_qualified_codex_manifest(self, tmp_path):
+        repo = _build_repo(tmp_path)
+        codex = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": (
+                                    'python3 "${PLUGIN_ROOT}/scripts/'
+                                    'loom_checker.py" push --hook'
+                                ),
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+        (repo / "loom-code/hooks/hooks-codex.json").write_text(json.dumps(codex))
+
+        assert cm.recompute_hooks(repo) == {
+            "SessionStart:startup:session-start",
+            "PreToolUse:Bash:loom_checker.py",
+            "PreToolUse:Bash:loom_checker.py@codex",
+        }
+
     def test_contract_from_manifest_is_per_field(self, tmp_path):
         """F10: contract recompute registers one id per artifact FIELD
         (`artifact:<name>.<field>`), not one per artifact."""

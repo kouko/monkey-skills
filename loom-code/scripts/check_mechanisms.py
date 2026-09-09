@@ -206,17 +206,21 @@ def _command_basename(command: str) -> str:
 
 
 def recompute_hooks(repo: Path) -> set[str]:
-    path = repo / "loom-code" / "hooks" / "hooks.json"
-    if not path.is_file():
-        return set()
-    data = json.loads(path.read_text(encoding="utf-8"))
     ids: set[str] = set()
-    for event, entries in (data.get("hooks") or {}).items():
-        for entry in entries:
-            matcher = entry.get("matcher", "")
-            for h in entry.get("hooks", []):
-                base = _command_basename(h.get("command", ""))
-                ids.add(f"{event}:{matcher}:{base}")
+    manifests = (
+        (repo / "loom-code" / "hooks" / "hooks.json", ""),
+        (repo / "loom-code" / "hooks" / "hooks-codex.json", "@codex"),
+    )
+    for path, qualifier in manifests:
+        if not path.is_file():
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for event, entries in (data.get("hooks") or {}).items():
+            for entry in entries:
+                matcher = entry.get("matcher", "")
+                for h in entry.get("hooks", []):
+                    base = _command_basename(h.get("command", ""))
+                    ids.add(f"{event}:{matcher}:{base}{qualifier}")
     return ids
 
 
@@ -522,12 +526,16 @@ def compute_baseline_total(repo: Path, ref: str) -> tuple[int, bool]:
     files = _git_ls_tree(repo, ref)
     skill_count = sum(1 for f in files if SKILL_MD_RE.match(f))
     hook_count = 0
-    hooks_text = _git_show(repo, ref, "loom-code/hooks/hooks.json")
-    if hooks_text is not None:
-        try:
-            hook_count = _count_hooks_json_entries(json.loads(hooks_text))
-        except (json.JSONDecodeError, TypeError):
-            hook_count = 0
+    for hook_path in (
+        "loom-code/hooks/hooks.json",
+        "loom-code/hooks/hooks-codex.json",
+    ):
+        hooks_text = _git_show(repo, ref, hook_path)
+        if hooks_text is not None:
+            try:
+                hook_count += _count_hooks_json_entries(json.loads(hooks_text))
+            except (json.JSONDecodeError, TypeError):
+                pass
     return skill_count + hook_count, True
 
 

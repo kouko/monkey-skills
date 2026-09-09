@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.0.8] — 2026-09-10 — native dual-host publication hooks
+
+budget-exception: PreToolUse:Bash:loom_checker.py@codex — one Codex-native
+publication hook replaces accidental reuse of the Claude lifecycle contract
+
+- Give Claude Code and Codex separate host-native hook manifests while keeping
+  one shared publication checker and policy.
+- Let a Codex task whose versioned plugin root was removed continue a closed
+  set of read-only inspection commands, while denying publication, mutation,
+  dynamic shell forms, and unknown commands until Codex restarts.
+- Document the distinct skill-path and hook-root variables for both hosts, and
+  verify manifest selection, arbitrary install roots, stale-root recovery, and
+  mechanism accounting.
+
 ## [2.0.7] — 2026-09-09 — derived intent delivery state
 
 - Derive `active`, `delivered`, `closed`, or `indeterminate` from canonical
