@@ -33,7 +33,7 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 | [`decision-map`](skills/decision-map/) | `docs/loom/maps/<map-id>/` にある永続的な decision map を作成・推進する — 目的地、育っていく Decisions-so-far ログ、そして複数 session にわたって ticket へ卒業していく Not-yet-specified（fog）list。一発 plan ではない。 |
 | [`distill-sessions`](skills/distill-sessions/) | 過去の Claude Code と Codex の session transcript ＋ `/insights` から friction pattern を掘り出し、skill ごとの改善提案 doc にまとめる。 |
 | [`git-memory`](skills/git-memory/) | 決定の文脈（diff そのものではなく **why**）を commit trailer と PR 本文に書き込み、Claude Code / Cursor / Codex / aider / 人間など将来のあらゆる session が `git log` だけから project knowledge を再構成できるようにする。 |
-| [`goal-create`](skills/goal-create/) | goal condition を起草する — SESSION mode は長時間実行 agent run のための 4 フィールド停止条件（Outcome / Constraints / Verification / Stop-when）、ARC mode は repository の purpose artifact（`Why` / `Done when`）。 |
+| [`goal-create`](skills/goal-create/) | goal condition を作成する — SESSION はホストに受理された場合に 4 項目ゴールを有効化し、それ以外は復旧操作を示す。ARC は repository の purpose artifact（`Why` / `Done when`）を起草する。 |
 | [`handoff`](skills/handoff/) | session 状態を構造化された HANDOFF ファイルに保存し、将来の agent がきれいに再開できるようにする。あるいは既存の HANDOFF を読み込み・検証する。 |
 | [`independent-advisor`](skills/independent-advisor/) | 現在の plan や決定について、**別の executor**——より強い model、より高い effort、あるいは別ベンダー——から second opinion を取る。変わるのは executor であって、critique の観点ではない。 |
 | [`recap-state`](skills/recap-state/) | session 内での再オリエンテーション — user が話の筋を見失った時、Synthesis-check で締めくくる構造化 recap を出す。 |

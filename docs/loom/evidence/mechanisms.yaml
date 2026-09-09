@@ -270,3 +270,6 @@ mechanisms:
   - id: "review.bounded-episode"
     class: prose-gate
     eval: loom-code/scripts/test_review_convergence_contract.py
+  - id: "goal-create.session-activation"
+    class: prose-gate
+    eval: loom-workflow/skills/goal-create/scripts/test_skill_md.py::test_session_activation_rules_are_one_registered_gate

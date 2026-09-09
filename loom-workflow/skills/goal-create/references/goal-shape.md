@@ -80,11 +80,24 @@ instead.
 
 ## The 4,000-character budget
 
-A goal condition is capped at 4,000 characters. A goal whose full detail
-would exceed that budget does not inline the detail — it points at a file
-instead (the plan, the spec, the design doc) and keeps the goal condition
-itself short enough for the evaluator to hold in view alongside the
-conversation it is checking.
+A complete goal condition aims for an advisory target of 1,500 Unicode
+characters. This is a compression prompt, not a validity boundary. Keep the
+smallest complete Outcome, costly-to-violate Constraints, decisive
+Verification, and bounded Stop-when inline; point to an exact file and heading
+for details that a durable source carries better.
+
+When a complete draft exceeds 1,500 characters, make one compression pass to
+remove duplication and move eligible detail to a durable source. If further
+compression would remove a behavior-changing constraint or make success less
+decidable, keep the detail. Remaining above 1,500 characters is not an error
+and needs no warning.
+
+A goal condition is capped at 4,000 Unicode characters. Count all four labels,
+content, and inline references, excluding presentation fences and a manual
+`/goal ` prefix. A goal whose full detail would exceed that budget does not
+inline the detail — it points at a file instead (the plan, the spec, the design
+doc) and keeps the goal condition itself short enough for the evaluator to
+hold in view alongside the conversation it is checking.
 
 Only Anthropic's guidance documents this cap; OpenAI's guidance states no
 length limit at all. This skill applies the same budget to goals for either

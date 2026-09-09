@@ -2,6 +2,10 @@
 
 ## [2.0.5] — 2026-09-09 — command substitution and update guidance
 
+budget-exception: goal-create.session-activation — native Goal activation is
+a new host-side effect whose authorization, fallback, and success boundary
+must be recomputed as one executable skill gate.
+
 - Detect real push and PR commands inside `$()` even when the substitution
   contains no shell operator, while keeping single-quoted substitutions literal.
 - Correct the Codex update guidance from live observation: `plugin add` may

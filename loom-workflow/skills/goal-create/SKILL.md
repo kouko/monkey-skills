@@ -2,7 +2,7 @@
 name: goal-create
 version: 0.1.0
 description: |
-  Draft a goal condition — SESSION mode emits the four-field goal (Outcome / Constraints / Verification / Stop-when) a long-running agent run is checked against, ARC mode drafts a repository's purpose artifact `Why` / `Done when` for the user to land. Use for 'set a goal', 'give this run a stopping condition', '設一個目標', 'ゴールを立てて'. This skill never fires on its own; it must be invoked by name.
+  Create a goal condition — SESSION mode validates the four-field goal (Outcome / Constraints / Verification / Stop-when), activates it when the current host accepts it, and gives an honest recovery action otherwise. ARC mode drafts a repository's purpose artifact `Why` / `Done when` for the user to land. Use for 'set a goal', 'give this run a stopping condition', '設一個目標', 'ゴールを立てて'. This skill never fires on its own; it must be invoked by name.
 ---
 
 # Goal Create
@@ -39,6 +39,58 @@ each time; no script can pass or fail it on the agent's behalf.
 The script exits 1 on any hard failure and 0 otherwise. On exit 1, the
 draft is rewritten to fix what it flagged and the checker is re-run — a
 draft is never shown to the user until it exits 0.
+
+<!-- gate: goal-create.session-activation -->
+After exit 0, show the complete four-field condition in the conversation,
+then use the capability actually exposed by the current host. Invoking the
+named `goal-create SESSION` mode is explicit authorization to replace any
+active Goal with this condition, without a separate replacement confirmation.
+Confirmation is only for content: when the Outcome was inferred or materially
+changed from the user's words, use the host's confirmation path.
+
+### Codex activation
+
+Call `create_goal` with the complete four-field condition as its objective.
+The authoritative schema and unfinished-Goal refusal are in OpenAI Codex's
+[`spec.rs`](https://github.com/openai/codex/blob/main/codex-rs/ext/goal/src/spec.rs)
+and [`tool.rs`](https://github.com/openai/codex/blob/main/codex-rs/ext/goal/src/tool.rs).
+Call the Goal active only after host-provided success. On any failure, report
+the host's reason and say the new Goal is not active. In particular, when an
+unfinished Goal makes `create_goal` refuse replacement, preserve it and tell
+the user to run `/goal clear`, then run `goal-create SESSION` again.
+
+### Claude Code activation
+
+When the interactive session exposes `ProposeGoal`, derive a proposal of at
+most 500 characters from the complete condition just shown. It preserves the
+Outcome, every behavior-changing Constraint, the decisive Verification, and
+the Stop-when bound, either inline or through an exact reference to that
+immediately preceding condition. A generic phrase such as "the goal above"
+is not an exact reference. If the faithful proposal cannot fit, skip
+`ProposeGoal` and use the manual fallback below.
+
+Anthropic's published Claude Code package defines the `condition`, its
+500-character maximum, `ask_user` default and direct-set path, and the result
+shape in
+[`sdk-tools.d.ts`](https://unpkg.com/@anthropic-ai/claude-code@2.1.227/sdk-tools.d.ts).
+
+Call `ProposeGoal` with `ask_user: false` only when the user's own words state
+the exact Outcome. Otherwise use its confirmation path and report the Goal as
+pending, not active, until the host confirms kickoff. An existing Goal does
+not change this content-confirmation rule: the SESSION invocation already
+authorizes replacing it without a separate replacement confirmation.
+
+When the current session does not expose `ProposeGoal`, or native activation
+returns a non-success result, say the Goal is not active and user action is
+required. Emit one copyable `/goal <condition>` command containing the
+complete condition, not the compact proposal, and disclose that submitting it
+replaces any active Goal. Do not invoke `claude -p`, inject keystrokes, launch
+another process, or install a custom Stop hook.
+
+For either host, an attempted call, displayed prose, pending confirmation, or
+manual command is not activation evidence. Report active only from the host's
+successful result, and keep its recoverable reason visible otherwise.
+<!-- /gate -->
 
 ## ARC mode
 

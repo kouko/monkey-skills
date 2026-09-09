@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-goal-create-native-goal-activation",
+  "content_digest": "a7076df9b820026b2b916aeba1dd266c24c389ab",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-09-goal-create-native-goal-activation/evidence/probes/test_goal_activation_contract.py",
+      "artifact": "docs/loom/2026-09-09-goal-create-native-goal-activation/evidence/probes/test_goal_activation_contract.py",
+      "result": "pass",
+      "command_digest": "830754301c5dddcf4708a8434e2c254bdbb63223dcfd0adaf307d3a28139e628"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "branch_skill_review",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "branch_code_review",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

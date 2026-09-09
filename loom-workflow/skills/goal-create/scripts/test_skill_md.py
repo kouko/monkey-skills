@@ -84,6 +84,17 @@ def _section(text: str, heading: str) -> str:
     return match.group(1)
 
 
+def _gate(text: str, gate_id: str) -> str:
+    pattern = re.compile(
+        r"<!--\s*gate:\s*" + re.escape(gate_id) + r"\s*-->(.*?)"
+        r"<!--\s*/gate\s*-->",
+        re.DOTALL,
+    )
+    match = pattern.search(text)
+    assert match, f"No gate block found for {gate_id!r}"
+    return _normalize_ws(match.group(1))
+
+
 def test_declares_two_modes_and_conditional_arc():
     text = _read_skill_md()
 
@@ -233,6 +244,78 @@ def test_floor_invocation_line_names_the_script():
         "Expected 'never ... shown' bound within one sentence — a draft "
         "must not be presented before the checker exits 0."
     )
+
+
+def test_session_activates_codex_only_after_lint_and_reports_host_evidence():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+
+    assert "create_goal" in session_body
+    assert "complete four-field condition" in session_body
+    assert "host-provided success" in session_body
+    assert "not active" in session_body
+    assert "`/goal clear`" in session_body
+    assert "run `goal-create SESSION` again" in session_body
+
+
+def test_session_activation_rules_are_one_registered_gate():
+    text = _read_skill_md()
+    gate = _gate(text, "goal-create.session-activation")
+
+    for obligation in (
+        "Codex activation",
+        "Claude Code activation",
+        "host-provided success",
+        "one copyable `/goal <condition>` command",
+    ):
+        assert obligation in gate
+
+
+def test_session_uses_a_faithful_bounded_claude_proposal():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+    normalized = _normalize_ws(session_body)
+
+    assert "ProposeGoal" in session_body
+    assert "500 characters" in normalized
+    for required_part in (
+        "Outcome",
+        "every behavior-changing Constraint",
+        "Verification",
+        "Stop-when",
+    ):
+        assert required_part in normalized
+    assert "exact reference" in normalized
+    assert "skip `ProposeGoal`" in normalized
+    assert "not the compact proposal" in normalized
+    assert "truncate" not in normalized.lower()
+
+
+def test_session_confirmation_and_replacement_follow_user_intent():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+    normalized = _normalize_ws(session_body)
+
+    assert "explicit authorization to replace" in normalized
+    assert "without a separate replacement confirmation" in normalized
+    assert "inferred" in normalized and "materially changed" in normalized
+    assert "ask_user: false" in session_body
+
+
+def test_session_falls_back_without_starting_another_process():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+
+    assert "does not expose `ProposeGoal`" in session_body
+    assert "one copyable `/goal <condition>` command" in session_body
+    assert "replaces any active Goal" in session_body
+    assert "Do not invoke `claude -p`" in session_body
+
+
+def test_external_goal_tool_contracts_are_cited_at_the_call_site():
+    session_body = _section(_read_skill_md(), "SESSION mode")
+
+    assert "https://github.com/openai/codex/blob/" in session_body
+    assert "/codex-rs/ext/goal/src/spec.rs" in session_body
+    assert "/codex-rs/ext/goal/src/tool.rs" in session_body
+    assert "https://unpkg.com/@anthropic-ai/claude-code@" in session_body
+    assert "/sdk-tools.d.ts" in session_body
 
 
 def test_arc_points_at_the_purpose_template_without_restating_it():
