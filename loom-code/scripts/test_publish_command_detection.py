@@ -33,3 +33,12 @@ def test_unbalanced_quote_keeps_conservative_detection() -> None:
 
 def test_dynamic_command_substitution_keeps_conservative_detection() -> None:
     assert loom_checker.is_push_command('echo "$(true | gh pr create --fill)"')
+    assert loom_checker.is_push_command('echo "`true | git push origin HEAD`"')
+    assert loom_checker.is_push_command('echo "`true | gh pr create --fill`"')
+
+
+def test_single_quoted_backticks_remain_literal() -> None:
+    command = "rg -n '`true | gh pr create --fill`' docs"
+
+    assert not loom_checker.is_push_command(command)
+    assert not loom_checker.is_pr_create_command(command)

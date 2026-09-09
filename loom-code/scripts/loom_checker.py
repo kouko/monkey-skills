@@ -2069,6 +2069,8 @@ def _shell_segments(command: str) -> list[str]:
             and command[index + 1] == "("
         ):
             dynamic = True
+        elif character == "`" and quote != "'":
+            dynamic = True
         elif quote:
             if character == quote:
                 quote = None
