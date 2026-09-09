@@ -12,6 +12,7 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py intent <path> [--commit-msg <file>]
     loom_checker.py intake <station> <change-id>
     loom_checker.py push [--head <ref>] [--hook]
+    loom_checker.py publish --intent <absolute-path> --title <text> --body-file <absolute-path>
     loom_checker.py publish --confirm-authorized --title <text> --body-file <absolute-path>
     loom_checker.py finalize-review <change-id> --input <review-input.json>
     loom_checker.py standing <path-to-intent>
@@ -37,6 +38,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import date
 from pathlib import Path
 from urllib.parse import quote
@@ -163,6 +165,12 @@ RULES.append((
     "The branch carries one generated attestation whose functional-content digest, "
     "successful executions, command identities, and passing reviewer verdicts validate "
     "without replaying package tests or adversarial probes.",
+))
+RULES.append((
+    "push.contextual-body",
+    "The exact pull-request body carries Ship's nine top-level contextual headings "
+    "exactly once and in order, with no competing Memory heading or explicit claim "
+    "to expose private or hidden chain-of-thought.",
 ))
 
 
@@ -2655,6 +2663,9 @@ def run_publish_external(argv: list[str], **kwargs) -> subprocess.CompletedProce
     return subprocess.run(argv, capture_output=True, text=True, timeout=30, **kwargs)
 
 
+wait_publish_interval = time.sleep
+
+
 def _publish_usage(reason: str, err) -> int:
     err.write(f"publish: {reason}\n")
     return 2
@@ -2662,6 +2673,69 @@ def _publish_usage(reason: str, err) -> int:
 
 def _publish_block(reason: str, err) -> int:
     return report([("push.attestation", reason)], err)
+
+
+CONTEXTUAL_PR_HEADINGS = (
+    "Context", "Intended outcome", "Scope", "Decisions", "Implementation",
+    "Behaviour change", "Verification", "Risks and rollback", "Follow-ups",
+)
+
+
+def validate_contextual_pr_body(body: str) -> str | None:
+    """Recompute the structural PR-body floor; semantic truth stays review-owned."""
+    sections: list[tuple[str, list[str]]] = []
+    outside_fences: list[str] = []
+    fence: tuple[str, int] | None = None
+    for line in body.splitlines():
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if marker and fence is None:
+            token = marker.group(1)
+            fence = (token[0], len(token))
+            continue
+        if marker and fence is not None:
+            token, suffix = marker.group(1), marker.group(2)
+            if token[0] == fence[0] and len(token) >= fence[1] and not suffix.strip():
+                fence = None
+            continue
+        if fence is not None:
+            continue
+        outside_fences.append(line)
+        heading = re.fullmatch(r"## ([^#\n].*)", line)
+        if heading:
+            sections.append((heading.group(1), []))
+        elif sections:
+            sections[-1][1].append(line)
+
+    if [heading for heading, _content in sections] != list(CONTEXTUAL_PR_HEADINGS):
+        return (
+            "PR body must contain Ship's nine top-level contextual headings "
+            "exactly once and in order, with no competing top-level heading"
+        )
+    for heading, lines in sections:
+        content = "\n".join(lines)
+        visible = re.sub(r"<!--.*?-->", " ", content, flags=re.DOTALL)
+        alphanumeric_count = sum(character.isalnum() for character in visible)
+        one_ascii_token = re.fullmatch(r"\s*[A-Za-z]+[.!?:;,-]*\s*", visible) is not None
+        template_placeholder = re.fullmatch(r"\s*<[^>\n]+>\s*", visible) is not None
+        sentinel = (
+            heading == "Follow-ups"
+            and re.sub(r"[\W_]+", "", visible).casefold() == "none"
+        )
+        if (
+            (alphanumeric_count < 8 or one_ascii_token or template_placeholder)
+            and not sentinel
+        ):
+            return f"PR body section {heading!r} has no substantive content"
+    visible_body = re.sub(
+        r"<!--.*?-->", " ", "\n".join(outside_fences), flags=re.DOTALL
+    )
+    if re.search(
+        r"\b(?:private|hidden)(?:\s+or\s+(?:private|hidden))?\s+chain-of-thought\b",
+        visible_body,
+        flags=re.IGNORECASE,
+    ):
+        return "PR body must not claim to expose private or hidden chain-of-thought"
+    return None
 
 
 def _publish_origin_state(repo: Path, expected_branch: str) -> tuple[str | None, str | None]:
@@ -2681,10 +2755,11 @@ def _publish_origin_state(repo: Path, expected_branch: str) -> tuple[str | None,
     return origin_urls[0], None
 
 
-def _publish_args(args: list[str]) -> tuple[str, Path] | str:
+def _publish_args(args: list[str]) -> tuple[str, Path, Path | None, bool] | str:
     authorized = False
     title: str | None = None
     body_file: Path | None = None
+    intent_file: Path | None = None
     rest = list(args)
     while rest:
         token = rest.pop(0)
@@ -2692,7 +2767,7 @@ def _publish_args(args: list[str]) -> tuple[str, Path] | str:
             if authorized:
                 return "--confirm-authorized may appear only once"
             authorized = True
-        elif token in {"--title", "--body-file"}:
+        elif token in {"--title", "--body-file", "--intent"}:
             if not rest:
                 return f"{token} needs a value"
             value = rest.pop(0)
@@ -2700,21 +2775,85 @@ def _publish_args(args: list[str]) -> tuple[str, Path] | str:
                 if title is not None:
                     return "--title may appear only once"
                 title = value
-            else:
+            elif token == "--body-file":
                 if body_file is not None:
                     return "--body-file may appear only once"
                 body_file = Path(value)
+            else:
+                if intent_file is not None:
+                    return "--intent may appear only once"
+                intent_file = Path(value)
         else:
             return f"unexpected argument {token!r}"
-    if not authorized:
-        return "--confirm-authorized is required after Ship decision point ③"
+    if not authorized and intent_file is None:
+        return "--intent or --confirm-authorized is required for publication authorization"
     if not title or not title.strip():
         return "--title needs non-empty text"
     if body_file is None or not body_file.is_absolute():
         return "--body-file must name an absolute path"
     if not body_file.is_file() or not os.access(body_file, os.R_OK):
         return f"--body-file is not a readable file: {body_file}"
-    return title, body_file
+    if intent_file is not None:
+        if not intent_file.is_absolute():
+            return "--intent must name an absolute path"
+        if not intent_file.is_file() or not os.access(intent_file, os.R_OK):
+            return f"--intent is not a readable file: {intent_file}"
+    return title, body_file, intent_file, authorized
+
+
+def _publication_change_id(repo: Path) -> tuple[str | None, str | None]:
+    """Derive the publication identity from the sole attestation in the branch."""
+    manifest = load_manifest()
+    template = manifest.get("artifacts", {}).get("attestation", {}).get("path")
+    if not template:
+        return None, "contract manifest declares no attestation artifact"
+    matcher = glob_to_regex(template.replace("<change-id>", "*"))
+    candidates = sorted(path for path in changed_paths(repo) if matcher.fullmatch(path))
+    if len(candidates) != 1:
+        return None, f"branch must carry exactly one attested change; found {len(candidates)}"
+    match = re.fullmatch(
+        re.escape(template).replace(re.escape("<change-id>"), r"(?P<change_id>[^/]+)"),
+        candidates[0],
+    )
+    if match is None:
+        return None, "cannot derive attested change id"
+    change_id = match.group("change_id")
+    try:
+        payload = json.loads(git_text(repo, "show", f"HEAD:{candidates[0]}"))
+    except (UsageError, json.JSONDecodeError):
+        return None, "attestation must be committed at HEAD"
+    if not isinstance(payload, dict) or payload.get("change_id") != change_id:
+        return None, "attestation change_id does not match its path"
+    return change_id, None
+
+
+def _intent_authorizes_publication(
+    repo: Path, intent_file: Path
+) -> tuple[bool, str | None]:
+    """Trust only the attested change's canonical intent as committed at HEAD."""
+    change_id, error = _publication_change_id(repo)
+    if error:
+        return False, error
+    manifest = load_manifest()
+    canonical = artifact_path(manifest, "intent", change_id, repo).resolve()
+    if intent_file.resolve() != canonical:
+        return False, "intent path does not match the attested change"
+    intent_rel = canonical.relative_to(repo)
+    try:
+        committed = git_text(repo, "show", f"HEAD:{intent_rel}")
+    except UsageError:
+        return False, "automatic publication requires a committed intent at HEAD"
+    front, _sections = parse_document(committed)
+    if not re.fullmatch(r"confirmed \d{4}-\d{2}-\d{2}", front.get("status", "")):
+        return False, "committed intent is not confirmed"
+    publication = front.get("publication", "")
+    match = re.fullmatch(
+        r"automatic — authorized (\d{4}-\d{2}-\d{2}) by (\S(?:.*\S)?)",
+        publication,
+    )
+    if match is None or not is_real_date(match.group(1)):
+        return False, "committed intent has no valid automatic-publication authorization"
+    return True, None
 
 
 def _publish_env(repo_identity: str, repo: Path, trusted_paths: tuple[str, str]) -> dict[str, str]:
@@ -2743,12 +2882,100 @@ def _external_or_block(argv: list[str], *, repo: Path, env: dict[str, str], err)
     return result
 
 
+def _observe_required_ci(
+    pr_url: str, *, trusted_gh: str, repo: Path, env: dict[str, str], out, err
+) -> int:
+    """Observe required PR checks in this process until a terminal state."""
+    poll_intervals = 0
+    saw_empty_snapshot = False
+    while True:
+        argv = [
+            trusted_gh, "pr", "checks", pr_url, "--required",
+            "--json", "name,state,bucket",
+        ]
+        try:
+            result = run_publish_external(argv, cwd=repo, env=env)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return _publish_block(
+                f"required CI could not be observed: {type(exc).__name__}: {exc}", err
+            )
+        # gh uses exit 8 while checks are pending; JSON remains authoritative.
+        if result.returncode not in {0, 8}:
+            detail = (result.stderr or result.stdout or f"exit {result.returncode}").strip()
+            return _publish_block(f"required CI could not be observed: {detail}", err)
+        if result.returncode == 0 and not result.stdout.strip():
+            checks = []
+        else:
+            try:
+                checks = json.loads(result.stdout)
+            except json.JSONDecodeError as exc:
+                return _publish_block(f"cannot decode required CI response: {exc}", err)
+        if not isinstance(checks, list) or any(not isinstance(check, dict) for check in checks):
+            return _publish_block("required CI response is not a list of checks", err)
+        if not checks:
+            if saw_empty_snapshot:
+                out.write("No required checks registered\n")
+                return 0
+            saw_empty_snapshot = True
+            wait_publish_interval(30)
+            continue
+
+        states = [(str(check.get("name", "unnamed")),
+                   str(check.get("state", "")).upper(),
+                   str(check.get("bucket", "")).casefold()) for check in checks]
+        action = [name for name, state, _ in states if state == "ACTION_REQUIRED"]
+        cancelled = [name for name, state, bucket in states
+                     if state in {"CANCELLED", "CANCELED"} or bucket == "cancel"]
+        failed = [name for name, state, bucket in states
+                  if state in {"FAILURE", "TIMED_OUT", "STARTUP_FAILURE"}
+                  or bucket == "fail"]
+        if action:
+            return _publish_block(
+                "required CI requires user action: " + ", ".join(action), err
+            )
+        if cancelled:
+            return _publish_block("required CI cancelled: " + ", ".join(cancelled), err)
+        if failed:
+            return _publish_block("required CI failed: " + ", ".join(failed), err)
+
+        pending = [name for name, state, bucket in states
+                   if state in {"PENDING", "QUEUED", "IN_PROGRESS", "WAITING", "REQUESTED"}
+                   or bucket == "pending"]
+        if pending:
+            if poll_intervals >= 120:
+                return _publish_block(
+                    "required CI requires user action because no reliable terminal result "
+                    "was available after 60 minutes",
+                    err,
+                )
+            wait_publish_interval(30)
+            poll_intervals += 1
+            continue
+        unknown = [name for name, _, bucket in states
+                   if bucket not in {"pass", "skipping"}]
+        if unknown:
+            return _publish_block(
+                "required CI requires user action because its state is unknown: "
+                + ", ".join(unknown), err,
+            )
+        out.write("Required CI passed\n")
+        return 0
+
+
 def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
     """Validate and publish one reviewed HEAD without caller-built shell text."""
     parsed = _publish_args(args)
     if isinstance(parsed, str):
         return _publish_usage(parsed, err)
-    title, body_file = parsed
+    title, body_file, intent_file, authorized = parsed
+
+    try:
+        body = body_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return _publish_usage(f"cannot read PR body as UTF-8: {exc}", err)
+    body_error = validate_contextual_pr_body(body)
+    if body_error:
+        return report([("push.contextual-body", body_error)], err)
 
     redirected = sorted(
         key for key in os.environ
@@ -2771,7 +2998,14 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         [str(Path(trusted_git).parent), str(Path(trusted_gh).parent), "/usr/bin", "/bin"]
     ))
     try:
-        return _cmd_publish_trusted(title, body_file, trusted_git, trusted_gh, out, err)
+        with tempfile.TemporaryDirectory(prefix="loom-publish-") as snapshot_dir:
+            body_snapshot = Path(snapshot_dir) / "pr-body.md"
+            body_snapshot.write_text(body, encoding="utf-8")
+            body_snapshot.chmod(0o600)
+            return _cmd_publish_trusted(
+                title, body_snapshot, intent_file, authorized,
+                trusted_git, trusted_gh, out, err,
+            )
     finally:
         if previous_path is None:
             os.environ.pop("PATH", None)
@@ -2780,13 +3014,25 @@ def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
 
 
 def _cmd_publish_trusted(
-    title: str, body_file: Path, trusted_git: str, trusted_gh: str,
+    title: str, body_file: Path, intent_file: Path | None, authorized: bool,
+    trusted_git: str, trusted_gh: str,
     out=sys.stdout, err=sys.stderr,
 ) -> int:
     try:
         repo = repo_root(Path.cwd()).resolve()
     except UsageError as exc:
         return _publish_block(str(exc), err)
+
+    intent_error: str | None = None
+    if not authorized and intent_file is not None:
+        intent_authorized, intent_error = _intent_authorizes_publication(repo, intent_file)
+        authorized = intent_authorized
+    if not authorized:
+        return _publish_usage(
+            f"{intent_error or 'intent has no confirmed automatic-publication authorization'}; "
+            "obtain one publication decision and pass --confirm-authorized",
+            err,
+        )
 
     head = git_maybe(repo, "rev-parse", "HEAD")
     branch = git_maybe(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
@@ -2892,7 +3138,7 @@ def _cmd_publish_trusted(
         return _publish_block(f"cannot decode existing PR response: {exc}", err)
     if not isinstance(candidates, list):
         return _publish_block("existing PR response is not a list", err)
-    urls: list[str] = []
+    candidate_matches: list[tuple[str, bool]] = []
     expected_repo = f"{owner}/{name}"
     for candidate in candidates:
         try:
@@ -2909,8 +3155,8 @@ def _cmd_publish_trusted(
             matches = False
         if not matches:
             return _publish_block("existing pull request identity does not match origin, HEAD, and base", err)
-        urls.append(candidate_url)
-    if len(urls) > 1:
+        candidate_matches.append((candidate_url, bool(candidate.get("draft", False))))
+    if len(candidate_matches) > 1:
         return _publish_block("multiple open pull requests match the current branch", err)
 
     current_origin, origin_error = _publish_origin_state(repo, branch)
@@ -2939,9 +3185,65 @@ def _cmd_publish_trusted(
             f"{origin_error or 'origin URL changed'}", err,
         )
 
-    if urls:
-        out.write(f"PR already exists: {urls[0]}\n")
-        return 0
+    if candidate_matches:
+        pr_url, is_draft = candidate_matches[0]
+        update_result = _external_or_block(
+            [trusted_gh, "pr", "edit", pr_url, "--title", title,
+             "--body-file", str(body_file)],
+            repo=repo, env=env, err=err,
+        )
+        if update_result is None:
+            return 1
+        if git_text(repo, "rev-parse", "HEAD") != head:
+            return _publish_block("live HEAD moved after PR update", err)
+        current_origin, origin_error = _publish_origin_state(repo, branch)
+        if origin_error or current_origin != origin_url:
+            return _publish_block(
+                f"publication identity changed after PR update: "
+                f"{origin_error or 'origin URL changed'}", err,
+            )
+        post_update_remote = _external_or_block(
+            [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+             f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+        )
+        if post_update_remote is None:
+            return 1
+        updated_remote = [
+            line.split()[0] for line in post_update_remote.stdout.splitlines() if line.strip()
+        ]
+        if updated_remote != [head]:
+            return _publish_block("remote branch moved after PR update", err)
+        if is_draft:
+            ready_result = _external_or_block(
+                [trusted_gh, "pr", "ready", pr_url],
+                repo=repo, env=env, err=err,
+            )
+            if ready_result is None:
+                return 1
+            if git_text(repo, "rev-parse", "HEAD") != head:
+                return _publish_block("live HEAD moved after PR readiness", err)
+            current_origin, origin_error = _publish_origin_state(repo, branch)
+            if origin_error or current_origin != origin_url:
+                return _publish_block(
+                    f"publication identity changed after PR readiness: "
+                    f"{origin_error or 'origin URL changed'}", err,
+                )
+            post_ready_remote = _external_or_block(
+                [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+                 f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+            )
+            if post_ready_remote is None:
+                return 1
+            ready_remote = [
+                line.split()[0] for line in post_ready_remote.stdout.splitlines()
+                if line.strip()
+            ]
+            if ready_remote != [head]:
+                return _publish_block("remote branch moved after PR readiness", err)
+        out.write(f"PR updated and ready: {pr_url}\n")
+        return _observe_required_ci(
+            pr_url, trusted_gh=trusted_gh, repo=repo, env=env, out=out, err=err
+        )
 
     create_result = _external_or_block(
         [trusted_gh, "pr", "create", "--base", base, "--head", branch,
@@ -2953,8 +3255,29 @@ def _cmd_publish_trusted(
     url = create_result.stdout.strip()
     if not url:
         return _publish_block("gh pr create returned no pull request URL", err)
+    if git_text(repo, "rev-parse", "HEAD") != head:
+        return _publish_block("live HEAD moved after PR creation", err)
+    current_origin, origin_error = _publish_origin_state(repo, branch)
+    if origin_error or current_origin != origin_url:
+        return _publish_block(
+            f"publication identity changed after PR creation: "
+            f"{origin_error or 'origin URL changed'}", err,
+        )
+    post_create_remote = _external_or_block(
+        [trusted_git, "-C", str(repo), "ls-remote", "--heads", "origin",
+         f"refs/heads/{branch}"], repo=repo, env=env, err=err,
+    )
+    if post_create_remote is None:
+        return 1
+    created_remote = [
+        line.split()[0] for line in post_create_remote.stdout.splitlines() if line.strip()
+    ]
+    if created_remote != [head]:
+        return _publish_block("remote branch moved after PR creation", err)
     out.write(f"Published PR: {url}\n")
-    return 0
+    return _observe_required_ci(
+        url, trusted_gh=trusted_gh, repo=repo, env=env, out=out, err=err
+    )
 
 
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:

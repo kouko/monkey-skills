@@ -12,6 +12,14 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.0.1] — 2026-09-09 — explicit publication authorization
+
+Patch. When the user confirms automatic publication with the intent,
+capture-intent records that choice in the contract's language-independent
+`publication:` field instead of leaving Ship to infer authority from prose.
+The restatement discloses the default non-forced push and Ready PR, explicit
+opt-out, and separate merge choice before that confirmation.
+
 ## [2.0.0] — 2026-09-08 — ledger-free spec handoff
 
 Breaking. Require loom contract 2.0, keep risk-triggered review within the

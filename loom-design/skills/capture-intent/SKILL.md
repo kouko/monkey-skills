@@ -37,7 +37,7 @@ one good way to produce them. Everything it writes is read back by
 | write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-ready`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
 | build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
 | review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
-| ship | diff / PR — the pushed change branch and its pull request | user — decision point ③ | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
+| ship | diff / PR — the pushed change branch and its pull request | automatic for canonical intent authorization; one user decision for a legacy intent; merge is separate | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
 ## What you will be asked, in plain words
@@ -221,6 +221,15 @@ twice, and this is the only stop this station makes.
    > (You want ___, and when it is done you will be able to ___, ___ and
    > ___. Is that right?)
 
+   For the current contract, automatic publication is the default. This same
+   restatement explicitly says that answering yes authorizes a later non-forced
+   push and Ready PR after Review and publication checks pass, while merge
+   remains a separate decision. Say that the user may explicitly opt out before
+   publication. Do not hide that consequence in mechanism language or add it
+   after the user has answered. Write
+   `publication: automatic — authorized <date> by <name>` only after that
+   informed yes; an opt-out leaves the field absent.
+
 2. **The one-way doors found so far**, in consequence form. A one-way door
    is a choice that is expensive or impossible to undo. The reference that
    defines them lives in `loom-code`'s `write-plan` station — the file
@@ -315,7 +324,10 @@ the intent and restate again; there is no limit on rounds here.
 
 **On "yes":**
 
-1. Write `status: confirmed <date>` into the intent, and, when step 3 ran,
+1. Write `status: confirmed <date>` into the intent. When the confirmed
+   restatement explicitly authorizes automatic publication, also write
+   `publication: automatic — authorized <date> by <name>`; never derive it
+   from status or prose. When step 3 ran, write
    `ratified-by: <name> <date>` into `PRINCIPLES.md`.
 2. Commit with the message `docs(loom): intent <change-id> confirmed`. Its
    body **must contain the `needs-design:` line verbatim** — the checker

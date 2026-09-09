@@ -1,6 +1,6 @@
 # Memory Conventions
 
-Format spec for commit trailers, PR body `## Memory` section, and
+Format spec for commit trailers, non-Loom PR body `## Memory` section, and
 diagram venue. This is the source of truth that protocols and scripts
 reference.
 
@@ -112,7 +112,7 @@ they never change the key vocabulary or the folding mechanism above.
 
 A trailer has **two** consumers: the human archaeologist above **and**
 a future **agent** doing `git log --grep='^Decision:'` retrieval or a
-Phase-3 digest rebuild (`git interpret-trailers` + the PR `## Memory`
+Non-Loom carrier verification (`git interpret-trailers` + the PR `## Memory`
 section). The guardrails must serve both — they must never degrade the
 machine/agent consumer.
 
@@ -205,10 +205,10 @@ MEMORY: Two-layer split adopted.
 X-Decision: ...
 ```
 
-## PR body `## Memory` section
+## Non-Loom PR body `## Memory` section
 
-The PR body gains one new optional section, placed **after all
-Claude Code standard sections** (`## Summary`, `## Test plan`) and
+When a non-Loom caller has no owning schema, its PR body gains one optional
+section, placed **after its standard sections** (`## Summary`, `## Test plan`) and
 **before the `🤖 Generated with` footer**.
 
 ### Layout
@@ -260,7 +260,7 @@ Choose the form based on where it will be read.
 | Venue | Form | Rationale |
 |---|---|---|
 | Commit message body | **ASCII only** | GitHub commit view does not render Mermaid; terminal (`git log`, `gh pr view`) shows raw text. ASCII works everywhere. |
-| PR body `## Memory → ### Architecture` | **Mermaid preferred** | GitHub renders Mermaid natively (since 2022-02). Fallback to ASCII for very small diagrams (< 4 nodes). |
+| Non-Loom PR body `## Memory → ### Architecture` | **Mermaid preferred** | GitHub renders Mermaid natively (since 2022-02). Fallback to ASCII for very small diagrams (< 4 nodes). Loom follows Ship's conditional Mermaid rule. |
 | Repo docs (`README.md`, `TECH-SPEC.md`, ADRs) | **Mermaid** | Long-lived, rendered by GitHub; exportable to SVG/PNG for docs sites |
 | Complex diagrams (class / ER / sequence / gantt / sankey) | **Mermaid only** | ASCII cannot express these cleanly |
 | Non-GitHub forge (sourcehut, self-hosted Gitea) | **ASCII** | Mermaid not rendered; ASCII degrades gracefully |
@@ -282,8 +282,8 @@ Is this a routine change (typo, bump, format)?
 
 - Put the diagram **where its reader will see it rendered**. Commit
   message readers see raw text; PR body readers see rendered markdown.
-- When unsure, ASCII is safer — it reads correctly everywhere. Mermaid
-  is the specialized tool, not the default.
+- For non-Loom callers, when unsure, ASCII is safer because it reads correctly
+  everywhere. Loom PR bodies follow Ship's mutually exclusive Mermaid rule.
 - Prefix any diagram with a one-sentence prose description for
   accessibility (screen readers cannot parse either form well).
 

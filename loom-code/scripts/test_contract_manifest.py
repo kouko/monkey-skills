@@ -140,3 +140,12 @@ def test_manifest_declares_generated_attestation(manifest):
     names = [field["name"] for field in schema["fields"]]
     assert names == ["schema", "change_id", "content_digest", "executions", "verdicts", "findings"]
     assert "review" not in manifest["artifacts"]
+
+
+def test_intent_contract_declares_machine_readable_publication_authorization(manifest):
+    fields = {field["name"]: field for field in manifest["artifacts"]["intent"]["fields"]}
+    publication = fields["publication"]
+    assert publication["required"] is False
+    assert publication["grammar"] == (
+        "automatic — authorized <YYYY-MM-DD> by <name>"
+    )

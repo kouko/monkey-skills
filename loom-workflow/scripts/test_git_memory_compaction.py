@@ -26,6 +26,7 @@ CONTRACT_BEHAVIORS = {
 
 def test_entrypoint_preserves_invocation_privacy_capture_and_recall():
     text = SKILL.read_text(encoding="utf-8")
+    normalized_text = " ".join(text.split())
 
     essence = {
         "mandatory boundaries": [
@@ -48,10 +49,15 @@ def test_entrypoint_preserves_invocation_privacy_capture_and_recall():
             "fail-closed",
             "BLOCKED",
         ],
-        "capture verification": [
+        "commit capture verification": [
             "memory-grep.sh --verify <ref>",
-            "Confirm the PR `## Memory` section",
-            "An empty result is a flag to fix **before** merge",
+            "the committed memory store remains authoritative",
+        ],
+        "Loom PR ownership": [
+            "the caller owns the body schema and publication consent",
+            "For Loom, contribute",
+            "never add `## Memory`, a second footer contract, or another confirmation",
+            "does not create a Loom lifecycle gate",
         ],
         "squash caveat": [
             "mid-body",
@@ -65,7 +71,7 @@ def test_entrypoint_preserves_invocation_privacy_capture_and_recall():
         ],
     }
     for contract, needles in essence.items():
-        missing = [needle for needle in needles if needle not in text]
+        missing = [needle for needle in needles if needle not in normalized_text]
         assert not missing, f"{contract} missing from entrypoint: {missing}"
 
     skill_root = SKILL.parent

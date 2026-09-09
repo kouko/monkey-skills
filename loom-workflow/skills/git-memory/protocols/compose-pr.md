@@ -1,12 +1,19 @@
-# Protocol: Composing a PR body with `## Memory` section
+# Protocol: Contributing durable memory to a PR body
 
-When you are about to open a PR (`gh pr create`), decide whether to add
-a `## Memory` section on top of Claude Code's standard template.
+When you are about to open a PR (`gh pr create`), classify whether the change
+has durable memory. Ship owns the top-level PR body schema for Loom changes;
+git-memory contributes earned Decision, Learning, and Gotcha content; it does not own
+or create a competing top-level schema.
 
-## Step 1 — Assemble CC's standard template first
+## Step 1 — Identify the caller's body schema
 
-Claude Code's default `gh pr create` template is stable and should not
-be modified:
+For a Loom change, preserve Ship's complete contextual headings and place
+durable material in the corresponding `## Decisions` section. Learning and
+Gotcha material may appear there or in the most relevant contextual section.
+Do not add a second Summary/Test-plan/Memory hierarchy.
+
+For a non-Loom caller without an owning schema, use its repository-provided PR
+template. If none exists, a minimal body may use:
 
 ```markdown
 ## Summary
@@ -18,8 +25,7 @@ be modified:
 🤖 Generated with [Claude Code]...
 ```
 
-Do not rewrite, reorder, or merge memory content into `## Summary` or
-`## Test plan`. The `## Memory` section is **additive**.
+Do not rewrite or reorder a caller-owned body merely to carry memory.
 
 ## Step 2 — Decide if the PR is memory-worthy
 
@@ -35,20 +41,24 @@ A PR is memory-worthy if **any** of these is true:
 - The PR touches architecture / flow / state in a way a diagram would
   clarify
 
-**If any apply, the PR is memory-worthy and `## Memory` is REQUIRED**
-— not optional. A memory-worthy PR that closes with no `## Memory`
-section (and no memory trailers on its commits) is the exact failure
-this protocol exists to prevent: the substrate ships empty and the
-"why" is lost.
+If any apply, the PR is memory-worthy. For a Loom PR, contribute the material
+to Ship's contextual schema, primarily `## Decisions`; Ship owns the complete
+body and publication boundary. Do not create a `## Memory` top-level section or
+append a second raw-footer contract. For a
+non-Loom PR whose caller has no place for durable rationale, `## Memory` is
+required. A memory-worthy PR that closes with neither contextual memory nor
+memory trailers is the exact failure this protocol exists to prevent: the
+substrate ships empty and the "why" is lost.
 
-If **none** apply, the PR is not memory-worthy — skip `## Memory`
-entirely. A non-memory-worthy PR without `## Memory` is the correct
-signal that the diff speaks for itself. See "When to skip" below for
-the legitimate skip cases.
+If none apply, the PR is not memory-worthy. Add neither memory prose nor raw
+memory trailers; the diff speaks for itself.
 
-## Step 3 — Draft the `## Memory` section
+## Step 3 — Draft the durable contribution
 
-Layout with sub-headings — omit any sub that has nothing to say.
+For Loom, express the chosen option, alternatives, evidence, trade-offs, and
+outcome under Ship's `## Decisions`; place earned Learning or Gotcha content in
+the most relevant existing section. For a non-Loom body without an owning
+location, use this layout and omit any sub that has nothing to say:
 
 ```markdown
 ## Memory
@@ -87,14 +97,14 @@ Guidelines per sub-heading:
   changes. Prefix with a one-sentence prose description so screen
   readers have context.
 
-## Step 4 — Placement and anchoring
+## Step 4 — Non-Loom placement and anchoring
 
-Two carriers land in the PR body, in this exact order — **both are
-mandatory** for a memory-worthy PR:
+This step applies only to a non-Loom caller without an owning schema. Two
+carriers land in that PR body, in this exact order:
 
-1. **`## Memory` prose section** — inserted **after `## Test plan`**
-   (or after the last CC standard section) and **before the
-   `🤖 Generated with` footer**.
+1. **Prose carrier** — a `## Memory` prose section inserted
+   after the caller's last standard section and before any generated-attribution
+   footer.
 2. **Raw trailer footer** — a blank-line-separated raw trailer block
    (`Decision:` / `Learning:` / `Gotcha:` — unbolded, one key per
    line) as the **absolute last block in the PR body**, placed
@@ -119,7 +129,7 @@ mandatory** for a memory-worthy PR:
    keep each trailer line short — a wrapped continuation without
    leading whitespace breaks trailer parsing too.
 
-Anchor rule for the `## Memory` section (carrier 1 above):
+Anchor rule for a non-Loom `## Memory` section (carrier 1 above):
 
 1. Search PR body for the line starting with `🤖 Generated with`
 2. Insert one blank line + `## Memory` section + one blank line,
@@ -129,8 +139,8 @@ Anchor rule for the `## Memory` section (carrier 1 above):
 
 Anchor rule for the raw trailer footer (carrier 2 above):
 
-1. After everything else is assembled (Summary, Test plan,
-   `## Memory`, the `🤖 Generated with` footer), append one blank
+1. After everything else is assembled (including the non-Loom `## Memory`
+   and any generated footer), append one blank
    line, then the raw trailer block, with **nothing after it**.
 2. The trailer block is blank-line-separated from the prose above
    it — not internally; its own lines run consecutively.
@@ -167,14 +177,15 @@ Learning: Google Auth Console 2025-01 UI relabels scopes
 
 ## Step 5 — Diagram venue choice
 
-Use the decision tree from `standards/memory-conventions.md`:
+For a Loom change, follow Ship's conditional Mermaid rule exactly. For a
+non-Loom caller, use the decision tree from `standards/memory-conventions.md`:
 
 - PR body → **Mermaid** preferred (GitHub renders it natively)
 - Complex diagrams (class / ER / sequence / gantt) → Mermaid only
 - For very small diagrams (< 4 nodes, pure flow), ASCII also fine
   — but Mermaid is the default for PR body
 
-## Example — a complete memory-worthy PR body
+## Example — a complete non-Loom memory-worthy PR body
 
 ```markdown
 ## Summary
@@ -269,57 +280,18 @@ the two-layer privacy check before it is used:
    BLOCK (never as PASS). This is an explicit branch, not an emergent
    default.
 
-## Step 7 — Determine whether confirmation is needed
+## Step 7 — Apply caller-owned consent
 
-### Delegated loom close-out exception
+For a Loom Ship caller, git-memory never re-confirms a Loom publication. Ship
+passes either canonical intent authorization or a single legacy Ship decision;
+git-memory only contributes content and runs the privacy gate. A privacy BLOCK
+still stops publication.
 
-Evaluate this condition before any confirmation action. When
-`loom-code:finishing-a-development-branch` delegates this protocol and the
-initiating request already authorizes the commit and PR, the close-out
-orchestrator owns consent. Git-memory drafts the memory carrier and does not
-re-confirm that authorized publish action. It may proceed only after the
-privacy gate PASSes. Privacy BLOCK remains a required human stop; delegation
-never authorizes a blocked PR body.
-
-### All other calls — confirm before opening
-
-Otherwise — including a direct git-memory invocation, a non-loom caller, or a
-loom close-out whose initiating request does not authorize publication — before
-firing `gh pr create`, summarize the `## Memory` draft for the user:
+An independent non-Loom caller without prior publication authorization must
+confirm before firing `gh pr create`. Summarize the `## Memory` draft:
 
 > "PR body includes a `## Memory` section with 1 Decision, 1 Learning,
 > 1 Gotcha, and a before/after architecture diagram. OK to open?"
 
 Adjust based on user feedback. Err on the side of less — deleting a
 sub-heading is cheaper than over-drafting.
-
-## Step 8 — Verify substrate survival before the branch closes
-
-The confirmed root cause of lost memory is **authoring-time
-under-recording**: a memory-worthy PR closing with an empty
-substrate (no commit trailer, no `## Memory`) and **no signal that
-it's empty**. Composing the section is not enough — verify it is
-actually retrievable from **both** carriers before the branch closes
-/ the PR merges.
-
-This verify is **enforced as an executable gate by
-`loom-code:finishing-a-development-branch`**: its Default-flow close-out
-runs `--verify HEAD` and STOPs on a memory-worthy branch whose commit
-carrier is empty. The checks below describe what that gate executes.
-
-For a memory-worthy PR (Step 2), the orchestrator runs both checks:
-
-1. **Commit carrier** — run
-   `scripts/memory-grep.sh --verify <merge-commit-or-ref>` against the
-   commit that carries the memory to main (the squash/merge commit, or
-   the close-out commit). It exits **0** if a
-   `Decision:`/`Learning:`/`Gotcha:` trailer is retrievable from that
-   ref's message body, **4** if the substrate is empty.
-2. **PR carrier** — confirm the PR `## Memory` section is present
-   (`gh pr view` / `memory-grep.sh` already extracts it).
-
-An empty result — `--verify` exits **4** **and** no `## Memory`
-section — is a flag to **fix before merge**, not to ignore. Re-author
-the missing carrier (add the trailers and/or the `## Memory` section),
-then re-run the verify. Do not close a memory-worthy branch on an
-empty substrate.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test-git-memory-raw-footer-mandate.sh
 #
-# Pins the O2 raw-trailer-footer mandate: a memory-worthy PR body MUST end
+# Pins the generic non-Loom raw-trailer-footer mandate: a memory-worthy PR body MUST end
 # with a blank-line-separated raw trailer block (Decision:/Learning:/
 # Gotcha:, unbolded) as the ABSOLUTE LAST block — placed after even the
 # "🤖 Generated with" footer. Live-found in #575: any non-trailer line
@@ -9,10 +9,8 @@
 # (squash_merge_commit_message = PR_BODY, so the PR body becomes the
 # squash commit message verbatim).
 #
-# Also pins that git-memory SKILL.md's former "opt-in escape hatch"
-# framing (SKILL.md:135-142) now points at the compose-pr.md mandate
-# instead of calling `git log --grep` "the supported path" — a phrase
-# that contradicts the O4 carrier-hierarchy doctrine (Task 1).
+# Loom PR context is instead owned by Ship: git-memory contributes rationale
+# without adding a competing Memory/raw-footer lifecycle or executable gate.
 #
 # Assertions scope to measured neighborhoods around each claim's anchor
 # string, per docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md
@@ -50,7 +48,7 @@ window_after() {
 }
 
 # -------------------------------------------------------------------------
-# Check 1 — compose-pr.md's placement-rule neighborhood (Step 4, around
+# Check 1 — compose-pr.md's non-Loom placement-rule neighborhood (Step 4, around
 # compose-pr.md:90-101) requires the raw trailer footer as the absolute
 # last block, after even the 🤖 footer, blank-line-separated.
 
@@ -68,7 +66,7 @@ elif ! echo "$WIN1" | grep -qF "blank-line-separated"; then
 elif ! echo "$WIN1" | grep -qF "%(trailers)"; then
   fail "compose-pr.md Step 4 neighborhood missing '%(trailers)' mechanism reference"
 else
-  pass "compose-pr.md Step 4 neighborhood pins the raw-trailer-footer mandate"
+  pass "compose-pr.md Step 4 neighborhood pins the non-Loom raw-trailer-footer mandate"
 fi
 
 # -------------------------------------------------------------------------
@@ -90,21 +88,25 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# Check 3 — git-memory SKILL.md's former opt-in-hatch neighborhood now
-# points at the compose-pr.md mandate instead of framing git log --grep
-# as the supported path. Anchor on stable prose immediately BEFORE the
-# hatch paragraph (untouched by this task) so the window reliably spans
-# into the rewritten paragraph.
+# Check 3 — Loom PR context belongs to Ship, while generic non-Loom callers
+# retain their two carriers and capture verification. The removed executable
+# finishing gate must not return.
 
-WIN3="$(window_after "This verification is **enforced as an executable gate by" 20 "$SKILL_MD")"
+WIN3="$(window_after "### PR create" 55 "$SKILL_MD")"
 if [ -z "$WIN3" ]; then
-  fail "anchor 'This verification is **enforced as an executable gate by' not found in SKILL.md"
-elif ! echo "$WIN3" | grep -qF "protocols/compose-pr.md"; then
-  fail "SKILL.md hatch neighborhood does not point at protocols/compose-pr.md"
-elif ! echo "$WIN3" | grep -qiF "mandate"; then
-  fail "SKILL.md hatch neighborhood does not frame the footer as a mandate"
+  fail "anchor '### PR create' not found in SKILL.md"
+elif ! echo "$WIN3" | grep -qF "the caller owns the body schema and publication consent"; then
+  fail "SKILL.md does not assign the Loom PR schema and consent to its caller"
+elif ! echo "$WIN3" | grep -qF 'never add `## Memory`, a second footer contract, or another confirmation'; then
+  fail "SKILL.md does not forbid the competing Loom PR memory lifecycle"
+elif ! echo "$WIN3" | grep -qF "For a non-Loom PR using the generic carriers"; then
+  fail "SKILL.md no longer preserves generic non-Loom capture verification"
+elif ! echo "$WIN3" | grep -qF "does not create a Loom lifecycle gate"; then
+  fail "SKILL.md does not disclaim a Loom capture-verification lifecycle"
+elif grep -qF 'This verification is **enforced as an executable gate by' "$SKILL_MD"; then
+  fail "SKILL.md revived the removed executable finishing gate"
 else
-  pass "SKILL.md hatch neighborhood points at the compose-pr.md mandate"
+  pass "SKILL.md keeps Loom PR context Ship-owned and non-Loom carriers generic"
 fi
 
 # -------------------------------------------------------------------------

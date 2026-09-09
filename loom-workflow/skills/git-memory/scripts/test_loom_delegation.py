@@ -21,22 +21,29 @@ def test_loom_closeout_delegation_does_not_reconfirm_authorized_publish() -> Non
     commit_protocol = _COMMIT_PROTOCOL.read_text(encoding="utf-8")
     pr_protocol = _PR_PROTOCOL.read_text(encoding="utf-8")
 
-    for protocol, direct_heading in (
-        (commit_protocol, "### All other calls — confirm before finalizing"),
-        (pr_protocol, "### All other calls — confirm before opening"),
-    ):
-        delegated_heading = "### Delegated loom close-out exception"
-        assert delegated_heading in protocol
-        assert protocol.index(delegated_heading) < protocol.index(direct_heading)
-        assert re.search(r"does\s+not\s+re-confirm", protocol)
-        assert "initiating request" in protocol
-        assert "privacy gate PASS" in protocol
-        assert "Privacy BLOCK remains a required human stop" in protocol
-        assert "Otherwise" in protocol
+    delegated_heading = "### Delegated loom close-out exception"
+    direct_heading = "### All other calls — confirm before finalizing"
+    assert delegated_heading in commit_protocol
+    assert commit_protocol.index(delegated_heading) < commit_protocol.index(direct_heading)
+    assert re.search(r"does\s+not\s+re-confirm", commit_protocol)
+    assert "initiating request" in commit_protocol
+    assert "privacy gate PASS" in commit_protocol
+    assert "Privacy BLOCK remains a required human stop" in commit_protocol
+    assert "Otherwise" in commit_protocol
+
+    # Loom PR consent belongs to canonical intent plus Ship. Git-memory adds
+    # rationale to Ship's schema without reviving its former PR lifecycle.
+    assert delegated_heading not in pr_protocol
+    assert "git-memory never re-confirms a Loom publication" in pr_protocol
+    assert "canonical intent authorization or a single legacy Ship decision" in pr_protocol
+    assert "Do not create a `## Memory` top-level section" in pr_protocol
+    assert re.search(
+        r"independent non-Loom caller without prior publication authorization must\s+confirm",
+        pr_protocol,
+    )
 
     # Every non-delegated or non-authorized route still pauses for consent.
     assert "direct git-memory invocation" in commit_protocol
-    assert "direct git-memory invocation" in pr_protocol
 
 
 def test_privacy_judge_only_runs_for_ambiguous_private_party_text() -> None:

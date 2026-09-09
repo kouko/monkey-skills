@@ -4,6 +4,13 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.1.4] — 2026-09-09 — caller-owned Loom PR composition
+
+Patch. Let Ship own Loom's contextual PR schema and publication consent, so
+git-memory contributes earned rationale without adding a second `## Memory`
+schema, raw-footer requirement, confirmation, or retired finishing-skill gate.
+Independent non-Loom callers retain the generic memory carriers and consent.
+
 ## [4.1.3] — 2026-09-09 — native Goal activation
 
 Patch. `goal-create SESSION` now activates Codex Goals directly and uses
