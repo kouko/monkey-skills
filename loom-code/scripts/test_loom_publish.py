@@ -7,6 +7,7 @@ from io import StringIO
 from pathlib import Path
 
 import loom_checker
+import pytest
 
 CONTEXT_HEADINGS = (
     "Context", "Intended outcome", "Scope", "Decisions", "Implementation",
@@ -933,11 +934,47 @@ def test_publish_rechecks_an_initial_empty_required_set_before_pass(
     assert "Required CI passed" in out
 
 
-def test_publish_reports_two_empty_required_sets_as_no_checks_registered(
+@pytest.mark.parametrize("initial_output", ["", "  \n\t"])
+def test_publish_rechecks_initial_successful_blank_ci_output_before_pass(
+    tmp_path: Path, monkeypatch, initial_output: str
+) -> None:
+    calls = ExternalCalls("")
+    calls.required_checks = [
+        initial_output,
+        [{"name": "gate", "state": "SUCCESS", "bucket": "pass"}],
+    ]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    assert waits == [30]
+    assert "Required CI passed" in out
+
+
+def test_publish_blocks_unexpected_ci_exit_with_blank_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     calls = ExternalCalls("")
-    calls.required_checks = [[], []]
+    calls.required_checks = [""]
+    calls.required_check_returncodes = [2]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, _, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 1
+    assert "required CI could not be observed" in err
+    assert waits == []
+
+
+@pytest.mark.parametrize("empty_snapshots", [[[], []], ["", "  \n"]])
+def test_publish_reports_two_empty_required_sets_as_no_checks_registered(
+    tmp_path: Path, monkeypatch, empty_snapshots: list[object]
+) -> None:
+    calls = ExternalCalls("")
+    calls.required_checks = empty_snapshots
     waits: list[int] = []
     monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
 

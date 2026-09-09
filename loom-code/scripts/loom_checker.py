@@ -2899,16 +2899,19 @@ def _observe_required_ci(
             return _publish_block(
                 f"required CI could not be observed: {type(exc).__name__}: {exc}", err
             )
-        try:
-            checks = json.loads(result.stdout)
-        except json.JSONDecodeError as exc:
-            return _publish_block(f"cannot decode required CI response: {exc}", err)
-        if not isinstance(checks, list) or any(not isinstance(check, dict) for check in checks):
-            return _publish_block("required CI response is not a list of checks", err)
         # gh uses exit 8 while checks are pending; JSON remains authoritative.
         if result.returncode not in {0, 8}:
             detail = (result.stderr or result.stdout or f"exit {result.returncode}").strip()
             return _publish_block(f"required CI could not be observed: {detail}", err)
+        if result.returncode == 0 and not result.stdout.strip():
+            checks = []
+        else:
+            try:
+                checks = json.loads(result.stdout)
+            except json.JSONDecodeError as exc:
+                return _publish_block(f"cannot decode required CI response: {exc}", err)
+        if not isinstance(checks, list) or any(not isinstance(check, dict) for check in checks):
+            return _publish_block("required CI response is not a list of checks", err)
         if not checks:
             if saw_empty_snapshot:
                 out.write("No required checks registered\n")
