@@ -9,7 +9,7 @@ REQ-1 — Native host contracts
   WHEN the loom-code package is installed independently in Codex or Claude Code, the package shall expose skills, manifests, hook configuration, root variables, event matchers, and hook results that conform to that host's documented plugin contracts, with exactly the Codex hook configuration named by the Codex manifest registered on Codex → Acceptance #1
 
 REQ-2 — Stale Codex cache does not block ordinary work
-  WHILE a live Codex task retains a hook definition from an earlier plugin version whose cache directory no longer exists, the hook shall allow a non-publication Bash command without loading any file from that version directory → Acceptance #2
+  WHILE a live Codex task retains a hook definition from an earlier plugin version whose cache directory no longer exists, the hook shall allow a Bash command on the stale-cache read-only allowlist without loading any file from that version directory → Acceptance #2
 
 REQ-3 — Publication remains fail-closed
   IF a Bash command is not on the stale-cache read-only allowlist and the installed checker cannot be loaded THEN the hook shall deny the command, name the missing checker path, instruct the user to restart Codex, and shall not search another version directory, the cache root, or `PATH` for a substitute checker → Acceptance #3
@@ -26,7 +26,7 @@ Use one shared publication-policy implementation and two host-owned integration 
 
 Keep skill content shared where its behavior is provider-neutral. Where installation paths, runtime tools, invocation syntax, or lifecycle promises differ, use an explicit host-labelled branch and validate it against that host rather than presenting Claude Code behavior as a Codex guarantee. This is agent-decided because duplicating whole skills would create two workflow contracts that can drift.
 
-Make the Codex publication hook stale-safe before it touches versioned files. While the checker exists, the retained command passes every Bash payload to the shared checker, leaving all publication classification in one place. When the checker is missing, the retained command enters recovery mode and permits only a closed read-only allowlist: `git status`, `git log`, `git diff`, `git show`, `git branch --list`, `ls`, `cat`, `rg`, and `find`, including documented read-only options and literal path arguments. Compound commands, substitutions, redirections, interpreters, malformed JSON, empty input, unrecognised options, and every command outside that list are denied with the restart instruction from REQ-3. A shared corpus test must prove that every existing checker publication case is denied in recovery mode. This is agent-decided because a recovery allowlist avoids creating a second hand-written publication classifier while still unblocking the observed read-only operations.
+Make the Codex publication hook stale-safe before it touches versioned files. While the checker exists, the retained command passes every Bash payload to the shared checker, leaving all publication classification in one place. When the checker is missing, the retained command enters recovery mode and permits only a closed read-only allowlist: `git status`, `git log`, `git diff`, `git show`, `git branch --list`, `ls`, `cat`, `rg`, and `find`, including safe read-only options and literal path arguments. Recovery mode denies command-executing or writing options, including `find -exec`, `find -execdir`, `find -ok`, `find -delete`, `rg --pre`, `rg --pre-glob`, and Git `--output`. Compound commands, substitutions, redirections, interpreters, malformed JSON, empty input, unrecognised options, and every command outside that list are denied with the restart instruction from REQ-3. A shared corpus test must prove that every existing checker publication case and a push wrapped in `find -exec` are denied in recovery mode. Other ordinary commands, including tests and network reads, deliberately receive the same restart instruction while the checker is missing; this narrows recovery to the intent's read-only Acceptance #2 rather than inventing a second publication classifier. This is agent-decided because a recovery allowlist avoids creating a second hand-written publication classifier while still unblocking the observed read-only operations.
 
 On Codex, omit SessionStart because skills are discovered natively and no bootstrap behavior is required. Omit the PostToolUse `Skill` language anchor because the Codex hook contract does not expose Claude Code's `Skill` tool event; language behavior remains instruction-owned. Therefore a vanished Codex plugin root leaves only the self-contained PreToolUse recovery command active. On Claude Code, retain SessionStart and PostToolUse with their existing native matchers; a live session follows Claude Code's documented retained-version and `/reload-plugins` lifecycle. These are agent-decided host adaptations, not changes to shared Loom policy.
 
@@ -43,7 +43,7 @@ Update `PRINCIPLES.md` Fixed choices from Codex `.codex/hooks.json` to Codex plu
 Official sources were checked on 2026-09-09:
 
 - Codex hook packaging, manifest override, `PLUGIN_ROOT`, matcher coverage, stdin payloads, and deny/exit semantics: [OpenAI Codex Hooks](https://learn.chatgpt.com/docs/hooks). In particular, a manifest hook declaration replaces default `hooks/hooks.json`, `PLUGIN_ROOT` names the installed root, and exit code 2 denies PreToolUse.
-- Codex plugin and skill packaging: [OpenAI plugin packaging](https://developers.openai.com/plugins/build/plugins) and [OpenAI Skills](https://developers.openai.com/codex/skills). Host-neutral skill instructions remain shared; Codex-only runtime steps are explicitly labelled.
+- Codex plugin and skill packaging: [OpenAI plugin packaging](https://developers.openai.com/plugins/build/plugins) and [OpenAI Skills](https://learn.chatgpt.com/docs/build-skills). Host-neutral skill instructions remain shared; Codex-only runtime steps are explicitly labelled.
 - Claude Code root substitution, cache lifecycle, reload behavior, hook events, and skill packaging: [Claude Code plugin reference](https://code.claude.com/docs/en/plugins-reference), [Claude Code hooks](https://code.claude.com/docs/en/hooks), and [Claude Code skills](https://code.claude.com/docs/en/skills). Claude keeps its native root variable and host-specific event coverage.
 
 The host boundary is:
@@ -53,8 +53,8 @@ flowchart LR
     C[Claude Code manifest and hooks] --> CA[Claude adapter]
     X[Codex manifest and hooks] --> XA[Stale-safe Codex adapter]
     CA --> P[Shared publication policy]
-    XA -->|publication candidate only| P
-    XA -->|definitely ordinary command| A[Allow without plugin cache]
+    XA -->|checker present: every Bash payload| P
+    XA -->|checker missing: allowlisted read| A[Allow without plugin cache]
     P -->|verified| R[Run publication]
     P -->|missing or invalid evidence| B[Block with recovery]
 ```
@@ -70,7 +70,7 @@ The harness extracts the committed command from the applicable hook manifest, in
 | Live replacement, old root present | exit 0 | shared checker verdict from the loaded version | retained root until reload |
 | Old root removed | allowlisted read exits 0 | exit 2; missing path + restart message | N/A — official cache grace period is the supported contract |
 | After host reload/restart | exit 0 | newly installed checker verdict | newly installed hook definitions and checker verdict |
-| Malformed JSON or empty stdin | exit 2 | exit 2 | native hook error behavior |
+| Malformed JSON or empty stdin | exit 2 | exit 2 | exit 2 from the shared checker |
 
 Codex tests additionally assert that the Claude-shaped hook file is not registered, SessionStart and PostToolUse are absent from its selected manifest, and no missing-root recovery case searches sibling versions or `PATH`.
 
