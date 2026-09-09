@@ -2051,6 +2051,7 @@ SHELL_PROGRAMS = {"bash", "sh", "zsh", "dash"}
 def _shell_segments(command: str) -> list[str]:
     """Split on shell operators outside quotes; malformed input stays strict."""
     segments: list[str] = []
+    conservative_command = list(command)
     start = 0
     quote: str | None = None
     escaped = False
@@ -2071,6 +2072,7 @@ def _shell_segments(command: str) -> list[str]:
             dynamic = True
         elif character == "`" and quote != "'":
             dynamic = True
+            conservative_command[index] = "\n"
         elif quote:
             if character == quote:
                 quote = None
@@ -2087,7 +2089,7 @@ def _shell_segments(command: str) -> list[str]:
             start = index + 1
         index += 1
     if quote or escaped or dynamic:
-        return SEGMENT_SPLIT.split(command)
+        return SEGMENT_SPLIT.split("".join(conservative_command))
     segments.append(command[start:])
     return segments
 
