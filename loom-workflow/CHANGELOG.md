@@ -4,6 +4,17 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.1.3] — 2026-09-09 — native Goal activation
+
+Patch. `goal-create SESSION` now activates Codex Goals directly and uses
+Claude Code's conditional `ProposeGoal` capability when available, with an
+honest manual `/goal` fallback otherwise. Complete Goals keep the portable
+4,000-character ceiling and use 1,500 characters only as an advisory
+compression target; Claude proposals retain their separate 500-character
+transport limit. Existing Goals are replaced by the named SESSION request
+where the host permits it, while Codex reports its current clear-and-retry
+limitation without claiming activation.
+
 ## [4.1.2] — 2026-09-08 — lower-cost local gates
 
 Patch. Route every Loom CI group through one declared package-suite runner,
