@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-fix-publish-token-boundary",
+  "content_digest": "5c5109fbbaf1cb90c2dc33772c46cd41d428061f",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "/tmp/loom-review-20260909-venv/bin/python -m pytest loom-code/scripts/test_publish_command_detection.py -q",
+      "artifact": "loom-code/scripts/test_publish_command_detection.py",
+      "result": "pass",
+      "command_digest": "6a7c7ba9a57d0555f8b395c863acdf8b3014612f4feb8812d192d07f98b5ad72"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-fresh-context",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code-security",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-fable-independent",
+      "vendor": "anthropic",
+      "model": "fable",
+      "lens": "code-security",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
