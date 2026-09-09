@@ -46,6 +46,7 @@ class ExternalCalls:
         self.change_pushurl_on_pr_list = False
         self.change_uploadpack_on_final_remote_read = False
         self.remote_reads = 0
+        self.required_checks = [[{"name": "gate", "state": "SUCCESS", "bucket": "pass"}]]
         self.calls: list[list[str]] = []
 
     def __call__(self, argv, **kwargs):
@@ -90,6 +91,9 @@ class ExternalCalls:
                 return subprocess.CompletedProcess(argv, 1, "", "temporary failure")
             self.existing_pr = "https://github.com/example/project/pull/1"
             return subprocess.CompletedProcess(argv, 0, f"{self.existing_pr}\n", "")
+        if "pr" in argv and "checks" in argv:
+            snapshot = self.required_checks.pop(0)
+            return subprocess.CompletedProcess(argv, 0, json.dumps(snapshot), "")
         raise AssertionError(argv)
 
 
@@ -500,3 +504,51 @@ def test_retry_after_pr_creation_failure_does_not_repush(tmp_path: Path, monkeyp
     assert second_rc == 0, err.getvalue()
     assert sum("push" in call for call in calls.calls) == first_pushes
     assert "pull/1" in out.getvalue()
+
+
+def test_publish_observes_required_ci_immediately_then_every_thirty_seconds(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    calls.required_checks = [
+        [{"name": "gate", "state": "IN_PROGRESS", "bucket": "pending"}],
+        [{"name": "gate", "state": "SUCCESS", "bucket": "pass"}],
+    ]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append, raising=False)
+
+    _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    checks = [call for call in calls.calls if "checks" in call]
+    assert len(checks) == 2
+    assert all("--required" in call for call in checks)
+    assert waits == [30]
+    assert "Required CI passed" in out
+    assert "pending" not in out.casefold()
+
+
+def test_publish_stops_on_required_ci_terminal_blockers(
+    tmp_path: Path, monkeypatch
+) -> None:
+    terminal = {
+        "FAILURE": "failed",
+        "CANCELLED": "cancelled",
+        "ACTION_REQUIRED": "requires user action",
+    }
+    for state, message in terminal.items():
+        case = tmp_path / state.casefold()
+        case.mkdir()
+        calls = ExternalCalls("")
+        calls.required_checks = [
+            [{"name": "gate", "state": state, "bucket": "fail"}]
+        ]
+        waits: list[int] = []
+        monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append, raising=False)
+
+        _, rc, out, err = invoke(case, monkeypatch, calls)
+
+        assert rc == 1, state
+        assert message in err.casefold(), state
+        assert waits == [], state
+        assert "Required CI passed" not in out, state

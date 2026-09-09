@@ -38,6 +38,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import date
 from pathlib import Path
 from urllib.parse import quote
@@ -2656,6 +2657,9 @@ def run_publish_external(argv: list[str], **kwargs) -> subprocess.CompletedProce
     return subprocess.run(argv, capture_output=True, text=True, timeout=30, **kwargs)
 
 
+wait_publish_interval = time.sleep
+
+
 def _publish_usage(reason: str, err) -> int:
     err.write(f"publish: {reason}\n")
     return 2
@@ -2809,6 +2813,67 @@ def _external_or_block(argv: list[str], *, repo: Path, env: dict[str, str], err)
         _publish_block(f"publication command failed: {detail}", err)
         return None
     return result
+
+
+def _observe_required_ci(
+    pr_url: str, *, trusted_gh: str, repo: Path, env: dict[str, str], out, err
+) -> int:
+    """Observe required PR checks in this process until a terminal state."""
+    while True:
+        argv = [
+            trusted_gh, "pr", "checks", pr_url, "--required",
+            "--json", "name,state,bucket",
+        ]
+        try:
+            result = run_publish_external(argv, cwd=repo, env=env)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return _publish_block(
+                f"required CI could not be observed: {type(exc).__name__}: {exc}", err
+            )
+        # gh uses exit 8 while checks are pending; JSON remains authoritative.
+        if result.returncode not in {0, 8}:
+            detail = (result.stderr or result.stdout or f"exit {result.returncode}").strip()
+            return _publish_block(f"required CI could not be observed: {detail}", err)
+        try:
+            checks = json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            return _publish_block(f"cannot decode required CI response: {exc}", err)
+        if not isinstance(checks, list) or any(not isinstance(check, dict) for check in checks):
+            return _publish_block("required CI response is not a list of checks", err)
+
+        states = [(str(check.get("name", "unnamed")),
+                   str(check.get("state", "")).upper(),
+                   str(check.get("bucket", "")).casefold()) for check in checks]
+        action = [name for name, state, _ in states if state == "ACTION_REQUIRED"]
+        cancelled = [name for name, state, bucket in states
+                     if state in {"CANCELLED", "CANCELED"} or bucket == "cancel"]
+        failed = [name for name, state, bucket in states
+                  if state in {"FAILURE", "TIMED_OUT", "STARTUP_FAILURE"}
+                  or bucket == "fail"]
+        if action:
+            return _publish_block(
+                "required CI requires user action: " + ", ".join(action), err
+            )
+        if cancelled:
+            return _publish_block("required CI cancelled: " + ", ".join(cancelled), err)
+        if failed:
+            return _publish_block("required CI failed: " + ", ".join(failed), err)
+
+        pending = [name for name, state, bucket in states
+                   if state in {"PENDING", "QUEUED", "IN_PROGRESS", "WAITING", "REQUESTED"}
+                   or bucket == "pending"]
+        if pending:
+            wait_publish_interval(30)
+            continue
+        unknown = [name for name, _, bucket in states
+                   if bucket not in {"pass", "skipping"}]
+        if unknown:
+            return _publish_block(
+                "required CI requires user action because its state is unknown: "
+                + ", ".join(unknown), err,
+            )
+        out.write("Required CI passed\n")
+        return 0
 
 
 def cmd_publish(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
@@ -3022,8 +3087,11 @@ def _cmd_publish_trusted(
         )
 
     if urls:
-        out.write(f"PR already exists: {urls[0]}\n")
-        return 0
+        pr_url = urls[0]
+        out.write(f"PR already exists: {pr_url}\n")
+        return _observe_required_ci(
+            pr_url, trusted_gh=trusted_gh, repo=repo, env=env, out=out, err=err
+        )
 
     create_result = _external_or_block(
         [trusted_gh, "pr", "create", "--base", base, "--head", branch,
@@ -3036,7 +3104,9 @@ def _cmd_publish_trusted(
     if not url:
         return _publish_block("gh pr create returned no pull request URL", err)
     out.write(f"Published PR: {url}\n")
-    return 0
+    return _observe_required_ci(
+        url, trusted_gh=trusted_gh, repo=repo, env=env, out=out, err=err
+    )
 
 
 def _cmd_push(args: list[str], out=sys.stdout, err=sys.stderr) -> int:

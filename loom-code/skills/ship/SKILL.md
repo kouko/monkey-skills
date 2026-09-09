@@ -113,10 +113,20 @@ hook-firing ledger is required.
 
 ## 4. Observe CI
 
-Report the returned PR URL. CI is the external trust boundary: inspect every
-required check and fix a real functional failure through Build → Review. A
-PR-text, version, or other publication-only failure is fixed in place and
-reuses the matching attestation.
+The publication command reports the PR URL, inspects required CI immediately,
+and checks again every 30 seconds while any required check remains pending.
+It stops when all required checks pass, a required check fails or is cancelled,
+or GitHub reports that user action is required. Optional checks do not keep the
+command alive. Unchanged pending snapshots produce no repeated user-facing
+output.
+
+Observation belongs only to the active publication process. Do not create a
+scheduler, daemon, persistent polling record, or restart recovery mechanism.
+Stopping the task or Desktop app stops observation.
+
+CI is the external trust boundary: fix a real functional failure through Build
+→ Review. A PR-text, version, or other publication-only failure is fixed in
+place and reuses the matching attestation.
 
 Publication never authorizes or invokes merge. Do not merge without the user's
 separate explicit authorization.
