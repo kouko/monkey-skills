@@ -2,9 +2,9 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 起草一個目標條件。兩種命名模式：**SESSION** 寫出長時間運行 agent
-> 的 run 用來比對的四欄目標；**ARC** 起草儲存庫 purpose 產物的草案，
-> 交由使用者確認落地。
+> 建立一個目標條件。**SESSION** 在 host 支援時啟用四欄 Goal，不支援時
+> 提供誠實的手動指令；**ARC** 起草儲存庫 purpose 產物的草案，交由使用者
+> 確認落地。
 
 ---
 
@@ -18,7 +18,9 @@
   `references/goal-shape.md`；草案建立所依據的兩個輸入槽、其中一槽為空時
   的拒絕規則、以及每個欄位必須帶的 provenance 標籤在
   `references/input-floor.md`。呈現草案前，會先跑過機械式下限檢查
-  `scripts/goal_lint.py`——只檢查結構，從不判斷文字是否真的可判定。
+  `scripts/goal_lint.py`——只檢查結構，從不判斷文字是否真的可判定。接著在
+  支援時啟用原生 Goal；不支援時明確標示尚未啟用，並提供一條手動 `/goal`
+  指令。
 
 - **ARC 模式** 產出儲存庫 purpose 產物 `docs/loom/PURPOSE.md` 的
   `Why` 與 `Done when` 草案。這個 skill 本身絕不會寫入該檔案——草案只能

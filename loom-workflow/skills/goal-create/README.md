@@ -2,9 +2,9 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Draft a goal condition. Two named modes: **SESSION** writes the
-> four-field goal a long-running agent run is checked against; **ARC**
-> drafts a repository's purpose artifact for the user to land.
+> Create a goal condition. **SESSION** activates the four-field goal in the
+> current host when supported, with an honest manual command otherwise;
+> **ARC** drafts a repository's purpose artifact for the user to land.
 
 ---
 
@@ -22,7 +22,8 @@ never by the agent guessing from context.
   provenance tag each field must carry live in `references/input-floor.md`.
   Before presenting a draft, the skill runs it through a mechanical floor,
   `scripts/goal_lint.py` — structure only, never a judgment call on
-  whether the prose actually reads as decidable.
+  whether the prose actually reads as decidable. It then activates the native
+  Goal when supported or labels one manual `/goal` command as not yet active.
 
 - **ARC mode** produces a draft `Why` and `Done when` for the
   repository's purpose artifact, `docs/loom/PURPOSE.md`. It never writes
