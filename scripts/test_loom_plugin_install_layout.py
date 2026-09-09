@@ -387,6 +387,63 @@ def test_isolated_codex_hook_uses_copied_root_and_survives_its_removal(
     assert stale.returncode == 0, stale.stderr
 
 
+def test_isolated_host_hook_lifecycle_matrix(tmp_path: Path) -> None:
+    code_root = _install_plugin("loom-code", tmp_path / "installed-v1")
+    codex_manifest = json.loads(
+        (code_root / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    codex_hooks = json.loads(
+        (code_root / codex_manifest["hooks"]).read_text(encoding="utf-8")
+    )["hooks"]
+    claude_hooks = json.loads(
+        (code_root / "hooks/hooks.json").read_text(encoding="utf-8")
+    )["hooks"]
+    codex_command = codex_hooks["PreToolUse"][0]["hooks"][0]["command"]
+    claude_command = claude_hooks["PreToolUse"][0]["hooks"][0]["command"]
+
+    def invoke(command: str, root_var: str, root: Path, body: str) -> subprocess.CompletedProcess[str]:
+        payload = json.dumps(
+            {
+                "cwd": str(REPO_ROOT),
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": body},
+            }
+        )
+        return subprocess.run(
+            command, shell=True, input=payload, text=True, capture_output=True,
+            env=dict(os.environ, **{root_var: str(root)}),
+        )
+
+    for body, expected in (("git status --short", 0), ("git push origin HEAD", 2)):
+        codex = invoke(codex_command, "PLUGIN_ROOT", code_root, body)
+        claude = invoke(claude_command, "CLAUDE_PLUGIN_ROOT", code_root, body)
+        assert codex.returncode == claude.returncode == expected
+
+    for command, root_var in (
+        (codex_command, "PLUGIN_ROOT"),
+        (claude_command, "CLAUDE_PLUGIN_ROOT"),
+    ):
+        malformed = subprocess.run(
+            command, shell=True, input="not-json", text=True,
+            capture_output=True, env=dict(os.environ, **{root_var: str(code_root)}),
+        )
+        assert malformed.returncode == 2
+
+    shutil.rmtree(code_root)
+    assert invoke(codex_command, "PLUGIN_ROOT", code_root, "git status").returncode == 0
+    assert invoke(codex_command, "PLUGIN_ROOT", code_root, "git push origin HEAD").returncode == 2
+
+    reloaded_root = _install_plugin("loom-code", tmp_path / "installed-v2")
+    reloaded_manifest = json.loads(
+        (reloaded_root / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    reloaded_command = json.loads(
+        (reloaded_root / reloaded_manifest["hooks"]).read_text(encoding="utf-8")
+    )["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+    assert invoke(reloaded_command, "PLUGIN_ROOT", reloaded_root, "git status").returncode == 0
+
+
 def test_design_declares_no_in_plugin_station_command(tmp_path: Path) -> None:
     """loom-design 1.0's command surface is empty, and that is load-bearing.
 

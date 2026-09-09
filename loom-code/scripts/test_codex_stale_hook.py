@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import shutil
 from pathlib import Path
 
 import pytest
@@ -50,11 +51,11 @@ def _run(command: str, plugin_root: Path) -> subprocess.CompletedProcess[str]:
     "command",
     [
         "git status --short --branch",
-        "git log -3 --oneline",
+        "git log --max-count=3 --oneline",
         "git diff --check",
         "git show --stat HEAD",
         "git branch --list 'codex/*'",
-        "ls -la loom-code",
+        "ls loom-code",
         "cat loom-code/hooks/hooks.json",
         "rg -n PLUGIN_ROOT loom-code",
         "find loom-code -maxdepth 2 -type f -print",
@@ -79,8 +80,14 @@ def test_codex_hook_missing_root_allows_closed_read_only_set(
         "git status && git push origin HEAD",
         "find . -exec git push origin HEAD ;",
         "find . -delete",
+        "find . -fls /tmp/loom-stale-hook-output",
         "rg --pre 'git push origin HEAD' needle .",
+        "rg --pre=bash needle .",
+        "rg --pre-glob=* --pre=sh needle .",
         "git log --output=/tmp/log",
+        "git branch --list --delete main",
+        "./git status",
+        "/tmp/cat file",
     ],
 )
 def test_codex_hook_missing_root_denies_publication_unknown_and_unsafe_reads(
@@ -140,3 +147,33 @@ def test_codex_hook_present_root_delegates_every_bash_payload(tmp_path: Path) ->
     result = _run("git status", root)
     assert result.returncode == 17
     assert "delegated:" in result.stdout
+
+
+def test_codex_hook_missing_root_denies_path_poisoning_and_sibling_checker(
+    tmp_path: Path,
+) -> None:
+    missing = tmp_path / "cache" / "2.0.7"
+    sibling = tmp_path / "cache" / "2.0.8" / "scripts"
+    sibling.mkdir(parents=True)
+    marker = tmp_path / "executed"
+    (sibling / "loom_checker.py").write_text(
+        f"from pathlib import Path\nPath({str(marker)!r}).write_text('sibling')\n",
+        encoding="utf-8",
+    )
+    poisoned = tmp_path / "bin"
+    poisoned.mkdir()
+    fake_git = poisoned / "git"
+    fake_git.write_text(f"#!/bin/sh\ntouch {marker}\n", encoding="utf-8")
+    fake_git.chmod(0o755)
+    env = dict(
+        os.environ,
+        PLUGIN_ROOT=str(missing),
+        PATH=f"{poisoned}:{os.environ.get('PATH', '')}",
+    )
+    result = subprocess.run(
+        _command(), shell=True, input=_payload("git status"), text=True,
+        capture_output=True, env=env,
+    )
+    assert result.returncode == 2
+    assert not marker.exists()
+    assert shutil.which("git", path=env["PATH"]) == str(fake_git)

@@ -201,7 +201,7 @@ def recompute_checker_rules(repo: Path) -> set[str]:
 def _command_basename(command: str) -> str:
     tokens = [a or b for a, b in QUOTED_TOKEN_RE.findall(command)]
     path_tokens = [t for t in tokens if "/" in t]
-    target = path_tokens[-1] if path_tokens else (tokens[-1] if tokens else command)
+    target = path_tokens[0] if path_tokens else (tokens[-1] if tokens else command)
     return Path(target).name
 
 
