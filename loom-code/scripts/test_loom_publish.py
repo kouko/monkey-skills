@@ -415,6 +415,25 @@ def test_contextual_body_gate_ignores_headings_inside_fenced_code() -> None:
     assert loom_checker.validate_contextual_pr_body(body) is None
 
 
+def test_contextual_body_gate_accepts_substantive_chinese_and_japanese() -> None:
+    for content in ("所有必要驗證均已成功完成。", "必要な検証はすべて正常に完了しました。"):
+        body = contextual_body(overrides={
+            heading: content for heading in CONTEXT_HEADINGS if heading != "Follow-ups"
+        })
+        assert loom_checker.validate_contextual_pr_body(body) is None, content
+
+
+def test_contextual_body_gate_respects_commonmark_fence_length() -> None:
+    body = contextual_body(overrides={
+        "Implementation": (
+            "The wrapper validates the exact public body.\n\n"
+            "````markdown\n```\n## Summary\n```\n## Example\n````"
+        ),
+    })
+
+    assert loom_checker.validate_contextual_pr_body(body) is None
+
+
 def test_publish_rejects_invalid_contextual_body_before_network(
     tmp_path: Path, monkeypatch
 ) -> None:

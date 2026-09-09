@@ -2685,14 +2685,16 @@ def validate_contextual_pr_body(body: str) -> str | None:
     """Recompute the structural PR-body floor; semantic truth stays review-owned."""
     sections: list[tuple[str, list[str]]] = []
     outside_fences: list[str] = []
-    fence: str | None = None
+    fence: tuple[str, int] | None = None
     for line in body.splitlines():
-        marker = re.match(r"^\s*(`{3,}|~{3,})", line)
-        if marker:
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if marker and fence is None:
             token = marker.group(1)
-            if fence is None:
-                fence = token[0]
-            elif token[0] == fence:
+            fence = (token[0], len(token))
+            continue
+        if marker and fence is not None:
+            token, suffix = marker.group(1), marker.group(2)
+            if token[0] == fence[0] and len(token) >= fence[1] and not suffix.strip():
                 fence = None
             continue
         if fence is not None:
@@ -2712,12 +2714,17 @@ def validate_contextual_pr_body(body: str) -> str | None:
     for heading, lines in sections:
         content = "\n".join(lines)
         visible = re.sub(r"<!--.*?-->", " ", content, flags=re.DOTALL)
-        words = re.findall(r"[^\W_]+", visible, flags=re.UNICODE)
+        alphanumeric_count = sum(character.isalnum() for character in visible)
+        one_ascii_token = re.fullmatch(r"\s*[A-Za-z]+[.!?:;,-]*\s*", visible) is not None
+        template_placeholder = re.fullmatch(r"\s*<[^>\n]+>\s*", visible) is not None
         sentinel = (
             heading == "Follow-ups"
             and re.sub(r"[\W_]+", "", visible).casefold() == "none"
         )
-        if len(words) < 2 and not sentinel:
+        if (
+            (alphanumeric_count < 8 or one_ascii_token or template_placeholder)
+            and not sentinel
+        ):
             return f"PR body section {heading!r} has no substantive content"
     visible_body = re.sub(
         r"<!--.*?-->", " ", "\n".join(outside_fences), flags=re.DOTALL
