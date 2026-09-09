@@ -3,7 +3,7 @@ originator: kouko
 kind: engineering
 needs-design: yes — push hook、公開文字檢查與驗證狀態都會改變，且包含多種失效與重用狀態
 evidence: [docs/loom/2026-09-07-push-gate-cheap-checks-first/review.json, docs/loom/2026-09-07-push-gate-cheap-checks-first/blind-run-report.md]
-status: confirmed 2026-09-08
+status: closed 2026-09-08 — PR #805
 
 ## Problem
 功能已經驗證完成後，剩餘時間主要耗在手動維護 review ledger、commit 形狀、隱私判斷與證據 SHA 對齊。純文字或帳務修正會讓有效證據失效，甚至迫使完整測試再次執行；這些往返成本已高於程式實作本身。

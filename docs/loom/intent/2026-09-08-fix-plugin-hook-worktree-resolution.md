@@ -3,7 +3,7 @@
 originator: maintenance-loop
 kind: engineering
 needs-design: yes — hook 需在主 checkout、worktree、明示目錄與 host 授權狀態間正確轉換，目前沒有規格界定這些狀態
-status: confirmed 2026-09-08
+status: closed 2026-09-09 — PR #809
 
 ## Problem
 Codex Desktop 從 feature worktree 執行發布命令時，plugin hook 可能仍使用 task 的主 checkout，因而把已驗證的分支誤判成 main 並阻擋操作。使用者也曾被要求手動承認 hook；目前不清楚那是每個 worktree 的重複提示、plugin 更新後的必要授權，或可以消除的重複成本。
