@@ -82,8 +82,9 @@ codex plugin add loom-code@monkey-skills
 codex plugin list
 ```
 
-仍有 task 執行時，不要先移除已安裝的 plugin；執行中的 task 可能仍在使用該
-版本的 hook 路徑。
+`plugin add` 會替換已安裝版本的快取，因此可能刪除執行中 task 仍持有的版本化
+hook 路徑。安裝成功後，請立刻重新啟動 Codex，再執行任何其他工具或命令。不要
+先移除 plugin；那只會讓同一段路徑失效期間更早開始。
 
 ## 授權
 

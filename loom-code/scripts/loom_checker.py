@@ -2070,6 +2070,8 @@ def _shell_segments(command: str) -> list[str]:
             and command[index + 1] == "("
         ):
             dynamic = True
+            conservative_command[index] = "\n"
+            conservative_command[index + 1] = "\n"
         elif character == "`" and quote != "'":
             dynamic = True
             conservative_command[index] = "\n"

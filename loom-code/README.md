@@ -91,8 +91,10 @@ codex plugin add loom-code@monkey-skills
 codex plugin list
 ```
 
-Do not remove the installed plugin first while tasks are active: an active task
-may still be using that version's hook path.
+`plugin add` replaces the installed version cache and can remove the versioned
+hook path held by an active task. After it succeeds, restart Codex immediately
+before running another tool or command. Do not remove the plugin first; that
+only creates the same broken-path window earlier.
 
 ## Licence
 
