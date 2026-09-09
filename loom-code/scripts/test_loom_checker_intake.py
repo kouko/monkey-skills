@@ -853,6 +853,36 @@ def test_worktree_only_attestation_does_not_prove_delivery(tmp_path: Path) -> No
             }],
             "findings": {},
         },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [{}],
+        },
+        {
+            "schema": "loom-attestation/v1",
+            "change_id": CHANGE,
+            "content_digest": "historical-digest",
+            "executions": [{
+                "kind": "package-tests", "command": "pytest", "artifact": "",
+                "result": "pass", "command_digest": "0" * 64,
+            }],
+            "verdicts": [{
+                "reviewer": "fixture", "vendor": "test", "model": "test",
+                "lens": "code", "verdict": "PASS", "findings": [],
+            }],
+            "findings": [{
+                "id": "incomplete", "anchor": "fixture.py:1", "raised_by": "fixture",
+            }],
+        },
     ],
 )
 def test_partial_unsupported_or_mismatched_remote_witness_stays_active(
@@ -897,6 +927,28 @@ def test_remote_attestation_without_canonical_intent_stays_active(tmp_path: Path
     git(repo, "checkout", "-q", "work")
 
     assert run_checker("intake", "write-plan", CHANGE, cwd=repo).returncode == 0
+
+
+def test_complete_historical_review_note_finding_still_delivers(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path)
+    commit_intent(repo, "status: confirmed 2026-09-02")
+    git(repo, "checkout", "-q", "-b", "finding-snapshot")
+    write_attestation(repo)
+    path = repo / "docs/loom" / CHANGE / "attestation.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["findings"] = [{
+        "severity": "important", "dimension": "tests", "anchor": "fixture.py:1",
+        "text": "note: execution evidence stayed in the active run",
+    }]
+    write_attestation(repo, payload=payload)
+    git(repo, "add", str(path.relative_to(repo)))
+    git(repo, "commit", "-q", "-m", "delivery with review note")
+    git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    git(repo, "checkout", "-q", "work")
+
+    result = run_checker("intake", "write-plan", CHANGE, cwd=repo)
+    assert result.returncode == 1
+    assert "delivered" in result.stderr
 
 
 def test_legacy_closed_on_remote_default_still_blocks_intake(tmp_path: Path) -> None:

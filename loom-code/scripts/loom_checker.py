@@ -1298,7 +1298,19 @@ def _delivery_witness_valid(attestation: object, change_id: str) -> bool:
             return False
         if not isinstance(item.get("findings"), list):
             return False
-    return all(isinstance(finding, dict) for finding in attestation["findings"])
+    return all(_delivery_finding_valid(finding) for finding in attestation["findings"])
+
+
+def _delivery_finding_valid(finding: object) -> bool:
+    """Accept the two complete finding carriers emitted under schema v1."""
+    if not isinstance(finding, dict):
+        return False
+    resolved = ("id", "anchor", "raised_by", "resolution")
+    review_note = ("severity", "dimension", "anchor", "text")
+    for shape in (resolved, review_note):
+        if all(isinstance(finding.get(key), str) and finding[key].strip() for key in shape):
+            return True
+    return False
 
 
 def intent_delivery_state(

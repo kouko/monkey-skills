@@ -206,7 +206,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
       - {name: content_digest, kind: json, required: true}
       - {name: executions,     kind: json, required: true, grammar: "[{kind, command, artifact, result, command_digest}]"}
       - {name: verdicts,       kind: json, required: true, grammar: "[{reviewer, vendor, model, lens, verdict, findings}]"}
-      - {name: findings,       kind: json, required: true, grammar: "[{id, anchor, raised_by, resolution}]"}
+      - {name: findings,       kind: json, required: true, grammar: "[{id, anchor, raised_by, resolution} | {severity, dimension, anchor, text}]"}
 
   blind-run-report:
     path: docs/loom/<change-id>/blind-run-report.md
