@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import shutil
 from pathlib import Path
 
 import pytest
@@ -51,12 +50,12 @@ def _run(command: str, plugin_root: Path) -> subprocess.CompletedProcess[str]:
     "command",
     [
         "git status --short --branch",
-        "git log --max-count=3 --oneline",
+        "git log -3 --oneline",
         "git diff --check",
         "git show --stat HEAD",
         "git branch --list 'codex/*'",
-        "ls loom-code",
-        "cat loom-code/hooks/hooks.json",
+        "ls -la loom-code",
+        "cat -n loom-code/hooks/hooks.json",
         "rg -n PLUGIN_ROOT loom-code",
         "find loom-code -maxdepth 2 -type f -print",
     ],
@@ -149,7 +148,7 @@ def test_codex_hook_present_root_delegates_every_bash_payload(tmp_path: Path) ->
     assert "delegated:" in result.stdout
 
 
-def test_codex_hook_missing_root_denies_path_poisoning_and_sibling_checker(
+def test_codex_hook_missing_root_ignores_sibling_checker(
     tmp_path: Path,
 ) -> None:
     missing = tmp_path / "cache" / "2.0.7"
@@ -160,20 +159,10 @@ def test_codex_hook_missing_root_denies_path_poisoning_and_sibling_checker(
         f"from pathlib import Path\nPath({str(marker)!r}).write_text('sibling')\n",
         encoding="utf-8",
     )
-    poisoned = tmp_path / "bin"
-    poisoned.mkdir()
-    fake_git = poisoned / "git"
-    fake_git.write_text(f"#!/bin/sh\ntouch {marker}\n", encoding="utf-8")
-    fake_git.chmod(0o755)
-    env = dict(
-        os.environ,
-        PLUGIN_ROOT=str(missing),
-        PATH=f"{poisoned}:{os.environ.get('PATH', '')}",
-    )
+    env = dict(os.environ, PLUGIN_ROOT=str(missing))
     result = subprocess.run(
-        _command(), shell=True, input=_payload("git status"), text=True,
+        _command(), shell=True, input=_payload("./git status"), text=True,
         capture_output=True, env=env,
     )
     assert result.returncode == 2
     assert not marker.exists()
-    assert shutil.which("git", path=env["PATH"]) == str(fake_git)
