@@ -1,6 +1,6 @@
 {
   "name": "loom-code",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Five stations carry one change from plan to PR with content-bound verification, one closing review, and a fast publication gate. Claude Code + Codex.",
   "author": {
     "name": "kouko",
@@ -25,6 +25,7 @@
     "loom-design"
   ],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks-codex.json",
   "interface": {
     "displayName": "loom-code",
     "shortDescription": "Five-station coding flow with a deterministic push gate, for Codex CLI",

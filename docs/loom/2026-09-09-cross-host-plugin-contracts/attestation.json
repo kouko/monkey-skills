@@ -1,0 +1,56 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-cross-host-plugin-contracts",
+  "content_digest": "5b57bbb2df4db243884ccc956e43ed62103a917b",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_codex_stale_hook.py -q",
+      "artifact": "loom-code/scripts/test_codex_stale_hook.py",
+      "result": "pass",
+      "command_digest": "747a1c417941595b5c6a294a3393d79f84d95482f9859e052c8ffab5bb590a96"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-fresh-reviewer",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-fable-reviewer",
+      "vendor": "anthropic",
+      "model": "fable",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "refactoring",
+          "anchor": "loom-code/scripts/test_codex_stale_hook.py:106",
+          "text": "nitpick (non-blocking): the recovery-mode publisher corpus remains copied rather than shared.",
+          "fix": "Share the publisher corpus if it changes again."
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "nit",
+      "dimension": "refactoring",
+      "anchor": "loom-code/scripts/test_codex_stale_hook.py:106",
+      "text": "nitpick (non-blocking): the recovery-mode publisher corpus remains copied rather than shared.",
+      "fix": "Share the publisher corpus if it changes again."
+    }
+  ]
+}

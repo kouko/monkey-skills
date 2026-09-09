@@ -18,9 +18,10 @@ counting: >
   outside the loom flow and is not part of the skill budget. checker-rule
   = every rule id `loom_checker.py --list-rules` prints (the checker is
   the single source for its own rule population). hook = one entry per
-  PreToolUse / PostToolUse / SessionStart hook declared in
-  loom-code/hooks/hooks.json, id'd as `<event>:<matcher>:<command
-  basename>`. contract = every station, non-standalone tool, action and
+  PreToolUse / PostToolUse / SessionStart hook declared in the Claude
+  `loom-code/hooks/hooks.json` or Codex `hooks-codex.json` manifest, id'd
+  as `<event>:<matcher>:<command basename>` with `@codex` appended for
+  the Codex manifest. contract = every station, non-standalone tool, action and
   artifact field declared in loom-code/contract/manifest.yaml, id'd as
   `station:<name>` / `tool:<name>` / `action:<name>` /
   `artifact:<name>.<field>` respectively — an artifact schema recomputes
@@ -153,13 +154,16 @@ mechanisms:
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_standing.py::test_missing_standing_docs_warn_in_exactly_three_lines
 
-  # --- hook (3 raw entries in hooks.json; 2 counted, 1 host-hygiene) ---
+  # --- hook (4 raw entries across host manifests; 3 counted, 1 host-hygiene) ---
   - id: "SessionStart:startup|clear|compact:session-start"
     class: hook
     eval: loom-code/scripts/test_session_start_words.py
   - id: "PreToolUse:Bash:loom_checker.py"
     class: hook
     eval: loom-code/scripts/test_loom_attestation.py::test_push_reuses_matching_attestation_without_subprocesses
+  - id: "PreToolUse:Bash:loom_checker.py@codex"
+    class: hook
+    eval: loom-code/scripts/test_codex_stale_hook.py
   - id: "PostToolUse:Skill:language-anchor.py"
     class: host-hygiene   # excluded from the net count — language-anchor is
                           # host infrastructure outside the loom flow, but a

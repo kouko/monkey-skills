@@ -26,6 +26,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[2]
 HOOKS_DIR = REPO / "loom-code" / "hooks"
 HOOKS_JSON = HOOKS_DIR / "hooks.json"
+CODEX_HOOKS_JSON = HOOKS_DIR / "hooks-codex.json"
 
 REMOVED_HOOK_FILES = [
     "git-guard.py",
@@ -44,6 +45,11 @@ def hooks() -> dict:
     return json.loads(HOOKS_JSON.read_text(encoding="utf-8"))["hooks"]
 
 
+@pytest.fixture(scope="module")
+def codex_hooks() -> dict:
+    return json.loads(CODEX_HOOKS_JSON.read_text(encoding="utf-8"))["hooks"]
+
+
 def _matchers(entries) -> set[str]:
     return {e.get("matcher", "") for e in entries}
 
@@ -56,6 +62,10 @@ def test_event_set_is_exact(hooks):
     assert set(hooks) == {"SessionStart", "PreToolUse", "PostToolUse"}
 
 
+def test_codex_event_set_is_only_publication_interception(codex_hooks):
+    assert set(codex_hooks) == {"PreToolUse"}
+
+
 def test_session_start_runs_the_rewritten_script(hooks):
     (command,) = _commands(hooks["SessionStart"])
     assert command.endswith('/hooks/session-start"')
@@ -63,6 +73,13 @@ def test_session_start_runs_the_rewritten_script(hooks):
 
 def test_pre_tool_use_matcher_set_is_exactly_bash(hooks):
     assert _matchers(hooks["PreToolUse"]) == {"Bash"}
+
+
+def test_codex_pre_tool_use_uses_native_root_and_bash_matcher(codex_hooks):
+    assert _matchers(codex_hooks["PreToolUse"]) == {"Bash"}
+    (command,) = _commands(codex_hooks["PreToolUse"])
+    assert "${PLUGIN_ROOT}" in command
+    assert "${CLAUDE_PLUGIN_ROOT}" not in command
 
 
 def test_pre_tool_use_runs_the_single_checker_push_rule(hooks):
@@ -106,3 +123,10 @@ def test_hook_dir_commands_resolve_to_existing_files(hooks):
             if not rel.startswith("hooks/"):
                 continue
             assert (REPO / "loom-code" / rel).is_file(), command
+
+
+def test_codex_manifest_selects_only_codex_hooks():
+    manifest = json.loads(
+        (REPO / "loom-code/.codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    assert manifest["hooks"] == "./hooks/hooks-codex.json"

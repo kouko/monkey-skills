@@ -7,6 +7,10 @@ SHIP = (ROOT / "loom-code/skills/ship/SKILL.md").read_text(encoding="utf-8")
 BUILD = (ROOT / "loom-code/skills/build/SKILL.md").read_text(encoding="utf-8")
 CAPTURE = (ROOT / "loom-design/skills/capture-intent/SKILL.md").read_text(encoding="utf-8")
 PLAN = (ROOT / "loom-code/skills/write-plan/SKILL.md").read_text(encoding="utf-8")
+CODEX_FIRST_CONTACT = (
+    ROOT / "loom-code/skills/write-plan/references/codex-first-contact.md"
+).read_text(encoding="utf-8")
+PRINCIPLES = (ROOT / "PRINCIPLES.md").read_text(encoding="utf-8")
 MEMORY_PR = (
     ROOT / "loom-workflow/skills/git-memory/protocols/compose-pr.md"
 ).read_text(encoding="utf-8")
@@ -127,6 +131,20 @@ def test_intent_confirmation_discloses_publication_and_separate_merge() -> None:
         assert "merge remains a separate decision" in prose
         assert "publication: automatic — authorized <date> by <name>" in station
         assert "only after that informed yes" in prose
+
+
+def test_host_specific_skill_guidance_uses_each_native_contract() -> None:
+    assert "`${CLAUDE_PLUGIN_ROOT}` is substituted by Claude Code" in PLAN
+    assert "`PLUGIN_ROOT` is provided to Codex plugin hook commands" in PLAN
+    assert "not a general skill-shell variable" in " ".join(PLAN.split())
+    assert "hooks/hooks-codex.json" in CODEX_FIRST_CONTACT
+    assert "`${PLUGIN_ROOT}`" in CODEX_FIRST_CONTACT
+    assert "does not also load `hooks/hooks.json`" in CODEX_FIRST_CONTACT
+
+
+def test_principles_name_installed_hooks_for_both_hosts() -> None:
+    assert "Host-installed plugin hooks (Claude Code and Codex)" in PRINCIPLES
+    assert "Codex `.codex/hooks.json`" not in PRINCIPLES
 
 
 def test_station_summaries_distinguish_current_and_legacy_ship_ownership() -> None:

@@ -19,6 +19,7 @@ one executable the plugin still ships, exercised from the isolated install.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -331,6 +332,116 @@ def test_isolated_plugins_execute_local_behavior_without_sibling(tmp_path: Path)
     code_root = _install_plugin("loom-code", tmp_path / "unrelated code cache's root")
 
     _assert_local_behavior_executes(design_root, code_root, tmp_path)
+
+
+def test_isolated_codex_install_selects_only_its_native_hook_manifest(
+    tmp_path: Path,
+) -> None:
+    code_root = _install_plugin("loom-code", tmp_path / "renamed codex cache")
+    manifest = json.loads(
+        (code_root / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    assert manifest["hooks"] == "./hooks/hooks-codex.json"
+    selected = (code_root / manifest["hooks"]).resolve()
+    selected.relative_to(code_root.resolve())
+    hooks = json.loads(selected.read_text(encoding="utf-8"))["hooks"]
+    assert set(hooks) == {"PreToolUse"}
+    assert "${PLUGIN_ROOT}" in hooks["PreToolUse"][0]["hooks"][0]["command"]
+
+    claude = json.loads(
+        (code_root / "hooks/hooks.json").read_text(encoding="utf-8")
+    )["hooks"]
+    assert {"SessionStart", "PreToolUse", "PostToolUse"} <= set(claude)
+    assert "${CLAUDE_PLUGIN_ROOT}" in json.dumps(claude)
+
+
+def test_isolated_codex_hook_uses_copied_root_and_survives_its_removal(
+    tmp_path: Path,
+) -> None:
+    code_root = _install_plugin("loom-code", tmp_path / "arbitrary codex root")
+    manifest = json.loads(
+        (code_root / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    hook_data = json.loads(
+        (code_root / manifest["hooks"]).read_text(encoding="utf-8")
+    )["hooks"]
+    command = hook_data["PreToolUse"][0]["hooks"][0]["command"]
+    payload = json.dumps(
+        {
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "git status --short"},
+        }
+    )
+    env = dict(os.environ, PLUGIN_ROOT=str(code_root))
+    present = subprocess.run(
+        command, shell=True, input=payload, text=True, capture_output=True, env=env
+    )
+    assert present.returncode == 0, present.stderr
+
+    shutil.rmtree(code_root)
+    stale = subprocess.run(
+        command, shell=True, input=payload, text=True, capture_output=True, env=env
+    )
+    assert stale.returncode == 0, stale.stderr
+
+
+def test_isolated_host_hook_lifecycle_matrix(tmp_path: Path) -> None:
+    code_root = _install_plugin("loom-code", tmp_path / "installed-v1")
+    codex_manifest = json.loads(
+        (code_root / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    codex_hooks = json.loads(
+        (code_root / codex_manifest["hooks"]).read_text(encoding="utf-8")
+    )["hooks"]
+    claude_hooks = json.loads(
+        (code_root / "hooks/hooks.json").read_text(encoding="utf-8")
+    )["hooks"]
+    codex_command = codex_hooks["PreToolUse"][0]["hooks"][0]["command"]
+    claude_command = claude_hooks["PreToolUse"][0]["hooks"][0]["command"]
+
+    def invoke(command: str, root_var: str, root: Path, body: str) -> subprocess.CompletedProcess[str]:
+        payload = json.dumps(
+            {
+                "cwd": str(REPO_ROOT),
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": body},
+            }
+        )
+        return subprocess.run(
+            command, shell=True, input=payload, text=True, capture_output=True,
+            env=dict(os.environ, **{root_var: str(root)}),
+        )
+
+    for body, expected in (("git status --short", 0), ("git push origin HEAD", 2)):
+        codex = invoke(codex_command, "PLUGIN_ROOT", code_root, body)
+        claude = invoke(claude_command, "CLAUDE_PLUGIN_ROOT", code_root, body)
+        assert codex.returncode == claude.returncode == expected
+
+    for command, root_var in (
+        (codex_command, "PLUGIN_ROOT"),
+        (claude_command, "CLAUDE_PLUGIN_ROOT"),
+    ):
+        malformed = subprocess.run(
+            command, shell=True, input="not-json", text=True,
+            capture_output=True, env=dict(os.environ, **{root_var: str(code_root)}),
+        )
+        assert malformed.returncode == 2
+
+    shutil.rmtree(code_root)
+    assert invoke(codex_command, "PLUGIN_ROOT", code_root, "git status").returncode == 0
+    assert invoke(codex_command, "PLUGIN_ROOT", code_root, "git push origin HEAD").returncode == 2
+
+    reloaded_root = _install_plugin("loom-code", tmp_path / "installed-v2")
+    reloaded_manifest = json.loads(
+        (reloaded_root / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    reloaded_command = json.loads(
+        (reloaded_root / reloaded_manifest["hooks"]).read_text(encoding="utf-8")
+    )["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+    assert invoke(reloaded_command, "PLUGIN_ROOT", reloaded_root, "git status").returncode == 0
 
 
 def test_design_declares_no_in_plugin_station_command(tmp_path: Path) -> None:

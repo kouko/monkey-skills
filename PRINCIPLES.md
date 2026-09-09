@@ -21,5 +21,5 @@ Work that passes every gate while its quality is insufficient and the user canno
 
 ## Fixed choices
 - Three plugins with one-way dependency on loom-code's versioned contract package.
-- Host hooks (Claude Code plugin hooks, Codex `.codex/hooks.json`), never git hooks.
+- Host-installed plugin hooks (Claude Code and Codex), never repository-local or git hooks.
 - Hard cutover: pre-1.0 artifacts are archived in place, never converted.
