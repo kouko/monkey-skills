@@ -5,19 +5,19 @@ charter: 1.0
 
 ## Task DAG
 
-### Wave 1 — Independent behavioural seams
+### Wave 1 — Behavioural seams
 
 **W1-01 Bind intent authorization to publication**  acceptance: 1, 6
 - Files: loom-code/scripts/loom_checker.py, loom-code/scripts/test_loom_publish.py, loom-code/skills/ship/SKILL.md
 - Test: A1 positive: confirmed-current-intent-publishes; boundary: legacy-intent-requires-decision. A6 positive: publish-stops-before-merge; negative: publish-never-invokes-merge.
 - Risk: agent-decided — extend the existing publish wrapper and explicit intent evidence; never infer authorization from plugin version, branch age, or a bare confirmed status.
 
-**W1-02 Make the PR body self-contained**  acceptance: 2, 3, 4
+**W1-02 Make the PR body self-contained**  after: W1-01  acceptance: 2, 3, 4
 - Files: loom-code/skills/ship/SKILL.md, loom-code/scripts/test_simplified_station_text.py, loom-workflow/skills/git-memory/protocols/compose-pr.md
 - Test: A2 positive: full-context-sections-present; negative: missing-context-rejected. A3 positive: graph-shaped-change-selects-mermaid; boundary: simple-change-omits-diagram. A4 positive: decision-summary-is-auditable; negative: hidden-reasoning-claim-rejected.
 - Risk: agent-decided — Ship owns one top-level body schema; git-memory supplies durable memory content without creating a second template or restoring legacy review fields.
 
-**W1-03 Observe required CI every thirty seconds**  acceptance: 8
+**W1-03 Observe required CI every thirty seconds**  after: W1-02  acceptance: 8
 - Files: loom-code/scripts/loom_checker.py, loom-code/scripts/test_loom_publish.py, loom-code/skills/ship/SKILL.md
 - Test: A8 positive: pending-then-pass-polls-thirty-seconds; boundary: fail-cancel-action-or-task-stop-terminates-without-pending-spam.
 - Risk: agent-decided — keep polling inside the existing publish process with injectable time and GitHub calls; create no scheduler, daemon, resume state, or optional-check wait.
