@@ -41,15 +41,15 @@ SKILL_MD_POINTER = "SKILL.md"
 
 PLUGIN_DIR = SKILL_DIR.parent.parent
 PLUGIN_READMES = {
-    "plugin README.md (EN)": (PLUGIN_DIR / "README.md", "when supported", "manual"),
-    "plugin README.ja.md (JA)": (PLUGIN_DIR / "README.ja.md", "対応する場合", "手動"),
-    "plugin README.zh-TW.md (zh-TW)": (PLUGIN_DIR / "README.zh-TW.md", "支援時", "手動"),
+    "plugin README.md (EN)": (PLUGIN_DIR / "README.md", "when accepted", "recovery"),
+    "plugin README.ja.md (JA)": (PLUGIN_DIR / "README.ja.md", "受理された場合", "復旧"),
+    "plugin README.zh-TW.md (zh-TW)": (PLUGIN_DIR / "README.zh-TW.md", "接受時", "復原"),
 }
 
 SKILL_ACTIVATION_TERMS = {
-    "README.md (EN)": ("when supported", "manual"),
-    "README.ja.md (JA)": ("対応する場合", "手動"),
-    "README.zh-TW.md (zh-TW)": ("支援時", "手動"),
+    "README.md (EN)": ("when accepted", "recovery"),
+    "README.ja.md (JA)": ("受理された場合", "復旧"),
+    "README.zh-TW.md (zh-TW)": ("接受時", "復原"),
 }
 
 
@@ -96,3 +96,7 @@ def test_tri_language_discovery_promises_activation_and_honest_fallback():
         goal_row = next(line for line in text.splitlines() if "[`goal-create`]" in line)
         assert activation in goal_row, f"{label}: goal-create row misses activation"
         assert fallback in goal_row, f"{label}: goal-create row misses manual fallback"
+
+    assert "`/goal clear`" in README_EN.read_text(encoding="utf-8")
+    assert "`/goal clear`" in README_JA.read_text(encoding="utf-8")
+    assert "`/goal clear`" in README_ZHTW.read_text(encoding="utf-8")
