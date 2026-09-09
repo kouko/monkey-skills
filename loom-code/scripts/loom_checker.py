@@ -2683,12 +2683,23 @@ CONTEXTUAL_PR_HEADINGS = (
 
 def validate_contextual_pr_body(body: str) -> str | None:
     """Recompute the structural PR-body floor; semantic truth stays review-owned."""
-    headings = re.findall(r"^## ([^#\n].*)$", body, flags=re.MULTILINE)
-    if headings != list(CONTEXTUAL_PR_HEADINGS):
+    matches = list(re.finditer(r"^## ([^#\n].*)$", body, flags=re.MULTILINE))
+    if [match.group(1) for match in matches] != list(CONTEXTUAL_PR_HEADINGS):
         return (
             "PR body must contain Ship's nine top-level contextual headings "
             "exactly once and in order, with no competing top-level heading"
         )
+    placeholders = {"tbd", "todo", "placeholder", "n/a"}
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(body)
+        content = body[match.end():end].strip()
+        normalized = content.casefold().rstrip(".:").strip()
+        if (
+            not content
+            or normalized in placeholders
+            or re.fullmatch(r"<[^>\n]+>", content) is not None
+        ):
+            return f"PR body section {match.group(1)!r} is empty or a placeholder"
     if re.search(
         r"\b(?:private|hidden)(?:\s+or\s+(?:private|hidden))?\s+chain-of-thought\b",
         body,

@@ -12,10 +12,22 @@ CONTEXT_HEADINGS = (
     "Context", "Intended outcome", "Scope", "Decisions", "Implementation",
     "Behaviour change", "Verification", "Risks and rollback", "Follow-ups",
 )
+CONTEXT_CONTENT = {
+    "Context": "Ship currently asks twice before publication.",
+    "Intended outcome": "One informed intent decision authorizes publication.",
+    "Scope": "Push, Ready PR creation, and task-local CI observation are included.",
+    "Decisions": "Use a machine-readable intent field instead of prose inference.",
+    "Implementation": "The publish wrapper validates and performs each outward step.",
+    "Behaviour change": "After review, publication proceeds without a second prompt.",
+    "Verification": "Focused race and contract regressions pass.",
+    "Risks and rollback": "Disable automatic publication by omitting the intent field.",
+    "Follow-ups": "None.",
+}
 
 
-def contextual_body(*, mermaid: bool = False) -> str:
-    body = "\n\n".join(f"## {heading}\nEvidence." for heading in CONTEXT_HEADINGS)
+def contextual_body(*, mermaid: bool = False, overrides: dict[str, str] | None = None) -> str:
+    content = CONTEXT_CONTENT | (overrides or {})
+    body = "\n\n".join(f"## {heading}\n{content[heading]}" for heading in CONTEXT_HEADINGS)
     if mermaid:
         body += "\n\n```mermaid\nflowchart LR\n  A --> B\n```"
     return body + "\n"
@@ -359,14 +371,16 @@ def test_publish_revalidates_head_remote_and_identity_after_new_pr_creation(
 def test_contextual_body_gate_rejects_malformed_or_unsafe_schema() -> None:
     valid = contextual_body()
     cases = {
-        "missing": valid.replace("## Scope\nEvidence.\n\n", ""),
+        "missing": valid.replace(f"## Scope\n{CONTEXT_CONTENT['Scope']}\n\n", ""),
         "duplicate": valid + "\n## Context\nAgain.\n",
         "out-of-order": valid.replace(
-            "## Context\nEvidence.\n\n## Intended outcome\nEvidence.",
-            "## Intended outcome\nEvidence.\n\n## Context\nEvidence.",
+            f"## Context\n{CONTEXT_CONTENT['Context']}\n\n"
+            f"## Intended outcome\n{CONTEXT_CONTENT['Intended outcome']}",
+            f"## Intended outcome\n{CONTEXT_CONTENT['Intended outcome']}\n\n"
+            f"## Context\n{CONTEXT_CONTENT['Context']}",
         ),
         "competing": valid + "\n## Memory\nLegacy.\n",
-        "hidden-cot": valid.replace("Evidence.", "private chain-of-thought", 1),
+        "hidden-cot": valid.replace(CONTEXT_CONTENT["Context"], "private chain-of-thought", 1),
     }
     for name, body in cases.items():
         assert loom_checker.validate_contextual_pr_body(body) is not None, name
@@ -375,6 +389,16 @@ def test_contextual_body_gate_rejects_malformed_or_unsafe_schema() -> None:
 def test_contextual_body_gate_accepts_simple_and_mermaid_bodies() -> None:
     assert loom_checker.validate_contextual_pr_body(contextual_body()) is None
     assert loom_checker.validate_contextual_pr_body(contextual_body(mermaid=True)) is None
+
+
+def test_contextual_body_gate_rejects_empty_or_placeholder_sections() -> None:
+    placeholders = ("", "  \n\t", "TBD", "TODO", "<describe this section>")
+    for heading in CONTEXT_HEADINGS:
+        for placeholder in placeholders:
+            body = contextual_body(overrides={heading: placeholder})
+            reason = loom_checker.validate_contextual_pr_body(body)
+            assert reason is not None, (heading, placeholder)
+            assert heading in reason, (heading, placeholder)
 
 
 def test_publish_rejects_invalid_contextual_body_before_network(

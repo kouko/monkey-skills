@@ -5,10 +5,14 @@ ROOT = Path(__file__).resolve().parents[2]
 REVIEW = (ROOT / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
 SHIP = (ROOT / "loom-code/skills/ship/SKILL.md").read_text(encoding="utf-8")
 BUILD = (ROOT / "loom-code/skills/build/SKILL.md").read_text(encoding="utf-8")
+CAPTURE = (ROOT / "loom-design/skills/capture-intent/SKILL.md").read_text(encoding="utf-8")
+PLAN = (ROOT / "loom-code/skills/write-plan/SKILL.md").read_text(encoding="utf-8")
 MEMORY_PR = (
     ROOT / "loom-workflow/skills/git-memory/protocols/compose-pr.md"
 ).read_text(encoding="utf-8")
 SHIP_PROSE = " ".join(SHIP.split())
+CAPTURE_PROSE = " ".join(CAPTURE.split())
+PLAN_PROSE = " ".join(PLAN.split())
 
 
 def test_review_generates_attestation_without_ledger_ceremony() -> None:
@@ -112,6 +116,22 @@ def test_git_memory_defers_loom_consent_and_schema_to_ship() -> None:
     assert "loom-code:finishing-a-development-branch" not in MEMORY_PR
     assert "For a Loom change" in MEMORY_PR
     assert "follow Ship's conditional Mermaid rule" in MEMORY_PR
+
+
+def test_intent_confirmation_discloses_publication_and_separate_merge() -> None:
+    assert "non-forced push" in CAPTURE_PROSE
+    assert "Ready PR" in CAPTURE_PROSE
+    assert "merge remains a separate decision" in CAPTURE_PROSE
+    assert "publication: automatic — authorized <date> by <name>" in CAPTURE
+
+
+def test_station_summaries_distinguish_current_and_legacy_ship_ownership() -> None:
+    expected = (
+        "automatic for canonical intent authorization; one user decision for a "
+        "legacy intent; merge is separate"
+    )
+    assert expected in CAPTURE_PROSE
+    assert expected in PLAN_PROSE
 
 
 def test_build_has_no_evidence_accounting() -> None:
