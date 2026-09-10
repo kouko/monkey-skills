@@ -1,0 +1,78 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-10-atomic-claude-reviewer-dispatch",
+  "content_digest": "3827864c201e1fe2ad2334e5997610b24ed3cab1",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python -m pytest docs/loom/2026-09-10-atomic-claude-reviewer-dispatch/evidence/probes/test_claude_reviewer_profile_abuse.py -q",
+      "artifact": "docs/loom/2026-09-10-atomic-claude-reviewer-dispatch/evidence/probes/test_claude_reviewer_profile_abuse.py",
+      "result": "pass",
+      "command_digest": "30d88e16c950760691bb22dd554d17fb795ff69660fabd045819e5c7c2a6093b"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "fresh-code-review",
+      "vendor": "openai",
+      "model": "host-default-unverified",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "fresh-skill-review",
+      "vendor": "openai",
+      "model": "host-default-unverified",
+      "lens": "skill",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-second-vendor",
+      "vendor": "anthropic",
+      "model": "opus-requested-unverified",
+      "lens": "second-vendor",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "nit",
+      "dimension": "tests",
+      "anchor": "loom-code/scripts/test_claude_reviewer.py:219",
+      "text": "The main-level host-rejection test composes two seams instead of driving the marker through subprocess output in one test."
+    },
+    {
+      "severity": "nit",
+      "dimension": "correctness",
+      "anchor": "loom-code/scripts/claude_reviewer.py:147",
+      "text": "A non-positive timeout remains a plain-text caller-misuse error rather than typed JSON."
+    },
+    {
+      "severity": "nit",
+      "dimension": "correctness",
+      "anchor": "docs/loom/2026-09-10-atomic-claude-reviewer-dispatch/spec.md:40",
+      "text": "The readable spec does not enumerate every semantic exit-code number pinned by tests."
+    },
+    {
+      "severity": "nit",
+      "dimension": "security",
+      "anchor": "loom-code/scripts/claude_reviewer.py:70",
+      "text": "The accepted exact-marker substring classification can false-positive if a failed provider echoes marker-bearing prompt text to stderr."
+    }
+  ]
+}
