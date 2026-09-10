@@ -19,6 +19,7 @@ charter: 1.0
 1 — what — 這次 Closing Review 要使用 Claude Code 當第二位讀者嗎？
 2 — behaviour — 也就是你看到 CI 失敗後，Agent 會自行完成可安全判斷的修復，同時保留功能修改後的完整 testing 保護。這個行為符合預期嗎？
 2 — behaviour — 你是否同意採用第一個方案：版本檔變更仍重新 Closing Review？
+1 — consequence — 你是否同意這次改成不使用 Claude 第二讀者？
 
 ## Risks
 

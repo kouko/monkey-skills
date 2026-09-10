@@ -137,18 +137,19 @@ CI is the external trust boundary. When required CI fails, the same active task
 identifies the failed required checks and each available failure log; the
 publication command's failure does not end the task. Missing required
 diagnostics or permission, a safely unattributed failure, a persistent external
-failure established from available evidence, or a required change to agreed
-behaviour is reported as a concrete blocker. An unattributed failure must not
-be rerun automatically.
+failure established from available evidence, or a required change to
+requirements, visible behaviour, or guarantees is reported as a concrete
+blocker. An unattributed failure must not be rerun automatically.
 
 Keep a functional or test repair in the original change. When an existing test
-already exposes the root cause, reuse it; otherwise add the smallest permanent
-regression case before applying Build's test-first discipline. Every
-committed-file change, including code, tests, and version files, invalidates the
-attestation and resumes the same bounded Review episode at its next functional
-digest without resetting the episode or adding another retry budget, then
-returns to Ship. A PR title, body, or other publication data not committed to
-the repository may be fixed in place and reuse the matching attestation.
+already exposes the root cause, use it; otherwise add the smallest permanent
+regression case. Run it to observe RED, apply the minimum fix under Build's
+test-first discipline, and rerun it to observe GREEN. Every committed-file
+change, including code, tests, and version files, invalidates the attestation
+and resumes the same bounded Review episode at its next functional digest
+without resetting the episode or adding another retry budget, then returns to
+Ship. A PR title, body, or other publication data not committed to the
+repository may be fixed in place and reuse the matching attestation.
 
 Publication never authorizes or invokes merge. Do not merge without the user's
 separate explicit authorization.

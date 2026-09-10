@@ -49,6 +49,13 @@ def test_ci_failure_continues_without_new_recovery_machinery() -> None:
         "same bounded Review episode",
         "Every committed-file change",
         "must not be rerun automatically",
+        "publication command's failure does not end the task",
+        "PR title, body, or other publication data not committed",
+        "required change to requirements, visible behaviour, or guarantees",
+        "required diagnostics or permission",
+        "persistent external failure established from available evidence",
+        "Run it to observe RED",
+        "rerun it to observe GREEN",
     ):
         assert phrase in SHIP_PROSE
     assert "active unmerged change" in MAINTAIN
