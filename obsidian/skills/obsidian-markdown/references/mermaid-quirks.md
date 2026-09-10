@@ -25,12 +25,13 @@ Applies to all quoted node labels and arrow labels in flowchart / graph diagrams
 
 ---
 
-## Rule 2: List syntax conflict
+## Rule 2: List syntax conflict — CAUTION, not a rule
 
-`number. space` inside node text triggers a Markdown list parser error.
+`number. space` inside node text has been reported to trigger a Markdown
+list-parser error in some builds. Probed 2026-09-11 on mermaid-cli 11.4.2 (the pinned version, matching Obsidian's bundled 11.4.1) and on 11.16.0: `1. Perception` renders cleanly, quoted and unquoted, on both. The failure is real in some builds but is not reproducible here, so this is a caution, not a gate — and "Step 1. do this" is an ordinary sentence that must not be rejected.
 
 ```
-❌ ["1. Perception"]   → Parse error: Unsupported markdown: list
+⚠️ ["1. Perception"]   → reported as: Parse error: Unsupported markdown: list
 ✅ ["1.Perception"]    — no space after period
 ✅ ["① Perception"]    — circled number
 ✅ ["(1) Perception"]  — parentheses

@@ -160,7 +160,7 @@ cat diagram.mmd | scripts/validate.sh -  # stdin
 It reports `FAIL` on syntax errors (which mermaid-cli does NOT signal via exit code) and `WARN` on likely literal-quote mistakes. A `FAIL` is a real bug; a `PASS` means it parses in mermaid-cli — which is **more lenient than Obsidian**, so verify CJK-heavy diagrams in Obsidian too. Requires `npx` (Node) on PATH.
 
 ### Universal checks (all 17 types)
-- [ ] No `number. space` pattern in node / label text ([quirk 1](obsidian-common-quirks.md))
+- [ ] `number. space` in node / label text is a known-fragile pattern in some builds, though it renders on the pinned parser — prefer `①` / `(1)` / `Step 1:` when the numbering is decorative, but do not mangle ordinary prose ([quirk 1](obsidian-common-quirks.md))
 - [ ] Subgraphs with spaces use `subgraph id["Display"]` format ([quirk 2](obsidian-common-quirks.md))
 - [ ] All node / entity references use IDs, not display text ([quirk 3](obsidian-common-quirks.md))
 - [ ] Special characters replaced: `"` → `『』`, `()` → `「」` ([quirk 4](obsidian-common-quirks.md))

@@ -17,20 +17,16 @@ Rules that apply to **every** Mermaid diagram type when rendered in Obsidian. If
 
 ---
 
-## Quirk 1: List syntax conflict (most common error)
+## Quirk 1: List syntax conflict (CAUTION — not reproducible on the pinned parser)
 
-**Root cause**: Mermaid parser interprets `number. space` inside node text as Markdown ordered list syntax.
+**Reported root cause**: some Mermaid builds interpret `number. space` inside
+node text as Markdown ordered-list syntax and abort with
+`Parse error: Unsupported markdown: list`.
 
-**Error message**: `Parse error: Unsupported markdown: list`
+> [!warning] Verify before treating this as a rule
+> Probed 2026-09-11 on mermaid-cli 11.4.2 (the pinned version, matching Obsidian's bundled 11.4.1) and on 11.16.0: `1. Perception` renders cleanly, quoted and unquoted, on both. The failure is real in some builds but is not reproducible here, so this is a caution, not a gate — and "Step 1. do this" is an ordinary sentence that must not be rejected.
 
-**Wrong**:
-```
-❌ [1. Perception]
-❌ [2. Planning]
-❌ [3. Reasoning]
-```
-
-**Fix — 4 safe numbering options**:
+**If you hit it, these all avoid it**:
 ```
 ✅ [1.Perception]           — remove space after period
 ✅ [① Perception]           — use circled numbers
