@@ -23,6 +23,7 @@ def test_run_attempt_valid_output_passes_through_once(monkeypatch) -> None:
     assert len(calls) == 1
     assert calls[0][0] == [
         "claude", "-p", "--model", "sonnet", "--output-format", "text",
+        "--no-session-persistence",
     ]
     assert calls[0][1]["input"] == "review this"
     assert calls[0][1]["timeout"] == 600

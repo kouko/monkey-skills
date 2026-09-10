@@ -39,8 +39,11 @@ def _argv(claude_bin: str, model: str) -> list[str]:
 
     External surface grounding: the checked-in ``claude -p --help`` capture at
     ``docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/claude-p-help-2026-09-05.txt``
-    defines ``-p``, ``--model`` and ``--output-format text``. Prompt delivery
-    on stdin follows the empirical contract documented by
+    defines ``-p``, ``--model`` and ``--output-format text``. Anthropic's
+    CLI reference documents ``--no-session-persistence`` as disabling disk
+    persistence for print-mode sessions:
+    https://code.claude.com/docs/en/cli-usage
+    Prompt delivery on stdin follows the empirical contract documented by
     ``coldread_role_split.run_once``.
     """
     return [
@@ -50,6 +53,7 @@ def _argv(claude_bin: str, model: str) -> list[str]:
         model,
         "--output-format",
         "text",
+        "--no-session-persistence",
     ]
 
 
