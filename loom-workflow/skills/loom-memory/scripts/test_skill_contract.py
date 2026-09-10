@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
@@ -228,13 +229,28 @@ def test_legacy_store_reported_needing_explicit_migration_without_modification()
 
 
 def test_skill_folder_is_flat_no_nested_subfolder() -> None:
+    """The flat-folder rule governs what the skill SHIPS, so this asks Git
+    what is tracked rather than what happens to sit on disk.
+
+    Walking the filesystem instead made the test report a failure whenever
+    anyone had run pytest in the skill directory without
+    `PYTHONDONTWRITEBYTECODE`, because the resulting `__pycache__` is a
+    nested directory. That is a fact about the runner's environment, not
+    about the layout being shipped, and the generated directory is not
+    tracked at all.
+    """
     assert SKILL_DIR.is_dir()
-    for entry in SKILL_DIR.iterdir():
-        if entry.is_dir():
-            for nested in entry.iterdir():
-                assert not nested.is_dir(), (
-                    f"{entry} must not contain a nested subfolder ({nested})"
-                )
+    tracked = subprocess.run(
+        ["git", "ls-files", "--", SKILL_DIR.as_posix()],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout.split()
+    assert tracked, "no tracked files under the skill directory"
+    for rel in tracked:
+        depth = Path(rel).relative_to(SKILL_DIR.relative_to(REPO_ROOT)).parts
+        assert len(depth) <= 2, (
+            f"{rel} nests a subfolder inside a skill subfolder; the skill "
+            "folder must be SKILL.md plus single-level subfolders"
+        )
 
 
 def test_skill_md_under_token_budget() -> None:
