@@ -843,3 +843,25 @@ applies to the reserved frontmatter literal, so both got one source.
 **Sources.** Closing review terminal verification of `8a250d3ca`, architecture
 finding at `migrate_legacy_store.py:192`; the docs reviewer's nit on
 `generate_index`'s literal.
+
+## D-23 — The pre-write gate runs the real check, not a list of field names
+
+**Decision.** `loom_memory.validate_concept_frontmatter(frontmatter, path)` is
+the profile's concept check, taking a parsed mapping so a caller holding
+frontmatter it has not written yet can ask it. The migration's staging pass runs
+it over each migrated concept before writing anything; the hand-listed field
+checks are gone except for the two keys the migration itself dereferences.
+
+**Candidates.** Add a non-empty check for `description` beside the presence
+check; or make the gate ask the check's own question.
+
+**Why.** This was the third instance of one shape in a single review: a rule
+enforced somewhere other than where the decision is made. Presence-versus-
+validity is that shape again — the gate asked "is the key there?" while the
+check asked "is the value usable?", so `description:` with no value passed the
+gate and failed after files had been rewritten. Adding one more special case
+would have left the gate free to drift from the check on the next field.
+
+**Sources.** Codex second-vendor review of `023121eb8`, one important finding
+with a reproduction; regression at `test_migrate_legacy_store.py::
+test_a_legacy_value_the_profile_rejects_aborts_before_any_file_is_written`.

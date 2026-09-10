@@ -291,12 +291,26 @@ def name_matches_stem(name: str, path: Path) -> bool:
 
 
 def _validate_concept_file(path: Path) -> list[Violation]:
-    violations: list[Violation] = []
     text = path.read_text(encoding="utf-8")
     frontmatter = parse_frontmatter(text)
     if frontmatter is None:
-        violations.append(Violation("frontmatter", path.name, "no parseable YAML frontmatter block"))
-        return violations
+        return [Violation("frontmatter", path.name, "no parseable YAML frontmatter block")]
+    return validate_concept_frontmatter(frontmatter, path)
+
+
+def validate_concept_frontmatter(frontmatter: dict, path: Path) -> list[Violation]:
+    """Every Loom-profile rule a concept's frontmatter must satisfy, decided
+    here and nowhere else.
+
+    Takes the parsed mapping rather than a path so a caller holding frontmatter
+    it has not written yet can ask the same question. The migration's pre-write
+    gate does exactly that: listing the fields by hand let it check presence
+    while this function checked validity, and a `description:` with no value
+    passed the gate and failed here — after the batch had already rewritten
+    files. A gate that asks a different question from the check it is guarding
+    is not a gate.
+    """
+    violations: list[Violation] = []
 
     type_value = frontmatter.get("type")
     if not isinstance(type_value, str) or not type_value.strip():

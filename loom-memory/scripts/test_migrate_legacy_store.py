@@ -588,3 +588,33 @@ def test_name_stem_mismatch_aborts_before_any_file_is_written(tmp_path: Path) ->
     assert "right-name.md" in result.stdout + result.stderr
     assert {p.name: p.read_bytes() for p in sorted(store.glob("*.md"))} == before
     assert not (store / "index.md").exists()
+
+
+def test_a_legacy_value_the_profile_rejects_aborts_before_any_file_is_written(tmp_path: Path) -> None:
+    """The pre-write gate used to list the fields it wanted by hand, so it
+    checked PRESENCE while index regeneration checked VALIDITY. A legacy
+    `description:` with no value passed the gate and failed the check — after
+    the batch had rewritten every earlier file, leaving a store that a rerun
+    refuses because the rewritten concepts now carry `sources`. The gate now
+    runs the profile's own concept check over the staged frontmatter.
+    Found by the second-vendor reviewer."""
+    repo_root = tmp_path / "repo"
+    store = repo_root / "docs" / "loom" / "memory"
+    store.mkdir(parents=True)
+    _write(store, "README.md", _legacy_readme(["[x](x.md) — Empty."]))
+    _write(store, "x.md", "---\nname: x\ndescription:\ntype: gotcha\norigin: fixture\n---\n\nBody.\n")
+    _init_git_repo(repo_root)
+    _commit_all(repo_root, "seed")
+    before = {p.name: p.read_bytes() for p in sorted(store.glob("*.md"))}
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "migrate_legacy_store.py"), str(store), "--repo-root", str(repo_root)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    combined = result.stdout + result.stderr
+    assert "x.md" in combined and "description" in combined
+    assert {p.name: p.read_bytes() for p in sorted(store.glob("*.md"))} == before
+    assert not (store / "index.md").exists()

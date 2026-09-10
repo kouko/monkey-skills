@@ -186,16 +186,9 @@ def _check_legacy_concept_frontmatter(legacy_fm: dict[str, str], *, path: Path) 
             f"{filename}: already carries a 'sources' key — this file is already in the "
             "OKF profile, not a legacy concept; refusing to re-migrate it as legacy"
         )
-    if "name" not in legacy_fm:
-        raise MigrationError(f"{filename}: legacy frontmatter has no 'name' key")
-    if "description" not in legacy_fm:
-        raise MigrationError(f"{filename}: legacy frontmatter has no 'description' key")
-    if not lm.name_matches_stem(legacy_fm["name"], path):
-        raise MigrationError(
-            f"{filename}: legacy frontmatter name {legacy_fm['name']!r} != filename stem "
-            f"{path.stem!r}; index regeneration would refuse this store, so the batch stops "
-            "here rather than after rewriting earlier files"
-        )
+    for key in ("name", "description"):
+        if key not in legacy_fm:
+            raise MigrationError(f"{filename}: legacy frontmatter has no {key!r} key")
 
 
 def _migrate_concept_frontmatter(
@@ -261,6 +254,16 @@ def migrate(store: Path, repo_root: Path) -> MigrationResult:
         _check_legacy_concept_frontmatter(legacy_fm, path=path)
         rel_path = (store_rel / path.name).as_posix()
         new_fm = _migrate_concept_frontmatter(legacy_fm, repo_root=repo_root, rel_path=rel_path)
+        # The gate asks the CHECK's own question, not a hand-listed subset of
+        # it: whatever index regeneration will demand of this concept at the
+        # end of the run must hold before the run writes its first byte.
+        staged_violations = lm.validate_concept_frontmatter(new_fm, path)
+        if staged_violations:
+            detail = "; ".join(f"[{v.invariant}] {v.file}: {v.detail}" for v in staged_violations)
+            raise MigrationError(
+                f"{path.name}: the migrated frontmatter would not satisfy the profile "
+                f"({detail}); the batch stops here rather than after rewriting earlier files"
+            )
         staged.append((path, render_frontmatter(new_fm) + body))
 
     charter = _extract_charter(readme_text)
