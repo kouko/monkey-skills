@@ -38,6 +38,13 @@ def _text(value: str | bytes | None) -> str:
     return value
 
 
+def _validate_profile(model: str | None, effort: str | None) -> None:
+    if (model is None) != (effort is None):
+        raise ValueError("--model and --effort must be provided together")
+    if effort is not None and effort not in CLAUDE_EFFORTS:
+        raise ValueError(f"unsupported --effort value: {effort}")
+
+
 def _argv(claude_bin: str, model: str | None, effort: str | None) -> list[str]:
     """Build the grounded Claude print-mode invocation.
 
@@ -51,16 +58,11 @@ def _argv(claude_bin: str, model: str | None, effort: str | None) -> list[str]:
     Prompt delivery on stdin follows the empirical contract documented by
     ``coldread_role_split.run_once``.
     """
-    argv = [
-        claude_bin,
-        "-p",
-        "--output-format",
-        "text",
-        "--no-session-persistence",
-    ]
+    _validate_profile(model, effort)
+    argv = [claude_bin, "-p"]
     if model is not None and effort is not None:
-        argv[2:2] = ["--model", model, "--effort", effort]
-    return argv
+        argv.extend(["--model", model, "--effort", effort])
+    return argv + ["--output-format", "text", "--no-session-persistence"]
 
 
 def _completed_attempt(completed: subprocess.CompletedProcess[str], elapsed: float) -> Attempt:
@@ -70,9 +72,10 @@ def _completed_attempt(completed: subprocess.CompletedProcess[str], elapsed: flo
             if UNRECOGNIZED_MODEL_MARKER in completed.stderr
             else "process-error"
         )
+        exit_code = 4 if kind == "host-rejection" else 1
         return Attempt(
             kind, completed.stdout, completed.stderr,
-            completed.returncode, elapsed, completed.returncode or 1,
+            completed.returncode, elapsed, exit_code,
         )
     if not completed.stdout.strip():
         return Attempt(
@@ -144,20 +147,19 @@ def main(
     if args.timeout_seconds <= 0:
         print("--timeout-seconds must be greater than zero", file=err)
         return 2
-    if (args.model is None) != (args.effort is None):
-        print("--model and --effort must be provided together", file=err)
-        return 2
-    if args.effort is not None and args.effort not in CLAUDE_EFFORTS:
-        rejection = Attempt(
-            kind="host-rejection",
+    try:
+        _validate_profile(args.model, args.effort)
+    except ValueError as exc:
+        invalid = Attempt(
+            kind="input-error",
             stdout="",
-            stderr=f"unsupported --effort value: {args.effort}",
+            stderr=str(exc),
             returncode=None,
             elapsed_seconds=0.0,
             exit_code=2,
         )
-        print(json.dumps(asdict(rejection), ensure_ascii=False, sort_keys=True), file=err)
-        return rejection.exit_code
+        print(json.dumps(asdict(invalid), ensure_ascii=False, sort_keys=True), file=err)
+        return invalid.exit_code
     attempt = run_attempt(
         "claude",
         args.model,

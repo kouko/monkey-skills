@@ -8,8 +8,10 @@ reviewers to infer routing failures from undifferentiated process errors
 
 - Pass a resolved Claude reviewer model and effort as one pair, or omit both
   overrides so host-default fallback remains atomic.
-- Reject partial runner profiles before starting Claude and keep host-rejection
-  replacement separate from the existing transient-executor retry.
+- Reject partial or unsupported-effort profiles as typed input errors before
+  starting Claude, and reserve host rejection for the grounded model marker.
+- Give runner result kinds distinct shell exit codes and let an override-free
+  replacement consume the transient retry slot, preventing a third invocation.
 - Preserve the runner's single-attempt, stdin, timeout, diagnostic,
   no-session-persistence, and credential-boundary behavior.
 

@@ -85,7 +85,7 @@ runner at most once more for the same functional-content digest and reviewer
 identity. If that attempt also fails before a conforming verdict exists, report
 both diagnostics and end the episode as `EXECUTION_FAILED`.
 
-A model-and-effort rejection before task execution follows the shared
+A model rejection before task execution follows the shared
 host-rejection path instead: feed the rejection to the resolver and invoke its
 override-free replacement in the same task attempt. If that replacement is
 also rejected, feed back `rejection_retried: true`, accept
@@ -93,11 +93,17 @@ also rejected, feed back `rejection_retried: true`, accept
 generic transient-executor retry, so the two policies cannot create a third
 Claude invocation.
 
-The runner reports `host-rejection` only for an effort outside Claude Code's
-grounded five-value CLI set or for a non-zero Claude result carrying the exact
-`[claude-code:unrecognized_model]` marker. Every other non-zero exit remains a
+The override-free replacement consumes the one same-digest transient-retry
+slot. After it, no further Claude invocation occurs for that digest regardless
+of failure kind.
+
+The runner reports `host-rejection` only for a non-zero Claude result carrying
+the exact `[claude-code:unrecognized_model]` marker. A partial pair or an effort
+outside Claude Code's grounded five-value CLI set is `input-error` and exits 2
+before launch; it is not host rejection. Every other non-zero exit remains a
 generic executor failure; the caller must not infer routing rejection from
-free-form provider text.
+free-form provider text. Route on the stderr JSON `kind`, not exit status
+alone; a plain-text exit 2 is caller misuse rather than a routing signal.
 <!-- /gate -->
 
 ## 3. Run blind and adversarial checks
