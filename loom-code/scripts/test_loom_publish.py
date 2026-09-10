@@ -936,19 +936,29 @@ def test_publish_rechecks_an_initial_empty_required_set_before_pass(
     assert "Required CI passed" in out
 
 
+@pytest.mark.parametrize(
+    "stderr",
+    [
+        "no checks reported on the 'feature' branch",
+        "no required checks reported on the 'feature' branch",
+    ],
+)
 def test_publish_treats_gh_exit_one_no_checks_as_registration_delay(
-    tmp_path: Path, monkeypatch
+    tmp_path: Path, monkeypatch, stderr: str
 ) -> None:
+    """Pin gh 2.88.1's two no-check error forms and exit-1 behavior.
+
+    https://github.com/cli/cli/blob/v2.88.1/pkg/cmd/pr/checks/checks.go
+    https://github.com/cli/cli/blob/v2.88.1/pkg/cmd/pr/checks/checks_test.go
+    https://github.com/cli/cli/issues/7401
+    """
     calls = ExternalCalls("")
     calls.required_checks = [
         "",
         [{"name": "gate", "state": "SUCCESS", "bucket": "pass"}],
     ]
     calls.required_check_returncodes = [1, 0]
-    calls.required_check_stderr = [
-        "no checks reported on the 'feature' branch",
-        "",
-    ]
+    calls.required_check_stderr = [stderr, ""]
     waits: list[int] = []
     monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
 
@@ -998,6 +1008,7 @@ def test_publish_blocks_unexpected_ci_exit_with_blank_output(
     ("stdout", "stderr"),
     [
         ("[]", "no checks reported on the 'feature' branch"),
+        ("", "no checks reported on the authentication failed branch"),
         ("", "no checks reported for feature"),
         ("", "authentication required"),
     ],

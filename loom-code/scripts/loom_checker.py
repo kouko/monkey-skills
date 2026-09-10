@@ -3146,11 +3146,17 @@ def _observe_required_ci(
             return _publish_block(
                 f"required CI could not be observed: {type(exc).__name__}: {exc}", err
             )
+        # gh 2.88.1 emits these quoted-branch errors before checks register;
+        # the command layer maps the returned error to exit 1 with blank stdout.
+        # https://github.com/cli/cli/blob/v2.88.1/pkg/cmd/pr/checks/checks.go
+        # https://github.com/cli/cli/blob/v2.88.1/pkg/cmd/pr/checks/checks_test.go
+        # https://github.com/cli/cli/issues/7401
         no_checks_yet = (
             result.returncode == 1
             and not result.stdout.strip()
             and re.fullmatch(
-                r"no checks reported on the .+ branch", result.stderr.strip()
+                r"no (?:required )?checks reported on the '.*' branch",
+                result.stderr.strip(),
             ) is not None
         )
         # gh uses exit 8 while checks are pending and exit 1 before a new
