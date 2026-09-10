@@ -26,7 +26,7 @@
     },
     {
       "name": "loom-workflow",
-      "description": "Loom workflow tools around the loom stations — persistent Outcome Maps, git memory, critique (proposal | complexity), recap, handoff, session distill, CoT explainers, cross-executor second opinion, plus the standalone goal-create and dbt-model-style skills.",
+      "description": "Loom workflow tools around the loom stations — persistent Outcome Maps, git memory, loom-memory (recall / record / reconcile / retire durable repository lessons), critique (proposal | complexity), recap, handoff, session distill, CoT explainers, cross-executor second opinion, plus the standalone goal-create and dbt-model-style skills.",
       "source": "./loom-workflow/"
     },
     {
