@@ -1,6 +1,6 @@
 # Main-relative subagent model dispatch — plan
 intent: 2026-09-09-main-relative-model-dispatch@be39c611d5fb8bfc85ed35b888e420e515ff1e11
-spec: docs/loom/2026-09-09-main-relative-model-dispatch/spec.md@9730418c9367c328a3123e7b1c6ffefb58acb60a
+spec: docs/loom/2026-09-09-main-relative-model-dispatch/spec.md@6a29d5bb979daa017b2063ef6d38f62202f7526f
 charter: 1.0
 
 ## Task DAG
