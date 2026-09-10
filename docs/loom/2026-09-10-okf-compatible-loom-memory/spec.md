@@ -11,10 +11,10 @@ REQ-2 — Symmetric optional consumption
   WHERE `loom-memory` is installed, `loom-code`, `loom-design`, and a user working without either plugin shall be able to invoke the same public memory skill without reading another plugin's private paths → Acceptance #3, #4
 
 REQ-3 — Absence never blocks core Loom
-  IF the `loom-memory` plugin is not installed, the repository store is absent, or recall finds no relevant entry THEN `loom-code` and `loom-design` shall continue their requested work without an error, installation prompt, degraded-verification claim, or mandatory fallback → Acceptance #4
+  IF the `loom-memory` plugin is not installed THEN an isolated `loom-code` install shall complete `loom_checker.py intake write-plan <fixture-change-id>` with exit 0 for an otherwise valid fixture intent, an isolated `loom-design` install shall retain its complete skill and executable surface, and neither result nor installed skill text shall name `loom-memory` as a missing requirement; an absent store or empty recall result shall likewise return a normal no-memory result from `loom-memory` rather than affect either consumer → Acceptance #4
 
 REQ-4 — Passive activation only
-  WHEN the user explicitly asks to remember, recall, reconcile, or retire repository knowledge, or the agent independently identifies a concrete need for prior repository experience, the memory skill shall perform the matching operation; no Build, Review, Ship, capture-intent, or write-spec station shall invoke it merely because that station was reached → Acceptance #3, #4
+  WHEN the user explicitly asks to remember, recall, reconcile, or retire repository knowledge, or the agent independently identifies a concrete need for prior repository experience, the memory skill shall perform the matching operation; no Loom station shall invoke it merely because that station was reached → Acceptance #3, #4
 
 REQ-5 — Optional hook boundary
   WHERE the plugin provides a hook, the hook shall be owned entirely by `loom-memory`, remain optional, and limit itself to a non-blocking relevance reminder or an explicit-memory-operation integrity check; it shall neither author or delete entries nor fail unrelated Loom operations → Acceptance #3, #4, #6
@@ -26,22 +26,22 @@ REQ-7 — Declared compatibility profile
   The bundle-root `index.md` shall declare `okf_version: "0.2"`, and the validator and documentation shall call the result an `OKF v0.2-compatible Loom memory profile` rather than claiming implementation of optional OKF services or future versions → Acceptance #1
 
 REQ-8 — Progressive-disclosure index
-  WHEN an entry is created, changed, reconciled, migrated, or retired, the plugin shall deterministically regenerate `index.md` from current entry metadata, grouping links by memory type and copying each entry's `description` exactly so an agent can choose entries without loading their bodies → Acceptance #2, #3
+  WHEN an entry is created, changed, reconciled, migrated, or retired, the plugin shall deterministically regenerate `index.md` from current entry metadata, grouping links by memory type and copying each entry's `description` byte-identically after stripping leading and trailing whitespace on both inputs so an agent can choose entries without loading their bodies → Acceptance #2, #3
 
 REQ-9 — Index remains derived
-  IF committed `index.md` differs from a fresh regeneration THEN explicit memory validation shall fail with the mismatched entry or section, while regeneration shall preserve the charter prose and produce byte-identical output on a second unchanged run → Acceptance #1, #2, #6
+  IF committed `index.md` differs from a fresh regeneration under REQ-8's normalization rule THEN explicit memory validation shall fail with the mismatched entry or section, while regeneration shall touch only `index.md` and produce byte-identical output on a second unchanged run → Acceptance #1, #2, #6
 
 REQ-10 — Minimum Loom concept schema
   Each Loom memory concept shall contain `type`, `name`, `description`, and at least one `sources[].resource`; `name` shall equal the filename stem, `description` shall be a standalone durable relevance rule, and every `sources` entry shall follow OKF v0.2 provenance structure → Acceptance #1, #2, #5
 
 REQ-11 — Minimum actionable body
-  Each Loom memory concept body shall state one durable lesson and contain `Trigger`, `Correct path`, and `Why` sections, with `Limits` included only when a real non-applicability boundary exists → Acceptance #2, #3, #5
+  Each newly recorded or subsequently content-edited Loom memory concept body shall state one durable lesson and contain `Trigger`, `Correct path`, and `Why` sections, with `Limits` included only when a real non-applicability boundary exists; migration alone shall not invent or rewrite those semantic sections in untouched legacy bodies → Acceptance #2, #3, #5
 
 REQ-12 — Optional OKF metadata stays optional
-  IF an entry uses OKF `generated`, `verified`, `status`, `stale_after`, tags, or source credibility fields THEN validation shall enforce the corresponding OKF v0.2 shape; otherwise their absence shall not block storage, retrieval, or use → Acceptance #1, #3
+  IF an entry contains optional or unknown OKF metadata THEN read, migration, and round-trip writes shall preserve it without making its absence or unrecognized shape a Loom-profile failure; field-specific validation shall be added only in the same change that makes a Loom operation emit that field → Acceptance #1, #3
 
 REQ-13 — Recall operation
-  WHEN recall is requested or independently judged relevant, the skill shall search `index.md` first, open only the bounded set of matching entries, verify that any named file, flag, skill, or command still exists before acting, and treat an empty result as normal → Acceptance #2, #3, #4
+  WHEN recall is requested or independently judged relevant, the skill shall search `index.md` first, open only the bounded set of matching entries, verify that any named file, flag, skill, or command still exists before acting, and treat an absent store or empty result as normal; a store containing concept files but no `index.md` shall fail that explicit recall as structural corruption and direct the user to validate or migrate it → Acceptance #2, #3, #4, #6
 
 REQ-14 — Record operation
   WHEN recording is requested or independently judged useful, the skill shall first classify the candidate as a durable repository lesson rather than an open task, change narrative, verification record, commit-bound decision, or user preference; it shall search for equivalent or contradictory live entries before creating exactly one concept → Acceptance #3
@@ -56,7 +56,7 @@ REQ-17 — Scoped structural failure
   IF a requested memory operation encounters malformed frontmatter, a missing required Loom field, duplicate concept identity, index drift, or a broken index target THEN that operation shall stop with every offender and violated invariant named; the failure shall not install another plugin or block unrelated code or design work → Acceptance #1, #4, #6
 
 REQ-18 — Safe migration of the existing store
-  WHEN the existing `docs/loom/memory` store is migrated, the migration shall preserve every entry body and `description`, map each legacy `origin` into at least one `sources[].resource`, add missing `type` values without inventing semantics, generate `index.md`, retain the charter as an OKF concept or equivalent non-conflicting document, and prove before/after entry counts and content fingerprints → Acceptance #5
+  WHEN the existing `docs/loom/memory` store is migrated, the migration shall preserve every entry body and `description` byte-for-byte, retain every legacy `origin` string verbatim as a `sources[].resource`, add a source describing the full introducing commit for an entry with no `origin`, assign the generic `type: Memory` rather than invent a narrower classification when legacy `type` is absent, generate `index.md`, add `type: Memory Store Guide` frontmatter to the existing `README.md` charter so it is a conformant concept, and prove equal before/after lesson-entry counts plus per-body content fingerprints → Acceptance #5
 
 REQ-19 — No duplicate change log
   The profile shall omit `log.md` because Git is the authoritative update history, while remaining conformant because OKF v0.2 makes both `index.md` and `log.md` optional → Acceptance #1, #3, #5
@@ -65,21 +65,31 @@ REQ-20 — Git-memory remains separate
   The `git-memory` skill shall continue to own commit- and pull-request-bound Decision, Learning, and Gotcha carriers, while `loom-memory` owns only repository lessons that outlive a change; neither skill shall be a required runtime dependency of the other → Acceptance #3, #4
 
 REQ-21 — Cross-host behavior contract
-  WHERE a host supports agent skills and repository file access, the plugin shall expose the same Recall, Record, Reconcile, and Retire meanings and the same store artifacts on Claude Code, Codex, and Gemini-compatible consumers, with host adapters limited to discovery or optional hooks → Acceptance #1, #2, #3, #4
+  WHERE a host supports agent skills and repository file access, the plugin's canonical skill and store schema shall contain no host-specific path or private API, and any host-specific discovery or hook adapter shall remain a separate optional file whose removal leaves Recall, Record, Reconcile, Retire, and validation semantics unchanged → Acceptance #1, #2, #3, #4
 
 REQ-22 — Isolated-install proof
-  The package verification shall copy each of `loom-memory`, `loom-code`, and `loom-design` into unrelated clean install roots and prove that `loom-memory` can validate and use a fixture store alone and that the other two plugins retain their normal declared surfaces without it → Acceptance #1, #4, #6
+  The existing `scripts/test_loom_plugin_install_layout.py` and `scripts/check_plugin_boundaries.py` harnesses shall be extended, rather than paralleled, to copy each of `loom-memory`, `loom-code`, and `loom-design` into unrelated clean install roots, validate `scripts/fixtures/loom-memory/okf-v0.2/` using only the installed `loom-memory` files, exercise REQ-3's absence case, and reject every mandatory sibling dependency or sibling-private path → Acceptance #1, #4, #6
 
 REQ-23 — Migration is not implicit
-  IF the plugin encounters a legacy README-indexed store THEN recall shall remain read-compatible, while any rewrite or migration shall require an explicit memory migration operation and shall not occur during plugin installation, session start, or an unrelated Loom station → Acceptance #4, #5, #6
+  IF the plugin encounters a legacy README-indexed store THEN it shall report that an explicit migration is required without modifying files; the migration command is the only legacy-format reader and shall be removed together with its fixtures after every repository-owned legacy store in this repository has migrated, while installation, session start, recall, and unrelated Loom stations shall never migrate implicitly → Acceptance #4, #5, #6
+
+REQ-24 — Retire the Ship-owned repository-memory action
+  WHEN the new plugin is introduced, `loom-code/contract/manifest.yaml` shall remove `docs/loom/memory` from the Ship-owned `memory` action and replace that action with an optional commit-carrier description whose complete summary is `git-memory trailers on the commit when loom-workflow is available; absence does not block publication`; no Loom station or artifact charter shall claim ownership of the repository memory store → Acceptance #3, #4
+
+REQ-25 — One store-template owner
+  WHEN the new plugin is introduced, the repository shall contain exactly one active store template under `loom-memory`, `loom-code/contract/templates/memory-README.md` shall be deleted, and no `loom-code` or `loom-design` runtime contract shall restate or link to the private template or schema → Acceptance #1, #4
+
+REQ-26 — One validator implementation
+  WHEN this repository migrates its store, `scripts/check_loom_memory_integrity.py` and its README-index-specific tests shall be retired in the same change that installs the plugin-owned OKF-profile validator and moves their still-valid invariants into that validator's tests; no legacy `--write` path shall remain capable of rewriting the migrated store → Acceptance #1, #5, #6
 
 ## Design decision
 
 - **Independent plugin:** Create `loom-memory` as a fourth, standalone Loom-family plugin rather than placing the skill inside `loom-code`, `loom-design`, or `loom-workflow` (user-decided). This gives code and design symmetric access and makes absence a real supported state.
 - **Compatibility profile, not wholesale adoption:** Implement the small OKF v0.2 conformance surface plus Loom's actionable lesson contract (user-decided). Optional trust, lifecycle, and computation families stay optional because making them universal would add maintenance without improving ordinary recall.
 - **`index.md` is operational; `log.md` is not:** Use the OKF reserved index for progressive disclosure and keep Git as the sole historical log (user-decided). A second chronological file would duplicate history and create drift.
-- **Provenance migration:** Replace legacy `origin` in the target profile with OKF `sources`, because `sources[].resource` is the standardized provenance carrier. Preserve the original origin text as the resource when no stronger repository or URL reference can be derived; do not fabricate a resolvable citation (agent-decided).
-- **Strict profile, permissive reader:** New and migrated entries must meet the Loom profile, but recall remains capable of reading the legacy README-indexed shape until an explicit migration occurs (agent-decided). This prevents installation from becoming a destructive data migration.
+- **Provenance migration:** Replace legacy `origin` in the target profile with OKF `sources`, because `sources[].resource` is the standardized provenance carrier. Preserve every original origin string verbatim even when adding a stronger repository or URL source; when origin is absent, derive only the full introducing commit recorded by Git (agent-decided).
+- **Strict profile, explicit migration reader:** Normal operations accept only the new profile; the bounded migration operation alone reads the known legacy README-indexed shape (agent-decided). This prevents installation from becoming a destructive data migration and avoids maintaining two permanent read paths.
+- **Charter location:** Keep the existing `README.md` as a `Memory Store Guide` concept and make `index.md` a generated discovery file containing no charter prose (agent-decided). This gives each file one owner and one reason to change.
 - **No truth gate:** Deterministic validation proves structure, identity, provenance shape, and index consistency; it does not claim that a lesson is true. Freshness is checked at use time against named repository surfaces, and uncertain semantic conflicts remain agent judgement (agent-decided).
 - **Hook is removable:** The complete mechanism works through the skill alone. Any hook is an optional adapter and cannot become the only discovery, write, or validation path (agent-decided).
 
@@ -119,7 +129,7 @@ The solid path is the complete mechanism. Dashed edges are optional callers or h
 - Data: `docs/loom/memory/README.md` under `Format — one fact per file` defines `name`, `description`, `type`, and `origin`, while the current store contains legacy entries that predate or omit parts of that shape.
 - Boundary: `scripts/check_plugin_boundaries.py` under its plugin-boundary rules and `scripts/test_loom_plugin_install_layout.py` under `MANDATORY_DEPENDENCY_KEYS` already establish that installable Loom roots may not depend on sibling-private files or mandatory sibling plugins.
 
-Normative external baseline: [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md), especially bundle structure, concept frontmatter, provenance, reserved index/log files, conformance, and versioning. If that upstream specification changes, this specification remains pinned to v0.2 until a separate change explicitly adopts another version.
+Normative external baseline: [Open Knowledge Format v0.2 at commit 62432a095456147ee71e70ac6e4dc0d2dea3ac30](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/62432a095456147ee71e70ac6e4dc0d2dea3ac30/okf/SPEC.md). This specification locally fixes the compatibility clauses to: (1) every non-reserved Markdown file has parseable YAML frontmatter; (2) each such frontmatter has a non-empty `type`; (3) a present `index.md` or `log.md` follows its reserved structure; (4) missing optional metadata, unknown types, unknown extra keys, broken cross-links, and a missing `index.md` do not make a generic OKF bundle nonconformant; (5) the Loom profile may impose its own required `index.md`, metadata, and body contract; and (6) the only frontmatter permitted on the bundle-root `index.md` is `okf_version: "0.2"`. A later upstream edit or OKF version has no effect until a separate change updates this pinned baseline.
 
 ## UI flows
 
