@@ -7,13 +7,13 @@ REQ-1 — Apply a complete supported profile
   WHEN the caller supplies a resolved model and effort pair, the runner shall pass both values to the single Claude Code attempt → Acceptance #1
 
 REQ-2 — Preserve atomic fallback
-  IF either override is absent or the resolved profile is unsupported or unverified THEN the review path shall invoke the runner without either model or effort override → Acceptance #2
+  WHEN the resolver returns no complete supported and verified pair, the Review path shall invoke the runner without either override, while the runner shall reject any directly supplied partial pair before spawning Claude → Acceptance #2
 
 REQ-3 — Preserve shared execution policy
-  WHILE the Claude second-vendor path is active, the Review station shall preserve the shared atomic fallback, retry budget, stdin prompt, no-session-persistence, and no-user-intervention rules → Acceptance #3
+  WHILE the Claude second-vendor path is active, the Review station shall keep host-rejection replacement separate from eligible transient-executor retry while preserving stdin prompt, no-session-persistence, and no-user-intervention rules → Acceptance #3
 
 ## Design decision
-- agent-decided — Make `--model` and `--effort` an optional pair on the runner CLI because Claude Code 2.1.267 exposes both flags and the shared resolver already owns profile selection.
+- agent-decided — Make `--model` and `--effort` an optional pair on the runner CLI because the checked-in Claude Code help exposes both flags and the shared resolver already owns profile selection.
 - agent-decided — Reject a partial CLI pair before spawning Claude instead of guessing the missing value, because a partial override cannot represent the resolver result.
 - agent-decided — Represent resolver fallback by invoking the runner with neither flag; remove the static `sonnet` default because host-default behavior must remain observable rather than claimed as inheritance.
 - agent-decided — Keep host rejection handling in the Review orchestrator: feed the failed pre-execution result to the resolver and invoke the returned override-free replacement in the same task attempt. The runner remains a one-attempt subprocess boundary and does not infer whether arbitrary Claude failures are routing failures.
@@ -36,6 +36,7 @@ REQ-3 — Preserve shared execution policy
 - `claude_reviewer.py --model opus --effort medium --timeout-seconds 600` with a reviewer prompt on stdin → runs one non-persistent Claude attempt with both overrides and returns the raw reviewer output with exit 0 on success.
 - `claude_reviewer.py --timeout-seconds 600` with a reviewer prompt on stdin → runs one non-persistent Claude attempt with neither override, allowing Claude Code to select its host defaults.
 - Supplying only `--model` or only `--effort` → prints a paired-override validation error to stderr and exits 2 before starting Claude; the caller retries with both values or neither.
-- A supported pair rejected by Claude before task execution → the Review caller feeds the rejection to the resolver and invokes the override-free replacement once in the same task attempt.
-- Timeout, empty output, authentication, quota, or other process failure → retains the existing structured diagnostic and exit behavior; no internal model or effort fallback is attempted.
+- A supported pair rejected by Claude before task execution → the Review caller feeds the rejection to the resolver and invokes the override-free replacement once in the same task attempt; if that replacement is also rejected, it sends `rejection_retried: true`, accepts `execution-failed`, and does not apply the generic transient retry.
+- Timeout, empty output, or a malformed reviewer response before a conforming verdict exists → retains the existing structured diagnostic and remains eligible for the existing one same-digest transient retry; no internal model or effort fallback is attempted.
+- Authentication, quota, or another non-routing process failure → retains the existing structured diagnostic and does not enter host-rejection fallback; any retry is governed only by the existing Review executor-failure policy.
 - In progress: the print-mode command emits no progress UI and waits up to the supplied timeout; this behavior is unchanged.
