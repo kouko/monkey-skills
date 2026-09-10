@@ -27,11 +27,57 @@ import pytest
 SCRIPTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPTS_DIR.parent.parent
 STORE = REPO_ROOT / "docs" / "loom" / "memory"
-PRE_MIGRATION_SHA = "bd7c080a0eea2517436fbd1c9ad8d19224528245"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import loom_memory as lm  # noqa: E402
 import migrate_legacy_store as mls  # noqa: E402
+
+
+def _pre_migration_ref() -> str | None:
+    """The commit whose `docs/loom/memory` still holds the LEGACY store, or
+    None when no such commit is reachable.
+
+    This baseline used to be a literal SHA from this branch. A rebase rewrote
+    the branch and the SHA stopped existing, so the proof went red in CI while
+    passing on the machine that wrote it — the failure this repository's own
+    lesson `a-graduated-probe-that-pins-a-fact-of-the-moment-goes-red-at-the-
+    next-change` describes: a check that pins a fact of one branch-moment.
+
+    The legacy store is not a fact of this branch at all: it is what trunk
+    still carries until this change merges. So the baseline is the merge base
+    with the trunk ref, which survives a rebase, and the check skips with a
+    reason once that merge base is itself migrated — after this change ships,
+    there is no longer a pre-migration state to compare against.
+    """
+    for ref in ("origin/main", "main"):
+        base = subprocess.run(
+            ["git", "merge-base", "HEAD", ref], cwd=REPO_ROOT, capture_output=True, text=True
+        )
+        if base.returncode != 0:
+            continue
+        sha = base.stdout.strip()
+        readme = subprocess.run(
+            ["git", "show", f"{sha}:docs/loom/memory/README.md"],
+            cwd=REPO_ROOT, capture_output=True, text=True,
+        )
+        if readme.returncode != 0:
+            continue
+        if "## Index" in readme.stdout:
+            return sha
+        return None  # merge base is already migrated: nothing left to prove
+    return None
+
+
+def _require_pre_migration_ref() -> str:
+    ref = _pre_migration_ref()
+    if ref is None:
+        pytest.skip(
+            "no reachable commit still carries the legacy docs/loom/memory store "
+            "(the trunk merge base is already migrated, or trunk is unavailable in "
+            "this checkout); change 2026-09-10-okf-compatible-loom-memory owns this proof"
+        )
+    return ref
+
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +137,7 @@ def _commit_all(root: Path, message: str) -> None:
 
 def _git_show(rel_path: str) -> str:
     result = subprocess.run(
-        ["git", "show", f"{PRE_MIGRATION_SHA}:{rel_path}"],
+        ["git", "show", f"{_require_pre_migration_ref()}:{rel_path}"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -102,7 +148,7 @@ def _git_show(rel_path: str) -> str:
 
 def _pre_migration_lesson_paths() -> list[str]:
     result = subprocess.run(
-        ["git", "ls-tree", "-r", "--name-only", PRE_MIGRATION_SHA, "--", "docs/loom/memory"],
+        ["git", "ls-tree", "-r", "--name-only", _require_pre_migration_ref(), "--", "docs/loom/memory"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -130,7 +176,7 @@ def test_lesson_and_guide_concept_counts_are_293_and_1():
 
 
 def test_lesson_bodies_and_descriptions_survive_migration_byte_for_byte():
-    """A5 positive — recomputed from Git at PRE_MIGRATION_SHA, never from a
+    """A5 positive — recomputed from Git at the pre-migration merge base, never from a
     committed snapshot file (plan.md Risk 1)."""
     lesson_paths = _pre_migration_lesson_paths()
     assert lesson_paths, "baseline must be non-empty or this proof is vacuous"

@@ -865,3 +865,24 @@ would have left the gate free to drift from the check on the next field.
 **Sources.** Codex second-vendor review of `023121eb8`, one important finding
 with a reproduction; regression at `test_migrate_legacy_store.py::
 test_a_legacy_value_the_profile_rejects_aborts_before_any_file_is_written`.
+
+## D-24 — The migration proof's baseline is the trunk merge base, not a SHA
+
+**Decision.** `test_migrate_legacy_store.py` resolves the pre-migration state as
+the merge base with `origin/main` (falling back to `main`), and skips with a
+named reason when no reachable commit still carries the legacy store.
+
+**Candidates.** Re-pin the literal SHA after every rebase; or derive the
+baseline from a ref that survives history rewriting.
+
+**Why.** The literal SHA was a fact of one branch-moment. The rebase onto the
+moved trunk erased it and the proof went red in CI while passing locally —
+exactly the failure the store's own lesson
+`a-graduated-probe-that-pins-a-fact-of-the-moment-goes-red-at-the-next-change`
+describes. The legacy store is not this branch's fact at all: trunk carries it
+until this change merges, so the merge base is the honest baseline, and once
+trunk is migrated there is no pre-migration state left to compare — a skip, not
+a failure.
+
+**Sources.** PR #821 CI run 34509768517 (three A5 tests, `exit status 128` on a
+SHA no longer reachable); the store lesson named above.
