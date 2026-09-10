@@ -64,11 +64,14 @@ The initial completed task execution may be followed by at most two completed
 redispatch executions. Packet repair and profile escalation each consume one
 redispatch when the task executes. A host rejection of routing parameters
 before task execution consumes no task attempt; its one override-free
-replacement occupies the same attempt. When two redispatches have completed,
-when the replacement is rejected or fails before a conforming execution, or
-when no legal upward transition remains, routing returns `execution-failed`
-and records the last profile that actually executed, or
-`host-default/unverified` when none can be verified.
+replacement occupies the same attempt. A successful execution returns
+`routed` regardless of its position in the budget. Only when the latest
+execution remains unsuccessful and another task execution would be required,
+exhausting two redispatches or having no legal upward transition returns
+`execution-failed`. A rejected replacement or one that fails before a
+conforming execution also returns `execution-failed`. The terminal record
+names the last profile that actually executed, or `host-default/unverified`
+when none can be verified.
 
 High triggers are limited to a blocker surviving a substantive fix, mutually exclusive conclusions over identical evidence, medium failing to settle a high-risk decision, round-3 technical redesign requiring adjudication, or an unresolved multi-step security chain. Xhigh requires either the same high-risk blocker and a checkable failure artifact after `frontier/high`, or mutually exclusive independent `frontier/high` conclusions over identical evidence. Missing inputs, role names, round labels, more search, and transient executor errors are not effort-escalation evidence.
 
