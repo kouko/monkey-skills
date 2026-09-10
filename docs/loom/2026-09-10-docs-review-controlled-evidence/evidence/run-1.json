@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "run_id": "luna-repeat-1",
+  "requested_model": "gpt-5.6-luna",
+  "model_evidence": "requested-model CLI evidence; backend did not directly attest the actual model",
+  "cli_version": "codex-cli 0.151.0",
+  "returncode": 0,
+  "elapsed_seconds": 19.602584875,
+  "usage": {"input_tokens": 13846, "cached_input_tokens": 4864, "output_tokens": 835, "reasoning_output_tokens": 516},
+  "raw_output": {"verdict":"NEEDS_REVISION","findings":[{"document":"business","quote":"The observed needs N1–N3 are valuable","problem":"N1–N3 are never defined in the document.","harm":"Readers cannot evaluate whether the recommendation addresses the stated needs.","severity":"red"},{"document":"business","quote":"EN and JA primary/authoritative sources listed as C10–C14","problem":"The cited sources and their relevant findings are not provided here.","harm":"The evidence basis for the recommendation cannot be independently checked from the artifact.","severity":"yellow"},{"document":"strategy","quote":"matching external evidence that LLM evaluator behavior varies","problem":"The external evidence is referenced only by opaque labels C10–C12, without source details or supporting excerpts.","harm":"Readers cannot verify whether the causal claim is supported or whether the sources apply to this corpus.","severity":"yellow"},{"document":"strategy","quote":"many later findings were consequential","problem":"The document gives no counts, examples, or operational definition for “many” or “consequential.”","harm":"The conclusion that later findings are not mostly cosmetic cannot be assessed from the artifact alone.","severity":"yellow"},{"document":"strategy","quote":"The best-supported causal model is an interaction","problem":"The document does not state how the competing causal explanations were evaluated or what evidence threshold supports this conclusion.","harm":"Readers may treat a qualitative synthesis as a measured causal attribution.","severity":"yellow"}],"coverage":{"technical":"reviewed","business":"reviewed","strategy":"reviewed"}}
+}

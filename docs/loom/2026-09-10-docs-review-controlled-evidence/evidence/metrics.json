@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "formula_revision": "controlled-internal-v1",
+  "population": {"runs":2,"documents_per_run":3,"expected_findings_per_run":4,"observations":8,"valid_runs":2,"invalid_runs":0},
+  "finding_rate": {"numerator":7,"denominator":8,"value":0.875,"exclusions":[]},
+  "false_alarm_rate": {"numerator":1,"denominator":8,"value":0.125,"exclusions":[]},
+  "repeat_agreement": {"formula":"Jaccard agreement over matched oracle IDs","intersection":3,"union":4,"value":0.75},
+  "per_run": {
+    "luna-repeat-1":{"finding_rate":1.0,"false_alarm_rate":0.2,"observations":5},
+    "luna-repeat-2":{"finding_rate":0.75,"false_alarm_rate":0.0,"observations":3}
+  },
+  "cost": {"elapsed_seconds_total":39.1943945,"input_tokens_total":27692,"cached_input_tokens_total":9728,"output_tokens_total":1576,"reasoning_output_tokens_total":1032},
+  "availability": {"technical_finding_rate":null,"technical_reason":"The human oracle has zero expected technical findings, so the denominator is zero.","claude_cohort":null,"claude_reason":"The approved pivot requested a real Luna replay only; no Claude run was made.","backend_model_attestation":null,"backend_model_attestation_reason":"Codex CLI recorded the requested model but did not report a backend-attested actual model identity."}
+}
