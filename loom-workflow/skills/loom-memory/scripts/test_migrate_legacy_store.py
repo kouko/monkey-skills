@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SCRIPTS_DIR.parent.parent
+REPO_ROOT = SCRIPTS_DIR.parents[3]
 STORE = REPO_ROOT / "docs" / "loom" / "memory"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -578,7 +578,7 @@ def test_no_other_script_in_the_repo_reads_the_legacy_readme_indexed_shape():
     """REQ-23: the migration command is the ONLY legacy-format reader."""
     legacy_markers = ("INDEX_LINE_RE", "def parse_index_lines", "def splice_index_section", "def build_entries")
     offenders = []
-    for candidate_dir in (REPO_ROOT / "loom-memory" / "scripts",):
+    for candidate_dir in (SCRIPTS_DIR,):
         for py in candidate_dir.glob("*.py"):
             if py.name in ("migrate_legacy_store.py", "test_migrate_legacy_store.py"):
                 continue

@@ -25,13 +25,14 @@ single durable relevance-rule line), `type`, and at least one
 
 ## Regenerating the index
 
-Run the `scripts/loom_memory.py` file inside the `loom-memory` plugin's own
-directory (`${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py` on hosts that
-substitute that token):
+Run the `skills/loom-memory/scripts/loom_memory.py` file inside the
+`loom-workflow` plugin's own directory
+(`${CLAUDE_PLUGIN_ROOT}/skills/loom-memory/scripts/loom_memory.py` on hosts
+that substitute that token):
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py regenerate-index <this-directory>
-python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py validate <this-directory>
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/loom-memory/scripts/loom_memory.py regenerate-index <this-directory>
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/loom-memory/scripts/loom_memory.py validate <this-directory>
 ```
 
 `validate` fails loudly — naming every offender — on malformed frontmatter,

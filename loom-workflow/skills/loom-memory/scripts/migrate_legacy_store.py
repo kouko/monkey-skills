@@ -57,7 +57,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
-REPO_ROOT_DEFAULT = SCRIPTS_DIR.parent.parent
+REPO_ROOT_DEFAULT = SCRIPTS_DIR.parents[3]
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import loom_memory as lm  # noqa: E402

@@ -18,8 +18,8 @@ import json
 import re
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-SKILL_DIR = REPO_ROOT / "loom-memory" / "skills" / "loom-memory"
+SKILL_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = SKILL_DIR.parents[2]
 SKILL_MD = SKILL_DIR / "SKILL.md"
 REFERENCES_DIR = SKILL_DIR / "references"
 OKF_PROFILE = REFERENCES_DIR / "okf-profile.md"
@@ -190,18 +190,24 @@ def test_no_host_specific_path_or_private_api() -> None:
 
 
 def test_no_bare_repo_root_relative_script_path() -> None:
-    """A `loom-memory/scripts/...` path resolves only relative to THIS
-    repository's root — a project that installs the plugin (per
-    `loom-memory/README.md`'s documented layout) has no `loom-memory/`
+    """A `skills/loom-memory/scripts/...` path resolves only relative to
+    THIS repository's root — a project that installs the plugin (per
+    `loom-workflow/README.md`'s documented layout) has no `loom-workflow/`
     directory at its root, so that path cannot resolve there. The only
-    portable form is `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py` (or its
-    plain-language restatement); a bare repo-root-relative path must never
-    reappear in the shipped skill text."""
+    portable form is `${CLAUDE_PLUGIN_ROOT}/skills/loom-memory/scripts/loom_memory.py`
+    (or its plain-language restatement); a bare repo-root-relative path must
+    never reappear in the shipped skill text — every paragraph naming the
+    script path must always pair it with the `${CLAUDE_PLUGIN_ROOT}`
+    substitution token somewhere in that same paragraph (prose wraps the
+    token and its plain-language restatement across physical lines, so the
+    pairing is checked per blank-line-delimited paragraph, not per physical
+    line)."""
     text = _all_skill_text()
-    for line in text.splitlines():
-        assert "loom-memory/scripts/" not in line, (
-            f"bare repo-root-relative script path resurfaced in skill text: {line!r}"
-        )
+    for paragraph in re.split(r"\n\s*\n", text):
+        if "skills/loom-memory/scripts/" in paragraph:
+            assert "${CLAUDE_PLUGIN_ROOT}" in paragraph, (
+                f"bare repo-root-relative script path resurfaced in skill text: {paragraph!r}"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -258,16 +264,18 @@ def test_references_exist_and_are_referenced() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Plugin manifest sanity: skills mount point exists, matching the plugin.json
-# `"skills": "./skills/"` declaration this task builds under.
+# Plugin manifest sanity: this skill lives under loom-workflow's default
+# skills mount (no explicit `"skills"` key — loom-workflow relies on the
+# host's default `./skills/` convention, unlike the retired standalone
+# loom-memory plugin).
 # ---------------------------------------------------------------------------
 
 
 def test_skills_mount_declared_in_claude_manifest() -> None:
     manifest = json.loads(
-        (REPO_ROOT / "loom-memory" / ".claude-plugin" / "plugin.json").read_text(
+        (REPO_ROOT / "loom-workflow" / ".claude-plugin" / "plugin.json").read_text(
             encoding="utf-8"
         )
     )
-    assert manifest.get("skills") == "./skills/"
-    assert (REPO_ROOT / "loom-memory" / "skills").is_dir()
+    assert manifest.get("name") == "loom-workflow"
+    assert (REPO_ROOT / "loom-workflow" / "skills" / "loom-memory").is_dir()
