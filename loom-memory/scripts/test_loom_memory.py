@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import subprocess
 import sys
+
+import pytest
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -569,3 +571,47 @@ def test_cli_regenerate_index_exit_codes(tmp_path):
     result = _run_cli("regenerate-index", str(store))
     assert result.returncode == 0
     assert "wrote" in result.stdout
+
+
+# --- R1 corollary: writing is byte-preserving too --------------------------
+#
+# R1 stopped the parser from stripping quotes. The serialiser kept adding
+# them for any value containing a colon, so a description written by Record
+# came back quoted and gained another pair on every rewrite. Both directions
+# must preserve bytes, or neither does.
+
+DIFFICULT_DESCRIPTIONS = [
+    'a rule: with a colon and a "quote"',
+    "plain colon: here",
+    'ends with a quote"',
+    'starts with "a quote',
+    "no colon at all",
+    "has --- inside",
+    "em — dash: and `backticks`",
+]
+
+
+@pytest.mark.parametrize("description", DIFFICULT_DESCRIPTIONS)
+def test_dump_then_parse_returns_the_same_bytes(description: str) -> None:
+    concept = {
+        "name": "x",
+        "description": description,
+        "type": "gotcha",
+        "sources": [{"resource": "PR #1: the colon belongs to the value"}],
+    }
+    dumped = lm.dump_frontmatter(concept)
+    parsed = lm.parse_frontmatter(dumped + "\nbody\n")
+    if isinstance(parsed, tuple):
+        parsed = parsed[0]
+    assert parsed["description"] == description
+    assert parsed["sources"][0]["resource"] == concept["sources"][0]["resource"]
+    # and a second write is stable, so a rewrite cannot accumulate quoting
+    assert lm.dump_frontmatter(parsed) == dumped
+
+
+@pytest.mark.parametrize("value", ["", "  padded  "])
+def test_dump_refuses_a_value_with_no_faithful_unquoted_form(value: str) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        lm.dump_frontmatter({"name": "x", "description": value})
+    assert "description" in str(excinfo.value)
+    assert repr(value) in str(excinfo.value)

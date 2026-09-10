@@ -160,11 +160,28 @@ def parse_frontmatter(text: str) -> dict | None:
     return _parse_mapping(lines[1:end], 0)
 
 
-def _quote_scalar(key: str, value: str) -> str:
+def _scalar_literal(key: str, value: str) -> str:
+    """The written form of a scalar, chosen so `parse_frontmatter` reads back
+    exactly the bytes handed in.
+
+    Since R1 the parser strips no quotes, so adding them here would make the
+    round trip lossy and would accumulate a new pair on every rewrite. A colon
+    needs no quoting either: the parser splits on the FIRST colon and takes the
+    remainder verbatim. Two shapes have no faithful unquoted form — an empty
+    value (indistinguishable from a key that opens a nested block) and one
+    carrying leading or trailing whitespace (the parser strips it) — and those
+    abort rather than silently changing the caller's bytes. `okf_version` is
+    the one schema-mandated literal, written quoted because REQ-7 fixes its
+    exact text.
+    """
     if key == "okf_version":
         return f'"{value}"'
-    if value == "" or ":" in value or value != value.strip():
-        return f'"{value}"'
+    if value == "" or value != value.strip():
+        raise ValueError(
+            f"cannot serialise {key!r} byte-identically: a value that is empty "
+            f"or carries leading/trailing whitespace has no unquoted form the "
+            f"parser reads back unchanged (got {value!r})"
+        )
     return value
 
 
@@ -181,7 +198,7 @@ def _dump_mapping(data: dict, indent: int) -> list[str]:
         elif value is None:
             out.append(f"{pad}{key}:")
         else:
-            out.append(f"{pad}{key}: {_quote_scalar(key, str(value))}")
+            out.append(f"{pad}{key}: {_scalar_literal(key, str(value))}")
     return out
 
 

@@ -779,3 +779,25 @@ actual data). `validate docs/loom/memory` exits 0; two consecutive
 `regenerate-index` runs are byte-identical to each other and to the
 committed `index.md` (confirmed via `cmp`); `git status` shows no diff
 on `index.md` after regeneration.
+
+## D-20 — Writing is byte-preserving too, and refuses what it cannot represent
+
+**Decision.** `_quote_scalar` becomes `_scalar_literal` and no longer quotes a
+value for containing a colon. `okf_version` keeps its schema-mandated quoted
+literal. An empty value, or one carrying leading or trailing whitespace, raises
+instead of being silently quoted.
+
+**Candidates.** (a) Leave the serialiser quoting and teach the parser to strip
+quotes again; (b) make both directions byte-preserving and abort on the two
+shapes that have no faithful unquoted form.
+
+**Why (b).** R1 removed quote stripping from the parser on the ground that
+REQ-8 permits stripping whitespace only. Re-adding it to satisfy the writer
+would restore the defect R1 fixed. The parser splits on the first colon and
+takes the remainder verbatim, so a colon never needed quoting; the quoting was
+the whole defect, and it accumulated a pair on every rewrite. Aborting on an
+unrepresentable value follows the module's existing abort-rather-than-launder
+rule.
+
+**Sources.** REQ-8; D-17 (R1); the round-trip regression in
+`loom-memory/scripts/test_loom_memory.py::test_dump_then_parse_returns_the_same_bytes`.
