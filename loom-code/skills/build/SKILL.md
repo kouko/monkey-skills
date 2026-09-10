@@ -2,7 +2,7 @@
 name: build
 description: |
   Implements a committed plan with test-first changes, focused verification, and one integration pass before the closing Review. Use when a confirmed intent and plan are ready to build.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Build
@@ -16,6 +16,14 @@ Read the confirmed intent, spec when present, plan, current branch, and branch
 base. Preserve unrelated and untracked work. Work only on planned paths.
 
 ## 2. Implement test first
+
+Before every host-native dispatch, the station must read the
+[shared dispatch profile](../../references/dispatch-profile.md), classify the
+task from its evidence, and resolve the atomic model-and-effort profile against
+the selected model's verified host capabilities. Record the requested and
+effective profile with its evidence-grounded reason in active task context only.
+Apply the resolved overrides at invocation time; a static model or effort pin in
+an agent contract is invalid.
 
 For every behavior change:
 

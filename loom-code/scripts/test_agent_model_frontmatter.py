@@ -32,9 +32,10 @@ def test_the_agent_population_is_the_four_station_roles():
     assert sorted(p.stem for p in AGENTS_DIR.glob("*.md")) == sorted(ROLES)
 
 
-def test_no_agent_pins_effort():
+def test_no_agent_pins_model_or_effort():
     for path in sorted(AGENTS_DIR.glob("*.md")):
         frontmatter = _frontmatter(path.stem)
-        assert "effort:" not in frontmatter, (
-            f"{path.name} frontmatter must inherit session effort"
-        )
+        for field in ("model:", "effort:"):
+            assert field not in frontmatter, (
+                f"{path.name} frontmatter must resolve {field[:-1]} at dispatch time"
+            )

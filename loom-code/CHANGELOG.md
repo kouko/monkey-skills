@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.0] — 2026-09-10 — main-relative subagent dispatch
+
+- Resolve one shared, host-neutral model-and-effort profile before every Build
+  and Review dispatch, using task evidence instead of role or round labels.
+- Preserve five portable effort tiers, evidence-gate expensive escalation, and
+  fall back atomically when a host cannot verify or accept the requested pair.
+- Keep routing records session-local, prohibit static agent profile pins, and
+  verify that the shared contract remains available in standalone installs.
+
 ## [2.0.12] — 2026-09-10 — Codex Claude credential boundary
 
 - Standardize Codex-to-Claude second-reader calls on the existing runner

@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 
 PLUGIN = Path(__file__).resolve().parents[1]
 PROFILE = PLUGIN / "references" / "dispatch-profile.md"
+STATIONS = (
+    PLUGIN / "skills" / "build" / "SKILL.md",
+    PLUGIN / "skills" / "review" / "SKILL.md",
+)
 
 
 def _contract() -> str:
@@ -95,3 +100,28 @@ def test_high_and_xhigh_are_sequential_and_max_is_inherited_only() -> None:
     _affirmative_sentence(text, "remain inheritance-only values")
     assert "An inherited `max`" in flat
     assert "initial dispatch may newly enter only `low` or `medium`" in flat
+
+
+def test_build_and_review_resolve_the_shared_profile_before_every_dispatch() -> None:
+    for station in STATIONS:
+        text = station.read_text(encoding="utf-8")
+        flat = _flat(text)
+        link = "../../references/dispatch-profile.md"
+
+        assert f"]({link})" in text, f"{station.name} must link the packaged contract"
+        _affirmative_sentence(text, "Before every host-native dispatch")
+        assert "classify the task from its evidence" in flat
+        assert "resolve the atomic model-and-effort profile" in flat
+        assert "active task context only" in flat
+        assert "static model or effort pin" in flat
+
+
+def test_packaged_station_reference_resolves_after_isolated_install(tmp_path: Path) -> None:
+    isolated = tmp_path / "standalone-loom-code"
+    shutil.copytree(PLUGIN, isolated)
+
+    for relative in (Path("skills/build/SKILL.md"), Path("skills/review/SKILL.md")):
+        station = isolated / relative
+        target = (station.parent / "../../references/dispatch-profile.md").resolve()
+        assert target.is_relative_to(isolated.resolve())
+        assert target.is_file()

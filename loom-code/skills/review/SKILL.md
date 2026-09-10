@@ -2,7 +2,7 @@
 name: review
 description: |
   Runs the one closing review over completed functional content, executes package and adversarial verification once, and generates a content-bound attestation. Use when Build is complete or a functional change invalidates prior evidence.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Review
@@ -20,6 +20,16 @@ attestation already exists, stop: the evidence is still valid and Ship owns
 the remaining work.
 
 ## 2. Choose the risk lane
+
+Before every host-native dispatch, the station must read the
+[shared dispatch profile](../../references/dispatch-profile.md), classify the
+task from its evidence, and resolve the atomic model-and-effort profile against
+the selected model's verified host capabilities. Record the requested and
+effective profile with its evidence-grounded reason in active task context only.
+Apply the resolved overrides at invocation time; a static model or effort pin in
+an agent contract is invalid. Repeat this resolution for every reviewer,
+second-vendor reviewer, blind runner, and adversary dispatch; role and round
+labels supply no routing evidence.
 
 - Every change: two fresh-context reviewers from distinct agents.
 - A configured second vendor remains required when the repository asks for it.
