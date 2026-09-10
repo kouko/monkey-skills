@@ -1,0 +1,55 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-10-okf-compatible-loom-memory",
+  "content_digest": "c4f0b04f70f930dc32b69130df9826b5a33db501",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-10-okf-compatible-loom-memory/evidence/probes/test_adversarial_loom_memory.py -q",
+      "artifact": "docs/loom/2026-09-10-okf-compatible-loom-memory/evidence/probes/test_adversarial_loom_memory.py",
+      "result": "pass",
+      "command_digest": "0b7fa2397eeddf5c67d08bad2350f83944a82e2602d9020a8984240eb547b3dc"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-10-okf-compatible-loom-memory/evidence/probes/test_adversarial_okf_memory_probes.py -q",
+      "artifact": "docs/loom/2026-09-10-okf-compatible-loom-memory/evidence/probes/test_adversarial_okf_memory_probes.py",
+      "result": "pass",
+      "command_digest": "a461c4062c698f3d9d0ef5b62f859d18d3048171f415e32458d0483dcf224a5c"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-code-lens",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "closing-docs-spec-lens",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "second-vendor-codex",
+      "vendor": "openai",
+      "model": "codex-cli-0.153.4",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
