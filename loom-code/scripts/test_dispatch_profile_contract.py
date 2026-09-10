@@ -152,6 +152,33 @@ def test_build_and_review_resolve_the_shared_profile_before_every_dispatch() -> 
         assert "static model or effort pin" in flat
 
 
+def test_claude_reviewer_dispatch_is_atomic_and_retry_budgets_do_not_stack() -> None:
+    review = (PLUGIN / "skills" / "review" / "SKILL.md").read_text(encoding="utf-8")
+    flat = _flat(review)
+
+    assert "--model <model> --effort <effort>" in flat
+    assert "invoke the runner with neither flag" in flat
+    assert "rejects a partial pair before starting Claude" in flat
+    assert "must not enter the generic transient-executor retry" in flat
+    assert "`rejection_retried: true`" in flat
+    assert "`[claude-code:unrecognized_model]`" in flat
+    assert "Every other non-zero exit" in flat
+
+
+def test_atomic_claude_dispatch_gate_is_registered_with_executable_eval() -> None:
+    gate_id = "review.atomic-claude-dispatch"
+    review = (PLUGIN / "skills" / "review" / "SKILL.md").read_text(encoding="utf-8")
+    mechanisms = MECHANISMS.read_text(encoding="utf-8")
+
+    assert review.count(f"<!-- gate: {gate_id} -->") == 1
+    assert review.count("<!-- /gate -->", review.find(f"<!-- gate: {gate_id} -->")) >= 1
+    assert f'- id: "{gate_id}"' in mechanisms
+    assert (
+        "eval: loom-code/scripts/test_dispatch_profile_contract.py::"
+        "test_claude_reviewer_dispatch_is_atomic_and_retry_budgets_do_not_stack"
+    ) in mechanisms
+
+
 def test_packaged_station_reference_resolves_after_isolated_install(tmp_path: Path) -> None:
     isolated = tmp_path / "standalone-loom-code"
     shutil.copytree(PLUGIN, isolated)
