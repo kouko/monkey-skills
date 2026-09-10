@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.1.1] — 2026-09-10 — atomic Claude reviewer profiles
+
+budget-exception: review.atomic-claude-dispatch — makes the cross-vendor
+atomic profile and non-stacking retry boundary executable instead of leaving
+reviewers to infer routing failures from undifferentiated process errors
+
+- Pass a resolved Claude reviewer model and effort as one pair, or omit both
+  overrides so host-default fallback remains atomic.
+- Reject partial or unsupported-effort profiles as typed input errors before
+  starting Claude, and reserve host rejection for the grounded model marker.
+- Give runner result kinds distinct shell exit codes and let an override-free
+  replacement consume the transient retry slot, preventing a third invocation.
+- Preserve the runner's single-attempt, stdin, timeout, diagnostic,
+  no-session-persistence, and credential-boundary behavior.
+
+## [2.1.0] — 2026-09-10 — main-relative subagent dispatch
+
+budget-exception: dispatch-profile.relative-routing — registers the one shared
+dispatch-time policy gate instead of duplicating routing mechanisms per station
+
+- Resolve one shared, host-neutral model-and-effort profile before every Build
+  and Review dispatch, using task evidence instead of role or round labels.
+- Preserve five portable effort tiers, evidence-gate expensive escalation, and
+  fall back atomically when a host cannot verify or accept the requested pair.
+- Keep routing records session-local, prohibit static agent profile pins, and
+  verify that the shared contract remains available in standalone installs.
+
 ## [2.0.12] — 2026-09-10 — Codex Claude credential boundary
 
 - Standardize Codex-to-Claude second-reader calls on the existing runner

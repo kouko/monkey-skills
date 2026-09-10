@@ -2,7 +2,7 @@
 name: review
 description: |
   Runs the one closing review over completed functional content, executes package and adversarial verification once, and generates a content-bound attestation. Use when Build is complete or a functional change invalidates prior evidence.
-version: 1.2.0
+version: 1.4.0
 ---
 
 # Review
@@ -21,6 +21,28 @@ the remaining work.
 
 ## 2. Choose the risk lane
 
+Before every host-native dispatch, the station must read the
+[shared dispatch profile](../../references/dispatch-profile.md), classify the
+task from its evidence, and resolve the atomic model-and-effort profile against
+the selected model's verified host capabilities. Record the requested and
+effective profile with its evidence-grounded reason in active task context only.
+Apply the resolved overrides at invocation time; a static model or effort pin in
+an agent contract is invalid. Repeat this resolution for every reviewer,
+second-vendor reviewer, blind runner, and adversary dispatch; role and round
+labels supply no routing evidence.
+
+Invoke `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dispatch_profile.py` from Claude
+Code or `python3 <injected loom-code plugin root>/scripts/dispatch_profile.py`
+from Codex, with the explicit observed JSON defined by the shared contract
+before each spawn. Pass its deterministic JSON result to the host-native spawn:
+apply both fields from `overrides`, or apply neither when it is `null`. Feed
+every completed result back as an `after-execution` event before any
+redispatch. Describe an omitted or wrong
+review obligation as a post-execution capability-quality failure only when it
+meets the contract's checkable definition; describe rejected routing
+parameters as a pre-execution host rejection, which selects the one atomic
+fallback instead of model escalation.
+
 - Every change: two fresh-context reviewers from distinct agents.
 - A configured second vendor remains required when the repository asks for it.
 
@@ -30,12 +52,18 @@ the applicable lens from `references/lenses.md`. Reviewers return the
 structured YAML required by `agents/reviewer.md`; the orchestrator converts
 the accepted fields to the temporary JSON consumed by finalization.
 
+<!-- gate: review.atomic-claude-dispatch -->
 On Codex, when the selected second vendor is Claude Code, send that complete
 reviewer prompt on stdin to one installed-plugin invocation:
 
 ```text
-python3 <loom-code>/scripts/claude_reviewer.py --model <model> --timeout-seconds 600
+python3 <loom-code>/scripts/claude_reviewer.py [--model <model> --effort <effort>] --timeout-seconds 600
 ```
+
+When the resolver returns a complete `overrides` pair, pass both flags. When
+it returns `null`, invoke the runner with neither flag so Claude Code uses its
+host defaults. The runner rejects a partial pair before starting Claude; the
+caller must never reconstruct a missing half.
 
 Run this invocation outside the Codex sandbox with reusable host approval
 scoped to the installed `python3 <loom-code>/scripts/claude_reviewer.py`
@@ -56,6 +84,27 @@ result as the transient executor failure already governed below: invoke the
 runner at most once more for the same functional-content digest and reviewer
 identity. If that attempt also fails before a conforming verdict exists, report
 both diagnostics and end the episode as `EXECUTION_FAILED`.
+
+A model rejection before task execution follows the shared
+host-rejection path instead: feed the rejection to the resolver and invoke its
+override-free replacement in the same task attempt. If that replacement is
+also rejected, feed back `rejection_retried: true`, accept
+`execution-failed`, and stop. The rejected replacement must not enter the
+generic transient-executor retry, so the two policies cannot create a third
+Claude invocation.
+
+The override-free replacement consumes the one same-digest transient-retry
+slot. After it, no further Claude invocation occurs for that digest regardless
+of failure kind.
+
+The runner reports `host-rejection` only for a non-zero Claude result carrying
+the exact `[claude-code:unrecognized_model]` marker. A partial pair or an effort
+outside Claude Code's grounded five-value CLI set is `input-error` and exits 2
+before launch; it is not host rejection. Every other non-zero exit remains a
+generic executor failure; the caller must not infer routing rejection from
+free-form provider text. Route on the stderr JSON `kind`, not exit status
+alone; a plain-text exit 2 is caller misuse rather than a routing signal.
+<!-- /gate -->
 
 ## 3. Run blind and adversarial checks
 
