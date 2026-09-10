@@ -6,9 +6,9 @@
 > of them, or a user working without any of them, can invoke the same
 > public memory skill.
 
-**Status**: v0.1.0 — scaffolding only. The skill, store validator, and
-migration are not built yet. See [CHANGELOG.md](CHANGELOG.md) once one
-exists.
+**Status**: v0.1.0 — the first release ships the public memory skill with
+its four operations, the OKF-profile validator and index generator, and the
+one-shot legacy-store migration. See [CHANGELOG.md](CHANGELOG.md).
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 

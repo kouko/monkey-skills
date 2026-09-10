@@ -5,8 +5,9 @@
 > `loom-workflow` —— 而且這些 plugin 中的任何一個，或完全沒裝任何一個的
 > 使用者，都能呼叫同一個公開的記憶 skill。
 
-**Status**: v0.1.0 —— 目前只有骨架。Skill、儲存驗證器與遷移工具都還沒
-建好。等有了再看 [CHANGELOG.md](CHANGELOG.md)。
+**Status**: v0.1.0 —— 首次發布即包含帶四個操作的公開記憶 skill、OKF
+格式驗證器與索引產生器，以及一次性的舊格式遷移工具。詳見
+[CHANGELOG.md](CHANGELOG.md)。
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: [`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 

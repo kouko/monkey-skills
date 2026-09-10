@@ -6,9 +6,9 @@
 > これらのどれか、あるいはどれも入れていないユーザーでも、同じ公開
 > skill を呼び出せる。
 
-**Status**: v0.1.0 — 現時点ではスキャフォールドのみ。skill・ストア
-バリデータ・移行ツールはまだ未実装。実装後は [CHANGELOG.md](CHANGELOG.md)
-を参照。
+**Status**: v0.1.0 — 最初のリリースで、4 つの操作を持つ公開 memory
+skill、OKF プロファイルのバリデータと index 生成、旧ストアからの
+一回限りの移行を提供。詳細は [CHANGELOG.md](CHANGELOG.md) を参照。
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: [`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 

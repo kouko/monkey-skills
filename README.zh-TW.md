@@ -12,7 +12,7 @@
 | [`loom-code`](loom-code/) | 1.8.2 | 5 | 0 | write-plan、build、review、ship、maintain 五個站把一次變更從計畫送到合併的 PR，checker 在每次 push 前重算審查。支援 Claude Code + Codex。 |
 | [`loom-design`](loom-design/) | 1.0.0 | 4 | 0 | capture-intent、write-spec 兩個站把粗略的想法變成確認過的 intent，以及一份使用者用自己的話讀回的 spec，另有 product-principles 與 design-system 兩個工具。讀 loom-code 的 contract package。支援 Claude Code + Codex。 |
 | [`loom-workflow`](loom-workflow/) | 4.0.0 | 10 | 4 | 提供 git 為基底的 project memory、`critique`（proposal / complexity）、recap、handoff、session distill、`goal-create`、`independent-advisor` 跨 executor 第二意見，以及以 intent 推進交付弧的長期 Outcome Map 的 loom workflow tools。 |
-| [`loom-memory`](loom-memory/) | 0.1.0 | 0 | 0 | 選用、被動觸發的儲存庫記憶能力，帶 OKF v0.2 相容的儲存格式。可獨立安裝、獨立運作 —— 不依賴 loom-code、loom-design 或 loom-workflow。支援 Claude Code + Codex。 |
+| [`loom-memory`](loom-memory/) | 0.1.0 | 1 | 0 | 選用、被動觸發的儲存庫記憶能力，帶 OKF v0.2 相容的儲存格式。可獨立安裝、獨立運作 —— 不依賴 loom-code、loom-design 或 loom-workflow。支援 Claude Code + Codex。 |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | 用於釐清問題與深化推理的哲學思考 framework。 |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | 投資研究 toolkit — macro regime 診斷（US/JP/TW/KR/CN）、DCF、screener、透過 primary source adapter 取得的 equity snapshot。 |
