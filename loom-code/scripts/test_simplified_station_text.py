@@ -74,6 +74,10 @@ def test_review_uses_one_observable_claude_attempt_and_existing_retry() -> None:
         "timeout",
         "same functional-content digest",
         "does not retry",
+        "outside the Codex sandbox",
+        "sandbox_permissions=require_escalated",
+        "prefix_rule",
+        "Do not fall back to a sandboxed Claude invocation",
     ):
         assert phrase in review_prose
     assert "Do not run a model-backed preflight." in review_prose
