@@ -8,7 +8,7 @@ charter: 1.0
 ### Wave 1 — One bounded Claude invocation seam
 
 **W1-01 Make one Claude review attempt observable**  after: none  acceptance: 1, 2, 3, 4
-- Files: loom-code/scripts/claude_reviewer.py, loom-code/scripts/test_claude_reviewer.py, loom-code/skills/review/SKILL.md, loom-code/CHANGELOG.md, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json
+- Files: loom-code/scripts/claude_reviewer.py, loom-code/scripts/test_claude_reviewer.py, loom-code/scripts/test_simplified_station_text.py, loom-code/skills/review/SKILL.md, loom-code/CHANGELOG.md, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json
 - Test: A1 positive: valid-output-passthrough; boundary: no-extra-preflight. A2 positive: nonempty-output; negative: whitespace-output. A3 positive: within-timeout; boundary: timeout-diagnostic. A4 positive: existing-single-retry; negative: no-runner-retry.
 - Risk: agent-decided — add one single-attempt Claude-specific runner because prose cannot deterministically distinguish blank output or terminate a hung process; keep retry ownership in Review and add no parser, state, preflight, or generic executor framework.
 

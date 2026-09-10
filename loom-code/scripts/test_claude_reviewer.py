@@ -23,7 +23,6 @@ def test_run_attempt_valid_output_passes_through_once(monkeypatch) -> None:
     assert len(calls) == 1
     assert calls[0][0] == [
         "claude", "-p", "--model", "sonnet", "--output-format", "text",
-        "--no-session-persistence",
     ]
     assert calls[0][1]["input"] == "review this"
     assert calls[0][1]["timeout"] == 600
@@ -87,3 +86,43 @@ def test_main_reports_empty_output_without_retrying(monkeypatch) -> None:
     assert "empty-output" in err.getvalue()
     assert "provider note" in err.getvalue()
     assert "retry" not in err.getvalue().lower()
+
+
+def test_main_valid_output_preserves_stdout_and_stderr(monkeypatch) -> None:
+    monkeypatch.setattr(
+        claude_reviewer,
+        "run_attempt",
+        lambda *args: claude_reviewer.Attempt(
+            kind="success", stdout="verdict: PASS\n", stderr="provider note\n",
+            returncode=0, elapsed_seconds=2.0, exit_code=0,
+        ),
+    )
+    out = io.StringIO()
+    err = io.StringIO()
+
+    rc = claude_reviewer.main([], stdin=io.StringIO("review"), out=out, err=err)
+
+    assert rc == 0
+    assert out.getvalue() == "verdict: PASS\n"
+    assert err.getvalue() == "provider note\n"
+
+
+def test_main_timeout_returns_124_with_json_diagnostics(monkeypatch) -> None:
+    monkeypatch.setattr(
+        claude_reviewer,
+        "run_attempt",
+        lambda *args: claude_reviewer.Attempt(
+            kind="timeout", stdout="partial", stderr="slow",
+            returncode=None, elapsed_seconds=600.25, exit_code=124,
+        ),
+    )
+    out = io.StringIO()
+    err = io.StringIO()
+
+    rc = claude_reviewer.main([], stdin=io.StringIO("review"), out=out, err=err)
+
+    assert rc == 124
+    assert out.getvalue() == ""
+    assert '"kind": "timeout"' in err.getvalue()
+    assert '"elapsed_seconds": 600.25' in err.getvalue()
+    assert '"stderr": "slow"' in err.getvalue()

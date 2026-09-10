@@ -35,6 +35,14 @@ def _text(value: str | bytes | None) -> str:
 
 
 def _argv(claude_bin: str, model: str) -> list[str]:
+    """Build the grounded Claude print-mode invocation.
+
+    External surface grounding: the checked-in ``claude -p --help`` capture at
+    ``docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/claude-p-help-2026-09-05.txt``
+    defines ``-p``, ``--model`` and ``--output-format text``. Prompt delivery
+    on stdin follows the empirical contract documented by
+    ``coldread_role_split.run_once``.
+    """
     return [
         claude_bin,
         "-p",
@@ -42,8 +50,24 @@ def _argv(claude_bin: str, model: str) -> list[str]:
         model,
         "--output-format",
         "text",
-        "--no-session-persistence",
     ]
+
+
+def _completed_attempt(completed: subprocess.CompletedProcess[str], elapsed: float) -> Attempt:
+    if completed.returncode != 0:
+        return Attempt(
+            "process-error", completed.stdout, completed.stderr,
+            completed.returncode, elapsed, completed.returncode or 1,
+        )
+    if not completed.stdout.strip():
+        return Attempt(
+            "empty-output", completed.stdout, completed.stderr,
+            completed.returncode, elapsed, 3,
+        )
+    return Attempt(
+        "success", completed.stdout, completed.stderr,
+        completed.returncode, elapsed, 0,
+    )
 
 
 def run_attempt(claude_bin: str, model: str, prompt: str, timeout: int) -> Attempt:
@@ -77,34 +101,7 @@ def run_attempt(claude_bin: str, model: str, prompt: str, timeout: int) -> Attem
             elapsed_seconds=time.monotonic() - started,
             exit_code=1,
         )
-
-    elapsed = time.monotonic() - started
-    if completed.returncode != 0:
-        return Attempt(
-            kind="process-error",
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            returncode=completed.returncode,
-            elapsed_seconds=elapsed,
-            exit_code=completed.returncode or 1,
-        )
-    if not completed.stdout.strip():
-        return Attempt(
-            kind="empty-output",
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            returncode=completed.returncode,
-            elapsed_seconds=elapsed,
-            exit_code=3,
-        )
-    return Attempt(
-        kind="success",
-        stdout=completed.stdout,
-        stderr=completed.stderr,
-        returncode=completed.returncode,
-        elapsed_seconds=elapsed,
-        exit_code=0,
-    )
+    return _completed_attempt(completed, time.monotonic() - started)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -134,6 +131,7 @@ def main(
     )
     if attempt.kind == "success":
         out.write(attempt.stdout)
+        err.write(attempt.stderr)
         return 0
     print(json.dumps(asdict(attempt), ensure_ascii=False, sort_keys=True), file=err)
     return attempt.exit_code
