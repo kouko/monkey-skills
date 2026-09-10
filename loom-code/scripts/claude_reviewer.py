@@ -16,6 +16,10 @@ from dataclasses import asdict, dataclass
 from typing import TextIO
 
 
+CLAUDE_EFFORTS = {"low", "medium", "high", "xhigh", "max"}
+UNRECOGNIZED_MODEL_MARKER = "[claude-code:unrecognized_model]"
+
+
 @dataclass(frozen=True)
 class Attempt:
     kind: str
@@ -34,33 +38,40 @@ def _text(value: str | bytes | None) -> str:
     return value
 
 
-def _argv(claude_bin: str, model: str) -> list[str]:
+def _argv(claude_bin: str, model: str | None, effort: str | None) -> list[str]:
     """Build the grounded Claude print-mode invocation.
 
     External surface grounding: the checked-in ``claude -p --help`` capture at
     ``docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/claude-p-help-2026-09-05.txt``
-    defines ``-p``, ``--model`` and ``--output-format text``. Anthropic's
+    defines ``-p``, ``--model``, ``--effort`` and ``--output-format text``.
+    Anthropic's
     CLI reference documents ``--no-session-persistence`` as disabling disk
     persistence for print-mode sessions:
     https://code.claude.com/docs/en/cli-usage
     Prompt delivery on stdin follows the empirical contract documented by
     ``coldread_role_split.run_once``.
     """
-    return [
+    argv = [
         claude_bin,
         "-p",
-        "--model",
-        model,
         "--output-format",
         "text",
         "--no-session-persistence",
     ]
+    if model is not None and effort is not None:
+        argv[2:2] = ["--model", model, "--effort", effort]
+    return argv
 
 
 def _completed_attempt(completed: subprocess.CompletedProcess[str], elapsed: float) -> Attempt:
     if completed.returncode != 0:
+        kind = (
+            "host-rejection"
+            if UNRECOGNIZED_MODEL_MARKER in completed.stderr
+            else "process-error"
+        )
         return Attempt(
-            "process-error", completed.stdout, completed.stderr,
+            kind, completed.stdout, completed.stderr,
             completed.returncode, elapsed, completed.returncode or 1,
         )
     if not completed.stdout.strip():
@@ -74,9 +85,15 @@ def _completed_attempt(completed: subprocess.CompletedProcess[str], elapsed: flo
     )
 
 
-def run_attempt(claude_bin: str, model: str, prompt: str, timeout: int) -> Attempt:
+def run_attempt(
+    claude_bin: str,
+    model: str | None,
+    effort: str | None,
+    prompt: str,
+    timeout: int,
+) -> Attempt:
     """Execute Claude once; never retry or interpret reviewer content."""
-    argv = _argv(claude_bin, model)
+    argv = _argv(claude_bin, model, effort)
     started = time.monotonic()
     try:
         completed = subprocess.run(
@@ -110,7 +127,8 @@ def run_attempt(claude_bin: str, model: str, prompt: str, timeout: int) -> Attem
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", default="sonnet")
+    parser.add_argument("--model")
+    parser.add_argument("--effort")
     parser.add_argument("--timeout-seconds", type=int, default=600)
     return parser
 
@@ -126,9 +144,24 @@ def main(
     if args.timeout_seconds <= 0:
         print("--timeout-seconds must be greater than zero", file=err)
         return 2
+    if (args.model is None) != (args.effort is None):
+        print("--model and --effort must be provided together", file=err)
+        return 2
+    if args.effort is not None and args.effort not in CLAUDE_EFFORTS:
+        rejection = Attempt(
+            kind="host-rejection",
+            stdout="",
+            stderr=f"unsupported --effort value: {args.effort}",
+            returncode=None,
+            elapsed_seconds=0.0,
+            exit_code=2,
+        )
+        print(json.dumps(asdict(rejection), ensure_ascii=False, sort_keys=True), file=err)
+        return rejection.exit_code
     attempt = run_attempt(
         "claude",
         args.model,
+        args.effort,
         stdin.read(),
         args.timeout_seconds,
     )
