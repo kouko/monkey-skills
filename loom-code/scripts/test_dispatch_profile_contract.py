@@ -102,6 +102,15 @@ def test_high_and_xhigh_are_sequential_and_max_is_inherited_only() -> None:
     assert "initial dispatch may newly enter only `low` or `medium`" in flat
 
 
+def test_final_allowed_redispatch_success_returns_routed() -> None:
+    text = _contract()
+
+    _affirmative_sentence(
+        text,
+        "successful execution returns `routed` regardless of its position in the budget",
+    )
+
+
 def test_build_and_review_resolve_the_shared_profile_before_every_dispatch() -> None:
     for station in STATIONS:
         text = station.read_text(encoding="utf-8")

@@ -103,6 +103,7 @@ user model-or-effort decision.
 One task permits at most two completed redispatches after its initial
 completed execution. Packet repair and capability escalation consume this
 shared budget when task execution occurs; changing model or effort does not
-reset it. When no legal transition remains or another completed execution
-would exceed the budget, return `execution-failed` and record the last
-verifiable effective profile.
+reset it. The dispatcher must ensure that every successful execution returns
+`routed` regardless of its position in the budget. When no legal transition
+remains or another completed execution would exceed the budget, return
+`execution-failed` and record the last verifiable effective profile.
