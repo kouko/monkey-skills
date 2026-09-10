@@ -176,3 +176,64 @@ this codebase's convention for determinism.
 **Sources.** spec.md REQ-8, REQ-9; `scripts/check_loom_memory_integrity.py`
 `_format_index_line`/invariant `(d)` (the byte-identical-after-strip rule
 this module reuses).
+
+## D-8 — No hook shipped for W2-01
+
+**Decision.** W2-01 ships no optional memory hook. The complete Recall /
+Record / Reconcile / Retire mechanism is reachable through
+`loom-memory/skills/loom-memory/SKILL.md` alone; no hook file is added.
+
+**Candidates.** (a) Ship a non-blocking relevance-reminder hook now,
+scoped to REQ-5's bound (no authoring, no deletion, no failing unrelated
+Loom operations); (b) ship no hook, leaving the door open for a later
+task if a measured need appears.
+
+**Why (b).** REQ-5 makes a hook optional, and the spec's own "Hook is
+removable" design decision states the mechanism must already be complete
+through the skill alone. The dispatch packet's own risk note repeats
+"prefer shipping no hook". Nothing in this task's scope (REQ-2, REQ-4,
+REQ-5, REQ-11, REQ-13–17, REQ-20, REQ-21, REQ-23) requires a hook to be
+satisfied, and no measured trigger-miss problem motivates adding one pre-
+emptively — CLAUDE.md's Simplicity rule ("no speculative abstractions...
+I didn't ask for") argues against authoring one on spec alone.
+
+**Sources.** spec.md REQ-5 and its "Hook is removable" design decision;
+plan.md W2-01 Risk line ("Prefer shipping no hook; if you ship one,
+justify it in decisions.md").
+
+## D-9 — Content split between `SKILL.md` and its two references
+
+**Decision.** `SKILL.md` (1,017 words) carries: the git-memory boundary
+statement, the two passive activation triggers, one compact
+Trigger/Steps block per operation, the failure-behavior summary
+(structural failure, legacy-store report), and the resource map.
+`references/okf-profile.md` carries the six pinned OKF v0.2 clauses, the
+Loom minimum concept schema table, the lesson body contract (`Trigger`/
+`Correct path`/`Why`/`Limits`), and the `log.md`-omission rationale.
+`references/operations.md` carries the fully expanded step-by-step
+procedure for all four operations, including REQ-14's five-way
+classification filter and REQ-15's reconcile-vs-narrow decision, spelled
+out at a level of prose `SKILL.md`'s compact steps intentionally do not
+repeat.
+
+**Candidates.** (a) Put everything in `SKILL.md` — one file, no
+progressive disclosure, but risks crowding toward the 4,500-word/6,000-
+token hard cap as REQ-11's body contract and REQ-14/15's classification
+and merge rules are spelled out in full; (b) split compact
+trigger-and-steps into `SKILL.md`, move the OKF profile contract and the
+expanded procedure into two references, loaded only when the compact
+version is not enough.
+
+**Why (b).** `SKILL.md` sits at 1,017 words — about 23% of the 4,500-word
+hard cap — leaving headroom without needing compression. The split
+mirrors this repository's own progressive-disclosure convention (the same
+one REQ-8 requires of `index.md` itself): an agent reads the compact
+operation contract every time, and opens `references/operations.md` or
+`references/okf-profile.md` only when a specific step needs the fuller
+rule. Neither reference is required reading for ordinary Recall/Record
+use, which keeps the always-loaded surface small.
+
+**Sources.** CLAUDE.md Skill Structure section (SKILL.md token cap,
+Anthropic progressive-disclosure convention); spec.md REQ-8 (the
+progressive-disclosure precedent already established for `index.md`);
+dispatch packet "What to build" steps 2–4.
