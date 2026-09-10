@@ -1,0 +1,45 @@
+{
+  "name": "loom-memory",
+  "version": "0.1.0",
+  "description": "Optional, passively-triggered repository-memory capability with an OKF v0.2-compatible store profile. Installs and works standalone — no dependency on loom-code, loom-design, or loom-workflow. Claude Code + Codex.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-memory",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "loom-memory",
+    "memory",
+    "okf",
+    "open-knowledge-format",
+    "repository-memory",
+    "recall",
+    "record",
+    "reconcile",
+    "retire",
+    "portable"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "loom-memory",
+    "shortDescription": "Optional OKF-compatible repository memory, for Codex CLI",
+    "longDescription": "loom-memory is a standalone, independently installable repository-memory capability: a public skill that recalls, records, reconciles, and retires repository knowledge on request or when an agent identifies a concrete need for prior experience — never because a Loom station was merely reached. Its generated store is OKF v0.2 conformant: every non-reserved document carries parseable YAML frontmatter with a non-empty type, and the reserved index.md and log.md files follow their reserved structure. loom-memory declares no mandatory dependency on loom-code, loom-design, or loom-workflow, and none of those plugins depends on it — any of them, or a user working without any of them, can invoke the same public memory skill. Verdicts on what it produces are never rendered here.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Remember what we learned from this.",
+      "What do we already know about this problem?",
+      "Reconcile the memory store with what's true now.",
+      "Retire this stale memory entry."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/loom-memory",
+    "brandColor": "#7C3AED"
+  }
+}

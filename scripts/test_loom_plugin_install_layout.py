@@ -537,3 +537,46 @@ def test_isolated_loom_workflow_bundle_contains_required_skills_and_executes(
         check=False,
     )
     assert verified.returncode == 0, verified.stderr
+
+
+def test_memory_plugin_installs_alone(tmp_path: Path) -> None:
+    """loom-memory copies into a clean isolated install root standalone.
+
+    Its manifests must declare none of the mandatory-dependency keys and no
+    `requires-contract` — loom-memory does not require loom-code's contract
+    package, unlike loom-design.
+    """
+    memory_root = _install_plugin(
+        "loom-memory", tmp_path / "unrelated memory cache's root"
+    )
+    assert not (memory_root.parent / "loom-code").exists()
+    assert not (memory_root.parent / "loom-design").exists()
+
+    manifest = _manifest(memory_root)
+    dependency_text = _mandatory_dependency_text(manifest)
+    assert dependency_text == "{}", dependency_text
+    assert "requires-contract" not in manifest
+
+    assert find_boundary_violations(memory_root) == []
+
+
+def test_code_design_manifests_have_no_memory_dependency(tmp_path: Path) -> None:
+    """loom-code and loom-design manifests must not gain a loom-memory dependency."""
+    code_root = _install_plugin("loom-code", tmp_path / "code-cache-for-memory-check")
+    design_root = _install_plugin(
+        "loom-design", tmp_path / "design-cache-for-memory-check"
+    )
+
+    code_dependencies = _mandatory_dependency_text(_manifest(code_root))
+    design_dependencies = _mandatory_dependency_text(_manifest(design_root))
+    assert "loom-memory" not in code_dependencies
+    assert "loom-memory" not in design_dependencies
+
+    code_manifest_text = (code_root / ".claude-plugin" / "plugin.json").read_text(
+        encoding="utf-8"
+    )
+    design_manifest_text = (design_root / ".claude-plugin" / "plugin.json").read_text(
+        encoding="utf-8"
+    )
+    assert "loom-memory" not in code_manifest_text
+    assert "loom-memory" not in design_manifest_text
