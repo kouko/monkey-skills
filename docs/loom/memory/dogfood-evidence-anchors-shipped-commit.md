@@ -2,7 +2,8 @@
 name: dogfood-evidence-anchors-shipped-commit
 description: A dogfood behavioral PASS certifies only the commit it ran against — post-dogfood remediation ships unexercised unless the probes re-run at the remediated text, and reports must anchor on-branch SHAs (pre-squash SHAs dangle)
 type: process
-origin: feat/digest-multiview-synthesis whole-branch review (2026-07-10)
+sources:
+  - resource: feat/digest-multiview-synthesis whole-branch review (2026-07-10)
 ---
 
 A skill-text dogfood's behavioral PASS is evidence about ONE commit — the one

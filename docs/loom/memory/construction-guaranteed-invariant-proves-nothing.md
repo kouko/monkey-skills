@@ -2,7 +2,8 @@
 name: construction-guaranteed-invariant-proves-nothing
 description: An invariant that holds BY CONSTRUCTION (both sides derived from the same operation) validates nothing about whether that operation was semantically right — `text[start:end] == token` held on every one of six fabricated numbers; when the trust rail is construction-guaranteed, the real risk is upstream of it.
 type: practice
-origin: branch feat-prose-kpi-part-2 (2026-07-20) — six instances of one class across three whole-branch review rounds, each found by a reviewer executing an exploit string by hand
+sources:
+  - resource: branch feat-prose-kpi-part-2 (2026-07-20) — six instances of one class across three whole-branch review rounds, each found by a reviewer executing an exploit string by hand
 ---
 
 The 8-K prose KPI chain's load-bearing anti-fabrication rail is

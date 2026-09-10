@@ -2,7 +2,8 @@
 name: gate-the-recorded-choice-not-the-detour
 description: When a rule says "recommend X once, record the user's choice, proceed either way", the recommendation degrades into a status bullet and the agent records its own default as the answer (measured 8 agent-default vs 3 explicit-user over 86 briefs) — mechanize the CHOICE, not the detour: a canonical brief line with `pending` until the user answers, a standalone ask, a repo-level standing-choice file so a decided row is never re-asked, and a checker at plan-commit that refuses any non-canonical wording as unresolved
 type: practice
-origin: branch onramp-explicit-choice-gate (2026-08-18) — on-ramp explicit-choice gate arc; evidence docs/loom/specs/2026-08-18-onramp-explicit-choice-gate.md §Problem, docs/loom/audits/2026-08-18-onramp-choice-gate-fire-rate.md; trigger case strategy-dag session (agent wrote "使用者未反對" for a choice the user never saw)
+sources:
+  - resource: branch onramp-explicit-choice-gate (2026-08-18) — on-ramp explicit-choice gate arc; evidence docs/loom/specs/2026-08-18-onramp-explicit-choice-gate.md §Problem, docs/loom/audits/2026-08-18-onramp-choice-gate-fire-rate.md; trigger case strategy-dag session (agent wrote "使用者未反對" for a choice the user never saw)
 ---
 
 The family reception's on-ramp rule ("surface ONCE, record the user's

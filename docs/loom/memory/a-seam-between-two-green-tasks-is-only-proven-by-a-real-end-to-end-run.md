@@ -2,7 +2,8 @@
 name: a-seam-between-two-green-tasks-is-only-proven-by-a-real-end-to-end-run
 description: When a feature's value is a PATH through several tasks (a CLI over a sealed library, a plan ledger writer, a checker), each task's per-task review and green suite prove only that task's assumption of the seam — the first real run on real inputs is where the path breaks; budget one end-to-end dogfood task on real artifacts (not synthetic fixtures) into the plan before declaring the path shipped
 type: practice
-origin: contract-repair-post-v3 (2026-08-31) — the batch-review adapter (R7) passed per-task triads, then the first real `packet` run on the arc's own plan refused at three seams none of which were in the adapter: the projection validator accepted only REQ- referents while plan-format admits quotes/BI ids; plan_card wrote short SHAs while the sealed chain demands 40-hex; apply-result never wrote the ledger. R11 added T14–T17 and the pilot (T17) measured dispatches 10 → 2 only after those landed
+sources:
+  - resource: contract-repair-post-v3 (2026-08-31) — the batch-review adapter (R7) passed per-task triads, then the first real `packet` run on the arc's own plan refused at three seams none of which were in the adapter: the projection validator accepted only REQ- referents while plan-format admits quotes/BI ids; plan_card wrote short SHAs while the sealed chain demands 40-hex; apply-result never wrote the ledger. R11 added T14–T17 and the pilot (T17) measured dispatches 10 → 2 only after those landed
 ---
 
 Task Batch Review shipped in #766 with every task green and per-task

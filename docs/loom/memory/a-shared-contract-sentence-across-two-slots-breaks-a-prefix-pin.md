@@ -2,7 +2,8 @@
 name: a-shared-contract-sentence-across-two-slots-breaks-a-prefix-pin
 description: When a second template slot adopts the same contract sentence as an existing slot (fill-or-declare's "Do not delete the section heading …"), a sibling test that pinned only the shared PREFIX with count()==1 breaks on the new slot's legitimate copy — pin the slot-specific continuation of the sentence, and at plan time grep sibling slot pins for shared clause prefixes so the pin file lands in Files touched up front
 type: gotcha
-origin: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — Task 2, Decision Log 1
+sources:
+  - resource: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — Task 2, Decision Log 1
 ---
 
 The brief's `## Alternatives Considered` became fill-or-declare, reusing

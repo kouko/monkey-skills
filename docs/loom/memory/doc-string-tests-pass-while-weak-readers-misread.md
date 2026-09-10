@@ -2,7 +2,8 @@
 name: doc-string-tests-pass-while-weak-readers-misread
 description: Tests that pin a SKILL.md's documentation STRINGS verify the words exist, not that a weak executor reads the intended semantics — three live cases shipped green-tested prose that haiku cold-readers then misread (mint-at-exhaustion inverted, cap budgets conflated, cross-plugin script path garbled); behavioral cold-read rounds on the weak tier are the only test layer that catches this class, and each fix was a few words
 type: practice
-origin: loop-convergence-fixes branch (2026-07-19) — 6 dogfood rounds, 59 haiku cold reads, 3 wording defects found+fixed+re-verified; fix commits 33effa0c/26db3788/65b0bf2c
+sources:
+  - resource: loop-convergence-fixes branch (2026-07-19) — 6 dogfood rounds, 59 haiku cold reads, 3 wording defects found+fixed+re-verified; fix commits 33effa0c/26db3788/65b0bf2c
 ---
 
 Three SKILL.md clauses on one branch each shipped with green string-pinning

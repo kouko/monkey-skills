@@ -2,7 +2,8 @@
 name: skill-in-subagent-loses-internal-orchestration
 description: Handing a multi-agent skill to ONE subagent degrades its internal orchestration — a writer≠evaluator gate panel becomes one agent auditing its own draft with no error surfaced; drive such skills from the main conversation and dispatch their panel as sibling subagents. NOTE the stated cause is CORRECTED: subagents DO expose the Agent tool (re-probed 2026-08-19); the 2026-07-23 "no Agent/Task/Workflow" finding is stale for Agent, and the advice now rests on the nested layer being where a child result gets dropped
 type: gotcha
-origin: 2026-07-23 JNJ memo e2e (report-equity-memo Phase 4 delegated to one sonnet subagent; chore-subagent-nesting-gotcha branch)
+sources:
+  - resource: 2026-07-23 JNJ memo e2e (report-equity-memo Phase 4 delegated to one sonnet subagent; chore-subagent-nesting-gotcha branch)
 ---
 
 A subagent's toolbox contains no `Agent`, `Task`, or `Workflow` tool — not

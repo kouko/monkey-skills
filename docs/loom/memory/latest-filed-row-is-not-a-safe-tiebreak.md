@@ -2,7 +2,8 @@
 name: latest-filed-row-is-not-a-safe-tiebreak
 description: When one (concept, period) carries several filed values, "take the most recently filed" is not a safe tie-break — a tag's MEANING can drift across a filer's filings, so the rows are not always restatements of one fact, and the newest can be the corrupt one; CRM's services-revenue tag for a single period was filed as 181M, then 3,050M (the company TOTAL), then 6,667M, and the newest made components exceed the total by 118%
 type: gotcha
-origin: 2026-07-28 offline sweep over the local companyfacts cache; found while validating a component-sum rule, not while looking for it. Full measurement in docs/loom/audits/2026-07-28-revenue-chain-and-hierarchy-audit.md §3
+sources:
+  - resource: 2026-07-28 offline sweep over the local companyfacts cache; found while validating a component-sum rule, not while looking for it. Full measurement in docs/loom/audits/2026-07-28-revenue-chain-and-hierarchy-audit.md §3
 ---
 
 A bitemporal store keeps every vintage of a fact, and the obvious way to collapse

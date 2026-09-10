@@ -2,7 +2,8 @@
 name: dont-finish-flag-definitions-rename
 description: The "Flag Definitions" heading in domain-teams rubrics is a deliberate convention — do not sweep it into the loom-code flags→findings rename
 type: practice
-origin: PR #468 (loom-* suite audit batch 1, 2026-07-02)
+sources:
+  - resource: PR #468 (loom-* suite audit batch 1, 2026-07-02)
 ---
 
 loom-code renamed its review vocabulary from "flags" to "findings"

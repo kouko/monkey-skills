@@ -2,7 +2,8 @@
 name: pytest-skip-reasons-with-nodeids-come-from-junit-xml-not-from-rs
 description: A script that must report each skipped or failed test with both its nodeid and its reason reads them from `--junit-xml`, because `-rs` prints `SKIPPED [n] <file>:<line>: <reason>` with no nodeid, `-v` truncates the reason at the terminal width, and `-n auto` changes the per-test line shape again; the junit `classname` has no `file` attribute on this pytest, so the nodeid is rebuilt by splitting `classname` at the last segment whose `.py` exists (the rest are `::Class` segments)
 type: gotcha
-origin: 2026-09-05-graduated-probes-independent-of-local-history — build-phase adversary finding on the plan (2026-09-05) and wave-end:1 adversary probe on the class-name splice (2026-09-06)
+sources:
+  - resource: 2026-09-05-graduated-probes-independent-of-local-history — build-phase adversary finding on the plan (2026-09-05) and wave-end:1 adversary probe on the class-name splice (2026-09-06)
 ---
 
 The plan for the rehearsal script said "`-q -rs` and list every skip as

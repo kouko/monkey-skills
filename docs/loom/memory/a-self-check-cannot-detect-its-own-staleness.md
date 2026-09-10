@@ -2,7 +2,8 @@
 name: a-self-check-cannot-detect-its-own-staleness
 description: A guard written INSIDE the artifact it protects cannot catch the case where an old copy of that artifact is what ran, because the old copy does not contain the guard either — only a mark the CURRENT code emits, and an old copy therefore cannot emit, discriminates the two; absence of the mark is the signal
 type: practice
-origin: 2026-08-18 stale-render arc (loom-code 0.88.0) — five HTML views were delivered unconverted because a pre-conversion copy of the renderer ran and exited 0; the first fix proposed was a self-check inside that same renderer
+sources:
+  - resource: 2026-08-18 stale-render arc (loom-code 0.88.0) — five HTML views were delivered unconverted because a pre-conversion copy of the renderer ran and exited 0; the first fix proposed was a self-check inside that same renderer
 ---
 
 A tool that can be deployed in several copies — a plugin cache holding

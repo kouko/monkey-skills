@@ -2,7 +2,8 @@
 name: whole-branch-review-catches-the-cross-artifact-defect-per-task-review-cannot
 description: A claim restated across several artifacts can pass every per-task review and still be false at the branch level, because each task reviewer sees only its own slice; only a whole-branch cross-artifact pass compares the copies against each other
 type: practice
-origin: 2026-09-01 — prose-edit self-sweep arc; whole-branch opus review found 3 stale/false-self-claim defects (98 vs 104 finding count, a nonexistent "second test", a stale sibling-path date) that all six per-task reviews had passed
+sources:
+  - resource: 2026-09-01 — prose-edit self-sweep arc; whole-branch opus review found 3 stale/false-self-claim defects (98 vs 104 finding count, a nonexistent "second test", a stale sibling-path date) that all six per-task reviews had passed
 ---
 
 Every per-task reviewer on this arc returned PASS on its own artifact,

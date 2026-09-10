@@ -2,7 +2,8 @@
 name: cache-key-collision-across-migration
 description: A new function reusing a legacy cache key but writing an incompatible payload shape under an immutable TTL is a never-self-healing 'works on my machine' landmine — give each payload shape a distinct key + a cross-function pre-seed regression test
 type: gotcha
-origin: branch feat-us-sec-narrative-edgartools (US SEC regex→edgartools narrative migration, 2026-07-12)
+sources:
+  - resource: branch feat-us-sec-narrative-edgartools (US SEC regex→edgartools narrative migration, 2026-07-12)
 ---
 
 During the regex→edgartools narrative migration, a NEW cached fetch

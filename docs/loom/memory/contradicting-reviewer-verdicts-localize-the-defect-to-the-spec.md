@@ -2,7 +2,8 @@
 name: contradicting-reviewer-verdicts-localize-the-defect-to-the-spec
 description: When one reviewer arm PASSes an artifact and the other blocks it on the same round, the fault is usually in the spec both are reading, not in the work — the contradiction is the signal; re-dispatching the implementer at that moment undoes a correct fix, because one arm is enforcing a spec sentence that is itself wrong
 type: practice
-origin: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — Task 1, round 2
+sources:
+  - resource: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — Task 1, round 2
 ---
 
 On the same artifact and the same round, the code-quality arm returned

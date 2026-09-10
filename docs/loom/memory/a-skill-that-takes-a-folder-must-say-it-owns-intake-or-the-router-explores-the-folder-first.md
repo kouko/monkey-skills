@@ -2,7 +2,8 @@
 name: a-skill-that-takes-a-folder-must-say-it-owns-intake-or-the-router-explores-the-folder-first
 description: When a user request names a folder ("think about X, sources in ./y"), the router's first move is to inspect the folder and ask, not to load the skill — unless the skill's description says explicitly that it owns intake and must be invoked before any folder is inspected; the same shape hides a second gap: a verb skill that presumes existing project state (break-assumption) never fires standalone unless the entry skill lists its phrases as its own triggers and hands off
 type: practice
-origin: think-orbit dogfood 2026-08-18 — Probe A (27 queries × 2, real harness): every folder-mentioning query 0/14, assumption-broke queries 0/8, precision perfect; after adding "invoke first — before inspecting any folder — it owns intake" and the assumption-broke phrases to the router description (0.1.2), the same queries went 1/26 → 22/26 with 0 over-triggers
+sources:
+  - resource: think-orbit dogfood 2026-08-18 — Probe A (27 queries × 2, real harness): every folder-mentioning query 0/14, assumption-broke queries 0/8, precision perfect; after adding "invoke first — before inspecting any folder — it owns intake" and the assumption-broke phrases to the router description (0.1.2), the same queries went 1/26 → 22/26 with 0 over-triggers
 ---
 
 A router deciding between "run a tool on this folder" and "load a skill"

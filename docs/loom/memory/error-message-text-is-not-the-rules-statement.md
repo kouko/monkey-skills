@@ -2,7 +2,8 @@
 name: error-message-text-is-not-the-rules-statement
 description: A checker's stderr wording gets read downstream as the rule's definition — it is the first statement of the rule anyone sees, and the only one they see at the moment they care — so an error string left behind when the rule changes silently becomes a second, contradicting source of truth that no documentation check covers
 type: gotcha
-origin: branch plan-field-microstructure (2026-08-19) — a checker's message kept describing a ceiling the rule had already dropped
+sources:
+  - resource: branch plan-field-microstructure (2026-08-19) — a checker's message kept describing a ceiling the rule had already dropped
 ---
 
 A rule written into a checker has two texts: the rule as stated in its contract

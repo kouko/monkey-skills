@@ -2,7 +2,8 @@
 name: lexical-overlap-cannot-separate-narrating-from-sharing-a-topic
 description: A gate that asks "does this text refer to that other text" cannot be built on shared vocabulary, because the two texts are related — that is why one cites the other — so they share vocabulary by construction. Measured on a real corpus, a keyword-overlap rule passed 10/10 nodes including one whose body referred to none of its three upstream nodes, while requiring an explicit identifier passed 2/10 and matched a human reading of the same corpus exactly. Stoplisting the false matches does not fix it: the class of non-discriminative words is open, and each stoplist entry buys one counterexample. Reach for an identifier the author must actually write, not for evidence that two passages are about the same subject.
 type: gotcha
-origin: think-orbit 0.1.4 transparency arc, T1 (2026-08-19) — `input-narration` check rule; the keyword arm was specified, built, stoplisted, and then deleted on measurement
+sources:
+  - resource: think-orbit 0.1.4 transparency arc, T1 (2026-08-19) — `input-narration` check rule; the keyword arm was specified, built, stoplisted, and then deleted on measurement
 ---
 
 The rule had to answer: does this node's body explain why it stands on its

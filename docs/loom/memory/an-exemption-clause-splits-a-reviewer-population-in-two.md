@@ -2,7 +2,8 @@
 name: an-exemption-clause-splits-a-reviewer-population-in-two
 description: A judgment rule with carve-outs does not produce a middling catch rate across reviewers — it produces runs that catch everything or nothing, so the reported average is a number no single run ever produces and more sampling widens the split instead of closing it; and identical zero scores can be reached by different mechanisms, which only the transcripts show, never the tally
 type: practice
-origin: 2026-08-22 code-as-spec lens dogfood — five samples of the deletion class read 1/2, 2/2, 0/2, 0/2, 2/2 against a baseline of 0/4; the two zeros turned out to have different causes, one invoking the rule's exemptions and one never engaging the rule's deletion half at all
+sources:
+  - resource: 2026-08-22 code-as-spec lens dogfood — five samples of the deletion class read 1/2, 2/2, 0/2, 0/2, 2/2 against a baseline of 0/4; the two zeros turned out to have different causes, one invoking the rule's exemptions and one never engaging the rule's deletion half at all
 ---
 
 A rule written as "delete X, except when Y" gets measured the way a detector

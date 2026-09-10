@@ -2,7 +2,8 @@
 name: a-path-literal-does-not-survive-being-copied-one-level-deeper
 description: A relative path that resolves from SKILL.md dangles when the same text is copied into references/ or rubrics/ one level down, and check-skill-crossrefs.py cannot see it — by its own docstring it checks inline markdown links only, so a backtick-quoted path is unchecked at any depth; the reviewer who first found one dismissed it on the same reasoning the checker encodes, that plain text is not a link
 type: gotcha
-origin: fix/conditional-ops-path (2026-08-27) — three dangling path literals in subagent-driven-development/references/conditional-operations.md, all created when #740 extracted prose out of SKILL.md; the checker reported OK throughout, and #740's own reviewer had seen one and filed it as a nit
+sources:
+  - resource: fix/conditional-ops-path (2026-08-27) — three dangling path literals in subagent-driven-development/references/conditional-operations.md, all created when #740 extracted prose out of SKILL.md; the checker reported OK throughout, and #740's own reviewer had seen one and filed it as a nit
 ---
 
 `#740` moved prose out of `subagent-driven-development/SKILL.md` into a new

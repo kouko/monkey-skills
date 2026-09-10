@@ -2,7 +2,8 @@
 name: producer-marker-inert-until-consumer-branches-on-it
 description: A producer emitting a structured sentinel/refusal marker (e.g. dcf_compute's `{"not_applicable":"financial-sector"}`) is INERT until every consumer of that output explicitly branches on it — until then the downstream silently degrades (a null field, a dropped memo section), it never errors. Shipping the marker is only half the fix; wiring each consumer to recognize it belongs in the SAME change. The dual of a missing-field 0-default — same producer↔consumer contract, a sentinel instead of a value.
 type: gotcha
-origin: branch tw-fin-ixbrl-followups (2026-07-24, shipped as 2.32.1) — the 2.31.0 arc shipped dcf_compute's `not_applicable` financial-sector marker (producer side) and treated the DCF-guard as done; no consumer branched on it, so a financial-ticker memo silently rendered `intrinsic_mid: null` with no explanation until this follow-up arc wired the three render surfaces.
+sources:
+  - resource: branch tw-fin-ixbrl-followups (2026-07-24, shipped as 2.32.1) — the 2.31.0 arc shipped dcf_compute's `not_applicable` financial-sector marker (producer side) and treated the DCF-guard as done; no consumer branched on it, so a financial-ticker memo silently rendered `intrinsic_mid: null` with no explanation until this follow-up arc wired the three render surfaces.
 ---
 
 A producer that emits a NEW structured sentinel — a refusal object, a

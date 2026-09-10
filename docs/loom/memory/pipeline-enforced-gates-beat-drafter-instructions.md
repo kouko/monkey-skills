@@ -2,7 +2,8 @@
 name: pipeline-enforced-gates-beat-drafter-instructions
 description: When a weak-model drafter keeps violating a coverage obligation despite prose instructions, move enforcement into the PIPELINE (harness runs a deterministic checker, verbatim miss list feeds one bounded fix round) — measured 22%→67% pass-rate with the dominant failure class displaced to input-side extraction quality, after three prose-hardening proposals had been mechanically rejected as no-ops
 type: practice
-origin: branch l3-loop-run-20260711 (2026-07-12) — mechanical seed-gate arc; motivating evidence docs/loom/dogfood/2026-07-11-l3-loop-run2 (L3 plateau) + acceptance docs/loom/dogfood/2026-07-12-mechanical-seed-gate-baseline
+sources:
+  - resource: branch l3-loop-run-20260711 (2026-07-12) — mechanical seed-gate arc; motivating evidence docs/loom/dogfood/2026-07-11-l3-loop-run2 (L3 plateau) + acceptance docs/loom/dogfood/2026-07-12-mechanical-seed-gate-baseline
 ---
 
 The principles station's seed-coverage obligation was enforced by prose

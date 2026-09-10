@@ -2,7 +2,8 @@
 name: a-stamp-recording-an-outcome-without-its-subject-cannot-go-stale
 description: A provenance field that records WHAT a check concluded but not WHAT it examined survives every later edit and keeps advertising the old result, so the artifact reports a verdict about text the checker never saw — bind the outcome to a fingerprint of the subject and let the consumer render disagreement as `stale`; the field most likely to be missing this is the one that reports checking, because it reads as already being the safeguard
 type: practice
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — the `verified` gate stamp shipped as a bare outcome while its sibling `fidelity_checked` had carried a body hash from the start
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — the `verified` gate stamp shipped as a bare outcome while its sibling `fidelity_checked` had carried a body hash from the start
 ---
 
 A generated artifact carries provenance fields written by tooling: "the

@@ -2,7 +2,8 @@
 name: one-record-commit-per-wave-and-per-round-keeps-the-record-honest-and-the-log-short
 description: Dispatch records must be committed before the work they record, and "commit it on its own" was read as one commit per record — #792's branch carried 56 commits, 16 of them dispatch records; the honest and short shape is one record commit per wave (every implementer of the wave) and one per verdict round (adversary, blind-runner, readers, and a fix round's fix implementer), so the count of `chore(loom): dispatch` commits stays ≤ waves + verdict rounds at every round boundary
 type: practice
-origin: 2026-09-05 review-sees-complexity-and-process-cost (loom-code 1.5.0) — build §3 said "Commit it on its own", review §2 already batched the adversary and blind-runner but recorded readers separately; a mid-round fix implementer turned out to be the one record no wave or round commit had a slot for
+sources:
+  - resource: 2026-09-05 review-sees-complexity-and-process-cost (loom-code 1.5.0) — build §3 said "Commit it on its own", review §2 already batched the adversary and blind-runner but recorded readers separately; a mid-round fix implementer turned out to be the one record no wave or round commit had a slot for
 ---
 
 The rule that matters is the ordering one: a record written before the

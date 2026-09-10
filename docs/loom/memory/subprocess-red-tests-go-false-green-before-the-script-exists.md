@@ -2,7 +2,8 @@
 name: subprocess-red-tests-go-false-green-before-the-script-exists
 description: In a subprocess-driven RED phase, two common assertion shapes pass while the script under test does not exist yet — an absence assertion ("X not in stdout") is trivially true against empty output, and a bare exit-code check for 2 matches the interpreter's own exit 2 for a missing file — so every such test must also assert something only a real run produces
 type: gotcha
-origin: 2026-08-03, TDD RED phase for `scripts/claim_copy_sweep.py` — 5 of 22 tests passed before a single line of the script was written
+sources:
+  - resource: 2026-08-03, TDD RED phase for `scripts/claim_copy_sweep.py` — 5 of 22 tests passed before a single line of the script was written
 ---
 
 Writing the failing tests for a CLI before writing the CLI, the first run

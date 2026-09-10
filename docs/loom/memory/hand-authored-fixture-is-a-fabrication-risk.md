@@ -2,7 +2,8 @@
 name: hand-authored-fixture-is-a-fabrication-risk
 description: A hand-built test fixture for an anti-fabrication feature is itself a fabrication risk — verify every value against the real source, ideally by cross-checking the live extractor
 type: gotcha
-origin: operational-kpi tier-② XBRL pilot (feat-operational-kpi-xbrl-pilot, 2026-07-15)
+sources:
+  - resource: operational-kpi tier-② XBRL pilot (feat-operational-kpi-xbrl-pilot, 2026-07-15)
 ---
 
 When TDD'ing an anti-fabrication feature (one whose whole purpose is to

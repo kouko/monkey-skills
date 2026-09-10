@@ -2,7 +2,8 @@
 name: a-prose-scanner-meets-its-own-vocabulary-first
 description: A check that scans prose for keywords will meet the toolchain's OWN vocabulary before it meets a user's — severity labels, verdict tokens, field names and status words are prose to a scanner, so the first real run fires false positives on the very machinery that dispatched it; exercise every new prose check against a real artifact of the system it ships inside before trusting its signal
 type: gotcha
-origin: 2026-08-12 adjudication-view arc (loom-code 0.77.0) — the modality check's first real input was the arc's own whole-branch verdict
+sources:
+  - resource: 2026-08-12 adjudication-view arc (loom-code 0.77.0) — the modality check's first real input was the arc's own whole-branch verdict
 ---
 
 A modality check was built to compare an English source unit against its

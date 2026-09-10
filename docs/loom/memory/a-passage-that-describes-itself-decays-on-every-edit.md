@@ -2,7 +2,8 @@
 name: a-passage-that-describes-itself-decays-on-every-edit
 description: A sentence stating a measurable fact ABOUT ITSELF or its own container — "this note shifted every line below it by N", "§5's closing sentence says X" — has no external source to open, so the cite-and-verify machinery structurally cannot reach it, and the same change set that edits the passage re-falsifies the claim. Close-out remediation rounds on one branch kept shipping a fresh instance while fixing the previous one. State the direction, never the magnitude; anchor by verbatim quote or stable heading, never by position; enumerate rather than total.
 type: gotcha
-origin: loom-code 0.39.0 close-out (`feat-plan-fact-grounding`), across its whole-branch review rounds
+sources:
+  - resource: loom-code 0.39.0 close-out (`feat-plan-fact-grounding`), across its whole-branch review rounds
 ---
 
 A claim about an external artifact is checkable: open the artifact. That is what

@@ -1,7 +1,9 @@
 ---
 name: splicing-into-a-pinned-sentence-creates-false-readings
 description: Extending an existing contract sentence in place — adding new material inside an enumeration or as indented continuation lines of a schema placeholder — creates defects that presence-pins cannot see, because the pinned substrings all still match while the JOINT reading changes; new contract material goes in its own sentence (or inside the placeholder it governs), and the guard is whole-sentence reading or mutation testing, never substring presence
-origin: 2026-08-06 progress-card roadmap arc (branch fix-plan-card-ascii-marks), round-2 whole-branch review
+type: Memory
+sources:
+  - resource: 2026-08-06 progress-card roadmap arc (branch fix-plan-card-ascii-marks), round-2 whole-branch review
 ---
 
 # Splicing into a pinned sentence creates false readings

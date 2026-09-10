@@ -2,7 +2,8 @@
 name: a-list-of-forbidden-words-is-defeated-by-the-word-outside-it
 description: A check that enumerates the words a rule forbids — runner names, disclaiming phrases, imperative verbs, marker tokens — is defeated by the first word nobody listed, and extending the list buys one round before the next word arrives; the remedy is to change what the check works on (a syntactic feature, a sentence or list-item boundary, a negation bound to its own object, or a guard that makes the unsanctioned shape unwritable), and a sweep that hunts instances by inspection reports itself clean while leaving siblings the next reviewer finds
 type: practice
-origin: goal-create arc (2026-08-27) — the same defeat recurred seven times across four files and five review rounds: an unlisted test runner (`k6`), an unlisted Japanese phrasing (会話に貼り付ける), an unlisted imperative verb (`Spin up`), an unlisted English stop word (`Halt`), an unlisted synonym (`obligates`), and twice a negation matched to a word further along the sentence; one instance was written by the very fix commit that closed the previous one
+sources:
+  - resource: goal-create arc (2026-08-27) — the same defeat recurred seven times across four files and five review rounds: an unlisted test runner (`k6`), an unlisted Japanese phrasing (会話に貼り付ける), an unlisted imperative verb (`Spin up`), an unlisted English stop word (`Halt`), an unlisted synonym (`obligates`), and twice a negation matched to a word further along the sentence; one instance was written by the very fix commit that closed the previous one
 ---
 
 Every mechanical check on that arc that named the tokens a rule forbids

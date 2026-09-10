@@ -2,7 +2,8 @@
 name: per-task-review-misses-duplicated-fallback-fix
 description: A fix at one location that shares a contract with other locations (code call-sites reading a data shape, OR a doc section's promise and its downstream enforcing check) can PASS individual per-task review while the sibling locations stay unfixed — only whole-branch cross-task-coherence review catches the gap
 type: gotcha
-origin: deep-deep-research bake-off round-2 bugfixes branch (2026-07-08)
+sources:
+  - resource: deep-deep-research bake-off round-2 bugfixes branch (2026-07-08)
 ---
 
 In `research-toolkit:deep-deep-research`, a claim dict's source-URL field

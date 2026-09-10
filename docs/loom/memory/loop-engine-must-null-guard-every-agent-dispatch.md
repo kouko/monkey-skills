@@ -2,7 +2,8 @@
 name: loop-engine-must-null-guard-every-agent-dispatch
 description: In a Workflow-driven convergence loop (goal-loop / wiki-update / principles-improve-loop), `agent()` returns null when the dispatched subagent dies on a terminal error (API overload, session/quota limit, user skip) after retries — so EVERY consumer that dereferences an agent() return (`.exitCode`/`.hash`/…) must null-guard first, or a transient infra death crashes the whole loop on `null.exitCode` instead of stopping honestly. The graceful-stop / "safe to leave unattended" guarantee is only as strong as its weakest unguarded agent() consumer.
 type: gotcha
-origin: branch fix-ratchet-wikilink-tokens (2026-07-24) — a wiki-update smoke re-run hit the Asia/Taipei session limit at round 3's compare grader; agent() returned null, the engine did `result.exitCode`, and the loop crashed ("null is not an object") instead of an honest stop. Fixed by a new INFRA_ABORT terminal + a sentinel-return `assertAgentAlive` guard at the two verdict-courier consumers (obsidian 3.20.1).
+sources:
+  - resource: branch fix-ratchet-wikilink-tokens (2026-07-24) — a wiki-update smoke re-run hit the Asia/Taipei session limit at round 3's compare grader; agent() returned null, the engine did `result.exitCode`, and the loop crashed ("null is not an object") instead of an honest stop. Fixed by a new INFRA_ABORT terminal + a sentinel-return `assertAgentAlive` guard at the two verdict-courier consumers (obsidian 3.20.1).
 ---
 
 The failure defeats the exact promise the machine exists to make: an

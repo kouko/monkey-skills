@@ -2,7 +2,8 @@
 name: a-guard-whose-marker-restates-the-artifact-can-never-fire
 description: A guard that looks for a literal marker RESTATED from the artifact it protects — a template's comment, a header line, a sentinel — silently stops matching the moment the artifact's wording drifts, and reads as coverage forever after because a never-firing check is indistinguishable from a check that keeps finding nothing; derive the marker FROM the artifact at check time instead of restating it, and pin that with a test that reads the artifact too
 type: practice
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — a checker looked for "cot-explain report template" while the shipped template said "cot-explain markdown template"; it had passed every page ever rendered
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — a checker looked for "cot-explain report template" while the shipped template said "cot-explain markdown template"; it had passed every page ever rendered
 ---
 
 A checker often guards against a marker it expects to find in the material:

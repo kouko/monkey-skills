@@ -2,7 +2,8 @@
 name: an-inherited-external-tool-fact-is-a-claim-with-a-version-attached
 description: A behavioural fact about an external tool, copied from another skill's quirks list or docs and then made load-bearing, is only true of the version it was observed on — two such facts inherited into one branch were BOTH false against the version that branch pinned, one of them enforcing a FAIL on correct content; re-probe every inherited tool fact at the moment you pin a version, and again when the pin moves
 type: practice
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — `number. space` kills mermaid, and mermaid-cli exits 0 on syntax errors; both inherited from obsidian-mermaid-visualizer, both falsified live on mermaid-cli 11.16.0
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — `number. space` kills mermaid, and mermaid-cli exits 0 on syntax errors; both inherited from obsidian-mermaid-visualizer, both falsified live on mermaid-cli 11.16.0
 ---
 
 Borrowing a hard-won quirk from a sibling skill feels like the opposite of

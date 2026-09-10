@@ -2,7 +2,8 @@
 name: run-the-push-gate-at-every-checkpoint-not-only-the-intake-gates
 description: A checkpoint that runs only the intake gates (intent / standing / contract) and never `loom_checker.py push` against HEAD reaches decision point ③ with a push gate that has never been green; on simple-loom-flow the first real run blocked on five rules, all real, and closing them cost nine review rounds, three user-run history rewrites and three blind-run addenda — run `push` at every wave-end against HEAD, and treat orchestrator-inline commits as the violation the rule says they are
 type: practice
-origin: simple-loom-flow (2026-09-03) — rounds 22–30 of the branch-end review; findings R22-*/R23-*/R24-*, CI-1, CI-2
+sources:
+  - resource: simple-loom-flow (2026-09-03) — rounds 22–30 of the branch-end review; findings R22-*/R23-*/R24-*, CI-1, CI-2
 ---
 
 The push gate is the only rule set that recomputes the whole branch

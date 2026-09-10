@@ -2,7 +2,8 @@
 name: equivalence-test-prompts-must-satisfy-target-intake-contract
 description: A behavioral-equivalence test prompt that violates the target skill's own input contract cannot arbitrate equivalence — it produced a false 3/3 not_equivalent verdict (baseline/candidate each picked different defensible readings of the invalid input); validate prompts against the skill's intake contract first, and confirm any single-run divergence with n≥2 replicates per side before believing it
 type: practice
-origin: PR (refactor/writing-plans-token-slim) — skill-refactor pilot on writing-plans; evidence: docs/skill-dogfood/2026-07-13-writing-plans-token-refactor/gate-evidence.md
+sources:
+  - resource: PR (refactor/writing-plans-token-slim) — skill-refactor pilot on writing-plans; evidence: docs/skill-dogfood/2026-07-13-writing-plans-token-refactor/gate-evidence.md
 ---
 
 During the writing-plans token-refactor equivalence gate, the P3 stress

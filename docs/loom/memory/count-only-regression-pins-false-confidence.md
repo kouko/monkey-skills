@@ -2,7 +2,8 @@
 name: count-only-regression-pins-false-confidence
 description: Regression tests that pin only element COUNTS can be coincidentally satisfied by the pre-change (broken) state — pin at least one exemplar value per collection plus a shape assertion that the known-bad form violates, and verify each parametrized case individually went RED
 type: practice
-origin: branch feat-principles-replay-loop-l1-l2 (2026-07-11) — seed3 oracle count-pin was never RED
+sources:
+  - resource: branch feat-principles-replay-loop-l1-l2 (2026-07-11) — seed3 oracle count-pin was never RED
 ---
 
 A parametrized regression test pinned per-key token COUNTS for 6

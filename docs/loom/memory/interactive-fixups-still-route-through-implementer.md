@@ -2,7 +2,8 @@
 name: interactive-fixups-still-route-through-implementer
 description: In interactive fix-up rounds outside an SDD dispatch, reviewer findings must still be routed through an implementer dispatch — the main agent fixing them by direct edit is the recorded test-skipping leak path
 type: process
-origin: PR #492 (loom-code 0.23.0; TDD-miss mining across 57 sessions, 2026-07-04)
+sources:
+  - resource: PR #492 (loom-code 0.23.0; TDD-miss mining across 57 sessions, 2026-07-04)
 ---
 
 In loom-code's subagent-driven development (SDD) workflow — where an

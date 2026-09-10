@@ -2,7 +2,8 @@
 name: a-prompt-that-may-start-with-a-dash-goes-on-stdin
 description: A prompt handed to a command-line tool as a positional argument is parsed by that tool's option parser first, so any prompt that can begin with `-` — every Markdown file with YAML frontmatter begins with `---` — must travel on stdin, and a unit test that fakes the subprocess never sees the rejection; only a real invocation against a real input does
 type: gotcha
-origin: 2026-09-04-adversary-three-way-attribution-measured — wave-end:1 blind run (2026-09-05); both readers reproduced it independently
+sources:
+  - resource: 2026-09-04-adversary-three-way-attribution-measured — wave-end:1 blind run (2026-09-05); both readers reproduced it independently
 ---
 
 The cold-read measurement script fed a contract file inline as the value

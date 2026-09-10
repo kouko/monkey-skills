@@ -2,7 +2,8 @@
 name: a-test-can-be-correct-and-still-unable-to-fail
 description: A test can call the right function, assert the genuinely correct result, and still be PROVABLY incapable of failing — when its inputs land where the mutation is arithmetically inert; two of three table-grid tests exercised the mutated line and asserted correct coordinates while `c + dc` and `c - dc` could not differ on the shapes chosen
 type: practice
-origin: 2026-07-27 mutation-testing arc (PR #623) — found by mutation, invisible to review-by-reading
+sources:
+  - resource: 2026-07-27 mutation-testing arc (PR #623) — found by mutation, invisible to review-by-reading
 ---
 
 `_anchor_cells` reserves a cell's span with `occupied.add((r + dr, c + dc))`.

@@ -237,3 +237,125 @@ use, which keeps the always-loaded surface small.
 Anthropic progressive-disclosure convention); spec.md REQ-8 (the
 progressive-disclosure precedent already established for `index.md`);
 dispatch packet "What to build" steps 2–4.
+
+## D-10 — README's authored `description`
+
+**Decision.** `migrate_legacy_store.py`'s `README_DESCRIPTION` constant:
+"This store's charter: one distilled loom-family lesson per file, the test
+for whether a fact belongs here rather than in an open intent, a commit
+trailer, or a one-off evidence record, and how to record, recall, and
+reconcile an entry; read before adding, editing, or retiring any concept in
+this store."
+
+**Candidates.** (a) A one-line paraphrase of the README's title only
+("Charter for the loom-* practice-memory store"); (b) a standalone durable
+relevance rule that states what an agent gains by opening the file, mirroring
+REQ-10's contract for every other concept's `description`.
+
+**Why (b).** REQ-10 requires `description` to be "a standalone durable
+relevance rule" for every concept, the guide included; (a) restates a title,
+which fails REQ-14's classification test the way a bare label would for any
+other concept. The chosen text names the file's actual jurisdiction (when a
+fact belongs here vs. an intent/trailer/evidence record) and its four
+operations, both durable properties of the store's charter that do not
+change when tooling around it changes.
+
+**Sources.** spec.md REQ-10, REQ-18; `docs/loom/memory/README.md` §Charter —
+jurisdiction, §When to record (source material paraphrased, not quoted).
+
+## D-11 — `sources[].resource` shape for a derived (no-origin) commit
+
+**Decision.** When legacy `origin` is absent, the added source is
+`{resource: "introducing commit <full 40-hex sha>"}` — the same shape for
+both the one lesson (`the-resolved-test-command-must-cover-every-suite-root.md`)
+and the `README.md` guide concept, both derived via
+`git log --diff-filter=A --format=%H -- <path>`, taking the OLDEST line
+returned (a file added exactly once has exactly one line; the oldest is
+taken defensively in case history ever shows more than one Add event for
+the same path).
+
+**Candidates.** (a) A bare 40-hex string with no label, matching only the
+positive case's `origin` strings (which are free-form prose, e.g. "branch
+feat-x, session Y"); (b) a labelled `"introducing commit <sha>"` string.
+
+**Why (b).** A bare hex string reads as ambiguous provenance (is drift a
+commit? a build id?) to a later reader with no other clue, and REQ-18 asks
+specifically for a source "describing" the introducing commit, not merely
+naming it. The label is stable, greppable, and distinguishes a derived
+source from a verbatim-preserved `origin` string on sight.
+
+**Sources.** spec.md REQ-18 ("add a source describing the full introducing
+commit"); verified fact that exactly 1 of 293 lessons plus `README.md` need
+this path.
+
+## D-12 — No generic frontmatter quoting for the migration's own writer
+
+**Decision.** `migrate_legacy_store.py` renders frontmatter with a small
+local `render_frontmatter()` that never wraps a scalar value in quotes,
+rather than reusing `loom_memory.dump_frontmatter()`.
+
+**Candidates.** (a) `lm.dump_frontmatter()` — already exists, already
+round-trip-tested for the general case; (b) a migration-local renderer that
+never quotes.
+
+**Why (b).** `dump_frontmatter`'s `_quote_scalar` wraps any scalar
+containing a colon in `"..."`. The real corpus has 21 `description` values
+that contain BOTH an internal colon AND an internal `"` character, 4 of
+which END in a literal `"`; wrapping those in an added pair of quotes
+produces a line whose OUTERMOST quote-stripping on re-parse leaves a stray
+trailing `"` inside the recovered value — a real, not hypothetical,
+corruption risk measured against this exact corpus before writing the
+renderer (see the module's own docstring). Every value migrated here was
+already stored on disk unquoted, on one physical line; `loom_memory.
+parse_frontmatter`'s reader only needs the line's FIRST colon to be the key
+delimiter, which always holds since no key name here contains a colon —
+so an unquoted renderer is both simpler and provably safe against this
+corpus, verified directly by `test_migrate_handles_description_with_colon_
+and_trailing_quote` and by the real migration's own
+`loom_memory.py validate` passing clean.
+
+**Sources.** Corpus scan (21 colon+quote descriptions, 4 trailing-quote
+descriptions, 0 leading-quote descriptions) performed before implementation;
+`loom_memory.py`'s `_parse_mapping` first-colon-partition rule.
+
+## D-13 — README's charter prose stays byte-identical; the legacy-tool
+references inside it are a documented residual, not silently left broken
+
+**Decision.** `migrate_legacy_store.py` changes README.md's prose ONLY by
+removing the `## Index` heading and its 293 hand-maintained entry lines
+(replaced by generated `index.md`, per the spec's "Charter location"
+decision). Every other sentence, including the §Format and §Index
+subsections that still describe `type: practice | gotcha | process`,
+`origin:`, and `python3 scripts/check_loom_memory_integrity.py [--write|
+--check]`, is left byte-identical to the pre-migration text — those
+subsections now describe a superseded authoring format and a deleted
+script. This staleness is a known, reported residual (see the task report's
+"references left" section), not fixed in this task.
+
+**Candidates.** (a) Rewrite §Format/§Index to describe the OKF profile and
+`loom_memory.py` as part of migration; (b) leave the charter body
+byte-identical except for removing the Index section, and report the
+staleness.
+
+**Why (b).** The task's own "What to build" instructions state the
+migration "gives README.md complete concept metadata... while its charter
+prose stays byte-identical" — a scope boundary distinct from the general
+"update every reference to the deleted script" instruction, which this
+decision reads as covering LIVE operative references outside the store
+(fixed: `AGENTS.md`; and the now-retired `.claude/hooks/
+check-memory-store-integrity.sh` + its test, which literally shelled out to
+the deleted script and is retired in the same commit — see the report's
+`files_outside_task_list`). Rewriting README's own multi-paragraph §Format
+contract is a content redesign, not a reference substitution, and doing it
+inside the byte-preserving migration step would make the Git-based
+byte-identity proof for the guide concept (REQ-18's own acceptance
+evidence) unable to assert anything meaningful. `loom-code/scripts/
+check_doc_citations.py`'s own three-bucket design (resolved / finding /
+UNCHECKED) means a backticked citation to the now-deleted script inside
+README.md becomes UNCHECKED, not a FINDING, so this residual does not
+redden CI.
+
+**Sources.** Dispatch packet "What to build" step ("charter prose stays
+byte-identical"); spec.md REQ-18, "Charter location" design decision;
+`loom-code/scripts/check_doc_citations.py` docstring (round-2 fallback,
+three-bucket design).

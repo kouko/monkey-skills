@@ -2,7 +2,8 @@
 name: a-red-anchor-can-go-stale-from-an-earlier-tasks-own-text
 description: A later task's RED grep anchor can be made prematurely green by an EARLIER task's own shipped text (a placeholder, an example, a docstring) that happens to contain the anchor string — the plan's acceptance greps are themselves a seam with sibling tasks' prose; pick anchors that only the later task's own edit can introduce, and have the per-task reviewer check sibling-task REDs against the artifact just shipped
 type: gotcha
-origin: seam-contracts arc (2026-08-25) — T1's Seam grammar placeholder `<name of the executed cross-seam probe ...>` contained the substring "cross-seam probe", which was T2's RED anchor; T1's spec-reviewer caught the stale RED before T2 dispatched, and the plan was amended to a `seam obligates` anchor that only T2's obligation paragraph introduces
+sources:
+  - resource: seam-contracts arc (2026-08-25) — T1's Seam grammar placeholder `<name of the executed cross-seam probe ...>` contained the substring "cross-seam probe", which was T2's RED anchor; T1's spec-reviewer caught the stale RED before T2 dispatched, and the plan was amended to a `seam obligates` anchor that only T2's obligation paragraph introduces
 ---
 
 Task 2's RED was `grep -q 'cross-seam probe'` exits 1. Task 1 — implementing

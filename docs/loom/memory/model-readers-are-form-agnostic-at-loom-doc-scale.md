@@ -2,7 +2,8 @@
 name: model-readers-are-form-agnostic-at-loom-doc-scale
 description: At the scale of a loom brief section (5 options × 5 axes, ~4.6 KB document, 10 questions incl. cross-row ordering and an absent-fact trap), a markdown table and a numbered list carrying byte-identical facts produce identical model-reader comprehension — 12 fresh readers (haiku ×8, sonnet ×4) scored 120/120 on both forms — so a container-routing rule's beneficiary at this scale is the human reader; argue it on human readability, not on model comprehension
 type: practice
-origin: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — docs/loom/dogfood/2026-08-17-artifact-table-routing-dogfood.md §Addendum
+sources:
+  - resource: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — docs/loom/dogfood/2026-08-17-artifact-table-routing-dogfood.md §Addendum
 ---
 
 Two variants of one brief, differing ONLY in `## Alternatives Considered`

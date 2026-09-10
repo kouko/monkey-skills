@@ -2,7 +2,8 @@
 name: a-composed-cli-hands-back-only-the-fields-it-dispatches
 description: A routine that composes another tool's CLI can only act on the fields that tool's own dispatch payload emits — writing a step against a field the payload never carries (because the field exists in the human-facing source of record, not in the machine handoff) produces a document that reads correctly and cannot be executed, and when that step is a fail-closed safety guard the improvised input makes it pass instead of refuse
 type: gotcha
-origin: 2026-08-07 whole-branch review of feat/u1-nightly-phase2-loop — ROUTINE.md Step 4, both docs-reviewer arms independently
+sources:
+  - resource: 2026-08-07 whole-branch review of feat/u1-nightly-phase2-loop — ROUTINE.md Step 4, both docs-reviewer arms independently
 ---
 
 The Phase 2 execution loop's brief chose to COMPOSE

@@ -2,7 +2,8 @@
 name: a-dispatch-packets-own-wording-becomes-the-artifacts-defect
 description: A worker reproduces the dispatch packet's wording faithfully, so any defect in that wording — a completion-tense verb for future work that has not yet run, a mis-attributed citation, an instruction that generalizes over items which are not alike — lands in the durable artifact as the worker's output and is then defended by the review round as if the worker had chosen it; audit the packet's own claims before dispatch, because the packet is the artifact's first draft
 type: gotcha
-origin: PR #693 (feat/open-question-dispatch-gate, merged 2026-08-14) — five occurrences in one arc; recorded 2026-08-18 in the arc's residue pass
+sources:
+  - resource: PR #693 (feat/open-question-dispatch-gate, merged 2026-08-14) — five occurrences in one arc; recorded 2026-08-18 in the arc's residue pass
 ---
 
 Dispatch packets are written fast, in the orchestrator's voice, about

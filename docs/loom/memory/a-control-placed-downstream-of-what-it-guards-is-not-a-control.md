@@ -2,7 +2,8 @@
 name: a-control-placed-downstream-of-what-it-guards-is-not-a-control
 description: A sanitizer, gate, or verifier that runs AFTER the step it is supposed to constrain protects nothing, and the code comment naming it as the mitigation is what stops anyone rechecking — mermaid's securityLevel cannot sanitize markup the browser already parsed, and a gate that judges file A while fingerprinting file B records a verdict about neither; the tell is that the comment argues the threat correctly and then sites the defence one step too late
 type: practice
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — two independent code reviewers found the same shape twice in one branch, both 🔴, in a skill written specifically to catch downstream-staleness
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — two independent code reviewers found the same shape twice in one branch, both 🔴, in a skill written specifically to catch downstream-staleness
 ---
 
 Both defects on that branch had the same skeleton: a real threat, correctly

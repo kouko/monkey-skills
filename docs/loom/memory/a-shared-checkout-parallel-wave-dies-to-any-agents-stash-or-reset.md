@@ -2,7 +2,8 @@
 name: a-shared-checkout-parallel-wave-dies-to-any-agents-stash-or-reset
 description: When several implementers run concurrently in ONE git checkout, any agent — a reviewer as much as an implementer — that runs `git stash`, `git reset --hard`, or `git checkout -- <path>` wipes every sibling's uncommitted work; a spec-reviewer's "harmless" stash/pop mid-wave erased two implementers' in-progress files, so the no-stash/no-reset trap-guard must ride EVERY packet in the wave (reviewers included), or the wave runs in per-task worktrees
 type: gotcha
-origin: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — wave 1, T3 spec-reviewer stash vs T2/T6 implementers
+sources:
+  - resource: branch loom-doc-container (loom-code 0.85.0, 2026-08-17) — wave 1, T3 spec-reviewer stash vs T2/T6 implementers
 ---
 
 Five implementers were dispatched into the same checkout. A spec-reviewer
