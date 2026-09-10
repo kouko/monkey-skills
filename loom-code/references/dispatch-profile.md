@@ -72,6 +72,7 @@ next event. A pre-execution rejection keeps the earlier completed count.
 
 ## Task classification and initial route
 
+<!-- gate: dispatch-profile.relative-routing -->
 Classification precedence is `mechanical > complex > ordinary`:
 
 1. `mechanical` requires an exact transformation, bounded targets, and a

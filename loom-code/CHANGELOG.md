@@ -2,6 +2,9 @@
 
 ## [2.1.0] — 2026-09-10 — main-relative subagent dispatch
 
+budget-exception: dispatch-profile.relative-routing — registers the one shared
+dispatch-time policy gate instead of duplicating routing mechanisms per station
+
 - Resolve one shared, host-neutral model-and-effort profile before every Build
   and Review dispatch, using task evidence instead of role or round labels.
 - Preserve five portable effort tiers, evidence-gate expensive escalation, and

@@ -8,6 +8,14 @@ from pathlib import Path
 
 PLUGIN = Path(__file__).resolve().parents[1]
 PROFILE = PLUGIN / "references" / "dispatch-profile.md"
+MECHANISMS = PLUGIN.parent / "docs" / "loom" / "evidence" / "mechanisms.yaml"
+PILOT_REPORT = (
+    PLUGIN.parent
+    / "docs"
+    / "skill-dogfood"
+    / "2026-09-09-model-effort-cost-pilot"
+    / "report.md"
+)
 STATIONS = (
     PLUGIN / "skills" / "build" / "SKILL.md",
     PLUGIN / "skills" / "review" / "SKILL.md",
@@ -134,3 +142,26 @@ def test_packaged_station_reference_resolves_after_isolated_install(tmp_path: Pa
         target = (station.parent / "../../references/dispatch-profile.md").resolve()
         assert target.is_relative_to(isolated.resolve())
         assert target.is_file()
+
+
+def test_shared_routing_gate_is_registered_once_with_executable_eval() -> None:
+    gate_id = "dispatch-profile.relative-routing"
+    marker = f"<!-- gate: {gate_id} -->"
+    profile = _contract()
+    mechanisms = MECHANISMS.read_text(encoding="utf-8")
+
+    assert profile.count(marker) == 1
+    assert f'- id: "{gate_id}"' in mechanisms
+    assert (
+        "eval: loom-code/scripts/test_dispatch_profile_contract.py::"
+        "test_class_relative_route_and_insufficient_evidence_boundary"
+    ) in mechanisms
+
+
+def test_cost_pilot_sparse_ladder_is_historical_not_normative_routing() -> None:
+    report = _flat(PILOT_REPORT.read_text(encoding="utf-8"))
+
+    assert "historical experiment design" in report
+    assert "final routing" in report
+    assert "`standard/medium` → `frontier/medium`" in report
+    assert "comparison and calibration evidence" in report

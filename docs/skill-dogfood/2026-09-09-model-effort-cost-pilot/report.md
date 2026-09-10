@@ -9,9 +9,9 @@ than `standard/medium`. It cost 80.1% more on the two-run mean and 34.1% more
 on the cache-warm replicate. It was 30.9% faster on mean wall time and found
 substantially more of the nine previously established required changes.
 
-This supports keeping `frontier/low` as a selective quality upgrade for
-complex work. It does not support using that profile as a general cost-saving
-substitute for `standard/medium`.
+This supports retaining `frontier/low` as comparison and calibration evidence
+for complex work. It does not support using that profile as a general
+cost-saving substitute for `standard/medium`, nor does it define final routing.
 
 ## Frozen method
 
@@ -190,7 +190,8 @@ unsupported or policy-opposed recommendations, notably partial override
 fallback and treating the intentional initial-high clamp as a reason to permit
 high. More text and more reasoning tokens were not a quality proxy.
 
-The supported ladder is therefore sparse rather than a full matrix:
+The following sparse ladder records the historical experiment design used to
+choose useful comparison cells; it is not the final routing policy:
 
 ```text
 standard/medium --complex capability upgrade--> frontier/low
@@ -200,10 +201,16 @@ frontier/medium --strict high trigger----------> frontier/high
 
 `standard/high` is dominated for this task by `frontier/low`: the latter had
 higher oracle recall and much lower latency, while the cost-equivalent gap was
-far smaller than the quality gap. `frontier/medium` remains a fallback for an
-observed reasoning-depth failure, not an initial complex-task default. This
+far smaller than the quality gap. In this historical experiment design,
+`frontier/medium` was reserved for an observed reasoning-depth failure. This
 stage supplies no reason to add `standard/high` or `frontier/high` to the
-initial-routing menu.
+initial-routing menu; the final policy below separately governs initial routes.
+
+The final routing contract supersedes that experimental ladder: a complex
+initial route preserves effort, so `standard/medium` → `frontier/medium`.
+`frontier/low` remains comparison and calibration evidence, and is also the
+effort-preserving result when the observable main profile is `standard/low`;
+it is not an automatic effort downgrade from `standard/medium`.
 
 Stage 1 still has only one corpus and two samples per cell. The result is strong
 enough to avoid eager high-effort routing, not to claim that high never helps.

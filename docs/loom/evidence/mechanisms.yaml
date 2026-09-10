@@ -281,3 +281,6 @@ mechanisms:
   - id: "goal-create.session-activation"
     class: prose-gate
     eval: loom-workflow/skills/goal-create/scripts/test_skill_md.py::test_session_activation_rules_are_one_registered_gate
+  - id: "dispatch-profile.relative-routing"
+    class: prose-gate
+    eval: loom-code/scripts/test_dispatch_profile_contract.py::test_class_relative_route_and_insufficient_evidence_boundary
