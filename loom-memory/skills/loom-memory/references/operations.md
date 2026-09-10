@@ -9,11 +9,12 @@ the compact steps there are not enough, not on every invocation.
    and move on; never treat a missing store as an error to fix.
 2. If the store exists but has concept files with no `index.md`, that is
    structural corruption, not a normal miss. Stop, name it explicitly, and
-   direct the user to `loom-memory/scripts/loom_memory.py validate
-   <store>` or, when the store is the pre-OKF legacy shape, the explicit
-   migration operation. Do not fall back to scanning concept files
-   directly — that defeats the bounded-load property the index exists
-   for.
+   direct the user to `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py
+   validate <store>` (the `scripts/loom_memory.py` file inside this
+   plugin's own directory) or, when the store is the pre-OKF legacy
+   shape, the explicit migration operation. Do not fall back to scanning
+   concept files directly — that defeats the bounded-load property the
+   index exists for.
 3. Read `index.md`. Its grouped, one-line-per-entry shape is enough to
    decide which entries might match without opening anything else.
 4. Open only the entries whose description plausibly matches the current
@@ -48,9 +49,10 @@ the compact steps there are not enough, not on every invocation.
    `resource`.
 4. Write the body: `Trigger`, `Correct path`, `Why`, and `Limits` only
    for a real non-applicability boundary — see `references/okf-profile.md`.
-5. Run `loom-memory/scripts/loom_memory.py regenerate-index <store>` then
-   `validate <store>`. Do not consider Record complete until validation
-   is clean.
+5. Run `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py regenerate-index
+   <store>` then `validate <store>` (that script is `scripts/loom_memory.py`
+   inside this plugin's own directory). Do not consider Record complete
+   until validation is clean.
 
 ## Reconcile
 

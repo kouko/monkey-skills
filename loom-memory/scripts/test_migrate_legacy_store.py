@@ -134,6 +134,7 @@ def test_lesson_bodies_and_descriptions_survive_migration_byte_for_byte():
     assert lesson_paths, "baseline must be non-empty or this proof is vacuous"
 
     checked = 0
+    origin_less_count = 0
     for rel in lesson_paths:
         pre_text = _git_show(rel)
         pre_fm_lines, pre_body = mls.split_legacy(pre_text)
@@ -147,9 +148,22 @@ def test_lesson_bodies_and_descriptions_survive_migration_byte_for_byte():
 
         assert post_body == pre_body, f"{rel}: body drifted"
         assert post_fm["description"] == pre_fm["description"], f"{rel}: description drifted"
+
+        sources = post_fm["sources"]
+        assert isinstance(sources, list) and sources, f"{rel}: sources missing post-migration"
+        resource = sources[0]["resource"]
+        if "origin" in pre_fm:
+            assert resource == pre_fm["origin"], f"{rel}: origin fingerprint drifted"
+        else:
+            origin_less_count += 1
+            assert resource.startswith("introducing commit "), (
+                f"{rel}: origin-less lesson must derive its resource from the introducing "
+                f"commit, got {resource!r}"
+            )
         checked += 1
 
     assert checked == 293
+    assert origin_less_count == 1
 
 
 def test_guide_concept_metadata_and_charter_prose():

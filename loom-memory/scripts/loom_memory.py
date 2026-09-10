@@ -149,7 +149,9 @@ def parse_frontmatter(text: str) -> dict | None:
     if not lines or lines[0].strip() != "---":
         return None
     try:
-        end = next(i for i in range(1, len(lines)) if lines[i].strip() == "---")
+        end = next(
+            i for i in range(1, len(lines)) if _indent_of(lines[i]) == 0 and lines[i].strip() == "---"
+        )
     except StopIteration:
         return None
     return _parse_mapping(lines[1:end], 0)
@@ -294,6 +296,7 @@ def _validate_reserved_index(index_path: Path) -> list[Violation]:
 def _check_index_targets(store: Path, index_path: Path) -> list[Violation]:
     text = index_path.read_text(encoding="utf-8")
     violations: list[Violation] = []
+    store_resolved = store.resolve()
     pos = 0
     while True:
         start = text.find(LINK_RE_START, pos)
@@ -306,7 +309,17 @@ def _check_index_targets(store: Path, index_path: Path) -> list[Violation]:
             pos = start + 1
             continue
         href = text[open_paren + 1 : close_paren]
-        if not (store / href).exists():
+        resolved = (store / href).resolve()
+        try:
+            resolved.relative_to(store_resolved)
+            escapes_store = False
+        except ValueError:
+            escapes_store = True
+        if escapes_store:
+            violations.append(
+                Violation("broken-target", href, f"index.md links outside the store {href!r}")
+            )
+        elif not resolved.exists():
             violations.append(Violation("broken-target", href, f"index.md links to a missing file {href!r}"))
         pos = close_paren + 1
     return violations
@@ -365,34 +378,32 @@ class IndexItem:
 def _collect_index_items_strict(store: Path) -> list[IndexItem]:
     """Every concept file's metadata, or a `LoomMemoryError` naming every
     offender — never a stem-fallback or a blank description (mirrors the
-    legacy `build_entries` "raise, never launder" contract)."""
+    legacy `build_entries` "raise, never launder" contract).
+
+    Reuses `_validate_concept_file`'s frontmatter/name/description/type
+    checks rather than restating them (a fifth required field would
+    otherwise drift between the two implementations) — but a missing
+    `sources` entry alone never blocks regeneration: it is a Loom-profile
+    violation `validate` reports on its own, not something the index needs
+    to render name/description/type.
+    """
     problems: list[Violation] = []
     items: list[IndexItem] = []
     for path in iter_concept_files(store):
-        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        if frontmatter is None:
-            problems.append(Violation("frontmatter", path.name, "no parseable frontmatter; refusing to regenerate"))
-            continue
-        name = frontmatter.get("name")
-        stem = path.stem
-        if not isinstance(name, str) or not name.strip():
-            problems.append(Violation("name", path.name, "missing 'name'; refusing to regenerate"))
-            continue
-        if name != stem:
-            problems.append(
-                Violation("name", path.name, f"name {name!r} != filename stem {stem!r}; refusing to regenerate")
+        blocking = [v for v in _validate_concept_file(path) if v.invariant != "sources"]
+        if blocking:
+            problems.extend(
+                Violation(v.invariant, v.file, f"{v.detail}; refusing to regenerate") for v in blocking
             )
             continue
-        description = frontmatter.get("description")
-        if not isinstance(description, str) or not description.strip():
-            problems.append(Violation("description", path.name, "missing 'description'; refusing to regenerate"))
-            continue
-        type_value = frontmatter.get("type")
-        if not isinstance(type_value, str) or not type_value.strip():
-            problems.append(Violation("type", path.name, "missing 'type'; refusing to regenerate"))
-            continue
+        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
         items.append(
-            IndexItem(name=name.strip(), file=path.name, description=description.strip(), type=type_value.strip())
+            IndexItem(
+                name=frontmatter["name"].strip(),
+                file=path.name,
+                description=frontmatter["description"].strip(),
+                type=frontmatter["type"].strip(),
+            )
         )
     if problems:
         raise LoomMemoryError(problems)

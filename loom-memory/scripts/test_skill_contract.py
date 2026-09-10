@@ -170,16 +170,38 @@ def test_git_memory_boundary_is_stated() -> None:
 
 
 def test_no_host_specific_path_or_private_api() -> None:
+    """REQ-21 forbids a HOST-SPECIFIC path or private API — not the portable
+    `${CLAUDE_PLUGIN_ROOT}` load-time textual substitution every sibling
+    skill uses (e.g. `loom-code/skills/write-plan/SKILL.md`). That token
+    is permitted here precisely because it is paired with a plain-language
+    restatement (see `test_no_bare_repo_root_relative_script_path` below,
+    which is what actually stops the non-portable form from coming back)."""
     text = _all_skill_text()
     forbidden_substrings = [
-        "${CLAUDE_PLUGIN_ROOT}",
         ".claude-plugin",
         ".codex-plugin",
         "/Users/",
-        "CLAUDE_PLUGIN_ROOT",
     ]
     for token in forbidden_substrings:
         assert token not in text, f"skill text must not depend on host-specific token {token!r}"
+    assert not re.search(r"/home/[A-Za-z0-9_.-]+", text), (
+        "skill text must not depend on an absolute home-directory path"
+    )
+
+
+def test_no_bare_repo_root_relative_script_path() -> None:
+    """A `loom-memory/scripts/...` path resolves only relative to THIS
+    repository's root — a project that installs the plugin (per
+    `loom-memory/README.md`'s documented layout) has no `loom-memory/`
+    directory at its root, so that path cannot resolve there. The only
+    portable form is `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py` (or its
+    plain-language restatement); a bare repo-root-relative path must never
+    reappear in the shipped skill text."""
+    text = _all_skill_text()
+    for line in text.splitlines():
+        assert "loom-memory/scripts/" not in line, (
+            f"bare repo-root-relative script path resurfaced in skill text: {line!r}"
+        )
 
 
 # ---------------------------------------------------------------------------

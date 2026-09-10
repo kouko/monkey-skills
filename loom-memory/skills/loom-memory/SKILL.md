@@ -11,8 +11,9 @@ repository memory store: a directory of Markdown concept files plus a
 generated `index.md`, holding durable repository lessons that outlive any
 single change. It exposes four operations — **Recall**, **Record**,
 **Reconcile**, **Retire** — and nothing else. Validation and index
-generation are implemented in `loom-memory/scripts/loom_memory.py`; this
-skill is the only place that decides *when* and *how* to call them.
+generation are implemented in `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py`
+(the `scripts/loom_memory.py` file inside this plugin's own directory);
+this skill is the only place that decides *when* and *how* to call them.
 
 This skill runs identically wherever agent skills and repository file
 access are available. Nothing in this file or in the store schema depends
@@ -65,9 +66,10 @@ experience is needed for the task at hand.
    error. Report it plainly and continue the task.
 5. A store with concept files but no `index.md` is structural corruption,
    not an empty result. Fail this recall explicitly and point the user at
-   `loom-memory/scripts/loom_memory.py validate` or the explicit migration
-   operation — never read the concept files directly to work around a
-   missing index.
+   `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py validate` (the
+   `scripts/loom_memory.py` file inside this plugin's own directory) or
+   the explicit migration operation — never read the concept files
+   directly to work around a missing index.
 
 ### Record
 
@@ -88,8 +90,9 @@ keeping past this change.
    only when a real non-applicability boundary exists — see
    `references/okf-profile.md`.
 4. Regenerate and validate the index with
-   `loom-memory/scripts/loom_memory.py regenerate-index <store>` and
-   `validate <store>`.
+   `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py regenerate-index <store>`
+   and `validate <store>` (that script is `scripts/loom_memory.py` inside
+   this plugin's own directory).
 
 ### Reconcile
 
@@ -140,7 +143,8 @@ start, Recall, or any other station.
 - `references/operations.md` — the full step-by-step procedure behind each
   operation above, including the Record classification filter and the
   Reconcile merge rule in detail.
-- `loom-memory/scripts/loom_memory.py` — `validate <store>` and
+- `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py` (the `scripts/loom_memory.py`
+  file inside this plugin's own directory) — `validate <store>` and
   `regenerate-index <store>`.
 - `loom-memory/templates/memory-store/` — the starting shape for a new
   store.

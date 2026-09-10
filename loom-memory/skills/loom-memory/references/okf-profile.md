@@ -2,13 +2,18 @@
 
 This is the compatibility surface `loom-memory` pins from Open Knowledge
 Format v0.2's generic bundle rules, implemented in full in
-`loom-memory/scripts/loom_memory.py`. It is not a restatement of the
+`${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py` (the `scripts/loom_memory.py`
+file inside this plugin's own directory). It is not a restatement of the
 upstream specification — only the six clauses this profile actually
 depends on, frozen at a fixed point so a later upstream edit has no effect
 until a separate change adopts it:
 
 1. Every non-reserved Markdown document in the store carries parseable
-   YAML-ish frontmatter.
+   YAML-ish frontmatter. The store is flat: a concept file lives directly
+   under the store's root directory, never in a nested subdirectory — a
+   nested `.md` file is out of this profile's scope entirely (the
+   validator globs `*.md` non-recursively, matching this repository's own
+   one-fact-per-file charter for the store).
 2. Each such frontmatter has a non-empty `type`.
 3. A present reserved file (`index.md` or `log.md`) follows its reserved
    structure.

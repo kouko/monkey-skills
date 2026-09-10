@@ -78,6 +78,7 @@ _SCOPE_DIRS: tuple[tuple[str, bool], ...] = (
     ("loom-code/contract/templates", False),
     ("loom-code/contract", False),
     ("loom-workflow/skills", True),
+    ("loom-memory/skills", True),
 )
 
 # One backtick-delimited span, single line (every real citation in this

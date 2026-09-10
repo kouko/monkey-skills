@@ -624,3 +624,51 @@ D-15's "found but left alone" RED
 (`test_memory_step_store_integrity_check_exits_zero`) was already resolved
 by the later `6780d70dd` (W3-02b) commit — confirmed here by running it:
 it now reports 1 skipped with a named reason, not RED.
+
+## D-17 — R2-fixes F1: the exact rule that closes a frontmatter block
+
+**Decision.** `parse_frontmatter`'s closing-delimiter scan now requires
+BOTH conditions on a candidate line: `_indent_of(line) == 0` (column 0,
+no leading whitespace) AND `line.strip() == "---"` (the line's only
+content, once trailing whitespace/CRLF remnants are stripped, is three
+dashes). A line that is `---` but indented under a nested key (e.g.
+`notes:` opening a block whose first line happens to be `  ---`) no
+longer closes the frontmatter — only an unindented `---` does, matching
+how `_parse_mapping`/`_parse_sequence` already reason about indentation
+for everything else in this parser.
+
+**Why not `lines[i] == "---"` (exact-equality, no `.strip()`).**
+Considered and rejected: `splitlines()`/`read_text`'s universal-newline
+translation should already remove a trailing `\r`, but the module has no
+guarantee against a stray trailing space on an otherwise-bare `---` line,
+and the boundary/abuse probes in this same suite deliberately exercise
+CRLF and BOM inputs. Requiring `_indent_of(line) == 0` is the load-bearing
+half of the fix (indentation-blindness was the actual defect); keeping
+`.strip() == "---"` on top costs nothing and avoids a needless new
+failure mode for trailing whitespace.
+
+**Verified no behavior change on the real store.** Compared
+`parse_frontmatter` output (before vs. after this fix) over every one of
+the 294 files in `docs/loom/memory/` (293 lessons + `README.md`) — zero
+mismatches. The real store contains no line that is a bare, indented,
+literal `---`, so this is a pure defect fix with no migration implied.
+
+## D-18 — R2-fixes F4: narrowed forbidden-list + the assertion that replaces it
+
+**Decision.** `test_no_host_specific_path_or_private_api` no longer
+forbids `${CLAUDE_PLUGIN_ROOT}` or the bare token `CLAUDE_PLUGIN_ROOT` —
+REQ-21 bans a path that only resolves on one specific host, and
+`${CLAUDE_PLUGIN_ROOT}` is the opposite: the one form Claude Code
+substitutes correctly on every host that runs it, and every sibling skill
+already uses it this way. The narrowed forbidden list keeps only
+genuinely host-specific tokens: `.claude-plugin`, `.codex-plugin`,
+`/Users/`, plus a new regex check for an absolute `/home/<user>` path.
+
+**The assertion that replaces the removed protection.**
+`test_no_bare_repo_root_relative_script_path` (new) scans every line of
+`_all_skill_text()` and fails if any line contains the literal substring
+`loom-memory/scripts/` — the repo-root-relative form that only resolves
+inside this authoring repository (F3's actual defect) and is exactly what
+F4's old forbidden-list entry was structurally incapable of catching
+(it forbade the *fix*, not the *defect*). This is the test that would now
+catch F3 recurring.

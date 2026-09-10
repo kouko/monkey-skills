@@ -183,7 +183,7 @@ jobs:
         run: |
           set -euo pipefail
           git ls-files '*.md' \
-            | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)' \
+            | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|memory|workflow)/(skills|agents|references|contract)/)' \
             | xargs python3 loom-code/scripts/check_doc_citations.py
 
       - name: Verify skill cross-references resolve
