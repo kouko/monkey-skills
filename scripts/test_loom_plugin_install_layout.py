@@ -41,10 +41,13 @@ MANDATORY_DEPENDENCY_KEYS = {
 # loom 1.0 merged proposal-critique + complexity-critique into `critique` and
 # deleted brief-before-asking (its judgement-fork definition moved into
 # loom-code's one-way-door action).
+# `loom-memory` joined this bundle when the independent `loom-memory` plugin
+# was retired into loom-workflow (2026-09-11) — 11 skills, was 10.
 REQUIRED_LOOM_WORKFLOW_SKILLS = {
     "critique",
     "decision-map",
     "git-memory",
+    "loom-memory",
 }
 
 # loom-design 1.0's whole skill surface: two stations and two tools.
@@ -539,25 +542,29 @@ def test_isolated_loom_workflow_bundle_contains_required_skills_and_executes(
     assert verified.returncode == 0, verified.stderr
 
 
-def test_memory_plugin_installs_alone(tmp_path: Path) -> None:
-    """loom-memory copies into a clean isolated install root standalone.
-
-    Its manifests must declare none of the mandatory-dependency keys and no
-    `requires-contract` — loom-memory does not require loom-code's contract
-    package, unlike loom-design.
+def test_workflow_plugin_installs_alone_with_no_mandatory_memory_dependency(
+    tmp_path: Path,
+) -> None:
+    """W3-01: replaces `test_memory_plugin_installs_alone`. `loom-memory` no
+    longer installs on its own — it is a skill folder inside `loom-workflow`
+    now — so the property this test protects becomes `loom-workflow` itself:
+    it copies into a clean isolated install root standalone (no loom-code or
+    loom-design sibling required), and its manifest declares none of the
+    mandatory-dependency keys and no `requires-contract` — loom-workflow does
+    not require loom-code's contract package, unlike loom-design.
     """
-    memory_root = _install_plugin(
-        "loom-memory", tmp_path / "unrelated memory cache's root"
+    workflow_root = _install_plugin(
+        "loom-workflow", tmp_path / "unrelated workflow cache's root"
     )
-    assert not (memory_root.parent / "loom-code").exists()
-    assert not (memory_root.parent / "loom-design").exists()
+    assert not (workflow_root.parent / "loom-code").exists()
+    assert not (workflow_root.parent / "loom-design").exists()
 
-    manifest = _manifest(memory_root)
+    manifest = _manifest(workflow_root)
     dependency_text = _mandatory_dependency_text(manifest)
     assert dependency_text == "{}", dependency_text
     assert "requires-contract" not in manifest
 
-    assert find_boundary_violations(memory_root) == []
+    assert find_boundary_violations(workflow_root) == []
 
 
 def test_code_design_manifests_have_no_memory_dependency(tmp_path: Path) -> None:
@@ -584,12 +591,13 @@ def test_code_design_manifests_have_no_memory_dependency(tmp_path: Path) -> None
 
 # --- W4-01: the complete optional integration (REQ-3, REQ-22) --------------
 #
-# The tests above prove loom-memory installs alone and declares no mandatory
-# dependency. What follows proves the two-way property the whole change
-# exists for: loom-memory validates a real store using ONLY its own copied
-# files (no repo-root path, no sibling plugin path), and loom-code /
-# loom-design genuinely keep working — not just "declare no dependency" —
-# with no loom-memory sibling installed at all.
+# The tests above prove loom-workflow installs alone and declares no
+# mandatory dependency. What follows proves the two-way property the whole
+# change exists for: loom-workflow's relocated loom-memory skill validates a
+# real store using ONLY its own copied files (no repo-root path, no sibling
+# plugin path), and loom-code / loom-design genuinely keep working — not
+# just "declare no dependency" — with no loom-workflow sibling installed at
+# all (Acceptance 5).
 
 MEMORY_FIXTURE = REPO_ROOT / "scripts" / "fixtures" / "loom-memory-store" / "okf-v0.2"
 
@@ -599,18 +607,20 @@ def test_isolated_loom_memory_validates_the_committed_fixture_using_only_install
 ) -> None:
     """A1 positive / A6 positive.
 
+    W3-01: the validator under test is no longer a standalone plugin's
+    script — it is `loom-workflow`'s relocated `loom-memory` skill script.
     The fixture is copied to a location unrelated to both the plugin cache
     and the repository root, and the validator invoked is the one copied
     into the isolated install — never `REPO_ROOT`-relative and never a
     sibling plugin's script.
     """
-    memory_root = _install_plugin(
-        "loom-memory", tmp_path / "unrelated memory cache for fixture validation"
+    workflow_root = _install_plugin(
+        "loom-workflow", tmp_path / "unrelated workflow cache for fixture validation"
     )
     fixture_copy = tmp_path / "consumer project's memory store"
     shutil.copytree(MEMORY_FIXTURE, fixture_copy)
 
-    validator = memory_root / "scripts" / "loom_memory.py"
+    validator = workflow_root / "skills" / "loom-memory" / "scripts" / "loom_memory.py"
     result = subprocess.run(
         [sys.executable, str(validator), "validate", str(fixture_copy)],
         cwd=tmp_path,
@@ -626,9 +636,11 @@ def test_isolated_loom_memory_rejects_a_corrupted_fixture_copy_using_only_instal
 ) -> None:
     """A1 negative / A6 negative — the positive proof above is not vacuous:
     the same isolated install rejects a deliberately corrupted copy of the
-    reserved `index.md` (clause 6 permits only `okf_version`)."""
-    memory_root = _install_plugin(
-        "loom-memory", tmp_path / "unrelated memory cache for corrupt fixture"
+    reserved `index.md` (clause 6 permits only `okf_version`). W3-01: the
+    validator moved from the standalone `loom-memory` plugin to the
+    `loom-memory` skill inside `loom-workflow`."""
+    workflow_root = _install_plugin(
+        "loom-workflow", tmp_path / "unrelated workflow cache for corrupt fixture"
     )
     fixture_copy = tmp_path / "consumer project's corrupted memory store"
     shutil.copytree(MEMORY_FIXTURE, fixture_copy)
@@ -640,7 +652,7 @@ def test_isolated_loom_memory_rejects_a_corrupted_fixture_copy_using_only_instal
         encoding="utf-8",
     )
 
-    validator = memory_root / "scripts" / "loom_memory.py"
+    validator = workflow_root / "skills" / "loom-memory" / "scripts" / "loom_memory.py"
     result = subprocess.run(
         [sys.executable, str(validator), "validate", str(fixture_copy)],
         cwd=tmp_path,
@@ -781,20 +793,24 @@ def test_isolated_loom_design_keeps_complete_surface_without_loom_memory_sibling
 
 
 def test_isolated_loom_memory_boundary_check_rejects_sibling_paths(tmp_path: Path) -> None:
-    """Bullet 1's closing clause, exercised through the real installed
-    plugin rather than a synthetic fixture: `check_plugin_boundaries.py`
-    rejects a sibling-private path even when the plugin under test is
-    loom-memory itself."""
-    memory_root = _install_plugin(
-        "loom-memory", tmp_path / "memory cache for a boundary violation probe"
+    """W3-01: Bullet 1's closing clause, exercised through the real
+    installed `loom-workflow` plugin rather than a synthetic fixture:
+    `check_plugin_boundaries.py` rejects a sibling-private path even when
+    the probe sits inside the relocated `loom-memory` skill's own folder —
+    the fix that lets that skill cite its own internal path (proven above
+    in `test_isolated_loom_workflow_bundle_contains_required_skills_and_executes`)
+    must not also swallow a genuine reference to a different sibling
+    plugin's private tree."""
+    workflow_root = _install_plugin(
+        "loom-workflow", tmp_path / "workflow cache for a boundary violation probe"
     )
-    probe = memory_root / "skills" / "loom-memory" / "reference-probe.md"
+    probe = workflow_root / "skills" / "loom-memory" / "reference-probe.md"
     probe.write_text(
         "Read `loom-code/scripts/loom_checker.py` before recording a lesson.\n",
         encoding="utf-8",
     )
     try:
-        violations = find_boundary_violations(memory_root)
+        violations = find_boundary_violations(workflow_root)
         assert any("sibling internal path" in v for v in violations)
     finally:
         probe.unlink()

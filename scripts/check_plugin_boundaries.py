@@ -79,6 +79,28 @@ def _plugin_name(root: Path) -> str:
     return root.name
 
 
+def _is_internal_path(root: Path, target: str) -> bool:
+    """A ``loom-*``-shaped match is internal, not a sibling reference, when
+    the target — read as a path rooted at the plugin's own directory, with
+    at most one leading ``/`` stripped — resolves to a real file or
+    directory inside that root.
+
+    This exists because a plugin may ship a skill whose own directory name
+    happens to be ``loom-<something>`` (e.g. a ``loom-memory`` skill living
+    inside ``loom-workflow``). The sibling-name regex has no notion of which
+    ``loom-*`` names are real sibling plugins versus a same-plugin skill
+    folder that merely looks like one; checking real on-disk containment
+    tells the two apart without hardcoding any plugin name.
+    """
+    candidate = target[1:] if target.startswith("/") else target
+    resolved = (root / candidate).resolve(strict=False)
+    try:
+        resolved.relative_to(root.resolve(strict=False))
+    except ValueError:
+        return False
+    return resolved.exists()
+
+
 def find_boundary_violations(plugin_root: str | Path) -> list[str]:
     """Return stable ``file:line: reason: target`` boundary violations."""
     root = Path(plugin_root).resolve(strict=True)
@@ -106,6 +128,8 @@ def find_boundary_violations(plugin_root: str | Path) -> list[str]:
 
             for match in _SIBLING_INTERNAL_RE.finditer(line):
                 if match.group("plugin") == plugin_name:
+                    continue
+                if _is_internal_path(root, match.group("target")):
                     continue
                 start, end = match.span("target")
                 if any(

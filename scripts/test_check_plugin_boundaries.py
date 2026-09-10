@@ -176,13 +176,42 @@ def test_archival_markdown_is_outside_the_install_runtime_scan(tmp_path):
 
 
 def test_real_loom_plugins_pass_the_install_boundary_gate():
+    """W3-01: `loom-memory` is no longer an independent plugin — its sibling
+    is now `loom-workflow`, which ships the relocated `loom-memory` skill
+    among its own files. The property under test is unchanged (every real
+    loom-family plugin root is boundary-clean); only the third plugin's
+    identity changed."""
     import check_plugin_boundaries as checker
 
     repo = Path(__file__).resolve().parents[1]
 
     assert checker.find_boundary_violations(repo / "loom-code") == []
     assert checker.find_boundary_violations(repo / "loom-design") == []
-    assert checker.find_boundary_violations(repo / "loom-memory") == []
+    assert checker.find_boundary_violations(repo / "loom-workflow") == []
+
+
+def test_own_skill_folder_named_like_a_sibling_plugin_is_not_flagged(tmp_path):
+    """W3-01 regression guard: `loom-workflow` ships a skill literally named
+    `loom-memory` (the plugin `loom-memory` retired into it). The generic
+    sibling-name regex would otherwise mistake that skill's own internal
+    `skills/loom-memory/scripts/...` path for a reference to a sibling
+    plugin's private tree. A match is internal, not a sibling reference,
+    when it resolves to a real path inside the plugin's own root."""
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-workflow"
+    _write(
+        plugin / "skills" / "loom-memory" / "scripts" / "loom_memory.py",
+        "# real file\n",
+    )
+    _write(
+        plugin / "skills" / "loom-memory" / "SKILL.md",
+        "Validation lives at `skills/loom-memory/scripts/loom_memory.py` "
+        "and at `/skills/loom-memory/scripts/loom_memory.py` inside this "
+        "skill's own directory.\n",
+    )
+
+    assert checker.find_boundary_violations(plugin) == []
 
 
 def test_reports_sibling_internal_path_naming_loom_memory(tmp_path):
