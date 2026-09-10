@@ -192,6 +192,28 @@ def test_reasoning_depth_below_frontier_raises_effort_without_skipping_tiers() -
     assert result["next_redispatch"] == 1
 
 
+def test_capability_quality_at_frontier_low_falls_through_to_medium() -> None:
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": True,
+            "success": False,
+            "conforming": True,
+            "profile": {"model": "frontier", "effort": "low"},
+            "failure_kind": "capability-quality",
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["requested_profile"] == {"model": "frontier", "effort": "medium"}
+    assert result["reason"] == "capability-quality-redispatch"
+    assert result["next_redispatch"] == 1
+
+
 def test_host_rejection_is_not_capability_quality_escalation() -> None:
     payload = initial("standard", "medium")
     payload.update({"event": "host-rejection", "failure_kind": "capability-quality"})
