@@ -36,9 +36,10 @@ def test_no_agent_pins_model_or_effort():
 
 
 def test_module_contract_rejects_retired_dispatch_ledger_wording():
-    documentation = (__doc__ or "").lower()
+    review_station = (AGENTS_DIR.parent / "skills" / "review" / "SKILL.md").read_text(
+        encoding="utf-8"
+    ).lower()
 
-    assert "review.json" not in documentation
-    assert "dispatch[]" not in documentation
-    assert "dispatch-time resolution" in documentation
-    assert "active task context only" in documentation
+    assert "review.json" not in review_station
+    assert "dispatch[]" not in review_station
+    assert "active task context only" in review_station

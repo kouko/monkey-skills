@@ -123,6 +123,20 @@ def test_preexecution_host_rejection_gets_one_override_free_replacement() -> Non
     assert repeated["effective_profile"] == "host-default/unverified"
 
 
+def test_host_rejection_needs_only_rejection_state_and_fallback_context() -> None:
+    result = dispatch_profile.resolve(
+        {
+            "event": "host-rejection",
+            "rejection_retried": False,
+            "inheritance_guaranteed": False,
+            "completed_redispatches": 0,
+        }
+    )
+
+    assert result["overrides"] is None
+    assert result["effective_profile"] == "host-default/unverified"
+
+
 def test_reasoning_escalation_is_sequential_and_uses_shared_budget() -> None:
     high = {
         "event": "after-execution",
@@ -154,6 +168,28 @@ def test_reasoning_escalation_is_sequential_and_uses_shared_budget() -> None:
     assert xhigh_result["requested_profile"] == {"model": "frontier", "effort": "xhigh"}
     assert xhigh_result["completed_redispatches"] == 1
     assert xhigh_result["next_redispatch"] == 2
+
+
+def test_reasoning_depth_below_frontier_raises_effort_without_skipping_tiers() -> None:
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": True,
+            "success": False,
+            "conforming": True,
+            "profile": {"model": "standard", "effort": "low"},
+            "failure_kind": "reasoning-depth",
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["requested_profile"] == {"model": "standard", "effort": "medium"}
+    assert result["reason"] == "reasoning-depth-redispatch"
+    assert result["next_redispatch"] == 1
 
 
 def test_host_rejection_is_not_capability_quality_escalation() -> None:
@@ -227,7 +263,8 @@ def test_unknown_failure_kind_fails_closed() -> None:
 
 def test_contract_defines_the_executable_json_boundary() -> None:
     text = (PLUGIN / "references" / "dispatch-profile.md").read_text(encoding="utf-8")
-    assert "python3 ../../scripts/dispatch_profile.py" in text
+    assert "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dispatch_profile.py" in text
+    assert "python3 <injected loom-code plugin root>/scripts/dispatch_profile.py" in text
     assert '"event": "initial"' in text
     assert '"event": "after-execution"' in text
     assert '"event": "host-rejection"' in text
@@ -239,7 +276,8 @@ def test_contract_defines_the_executable_json_boundary() -> None:
 def test_stations_invoke_the_executable_resolver_before_spawn(station: str) -> None:
     text = (PLUGIN / "skills" / station / "SKILL.md").read_text(encoding="utf-8")
     flat = " ".join(text.split())
-    assert "python3 ../../scripts/dispatch_profile.py" in text
+    assert "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dispatch_profile.py" in text
+    assert "python3 <injected loom-code plugin root>/scripts/dispatch_profile.py" in text
     assert "Pass its deterministic JSON result to the host-native spawn" in flat
     assert "post-execution capability-quality failure" in flat
     assert "pre-execution host rejection" in flat

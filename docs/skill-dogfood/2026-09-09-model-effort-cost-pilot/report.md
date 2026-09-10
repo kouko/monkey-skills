@@ -168,7 +168,7 @@ CLI, not incremental charges.
 
 | Profile | Mean equivalent cost | Mean wall time | Oracle recall per run |
 |---|---:|---:|---|
-| standard / medium | 0.1327525 | 90.561 s | 2/9, 2/9 |
+| standard / medium | 0.1327525 | 90.562 s | 2/9, 2/9 |
 | standard / high | 0.1689125 | 122.291 s | 2/9, 2/9 |
 | frontier / low | 0.2391543 | 62.548 s | 6/9, 7/9 |
 | frontier / medium | 0.4533477 | 128.793 s | 5/9, 6/9 |

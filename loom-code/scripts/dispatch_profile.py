@@ -199,7 +199,7 @@ def _after_execution(packet: dict[str, Any], capabilities: dict[str, tuple[str, 
     next_profile: dict[str, str] | None = None
     if kind == "capability-quality" and model != "frontier":
         next_profile = {"model": MODELS[MODELS.index(model) + 1], "effort": effort}
-    elif model == "frontier" and effort == "low":
+    elif kind == "reasoning-depth" and effort == "low":
         next_profile = {"model": model, "effort": "medium"}
     elif model == "frontier" and effort == "medium" and attempt.get("failure_trigger") in HIGH_TRIGGERS:
         next_profile = {"model": model, "effort": "high"}
@@ -240,10 +240,6 @@ def resolve(packet: dict[str, Any]) -> dict[str, Any]:
     count = packet.get("completed_redispatches")
     if type(count) is not int or not 0 <= count <= 2:
         raise InputError("completed_redispatches must be an integer from 0 through 2")
-    capabilities = _capabilities(packet)
-
-    if event == "initial":
-        return _initial(packet, capabilities, inheritance_guaranteed, count)
     if event == "host-rejection":
         retried = packet.get("rejection_retried", False)
         if type(retried) is not bool:
@@ -258,6 +254,9 @@ def resolve(packet: dict[str, Any]) -> dict[str, Any]:
         return _fallback(
             "host-rejection-replacement", inheritance_guaranteed, count=count,
         )
+    capabilities = _capabilities(packet)
+    if event == "initial":
+        return _initial(packet, capabilities, inheritance_guaranteed, count)
     return _after_execution(packet, capabilities, inheritance_guaranteed, count)
 
 

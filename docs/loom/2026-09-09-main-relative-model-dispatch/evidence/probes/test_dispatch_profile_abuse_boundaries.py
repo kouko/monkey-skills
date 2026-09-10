@@ -3,12 +3,24 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 import pytest
 
 
 ROOT = Path(__file__).resolve().parents[5]
 PROFILE = ROOT / "loom-code" / "references" / "dispatch-profile.md"
+SCRIPTS = ROOT / "loom-code" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+import dispatch_profile  # noqa: E402
+
+
+CAPABILITIES = {
+    "economy": ["low", "medium"],
+    "standard": ["low", "medium", "high"],
+    "frontier": ["low", "medium", "high", "xhigh", "max", "ultra"],
+}
 
 
 def _contract() -> str:
@@ -131,3 +143,80 @@ def test_redispatch_final_success_returns_routed() -> None:
         text,
         "successful execution returns `routed` regardless of its position in the budget",
     )
+
+
+def _failed_attempt(
+    model: str, effort: str, *, count: int = 0, **extra: str
+) -> dict[str, object]:
+    return {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": True,
+            "success": False,
+            "conforming": True,
+            "profile": {"model": model, "effort": effort},
+            **extra,
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": count,
+    }
+
+
+def test_resolver_frontier_low_high_trigger_cannot_skip_medium() -> None:
+    payload = _failed_attempt(
+        "frontier",
+        "low",
+        failure_kind="reasoning-depth",
+        failure_trigger="high-risk-decision-unsettled",
+    )
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["requested_profile"] == {"model": "frontier", "effort": "medium"}
+
+
+def test_resolver_frontier_xhigh_failure_cannot_generate_max() -> None:
+    payload = _failed_attempt(
+        "frontier",
+        "xhigh",
+        failure_kind="reasoning-depth",
+        failure_trigger="same-high-risk-blocker-with-artifact",
+    )
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["outcome"] == "execution-failed"
+    assert result["requested_profile"] is None
+
+
+def test_resolver_unsupported_pair_omits_both_overrides() -> None:
+    payload = {
+        "event": "initial",
+        "main_profile": {"model": "standard", "effort": "high"},
+        "task_evidence": {},
+        "capabilities": {"standard": ["low", "medium"]},
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["overrides"] is None
+    assert result["requested_profile"] == {"model": "standard", "effort": "high"}
+
+
+def test_resolver_third_redispatch_is_refused() -> None:
+    payload = _failed_attempt(
+        "frontier",
+        "medium",
+        count=2,
+        failure_kind="reasoning-depth",
+        failure_trigger="high-risk-decision-unsettled",
+    )
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["outcome"] == "execution-failed"
+    assert result["reason"] == "no-legal-redispatch"
+    assert "next_redispatch" not in result

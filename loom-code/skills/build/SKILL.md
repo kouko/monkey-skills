@@ -25,11 +25,13 @@ effective profile with its evidence-grounded reason in active task context only.
 Apply the resolved overrides at invocation time; a static model or effort pin in
 an agent contract is invalid.
 
-Invoke `python3 ../../scripts/dispatch_profile.py` with the explicit observed
-JSON defined by the shared contract before each spawn. Pass its deterministic
-JSON result to the host-native spawn: apply both fields from `overrides`, or
-apply neither when it is `null`. Feed every completed result back as an
-`after-execution` event before any redispatch. Describe an omitted or wrong
+Invoke `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dispatch_profile.py` from Claude
+Code or `python3 <injected loom-code plugin root>/scripts/dispatch_profile.py`
+from Codex, with the explicit observed JSON defined by the shared contract
+before each spawn. Pass its deterministic JSON result to the host-native spawn:
+apply both fields from `overrides`, or apply neither when it is `null`. Feed
+every completed result back as an `after-execution` event before any
+redispatch. Describe an omitted or wrong
 task result as a post-execution capability-quality failure only when it meets
 the contract's checkable definition; describe rejected routing parameters as
 a pre-execution host rejection, which selects the one atomic fallback instead

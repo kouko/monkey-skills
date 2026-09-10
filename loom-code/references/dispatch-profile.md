@@ -18,11 +18,15 @@ atomic fallback in this contract instead of inferring a portable baseline.
 ## Executable resolver
 
 Before a host-native spawn, a station invokes the packaged standard-library
-oracle from its skill directory and supplies exactly one observed-state JSON
-object on standard input:
+oracle by its host-provided absolute plugin root and supplies exactly one
+observed-state JSON object on standard input:
 
 ```text
-python3 ../../scripts/dispatch_profile.py
+# Claude Code
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dispatch_profile.py
+
+# Codex
+python3 <injected loom-code plugin root>/scripts/dispatch_profile.py
 ```
 
 The initial event has this shape (the five complex predicates are
@@ -56,10 +60,12 @@ the effective `profile`, and, for failure, `failure_kind` plus an allowed
 omitted a checkable obligation, produced an oracle-verifiable wrong result, or
 failed to connect required system relationships; it is not a provider error.
 
-For a pre-execution host rejection, use `"event": "host-rejection"` and
-`"rejection_retried": false`. Apply the returned override-free replacement in
-the same task attempt. If that replacement is also rejected, repeat with
-`rejection_retried` set to true; the resolver returns `execution-failed`.
+For a pre-execution host rejection, use `"event": "host-rejection"`, the same
+`inheritance_guaranteed` and `completed_redispatches` fields, and
+`"rejection_retried": false`. This event does not require `capabilities`.
+Apply the returned override-free replacement in the same task attempt. If that
+replacement is also rejected, repeat with `rejection_retried` set to true; the
+resolver returns `execution-failed`.
 
 The resolver emits one deterministic JSON object. `overrides` is either the
 complete portable pair or `null`; a station must never reconstruct a partial
@@ -118,9 +124,10 @@ remains host-native and inheritance-only.
 
 ## Evidence-gated effort escalation
 
-Reasoning-depth escalation moves one effort tier at a time and only on the
-`frontier` model. Before each move, the dispatcher must retain the matching
-failure trigger.
+Reasoning-depth escalation moves from `low` to `medium` on the current model.
+Further escalation to `high` or `xhigh` is allowed only on `frontier`. Before
+each expensive-effort move, the dispatcher must retain the matching failure
+trigger.
 
 Entering `high` requires a completed `frontier/medium` attempt and one of:
 
