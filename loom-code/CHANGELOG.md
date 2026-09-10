@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.10] — 2026-09-10 — continue active work after CI failure
+
+- Keep a required-CI failure in the same active task, inspect its failed checks
+  and available logs, and continue the original change without a user prompt.
+- Reuse existing regression coverage when it exposes the cause, resume the
+  bounded review episode after every committed repair, and never retry an
+  unattributed failure automatically.
+- Keep active unmerged CI failures out of Maintain and reuse an attestation only
+  for pull-request data that was not committed to the repository.
+
 ## [2.0.9] — 2026-09-10 — faster required-check observation
 
 - Poll required checks every 10 seconds while keeping the 60-minute pending

@@ -8,7 +8,7 @@ charter: 1.0
 ### Wave 1 — One contract-only continuation change
 
 **W1-01 Keep an active task moving after CI failure**  after: none  acceptance: 1, 2, 3, 4
-- Files: loom-code/skills/ship/SKILL.md, loom-code/skills/maintain/SKILL.md, loom-code/scripts/test_simplified_station_text.py
+- Files: loom-code/skills/ship/SKILL.md, loom-code/skills/maintain/SKILL.md, loom-code/scripts/test_simplified_station_text.py, loom-code/CHANGELOG.md, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json
 - Test: A1 positive: failed-checks-and-logs; boundary: missing-diagnostics-block. A2 positive: existing-test-repair; boundary: same-review-episode. A3 positive: PR-text-reuse; negative: committed-version-rereview. A4 positive: diagnosed-external-block; negative: unattributed-no-retry.
 - Risk: agent-decided — replace existing sentences instead of adding recovery machinery; add no runtime, classifier, state, hook, checker rule, retry budget, or command contract.
 
