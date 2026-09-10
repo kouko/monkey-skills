@@ -65,6 +65,20 @@ def test_ci_failure_continues_without_new_recovery_machinery() -> None:
         assert forbidden not in SHIP_PROSE
 
 
+def test_review_uses_one_observable_claude_attempt_and_existing_retry() -> None:
+    review_prose = " ".join(REVIEW.split())
+    for phrase in (
+        "scripts/claude_reviewer.py",
+        "one Claude attempt",
+        "empty-output",
+        "timeout",
+        "same functional-content digest",
+        "does not retry",
+    ):
+        assert phrase in review_prose
+    assert "Do not run a model-backed preflight." in review_prose
+
+
 def test_ship_uses_one_publish_command_after_acceptance() -> None:
     assert "publish --confirm-authorized" in SHIP
     assert "one publication command" in SHIP
