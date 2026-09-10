@@ -91,6 +91,7 @@ class ExternalCalls:
         self.remote_reads = 0
         self.required_checks = [[{"name": "gate", "state": "SUCCESS", "bucket": "pass"}]]
         self.required_check_returncodes: list[int] = []
+        self.required_check_stderr: list[str] = []
         self.calls: list[list[str]] = []
 
     def __call__(self, argv, **kwargs):
@@ -181,7 +182,8 @@ class ExternalCalls:
                 self.required_check_returncodes.pop(0)
                 if self.required_check_returncodes else 0,
                 snapshot if isinstance(snapshot, str) else json.dumps(snapshot),
-                "CI observation failed",
+                self.required_check_stderr.pop(0)
+                if self.required_check_stderr else "CI observation failed",
             )
         raise AssertionError(argv)
 
@@ -830,7 +832,7 @@ def test_retry_after_pr_creation_failure_does_not_repush(tmp_path: Path, monkeyp
     assert "pull/1" in out.getvalue()
 
 
-def test_publish_observes_required_ci_immediately_then_every_thirty_seconds(
+def test_publish_observes_required_ci_immediately_then_every_ten_seconds(
     tmp_path: Path, monkeypatch
 ) -> None:
     calls = ExternalCalls("")
@@ -847,7 +849,7 @@ def test_publish_observes_required_ci_immediately_then_every_thirty_seconds(
     checks = [call for call in calls.calls if "checks" in call]
     assert len(checks) == 2
     assert all("--required" in call for call in checks)
-    assert waits == [30]
+    assert waits == [10]
     assert "Required CI passed" in out
     assert "pending" not in out.casefold()
 
@@ -895,7 +897,7 @@ def test_publish_accepts_gh_pending_exit_code_eight(tmp_path: Path, monkeypatch)
     _, rc, _, err = invoke(tmp_path, monkeypatch, calls)
 
     assert rc == 0, err
-    assert waits == [30]
+    assert waits == [10]
 
 
 def test_publish_blocks_unexpected_gh_checks_exit_and_malformed_json(
@@ -930,7 +932,40 @@ def test_publish_rechecks_an_initial_empty_required_set_before_pass(
     _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
 
     assert rc == 0, err
-    assert waits == [30]
+    assert waits == [10]
+    assert "Required CI passed" in out
+
+
+@pytest.mark.parametrize(
+    "stderr",
+    [
+        "no checks reported on the 'feature' branch",
+        "no required checks reported on the 'feature' branch",
+    ],
+)
+def test_publish_treats_gh_exit_one_no_checks_as_registration_delay(
+    tmp_path: Path, monkeypatch, stderr: str
+) -> None:
+    """Pin gh 2.88.1's two no-check error forms and exit-1 behavior.
+
+    https://github.com/cli/cli/blob/v2.88.1/pkg/cmd/pr/checks/checks.go
+    https://github.com/cli/cli/blob/v2.88.1/pkg/cmd/pr/checks/checks_test.go
+    https://github.com/cli/cli/issues/7401
+    """
+    calls = ExternalCalls("")
+    calls.required_checks = [
+        "",
+        [{"name": "gate", "state": "SUCCESS", "bucket": "pass"}],
+    ]
+    calls.required_check_returncodes = [1, 0]
+    calls.required_check_stderr = [stderr, ""]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 0, err
+    assert waits == [10]
     assert "Required CI passed" in out
 
 
@@ -949,7 +984,7 @@ def test_publish_rechecks_initial_successful_blank_ci_output_before_pass(
     _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
 
     assert rc == 0, err
-    assert waits == [30]
+    assert waits == [10]
     assert "Required CI passed" in out
 
 
@@ -969,21 +1004,64 @@ def test_publish_blocks_unexpected_ci_exit_with_blank_output(
     assert waits == []
 
 
+@pytest.mark.parametrize(
+    ("stdout", "stderr"),
+    [
+        ("[]", "no checks reported on the 'feature' branch"),
+        ("", "no checks reported on the authentication failed branch"),
+        ("", "no checks reported for feature"),
+        ("", "authentication required"),
+    ],
+)
+def test_publish_blocks_non_exact_exit_one_no_checks_responses(
+    tmp_path: Path, monkeypatch, stdout: str, stderr: str
+) -> None:
+    calls = ExternalCalls("")
+    calls.required_checks = [stdout]
+    calls.required_check_returncodes = [1]
+    calls.required_check_stderr = [stderr]
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, _, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 1
+    assert stderr in err
+    assert waits == []
+
+
 @pytest.mark.parametrize("empty_snapshots", [[[], []], ["", "  \n"]])
-def test_publish_reports_two_empty_required_sets_as_no_checks_registered(
+def test_publish_reports_registration_grace_expiry_as_no_checks_registered(
     tmp_path: Path, monkeypatch, empty_snapshots: list[object]
 ) -> None:
     calls = ExternalCalls("")
-    calls.required_checks = empty_snapshots
+    calls.required_checks = empty_snapshots[:1] * 7
     waits: list[int] = []
     monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
 
     _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
 
     assert rc == 0, err
-    assert waits == [30]
+    assert waits == [10] * 6
     assert "no required checks registered" in out.casefold()
     assert "Required CI passed" not in out
+
+
+def test_publish_checks_appearing_at_registration_deadline_get_full_pending_budget(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls = ExternalCalls("")
+    pending = [{"name": "gate", "state": "IN_PROGRESS", "bucket": "pending"}]
+    calls.required_checks = ([[]] * 6) + [pending] + ([pending] * 360)
+    waits: list[int] = []
+    monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
+
+    _, rc, out, err = invoke(tmp_path, monkeypatch, calls)
+
+    assert rc == 1
+    assert "after 60 minutes" in err
+    assert waits == ([10] * 6) + ([10] * 360)
+    assert "pending" not in out.casefold()
 
 
 def test_publish_stops_permanent_pending_after_sixty_minutes_without_resume_state(
@@ -991,7 +1069,7 @@ def test_publish_stops_permanent_pending_after_sixty_minutes_without_resume_stat
 ) -> None:
     calls = ExternalCalls("")
     pending = [{"name": "gate", "state": "IN_PROGRESS", "bucket": "pending"}]
-    calls.required_checks = [pending] * 121
+    calls.required_checks = [pending] * 361
     waits: list[int] = []
     monkeypatch.setattr(loom_checker, "wait_publish_interval", waits.append)
     before = set(tmp_path.rglob("*"))
@@ -1001,7 +1079,7 @@ def test_publish_stops_permanent_pending_after_sixty_minutes_without_resume_stat
     assert rc == 1
     assert "requires user action" in err.casefold()
     assert "reliable terminal result" in err.casefold()
-    assert waits == [30] * 120
+    assert waits == [10] * 360
     assert "pending" not in out.casefold()
     created = set(tmp_path.rglob("*")) - before
     assert not any(path.name.endswith((".pid", ".state", ".resume")) for path in created)

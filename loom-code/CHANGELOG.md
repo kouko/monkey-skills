@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.9] — 2026-09-10 — faster required-check observation
+
+- Poll required checks every 10 seconds while keeping the 60-minute pending
+  budget, and wait up to 60 seconds for newly published checks to register.
+- Treat only GitHub CLI's explicit exit-1 no-checks response as registration
+  delay; authorization, network, malformed, and ambiguous failures still block.
+
 ## [2.0.8] — 2026-09-10 — native dual-host publication hooks
 
 budget-exception: PreToolUse:Bash:loom_checker.py@codex — one Codex-native

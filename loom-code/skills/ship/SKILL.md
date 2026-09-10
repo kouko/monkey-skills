@@ -116,17 +116,18 @@ hook-firing ledger is required.
 ## 4. Observe CI
 
 The publication command reports the PR URL, inspects required CI immediately,
-and checks again every 30 seconds while any required check remains pending.
+and checks again every 10 seconds while any required check remains pending.
 It stops when all required checks pass, a required check fails or is cancelled,
 or GitHub reports that user action is required. Optional checks do not keep the
 command alive. Unchanged pending snapshots produce no repeated user-facing
 output.
 
-If checks remain pending after 120 polling intervals (60 minutes), stop and
-report that a reliable terminal result could not be obtained. Treat an initial
-empty required-check snapshot as registration delay and check once more after
-30 seconds; if it is still empty, report that no required checks are registered
-and finish successfully.
+If checks remain pending after 360 polling intervals (60 minutes), stop and
+report that a reliable terminal result could not be obtained. Treat an empty
+required-check snapshot, including GitHub CLI's explicit no-checks response,
+as registration delay. Check every 10 seconds for up to 60 seconds; if checks
+are still absent on the final observation, report that no required checks are
+registered and finish successfully. Other observation errors stop immediately.
 
 Observation belongs only to the active publication process. Do not create a
 scheduler, daemon, persistent polling record, or restart recovery mechanism.
