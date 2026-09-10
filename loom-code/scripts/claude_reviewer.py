@@ -110,7 +110,6 @@ def run_attempt(claude_bin: str, model: str, prompt: str, timeout: int) -> Attem
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--claude-bin", default="claude")
     parser.add_argument("--model", default="sonnet")
     parser.add_argument("--timeout-seconds", type=int, default=600)
     return parser
@@ -128,7 +127,7 @@ def main(
         print("--timeout-seconds must be greater than zero", file=err)
         return 2
     attempt = run_attempt(
-        args.claude_bin,
+        "claude",
         args.model,
         stdin.read(),
         args.timeout_seconds,
