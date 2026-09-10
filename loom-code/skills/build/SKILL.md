@@ -25,6 +25,16 @@ effective profile with its evidence-grounded reason in active task context only.
 Apply the resolved overrides at invocation time; a static model or effort pin in
 an agent contract is invalid.
 
+Invoke `python3 ../../scripts/dispatch_profile.py` with the explicit observed
+JSON defined by the shared contract before each spawn. Pass its deterministic
+JSON result to the host-native spawn: apply both fields from `overrides`, or
+apply neither when it is `null`. Feed every completed result back as an
+`after-execution` event before any redispatch. Describe an omitted or wrong
+task result as a post-execution capability-quality failure only when it meets
+the contract's checkable definition; describe rejected routing parameters as
+a pre-execution host rejection, which selects the one atomic fallback instead
+of model escalation.
+
 For every behavior change:
 
 1. Write the smallest failing test and run it to observe RED.

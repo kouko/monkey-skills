@@ -31,6 +31,16 @@ an agent contract is invalid. Repeat this resolution for every reviewer,
 second-vendor reviewer, blind runner, and adversary dispatch; role and round
 labels supply no routing evidence.
 
+Invoke `python3 ../../scripts/dispatch_profile.py` with the explicit observed
+JSON defined by the shared contract before each spawn. Pass its deterministic
+JSON result to the host-native spawn: apply both fields from `overrides`, or
+apply neither when it is `null`. Feed every completed result back as an
+`after-execution` event before any redispatch. Describe an omitted or wrong
+review obligation as a post-execution capability-quality failure only when it
+meets the contract's checkable definition; describe rejected routing
+parameters as a pre-execution host rejection, which selects the one atomic
+fallback instead of model escalation.
+
 - Every change: two fresh-context reviewers from distinct agents.
 - A configured second vendor remains required when the repository asks for it.
 
