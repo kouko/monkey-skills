@@ -1,6 +1,6 @@
 # Stable Claude Code second reviewer — spec
-intent: 2026-09-10-stabilize-claude-second-reviewer@4548d118dbe922ca555c106edcb4bb486f1fe0c6
-confirmed-behavior: 2026-09-10 @57f75dc
+intent: 2026-09-10-stabilize-claude-second-reviewer@4548d118d0c388b682476288ca5a10263a604f2b
+confirmed-behavior: 2026-09-10 @db23085
 pre-build-review: required — changes the public cross-vendor Closing Review contract and its failure states
 
 ## Requirements
@@ -9,13 +9,13 @@ REQ-1 — Real read-only review
   WHEN a Codex-hosted full-lane change selects Claude Code as its second vendor, the Closing Review shall invoke Claude Code non-interactively with the complete reviewer input, repository read access, no repository write authority, and a structured verdict accepted by the existing reviewer contract → Acceptance #1
 
 REQ-2 — Representative readiness
-  WHEN Claude Code is considered available for second-vendor review, Loom shall verify the execution conditions needed by the real review and distinguish authentication, model, permission, timeout, process, and malformed-output failures → Acceptance #2
+  WHEN Claude Code is considered available for second-vendor review, Loom shall verify the same executable, model access, authentication source, permission and tool policy, repository scope, customization isolation, timeout, and structured-output contract used by the formal review, with only a minimal review payload permitted to differ, and shall distinguish failures by category → Acceptance #2
 
 REQ-3 — Bounded failure handling
-  WHEN a Claude reviewer execution fails before a conforming verdict exists, the Closing Review shall use only its existing one retry for the same functional digest and shall report the concrete diagnosis after a second failure without changing reviewer identity or review-round accounting → Acceptance #3
+  WHEN a Claude reviewer has a transient execution failure, timeout, or malformed output before a conforming verdict exists, the Closing Review shall use only its existing one retry for the same functional digest and shall report the concrete diagnosis after a second failure without changing reviewer identity or review-round accounting; diagnosed authentication, model-access, permission, or deterministic process and configuration failures shall stop immediately with recovery information → Acceptance #3
 
 REQ-4 — End-to-end evidence
-  The implementation shall include a clean controlled dogfood path that reviews a minimal real repository change, validates the complete verdict fields, and proves the reviewer left the repository unchanged → Acceptance #4
+  The implementation shall include a clean controlled dogfood path that reviews a minimal real repository change containing an instruction to create a sentinel mutation, denies or omits every write-capable tool, validates the complete verdict fields or a safe failure, and compares a defined full working-tree path-and-content fingerprint before and after → Acceptance #4
 
 ## Design decision
 
@@ -47,4 +47,4 @@ REQ-4 — End-to-end evidence
 - The retry returns a valid verdict → Closing Review continues using that verdict without consuming an extra review round.
 - Authentication, model access, read permission, or another non-recoverable requirement is unavailable → the active task identifies the missing requirement and stops without a blind retry.
 - A second transient execution fails, the command times out, or the result remains malformed → the active task reports `EXECUTION_FAILED` with the concrete category and recovery information, then stops.
-- The controlled dogfood completes → the report shows valid reviewer fields and identical repository state before and after the Claude invocation.
+- The controlled dogfood asks the reviewer to create a sentinel mutation → the invocation lacks or denies write-capable tools and the report shows a valid verdict or safe failure plus an identical full working-tree path-and-content fingerprint before and after.
