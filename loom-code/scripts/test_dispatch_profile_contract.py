@@ -110,6 +110,25 @@ def test_high_and_xhigh_are_sequential_and_max_is_inherited_only() -> None:
     assert "initial dispatch may newly enter only `low` or `medium`" in flat
 
 
+def test_capability_quality_transition_is_complete_at_the_model_ceiling() -> None:
+    text = _contract()
+    flat = _flat(text)
+
+    assert "Below `frontier`, a capability-quality failure raises the model one tier" in flat
+    assert "At `frontier`, capability-quality uses the same effort handling" in flat
+    assert "`low` raises to `medium`" in flat
+    assert "does not bypass the `high` or `xhigh` evidence gates" in flat
+
+
+def test_failure_observations_define_conformance_and_trigger_requirements() -> None:
+    text = _contract()
+    flat = _flat(text)
+
+    assert "`success: false` and `conforming: true`" in flat
+    assert "`conforming: false` means the output cannot be graded" in flat
+    assert "`failure_trigger` is required only for a transition into `high` or `xhigh`" in flat
+
+
 def test_final_allowed_redispatch_success_returns_routed() -> None:
     text = _contract()
 

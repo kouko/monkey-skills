@@ -53,12 +53,20 @@ universal product-model table. A verified host-native effort may appear in the
 selected model's array only so an observed main value can be inherited. The
 resolver never generates such a value.
 
-After a conforming execution, use `"event": "after-execution"` and add
-`last_attempt` with typed `completed`, `success`, and `conforming` observations,
-the effective `profile`, and, for failure, `failure_kind` plus an allowed
-`failure_trigger`. A capability-quality failure means the completed task
-omitted a checkable obligation, produced an oracle-verifiable wrong result, or
-failed to connect required system relationships; it is not a provider error.
+After an execution, use `"event": "after-execution"` and add `last_attempt`
+with typed `completed`, `success`, and `conforming` observations plus the
+effective `profile`. `success` reports whether the completed work satisfied
+its acceptance conditions. `conforming` reports whether the output is
+structurally usable and contains enough evidence to classify its result;
+`conforming: false` means the output cannot be graded and receives no routing
+escalation. A completed capability-quality or reasoning-depth failure therefore
+uses `success: false` and `conforming: true` plus its `failure_kind`.
+
+A capability-quality failure means the completed task omitted a checkable
+obligation, produced an oracle-verifiable wrong result, or failed to connect
+required system relationships; it is not a provider error. `failure_trigger`
+is required only for a transition into `high` or `xhigh`; low-to-medium and
+non-routing failures omit it.
 
 For a pre-execution host rejection, use `"event": "host-rejection"`, the same
 `inheritance_guaranteed` and `completed_redispatches` fields, and
@@ -128,6 +136,11 @@ Reasoning-depth escalation moves from `low` to `medium` on the current model.
 Further escalation to `high` or `xhigh` is allowed only on `frontier`. Before
 each expensive-effort move, the dispatcher must retain the matching failure
 trigger.
+
+Below `frontier`, a capability-quality failure raises the model one tier and
+preserves effort. At `frontier`, capability-quality uses the same effort
+handling as reasoning-depth: `low` raises to `medium`, and the transition does
+not bypass the `high` or `xhigh` evidence gates.
 
 Entering `high` requires a completed `frontier/medium` attempt and one of:
 

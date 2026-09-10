@@ -14,8 +14,8 @@ charter: 1.0
 ### Wave 1
 
 **W1-01 Restore the frontier ceiling transition**  after: none  acceptance: 1, 2
-- Files: `loom-code/scripts/dispatch_profile.py`, `loom-code/scripts/test_dispatch_profile_resolver.py`
-- Test: A1 positive: frontier-low-capability-to-medium; boundary: frontier-medium-keeps-high-gate. A2 positive: focused-resolver-suite; negative: unsupported-pair-atomic-fallback.
+- Files: `loom-code/scripts/dispatch_profile.py`, `loom-code/scripts/test_dispatch_profile_resolver.py`, `loom-code/references/dispatch-profile.md`, `loom-code/scripts/test_dispatch_profile_contract.py`
+- Test: A1 positive: frontier-low-capability-to-medium; boundary: contract-pins-frontier-ceiling. A2 positive: focused-resolver-suite; negative: unsupported-pair-atomic-fallback.
 - Risk: A broad condition could bypass expensive-effort gates; agent-decided — change only the low-to-medium ceiling branch and retain every later gate.
 
 ## Questions asked

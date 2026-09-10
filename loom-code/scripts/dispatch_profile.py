@@ -199,7 +199,10 @@ def _after_execution(packet: dict[str, Any], capabilities: dict[str, tuple[str, 
     next_profile: dict[str, str] | None = None
     if kind == "capability-quality" and model != "frontier":
         next_profile = {"model": MODELS[MODELS.index(model) + 1], "effort": effort}
-    elif effort == "low" and (kind == "reasoning-depth" or model == "frontier"):
+    elif effort == "low" and (
+        kind == "reasoning-depth"
+        or (kind == "capability-quality" and model == "frontier")
+    ):
         next_profile = {"model": model, "effort": "medium"}
     elif model == "frontier" and effort == "medium" and attempt.get("failure_trigger") in HIGH_TRIGGERS:
         next_profile = {"model": model, "effort": "high"}
