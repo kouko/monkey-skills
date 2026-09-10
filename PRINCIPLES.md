@@ -1,5 +1,5 @@
 # Product principles — loom (monkey-skills)
-ratified-by: kouko 2026-09-05
+ratified-by: kouko 2026-09-05; Fixed-choices plugin clause amended by kouko 2026-09-11
 
 ## Who
 People who describe what they want in plain words and have only basic software-engineering knowledge, working alone or in a small team, on Claude Code or Codex CLI. They cannot judge the quality of a spec, a plan, or a diff.
@@ -20,6 +20,6 @@ People who describe what they want in plain words and have only basic software-e
 Work that passes every gate while its quality is insufficient and the user cannot see that it is — the user says "OK" to a blind-run report that hides the problem.
 
 ## Fixed choices
-- Three plugins with one-way dependency on loom-code's versioned contract package.
+- Four loom-family plugins: loom-code, loom-design and loom-workflow depend one-way on loom-code's versioned contract package; loom-memory depends on none of them.
 - Host-installed plugin hooks (Claude Code and Codex), never repository-local or git hooks.
 - Hard cutover: pre-1.0 artifacts are archived in place, never converted.
