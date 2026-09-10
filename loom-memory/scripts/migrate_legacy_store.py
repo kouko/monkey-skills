@@ -276,6 +276,13 @@ def migrate(store: Path, repo_root: Path) -> MigrationResult:
         "sources": [{"resource": f"introducing commit {readme_sha}"}],
     }
     readme_new_text = render_frontmatter(readme_fm) + "\n" + charter
+    readme_violations = lm.validate_concept_frontmatter(readme_fm, readme_path)
+    if readme_violations:
+        detail = "; ".join(f"[{v.invariant}] {v.file}: {v.detail}" for v in readme_violations)
+        raise MigrationError(
+            f"README.md: the migrated guide frontmatter would not satisfy the profile "
+            f"({detail}); the batch stops here rather than after rewriting earlier files"
+        )
 
     # Every rewrite computed and validated — now write the whole batch.
     for path, new_text in staged:
