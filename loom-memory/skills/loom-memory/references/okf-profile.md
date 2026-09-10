@@ -10,10 +10,12 @@ until a separate change adopts it:
 
 1. Every non-reserved Markdown document in the store carries parseable
    YAML-ish frontmatter. The store is flat: a concept file lives directly
-   under the store's root directory, never in a nested subdirectory — a
-   nested `.md` file is out of this profile's scope entirely (the
-   validator globs `*.md` non-recursively, matching this repository's own
-   one-fact-per-file charter for the store).
+   under the store's root directory, never in a nested subdirectory — the
+   validator walks the bundle recursively and reports a nested `.md` file
+   as a violation naming that path, matching this repository's own
+   one-fact-per-file charter for the store. Concept identity itself stays
+   flat: a nested document is never treated as a concept, only ever as an
+   offender.
 2. Each such frontmatter has a non-empty `type`.
 3. A present reserved file (`index.md` or `log.md`) follows its reserved
    structure.

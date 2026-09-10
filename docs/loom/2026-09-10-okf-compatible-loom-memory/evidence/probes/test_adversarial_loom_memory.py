@@ -5,11 +5,15 @@ the code under attack. Every probe here constructs abusive or boundary
 input, runs the real shipped code, and asserts on specific behavior — never
 merely on an exit status.
 
-Probes that currently expose a defect are marked `xfail(strict=True)`: they
-run on every invocation, they document the exact reproduction, and the day
-the defect is fixed they turn RED as XPASS, so the fix cannot land while
-still claiming the old behavior. Probes without that marker record attacks
-the code SURVIVED; they are live regression detectors for those surfaces.
+A probe exposing a live defect is marked `xfail(strict=True)`: it runs on
+every invocation, documents the exact reproduction, and the day the
+defect is fixed it turns RED as XPASS, so the fix cannot land while
+still claiming the old behavior. Every probe here has already been fixed
+(R3-fixes, see decisions.md D-19) and now carries a plain passing
+assertion instead — each docstring records, past tense, the defect the
+probe once exposed. Every probe is a live regression detector for its
+surface: the eight that were `xfail` for the DEFECT they pinned, the
+rest for the abuse/boundary attack the code already SURVIVED.
 
 Run:
     python3 -m pytest docs/loom/2026-09-10-okf-compatible-loom-memory/evidence/probes -rxX
@@ -87,19 +91,16 @@ def _invariants(violations: list[lm.Violation]) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: migrate() writes concept files one at a time and reaches "
-    "legacy_fm['name'] unguarded, so a legacy file missing 'name' raises a bare "
-    "KeyError after earlier files were already rewritten — contradicting the "
-    "module docstring's 'Either way nothing is written'.",
-)
 def test_migrate_legacy_file_missing_name_leaves_every_other_file_untouched(tmp_path):
-    """A legacy concept with no `name` key must abort the migration cleanly.
-
-    The documented contract is a MigrationError with the store left exactly as
-    it was. Observed: an uncaught KeyError, with the alphabetically earlier
-    concept file already rewritten on disk.
+    """FIXED (R4): a legacy concept with no `name` key aborts the migration
+    cleanly — a MigrationError naming it, with the store left exactly as it
+    was. Previously (DEFECT): migrate() wrote concept files one at a time
+    and reached `legacy_fm['name']` unguarded, so a legacy file missing
+    'name' raised a bare KeyError after earlier files were already
+    rewritten — contradicting the module docstring's 'Either way nothing
+    is written'. R4 now stages every rewrite in memory, checking every
+    legacy file for the fields it will dereference, before writing
+    anything.
     """
     store = _legacy_store(
         tmp_path,
@@ -117,21 +118,18 @@ def test_migrate_legacy_file_missing_name_leaves_every_other_file_untouched(tmp_
     assert (store / "aaa-fact.md").read_bytes() == before, "no file may be rewritten when migration fails"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: after a partial migration, a rerun re-reads already-migrated "
-    "files as legacy. _migrate_concept_frontmatter's pass-through loop does not "
-    "skip 'sources', so the derived source is overwritten by the empty scalar "
-    "parsed from the 'sources:' key line, and the verbatim legacy origin is "
-    "demoted to a stray top-level '- resource' key. Migration still exits 0.",
-)
 def test_migrate_rerun_after_partial_failure_keeps_the_store_valid(tmp_path):
-    """Recovering from a partial migration must not destroy provenance.
-
-    Reproduction: migrate a store whose last file lacks `name` (crashes after
-    rewriting the first file), fix that file, migrate again. The rerun reports
-    success while producing a store the validator rejects and whose original
-    `origin` string is no longer a `sources[].resource`.
+    """FIXED (R4): recovering from a partial migration does not destroy
+    provenance. Reproduction: migrate a store whose last file lacks `name`
+    (this no longer rewrites anything, per the fix above), fix that file,
+    migrate again. Previously (DEFECT): after a partial migration, a
+    rerun re-read already-migrated files as legacy —
+    `_migrate_concept_frontmatter`'s pass-through loop did not skip
+    'sources', so the derived source was overwritten by the empty scalar
+    parsed from the 'sources:' key line, and the verbatim legacy origin
+    was demoted to a stray top-level '- resource' key, while migration
+    still exited 0. R4 now also refuses outright to treat a file already
+    carrying 'sources' as legacy.
     """
     store = _legacy_store(
         tmp_path,
@@ -198,19 +196,16 @@ def test_migrate_already_migrated_store_refuses_to_run(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: _check_index_targets is a naive '[..](..)' substring scan over "
-    "the whole index text, so a Markdown link inside a description is read as an "
-    "index target. regenerate-index exits 0 and validate then exits 1 on the very "
-    "file it just wrote, blaming a phantom href instead of the concept file.",
-)
 def test_validate_freshly_regenerated_index_with_link_in_description_is_clean(tmp_path):
-    """A description that quotes a Markdown link must not fake a broken target.
-
-    Reproduction: a concept whose description contains `[the plan](plan.md)`.
-    `regenerate-index` succeeds; `validate` then reports
-    `[broken-target] plan.md`, naming a file the store never claimed to hold.
+    """FIXED (R2): a description that quotes a Markdown link no longer
+    fakes a broken target. Reproduction: a concept whose description
+    contains `[the plan](plan.md)`. Previously (DEFECT):
+    `_check_index_targets` was a naive '[..](..)' substring scan over the
+    whole index text, so the link inside the description was read as an
+    index target — `regenerate-index` exited 0 and `validate` then
+    reported `[broken-target] plan.md`, naming a file the store never
+    claimed to hold. The check is now anchored to each generated entry's
+    own line shape, never a whole-text scan.
     """
     store = tmp_path / "store"
     store.mkdir()
@@ -221,14 +216,13 @@ def test_validate_freshly_regenerated_index_with_link_in_description_is_clean(tm
     assert lm.validate_bundle(store) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: same naive link scan — a concept filename containing '(' "
-    "truncates the href at the inner ')', so validate reports a broken target "
-    "for a file that exists and that the generator itself linked.",
-)
 def test_validate_concept_filename_with_parentheses_is_clean(tmp_path):
-    """A parenthesis in a concept filename must not break its own index link."""
+    """FIXED (R2): a parenthesis in a concept filename no longer breaks its
+    own index link. Previously (DEFECT): the same naive link scan — a
+    concept filename containing '(' truncated the href at the inner ')',
+    so validate reported a broken target for a file that exists and that
+    the generator itself linked.
+    """
     store = tmp_path / "store"
     store.mkdir()
     (store / "a(b)-rule.md").write_text(_concept("a(b)-rule", "a rule"), encoding="utf-8")
@@ -236,15 +230,16 @@ def test_validate_concept_filename_with_parentheses_is_clean(tmp_path):
     assert lm.validate_bundle(store) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: iter_concept_files uses store.glob('*.md'), which is not "
-    "recursive, so a Markdown document nested inside the bundle is invisible to "
-    "both validation and migration. The pinned OKF clause 1 requires every "
-    "non-reserved Markdown document in the bundle to have parseable frontmatter.",
-)
 def test_validate_nested_markdown_document_without_frontmatter_is_reported(tmp_path):
-    """A malformed Markdown doc one directory deep must not validate as clean."""
+    """FIXED (R5): a malformed Markdown doc one directory deep no longer
+    validates as clean. Previously (DEFECT): `iter_concept_files` used
+    `store.glob('*.md')`, which is not recursive, so a Markdown document
+    nested inside the bundle was invisible to validation — the pinned
+    OKF clause 1 requires every non-reserved Markdown document in the
+    bundle to have parseable frontmatter. `validate_bundle` now walks the
+    bundle recursively and reports any nested Markdown document as its
+    own offender (concept identity itself stays flat).
+    """
     store = tmp_path / "store"
     (store / "notes").mkdir(parents=True)
     (store / "one-rule.md").write_text(_concept("one-rule", "a rule"), encoding="utf-8")
@@ -254,14 +249,14 @@ def test_validate_nested_markdown_document_without_frontmatter_is_reported(tmp_p
     assert any("hidden.md" in v.file for v in violations), "the nested document must be named as an offender"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: check_index_drift compares Path.read_text() output, which "
-    "translates CRLF to LF, so an index.md whose bytes differ from a fresh "
-    "regeneration validates clean. REQ-9 states the comparison unconditionally.",
-)
 def test_validate_crlf_index_that_byte_differs_from_regeneration_is_reported(tmp_path):
-    """Byte drift in the generated index must fail validation (REQ-9)."""
+    """FIXED (R3): byte drift in the generated index fails validation
+    (REQ-9). Previously (DEFECT): `check_index_drift` compared
+    `Path.read_text()` output, which translates CRLF to LF, so an
+    `index.md` whose bytes differed from a fresh regeneration validated
+    clean. The comparison is now unconditionally a byte comparison
+    (`read_bytes()`), matching REQ-9's letter.
+    """
     store = tmp_path / "store"
     store.mkdir()
     (store / "one-rule.md").write_text(_concept("one-rule", "a rule"), encoding="utf-8")
@@ -271,28 +266,28 @@ def test_validate_crlf_index_that_byte_differs_from_regeneration_is_reported(tmp
     assert "index-drift" in _invariants(lm.validate_bundle(store))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: validate on a path that is not a directory (a typo, or a "
-    "regular file) reports only '[index-missing] index.md', misdiagnosing an "
-    "absent store as a store with a missing index. REQ-17 requires the offender "
-    "to be named.",
-)
 def test_validate_absent_store_directory_names_the_store_path(tmp_path):
-    """Pointing the validator at a non-existent store must say so."""
+    """FIXED (R5): pointing the validator at a non-existent store now says
+    so. Previously (DEFECT): validate on a path that is not a directory
+    (a typo, or a regular file) reported only '[index-missing]
+    index.md', misdiagnosing an absent store as a store with a missing
+    index — REQ-17 requires the offender to be named. `validate_bundle`
+    now checks `store.is_dir()` first and names the store path itself.
+    """
     missing = tmp_path / "no-such-store"
     violations = lm.validate_bundle(missing)
     assert any("no-such-store" in v.file or "no-such-store" in v.detail for v in violations)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: _strip_quotes removes a matching leading/trailing quote pair, "
-    "so a description that is deliberately quoted loses those bytes in the index. "
-    "REQ-8 permits stripping leading and trailing WHITESPACE only.",
-)
 def test_generate_index_quoted_description_is_copied_byte_identically(tmp_path):
-    """REQ-8's byte-identical copy must not silently drop quote characters."""
+    """FIXED (R1): REQ-8's byte-identical copy no longer silently drops
+    quote characters. Previously (DEFECT): `_strip_quotes` removed a
+    matching leading/trailing quote pair, so a description that was
+    deliberately quoted lost those bytes in the index — REQ-8 permits
+    stripping leading and trailing WHITESPACE only. `_strip_quotes` is
+    now removed entirely from the frontmatter parser; a scalar value is
+    everything after the first `:` separator, byte-preserving.
+    """
     store = tmp_path / "store"
     store.mkdir()
     quoted = '"a quoted rule"'

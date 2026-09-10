@@ -175,6 +175,22 @@ def introducing_commit(repo_root: Path, rel_path: str) -> str:
     return shas[-1]  # oldest entry = the true introducing commit
 
 
+def _check_legacy_concept_frontmatter(legacy_fm: dict[str, str], *, filename: str) -> None:
+    """Raise `MigrationError`, naming `filename`, for every field this
+    concept's migration will dereference — checked BEFORE any file in the
+    batch is written (R4), so a single bad file never leaves an earlier
+    one half-migrated on disk."""
+    if "sources" in legacy_fm:
+        raise MigrationError(
+            f"{filename}: already carries a 'sources' key — this file is already in the "
+            "OKF profile, not a legacy concept; refusing to re-migrate it as legacy"
+        )
+    if "name" not in legacy_fm:
+        raise MigrationError(f"{filename}: legacy frontmatter has no 'name' key")
+    if "description" not in legacy_fm:
+        raise MigrationError(f"{filename}: legacy frontmatter has no 'description' key")
+
+
 def _migrate_concept_frontmatter(
     legacy_fm: dict[str, str], *, repo_root: Path, rel_path: str
 ) -> dict[str, object]:
@@ -212,6 +228,10 @@ def is_legacy_store(store: Path) -> bool:
 
 
 def migrate(store: Path, repo_root: Path) -> MigrationResult:
+    """R4: every rewrite is computed in memory first, against every legacy
+    file's own required fields, before a single byte is written. A
+    failure on any one file raises `MigrationError` naming it, and writes
+    nothing at all — the store is left exactly as it was found."""
     if not is_legacy_store(store):
         raise MigrationError(
             f"{store} is not a legacy README-indexed store (already migrated, "
@@ -223,13 +243,18 @@ def migrate(store: Path, repo_root: Path) -> MigrationResult:
     store_rel = store.relative_to(repo_root)
 
     lesson_paths = sorted(p for p in store.glob("*.md") if p.name not in ("README.md", "index.md"))
+
+    # Stage every lesson rewrite first — check, then compute, never write —
+    # so a problem anywhere in the batch is caught before any write happens.
+    staged: list[tuple[Path, str]] = []
     for path in lesson_paths:
         text = path.read_text(encoding="utf-8")
         fm_lines, body = split_legacy(text)
         legacy_fm = parse_legacy_frontmatter(fm_lines)
+        _check_legacy_concept_frontmatter(legacy_fm, filename=path.name)
         rel_path = (store_rel / path.name).as_posix()
         new_fm = _migrate_concept_frontmatter(legacy_fm, repo_root=repo_root, rel_path=rel_path)
-        path.write_text(render_frontmatter(new_fm) + body, encoding="utf-8")
+        staged.append((path, render_frontmatter(new_fm) + body))
 
     charter = _extract_charter(readme_text)
     readme_rel = (store_rel / "README.md").as_posix()
@@ -240,7 +265,12 @@ def migrate(store: Path, repo_root: Path) -> MigrationResult:
         "type": lm.GUIDE_TYPE,
         "sources": [{"resource": f"introducing commit {readme_sha}"}],
     }
-    readme_path.write_text(render_frontmatter(readme_fm) + "\n" + charter, encoding="utf-8")
+    readme_new_text = render_frontmatter(readme_fm) + "\n" + charter
+
+    # Every rewrite computed and validated — now write the whole batch.
+    for path, new_text in staged:
+        path.write_text(new_text, encoding="utf-8")
+    readme_path.write_text(readme_new_text, encoding="utf-8")
 
     lm.regenerate_index(store)
     return MigrationResult(lessons=len(lesson_paths), guide=1)

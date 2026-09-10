@@ -66,8 +66,10 @@ def test_parse_frontmatter_nested_dash_only_line_does_not_drop_trailing_keys():
     own closing `---`. Every key physically written after that line is
     silently dropped from the parsed dict instead of raising any error.
     This test pins the correct contract (every declared key round-trips)
-    and currently fails: `sources` disappears even though it is present,
-    unquoted, in the source text.
+    and currently fails: `sources` disappears even though it is present
+    in the source text. (R3-fixes R1 update: parsing is now byte-
+    preserving with no quote-stripping at parse time, so the expected
+    `resource` value below carries its literal quote characters.)
     """
     text = (
         "---\n"
@@ -87,7 +89,7 @@ def test_parse_frontmatter_nested_dash_only_line_does_not_drop_trailing_keys():
         "'sources' is written verbatim inside the frontmatter block but was "
         f"silently dropped by the indentation-blind closing-delimiter scan; parsed={parsed!r}"
     )
-    assert parsed["sources"] == [{"resource": "test fixture"}]
+    assert parsed["sources"] == [{"resource": '"test fixture"'}]
 
 
 def test_validate_bundle_nested_dash_only_line_reports_true_offender_not_phantom_missing_sources():

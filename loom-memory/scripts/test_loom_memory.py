@@ -456,6 +456,100 @@ def test_unknown_metadata_round_trips_through_parse_and_dump():
 
 
 # ---------------------------------------------------------------------------
+# R1 — frontmatter scalars are byte-preserving (no quote-stripping at parse)
+# ---------------------------------------------------------------------------
+
+
+def test_parse_frontmatter_does_not_strip_a_quoted_scalar():
+    text = '---\nname: n\ndescription: "a quoted rule"\ntype: gotcha\nsources:\n  - resource: c\n---\n'
+    parsed = lm.parse_frontmatter(text)
+    assert parsed["description"] == '"a quoted rule"'
+
+
+def test_generate_index_copies_a_quoted_description_byte_identically(tmp_path):
+    store = tmp_path / "memory"
+    store.mkdir()
+    quoted = '"a quoted rule"'
+    _write(store, "one-rule.md", _concept("one-rule", quoted, type_="gotcha"))
+    assert lm.generate_index(store).splitlines()[-1].endswith(quoted)
+
+
+# ---------------------------------------------------------------------------
+# R2 — index-target checking is line-anchored, not a whole-text substring scan
+# ---------------------------------------------------------------------------
+
+
+def test_regenerated_index_with_link_inside_description_validates_clean(tmp_path):
+    store = tmp_path / "memory"
+    store.mkdir()
+    _write(store, "one-rule.md", _concept("one-rule", "see [the plan](plan.md) before acting", type_="gotcha"))
+    lm.regenerate_index(store)
+    assert lm.validate_bundle(store) == []
+
+
+def test_concept_filename_with_parentheses_validates_clean(tmp_path):
+    store = tmp_path / "memory"
+    store.mkdir()
+    _write(store, "a(b)-rule.md", _concept("a(b)-rule", "a rule", type_="gotcha"))
+    lm.regenerate_index(store)
+    assert lm.validate_bundle(store) == []
+
+
+def test_check_index_targets_still_flags_a_hand_edited_broken_link(tmp_path):
+    store = tmp_path / "memory"
+    store.mkdir()
+    _write(store, "one-rule.md", _concept("one-rule", "a rule", type_="gotcha"))
+    lm.regenerate_index(store)
+    stale = (store / "index.md").read_text(encoding="utf-8") + "- [ghost](ghost.md) — deleted.\n"
+    _write(store, "index.md", stale)
+    violations = lm._check_index_targets(store, store / "index.md")
+    assert any(v.invariant == "broken-target" and v.file == "ghost.md" for v in violations)
+
+
+# ---------------------------------------------------------------------------
+# R3 — index drift comparison is byte-for-byte
+# ---------------------------------------------------------------------------
+
+
+def test_crlf_index_that_byte_differs_from_regeneration_is_drift(tmp_path):
+    store = tmp_path / "memory"
+    store.mkdir()
+    _write(store, "one-rule.md", _concept("one-rule", "a rule", type_="gotcha"))
+    expected = lm.generate_index(store)
+    (store / "index.md").write_bytes(expected.replace("\n", "\r\n").encode("utf-8"))
+    violations = lm.validate_bundle(store)
+    assert any(v.invariant == "index-drift" for v in violations)
+
+
+# ---------------------------------------------------------------------------
+# R5 — recursive walk for clause-1 conformance; a named absent store
+# ---------------------------------------------------------------------------
+
+
+def test_nested_markdown_document_is_reported_not_silently_skipped(tmp_path):
+    store = tmp_path / "memory"
+    (store / "notes").mkdir(parents=True)
+    _write(store, "one-rule.md", _concept("one-rule", "a rule", type_="gotcha"))
+    _write(store, "notes/hidden.md", "NOT FRONTMATTER AT ALL\n")
+    lm.regenerate_index(store)
+    violations = lm.validate_bundle(store)
+    assert any("hidden.md" in v.file for v in violations)
+
+
+def test_absent_store_directory_names_the_store_path(tmp_path):
+    missing = tmp_path / "no-such-store"
+    violations = lm.validate_bundle(missing)
+    assert any("no-such-store" in v.file or "no-such-store" in v.detail for v in violations)
+
+
+def test_a_file_passed_as_store_names_the_store_path(tmp_path):
+    not_a_dir = tmp_path / "just-a-file"
+    not_a_dir.write_text("not a store\n", encoding="utf-8")
+    violations = lm.validate_bundle(not_a_dir)
+    assert any("just-a-file" in v.file or "just-a-file" in v.detail for v in violations)
+
+
+# ---------------------------------------------------------------------------
 # CLI wiring
 # ---------------------------------------------------------------------------
 

@@ -672,3 +672,110 @@ inside this authoring repository (F3's actual defect) and is exactly what
 F4's old forbidden-list entry was structurally incapable of catching
 (it forbade the *fix*, not the *defect*). This is the test that would now
 catch F3 recurring.
+
+## D-19 — R3-fixes: the design correction replacing eight point-fixes
+
+**Decision.** The eight defects the Round 3 adversary found were not eight
+independent bugs — every one was one of `loom_memory.py`'s three ad-hoc
+scanners (frontmatter quote-stripping, a whole-text `[..](..)` substring
+scan, and `read_text()`-based drift comparison) applied outside the shape
+it can actually handle, plus one non-atomic write path in
+`migrate_legacy_store.py`. Patching each symptom would have produced a
+ninth; instead the five rules below replace the scanners themselves.
+Each probe named is now a plain passing assertion (marker removed,
+docstring rewritten past-tense) — none deleted, none weakened.
+
+- **R1 — frontmatter values are byte-preserving.** Removed `_strip_quotes`
+  from `_parse_mapping` entirely; a scalar is everything after the first
+  `:` separator (the mandatory single space after the delimiter is still
+  trimmed — that space is the delimiter's own convention, not part of the
+  value). REQ-8's whitespace-only stripping stays where it already lived,
+  at the index-copy site (`_collect_index_items_strict`'s `.strip()`),
+  never at parse time. Consequence: `generate_index`'s own hardcoded
+  `okf_version: "0.2"` line now parses back with its quote characters
+  intact, so `INDEX_FRONTMATTER` was updated to `{"okf_version": '"0.2"'}`
+  to match the byte-literal form it is compared against — this is the one
+  place a "stored value changes" ripple was expected, and it is
+  self-consistent (the generator and the comparator agree). Verified
+  against the real 294-file corpus (below): only `index.md` itself
+  differs in parsed form, and `validate`/`regenerate-index` both still
+  exit 0 and are byte-identical, so no corpus rewrite was needed.
+  Proves: `test_generate_index_quoted_description_is_copied_byte_identically`.
+  One incidental collateral fix: `test_adversarial_okf_memory_probes.py`'s
+  `test_parse_frontmatter_nested_dash_only_line_does_not_drop_trailing_keys`
+  asserted an unquoted `resource` value that only held because the (now
+  removed) quote-stripping ran; its expected value was updated to the
+  byte-preserved quoted form, its docstring corrected from "unquoted" to
+  reflect what the source text actually contains — the defect the test
+  pins (indentation-blind `---` scan dropping `sources`) is untouched.
+
+- **R2 — the index is checked by the generator's own grammar, not a
+  substring scan.** `_check_index_targets` no longer scans the whole
+  index text for any `[..](..)` occurrence. It now matches only lines
+  shaped exactly like a generated entry (`^-\s+\[name\]\(href\)\s+—\s+`,
+  anchored at line start, href captured lazily up to the first
+  `) <space> em-dash <space>` — the entry's own closing delimiter, never
+  the first `)` byte or a link quoted later in the description). This
+  removes the phantom-href class (a description containing
+  `[the plan](plan.md)`, a filename containing `(b)`) while still
+  flagging a hand-edited bogus link (`ghost.md`) and a store-escaping
+  target (`../../../etc/passwd`) — both still exercised by
+  `test_adversarial_okf_memory_probes.py`'s still-green
+  `test_check_index_targets_rejects_href_that_escapes_the_store` and
+  `test_loom_memory.py`'s `test_all_offenders_are_reported_not_just_the_first`.
+  Proves:
+  `test_validate_freshly_regenerated_index_with_link_in_description_is_clean`,
+  `test_validate_concept_filename_with_parentheses_is_clean`.
+
+- **R3 — the drift comparison is unconditionally byte-for-byte.**
+  `check_index_drift` now compares `index_path.read_bytes()` against
+  `generate_index(...).encode("utf-8")`, never `read_text()` (which
+  folds CRLF to LF and would hide real drift). The diff message still
+  decodes for a human-readable unified diff; only the pass/fail
+  comparison is byte-exact, per REQ-9's unconditional statement.
+  Proves: `test_validate_crlf_index_that_byte_differs_from_regeneration_is_reported`.
+
+- **R4 — migration writes are staged, and a rerun is harmless.**
+  `migrate()` now computes every lesson rewrite in memory first —
+  reading, splitting, and validating each legacy file's `name` and
+  `description` (a new `_check_legacy_concept_frontmatter` helper) —
+  before writing a single byte; a failure anywhere in the batch raises
+  `MigrationError` naming the offending file with zero files written.
+  The same helper also refuses a legacy-shaped store whose concept file
+  already carries a `sources` key (already in the OKF profile, not
+  legacy) — the guard that keeps a rerun from ever reaching the old
+  demote-verbatim-origin-to-a-stray-key bug, independent of the
+  atomicity fix. Proves:
+  `test_migrate_legacy_file_missing_name_leaves_every_other_file_untouched`,
+  `test_migrate_rerun_after_partial_failure_keeps_the_store_valid`.
+
+- **R5 — the walk matches the pinned clause, and an absent store is
+  named.** `iter_concept_files` stays non-recursive (concept identity
+  stays flat — a nested document is never a concept), but a new
+  `iter_nested_markdown_files` (`store.rglob("*.md")`, filtered to
+  `parent != store`) feeds a new `validate_bundle` check that reports
+  every nested Markdown document as its own `nested-document` offender,
+  named by its path relative to the store — satisfying pinned clause 1's
+  coverage of the whole bundle without ever treating a nested file as a
+  concept. Separately, `validate_bundle` now checks `store.is_dir()`
+  first and returns a single `store-missing` violation naming the store
+  path itself when the store is absent or not a directory, instead of
+  falling through to a misdiagnosed `index-missing`. Superseded
+  `loom-memory/skills/loom-memory/references/okf-profile.md` clause 1's
+  prior sentence claiming a nested subdirectory is simply "out of this
+  profile's scope entirely" — the pinned clause does not permit that
+  escape; the reference now states what the validator does: nested
+  documents are reported, not skipped. Proves:
+  `test_validate_nested_markdown_document_without_frontmatter_is_reported`,
+  `test_validate_absent_store_directory_names_the_store_path`.
+
+**Real-corpus verification (all 294 files under `docs/loom/memory/`).**
+Compared `parse_frontmatter` output before vs. after R1 over every file:
+only `index.md` differs (its own `okf_version` value now carries its
+quote characters, matched by the updated `INDEX_FRONTMATTER` constant) —
+no lesson or guide concept's stored value changed. No nested Markdown
+document exists under the store (R5 is a no-op on this repository's
+actual data). `validate docs/loom/memory` exits 0; two consecutive
+`regenerate-index` runs are byte-identical to each other and to the
+committed `index.md` (confirmed via `cmp`); `git status` shows no diff
+on `index.md` after regeneration.

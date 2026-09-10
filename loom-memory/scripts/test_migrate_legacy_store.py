@@ -22,6 +22,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPTS_DIR.parent.parent
 STORE = REPO_ROOT / "docs" / "loom" / "memory"
@@ -371,6 +373,86 @@ def test_migrate_handles_description_with_colon_and_trailing_quote(tmp_path):
 
     fm = lm.parse_frontmatter((store / "tricky-fact.md").read_text(encoding="utf-8"))
     assert fm["description"] == tricky
+
+
+def test_migrate_missing_name_on_one_file_leaves_every_other_file_untouched(tmp_path):
+    """R4: every rewrite is staged before any write, so a legacy file
+    missing 'name' aborts the whole batch and leaves an earlier,
+    alphabetically-sorted, valid file exactly as it was found."""
+    repo_root = tmp_path / "repo"
+    store = repo_root / "docs" / "loom" / "memory"
+    store.mkdir(parents=True)
+    _write(store, "README.md", _legacy_readme(["[aaa-fact](aaa-fact.md) — First.", "[zzz-fact](zzz-fact.md) — No name."]))
+    _write(store, "aaa-fact.md", _legacy_concept("aaa-fact", "First lesson."))
+    _write(store, "zzz-fact.md", "---\ndescription: No name key.\ntype: gotcha\norigin: PR#1\n---\n\nBody.\n")
+    _init_git_repo(repo_root)
+    _commit_all(repo_root, "initial")
+    before = (store / "aaa-fact.md").read_bytes()
+
+    try:
+        mls.migrate(store, repo_root)
+        raised = False
+    except mls.MigrationError as exc:
+        raised = True
+        assert "zzz-fact.md" in str(exc)
+    assert raised
+
+    assert (store / "aaa-fact.md").read_bytes() == before
+    assert not (store / "index.md").exists()
+
+
+def test_migrate_refuses_a_file_that_already_carries_sources(tmp_path):
+    """R4: a legacy-shaped store (no `index.md`, README still has the
+    `## Index` heading) whose one concept file already carries a
+    `sources` key must be refused rather than re-migrated — treating an
+    already-migrated file as legacy is exactly the rerun bug (a verbatim
+    `origin` demoted to a stray key) this guard exists to prevent."""
+    repo_root = tmp_path / "repo"
+    store = repo_root / "docs" / "loom" / "memory"
+    store.mkdir(parents=True)
+    _write(store, "README.md", _legacy_readme(["[already-migrated](already-migrated.md) — Already migrated."]))
+    _write(
+        store,
+        "already-migrated.md",
+        "---\nname: already-migrated\ndescription: Already migrated.\ntype: gotcha\n"
+        "sources:\n  - resource: PR#1 verbatim\n---\n\nBody.\n",
+    )
+    _init_git_repo(repo_root)
+    _commit_all(repo_root, "initial")
+    before = (store / "already-migrated.md").read_bytes()
+
+    with pytest.raises(mls.MigrationError) as excinfo:
+        mls.migrate(store, repo_root)
+
+    assert "already-migrated.md" in str(excinfo.value)
+    assert (store / "already-migrated.md").read_bytes() == before
+
+
+def test_migrate_rerun_after_a_fixed_failure_keeps_sources_and_validates_clean(tmp_path):
+    """R4: recovering from a failed batch by fixing the offending file and
+    re-running must produce a valid store that keeps the first file's
+    verbatim `origin` as its `sources[].resource` — the rerun bug this
+    guards against silently demoted that string to a stray top-level key."""
+    repo_root = tmp_path / "repo"
+    store = repo_root / "docs" / "loom" / "memory"
+    store.mkdir(parents=True)
+    _write(store, "README.md", _legacy_readme(["[aaa-fact](aaa-fact.md) — First.", "[zzz-fact](zzz-fact.md) — No name."]))
+    _write(store, "aaa-fact.md", _legacy_concept("aaa-fact", "First lesson.", origin="PR#1 verbatim"))
+    _write(store, "zzz-fact.md", "---\ndescription: No name key.\ntype: gotcha\norigin: PR#9\n---\n\nBody.\n")
+    _init_git_repo(repo_root)
+    _commit_all(repo_root, "initial")
+
+    with pytest.raises(mls.MigrationError):
+        mls.migrate(store, repo_root)
+
+    _write(store, "zzz-fact.md", _legacy_concept("zzz-fact", "Now fixed.", origin="PR#9"))
+    mls.migrate(store, repo_root)
+
+    fm = lm.parse_frontmatter((store / "aaa-fact.md").read_text(encoding="utf-8"))
+    sources = fm.get("sources")
+    assert isinstance(sources, list) and sources
+    assert any(entry.get("resource") == "PR#1 verbatim" for entry in sources)
+    assert lm.validate_bundle(store) == []
 
 
 # ---------------------------------------------------------------------------

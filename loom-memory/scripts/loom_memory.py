@@ -52,14 +52,19 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 RESERVED_FILENAMES = {"index.md", "log.md"}
 GUIDE_TYPE = "Memory Store Guide"
-INDEX_FRONTMATTER = {"okf_version": "0.2"}
-LINK_RE_START = "["
+# `generate_index` writes the literal text `okf_version: "0.2"` (quote
+# characters included); since a scalar value is parsed byte-preserving
+# (R1 — no quote-stripping at parse time), the value this dict compares
+# against must carry those same quote characters, not the bare string.
+INDEX_FRONTMATTER = {"okf_version": '"0.2"'}
+INDEX_LINK_LINE_RE = re.compile(r"^-\s+\[[^\]]*\]\((?P<href>.*?)\)\s+—\s+")
 
 
 # ---------------------------------------------------------------------------
@@ -69,13 +74,6 @@ LINK_RE_START = "["
 
 def _indent_of(line: str) -> int:
     return len(line) - len(line.lstrip(" "))
-
-
-def _strip_quotes(value: str) -> str:
-    value = value.strip()
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
-        return value[1:-1]
-    return value
 
 
 def _parse_mapping(lines: list[str], indent: int) -> dict:
@@ -104,7 +102,12 @@ def _parse_mapping(lines: list[str], indent: int) -> dict:
         key = key.strip()
         rest = rest.strip()
         if rest:
-            result[key] = _strip_quotes(rest)
+            # R1: byte-preserving scalar — everything after the first `:`
+            # separator, stored as-is (only the mandatory single space
+            # after the colon delimiter is trimmed above). No quote
+            # interpretation at parse time; REQ-8's whitespace-stripping
+            # for the index copy happens at that copy site, not here.
+            result[key] = rest
             i += 1
             continue
 
@@ -230,7 +233,20 @@ class LoomMemoryError(Exception):
 
 
 def iter_concept_files(store: Path) -> list[Path]:
+    """Flat, top-level concept files only — concept identity stays flat
+    (R5): a nested Markdown document is never a concept, it is reported
+    separately by `iter_nested_markdown_files` as its own violation."""
     return sorted(p for p in store.glob("*.md") if p.name not in RESERVED_FILENAMES)
+
+
+def iter_nested_markdown_files(store: Path) -> list[Path]:
+    """Every Markdown document that lives one or more directories below the
+    store root (R5 / pinned OKF clause 1: the walk must cover the whole
+    bundle). The bundle is flat by profile choice, so any such document —
+    parseable frontmatter or not — is itself a violation, named by its
+    path relative to the store, not silently skipped by a non-recursive
+    glob."""
+    return sorted(p for p in store.rglob("*.md") if p.parent != store)
 
 
 # ---------------------------------------------------------------------------
@@ -294,21 +310,24 @@ def _validate_reserved_index(index_path: Path) -> list[Violation]:
 
 
 def _check_index_targets(store: Path, index_path: Path) -> list[Violation]:
+    """Check each index ENTRY's link target — never a substring scan over
+    the whole index text (R2). `index.md` is machine-generated: every real
+    entry is one line of the exact shape `- [name](file) — description`
+    that `generate_index` emits, so a target is only ever read from that
+    anchored line shape. This keeps a link quoted inside a description
+    (e.g. `... — see [the plan](plan.md) before acting`) from being read
+    as a second index target, and keeps a literal `(`/`)` inside a
+    concept's own filename from truncating its own href early — the
+    lazy match stops at the first `) <space> — <space>` it finds, which
+    is the entry's own closing delimiter, not the first `)` byte."""
     text = index_path.read_text(encoding="utf-8")
     violations: list[Violation] = []
     store_resolved = store.resolve()
-    pos = 0
-    while True:
-        start = text.find(LINK_RE_START, pos)
-        if start == -1:
-            break
-        close = text.find("]", start)
-        open_paren = text.find("(", close) if close != -1 else -1
-        close_paren = text.find(")", open_paren) if open_paren != -1 else -1
-        if close == -1 or open_paren != close + 1 or close_paren == -1:
-            pos = start + 1
+    for line in text.splitlines():
+        match = INDEX_LINK_LINE_RE.match(line.lstrip())
+        if not match:
             continue
-        href = text[open_paren + 1 : close_paren]
+        href = match.group("href")
         resolved = (store / href).resolve()
         try:
             resolved.relative_to(store_resolved)
@@ -321,13 +340,31 @@ def _check_index_targets(store: Path, index_path: Path) -> list[Violation]:
             )
         elif not resolved.exists():
             violations.append(Violation("broken-target", href, f"index.md links to a missing file {href!r}"))
-        pos = close_paren + 1
     return violations
 
 
 def validate_bundle(store: Path) -> list[Violation]:
     """Every offender, every violated invariant — never stops at the first."""
     violations: list[Violation] = []
+
+    # R5: an absent (or non-directory) store path is its own offender —
+    # never misdiagnosed downstream as an ordinary store missing its index.
+    if not store.is_dir():
+        return [
+            Violation(
+                "store-missing", str(store), "the store path does not exist or is not a directory"
+            )
+        ]
+
+    for nested in iter_nested_markdown_files(store):
+        violations.append(
+            Violation(
+                "nested-document",
+                str(nested.relative_to(store)),
+                "concept files must live directly under the store root; "
+                "this profile is flat and does not walk into subdirectories",
+            )
+        )
 
     concept_files = iter_concept_files(store)
     names_seen: dict[str, list[str]] = {}
@@ -449,12 +486,15 @@ def check_index_drift(store: Path) -> list[Violation]:
         # Already reported per-file under the concept-level violations above;
         # a drift comparison against unusable data would only be noise.
         return []
-    committed = index_path.read_text(encoding="utf-8")
-    if committed == regenerated:
+    # R3: the comparison is unconditionally a byte comparison (REQ-9) —
+    # `read_text()` would silently fold CRLF to LF and hide real drift.
+    committed_bytes = index_path.read_bytes()
+    regenerated_bytes = regenerated.encode("utf-8")
+    if committed_bytes == regenerated_bytes:
         return []
     diff = "\n".join(
         difflib.unified_diff(
-            committed.splitlines(),
+            committed_bytes.decode("utf-8", errors="replace").splitlines(),
             regenerated.splitlines(),
             fromfile="index.md (committed)",
             tofile="index.md (regenerated)",
