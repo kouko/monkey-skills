@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-10-okf-compatible-loom-memory",
-  "content_digest": "c4f0b04f70f930dc32b69130df9826b5a33db501",
+  "content_digest": "359c894da184c20fd9fdf4131b61cf6c8782b95c",
   "executions": [
     {
       "kind": "package-tests",
