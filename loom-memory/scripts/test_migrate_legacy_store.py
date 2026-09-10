@@ -561,3 +561,30 @@ def test_loom_memory_cli_has_no_legacy_write_subcommand():
     )
     assert "--write" not in result.stdout
     assert "{validate,regenerate-index}" in result.stdout
+
+
+def test_name_stem_mismatch_aborts_before_any_file_is_written(tmp_path: Path) -> None:
+    """A concept whose frontmatter `name` disagrees with its filename stem is
+    rejected by index regeneration, which runs at the END of migration. Checking
+    it only there meant the batch had already rewritten every earlier file — the
+    zero-writes-on-failure guarantee held for a missing `name` and quietly failed
+    for a mismatched one. Found by the second-vendor reviewer."""
+    repo_root = tmp_path / "repo"
+    store = repo_root / "docs" / "loom" / "memory"
+    store.mkdir(parents=True)
+    _write(store, "README.md", _legacy_readme(["[right-name](right-name.md) — Mismatch."]))
+    _write(store, "right-name.md", _legacy_concept("wrong-name", "Mismatch."))
+    _init_git_repo(repo_root)
+    _commit_all(repo_root, "seed")
+    before = {p.name: p.read_bytes() for p in sorted(store.glob("*.md"))}
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "migrate_legacy_store.py"), str(store), "--repo-root", str(repo_root)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "right-name.md" in result.stdout + result.stderr
+    assert {p.name: p.read_bytes() for p in sorted(store.glob("*.md"))} == before
+    assert not (store / "index.md").exists()

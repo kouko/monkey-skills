@@ -801,3 +801,25 @@ rule.
 
 **Sources.** REQ-8; D-17 (R1); the round-trip regression in
 `loom-memory/scripts/test_loom_memory.py::test_dump_then_parse_returns_the_same_bytes`.
+
+## D-21 — Second-vendor findings: no special case in the serialiser, and stage-time identity checks
+
+**Decision.** (a) `_scalar_literal` drops its `okf_version` special case: REQ-7's
+exact text `"0.2"` lives in the constant, quotes included, so the value is
+written verbatim like any other. (b) The migration's pre-write check also
+verifies `name` equals the filename stem, the identity that index regeneration
+enforces at the end of the run.
+
+**Candidates.** For (b): keep the check only in regeneration and document that a
+mismatch leaves a partial store; or move the identity check into staging.
+
+**Why.** Both defects share one shape — a rule enforced at a different point
+from where the bytes are decided. The serialiser re-quoted a value the parser
+had already handed back with its quotes; the migration validated identity after
+it had already rewritten earlier files, so the zero-writes-on-failure guarantee
+held for a missing `name` and silently failed for a mismatched one.
+
+**Sources.** Codex second-vendor review of `e075c3ff3`, two important findings
+with reproductions; regressions at
+`test_loom_memory.py::test_okf_version_round_trips_without_gaining_a_quote_pair`
+and `test_migrate_legacy_store.py::test_name_stem_mismatch_aborts_before_any_file_is_written`.

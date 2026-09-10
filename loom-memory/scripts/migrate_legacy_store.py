@@ -189,6 +189,13 @@ def _check_legacy_concept_frontmatter(legacy_fm: dict[str, str], *, filename: st
         raise MigrationError(f"{filename}: legacy frontmatter has no 'name' key")
     if "description" not in legacy_fm:
         raise MigrationError(f"{filename}: legacy frontmatter has no 'description' key")
+    stem = filename[: -len(".md")] if filename.endswith(".md") else filename
+    if legacy_fm["name"] != stem:
+        raise MigrationError(
+            f"{filename}: legacy frontmatter name {legacy_fm['name']!r} != filename stem "
+            f"{stem!r}; index regeneration would refuse this store, so the batch stops "
+            "here rather than after rewriting earlier files"
+        )
 
 
 def _migrate_concept_frontmatter(

@@ -615,3 +615,19 @@ def test_dump_refuses_a_value_with_no_faithful_unquoted_form(value: str) -> None
         lm.dump_frontmatter({"name": "x", "description": value})
     assert "description" in str(excinfo.value)
     assert repr(value) in str(excinfo.value)
+
+
+def test_okf_version_round_trips_without_gaining_a_quote_pair() -> None:
+    """REQ-7 fixes the reserved index frontmatter's exact text, quotes included,
+    so the constant holds `"0.2"` with them and the parser reads them back. The
+    serialiser used to add its own pair on top, turning valid metadata into
+    `""0.2""` — the validator then rejected a file its own writer produced.
+    Found by the second-vendor reviewer."""
+    value = {"okf_version": '"0.2"'}
+    dumped = lm.dump_frontmatter(value)
+    assert 'okf_version: "0.2"' in dumped
+    parsed = lm.parse_frontmatter(dumped)
+    if isinstance(parsed, tuple):
+        parsed = parsed[0]
+    assert parsed == value
+    assert lm.dump_frontmatter(parsed) == dumped

@@ -170,12 +170,12 @@ def _scalar_literal(key: str, value: str) -> str:
     remainder verbatim. Two shapes have no faithful unquoted form — an empty
     value (indistinguishable from a key that opens a nested block) and one
     carrying leading or trailing whitespace (the parser strips it) — and those
-    abort rather than silently changing the caller's bytes. `okf_version` is
-    the one schema-mandated literal, written quoted because REQ-7 fixes its
-    exact text.
+    abort rather than silently changing the caller's bytes. `okf_version` gets
+    no special case either: REQ-7 fixes its exact text `"0.2"`, quotes and all,
+    so that text is what the constant holds and what the parser reads back —
+    re-quoting it here would wrap a second pair around a value that already
+    carries its own.
     """
-    if key == "okf_version":
-        return f'"{value}"'
     if value == "" or value != value.strip():
         raise ValueError(
             f"cannot serialise {key!r} byte-identically: a value that is empty "
