@@ -91,9 +91,9 @@ A legacy README-indexed store — one predating this profile, whose
 "index" is hand-written prose in `README.md` rather than a generated
 `index.md`, and whose concept files may carry a legacy `origin` field
 instead of `sources` — is out of scope for every operation above. Detect
-it (concept files present, no generated `index.md`, at least one concept
-file lacking a `sources` entry) and report that an explicit migration is
-required, without modifying any file. This skill never reads or writes
+it the way the migration command itself does — a `README.md` carrying a
+`## Index` heading and no generated `index.md` present — and report that an
+explicit migration is required, without modifying any file. This skill never reads or writes
 that legacy format itself; migration is a separate, explicit operation
 performed on request, never an implicit side effect of installation,
 session start, Recall, or any other station.

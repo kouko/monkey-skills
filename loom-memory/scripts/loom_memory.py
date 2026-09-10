@@ -216,8 +216,14 @@ def _dump_sequence(items: list[dict], indent: int) -> list[str]:
 
 
 def dump_frontmatter(data: dict) -> str:
-    """The inverse of `parse_frontmatter` — used internally so unrecognized
-    keys and shapes demonstrably round-trip (REQ-12)."""
+    """The inverse of `parse_frontmatter`, so unrecognized keys and shapes
+    demonstrably round-trip (REQ-12).
+
+    No function in this module calls it: `generate_index` writes the reserved
+    frontmatter from `INDEX_FRONTMATTER`, and the migration renders its own.
+    It is the serialiser a caller writing a concept file uses, and its
+    round-trip property is pinned by tests rather than by an internal caller.
+    """
     lines = ["---", *_dump_mapping(data, 0), "---"]
     return "\n".join(lines) + "\n"
 

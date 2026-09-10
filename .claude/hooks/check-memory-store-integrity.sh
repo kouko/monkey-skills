@@ -22,10 +22,11 @@
 # `type: Memory Store Guide`), so a bad edit to it breaks the invariant just
 # as surely as a bad edit to any lesson. No-op for every other path,
 # including the near-miss spellings `docs/loom/memory-archive/` and
-# `docs/loom/memoryX/`. Note the validator globs the store non-recursively
-# (`store.glob("*.md")`), so an edit at `…/memory/sub/x.md` triggers a check
-# that cannot see that file — the store's charter is one flat file per fact,
-# so a nested entry is itself the thing to fix, not a validator gap.
+# `docs/loom/memoryX/`. On nesting: the concept scan stays non-recursive, so a
+# file at `…/memory/sub/x.md` is never treated as a concept — but `validate`,
+# the command this hook runs, walks the tree recursively and reports such a
+# file as a `nested-document` offender. The store's charter is one flat file
+# per fact, and an edit that nests one is caught here, not silently missed.
 #
 # Portability: the store is portable (`loom-code:loom-memory` fires in any
 # repo carrying `docs/loom/memory/README.md`) but this validator ships inside
