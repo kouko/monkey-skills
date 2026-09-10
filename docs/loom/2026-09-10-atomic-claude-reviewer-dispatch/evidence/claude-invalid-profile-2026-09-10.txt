@@ -1,0 +1,22 @@
+Claude Code invalid-profile probe — 2026-09-10
+Claude Code version: 2.1.267
+
+No repository content was supplied. The effort probe used empty stdin; the
+model probe used the prompt `Reply only OK.`.
+
+Command:
+claude -p --model sonnet --effort loom-invalid-effort --output-format text --no-session-persistence
+
+Exit: 1
+Observed stderr:
+Warning: Unknown --effort value 'loom-invalid-effort' — ignoring it and using the default effort. Valid values: low, medium, high, xhigh, max.
+Error: Input must be provided either through stdin or as a prompt argument when using --print
+
+Command:
+claude -p --model loom-invalid-model --effort low --output-format text --no-session-persistence 'Reply only OK.'
+
+Exit: 1
+Observed stderr markers:
+"loom-invalid-model" isn't described by this version's model catalog.
+[claude-code:unrecognized_model] {"model":"loom-invalid-model","query_source":"sdk"}
+There's an issue with the selected model (loom-invalid-model). It may not exist or you may not have access to it.

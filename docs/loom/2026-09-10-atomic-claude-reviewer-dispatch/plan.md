@@ -8,14 +8,14 @@ charter: 1.0
 ### Wave 1 — Runner boundary
 
 **W1-01 Make runner overrides atomic**  after: none  acceptance: 1, 2
-- Files: `loom-code/scripts/test_claude_reviewer.py`, `loom-code/scripts/claude_reviewer.py`
+- Files: `loom-code/scripts/test_claude_reviewer.py`, `loom-code/scripts/claude_reviewer.py`, `docs/loom/2026-09-10-atomic-claude-reviewer-dispatch/evidence/claude-invalid-profile-2026-09-10.txt`
 - Test: A1 positive: paired-profile-forwarded; boundary: override-free-host-default. A2 positive: resolver-null-omits-pair; negative: partial-pair-rejected-before-spawn.
 - Risk: agent-decided — keep one-attempt execution unchanged; only argv construction and paired-input validation implement spec REQ-1 and REQ-2.
 
 ### Wave 2 — Review integration
 
 **W2-01 Align Review contract and package metadata**  after: W1-01  acceptance: 3
-- Files: `loom-code/skills/review/SKILL.md`, `loom-code/scripts/test_dispatch_profile_contract.py`, `loom-code/.claude-plugin/plugin.json`, `loom-code/.codex-plugin/plugin.json`, `loom-code/CHANGELOG.md`
+- Files: `loom-code/skills/review/SKILL.md`, `loom-code/scripts/test_dispatch_profile_contract.py`, `docs/loom/evidence/mechanisms.yaml`, `loom-code/.claude-plugin/plugin.json`, `loom-code/.codex-plugin/plugin.json`, `loom-code/CHANGELOG.md`
 - Test: A3 positive: review-command-carries-atomic-pair; boundary: rejected-fallback-cannot-stack-transient-retry.
 - Risk: agent-decided — Review owns resolver feedback and retry separation; the runner remains one subprocess attempt as required by spec REQ-3.
 
