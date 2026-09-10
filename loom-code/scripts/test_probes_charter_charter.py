@@ -42,13 +42,19 @@ CODEX_MIRROR_MANIFEST = REPO_ROOT / ".codex" / "hooks" / "contract" / "manifest.
 
 NEW_ARTIFACTS = {
     "blind-run-report": {"path": "docs/loom/<change-id>/blind-run-report.md"},
-    "memory": {"path": "docs/loom/memory/<slug>.md"},
+    # `memory` was retired from this contract by REQ-24 of
+    # 2026-09-10-okf-compatible-loom-memory (the repository memory store
+    # is now owned solely by the independent `loom-memory` plugin); this
+    # probe file only needs a placeholder row to exercise the generic
+    # charter-validation machinery, so it uses a synthetic name that
+    # cannot be mistaken for a production artifact.
+    "sample-row": {"path": "docs/loom/<change-id>/sample-row.md"},
     "kickoff-defaults": {"path": "docs/loom/KICKOFF-DEFAULTS.md"},
 }
 
 ALL_ROWS = [
     "intent", "spec", "plan", "attestation",
-    "blind-run-report", "memory", "kickoff-defaults",
+    "blind-run-report", "sample-row", "kickoff-defaults",
 ]
 
 
@@ -144,10 +150,10 @@ def test_charter_row_goes_to_unknown_artifact_blocked(tmp_path):
     """Attack: `goes_to: nonexistent-artifact`, a name absent from the
     eight-row table.
     Expected (after W0-01): BLOCK contract.charter-complete naming
-    `memory.must_not` (or the offending goes_to value).
+    `sample-row.must_not` (or the offending goes_to value).
     Observed (before W0-01): unknown sub-command, exit 2, no BLOCK line."""
     def mutate(data):
-        data["artifacts"]["memory"]["charter"]["must_not"] = [
+        data["artifacts"]["sample-row"]["charter"]["must_not"] = [
             {"kind": "code", "goes_to": "nonexistent-artifact"}
         ]
 

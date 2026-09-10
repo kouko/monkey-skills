@@ -447,3 +447,86 @@ test already fetches from Git.
 `.claude/hooks/check-memory-store-integrity.sh` header (recovered,
 rewritten); D-13 above; `loom-memory/scripts/loom_memory.py` CLI
 (`validate` / `regenerate-index`, exit 0/1).
+
+## D-15 — W3-02: Ship/git-memory line, and how the contract-pin sweep was
+scoped
+
+**Context.** REQ-24 retires every repository-memory coupling from
+`loom-code/contract/manifest.yaml` while REQ-20 keeps `git-memory` as the
+owner of commit- and PR-bound Decision/Learning/Gotcha carriers, and Ship
+may still route through it for that. The dispatch asked me to read both
+`manifest.yaml`'s Ship action and `loom-code/skills/ship/SKILL.md` before
+deciding where the line falls.
+
+**Ship/git-memory line.** `loom-code/skills/ship/SKILL.md` was read in
+full and greped for `memory`; its only mention (§2, "Use
+`loom-workflow:git-memory` to classify the change and contribute durable
+Decision, Learning, and Gotcha material inside this schema when earned")
+is exactly the commit-carrier behavior REQ-20 keeps — it never mentions
+`docs/loom/memory/**`, a `memory` action, or store ownership. **No edit
+was made to `ship/SKILL.md`**: there was nothing to remove from it. The
+only manifest-side coupling was the `actions: - name: memory / owner:
+ship` entry (git-memory trailers *plus* `docs/loom/memory/` entries via
+`templates/memory-README.md`) — that whole action, and its `summary:`
+line, were deleted; the `tools: - name: git-memory` declaration stays
+untouched.
+
+**Sweep scope — production contract pins fixed (RED before, GREEN
+after).** Beyond the two files REQ-24 names, two more operative contract
+pins turned out to assert the retired artifact/template against the REAL
+committed manifest/templates directory (not a synthetic copy), so they
+would have gone RED the moment `manifest.yaml`/the template were touched
+and are equally "equivalent contract pins" under REQ-24's own wording:
+- `loom-code/scripts/test_contract_charter.py` — `EXPECTED_ARTIFACTS`
+  asserted the `charter` sub-command's row order against the live
+  manifest; `memory` removed from the list.
+- `loom-code/scripts/test_probes_language_policy.py` — `_template_files()`
+  glob-counts `loom-code/contract/templates/*`; asserted `== 8`, now `==
+  7` after `memory-README.md`'s deletion (REQ-25). Its docstring's
+  GREEN-file list also dropped the retired filename with a one-line note
+  pointing at `loom-memory/templates/memory-store/`.
+
+**`loom-code/scripts/test_probes_charter_charter.py`.** This probe file
+builds its OWN synthetic tmp-path manifest copy (never the real one) to
+exercise the generic `contract.charter-complete` rule — it does not
+require `memory` to be a real production artifact. Even so, two tests
+(`test_charter_row_goes_to_unknown_artifact_blocked`,
+`test_charter_command_renders_complete_rows_on_valid_manifest`) used the
+name `memory` as their placeholder row and would have silently kept
+"testing" a row that no longer exists in production. Renamed the
+placeholder to `sample-row` throughout (`NEW_ARTIFACTS`, `ALL_ROWS`, both
+`data["artifacts"][...]` mutations, and the matching docstring line) so
+the fixture cannot be mistaken for a claim that the production artifact
+survives. `test_charter_command_renders_complete_rows_on_valid_manifest`'s
+`len(data_rows) == 7` held unmodified: 6 real production rows (after
+`memory`'s removal) + 1 synthetic `sample-row` = 7, same as before.
+
+**Found but left alone — a genuinely out-of-scope pre-existing RED.**
+`loom-code/scripts/test_probes_coldread_abuse_coldread_branch_end.py::
+test_memory_step_store_integrity_check_exits_zero` shells out to
+`scripts/check_loom_memory_integrity.py`, which W3-01
+(`79692695f`) already deleted — this test has been RED since before W3-02
+started, for a task this plan attributes to W3-01/REQ-26, not W3-02. I
+first rewrote it to call the new `loom-memory/scripts/loom_memory.py
+validate docs/loom/memory` command (GREEN), but that edit broke this same
+file's OTHER test,
+`test_graduated_probe_copies_byte_identical_to_evidence_originals`, which
+enforces byte-identity between this graduated probe and its FROZEN
+evidence original at
+`docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/
+probes/test_abuse_coldread_branch_end.py` — a closed change's evidence
+directory, out of bounds for this task's sweep. Editing only the
+graduated copy is exactly the "compression/edit without updating the
+paired original" failure mode `graduated-probes-survive-squash` warns
+about. I reverted the edit (recovered via `git show HEAD:<path>`, since
+`git checkout --` is dcg-blocked here) rather than touch the frozen
+evidence file to make the pair agree again. The RED stays, reported as an
+unresolved risk for whichever task closes out REQ-26's loose end, not
+silently fixed by widening W3-02's scope into a closed change's evidence.
+
+**Sources.** `docs/loom/2026-09-10-okf-compatible-loom-memory/spec.md`
+REQ-20, REQ-24, REQ-25; `loom-code/skills/ship/SKILL.md` (full read);
+`loom-code/contract/manifest.yaml` diff; the four edited/deleted files
+above; the operator's own (machine-local, not this repository's) session
+memory entry `graduated-probes-survive-squash`, named here for the
+pattern it documents, not as a repository-committed source.
