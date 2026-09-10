@@ -8,6 +8,6 @@ sources:
 
 # loom-memory fixture store
 
-A small, deliberately valid bundle: `loom-memory/scripts/loom_memory.py
+A small, deliberately valid bundle: `loom-workflow/skills/loom-memory/scripts/loom_memory.py
 validate` on this directory must exit 0, and running `regenerate-index`
 against it twice must produce a byte-identical `index.md` both times.

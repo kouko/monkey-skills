@@ -591,7 +591,7 @@ def test_code_design_manifests_have_no_memory_dependency(tmp_path: Path) -> None
 # loom-design genuinely keep working — not just "declare no dependency" —
 # with no loom-memory sibling installed at all.
 
-MEMORY_FIXTURE = REPO_ROOT / "scripts" / "fixtures" / "loom-memory" / "okf-v0.2"
+MEMORY_FIXTURE = REPO_ROOT / "scripts" / "fixtures" / "loom-memory-store" / "okf-v0.2"
 
 
 def test_isolated_loom_memory_validates_the_committed_fixture_using_only_installed_files(
