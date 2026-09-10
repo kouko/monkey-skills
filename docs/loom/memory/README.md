@@ -72,8 +72,9 @@ filename, so index links never diverge from filenames.
 ---
 name: <kebab-slug>
 description: <one-line — used for relevance decisions at pull time>
-type: practice | gotcha | process
-origin: <PR / session / audit reference>
+type: <free-text label, e.g. practice | gotcha | process | reference>
+sources:
+  - resource: <PR / session / audit reference, or "introducing commit <sha>">
 ---
 
 <the fact>
@@ -82,6 +83,11 @@ origin: <PR / session / audit reference>
 
 **How to apply:** <the operative rule, readable standalone>
 ```
+
+`name`, `description`, `type`, and at least one `sources[].resource` are
+required (the OKF v0.2-compatible Loom profile checked by
+`loom-memory/scripts/loom_memory.py`); any other frontmatter key is
+preserved as-is and never rejected.
 
 **The `description` states the durable rule; it never states which tools
 currently exist.**
@@ -99,10 +105,10 @@ it is body content. If no, it may stay.
 
 **Why the description and not the body.** The body can be corrected in the
 same commit that changes the tooling, and the reader meets the correction
-in context. The description cannot: §Index is generated from it
-(`python3 scripts/check_loom_memory_integrity.py --write`), it is the only
-text a pull-time grep surfaces before the file is opened, and nothing
-mechanically compares it against the body. A
+in context. The description cannot: `index.md` is generated from it
+(`python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory`),
+it is the only text a pull-time grep surfaces before the file is opened, and
+nothing mechanically compares it against the body. A
 description asserting an open leak therefore outlives the commit that
 closes the leak, and the recall surface goes on reporting the old world.
 
@@ -119,19 +125,21 @@ governs an entry when it is written and when its description is next
 edited; it does not oblige a retrofit sweep. Fix a non-conforming
 description on its next touch.
 
-**§Index is generated — never hand-edit it.** Any change belongs in the
+**`index.md` is generated — never hand-edit it.** Any change belongs in the
 entry file's frontmatter, followed by regenerating the index (run from
 the repo root):
 
 ```
-python3 scripts/check_loom_memory_integrity.py          # validate every invariant (default, no flags)
-python3 scripts/check_loom_memory_integrity.py --write   # regenerate ## Index from body-file frontmatter
-python3 scripts/check_loom_memory_integrity.py --check   # regenerate in memory and diff against the committed index; exits 1 on drift
+python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory            # validate every invariant, index drift included
+python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory    # rewrite index.md from every concept file's frontmatter
 ```
 
-A hand-edit to §Index is drift and will be overwritten by `--write`, and
-is detected as drift by `--check`.
+A hand-edit to `index.md` is drift: `validate` compares a fresh
+regeneration against the committed file and fails on any difference, so a
+lesson's frontmatter edited without regenerating the index is caught, not
+silently stale.
 
-If `--write` itself fails, its FAIL output names the offending file and
-the reason (broken frontmatter, unexpected prose in the index region) —
-fix that named problem first, then repeat the three commands above.
+If `regenerate-index` itself fails, its FAIL output names every offending
+file and the reason (broken frontmatter, a `name` that does not match the
+filename, a missing `description`) — fix those named problems first, then
+repeat both commands above.

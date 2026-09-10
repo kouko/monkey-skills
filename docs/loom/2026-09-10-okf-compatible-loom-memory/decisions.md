@@ -359,3 +359,91 @@ redden CI.
 byte-identical"); spec.md REQ-18, "Charter location" design decision;
 `loom-code/scripts/check_doc_citations.py` docstring (round-2 fallback,
 three-bucket design).
+
+## D-14 — W3-01b: restore the shift-left hook (repointed), correct the
+now-stale README §Format/§Index, and narrow the byte-identity test that
+would otherwise block that correction
+
+**Context.** D-13 retired `.claude/hooks/check-memory-store-integrity.sh`
+and its test because they shelled out to the deleted
+`scripts/check_loom_memory_integrity.py`. The hook's own header records
+that the invariant it guards — an entry edited without its index kept in
+sync — shipped broken three times, twice caught only after push under a CI
+job whose display name names a different check. Deleting the guard to make
+a change go green, rather than repointing it at the invariant's new home,
+is exactly the failure mode the hook exists to prevent recurring.
+
+**Decision — restore, repoint, don't reinvent.** The hook is recovered
+verbatim from Git at `bd7c080a0` and repointed at
+`loom-memory/scripts/loom_memory.py validate <store>` (exit 0/1, not the
+legacy checker's own exit convention) in place of the deleted checker. The
+header prose is rewritten to describe the CURRENT invariant — OKF-profile
+validation plus `index.md` drift, not the retired §Index-in-README format —
+while keeping the three-incidents rationale verbatim in substance, because
+that rationale is the reason the hook exists and losing it during the
+repoint would be the same class of silent loss this decision exists to
+avoid. The fix-hint in the hook's stderr output is updated to the new CLI
+(`regenerate-index` / `validate`) so a blocked agent is not handed a dead
+command. The test file is rewritten with the same case coverage (path
+match, near-miss spellings, checker/validator-absent no-op, exit codes) —
+the two cases specific to the old §Index-in-README format (the "index line
+missing/present" fixture shape) are replaced with an equivalent-purpose
+fixture built on the new profile (a store an OKF-aware `_make_store` helper
+either makes valid — entry + a freshly regenerated `index.md` — or leaves
+with a broken entry frontmatter and no index), because the old format no
+longer exists to test against. `.claude/settings.json` gets its
+`PostToolUse` entry back, appended after `remind-memory-mirror.sh` (its
+prior position) rather than reordered.
+`.claude/hooks/remind-memory-mirror.sh` was checked and carries no
+reference to the legacy format or the deleted script — nothing to repoint
+there.
+
+**Decision — narrow `test_guide_concept_metadata_and_charter_prose`'s
+byte-identity assertion, don't delete or weaken it.** That test's original
+assertion compared the ENTIRE post-migration README body, byte-for-byte,
+against the pre-migration charter fetched from Git at
+`PRE_MIGRATION_SHA` — proof that migration itself did not silently rewrite
+any charter prose (D-13's own "byte-identical" commitment; REQ-18's
+acceptance evidence). But that same assertion also blocks any later,
+separately-motivated, deliberately-committed correction to the README's
+prose — this task's fix to `## Format — one fact per file`, which the
+migration left describing a legacy `type: practice | gotcha | process` /
+`origin:` shape and a deleted `--write`/`--check` command (README.md:75,
+README.md:127-130 pre-fix — a charter that teaches a deleted command is
+worse than no charter). Two mechanically distinct properties were living in
+one assertion: (1) migration fidelity, and (2) the README's prose has never
+changed since migration. Property (2) is not something REQ-18 promises
+going forward, only something the migration commit itself had to hold.
+
+The test is narrowed, not weakened: it now partitions both the
+pre-migration charter and the current README body at the
+`## Format — one fact per file` heading. Everything before that heading —
+title, blockquote, the full jurisdiction table, "When to record" in its
+entirety — is still required byte-for-byte identical; a silent rewrite
+anywhere in that region (the majority of the charter) still fails the
+test. Inside the Format section, five load-bearing clauses this task's fix
+did NOT touch — the filename-slug rule, the "description states the
+durable rule" clause, the description-vs-body test (with its Fails/Passes
+bullets), the recorded-instance case study, and the forward-only binding
+clause — are pinned as exact multi-line substrings required present,
+verbatim, in BOTH the pre-migration and the current text. Only the code
+block (legacy frontmatter shape) and the two paragraphs that named the
+deleted script/command are left uncompared, because those are precisely
+what this task's report says it changed and why. A future accidental loss
+of any of the five pinned clauses — even one nested inside a
+Format-section edit — still fails this test; only a deliberate,
+documented, narrowly-scoped Format-section rewrite (like this one) can
+pass it while changing prose.
+
+This is the "assert the specific load-bearing sections survive" option
+from the task's own two offered narrowings, not the "compare against
+79692695f" option — that alternative would re-encode the SAME pre-fix
+text as the new baseline and block this exact fix for the same reason as
+before, since W3-01's migration was itself byte-preserving (D-13) and so
+`79692695f`'s README is byte-identical to the pre-migration charter this
+test already fetches from Git.
+
+**Sources.** Dispatch packet Task A/Task B and their acceptance criteria;
+`.claude/hooks/check-memory-store-integrity.sh` header (recovered,
+rewritten); D-13 above; `loom-memory/scripts/loom_memory.py` CLI
+(`validate` / `regenerate-index`, exit 0/1).

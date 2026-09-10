@@ -153,7 +153,28 @@ def test_lesson_bodies_and_descriptions_survive_migration_byte_for_byte():
 
 
 def test_guide_concept_metadata_and_charter_prose():
-    """A5 positive — the guide concept, compared separately from lessons."""
+    """A5 positive — the guide concept, compared separately from lessons.
+
+    Narrowed 2026-09-10 (W3-01b, see decisions.md): the original assertion
+    here was a full-body byte-match against the PRE-MIGRATION charter, which
+    also blocks any later deliberate correction to the README's prose (the
+    OKF-migration W3-01 task left `## Format — one fact per file` describing
+    a legacy `type: practice | gotcha | process` / `origin:` shape and a
+    deleted `scripts/check_loom_memory_integrity.py` command — a charter that
+    teaches a deleted command is a defect, and REQ-5/REQ-17/REQ-26 do not
+    freeze the README's prose, only the migration's fidelity).
+    Splitting the comparison at the `## Format` heading keeps the strong
+    byte-for-byte proof over everything migration must not have touched
+    (title, blockquote, the jurisdiction table, "When to record") — a
+    wholesale rewrite anywhere in that region still fails this test — while
+    permitting the Format section's own documented, separately-committed
+    fix. Within the Format section, the specific load-bearing clauses that
+    fix did NOT touch (the filename-slug rule, the description-vs-body
+    test, the recorded-instance case study, the forward-only binding
+    clause) are still pinned verbatim against the pre-migration text, so an
+    accidental loss of THOSE clauses during a future Format-section edit
+    still fails here too.
+    """
     pre_text = _git_show("docs/loom/memory/README.md")
     charter_before = mls._extract_charter(pre_text)
 
@@ -175,11 +196,51 @@ def test_guide_concept_metadata_and_charter_prose():
     # closing `---` and the charter body (the same spacing convention every
     # lesson concept already uses) — strip that one separator, not part of
     # the charter prose itself, before comparing.
-    # The byte-match against `charter_before` (everything strictly before
-    # the pre-migration `## Index` heading) is itself the proof that the
-    # hand-maintained index section and its 293 entry lines are gone.
-    assert post_body.lstrip("\n").rstrip("\n") + "\n" == charter_before
+    charter_before = charter_before.lstrip("\n")
+    post_body = post_body.lstrip("\n").rstrip("\n") + "\n"
     assert "[a-backticked-token-with-a-slash" not in post_body  # first index entry line, gone
+
+    FORMAT_HEADING = "## Format — one fact per file"
+    before_preamble, _, before_format = charter_before.partition(FORMAT_HEADING)
+    post_preamble, _, post_format = post_body.partition(FORMAT_HEADING)
+    assert before_format and post_format, "both texts must still carry the Format heading"
+    # Everything migration must not have touched — title, blockquote, the
+    # jurisdiction table, "When to record" — byte-for-byte, unnarrowed.
+    assert post_preamble == before_preamble
+
+    # Load-bearing clauses inside the Format section that this task's README
+    # fix did not touch, pinned verbatim against the pre-migration text so a
+    # future edit cannot silently drop them while narrowing this test.
+    load_bearing_clauses = [
+        "The file is named `<name>.md` — the frontmatter `name` slug IS the\n"
+        "filename, so index links never diverge from filenames.\n",
+        "**The `description` states the durable rule; it never states which tools\n"
+        "currently exist.**",
+        "**The test** — one question, applied clause by clause: *would this clause\n"
+        "become false if someone shipped, removed, or reconfigured a tool?* If yes,\n"
+        "it is body content. If no, it may stay.\n"
+        "\n"
+        "- Fails the test, so belongs in the body: \"X is not yet mechanised\",\n"
+        "  \"no script covers Z\", \"the check runs in CI but not in pytest\",\n"
+        "  \"mechanized in `<some-tool>`\".\n"
+        "- Passes, so may stay: a permanent property of the method itself — \"a\n"
+        "  proposition restated in synonyms is invisible to any string search\" is\n"
+        "  true of string search, not of any particular script.\n",
+        "Recorded instance: an entry whose description presented a hard-wrap leak\n"
+        "as open while its own body stated the leak was mechanised — the store's\n"
+        "integrity checker exited 0 throughout, because byte-identity to the index\n"
+        "is the invariant it enforces, and truth against the body is not checkable\n"
+        "(`docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md`).\n"
+        "`docs/loom/memory/measure-a-checks-fire-rate-before-building-it.md`\n"
+        "records why this is a format rule and not a detector.\n",
+        "**Binding: forward-only, and the store does not yet conform.** The rule\n"
+        "governs an entry when it is written and when its description is next\n"
+        "edited; it does not oblige a retrofit sweep. Fix a non-conforming\n"
+        "description on its next touch.\n",
+    ]
+    for clause in load_bearing_clauses:
+        assert clause in before_format, f"pre-migration Format section lost an anchor clause:\n{clause}"
+        assert clause in post_format, f"current Format section dropped a load-bearing clause:\n{clause}"
 
 
 def test_migrated_store_validates_clean_and_regenerates_idempotently():
