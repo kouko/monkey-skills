@@ -50,7 +50,8 @@ def test_ci_failure_continues_without_new_recovery_machinery() -> None:
         "Every committed-file change",
         "must not be rerun automatically",
         "publication command's failure does not end the task",
-        "PR title, body, or other publication data not committed",
+        "PR title, body, or other publication data not committed to the "
+        "repository may be fixed in place and reuse the matching attestation",
         "required change to requirements, visible behaviour, or guarantees",
         "required diagnostics or permission",
         "persistent external failure established from available evidence",
