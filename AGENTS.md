@@ -66,13 +66,13 @@ Role boundaries enforced by behavior, not reading restrictions:
   `dbt-wiki/skills/*/assets/*_test.py` only) — wiring it in is Phase 4
   (U1/U2) of the dbt-wiki quality campaign, not yet built.
 - **Check the loom-memory store's OKF v0.2-compatible profile invariants**:
-  `python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory`
+  `python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py validate docs/loom/memory`
   — validate-only, stdlib-only; fails rc=1 and names every offender when a
   concept file has no parseable frontmatter, a missing `type`/`name`/
   `description`/`sources[].resource`, a `name` diverging from its filename
   stem, a duplicate concept identity, or a committed `index.md` that has
   drifted from a fresh regeneration; rc=0 when clean.
-  `python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory`
+  `python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory`
   deterministically rewrites `index.md` from every concept's frontmatter,
   grouped by memory type; refuses to write when any concept's own metadata
   is broken.
