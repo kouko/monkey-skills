@@ -49,10 +49,6 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 scripts/check-skill-structure.py loom-workflow
 
-      - name: Run check-skill-structure.py against loom-memory
-        if: ${{ !cancelled() }}
-        run: python3 scripts/check-skill-structure.py loom-memory
-
       - name: Run check-skill-structure.py against copywriting-toolkit
         if: ${{ !cancelled() }}
         run: python3 scripts/check-skill-structure.py copywriting-toolkit
@@ -244,8 +240,9 @@ jobs:
         #
         # The repository-local `check_loom_memory_integrity.py` this step used
         # to call was retired at 2026-09-10-okf-compatible-loom-memory (the
-        # store is now the independent `loom-memory` plugin's OKF v0.2-
-        # compatible profile, and its own validator ships inside the plugin) —
-        # run that validator against the migrated store instead.
+        # store's OKF v0.2-compatible profile is validated by the
+        # loom-workflow:loom-memory skill's own validator, relocated there
+        # at 2026-09-11-loom-memory-into-loom-workflow) — run that validator
+        # against the migrated store instead.
         run: |
-          python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory
+          python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py validate docs/loom/memory
