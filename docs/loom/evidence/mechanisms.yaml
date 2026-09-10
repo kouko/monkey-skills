@@ -278,6 +278,9 @@ mechanisms:
   - id: "review.bounded-episode"
     class: prose-gate
     eval: loom-code/scripts/test_review_convergence_contract.py
+  - id: "review.atomic-claude-dispatch"
+    class: prose-gate
+    eval: loom-code/scripts/test_dispatch_profile_contract.py::test_claude_reviewer_dispatch_is_atomic_and_retry_budgets_do_not_stack
   - id: "goal-create.session-activation"
     class: prose-gate
     eval: loom-workflow/skills/goal-create/scripts/test_skill_md.py::test_session_activation_rules_are_one_registered_gate

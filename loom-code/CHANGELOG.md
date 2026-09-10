@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.1] — 2026-09-10 — atomic Claude reviewer profiles
+
+budget-exception: review.atomic-claude-dispatch — makes the cross-vendor
+atomic profile and non-stacking retry boundary executable instead of leaving
+reviewers to infer routing failures from undifferentiated process errors
+
+- Pass a resolved Claude reviewer model and effort as one pair, or omit both
+  overrides so host-default fallback remains atomic.
+- Reject partial runner profiles before starting Claude and keep host-rejection
+  replacement separate from the existing transient-executor retry.
+- Preserve the runner's single-attempt, stdin, timeout, diagnostic,
+  no-session-persistence, and credential-boundary behavior.
+
 ## [2.1.0] — 2026-09-10 — main-relative subagent dispatch
 
 budget-exception: dispatch-profile.relative-routing — registers the one shared

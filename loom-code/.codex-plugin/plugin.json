@@ -1,6 +1,6 @@
 {
   "name": "loom-code",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Five stations carry one change from plan to PR with content-bound verification, one closing review, and a fast publication gate. Claude Code + Codex.",
   "author": {
     "name": "kouko",

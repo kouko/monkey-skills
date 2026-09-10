@@ -2,7 +2,7 @@
 name: review
 description: |
   Runs the one closing review over completed functional content, executes package and adversarial verification once, and generates a content-bound attestation. Use when Build is complete or a functional change invalidates prior evidence.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Review
@@ -52,12 +52,18 @@ the applicable lens from `references/lenses.md`. Reviewers return the
 structured YAML required by `agents/reviewer.md`; the orchestrator converts
 the accepted fields to the temporary JSON consumed by finalization.
 
+<!-- gate: review.atomic-claude-dispatch -->
 On Codex, when the selected second vendor is Claude Code, send that complete
 reviewer prompt on stdin to one installed-plugin invocation:
 
 ```text
-python3 <loom-code>/scripts/claude_reviewer.py --model <model> --timeout-seconds 600
+python3 <loom-code>/scripts/claude_reviewer.py [--model <model> --effort <effort>] --timeout-seconds 600
 ```
+
+When the resolver returns a complete `overrides` pair, pass both flags. When
+it returns `null`, invoke the runner with neither flag so Claude Code uses its
+host defaults. The runner rejects a partial pair before starting Claude; the
+caller must never reconstruct a missing half.
 
 Run this invocation outside the Codex sandbox with reusable host approval
 scoped to the installed `python3 <loom-code>/scripts/claude_reviewer.py`
@@ -78,6 +84,21 @@ result as the transient executor failure already governed below: invoke the
 runner at most once more for the same functional-content digest and reviewer
 identity. If that attempt also fails before a conforming verdict exists, report
 both diagnostics and end the episode as `EXECUTION_FAILED`.
+
+A model-and-effort rejection before task execution follows the shared
+host-rejection path instead: feed the rejection to the resolver and invoke its
+override-free replacement in the same task attempt. If that replacement is
+also rejected, feed back `rejection_retried: true`, accept
+`execution-failed`, and stop. The rejected replacement must not enter the
+generic transient-executor retry, so the two policies cannot create a third
+Claude invocation.
+
+The runner reports `host-rejection` only for an effort outside Claude Code's
+grounded five-value CLI set or for a non-zero Claude result carrying the exact
+`[claude-code:unrecognized_model]` marker. Every other non-zero exit remains a
+generic executor failure; the caller must not infer routing rejection from
+free-form provider text.
+<!-- /gate -->
 
 ## 3. Run blind and adversarial checks
 
