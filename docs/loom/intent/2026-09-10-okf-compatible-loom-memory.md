@@ -25,7 +25,7 @@ Define `loom-memory` as an independently installable, passively triggered skill 
 - Memory activation is passive: explicit user requests, agent relevance judgment, or an optional memory-owned hook. No fixed-stage mandatory invocation.
 - Hooks may remind or validate but must not autonomously author lessons or block unrelated Loom operations.
 - The specification must preserve plugin filesystem boundaries and must not create a mandatory sibling-plugin dependency.
-- This change is limited to intent and specification; it does not authorize implementation, data migration, publication, or merge.
+- Implementation, repository data migration, and publication up to an opened pull request with all required CI checks green are authorized (kouko, 2026-09-10, superseding the earlier intent-and-specification-only limit); merging the pull request remains outside this change.
 
 ## Out of scope
 - Conversation-level personal memory or user-profile storage.
