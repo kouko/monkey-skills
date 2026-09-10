@@ -63,12 +63,12 @@ def test_run_attempt_unrecognized_model_is_typed_host_rejection(monkeypatch) -> 
 
     assert result.kind == "host-rejection"
     assert result.stderr == marker
-    assert result.exit_code == 1
+    assert result.exit_code == 4
 
 
 def test_run_attempt_other_nonzero_is_process_error(monkeypatch) -> None:
     def fake_run(argv, **kwargs):
-        return subprocess.CompletedProcess(argv, 1, stdout="", stderr="quota exceeded")
+        return subprocess.CompletedProcess(argv, 7, stdout="", stderr="quota exceeded")
 
     monkeypatch.setattr(claude_reviewer.subprocess, "run", fake_run)
 
@@ -77,6 +77,8 @@ def test_run_attempt_other_nonzero_is_process_error(monkeypatch) -> None:
     )
 
     assert result.kind == "process-error"
+    assert result.returncode == 7
+    assert result.exit_code == 1
 
 
 def test_run_attempt_timeout_is_terminated_with_elapsed_diagnostics(monkeypatch) -> None:
@@ -182,6 +184,7 @@ def test_main_rejects_partial_override_before_spawn(monkeypatch, argv) -> None:
 
     assert rc == 2
     assert calls == 0
+    assert '"kind": "input-error"' in err.getvalue()
     assert "--model and --effort must be provided together" in err.getvalue()
 
 
@@ -202,7 +205,36 @@ def test_main_rejects_unknown_effort_before_spawn(monkeypatch) -> None:
 
     assert rc == 2
     assert calls == 0
+    assert '"kind": "input-error"' in err.getvalue()
+
+
+@pytest.mark.parametrize(
+    "model,effort", (("sonnet", None), (None, "medium"), ("sonnet", "unknown")),
+)
+def test_run_attempt_rejects_invalid_profile_at_execution_boundary(model, effort) -> None:
+    with pytest.raises(ValueError):
+        claude_reviewer.run_attempt("claude", model, effort, "review", 600)
+
+
+def test_main_unrecognized_model_reports_host_rejection_json(monkeypatch) -> None:
+    monkeypatch.setattr(
+        claude_reviewer,
+        "run_attempt",
+        lambda *args: claude_reviewer.Attempt(
+            kind="host-rejection", stdout="", stderr="marker",
+            returncode=1, elapsed_seconds=0.5, exit_code=4,
+        ),
+    )
+    err = io.StringIO()
+
+    rc = claude_reviewer.main(
+        ["--model", "missing", "--effort", "medium"],
+        stdin=io.StringIO("review"), err=err,
+    )
+
+    assert rc == 4
     assert '"kind": "host-rejection"' in err.getvalue()
+    assert '"returncode": 1' in err.getvalue()
 
 
 def test_main_timeout_returns_124_with_json_diagnostics(monkeypatch) -> None:

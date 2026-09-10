@@ -163,6 +163,10 @@ def test_claude_reviewer_dispatch_is_atomic_and_retry_budgets_do_not_stack() -> 
     assert "`rejection_retried: true`" in flat
     assert "`[claude-code:unrecognized_model]`" in flat
     assert "Every other non-zero exit" in flat
+    assert "consumes the one same-digest transient-retry slot" in flat
+    assert "no further Claude invocation occurs for that digest" in flat
+    assert "stderr JSON `kind`" in flat
+    assert "plain-text exit 2" in flat
 
 
 def test_atomic_claude_dispatch_gate_is_registered_with_executable_eval() -> None:
