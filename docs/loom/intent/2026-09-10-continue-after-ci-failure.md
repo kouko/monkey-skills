@@ -15,7 +15,7 @@ Loom 已能自動開 PR 並監控 CI，但 required CI 真的失敗時會停止�
 ## Acceptance
 1. required CI 失敗時，同一個仍在執行的 task 會自動取得失敗 check 與可用 log，不把 publish 的失敗回傳當成整個 task 的終點。
 2. 功能或測試問題留在原 change，依 Build 的 test-first 規則做最小修復；既有測試無法覆蓋根因時才新增永久 regression case。Functional digest 改變後重新執行 Closing Review，再次 Ship。
-3. PR 文字、版本或其他僅發布資料的問題會直接修正並沿用仍匹配的 attestation，不重跑功能驗證。
+3. PR 標題、PR 說明或其他未寫入 repository 的發布資料可直接修正並沿用仍匹配的 attestation；任何 committed file 變更，包括版本檔，都重新執行 Closing Review。
 4. 只有需求或保證需要改變、缺少必要權限、無法取得診斷資料，或外部故障持續存在時，才停止並向使用者說明具體 blocker。
 
 ## Constraints
