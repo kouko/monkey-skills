@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-10-continue-after-ci-failure",
+  "content_digest": "4f94f6085e9d9b6b7eea6500def1f693f8ea3c57",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_simplified_station_text.py -q",
+      "artifact": "loom-code/scripts/test_simplified_station_text.py",
+      "result": "pass",
+      "command_digest": "6934e28dd1cb4f1bf3103bb0cd7eaf837180ecf864eb412bd19db89cb443b97f"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "branch-end-review",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "branch-end-second",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

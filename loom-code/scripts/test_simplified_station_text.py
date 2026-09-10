@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 REVIEW = (ROOT / "loom-code/skills/review/SKILL.md").read_text(encoding="utf-8")
 SHIP = (ROOT / "loom-code/skills/ship/SKILL.md").read_text(encoding="utf-8")
+MAINTAIN = (ROOT / "loom-code/skills/maintain/SKILL.md").read_text(encoding="utf-8")
 BUILD = (ROOT / "loom-code/skills/build/SKILL.md").read_text(encoding="utf-8")
 CAPTURE = (ROOT / "loom-design/skills/capture-intent/SKILL.md").read_text(encoding="utf-8")
 PLAN = (ROOT / "loom-code/skills/write-plan/SKILL.md").read_text(encoding="utf-8")
@@ -38,6 +39,30 @@ def test_ship_keeps_publication_safety() -> None:
     assert "destination/refspec safety" in SHIP
     assert "deterministic secrets scan" in SHIP
     assert "cannot be bypassed" in SHIP
+
+
+def test_ci_failure_continues_without_new_recovery_machinery() -> None:
+    for phrase in (
+        "same active task",
+        "failed required checks and each available failure log",
+        "existing test already exposes the root cause",
+        "same bounded Review episode",
+        "Every committed-file change",
+        "must not be rerun automatically",
+        "publication command's failure does not end the task",
+        "PR title, body, or other publication data not committed to the "
+        "repository may be fixed in place and reuse the matching attestation",
+        "required change to requirements, visible behaviour, or guarantees",
+        "required diagnostics or permission",
+        "persistent external failure established from available evidence",
+        "Run it to observe RED",
+        "rerun it to observe GREEN",
+    ):
+        assert phrase in SHIP_PROSE
+    assert "active unmerged change" in MAINTAIN
+    assert "Use for CI failures" not in MAINTAIN
+    for forbidden in ("recovery script", "failure classifier", "recovery state"):
+        assert forbidden not in SHIP_PROSE
 
 
 def test_ship_uses_one_publish_command_after_acceptance() -> None:
