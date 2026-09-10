@@ -175,11 +175,12 @@ def introducing_commit(repo_root: Path, rel_path: str) -> str:
     return shas[-1]  # oldest entry = the true introducing commit
 
 
-def _check_legacy_concept_frontmatter(legacy_fm: dict[str, str], *, filename: str) -> None:
+def _check_legacy_concept_frontmatter(legacy_fm: dict[str, str], *, path: Path) -> None:
     """Raise `MigrationError`, naming `filename`, for every field this
     concept's migration will dereference — checked BEFORE any file in the
     batch is written (R4), so a single bad file never leaves an earlier
     one half-migrated on disk."""
+    filename = path.name
     if "sources" in legacy_fm:
         raise MigrationError(
             f"{filename}: already carries a 'sources' key — this file is already in the "
@@ -189,11 +190,10 @@ def _check_legacy_concept_frontmatter(legacy_fm: dict[str, str], *, filename: st
         raise MigrationError(f"{filename}: legacy frontmatter has no 'name' key")
     if "description" not in legacy_fm:
         raise MigrationError(f"{filename}: legacy frontmatter has no 'description' key")
-    stem = filename[: -len(".md")] if filename.endswith(".md") else filename
-    if legacy_fm["name"] != stem:
+    if not lm.name_matches_stem(legacy_fm["name"], path):
         raise MigrationError(
             f"{filename}: legacy frontmatter name {legacy_fm['name']!r} != filename stem "
-            f"{stem!r}; index regeneration would refuse this store, so the batch stops "
+            f"{path.stem!r}; index regeneration would refuse this store, so the batch stops "
             "here rather than after rewriting earlier files"
         )
 
@@ -258,7 +258,7 @@ def migrate(store: Path, repo_root: Path) -> MigrationResult:
         text = path.read_text(encoding="utf-8")
         fm_lines, body = split_legacy(text)
         legacy_fm = parse_legacy_frontmatter(fm_lines)
-        _check_legacy_concept_frontmatter(legacy_fm, filename=path.name)
+        _check_legacy_concept_frontmatter(legacy_fm, path=path)
         rel_path = (store_rel / path.name).as_posix()
         new_fm = _migrate_concept_frontmatter(legacy_fm, repo_root=repo_root, rel_path=rel_path)
         staged.append((path, render_frontmatter(new_fm) + body))

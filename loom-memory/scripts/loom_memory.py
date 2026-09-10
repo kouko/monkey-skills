@@ -219,10 +219,10 @@ def dump_frontmatter(data: dict) -> str:
     """The inverse of `parse_frontmatter`, so unrecognized keys and shapes
     demonstrably round-trip (REQ-12).
 
-    No function in this module calls it: `generate_index` writes the reserved
-    frontmatter from `INDEX_FRONTMATTER`, and the migration renders its own.
-    It is the serialiser a caller writing a concept file uses, and its
-    round-trip property is pinned by tests rather than by an internal caller.
+    `generate_index` builds the reserved index frontmatter with it, from
+    `INDEX_FRONTMATTER`, so the one text REQ-7 pins exactly has a single
+    source. The migration renders its own frontmatter separately, and a caller
+    writing a concept file uses this.
     """
     lines = ["---", *_dump_mapping(data, 0), "---"]
     return "\n".join(lines) + "\n"
@@ -277,6 +277,19 @@ def iter_nested_markdown_files(store: Path) -> list[Path]:
 # ---------------------------------------------------------------------------
 
 
+def name_matches_stem(name: str, path: Path) -> bool:
+    """Whether a concept's `name` satisfies the identity rule: it equals the
+    file's stem.
+
+    The one place this rule is decided. The migration's pre-write gate asks the
+    same question before it writes anything, and index regeneration asks it
+    again over the finished store; two hand-rolled copies would be free to
+    drift apart, and a rule enforced in two places is the defect shape this
+    module has already paid for twice.
+    """
+    return name == path.stem
+
+
 def _validate_concept_file(path: Path) -> list[Violation]:
     violations: list[Violation] = []
     text = path.read_text(encoding="utf-8")
@@ -293,7 +306,7 @@ def _validate_concept_file(path: Path) -> list[Violation]:
     stem = path.stem
     if not isinstance(name, str) or not name.strip():
         violations.append(Violation("name", path.name, "frontmatter missing a non-empty 'name'"))
-    elif name != stem:
+    elif not name_matches_stem(name, path):
         violations.append(
             Violation("name", path.name, f"frontmatter name {name!r} != filename stem {stem!r}")
         )
@@ -483,7 +496,9 @@ def generate_index(store: Path) -> str:
             continue
         groups.setdefault(item.type, []).append(item)
 
-    lines = ["---", 'okf_version: "0.2"', "---", "", "# Memory Store Index", ""]
+    # Built from INDEX_FRONTMATTER, never restated as a literal: REQ-7 fixes
+    # this text exactly, and a second copy of it is a second thing to drift.
+    lines = [*dump_frontmatter(INDEX_FRONTMATTER).rstrip("\n").split("\n"), "", "# Memory Store Index", ""]
     if guides:
         lines.append("## Guides")
         lines.append("")

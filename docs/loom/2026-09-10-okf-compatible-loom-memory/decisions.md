@@ -823,3 +823,23 @@ held for a missing `name` and silently failed for a mismatched one.
 with reproductions; regressions at
 `test_loom_memory.py::test_okf_version_round_trips_without_gaining_a_quote_pair`
 and `test_migrate_legacy_store.py::test_name_stem_mismatch_aborts_before_any_file_is_written`.
+
+## D-22 — One place decides the name/stem identity rule
+
+**Decision.** `loom_memory.name_matches_stem(name, path)` is the single decider
+of a concept's identity rule. `_validate_concept_file` and the migration's
+pre-write gate both call it; the index frontmatter is likewise built from
+`INDEX_FRONTMATTER` rather than restated as a literal in `generate_index`.
+
+**Candidates.** Leave the migration's own stem comparison (a hand-rolled string
+slice) beside the validator's `path.stem` comparison; or route both through one
+function.
+
+**Why.** D-21(b) fixed a rule enforced at a different point from where the bytes
+were decided, and the fix reintroduced the same shape as duplication: two copies
+of one rule, free to drift. The closing reviewer named it, and the same argument
+applies to the reserved frontmatter literal, so both got one source.
+
+**Sources.** Closing review terminal verification of `8a250d3ca`, architecture
+finding at `migrate_legacy_store.py:192`; the docs reviewer's nit on
+`generate_index`'s literal.
