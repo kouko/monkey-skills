@@ -2,7 +2,8 @@
 name: a-rule-that-reads-diff-content-is-specified-as-regenerate-and-compare
 description: A checker rule that must inspect file content is specified as "regenerate the canonical text and compare blob ids", never as a set of line/regex conditions — the close-commit shape rule took six fix rounds under line-level conditions (rename, deletion, BOM, symlink typechange, body decoy, headingless last-wins, CRLF, non-UTF-8) and converged in one round once rewritten as byte equality
 type: practice
-origin: 2026-09-03-loom-post-merge-seams, opus design review
+sources:
+  - resource: 2026-09-03-loom-post-merge-seams, opus design review
 ---
 
 A checker rule written as a list of line-level or regex conditions over a

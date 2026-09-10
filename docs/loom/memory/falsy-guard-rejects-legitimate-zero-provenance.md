@@ -2,7 +2,8 @@
 name: falsy-guard-rejects-legitimate-zero-provenance
 description: A required-field/provenance guard written `if not point.get(field)` rejects a LEGITIMATE falsy value (integer 0, empty string) as "missing" — render the field as a truthy token at the producer boundary (e.g. table index 0 → `table:0`), or test `is None`, rather than weakening the guard to admit falsy-absent alike
 type: gotcha
-origin: feat-8k-earnings-kpi-intake T4 (8-K KPI confirm-gate commit, investing-toolkit 2.26.0, 2026-07-19)
+sources:
+  - resource: feat-8k-earnings-kpi-intake T4 (8-K KPI confirm-gate commit, investing-toolkit 2.26.0, 2026-07-19)
 ---
 
 The tier-① store's `kpi_store._require_provenance` refuses a point missing

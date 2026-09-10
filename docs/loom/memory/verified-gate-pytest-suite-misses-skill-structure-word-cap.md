@@ -2,7 +2,8 @@
 name: verified-gate-pytest-suite-misses-skill-structure-word-cap
 description: The finishing-a-development-branch `verified` gate marker runs the pytest suite, which does NOT collect scripts/check-skill-structure.py (it is check-*.py, not test_*.py) — a SKILL.md word-cap breach (CHK-SKL-010, >4500 words / ~6000 tokens) passes the verified gate AND the local .claude/hooks/validate-skill-folder-structure.sh (structure-only), but fails CI's separate skill-structure job; run check-skill-structure.py <plugin> in the verify command for any branch that edits SKILL.md files
 type: gotcha
-origin: 2026-08-15 plain-relay-contract arc — the plain-relay N/A-consolidation paragraph tipped loom-code/skills/finishing-a-development-branch/SKILL.md to 4600 words; the close-out `verified` marker (full 2488-test pytest suite) minted green at HEAD, the local skill-folder hook passed, but CI's `skill-structure` job failed CHK-SKL-010 after the PR opened
+sources:
+  - resource: 2026-08-15 plain-relay-contract arc — the plain-relay N/A-consolidation paragraph tipped loom-code/skills/finishing-a-development-branch/SKILL.md to 4600 words; the close-out `verified` marker (full 2488-test pytest suite) minted green at HEAD, the local skill-folder hook passed, but CI's `skill-structure` job failed CHK-SKL-010 after the PR opened
 ---
 
 The repo has TWO skill-structure enforcement surfaces that are easy to

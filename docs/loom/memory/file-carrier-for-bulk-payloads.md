@@ -2,7 +2,8 @@
 name: file-carrier-for-bulk-payloads
 description: Bulk data between agent-skill pipeline stages must travel by file path, never as inline JSON in a command or one giant response — a large single response is a reproducible mid-response 5xx killer (proven live 2026-07-07, 2/2 inline failures, success after file hand-off)
 type: gotcha
-origin: 2026-07-07 research bake-off (docs/loom/dogfood/2026-07-07-research-bakeoff-vs-builtin.md) + fix brief docs/loom/specs/2026-07-07-deep-deep-research-file-carrier.md
+sources:
+  - resource: 2026-07-07 research bake-off (docs/loom/dogfood/2026-07-07-research-bakeoff-vs-builtin.md) + fix brief docs/loom/specs/2026-07-07-deep-deep-research-file-carrier.md
 ---
 
 Bulk data passed between pipeline stages in an agent skill must travel

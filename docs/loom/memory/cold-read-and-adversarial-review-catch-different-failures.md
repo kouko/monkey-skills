@@ -2,7 +2,8 @@
 name: cold-read-and-adversarial-review-catch-different-failures
 description: A fresh-context cold-read verifies a reader UNDERSTANDS a rule; an adversarial whole-branch review verifies the rule is ROBUST against a reader trying to exploit it — these are different failure classes and one does not substitute for the other on exemption/gate-mechanism changes
 type: practice
-origin: PR #520 (loom-code mechanical-exemption sync-script category, 2026-07-08)
+sources:
+  - resource: PR #520 (loom-code mechanical-exemption sync-script category, 2026-07-08)
 ---
 
 A documentation change to `subagent-driven-development`'s

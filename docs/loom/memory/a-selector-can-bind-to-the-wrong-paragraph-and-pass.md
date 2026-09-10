@@ -2,7 +2,8 @@
 name: a-selector-can-bind-to-the-wrong-paragraph-and-pass
 description: A check that locates its target by keyword can bind to a different passage carrying the same keywords, and every assertion after it then passes against text nobody meant to check — the check is green, dead, and reads as coverage; select the target by something only the target has, and prove the selection by a mutation that removes the intended target's content alone
 type: gotcha
-origin: PR after #748 (loom/reachable-anchor-lessons, review round 1, 2026-08-28)
+sources:
+  - resource: PR after #748 (loom/reachable-anchor-lessons, review round 1, 2026-08-28)
 ---
 
 A document's attribution paragraph was pinned by searching every paragraph for

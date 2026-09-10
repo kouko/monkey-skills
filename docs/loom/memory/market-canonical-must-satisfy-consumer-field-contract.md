@@ -2,7 +2,8 @@
 name: market-canonical-must-satisfy-consumer-field-contract
 description: When a new data source fills a canonical/normalized structure that downstream analysis reads, its output must emit EVERY field the consumers read — a partial schema silently resolves missing fields to 0/default (e.g. dcf_compute net_debt=0), producing wrong results with no error. The producer's own tests pass; only whole-branch review comparing producer output to consumer field-reads catches it.
 type: practice
-origin: branch xbrl-tw (2026-07-19) — TW iXBRL canonical replaced the yfinance stub in pack_tw memo-fetch but omitted total_debt/cash/capex/ebit/fcf; dcf_compute silently zeroed them, overstating every TW equity value
+sources:
+  - resource: branch xbrl-tw (2026-07-19) — TW iXBRL canonical replaced the yfinance stub in pack_tw memo-fetch but omitted total_debt/cash/capex/ebit/fcf; dcf_compute silently zeroed them, overstating every TW equity value
 ---
 
 When a new producer (a market data client) replaces or fills a canonical

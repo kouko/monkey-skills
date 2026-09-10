@@ -2,7 +2,8 @@
 name: entry-triggers-follow-the-purpose-not-the-most-concrete-verb
 description: When a plugin's entry vocabulary is written from the most concrete verb in its design ("decide"), the trigger becomes narrower than the product's purpose ("think and plan") and the first real user cannot get in the door with their natural phrasing — write trigger phrases from the purpose statement the user actually gave, then list the concrete verbs as instances
 type: practice
-origin: think-orbit 0.1.1 (2026-08-18) — the user, about to run the Part 1 real-material checkpoint, said 「我要決定 X 這個啟動方式好像太窄了 原始目的應該是 思考 與 規劃」; the router and core skill had been named and triggered around "決定/decide" although the brief's job story and the plugin name (think-orbit) were about thinking; fixed by renaming decision-session → thinking-session, widening descriptions (幫我想／規劃／整理思路／think through／plan), and stating that a sitting need not end in a DECISION
+sources:
+  - resource: think-orbit 0.1.1 (2026-08-18) — the user, about to run the Part 1 real-material checkpoint, said 「我要決定 X 這個啟動方式好像太窄了 原始目的應該是 思考 與 規劃」; the router and core skill had been named and triggered around "決定/decide" although the brief's job story and the plugin name (think-orbit) were about thinking; fixed by renaming decision-session → thinking-session, widening descriptions (幫我想／規劃／整理思路／think through／plan), and stating that a sitting need not end in a DECISION
 ---
 
 The plugin's design note used "決策" as its running example, and every

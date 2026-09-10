@@ -2,7 +2,8 @@
 name: prose-only-enforcement-dies-on-weak-executors
 description: Weak executors preserve whatever a deterministic validator checks and lose whatever only prose demands — vocabulary survives, enforcement semantics (tier consequences, disclosure duties, provenance honesty) die; when a contract must hold on the weak tier, encode its CONSEQUENCES as validator/pre-check code, and keep prose as the explanation, not the enforcement
 type: practice
-origin: knowledge-triage v2.1 arc (2026-07-18) — three haiku live legs + fresh re-runs; dogfood report docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md
+sources:
+  - resource: knowledge-triage v2.1 arc (2026-07-18) — three haiku live legs + fresh re-runs; dogfood report docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md
 ---
 
 Three weak-model (Haiku 4.5) live runs of freshly-shipped skills all kept

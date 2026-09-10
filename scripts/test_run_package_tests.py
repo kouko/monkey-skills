@@ -65,6 +65,22 @@ def test_loom_family_preset_covers_every_ci_test_surface() -> None:
     assert actual_skill_dirs == expected_skill_dirs
 
 
+def test_loom_family_preset_includes_memory_group() -> None:
+    commands = loom_family_commands(REPO, verbosity="-q")
+    rendered = [" ".join(command) for command in commands]
+    assert any("loom-memory/scripts/" in command for command in rendered)
+
+
+def test_loom_family_only_accepts_memory_group() -> None:
+    result = subprocess.run(
+        [sys.executable, str(RUNNER), "--loom-family", "--only", "memory", "-q"],
+        capture_output=True,
+        text=True,
+        cwd=REPO,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_loom_family_preset_is_the_only_test_command_named_by_ci_and_kickoff() -> None:
     kickoff = (REPO / "docs/loom/KICKOFF-DEFAULTS.md").read_text(encoding="utf-8")
     assert "scripts/run_package_tests.py --loom-family" in kickoff

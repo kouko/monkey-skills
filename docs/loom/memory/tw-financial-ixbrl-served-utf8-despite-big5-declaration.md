@@ -2,7 +2,8 @@
 name: tw-financial-ixbrl-served-utf8-despite-big5-declaration
 description: TWSE MOPS t164sb01 serves the WHOLE financial family (-fh/-basi/-bd/-ins) as UTF-8 even though the document declares charset=big5; -ci industrial filings are MIXED — some genuine Big5 (1301/2330), some UTF-8-despite-big5 (1101, 2026Q1) — so served encoding is NOT predictable from taxonomy. A hardcoded big5hkscs decode silently garbles every Chinese-text (nonNumeric) fact for the UTF-8-served bodies (company/subsidiary names, note labels); numeric facts + fact counts are ASCII-safe and unaffected. Decode UTF-8-strict first, big5hkscs fallback (handles both regardless of declaration or taxonomy).
 type: gotcha
-origin: branch feat-tw-ixbrl-fh (2026-07-22) — TW financial-sector iXBRL; surfaced when -fh NPL notes needed the legible bank-subsidiary name and big5hkscs yielded "國泰世華銀行" → "��𧢲陸銝𤥁虾���銵�"
+sources:
+  - resource: branch feat-tw-ixbrl-fh (2026-07-22) — TW financial-sector iXBRL; surfaced when -fh NPL notes needed the legible bank-subsidiary name and big5hkscs yielded "國泰世華銀行" → "��𧢲陸銝𤥁虾���銵�"
 ---
 
 The `-ci` industrial arc hardcoded `resp.content.decode("big5hkscs", errors="replace")`

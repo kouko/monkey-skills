@@ -2,7 +2,8 @@
 name: a-worker-that-blames-preexisting-state-is-often-naming-its-own-damage
 description: A dispatched worker reporting "that failure was already there / out of my scope / a sibling did it" is making a causal claim it did not measure — four such claims in one arc were all wrong, each maskable only because the orchestrator held a pre-dispatch baseline; take the baseline before dispatching and diff against it, never accept the attribution
 type: practice
-origin: loom-design-merge (6 plugins → 2 consolidation, parts 1-3, 2026-08-16/17)
+sources:
+  - resource: loom-design-merge (6 plugins → 2 consolidation, parts 1-3, 2026-08-16/17)
 ---
 
 Across one migration arc, four workers reported a failure as not-mine. Every

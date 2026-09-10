@@ -2,7 +2,8 @@
 name: departure-disguised-as-conformance-cites-wrong-precedent
 description: A convention-departure justification that cites an "established pattern" the code actually diverges from is a departure DISGUISED as conformance — worse than an honest one; verify the cited precedent actually covers your case, and have review check the citation, not just the code
 type: gotcha
-origin: feat-narrative-kpi-evidence-coverage T3 (8-K prose KPI producer, investing-toolkit 2.27.0, 2026-07-20)
+sources:
+  - resource: feat-narrative-kpi-evidence-coverage T3 (8-K prose KPI producer, investing-toolkit 2.27.0, 2026-07-20)
 ---
 
 An implementer reached the data-markets `exhibit_prose` locator from an

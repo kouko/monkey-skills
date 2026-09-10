@@ -2,7 +2,8 @@
 name: cross-plugin-guard-tests-need-foreign-carrier-trigger-paths
 description: A repo-level guard test asserting invariants over files in OTHER plugins is fail-open until the running workflow's paths filter names those foreign carrier files in BOTH pull_request and push trigger blocks — an edit to a foreign carrier alone never fires the guard
 type: gotcha
-origin: feat-knowledge-triage-v1 (2026-07-18) — bucket-vocabulary drift guard, T5 implementer finding
+sources:
+  - resource: feat-knowledge-triage-v1 (2026-07-18) — bucket-vocabulary drift guard, T5 implementer finding
 ---
 
 `scripts/test_bucket_vocabulary_consistency.py` pins byte-identity of the

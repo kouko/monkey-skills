@@ -2,7 +2,8 @@
 name: an-absence-pin-and-a-presence-pin-want-opposite-scopes
 description: A presence pin must be narrowed to the region that owns the claim or it goes false-green, but narrowing an ABSENCE pin is a silent weakening — a retired instruction is a defect wherever it lives, so scoping its absence check to one section lets it return in any other with the suite green; keep an absence pin only when it is paired with a positive assertion of the replacement AND the retired string is a conflicting instruction, and leave it unwindowed
 type: practice
-origin: pin-granularity migration (2026-08-28) — twelve batch agents settled this rule three incompatible ways and all three landed on one branch; whole-branch review found it, and both arms independently flagged the windowed case
+sources:
+  - resource: pin-granularity migration (2026-08-28) — twelve batch agents settled this rule three incompatible ways and all three landed on one branch; whole-branch review found it, and both arms independently flagged the windowed case
 ---
 
 Refactoring markdown pins to assert invariants rather than wording produced

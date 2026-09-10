@@ -2,7 +2,8 @@
 name: a-line-cite-fixed-before-its-file-is-edited-goes-stale-again
 description: A `path:line` citation written or corrected inside the same change that edits the cited file is captured against pre-edit coordinates and nothing re-checks it, so it ships stale by exactly the number of lines that change inserted above it — grep confirming the line today proves nothing about the line at commit time, and the failure repeats even for an author who just recorded the lesson, because the cite is corrected at the moment it is noticed rather than after the edits settle
 type: gotcha
-origin: 2026-08-07 whole-branch review of feat/u1-nightly-phase2-loop — round 2 raised five drifted cites, round 3 found two of the five drifted AGAIN by the same mechanism in the commit that "fixed" them
+sources:
+  - resource: 2026-08-07 whole-branch review of feat/u1-nightly-phase2-loop — round 2 raised five drifted cites, round 3 found two of the five drifted AGAIN by the same mechanism in the commit that "fixed" them
 ---
 
 A backlog entry filed during a review round cited five `path:line`

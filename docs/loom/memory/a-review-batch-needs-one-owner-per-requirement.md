@@ -2,7 +2,8 @@
 name: a-review-batch-needs-one-owner-per-requirement
 description: A Review Batch is refused at `packet` time when two members cite the same `Brief item covered` value ("ownership proof contains duplicate requirement authority") — one requirement, one owner — and same-module dependency chains, exactly the tasks the module rule batches, usually share one brief item; cite the item's clauses verbatim per task (plan-format referent kind (a)) so each member owns a distinct requirement, and expect `ready` and `check_review_batches.py` to say yes before `packet` says no
 type: gotcha
-origin: batch-review-measurement-and-nudge arc (2026-08-31) — batch `proposer` (Tasks 7/8/9, all `BI-3`) passed `ready` and the schema oracle, then `batch_review_cli.py packet` refused; resolved by quoting BI-3's `--check` clause on Task 8 and its gate/plan-format clause on Task 9
+sources:
+  - resource: batch-review-measurement-and-nudge arc (2026-08-31) — batch `proposer` (Tasks 7/8/9, all `BI-3`) passed `ready` and the schema oracle, then `batch_review_cli.py packet` refused; resolved by quoting BI-3's `--check` clause on Task 8 and its gate/plan-format clause on Task 9
 ---
 
 The ownership proof in `review_batch.py` requires every owned requirement

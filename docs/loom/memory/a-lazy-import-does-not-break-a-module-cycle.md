@@ -2,7 +2,8 @@
 name: a-lazy-import-does-not-break-a-module-cycle
 description: Moving one edge of a circular module dependency into a function delays when the cycle executes but does not make the dependency graph one-way; remove or invert the edge, then assert the import graph directly
 type: gotcha
-origin: Outcome Map v3 whole-branch review, 2026-08-30
+sources:
+  - resource: Outcome Map v3 whole-branch review, 2026-08-30
 ---
 
 A function-local import can make a circular dependency appear harmless because

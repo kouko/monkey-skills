@@ -2,7 +2,8 @@
 name: a-stronger-guard-makes-the-fallback-beneath-it-untestable
 description: When defence-in-depth stacks a strong check in front of a weaker fallback, the fallback becomes unreachable from the front door — every test exercising that input is answered by the primary, so deleting the fallback entirely leaves the whole suite green and mutation testing reports it as dead code rather than as an unguarded path; the fallback is the ONLY guard on the machines that lack the primary's dependency, so it needs a test that disables the primary deliberately
 type: practice
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — two mutants survived a 12-mutant battery purely because a rebuild-and-compare check answered before the fingerprint check it superseded
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.26.0) — two mutants survived a 12-mutant battery purely because a rebuild-and-compare check answered before the fingerprint check it superseded
 ---
 
 Adding a stronger check in front of a weaker one is usually right: the

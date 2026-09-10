@@ -2,7 +2,8 @@
 name: a-non-ascii-path-crosses-the-process-boundary-twice
 description: A non-ASCII path crosses the process boundary twice, and the two crossings use different encodings from different sources — pipes DECODE with the locale encoding (`locale.getencoding()`), argv ENCODES with the filesystem encoding (`sys.getfilesystemencoding()`, ASCII under an uncoerced C/POSIX locale) — so fixing one says nothing about the other, and only Linux under a C locale exposes the argv half (macOS pins the filesystem encoding to UTF-8), which makes a macOS-green suite no evidence for it; hand argv to git as UTF-8 bytes AND decode its output as UTF-8, and pin the argv half with a platform-independent test
 type: gotcha
-origin: PR #769 (batch-review-hardening hotfix, 2026-08-31) — #768 merged with `test_packet_seals_non_ascii_path_under_c_locale` failing on the Linux runner (`'ascii' codec can't encode characters in position 45-46`) after the 0.107.0 locale fix had decoded git's output as UTF-8 but left argv on the filesystem encoding; every local run, per-task review and whole-branch review had stayed green
+sources:
+  - resource: PR #769 (batch-review-hardening hotfix, 2026-08-31) — #768 merged with `test_packet_seals_non_ascii_path_under_c_locale` failing on the Linux runner (`'ascii' codec can't encode characters in position 45-46`) after the 0.107.0 locale fix had decoded git's output as UTF-8 but left argv on the filesystem encoding; every local run, per-task review and whole-branch review had stayed green
 ---
 
 `git show <sha>:src/日本.py` raised `UnicodeEncodeError` before git ever

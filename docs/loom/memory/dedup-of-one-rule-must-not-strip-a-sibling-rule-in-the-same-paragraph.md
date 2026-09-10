@@ -2,7 +2,8 @@
 name: dedup-of-one-rule-must-not-strip-a-sibling-rule-in-the-same-paragraph
 description: When dedup'ing a rule (replacing an in-place copy with a pointer to an SSOT), a paragraph often holds several distinct rules governed by DIFFERENT upstream sections — replacing the whole paragraph with the pointer strips the siblings that are NOT dedup targets; edit at sentence granularity, leaving the non-dedup rules in place, and keep a guard test that asserts each sibling marker survives
 type: gotcha
-origin: 2026-08-15 plain-relay-contract arc — T10 (8bc0f516) replaced brainstorming/SKILL.md's fork-guidance paragraph (which held the brief-before-fork trigger, the stakes-first framing, AND the "render ≥2 options as a markdown comparison table" default) with a single dedup pointer; the table-default rule is governed by family-relay.md §Family relay discipline, a different section, and was never a dedup target — it was deleted incidentally; caught by the F1 dogfood guard test in loom-pipeline/scripts/test_family_relay.py
+sources:
+  - resource: 2026-08-15 plain-relay-contract arc — T10 (8bc0f516) replaced brainstorming/SKILL.md's fork-guidance paragraph (which held the brief-before-fork trigger, the stakes-first framing, AND the "render ≥2 options as a markdown comparison table" default) with a single dedup pointer; the table-default rule is governed by family-relay.md §Family relay discipline, a different section, and was never a dedup target — it was deleted incidentally; caught by the F1 dogfood guard test in loom-pipeline/scripts/test_family_relay.py
 ---
 
 A dedup replaces an in-place copy of *one* rule with a pointer to its

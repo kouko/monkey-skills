@@ -2,7 +2,8 @@
 name: contract-class-review-does-not-reach-generated-artifacts
 description: A clause added to docs-reviewer's dimensions binds only where its scope contract lets it look — since the 0.75.0 contract-class narrowing, record-class docs/** (generated briefs/plans/specs) exit review scope before dimension evaluation runs, so a template-contract enforcement clause reaches the template files themselves but never the instances writers generate from them; instance-level gating needs its own check in the reviewer that actually reads instances (for plans: plan-document-reviewer)
 type: gotcha
-origin: feat/visualization-trigger-layer (2026-08-11) — T5 code-quality reviewer caught the plan's own Notes overstating docs-reviewer coverage ("the loop for plans is covered at branch time"), corrected in the plan's Decision Log
+sources:
+  - resource: feat/visualization-trigger-layer (2026-08-11) — T5 code-quality reviewer caught the plan's own Notes overstating docs-reviewer coverage ("the loop for plans is covered at branch time"), corrected in the plan's Decision Log
 ---
 
 The visualization arc wired "diagram slot absent / unjustified N/A" into

@@ -2,7 +2,8 @@
 name: a-tests-message-explaining-the-contract-marks-what-the-contract-omits
 description: when a test's assertion message has to explain what the contract means — naming a referent, a dimension, or a scope the contract text never states — the author knew the missing piece and wrote it into the wrong artifact; the test passes, the contract ships ambiguous, and the reader who actually executes it never sees the message
 type: gotcha
-origin: 2026-08-22 code-as-spec-lens-no-op-bar arc — a mirrored rule sentence shipped saying "this dimension" into an arm that has no such dimension, while the pinning test's own assert message read "must bar declaring the omission dimension a no-op"; two whole-branch reviewers found it independently, and one cited the test message as the evidence that the intent existed
+sources:
+  - resource: 2026-08-22 code-as-spec-lens-no-op-bar arc — a mirrored rule sentence shipped saying "this dimension" into an arm that has no such dimension, while the pinning test's own assert message read "must bar declaring the omission dimension a no-op"; two whole-branch reviewers found it independently, and one cited the test message as the evidence that the intent existed
 ---
 
 A rule sentence was mirrored from one reviewer contract into another. The

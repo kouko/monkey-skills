@@ -123,6 +123,11 @@
       "name": "think-orbit",
       "description": "Single-user thinking-and-planning partner — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view; decisions are one kind of ending, not the only one.",
       "source": "./think-orbit/"
+    },
+    {
+      "name": "loom-memory",
+      "description": "Optional, passively-triggered repository-memory capability with an OKF v0.2-compatible store profile. Installs and works standalone — no dependency on loom-code, loom-design, or loom-workflow. Claude Code + Codex.",
+      "source": "./loom-memory/"
     }
   ]
 }

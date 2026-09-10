@@ -2,7 +2,8 @@
 name: a-bounded-check-must-state-its-bound
 description: A completeness check that recognises by NAME or by PATTERN is always partial, and a partial check whose docstring promises totality is worse than no check — it licenses the next reviewer to stop looking at the exact class it was built for; state the bound in the assertion message and the docstring, name the shapes that still escape, and treat "widen the mechanism" and "size the claim" as two obligations, not one
 type: practice
-origin: north-star-serves-link / dissolve-direction-layer (2026-08-21) — review rounds 6, 7 and 8 each rated the then-current revision of one test file fatal, each by injecting a bare filesystem read the docstring implied was impossible
+sources:
+  - resource: north-star-serves-link / dissolve-direction-layer (2026-08-21) — review rounds 6, 7 and 8 each rated the then-current revision of one test file fatal, each by injecting a bare filesystem read the docstring implied was impossible
 ---
 
 The same test file was defeated three times, each revision built to fix

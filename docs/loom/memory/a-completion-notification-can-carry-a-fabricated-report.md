@@ -2,7 +2,8 @@
 name: a-completion-notification-can-carry-a-fabricated-report
 description: A dispatched agent can emit a completion notification whose summary is detailed, plausible and entirely false — function names that exist nowhere, a test count that does not reproduce — and it can arrive BEFORE the real notification from that same agent; the tell is a near-zero tool_uses and duration, and the only defence is measuring the artifact instead of reading the report
 type: gotcha
-origin: branch direction-queue-gate (2026-08-20) — Task 4's implementer notified twice with conflicting reports; the first named functions that were never written
+sources:
+  - resource: branch direction-queue-gate (2026-08-20) — Task 4's implementer notified twice with conflicting reports; the first named functions that were never written
 ---
 
 One dispatched implementer produced two completion notifications for the same

@@ -2,7 +2,8 @@
 name: absence-pin-fix-recurred-in-files-authored-after-the-fix
 description: Prose-pin normalization must strip inline markup and collapse whitespace AND lowercase, both sides — case, hard-wrap, and markdown-bold are three observed variants of the same vacuous-pin class; and a pin-bug fix does NOT stop recurrence, because new test files are written by copying the nearest sibling (which may predate the fix) — the fix must travel in the dispatch packet, not just in the repo
 type: practice
-origin: feat-copywriting-convergence-modernization (copywriting-toolkit 1.15.0, 2026-07-30) — same bug class fixed three separate times in one arc (7f13682c, 0e85e073, bf1b3dcc); third variant + cross-file recurrence re-confirmed on fix-docs-review-0490-adjudicated-defects (loom-code 0.50.0, 2026-08-04)
+sources:
+  - resource: feat-copywriting-convergence-modernization (copywriting-toolkit 1.15.0, 2026-07-30) — same bug class fixed three separate times in one arc (7f13682c, 0e85e073, bf1b3dcc); third variant + cross-file recurrence re-confirmed on fix-docs-review-0490-adjudicated-defects (loom-code 0.50.0, 2026-08-04)
 ---
 
 An absence pin like `assert PHRASE not in text` guards against a retired rule

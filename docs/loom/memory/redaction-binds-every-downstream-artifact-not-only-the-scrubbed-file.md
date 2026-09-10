@@ -2,7 +2,8 @@
 name: redaction-binds-every-downstream-artifact-not-only-the-scrubbed-file
 description: Scrubbing a document of private material does not scrub what other documents quote from it. Identifiers judged individually harmless — node ids, branch names, ticket slugs — reconstruct the subject when read together, and a downstream brief that quotes one line verbatim reintroduces the whole. The scrubbed file's own 脫敏聲明 then asserts something false. Sweep every artifact that cites the source, including commit bodies, and do it before the first push, because a public repo makes it unrecoverable.
 type: gotcha
-origin: think-orbit 0.1.4 transparency arc (2026-08-19) — the orchestrator scrubbed the checkpoint doc, explicitly judged ~10 node ids abstract enough to keep, and the whole-branch reviewer showed they reconstructed the subject matter; caught pre-push, nothing left the machine
+sources:
+  - resource: think-orbit 0.1.4 transparency arc (2026-08-19) — the orchestrator scrubbed the checkpoint doc, explicitly judged ~10 node ids abstract enough to keep, and the whole-branch reviewer showed they reconstructed the subject matter; caught pre-push, nothing left the machine
 ---
 
 A real-material checkpoint was written from a project belonging to the user's

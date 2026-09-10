@@ -2,7 +2,8 @@
 name: reviewer-dispatch-isolated-worktree
 description: A reviewer subagent comparing commits can overwrite tracked files in the main checkout — dispatch prompts must explicitly order an isolated scratch dir or detached worktree
 type: gotcha
-origin: loom-pipeline v1.1 batch mode branch (PRs #483–#487, 2026-07-04)
+sources:
+  - resource: loom-pipeline v1.1 batch mode branch (PRs #483–#487, 2026-07-04)
 ---
 
 A reviewer subagent asked to compare two commits checked historical

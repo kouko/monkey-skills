@@ -2,7 +2,8 @@
 name: a-gate-that-executes-a-recorded-string-is-a-gate-the-string-writes
 description: A push gate that runs whatever `command` an agent recorded in review.json is not a gate over the work — it is a gate over the string; four adversarial rounds each reopened it with one token (`true`, a `# comment` naming the artifact, `; true`, a pipeline) until the checker stopped executing recorded strings and ran the artifact file / the declared test command directly, argv-style, no shell
 type: practice
-origin: simple-loom-flow (2026-09-02) — W1 checkpoint rounds 1–4 on loom_checker.py; the fix that held was ffd9b90a's "execute artifacts and declared commands, never recorded strings"
+sources:
+  - resource: simple-loom-flow (2026-09-02) — W1 checkpoint rounds 1–4 on loom_checker.py; the fix that held was ffd9b90a's "execute artifacts and declared commands, never recorded strings"
 ---
 
 The first design let the checker re-run `probes[].command` "so the result

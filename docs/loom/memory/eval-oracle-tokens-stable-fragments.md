@@ -2,7 +2,8 @@
 name: eval-oracle-tokens-stable-fragments
 description: Substring-matched eval-oracle tokens must be the shortest distinctive stable fragment (surname / product name) with |-alternatives for alias-language-case variance — full names break on translation, spacing, word order; and a miss's class (form vs genuine drop) must be re-derived per run, never carried over from an earlier run
 type: practice
-origin: branch feat-replay-oracle-calibration (2026-07-11) — 3 calibration rounds over 18 replay artifacts
+sources:
+  - resource: branch feat-replay-oracle-calibration (2026-07-11) — 3 calibration rounds over 18 replay artifacts
 ---
 
 Calibrating substring-matched oracle tokens against non-deterministic LLM

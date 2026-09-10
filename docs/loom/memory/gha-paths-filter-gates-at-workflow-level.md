@@ -2,7 +2,8 @@
 name: gha-paths-filter-gates-at-workflow-level
 description: GitHub Actions `paths:` filters gate at the `on:`/workflow-trigger level, never per-job — a job that must see EVERY push to a branch (post-merge verifiers, repo-wide sweeps) cannot live inside a path-filtered workflow file; give it its own unfiltered workflow
 type: gotcha
-origin: PR feat/loom-memory-hardening-o4-o2-o3-o5-o6 Task 6 (2026-07-17)
+sources:
+  - resource: PR feat/loom-memory-hardening-o4-o2-o3-o5-o6 Task 6 (2026-07-17)
 ---
 
 While adding the post-merge memory-trailer verifier, the plan said "add a

@@ -2,7 +2,8 @@
 name: a-shared-index-file-is-regenerated-from-entries-never-hand-merged
 description: Committed index files that mirror many entry files (BACKLOG.md, the memory store's §Index) are a structural source of rebase/merge conflicts — resolve by REGENERATING from the entry files with the store's generator, never by hand-picking conflict hunks; hand-merging reintroduces exactly the drift the generator exists to prevent
 type: process
-origin: US-quarterly arc PR #665 (two live rebase-conflict incidents on shared indexes, 2026-08-07) + loom arc 3 (memory §Index generation shipped, same date)
+sources:
+  - resource: US-quarterly arc PR #665 (two live rebase-conflict incidents on shared indexes, 2026-08-07) + loom arc 3 (memory §Index generation shipped, same date)
 ---
 
 A committed index that is a projection of many entry files conflicts

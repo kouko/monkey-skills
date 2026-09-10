@@ -2,7 +2,8 @@
 name: a-token-level-fix-to-an-adversarial-finding-reopens-next-round
 description: When an adversarial reviewer defeats a gate with one example, fixing that example (a keyword, a substring, a regex branch) reopens the class next round; the fix that survives replaces the judgement with structure (execute the thing itself, count characters not words, strip every markdown prefix) or hands the judgement to the reviewer lens explicitly — and the same finding id surviving a third round is the signal to change design, not patch again
 type: practice
-origin: simple-loom-flow (2026-09-03) — `spec.ui-flows-recompute` went N/A → synonyms → arrow char → fence/prefix bypass → CJK false-blocks across W2 rounds 2–5; the structural rule (no keyword list, ≥4 visible chars each side of an arrow, fences/comments/indented code stripped) is what closed it
+sources:
+  - resource: simple-loom-flow (2026-09-03) — `spec.ui-flows-recompute` went N/A → synonyms → arrow char → fence/prefix bypass → CJK false-blocks across W2 rounds 2–5; the structural rule (no keyword list, ≥4 visible chars each side of an arrow, fences/comments/indented code stripped) is what closed it
 ---
 
 Two checker rules in this change followed the same arc: the reviewer

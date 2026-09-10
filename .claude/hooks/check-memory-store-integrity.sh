@@ -3,32 +3,40 @@
 #
 # Triggered: PostToolUse on Write|Edit (configured in .claude/settings.json).
 #
-# Why: `docs/loom/memory/` keeps one fact per file, and its README.md §Index
-# must carry one line per entry whose description is the entry's frontmatter
-# `description` copied byte-identical. Writing the entry alone leaves the store
-# invalid. That shipped twice before being caught by CI after push — under a job
-# whose display name is "plugin version bump", which names a DIFFERENT check, so
-# the failure did not point at the store and cost a diagnosis round each time.
-# A third occurrence happened while this work was underway and was caught one
-# step later — at branch close-out, by an orchestrator following prose. Prose
-# only works when it is read; this hook fires whether or not it is.
+# Why: `docs/loom/memory/` keeps one fact per file, and its generated
+# `index.md` must be exactly what a fresh regeneration from every entry's
+# frontmatter would produce (OKF v0.2-compatible Loom profile — see
+# `loom-memory/scripts/loom_memory.py`). Editing an entry's frontmatter
+# without regenerating the index leaves the store invalid: `index.md` still
+# carries the OLD name/description/type for that entry. That drift shipped
+# undetected twice before being caught by CI after push — under a job whose
+# display name is "plugin version bump", which names a DIFFERENT check, so
+# the failure did not point at the store and cost a diagnosis round each
+# time. A third occurrence happened while this work was underway and was
+# caught one step later — at branch close-out, by an orchestrator following
+# prose. Prose only works when it is read; this hook fires whether or not
+# it is.
 #
 # Scope: fires for any edit under a `docs/loom/memory/` tree, the store's own
-# README.md included — deleting an index line breaks the invariant just as
-# surely as omitting one. No-op for every other path, including the near-miss
-# spellings `docs/loom/memory-archive/` and `docs/loom/memoryX/`. Note the
-# checker globs the store non-recursively, so an edit at `…/memory/sub/x.md`
-# triggers a check that cannot see that file — the store's charter is one flat
-# file per fact, so a nested entry is itself the thing to fix.
+# README.md included — README.md is itself a store concept file (frontmatter
+# `type: Memory Store Guide`), so a bad edit to it breaks the invariant just
+# as surely as a bad edit to any lesson. No-op for every other path,
+# including the near-miss spellings `docs/loom/memory-archive/` and
+# `docs/loom/memoryX/`. On nesting: the concept scan stays non-recursive, so a
+# file at `…/memory/sub/x.md` is never treated as a concept — but `validate`,
+# the command this hook runs, walks the tree recursively and reports such a
+# file as a `nested-document` offender. The store's charter is one flat file
+# per fact, and an edit that nests one is caught here, not silently missed.
 #
 # Portability: the store is portable (`loom-code:loom-memory` fires in any
-# repo carrying `docs/loom/memory/README.md`) but this checker ships inside no
-# plugin. When it is absent, no-op — never let a "No such file" become a
-# phantom store violation.
+# repo carrying `docs/loom/memory/README.md`) but this validator ships inside
+# the `loom-memory` plugin, not every consumer. When it is absent, no-op —
+# never let a "No such file" become a phantom store violation.
 #
 # Exit codes:
-#   0 — store valid, not a store edit, checker unavailable, or the hook payload
-#       was unreadable (no jq, malformed JSON, empty stdin → no path to check)
+#   0 — store valid, not a store edit, validator unavailable, or the hook
+#       payload was unreadable (no jq, malformed JSON, empty stdin → no path
+#       to check)
 #   2 — invariant violated. NOTE the host contract: a PostToolUse exit 2 does
 #       NOT undo the write — the file has already landed. It surfaces stderr to
 #       the agent, which must then fix the store before continuing. Preventing
@@ -55,19 +63,21 @@ fi
 # which pass absolute paths. An earlier draft used a separate `case` guard
 # plus this strip — two patterns that can drift apart, and whole-branch review
 # showed the drift was unobservable: widening only the `case` left behaviour
-# identical because the stricter strip then failed and the missing checker
+# identical because the stricter strip then failed and the missing validator
 # fail-opened. With a single pattern, widening it changes behaviour, which is
 # what makes the near-miss probes in the test suite discriminating.
 REPO_ROOT="${FILE_PATH%/docs/loom/memory/*}"
 # Explicit intent, deliberately untested: removing this line does not change
 # observable behaviour today, because a non-store path leaves REPO_ROOT equal to
-# the file path and the checker lookup then fail-opens on the missing file. It
+# the file path and the validator lookup then fail-opens on the missing file. It
 # stays so the not-a-store-path decision is stated rather than inherited from a
 # downstream accident.
 [ "$REPO_ROOT" != "$FILE_PATH" ] || exit 0
 
-CHECKER="$REPO_ROOT/scripts/check_loom_memory_integrity.py"
-[ -f "$CHECKER" ] || exit 0   # portable store, non-portable checker → harmless no-op
+VALIDATOR="$REPO_ROOT/loom-memory/scripts/loom_memory.py"
+[ -f "$VALIDATOR" ] || exit 0   # portable store, non-portable plugin → harmless no-op
+
+STORE="$REPO_ROOT/docs/loom/memory"
 
 # THREE constructs in this hook carry no test, each for a stated reason. Two are
 # equivalent mutants (removing them changes nothing observable, so any test would
@@ -79,31 +89,31 @@ CHECKER="$REPO_ROOT/scripts/check_loom_memory_integrity.py"
 #   3. the `2>&1` in the capture below — observable, not pinned.
 #
 # PYTHONDONTWRITEBYTECODE: defence-in-depth. CPython does not cache the
-# `__main__` script and the checker imports stdlib only, so no `__pycache__` is
-# reachable today — a test asserting its absence passes with or without this var
-# (whole-branch review proved the equivalent mutant). It stays because a
+# `__main__` script and the validator imports stdlib only, so no `__pycache__`
+# is reachable today — a test asserting its absence passes with or without this
+# var (whole-branch review proved the equivalent mutant). It stays because a
 # `__pycache__` under a scanned tree trips the skill-folder-structure hook, and
-# the checker may grow a local import later.
-# `2>&1`: folds a checker crash into $REPORT so the traceback prints under the ❌
-# header instead of above it. This IS observable — a test could assert the
-# header precedes the traceback — but stderr ordering on a crash path is not a
-# contract worth pinning, so it is left unguarded on purpose rather than
+# the validator may grow a local import later.
+# `2>&1`: folds a validator crash into $REPORT so the traceback prints under
+# the ❌ header instead of above it. This IS observable — a test could assert
+# the header precedes the traceback — but stderr ordering on a crash path is
+# not a contract worth pinning, so it is left unguarded on purpose rather than
 # misfiled as untestable.
-if ! REPORT=$(cd "$REPO_ROOT" && PYTHONDONTWRITEBYTECODE=1 python3 "$CHECKER" 2>&1); then
+if ! REPORT=$(cd "$REPO_ROOT" && PYTHONDONTWRITEBYTECODE=1 python3 "$VALIDATOR" validate "$STORE" 2>&1); then
   cat >&2 <<EOF
 ❌ loom memory-store integrity violated
 
 $REPORT
 
-Fix: regenerate the §Index from entry frontmatter:
+Fix: correct the named entry's frontmatter, then regenerate index.md from it:
 
-    python3 scripts/check_loom_memory_integrity.py --write
+    python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory
 
 then re-run the check:
 
-    python3 scripts/check_loom_memory_integrity.py
+    python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory
 
-If --write refuses instead of regenerating, its output names the file and the problem; fix that file, then repeat both steps.
+If regenerate-index itself refuses instead of writing, its output names the file and the problem; fix that file, then repeat both steps.
 EOF
   exit 2
 fi

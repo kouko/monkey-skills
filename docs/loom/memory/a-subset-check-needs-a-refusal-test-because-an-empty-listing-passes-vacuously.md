@@ -2,7 +2,8 @@
 name: a-subset-check-needs-a-refusal-test-because-an-empty-listing-passes-vacuously
 description: When a guard is "every listed item must be in the declared set", a GREEN test that only shows a conforming input sealing proves nothing — an EMPTY listing from a broken producer is a subset of anything; pin every subset/allow-list check with a RED test whose input contains one item that must be refused, on every producer branch (here the root-commit branch of `git diff-tree` listed zero paths without `--root`, and the seal-only test stayed green through two review layers)
 type: gotcha
-origin: batch-review-hardening (2026-08-31) — Task 3's declared-files check had a root-commit fallback whose `git diff-tree` call lacked `--root`; the fallback returned an empty list, the "root commit member seals" test passed vacuously, per-task triad and batch aggregate review both accepted it, and an implementer fixing an unrelated quoting bug noticed the empty listing
+sources:
+  - resource: batch-review-hardening (2026-08-31) — Task 3's declared-files check had a root-commit fallback whose `git diff-tree` call lacked `--root`; the fallback returned an empty list, the "root commit member seals" test passed vacuously, per-task triad and batch aggregate review both accepted it, and an implementer fixing an unrelated quoting bug noticed the empty listing
 ---
 
 The shape is general: `changed ⊆ declared` is trivially true when `changed`

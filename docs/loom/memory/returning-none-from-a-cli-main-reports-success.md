@@ -2,7 +2,8 @@
 name: returning-none-from-a-cli-main-reports-success
 description: Every CLI here ends `sys.exit(main())` and `sys.exit(None)` exits 0 — so an error path that stops returning its non-zero code does not lose a diagnostic, it reports SUCCESS to the shell; a sampled mutation pass found four such paths where `return 1`/`return 2` could become `return None` with 1363 tests green
 type: gotcha
-origin: 2026-07-27 sampled mutation pass over the US SEC lanes (PR #623)
+sources:
+  - resource: 2026-07-27 sampled mutation pass over the US SEC lanes (PR #623)
 ---
 
 `analysis-kpi`'s CLIs all end:

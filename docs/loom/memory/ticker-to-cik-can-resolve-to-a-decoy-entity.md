@@ -2,7 +2,8 @@
 name: ticker-to-cik-can-resolve-to-a-decoy-entity
 description: A ticker's CURRENT SEC CIK can resolve to a new holding shell / subsidiary / successor entity, not the operating history — a naive historical pull then returns EMPTY (or truncated) with no error; verify CIK continuity before any multi-year fetch, and never stitch across a discontinuity
 type: gotcha
-origin: feat-8k-earnings-kpi-intake (88-filer 30-year 8-K census, investing-toolkit, 2026-07-19)
+sources:
+  - resource: feat-8k-earnings-kpi-intake (88-filer 30-year 8-K census, investing-toolkit, 2026-07-19)
 ---
 
 Resolving a ticker to a SEC CIK today does NOT guarantee that CIK holds the

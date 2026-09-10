@@ -182,3 +182,45 @@ def test_real_loom_plugins_pass_the_install_boundary_gate():
 
     assert checker.find_boundary_violations(repo / "loom-code") == []
     assert checker.find_boundary_violations(repo / "loom-design") == []
+    assert checker.find_boundary_violations(repo / "loom-memory") == []
+
+
+def test_reports_sibling_internal_path_naming_loom_memory(tmp_path):
+    """W4-01: the generic sibling-plugin regex must catch `loom-memory`
+    specifically, not just the two plugins every other fixture in this file
+    names — a plugin-name-shaped regex proven only against `loom-design`/
+    `loom-code` could still miss a real third name."""
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-code"
+    source = _write(
+        plugin / "skills" / "ship" / "SKILL.md",
+        "Read `loom-memory/scripts/loom_memory.py` before recording.\n"
+        "[private](../../../loom-memory/skills/loom-memory/SKILL.md)\n",
+    )
+
+    assert checker.find_boundary_violations(plugin) == [
+        f"{source}:1: sibling internal path: loom-memory/scripts/loom_memory.py",
+        f"{source}:2: escaping relative link: ../../../loom-memory/skills/loom-memory/SKILL.md",
+    ]
+
+
+def test_reports_sibling_internal_path_when_loom_memory_is_the_plugin_under_test(tmp_path):
+    """The reverse direction: loom-memory itself must not reference a
+    sibling's private path either — its own name is excluded from the
+    detector, its siblings' names are not."""
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-memory"
+    _write(
+        plugin / ".claude-plugin" / "plugin.json",
+        json.dumps({"name": "loom-memory"}),
+    )
+    source = _write(
+        plugin / "skills" / "loom-memory" / "SKILL.md",
+        "Run `loom-code/scripts/loom_checker.py` to cross-check a citation.\n",
+    )
+
+    assert checker.find_boundary_violations(plugin) == [
+        f"{source}:1: sibling internal path: loom-code/scripts/loom_checker.py",
+    ]

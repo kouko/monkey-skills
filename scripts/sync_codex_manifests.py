@@ -80,6 +80,7 @@ CODEX_ELIGIBLE = (
     "collab-toolkit",
     "salesforce-toolkit",
     "think-orbit",
+    "loom-memory",
 )
 
 

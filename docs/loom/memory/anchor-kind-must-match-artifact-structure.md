@@ -2,7 +2,8 @@
 name: anchor-kind-must-match-artifact-structure
 description: Evidence anchors stay stable only when their form matches the cited artifact: prose headings or phrases, code declarations or literals, and configuration key paths plus value fragments
 type: practice
-origin: anchor-primary-line-cite-rule branch, 2026-08-22
+sources:
+  - resource: anchor-primary-line-cite-rule branch, 2026-08-22
 ---
 
 An anchor is not a prose-only device. Its stable form must match the artifact

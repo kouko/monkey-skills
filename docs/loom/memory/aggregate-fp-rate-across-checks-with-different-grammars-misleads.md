@@ -2,7 +2,8 @@
 name: aggregate-fp-rate-across-checks-with-different-grammars-misleads
 description: Gating a tool on ONE false-positive rate aggregated across checks with different grammars produces verdicts that move opposite to quality — fixing one check's entire FP class RAISED the aggregate from 79.7% to 96.8% because the denominator shrank faster than the numerator, and a later round's "improvement" to 0% was actually descoping the noisy check, not fixing anything. Split the measurement per check BEFORE comparing anything to a threshold; a reversal condition written against an aggregate can trip on strict improvements and stay silent on real regressions.
 type: gotcha
-origin: feat-docs-citation-check-review-mode (loom-code 0.40.0), citation-checker corpus rounds 1-4 — docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md
+sources:
+  - resource: feat-docs-citation-check-review-mode (loom-code 0.40.0), citation-checker corpus rounds 1-4 — docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md
 ---
 
 A citation checker carried two checks with different grammars — `path:line`

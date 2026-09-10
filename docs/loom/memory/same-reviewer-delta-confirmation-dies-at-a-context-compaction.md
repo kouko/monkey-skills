@@ -2,7 +2,8 @@
 name: same-reviewer-delta-confirmation-dies-at-a-context-compaction
 description: The repo's standard fix-resolution mechanism — the SAME reviewer confirming a delta via SendMessage rather than a fresh whole-artifact round — is addressable only through handles held in the orchestrator's live context, so a context compaction silently destroys it for every already-completed reviewer; the loss surfaces as "I cannot remember whom to ask", never as an error, and the tempting repairs (a fresh reviewer, or flipping the ledger anyway) each discard exactly what the mechanism was protecting
 type: gotcha
-origin: brief-item-addressability arc (2026-08-13) — after a compaction, T7's and T8's reviewers were unreachable; ListAgents listed only the one still-running subagent, and no completed reviewer could be resumed
+sources:
+  - resource: brief-item-addressability arc (2026-08-13) — after a compaction, T7's and T8's reviewers were unreachable; ListAgents listed only the one still-running subagent, and no completed reviewer could be resumed
 ---
 
 Delta confirmation is this repo's standard resolution for a gating

@@ -2,7 +2,8 @@
 name: never-quote-a-living-plan-verbatim-in-a-code-artifact
 description: A code artifact that quotes plan prose verbatim, or narrates a task's ownership history, is false the moment the plan is amended — and under parallel SDD the orchestrator amends the plan WHILE the implementer is writing those quotes; in one round every plan quotation in an artifact was false while its code citations failed at about 1 in 12, because code is a stable citation target within a task and a plan under active amendment is not. A reviewer's own "all twelve citations hold" did not survive a second audit either
 type: gotcha
-origin: feat-us-quarterly-statement-series Task D round 3 (US quarterly series arc, 2026-07-30)
+sources:
+  - resource: feat-us-quarterly-statement-series Task D round 3 (US quarterly series arc, 2026-07-30)
 ---
 
 Task D's round 3 was audited by two independent reviewers. The first opened twelve

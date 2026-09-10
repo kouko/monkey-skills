@@ -2,7 +2,8 @@
 name: a-proxy-metric-is-a-claim-about-what-it-measures
 description: A number stood in for a property nobody verified it tracked — squareness `min(W,H)/max(W,H)` was used to decide whether a mermaid subgraph's `direction` had taken effect, and it cannot tell "the rows are laid out horizontally" from "the boxes happen to be wide", so it ranked the best-looking WRONG shape first (0.807, rows secretly stacked) above the correct one (0.686); when a metric is standing in for a property, validate it against a case where the two must disagree, and read the underlying structure directly at least once
 type: practice
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.27.0) — a layout rule, its appendix of fifteen measurements, and a proposed fix were all decided on squareness; the fix was adopted and had to be withdrawn after node coordinates were parsed out of the SVG
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.27.0) — a layout rule, its appendix of fifteen measurements, and a proposed fix were all decided on squareness; the fix was adopted and had to be withdrawn after node coordinates were parsed out of the SVG
 ---
 
 A proxy is adopted because the real property is awkward to observe. That is

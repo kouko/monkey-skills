@@ -2,7 +2,8 @@
 name: a-verbatim-pin-proves-nobody-edited-the-sentence
 description: A verbatim pin is satisfied by its sentence surviving unedited, so a claim the sentence makes about things living elsewhere — how many surfaces do X, which files are covered — goes false while the pin stays green and nothing has to be edited for that to happen; a claim of that shape needs a check that recomputes it from the population it describes, and that recomputation must be unable to pass vacuously
 type: gotcha
-origin: PR #748 (goal-create — round-1 whole-branch review finding, 2026-08-27)
+sources:
+  - resource: PR #748 (goal-create — round-1 whole-branch review finding, 2026-08-27)
 ---
 
 A skill's `## Invocation` section said it is named as an option "at exactly two

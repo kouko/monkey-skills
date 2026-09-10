@@ -2,7 +2,8 @@
 name: a-plan-is-a-dispatch-ticket-and-changes-only-by-charter-policy-after-its-commit
 description: A plan answers "how is the work split and dispatched" for a fresh-context implementer; after the plan commit it changes only through the policies the artifact charter's plan row names (claimed/blocked marks, an appended memory task, an un-landed task replaced or amended with the reason in the commit message, a Questions-asked append) — build diaries, lessons and landed shas have their own homes and a plan that carries them is an inconsistency, never a richer plan
 type: practice
-origin: 2026-09-05-artifact-charter-boundaries-and-edit-rights — a real 3,945-word plan whose Risks section had grown a dated build diary (41% of the file) and three post-hoc tasks tagged with landed shas; the same template had produced 215-word plans elsewhere
+sources:
+  - resource: 2026-09-05-artifact-charter-boundaries-and-edit-rights — a real 3,945-word plan whose Risks section had grown a dated build diary (41% of the file) and three post-hoc tasks tagged with landed shas; the same template had produced 215-word plans elsewhere
 ---
 
 Plans from one template ranged from 215 to 3,945 words. The long ones were

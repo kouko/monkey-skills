@@ -1,0 +1,25 @@
+{
+  "name": "loom-memory",
+  "version": "0.1.0",
+  "description": "Optional, passively-triggered repository-memory capability with an OKF v0.2-compatible store profile. Installs and works standalone — no dependency on loom-code, loom-design, or loom-workflow. Claude Code + Codex.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-memory",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "loom-memory",
+    "memory",
+    "okf",
+    "open-knowledge-format",
+    "repository-memory",
+    "recall",
+    "record",
+    "reconcile",
+    "retire",
+    "portable"
+  ],
+  "skills": "./skills/"
+}

@@ -2,7 +2,8 @@
 name: grep-tests-scope-to-measured-neighborhood
 description: Whole-file substring grep-tests over prose files go false-green when the asserted phrase pre-exists elsewhere in the file, and pinning a phrase's text plus its file-wide uniqueness still does not pin the SECTION that makes it fire — scope assertions to a measured window around the feature's anchor, make the anchor the enclosing section whenever placement is load-bearing, and verify RED against the pre-change content
 type: gotcha
-origin: PR feat-loom-code-upstream-hardening (2026-07-10), plan T11 round-2 — two of seven grep-tests passed with the feature entirely absent
+sources:
+  - resource: PR feat-loom-code-upstream-hardening (2026-07-10), plan T11 round-2 — two of seven grep-tests passed with the feature entirely absent
 ---
 
 Grep-style behavioral tests over SKILL.md / agent prose assert phrase

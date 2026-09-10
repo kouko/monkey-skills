@@ -200,7 +200,6 @@ mechanisms:
   - {id: "action:blind-run",           class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:adversarial",         class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:checkpoint",          class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
-  - {id: "action:memory",              class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   - {id: "action:alert-to-intent",     class: contract, eval: "loom-code/scripts/test_contract_manifest.py::test_every_action_names_one_owner_station"}
   # artifact:<name>.<field> — one id per declared field (F10); eval is the
   # single test that walks every field of every artifact against its

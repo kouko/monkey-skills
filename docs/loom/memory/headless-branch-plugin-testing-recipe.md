@@ -2,7 +2,8 @@
 name: headless-branch-plugin-testing-recipe
 description: Recipe for behaviorally testing an unpushed branch's Claude Code plugins headlessly — --plugin-dir wrapper, neutral empty cwd, probe hook injection first, parse_corpus takes content
 type: process
-origin: PR #488 (loom family connective tissue, firing tests 2026-07-04)
+sources:
+  - resource: PR #488 (loom family connective tissue, firing tests 2026-07-04)
 ---
 
 To behaviorally test Claude Code plugins from an UNPUSHED branch

@@ -2,7 +2,8 @@
 name: an-ab-verdict-scopes-to-the-string-it-varied-not-its-namesake
 description: A firing A/B binds only the exact string it varied, but its verdict gets written as "do not shorten X's description" and X names a plugin that owns several descriptions — so the ban reads as covering a neighbouring string no leg ever touched, and the misreading runs both ways: it blocks a safe edit, or it licenses editing the measured pin because "that experiment was overturned"
 type: gotcha
-origin: 2026-08-07 loom-discovery plugin-manifest diet (PR #664 shipped it; PR #666 was a duplicate closed the same day) — the reviewing session initially read the 2026-07-30 A/B as forbidding the change
+sources:
+  - resource: 2026-08-07 loom-discovery plugin-manifest diet (PR #664 shipped it; PR #666 was a duplicate closed the same day) — the reviewing session initially read the 2026-07-30 A/B as forbidding the change
 ---
 
 `loom-discovery` owns at least four description strings: three SKILL

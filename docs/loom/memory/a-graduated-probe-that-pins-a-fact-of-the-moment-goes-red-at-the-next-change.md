@@ -2,7 +2,8 @@
 name: a-graduated-probe-that-pins-a-fact-of-the-moment-goes-red-at-the-next-change
 description: Three changes in a row (#794, #795, this one) graduated a probe that pinned a fact true only while its branch existed — the intent-confirmation commit found by subject, the live plugin version, a dispatch-commit count with the round number hardcoded — and each went red on main or on the next branch; a graduated probe recomputes what grows (rounds, waves, versions) and skips with a reason when its branch history is gone, the way the language-policy probes already did
 type: gotcha
-origin: 2026-09-05 user-declared-express-lane (loom-code 1.6.0) — the W1-03 implementer hit the red on a fresh branch, the other session hit it on main and fixed the copy without the original, this change re-synced the pair
+sources:
+  - resource: 2026-09-05 user-declared-express-lane (loom-code 1.6.0) — the W1-03 implementer hit the red on a fresh branch, the other session hit it on main and fixed the copy without the original, this change re-synced the pair
 ---
 
 A probe under `evidence/` is written against one branch at one moment,

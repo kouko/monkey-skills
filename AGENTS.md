@@ -65,18 +65,17 @@ Role boundaries enforced by behavior, not reading restrictions:
   `test-dbt-wiki.yml` workflow does NOT cover this directory (it globs
   `dbt-wiki/skills/*/assets/*_test.py` only) — wiring it in is Phase 4
   (U1/U2) of the dbt-wiki quality campaign, not yet built.
-- **Check the loom-memory store's §Index invariants**:
-  `python3 scripts/check_loom_memory_integrity.py [--store docs/loom/memory]`
-  — validate-only (default), stdlib-only; fails rc=1 and names every offender
-  when a body file has no index line, an index line points to a missing
-  file, a filename diverges from its frontmatter `name`, an index
-  description isn't byte-identical to its frontmatter `description`, or
-  two index lines point at the same body file; rc=0 when clean.
-  `python3 scripts/check_loom_memory_integrity.py --write`
-  regenerates the `## Index` section from every entry's frontmatter and
-  writes it back in place. `--check` diffs the committed `## Index` against
-  a freshly rebuilt one and fails rc=1 on any drift without writing —
-  the CI-safe form.
+- **Check the loom-memory store's OKF v0.2-compatible profile invariants**:
+  `python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory`
+  — validate-only, stdlib-only; fails rc=1 and names every offender when a
+  concept file has no parseable frontmatter, a missing `type`/`name`/
+  `description`/`sources[].resource`, a `name` diverging from its filename
+  stem, a duplicate concept identity, or a committed `index.md` that has
+  drifted from a fresh regeneration; rc=0 when clean.
+  `python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory`
+  deterministically rewrites `index.md` from every concept's frontmatter,
+  grouped by memory type; refuses to write when any concept's own metadata
+  is broken.
 - **Run the skill-refactor package gate**:
   `python3 skill-dev-toolkit/skills/skill-refactor/scripts/package_gate.py {export|verify|account|reduce} [arguments]`
   — JSON CLI over the tested immutable-baseline, verification, whole-package

@@ -2,7 +2,8 @@
 name: re-multiline-whitespace-captures-across-lines
 description: Python re — \s* matches newlines even under re.M, so an empty-valued key swallows the next line and chains wrong-field parses; use [ \t]* or anchor the value
 type: gotcha
-origin: PR #492 (loom-code 0.23.0 mechanical gates, 2026-07-04)
+sources:
+  - resource: PR #492 (loom-code 0.23.0 mechanical gates, 2026-07-04)
 ---
 
 In Python regular expressions, `\s` includes `\n` regardless of

@@ -2,7 +2,8 @@
 name: section-gate-must-flag-entry-lookalikes-not-just-matches
 description: A section-scoped gate that matches one entry marker (e.g. `- OQ-<n>`) reports clean on unresolved content when the author used a different bullet (`*`, `1.`) — the matcher accepted only its exact grammar and silently treated every non-matching look-alike as prose, so a full unresolved section read as empty; a gate's job is to flag malformed/look-alike entries, not only to confirm well-formed ones
 type: gotcha
-origin: feat/open-question-dispatch-gate (whole-branch review fix bfb1b79a, 2026-08-14)
+sources:
+  - resource: feat/open-question-dispatch-gate (whole-branch review fix bfb1b79a, 2026-08-14)
 ---
 
 `check_open_questions.py` scans a plan's `## Open Questions` section and

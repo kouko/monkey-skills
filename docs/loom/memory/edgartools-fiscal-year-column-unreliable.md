@@ -2,7 +2,8 @@
 name: edgartools-fiscal-year-column-unreliable
 description: edgartools' facts dataframe `fiscal_year` column mislabels prior-year comparatives — derive the fiscal period from `period_end`, never that column
 type: gotcha
-origin: operational-kpi tier-② XBRL pilot (feat-operational-kpi-xbrl-pilot, 2026-07-15)
+sources:
+  - resource: operational-kpi tier-② XBRL pilot (feat-operational-kpi-xbrl-pilot, 2026-07-15)
 ---
 
 The `fiscal_year` column of edgartools' `xbrl().facts.to_dataframe()`

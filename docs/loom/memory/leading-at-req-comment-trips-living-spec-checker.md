@@ -2,7 +2,8 @@
 name: leading-at-req-comment-trips-living-spec-checker
 description: A test-file comment whose FIRST token is `@req` (e.g. `# @req omitted — see docstring`) is parsed by loom-code's living-spec checker as a REQ-id tag declaration and FAILS the CI structural check as a MALFORMED tag — word any "no req-id here" note without a leading @req token; the check is CI-only (check-living-spec-index.py .), not the package pytest, so a green local suite misses it
 type: gotcha
-origin: feat-8k-earnings-kpi-intake CI fix (loom-code living-spec gate, 2026-07-19, PR #590)
+sources:
+  - resource: feat-8k-earnings-kpi-intake CI fix (loom-code living-spec gate, 2026-07-19, PR #590)
 ---
 
 `loom-code/scripts/check-living-spec-index.py .` (a loom-code CI step,

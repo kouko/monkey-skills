@@ -2,7 +2,8 @@
 name: description-sweeps-must-run-owning-plugin-suite
 description: Frontmatter-description edits look test-free but plugins pin description content in scripts/ guard tests ("Axis 0" mandate, "not for"/N/A needles, isolation clauses) — a sweep dispatch that omits the owning plugin's package suite ships red guards to close-out; every description-sweep task packet must carry that plugin's suite as its Resolved test command
 type: gotcha
-origin: feat/description-token-economy Task 7c collateral (2026-07-14) — two loom-code guards red at close-out; the 7c dispatch omitted the package suite and verdict-only reviewers never ran tests
+sources:
+  - resource: feat/description-token-economy Task 7c collateral (2026-07-14) — two loom-code guards red at close-out; the 7c dispatch omitted the package suite and verdict-only reviewers never ran tests
 type_note: also proven the other direction — loom-discovery's whole-file isolation guard forced a 7a description clause to stay (body line-wraps mid-phrase)
 ---
 
