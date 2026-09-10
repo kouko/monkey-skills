@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-10-stabilize-claude-second-reviewer",
+  "content_digest": "2ace6e6978c84fde67da8bc5e7bc27c5d80df093",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_claude_reviewer.py -q",
+      "artifact": "loom-code/scripts/test_claude_reviewer.py",
+      "result": "pass",
+      "command_digest": "2c7941f048335cd61c180c6f42a8c259e1224b8d239f6c14052d845912c66ae8"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-closing-reader",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-closing-reader",
+      "vendor": "anthropic",
+      "model": "sonnet",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
