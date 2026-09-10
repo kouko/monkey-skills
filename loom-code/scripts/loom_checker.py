@@ -2908,6 +2908,9 @@ def run_publish_external(argv: list[str], **kwargs) -> subprocess.CompletedProce
 
 
 wait_publish_interval = time.sleep
+PUBLISH_CI_POLL_SECONDS = 10
+PUBLISH_CI_REGISTRATION_WAITS = 6
+PUBLISH_CI_PENDING_WAITS = 360
 
 
 def _publish_usage(reason: str, err) -> int:
@@ -3130,8 +3133,8 @@ def _observe_required_ci(
     pr_url: str, *, trusted_gh: str, repo: Path, env: dict[str, str], out, err
 ) -> int:
     """Observe required PR checks in this process until a terminal state."""
-    poll_intervals = 0
-    saw_empty_snapshot = False
+    pending_waits = 0
+    registration_waits = 0
     while True:
         argv = [
             trusted_gh, "pr", "checks", pr_url, "--required",
@@ -3143,11 +3146,19 @@ def _observe_required_ci(
             return _publish_block(
                 f"required CI could not be observed: {type(exc).__name__}: {exc}", err
             )
-        # gh uses exit 8 while checks are pending; JSON remains authoritative.
-        if result.returncode not in {0, 8}:
+        no_checks_yet = (
+            result.returncode == 1
+            and not result.stdout.strip()
+            and re.fullmatch(
+                r"no checks reported on the .+ branch", result.stderr.strip()
+            ) is not None
+        )
+        # gh uses exit 8 while checks are pending and exit 1 before a new
+        # branch's checks register. JSON remains authoritative otherwise.
+        if result.returncode not in {0, 8} and not no_checks_yet:
             detail = (result.stderr or result.stdout or f"exit {result.returncode}").strip()
             return _publish_block(f"required CI could not be observed: {detail}", err)
-        if result.returncode == 0 and not result.stdout.strip():
+        if no_checks_yet or (result.returncode == 0 and not result.stdout.strip()):
             checks = []
         else:
             try:
@@ -3157,11 +3168,11 @@ def _observe_required_ci(
         if not isinstance(checks, list) or any(not isinstance(check, dict) for check in checks):
             return _publish_block("required CI response is not a list of checks", err)
         if not checks:
-            if saw_empty_snapshot:
+            if registration_waits >= PUBLISH_CI_REGISTRATION_WAITS:
                 out.write("No required checks registered\n")
                 return 0
-            saw_empty_snapshot = True
-            wait_publish_interval(30)
+            wait_publish_interval(PUBLISH_CI_POLL_SECONDS)
+            registration_waits += 1
             continue
 
         states = [(str(check.get("name", "unnamed")),
@@ -3186,14 +3197,14 @@ def _observe_required_ci(
                    if state in {"PENDING", "QUEUED", "IN_PROGRESS", "WAITING", "REQUESTED"}
                    or bucket == "pending"]
         if pending:
-            if poll_intervals >= 120:
+            if pending_waits >= PUBLISH_CI_PENDING_WAITS:
                 return _publish_block(
                     "required CI requires user action because no reliable terminal result "
                     "was available after 60 minutes",
                     err,
                 )
-            wait_publish_interval(30)
-            poll_intervals += 1
+            wait_publish_interval(PUBLISH_CI_POLL_SECONDS)
+            pending_waits += 1
             continue
         unknown = [name for name, _, bucket in states
                    if bucket not in {"pass", "skipping"}]

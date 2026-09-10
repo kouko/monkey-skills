@@ -8,7 +8,7 @@ charter: 1.0
 ### Wave 1 — One bounded observation loop
 
 **W1-01 Handle CI registration and pending states in one publisher loop**  acceptance: 1, 2, 3, 4
-- Files: loom-code/scripts/loom_checker.py, loom-code/scripts/test_loom_publish.py, loom-code/skills/ship/SKILL.md, loom-code/CHANGELOG.md, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, .claude-plugin/marketplace.json
+- Files: loom-code/scripts/loom_checker.py, loom-code/scripts/test_loom_publish.py, loom-code/skills/ship/SKILL.md, loom-code/CHANGELOG.md, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json
 - Test: A1 positive: exit-one-no-checks-then-pass; negative: no-second-publish. A2 positive: exact-no-checks-classified; negative: near-match-or-nonblank-blocks. A3 positive: six-waits-then-success; boundary: checks-appear-at-final-observation. A4 positive: pending-then-pass-ten-seconds; boundary: independent-360-wait-timeout.
 - Risk: agent-decided — extend the existing publisher loop with separate counters and exact error classification; add no scheduler, state artifact, gate, or background service.
 
