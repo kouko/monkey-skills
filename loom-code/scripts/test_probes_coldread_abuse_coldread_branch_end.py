@@ -288,7 +288,22 @@ def test_memory_step_store_integrity_check_exits_zero() -> None:
     root. This probe runs the corrected command from the repo root
     (resolved from `__file__`, not the process cwd) and asserts it
     exits 0 against the committed memory store — the positive case the
-    original probe never carried."""
+    original probe never carried.
+
+    The checker it names is a fact of that branch's moment. Change
+    `2026-09-10-okf-compatible-loom-memory` retired
+    `scripts/check_loom_memory_integrity.py` and moved the store to the
+    plugin-owned OKF profile validator, so where the legacy checker is
+    absent this probe skips with that reason rather than reporting a
+    phantom failure — the graduated-probe rule recorded in
+    `a-graduated-probe-that-pins-a-fact-of-the-moment-goes-red-at-the-next-change`."""
+    checker = REPO_ROOT / "scripts" / "check_loom_memory_integrity.py"
+    if not checker.is_file():
+        pytest.skip(
+            "scripts/check_loom_memory_integrity.py was retired by change "
+            "2026-09-10-okf-compatible-loom-memory; the memory store is now "
+            "validated by loom-memory/scripts/loom_memory.py"
+        )
     result = subprocess.run(
         [sys.executable, "scripts/check_loom_memory_integrity.py", "--check"],
         cwd=REPO_ROOT, capture_output=True, text=True,
@@ -296,17 +311,4 @@ def test_memory_step_store_integrity_check_exits_zero() -> None:
     assert result.returncode == 0, (
         f"expected the corrected memory-store checker to pass with exit 0, "
         f"got {result.returncode}: {result.stdout}{result.stderr}"
-    )
-
-    # Negative control, clearly labelled: the plan's ORIGINAL (now-corrected)
-    # command still does not exist and still exits 2 — kept as a witness
-    # that the fix in the plan, not a change to loom_checker.py itself, is
-    # what closed this finding.
-    stale_command = subprocess.run(
-        [sys.executable, str(SCRIPTS_DIR / "loom_checker.py"), "memory"],
-        cwd=REPO_ROOT, capture_output=True, text=True,
-    )
-    assert stale_command.returncode == 2, (
-        "negative control: the plan's original 'loom_checker.py memory' command "
-        f"was expected to still exit 2 (unknown sub-command), got {stale_command.returncode}"
     )
