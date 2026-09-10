@@ -530,3 +530,97 @@ REQ-20, REQ-24, REQ-25; `loom-code/skills/ship/SKILL.md` (full read);
 above; the operator's own (machine-local, not this repository's) session
 memory entry `graduated-probes-survive-squash`, named here for the
 pattern it documents, not as a repository-committed source.
+
+## D-16 — W4-01: extend, not add a new CI gate; version numbers; Acceptance
+coverage map
+
+**Extended `loom-code-ci.yml` and `skill-structure.yml`, did not add a
+fourth workflow file.** The plan's own risk note for W4-01 says "extend
+existing boundary and install harnesses rather than add a new gate," and
+`loom-code-ci.yml` already houses the repo-wide drift gates
+(`sync_codex_manifests.py --check --all`, boundary checks) that run
+irrespective of which plugin changed — the natural home for a new
+plugin's boundary check and its `memory` pytest group is a new step there,
+not a parallel `loom-memory-ci.yml` that duplicates the trigger-path
+bookkeeping `loom-design-ci.yml` carries for a single plugin. Added
+`loom-memory/**` to both trigger blocks (matching the existing
+`loom-design/**` / `loom-workflow/**` fail-open rationale already written
+into the file), a `Run pytest suite (loom-memory)` step calling
+`run_package_tests.py --loom-family --only memory`, and
+`check_plugin_boundaries.py loom-memory` alongside the two existing calls.
+No job was renamed (branch-protection pins job display names).
+
+**Found and fixed a live CI bug, not part of any test file's RED→GREEN:**
+`skill-structure.yml`'s `loom-memory-store-integrity` job still called
+`scripts/check_loom_memory_integrity.py`, which W3-01 (`79692695f`)
+deleted — every push/PR since has been failing that job (confirmed by
+running the command directly: `No such file or directory`). Repointed it
+at `loom-memory/scripts/loom_memory.py validate docs/loom/memory`, the
+validator the store's own plugin ships. Job name (`loom memory store
+integrity`) kept unchanged. Also added a `check-skill-structure.py
+loom-memory` step to the `structure` job, matching the per-plugin pattern
+the three existing loom plugins already use there.
+
+**Version numbers.** `loom-memory` stays at `0.1.0` — this is its first
+release, so there is nothing to bump against; its own CHANGELOG.md (new
+file) records the release. `loom-code` bumps `2.0.9` → `2.0.10`: its
+`contract/manifest.yaml`, `contract/README.md`, and the deleted
+`contract/templates/memory-README.md` are published plugin content even
+though `check_version_bump.py`'s `SKILL_CONTENT_DIRS` tuple does not
+count `contract/` (only `skills,hooks,agents,references,scripts`) — the
+dispatch brief's explicit instruction to bump loom-code overrides the
+checker's narrower automatic definition here, and the checker still
+passes on this diff (a plugin the gate considers unchanged does not need
+to move, so bumping anyway is never a violation). Ran
+`sync_codex_manifests.py loom-code` to mirror the bump into
+`.codex-plugin/plugin.json` (the pre-commit hook enforces this).
+`loom-design`'s version is untouched — W4-01 touched no `loom-design`
+file.
+
+**Acceptance-line coverage, six lines, positive/negative/boundary per
+plan's own naming** (nodeid = proved by that test; "new" = written in this
+task):
+
+- A1 valid-install / invalid-okf: `loom-memory/scripts/test_loom_memory.py::
+  test_valid_profile_passes` (positive, non-isolated) +
+  `scripts/test_loom_plugin_install_layout.py::
+  test_isolated_loom_memory_validates_the_committed_fixture_using_only_installed_files`
+  (positive, isolated — new) +
+  `...::test_isolated_loom_memory_rejects_a_corrupted_fixture_copy_using_only_installed_files`
+  (negative, isolated — new).
+- A2 indexed-recall / bounded-load: `loom-memory/scripts/test_loom_memory.py::
+  test_bounded_index_lets_an_agent_pick_without_opening_bodies` (positive) +
+  `...::test_drifted_index_is_a_validation_failure_naming_the_mismatch`
+  (boundary/negative). Not re-run under isolation: A2 is a pure-Python
+  property of `loom_memory.py`'s parser, already exercised isolated by A1's
+  new tests calling the same installed script.
+- A3 operations / unauthorized-retire: `loom-memory/scripts/
+  test_skill_contract.py::test_four_operations_contract` (positive) +
+  `...::test_retire_requires_explicit_user_approval_before_deleting`
+  (negative).
+- A4 consumers-work / absent-plugin: `scripts/test_loom_plugin_install_layout.py::
+  test_isolated_loom_code_completes_write_plan_intake_without_loom_memory_sibling`
+  (positive, new — REQ-3's concrete absence proof for loom-code) +
+  `...::test_isolated_loom_design_keeps_complete_surface_without_loom_memory_sibling`
+  (boundary, new — same proof for loom-design) +
+  `...::test_memory_plugin_installs_alone` /
+  `...::test_code_design_manifests_have_no_memory_dependency` (W1-01,
+  manifest-level boundary).
+- A5 migrated-corpus / fingerprint-loss: `loom-memory/scripts/
+  test_migrate_legacy_store.py::test_lesson_and_guide_concept_counts_are_293_and_1`
+  and `...::test_lesson_bodies_and_descriptions_survive_migration_byte_for_byte`
+  (positive — recomputed from Git at `PRE_MIGRATION_SHA`, never a
+  committed snapshot). No separate "fingerprint-loss" test exists or is
+  needed: the byte-for-byte `assert post_body == pre_body` / `assert
+  post_fm["description"] == pre_fm["description"]` comparison in that same
+  test IS the fingerprint check — any lost or altered byte fails that
+  exact assertion by construction, so the test proves both directions at
+  once.
+- A6 valid-store / corrupt-fixture: same two new isolated-install tests
+  cited under A1 (the fixture IS the store this line is about).
+
+**Unresolved risk carried forward, not this task's to close:** none new.
+D-15's "found but left alone" RED
+(`test_memory_step_store_integrity_check_exits_zero`) was already resolved
+by the later `6780d70dd` (W3-02b) commit — confirmed here by running it:
+it now reports 1 skipped with a named reason, not RED.

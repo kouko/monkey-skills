@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.2] — 2026-09-11 — repository-memory ownership retired
+
+- Removed the repository-memory coupling this plugin used to own: the
+  contract manifest's `memory` action pin, the `memory-README.md` template,
+  and the contract README's memory-store instructions are all gone. The
+  store and its validator now belong solely to the independent `loom-memory`
+  plugin, and this plugin installs and runs identically whether or not
+  `loom-memory` is installed alongside it.
+- No behavior change for a caller that never touched the retired action.
+
 ## [2.1.1] — 2026-09-10 — atomic Claude reviewer profiles
 
 budget-exception: review.atomic-claude-dispatch — makes the cross-vendor

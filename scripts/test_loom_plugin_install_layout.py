@@ -580,3 +580,221 @@ def test_code_design_manifests_have_no_memory_dependency(tmp_path: Path) -> None
     )
     assert "loom-memory" not in code_manifest_text
     assert "loom-memory" not in design_manifest_text
+
+
+# --- W4-01: the complete optional integration (REQ-3, REQ-22) --------------
+#
+# The tests above prove loom-memory installs alone and declares no mandatory
+# dependency. What follows proves the two-way property the whole change
+# exists for: loom-memory validates a real store using ONLY its own copied
+# files (no repo-root path, no sibling plugin path), and loom-code /
+# loom-design genuinely keep working — not just "declare no dependency" —
+# with no loom-memory sibling installed at all.
+
+MEMORY_FIXTURE = REPO_ROOT / "scripts" / "fixtures" / "loom-memory" / "okf-v0.2"
+
+
+def test_isolated_loom_memory_validates_the_committed_fixture_using_only_installed_files(
+    tmp_path: Path,
+) -> None:
+    """A1 positive / A6 positive.
+
+    The fixture is copied to a location unrelated to both the plugin cache
+    and the repository root, and the validator invoked is the one copied
+    into the isolated install — never `REPO_ROOT`-relative and never a
+    sibling plugin's script.
+    """
+    memory_root = _install_plugin(
+        "loom-memory", tmp_path / "unrelated memory cache for fixture validation"
+    )
+    fixture_copy = tmp_path / "consumer project's memory store"
+    shutil.copytree(MEMORY_FIXTURE, fixture_copy)
+
+    validator = memory_root / "scripts" / "loom_memory.py"
+    result = subprocess.run(
+        [sys.executable, str(validator), "validate", str(fixture_copy)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "OK" in result.stdout
+
+
+def test_isolated_loom_memory_rejects_a_corrupted_fixture_copy_using_only_installed_files(
+    tmp_path: Path,
+) -> None:
+    """A1 negative / A6 negative — the positive proof above is not vacuous:
+    the same isolated install rejects a deliberately corrupted copy of the
+    reserved `index.md` (clause 6 permits only `okf_version`)."""
+    memory_root = _install_plugin(
+        "loom-memory", tmp_path / "unrelated memory cache for corrupt fixture"
+    )
+    fixture_copy = tmp_path / "consumer project's corrupted memory store"
+    shutil.copytree(MEMORY_FIXTURE, fixture_copy)
+    index = fixture_copy / "index.md"
+    index.write_text(
+        index.read_text(encoding="utf-8").replace(
+            'okf_version: "0.2"', 'okf_version: "0.2"\nextra_key: not allowed'
+        ),
+        encoding="utf-8",
+    )
+
+    validator = memory_root / "scripts" / "loom_memory.py"
+    result = subprocess.run(
+        [sys.executable, str(validator), "validate", str(fixture_copy)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0, "a corrupted index.md must fail validation"
+    assert "reserved-index" in result.stdout
+
+
+def _write_intake_fixture_repo(repo: Path, change_id: str) -> None:
+    """A minimal git repo carrying a confirmed intent, ready for `intake
+    write-plan`. Mirrors loom-code/scripts/test_loom_checker_intake.py's
+    `make_repo()`: the checker's delivery-state rule reads the local
+    remote-default ref, so this fixture needs one even though nothing is
+    delivered on it."""
+
+    def git(*args: str) -> str:
+        return subprocess.run(
+            ["git", "-C", str(repo), *args], capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+    repo.mkdir(parents=True, exist_ok=True)
+    git("init", "-q", "-b", "main")
+    git("config", "user.email", "loom-memory-absence@example.test")
+    git("config", "user.name", "Isolated Install Fixture")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    git("add", "seed.txt")
+    git("commit", "-q", "-m", "seed")
+    git("update-ref", "refs/remotes/origin/main", "HEAD")
+    git("symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main")
+    git("checkout", "-q", "-b", "work")
+
+    intent_path = repo / "docs/loom/intent" / f"{change_id}.md"
+    intent_path.parent.mkdir(parents=True, exist_ok=True)
+    intent_path.write_text(
+        f"""# Fixture change
+originator: tester
+kind: engineering
+needs-design: no — internal only
+status: confirmed 2026-09-10
+
+## Problem
+The isolated install proof needs a confirmed intent.
+
+## Proposed outcome
+Prove `intake write-plan` completes with no loom-memory sibling installed.
+
+## Acceptance
+1. `intake write-plan {change_id}` exits 0.
+
+## Constraints
+- None.
+
+## Out of scope
+- Everything else.
+
+## Open questions
+- None yet.
+""",
+        encoding="utf-8",
+    )
+
+
+def test_isolated_loom_code_completes_write_plan_intake_without_loom_memory_sibling(
+    tmp_path: Path,
+) -> None:
+    """REQ-3 / Acceptance #4 positive `consumers-work` and boundary
+    `absent-plugin`.
+
+    Installs ONLY loom-code (no loom-design, no loom-memory) into an
+    unrelated cache root, runs the installed `loom_checker.py intake
+    write-plan` from a fixture repository, and asserts a clean exit — and
+    that nothing in the installed skill surface names loom-memory as a
+    missing requirement.
+    """
+    code_root = _install_plugin(
+        "loom-code", tmp_path / "isolated code cache without memory's root"
+    )
+    assert not (code_root.parent / "loom-memory").exists()
+    assert not (code_root.parent / "loom-design").exists()
+
+    change_id = "2026-09-10-fixture-absence-proof"
+    fixture_repo = tmp_path / "consumer project without loom-memory"
+    _write_intake_fixture_repo(fixture_repo, change_id)
+
+    checker = code_root / "scripts" / "loom_checker.py"
+    result = subprocess.run(
+        [sys.executable, str(checker), "intake", "write-plan", change_id],
+        cwd=fixture_repo,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+    combined_output = result.stdout + result.stderr
+    assert "loom-memory" not in combined_output
+
+    for document in sorted(code_root.rglob("*.md")):
+        if document.name.startswith("CHANGELOG"):
+            continue
+        text = document.read_text(encoding="utf-8")
+        assert "loom-memory" not in text, (
+            f"{document.relative_to(code_root)} still names loom-memory; an "
+            "isolated install must not describe it as missing"
+        )
+
+
+def test_isolated_loom_design_keeps_complete_surface_without_loom_memory_sibling(
+    tmp_path: Path,
+) -> None:
+    """REQ-3 / Acceptance #4 boundary `absent-plugin`: loom-design's skill
+    and executable surface is complete with no loom-memory sibling
+    installed, and no skill text names loom-memory as a missing
+    requirement."""
+    design_root = _install_plugin(
+        "loom-design", tmp_path / "isolated design cache without memory's root"
+    )
+    assert not (design_root.parent / "loom-memory").exists()
+    assert not (design_root.parent / "loom-code").exists()
+
+    skills = sorted((design_root / "skills").iterdir())
+    assert {skill.name for skill in skills} == DESIGN_SKILLS
+    assert (design_root / DESIGN_EXECUTABLE).is_file()
+
+    _execute_installed_design_command(
+        design_root, tmp_path / "consumer project's unrelated root for design"
+    )
+
+    for document in sorted(design_root.rglob("*.md")):
+        if document.name.startswith("CHANGELOG"):
+            continue
+        text = document.read_text(encoding="utf-8")
+        assert "loom-memory" not in text, (
+            f"{document.relative_to(design_root)} still names loom-memory; an "
+            "isolated install must not describe it as missing"
+        )
+
+
+def test_isolated_loom_memory_boundary_check_rejects_sibling_paths(tmp_path: Path) -> None:
+    """Bullet 1's closing clause, exercised through the real installed
+    plugin rather than a synthetic fixture: `check_plugin_boundaries.py`
+    rejects a sibling-private path even when the plugin under test is
+    loom-memory itself."""
+    memory_root = _install_plugin(
+        "loom-memory", tmp_path / "memory cache for a boundary violation probe"
+    )
+    probe = memory_root / "skills" / "loom-memory" / "reference-probe.md"
+    probe.write_text(
+        "Read `loom-code/scripts/loom_checker.py` before recording a lesson.\n",
+        encoding="utf-8",
+    )
+    try:
+        violations = find_boundary_violations(memory_root)
+        assert any("sibling internal path" in v for v in violations)
+    finally:
+        probe.unlink()
