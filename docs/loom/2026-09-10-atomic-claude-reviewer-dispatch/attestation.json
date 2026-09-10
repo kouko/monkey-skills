@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-10-atomic-claude-reviewer-dispatch",
-  "content_digest": "3827864c201e1fe2ad2334e5997610b24ed3cab1",
+  "content_digest": "6a35b02d6c13614b917f0cc0da4987d88575c8d3",
   "executions": [
     {
       "kind": "package-tests",
