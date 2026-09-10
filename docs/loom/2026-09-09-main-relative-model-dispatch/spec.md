@@ -4,13 +4,13 @@ pre-build-review: required — the policy coordinates model and effort controls 
 
 ## Requirements
 REQ-1 — Evidence-based relative routing
-  WHEN Loom dispatches a subagent with an observable main-agent profile and sufficient task evidence, the dispatcher shall classify the task as mechanical, ordinary, or complex and derive the initial profile relative to the main agent without using the role name as routing evidence → Acceptance #1
+  WHEN Loom dispatches a subagent with an observable main-agent profile, the dispatcher shall apply the normative evidence predicates and precedence in this spec to classify the task as mechanical, ordinary, or complex and derive the initial profile relative to the main agent without using the role name as routing evidence → Acceptance #1
 
 REQ-2 — Portable model and effort vocabulary
   WHERE a host supports model or effort overrides, the dispatcher shall represent model capability as `economy < standard < frontier`, represent common effort as `low < medium < high < xhigh < max`, preserve inherited host-native values outside that effort range, and resolve each portable value through the selected model's verified host capabilities → Acceptance #2
 
 REQ-3 — Automatic atomic fallback
-  IF either override or the requested model-effort combination is unsupported, unknown, or rejected THEN the dispatcher shall omit both overrides, retry at most once after a rejection, and report `inherited` only when parent inheritance is guaranteed, without asking the user to choose routing parameters → Acceptance #3
+  IF either main-profile component is unobservable or either override or the requested model-effort combination is unsupported, unknown, or rejected THEN the dispatcher shall omit both overrides, retry the rejected pre-execution attempt once, and report `inherited` only when parent inheritance is guaranteed, without asking the user to choose routing parameters → Acceptance #3
 
 REQ-4 — Evidence-gated expensive effort
   WHEN routing would newly enter effort above `medium`, the dispatcher shall require the corresponding completed lower-profile attempt and retained failure trigger, allow `high` and `xhigh` only one step at a time on `frontier`, never newly generate `max` or a host-native extension, and preserve an already inherited higher effort without treating it as an escalation → Acceptance #4
@@ -24,6 +24,7 @@ REQ-5 — Replayable verification boundary
 - Agent-decided — cap newly generated initial effort at `medium`; inherited `high`, `xhigh`, `max`, or host-native effort remains unchanged so routing does not silently weaken a user-selected main profile.
 - Agent-decided — require a completed `frontier/medium` failure matching a high trigger before entering `high`, and a completed `frontier/high` failure matching an xhigh trigger before entering `xhigh`; `max` and host-native extensions are inheritance-only.
 - Agent-decided — retain the existing two-redispatch cap across packet repair and profile escalation; changing model or effort does not reset that budget or Review's three-digest limit.
+- Agent-decided — count completed task executions after the initial completed execution against the two-redispatch cap; a host rejection before task execution and its single override-free replacement are one execution attempt, so the replacement neither consumes nor resets the task redispatch budget.
 - Agent-decided — treat a profile as atomic: an unsupported or rejected component removes both overrides instead of claiming that a partially resolved profile ran.
 - Agent-decided — resolve support per selected model immediately before dispatch; an unverified mapping is unsupported and is not silently clamped to a different effort.
 - Agent-decided — keep the effective routing record in active task context only; do not introduce a persistent dispatch ledger, resolver service, or attestation field.
@@ -39,6 +40,35 @@ The portable transition rules are:
 | Capability failure | one tier up; at `frontier`, use reasoning-depth handling | unchanged unless at model ceiling |
 | Reasoning-depth failure | unchanged | one tier up subject to the `high` and `xhigh` gates |
 | Requested profile unsupported or rejected | omit both overrides | omit both overrides |
+
+The normative task-class predicates and precedence are:
+
+1. `mechanical` applies first when the task has an exact transformation,
+   bounded targets, and a mechanical oracle.
+2. Otherwise `complex` applies when at least one checkable condition holds:
+   the change affects an interface consumed by another module; at least two
+   plausible causes remain after initial diagnosis; the task crosses a
+   security or privacy trust boundary; it makes an irreversible architecture
+   or data decision; or it reconciles mutually inconsistent evidence.
+3. `ordinary` applies to everything else, including implementation, review,
+   blind-run, and adversarial work that meets neither earlier predicate.
+
+Missing task evidence is not a fourth class. When the missing field is
+obtainable internally, repair the dispatch packet before execution. Otherwise
+route as `ordinary`, record `insufficient-task-evidence`, and do not infer an
+upgrade or downgrade from a role or round label. When either main model or main
+effort cannot be observed reliably, do not infer a portable profile: omit both
+overrides before dispatch and record `host-default/unverified`.
+
+The initial completed task execution may be followed by at most two completed
+redispatch executions. Packet repair and profile escalation each consume one
+redispatch when the task executes. A host rejection of routing parameters
+before task execution consumes no task attempt; its one override-free
+replacement occupies the same attempt. When two redispatches have completed,
+when the replacement is rejected or fails before a conforming execution, or
+when no legal upward transition remains, routing returns `execution-failed`
+and records the last profile that actually executed, or
+`host-default/unverified` when none can be verified.
 
 High triggers are limited to a blocker surviving a substantive fix, mutually exclusive conclusions over identical evidence, medium failing to settle a high-risk decision, round-3 technical redesign requiring adjudication, or an unresolved multi-step security chain. Xhigh requires either the same high-risk blocker and a checkable failure artifact after `frontier/high`, or mutually exclusive independent `frontier/high` conclusions over identical evidence. Missing inputs, role names, round labels, more search, and transient executor errors are not effort-escalation evidence.
 
