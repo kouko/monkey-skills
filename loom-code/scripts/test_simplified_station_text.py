@@ -74,6 +74,14 @@ def test_review_uses_one_observable_claude_attempt_and_existing_retry() -> None:
         "timeout",
         "same functional-content digest",
         "does not retry",
+        "outside the Codex sandbox",
+        "reusable host approval",
+        "Do not fall back to a sandboxed Claude invocation",
+        "separate authentication preflight",
+        "broader Python or shell access",
+        "Do not read, copy, or move Claude credentials",
+        "Only an unauthenticated result from this outside-sandbox invocation",
+        "stop without treating it as transient",
     ):
         assert phrase in review_prose
     assert "Do not run a model-backed preflight." in review_prose

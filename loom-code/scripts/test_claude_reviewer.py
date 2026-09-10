@@ -4,6 +4,7 @@ import io
 import subprocess
 
 import claude_reviewer
+import pytest
 
 
 def test_run_attempt_valid_output_passes_through_once(monkeypatch) -> None:
@@ -127,3 +128,10 @@ def test_main_timeout_returns_124_with_json_diagnostics(monkeypatch) -> None:
     assert '"kind": "timeout"' in err.getvalue()
     assert '"elapsed_seconds": 600.25' in err.getvalue()
     assert '"stderr": "slow"' in err.getvalue()
+
+
+def test_cli_rejects_an_alternate_executable() -> None:
+    with pytest.raises(SystemExit) as exc:
+        claude_reviewer.main(["--claude-bin", "/bin/echo"])
+
+    assert exc.value.code == 2

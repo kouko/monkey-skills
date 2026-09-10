@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.12] — 2026-09-10 — Codex Claude credential boundary
+
+- Standardize Codex-to-Claude second-reader calls on the existing runner
+  outside the Codex sandbox, where the user's existing Claude login is visible.
+- Scope reusable host approval to that runner command and stop on unavailable
+  authorization instead of falling back to a misleading sandboxed auth result.
+- Remove the public executable override so that runner-scoped approval cannot
+  be extended to execute another program outside the sandbox.
+- Keep the existing runner, timeout, empty-output handling, and retry budget
+  unchanged; add no authentication preflight or credential handling.
+
 ## [2.0.11] — 2026-09-10 — observable Claude reviewer attempts
 
 - Run each Claude Code second-reviewer attempt through one thin subprocess

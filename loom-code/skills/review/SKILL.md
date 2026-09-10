@@ -37,6 +37,17 @@ reviewer prompt on stdin to one installed-plugin invocation:
 python3 <loom-code>/scripts/claude_reviewer.py --model <model> --timeout-seconds 600
 ```
 
+Run this invocation outside the Codex sandbox with reusable host approval
+scoped to the installed `python3 <loom-code>/scripts/claude_reviewer.py`
+command. This is the standard Codex-to-Claude path because the sandbox can
+hide an existing Claude login that the same runner can use outside it. If that
+narrowly scoped permission is denied or unavailable, report an authorization
+blocker. Do not fall back to a sandboxed Claude invocation, infer that the user
+logged out, run a separate authentication preflight, or request broader Python
+or shell access. Do not read, copy, or move Claude credentials into the
+sandbox. Only an unauthenticated result from this outside-sandbox invocation
+produces the Claude login diagnosis; stop without treating it as transient.
+
 The runner executes one Claude attempt and does not retry. Exit 0 carries the
 raw non-empty reviewer output, which must still satisfy `agents/reviewer.md`.
 Its JSON stderr names `empty-output` for blank stdout and `timeout` when the
