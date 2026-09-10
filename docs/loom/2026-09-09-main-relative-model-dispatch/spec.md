@@ -27,6 +27,7 @@ REQ-5 — Replayable verification boundary
 - Agent-decided — count completed task executions after the initial completed execution against the two-redispatch cap; a host rejection before task execution and its single override-free replacement are one execution attempt, so the replacement neither consumes nor resets the task redispatch budget.
 - Agent-decided — treat a profile as atomic: an unsupported or rejected component removes both overrides instead of claiming that a partially resolved profile ran.
 - Agent-decided — resolve support per selected model immediately before dispatch; an unverified mapping is unsupported and is not silently clamped to a different effort.
+- Agent-decided — implement the normative state machine as a pure standard-library resolver and thin JSON CLI, not a resident service; stations provide observed inputs and apply its resolved portable result through their host-native spawn surface.
 - Agent-decided — keep the effective routing record in active task context only; do not introduce a persistent dispatch ledger, resolver service, or attestation field.
 
 The portable transition rules are:
@@ -37,7 +38,7 @@ The portable transition rules are:
 | Ordinary initial dispatch | unchanged | unchanged |
 | Complex initial dispatch below `frontier` | one tier up | unchanged |
 | Complex initial dispatch at `frontier` | unchanged | one tier up, but newly generated effort clamps at `medium` |
-| Capability failure | one tier up; at `frontier`, use reasoning-depth handling | unchanged unless at model ceiling |
+| Post-execution capability-quality failure | one tier up; at `frontier`, use reasoning-depth handling | unchanged unless at model ceiling |
 | Reasoning-depth failure | unchanged | one tier up subject to the `high` and `xhigh` gates |
 | Requested profile unsupported or rejected | omit both overrides | omit both overrides |
 
@@ -74,6 +75,13 @@ names the last profile that actually executed, or `host-default/unverified`
 when none can be verified.
 
 High triggers are limited to a blocker surviving a substantive fix, mutually exclusive conclusions over identical evidence, medium failing to settle a high-risk decision, round-3 technical redesign requiring adjudication, or an unresolved multi-step security chain. Xhigh requires either the same high-risk blocker and a checkable failure artifact after `frontier/high`, or mutually exclusive independent `frontier/high` conclusions over identical evidence. Missing inputs, role names, round labels, more search, and transient executor errors are not effort-escalation evidence.
+
+A post-execution capability-quality failure exists only when a conforming task
+execution had complete inputs and left a checkable task obligation omitted,
+produced an oracle-verifiable wrong result, or explicitly failed to connect
+system relationships required by the task. A host rejection, unavailable
+model, timeout, malformed response, missing input, or unsupported override is
+an execution or fallback condition instead and never selects model escalation.
 
 ## Alternatives considered
 - Keep only `low`, `medium`, and `high` — rejected because it cannot preserve a main agent already using `xhigh` or `max` and loses cross-host decision flexibility.
