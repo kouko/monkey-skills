@@ -30,6 +30,22 @@ the applicable lens from `references/lenses.md`. Reviewers return the
 structured YAML required by `agents/reviewer.md`; the orchestrator converts
 the accepted fields to the temporary JSON consumed by finalization.
 
+On Codex, when the selected second vendor is Claude Code, send that complete
+reviewer prompt on stdin to one installed-plugin invocation:
+
+```text
+python3 <loom-code>/scripts/claude_reviewer.py --model <model> --timeout-seconds 600
+```
+
+The runner executes one Claude attempt and does not retry. Exit 0 carries the
+raw non-empty reviewer output, which must still satisfy `agents/reviewer.md`.
+Its JSON stderr names `empty-output` for blank stdout and `timeout` when the
+attempt exceeds the bound. Do not run a model-backed preflight. Treat either
+result as the transient executor failure already governed below: invoke the
+runner at most once more for the same functional-content digest and reviewer
+identity. If that attempt also fails before a conforming verdict exists, report
+both diagnostics and end the episode as `EXECUTION_FAILED`.
+
 ## 3. Run blind and adversarial checks
 
 Use a blind run when an Acceptance line cannot be settled mechanically. For

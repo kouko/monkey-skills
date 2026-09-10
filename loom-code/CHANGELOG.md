@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.11] — 2026-09-10 — observable Claude reviewer attempts
+
+- Run each Claude Code second-reviewer attempt through one thin subprocess
+  boundary that rejects blank stdout and terminates at the declared timeout.
+- Preserve exit, stderr, and elapsed diagnostics while keeping retry ownership
+  in Closing Review's existing one-retry executor rule.
+- Invoke the formal review directly without adding a model-backed preflight,
+  persistent state, verdict parser, or vendor-specific retry budget.
+
 ## [2.0.10] — 2026-09-10 — continue active work after CI failure
 
 - Keep a required-CI failure in the same active task, inspect its failed checks
