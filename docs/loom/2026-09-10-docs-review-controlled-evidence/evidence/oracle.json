@@ -11,7 +11,7 @@
     {"id":"O4","document":"strategy","origin":"initial-authoring","summary":"The interaction model uses unquantified scale language such as sizeable or many, so it can be mistaken for measured dominance."}
   ],
   "adjudication": {
-    "luna-repeat-1": {"matched":["O1","O2","O3","O4"],"unmatched_observations":["The best-supported causal model lacks an explicit evidence threshold"]},
+    "luna-repeat-1": {"matched":["O1","O2","O3","O4"],"unmatched_observations":["The best-supported causal model lacks an explicit evidence threshold"],"unmatched_adjudication":"not adjudicated false"},
     "luna-repeat-2": {"matched":["O1","O3","O4"],"missed":["O2"],"unmatched_observations":[]}
   },
   "revision_attribution": {

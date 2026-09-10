@@ -2,17 +2,16 @@
 
 ## Result
 
-In this fixed three-document corpus, the dominant measured cost comes from the
-initial drafts, not from false-positive review churn. The human oracle ratified
-four initial-authoring defects. Luna found seven of eight per-run opportunities
-(87.5%) with one unmatched observation among eight observations (12.5%). The
-two runs agreed on three of four oracle classes (75% Jaccard agreement).
+In this fixed three-document corpus, all four human-ratified defects come from
+the initial drafts. Luna found seven of eight per-run opportunities (87.5%)
+with one unmatched observation among eight observations (12.5%). The two runs
+agreed on three of four oracle classes (75% Jaccard agreement).
 
-This is a narrow internal result, not a production benchmark. It does not show
-that writing dominates every docs-review workload. It shows that, for this
-pre-intervention corpus, both repeats recovered the same core draft defects,
-while review added a smaller sampling cost: one miss, one unmatched finding,
-and a red/yellow severity disagreement.
+This is a narrow internal result, not a production benchmark. For ratified
+defects in this corpus, initial-draft quality is the primary source. Total
+review churn remains unquantified because the unmatched observation was not
+adjudicated false. The replay separately shows detection variance: one miss,
+one unmatched observation, and a red/yellow severity disagreement.
 
 ## Frozen design
 
@@ -30,10 +29,12 @@ and a red/yellow severity disagreement.
 
 ## Revision attribution
 
-The business and strategy artifacts were both born in `2aae5d8b…` and have no
-later modifying commit through this experiment. Therefore the four ratified
-defects cannot be remediation-introduced: they are present in the initial
-revision. The replay nevertheless measures reviewer cost separately: run 2
+In the pre-rebase lineage, the business and strategy artifacts were both born
+in `2aae5d8b…` and have no later modifying commit through this experiment. The
+preserved source branch carries the byte-equivalent birth commit as
+`7a179e2c…`; `provenance.md` records the lineage mapping. Therefore the four
+ratified defects cannot be remediation-introduced: they are present in the
+initial revision. The replay separately records detection variance: run 2
 missed O2, run 1 added one unmatched observation, and the shared O1 finding
 changed severity from red to yellow.
 
