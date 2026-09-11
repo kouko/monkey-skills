@@ -79,26 +79,62 @@ def _plugin_name(root: Path) -> str:
     return root.name
 
 
-def _is_internal_path(root: Path, target: str) -> bool:
-    """A ``loom-*``-shaped match is internal, not a sibling reference, when
-    the target — read as a path rooted at the plugin's own directory, with
-    at most one leading ``/`` stripped — resolves to a real file or
-    directory inside that root.
+def _is_internal_path(root: Path, plugin: str, target: str) -> bool:
+    """Whether a ``loom-*``-shaped match names this plugin's OWN skill folder
+    rather than a sibling plugin's private tree.
 
-    This exists because a plugin may ship a skill whose own directory name
-    happens to be ``loom-<something>`` (e.g. a ``loom-memory`` skill living
-    inside ``loom-workflow``). The sibling-name regex has no notion of which
-    ``loom-*`` names are real sibling plugins versus a same-plugin skill
-    folder that merely looks like one; checking real on-disk containment
-    tells the two apart without hardcoding any plugin name.
+    A plugin may ship a skill whose directory name happens to look like a
+    sibling plugin — ``loom-workflow/skills/loom-memory/`` is the case this
+    exists for. Only that shape is exempt: the target must resolve to a real
+    path under this plugin's ``skills/<plugin>/``.
+
+    An earlier version exempted anything that merely resolved to an existing
+    path under the plugin root, which let a decoy defeat the gate: a file
+    planted at ``<root>/loom-code/scripts/loom_checker.py`` made a genuine
+    reference to the real sibling's private script read as internal. Requiring
+    the ``skills/<plugin>/`` prefix, and refusing the exemption outright when a
+    real sibling plugin of that name exists, closes that.
     """
+    if _sibling_plugin_exists(root, plugin):
+        return False
     candidate = target[1:] if target.startswith("/") else target
     resolved = (root / candidate).resolve(strict=False)
+    own_skill = (root / "skills" / plugin).resolve(strict=False)
     try:
-        resolved.relative_to(root.resolve(strict=False))
+        resolved.relative_to(own_skill)
     except ValueError:
         return False
     return resolved.exists()
+
+
+def _sibling_plugin_exists(root: Path, plugin: str) -> bool:
+    """True when ``plugin`` is a real installable plugin beside this one.
+
+    Checks both the flat install shape (``<plugin>/.claude-plugin/
+    plugin.json``) and the versioned-install shape this repo's own suite
+    proves is real (``<plugin>/<version>/.claude-plugin/plugin.json``), and
+    checks both from ``root``'s own parent (when ``root`` itself is flat)
+    and from ``root``'s grandparent (when ``root`` itself is a version
+    directory, e.g. ``.../loom-design/0.4.0``, so the sibling's install
+    root sits beside ``loom-design``, not beside ``0.4.0``).
+
+    An earlier version checked only the flat shape from ``root``'s parent,
+    so a sibling installed under a version directory went undetected — the
+    bare ``root/skills/<plugin>/`` existence check in ``_is_internal_path``
+    then let a same-named decoy through exactly as before the flat-layout
+    fix.
+    """
+    resolved_root = root.resolve(strict=False)
+    bases = {resolved_root.parent, resolved_root.parent.parent}
+    for base in bases:
+        sibling_base = base / plugin
+        if (sibling_base / ".claude-plugin" / "plugin.json").is_file():
+            return True
+        if sibling_base.is_dir():
+            for child in sibling_base.iterdir():
+                if child.is_dir() and (child / ".claude-plugin" / "plugin.json").is_file():
+                    return True
+    return False
 
 
 def find_boundary_violations(plugin_root: str | Path) -> list[str]:
@@ -129,7 +165,7 @@ def find_boundary_violations(plugin_root: str | Path) -> list[str]:
             for match in _SIBLING_INTERNAL_RE.finditer(line):
                 if match.group("plugin") == plugin_name:
                     continue
-                if _is_internal_path(root, match.group("target")):
+                if _is_internal_path(root, match.group("plugin"), match.group("target")):
                     continue
                 start, end = match.span("target")
                 if any(

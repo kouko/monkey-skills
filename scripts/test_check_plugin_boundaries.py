@@ -253,3 +253,50 @@ def test_reports_sibling_internal_path_when_loom_memory_is_the_plugin_under_test
     assert checker.find_boundary_violations(plugin) == [
         f"{source}:1: sibling internal path: loom-code/scripts/loom_checker.py",
     ]
+
+
+def test_decoy_nested_tree_does_not_launder_a_real_sibling_reference(tmp_path):
+    """A file planted inside the plugin at a sibling's path shape must not
+    make a genuine sibling-private reference read as internal.
+
+    The first version of the internal-path exemption asked only whether the
+    target resolved to something that exists under the plugin root. That let
+    a decoy defeat the gate: create `<root>/loom-code/scripts/loom_checker.py`
+    and a prose reference to the real `loom-code` plugin's private script
+    stops being reported. The exemption now requires the target to live under
+    this plugin's own `skills/<name>/`, so the decoy is still a violation.
+    """
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-workflow"
+    _write(plugin / ".claude-plugin" / "plugin.json", '{"name": "loom-workflow"}\n')
+    _write(plugin / "skills" / "loom-memory" / "scripts" / "loom_memory.py", "# real\n")
+    _write(plugin / "loom-code" / "scripts" / "loom_checker.py", "# decoy\n")
+    _write(
+        plugin / "skills" / "handoff" / "SKILL.md",
+        "Run `skills/loom-memory/scripts/loom_memory.py` for the store.\n"
+        "See `loom-code/scripts/loom_checker.py` for the rules.\n",
+    )
+
+    violations = checker.find_boundary_violations(plugin)
+
+    assert any("loom_checker.py" in v for v in violations), violations
+    assert not any("loom_memory.py" in v for v in violations), violations
+
+
+def test_a_real_sibling_plugin_name_is_never_exempt(tmp_path):
+    """Even a same-named skill cannot exempt a name that is a real sibling
+    plugin: when `<repo>/loom-design/.claude-plugin/plugin.json` exists, a
+    `loom-design/...` reference stays a violation whatever sits inside."""
+    import check_plugin_boundaries as checker
+
+    _write(tmp_path / "loom-design" / ".claude-plugin" / "plugin.json", '{"name": "loom-design"}\n')
+    plugin = tmp_path / "loom-workflow"
+    _write(plugin / ".claude-plugin" / "plugin.json", '{"name": "loom-workflow"}\n')
+    _write(plugin / "skills" / "loom-design" / "scripts" / "x.py", "# same-named skill\n")
+    _write(
+        plugin / "skills" / "handoff" / "SKILL.md",
+        "See `skills/loom-design/scripts/x.py` for details.\n",
+    )
+
+    assert any("x.py" in v for v in checker.find_boundary_violations(plugin))
