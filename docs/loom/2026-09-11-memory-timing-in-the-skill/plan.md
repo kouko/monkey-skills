@@ -31,9 +31,9 @@ intent: 2026-09-11-memory-timing-in-the-skill@ae70e8e0f
 - Risk: Agent-decided: placed at the end of the convergence section rather than in Finalize, because the sentence must be read before the attestation exists — recording after it is generated invalidates it, which is the excuse that pushed the two previous changes past the line.
 
 **W2-02 Pin the review station's text from inside loom-code**  after: W2-01  acceptance: 4, 5
-- Files: loom-code/scripts/test_simplified_station_text.py
+- Files: loom-code/scripts/test_review_convergence_contract.py
 - Test: A4 positive: review-text-pinned-in-loom-codes-own-suite; negative: no-new-cross-plugin-read. A5 positive: pin-covers-both-timing-and-scarcity; boundary: pin-tolerates-rewording-that-keeps-both-halves.
-- Risk: Agent-decided: extends the station-prose test this plugin already owns rather than adding a module, and pins meaning rather than a literal sentence so a later rewording that keeps both halves does not go red.
+- Risk: Agent-decided: extends the test that already pins this same station's same section, not `test_simplified_station_text.py` — that module reads `loom-workflow/` prose and is one of the four cross-plugin couplings the previous change worked to stop deepening. Pins the required elements after whitespace flattening rather than a literal sentence, so a rewording that keeps both halves does not go red.
 
 ### Wave 3 — The change obeys its own rule
 
