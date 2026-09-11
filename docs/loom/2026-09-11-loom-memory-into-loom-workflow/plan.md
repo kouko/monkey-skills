@@ -38,14 +38,14 @@ intent: 2026-09-11-loom-memory-into-loom-workflow@3e136a4de
 ### Wave 3 — Consumers, standing documents and the store itself
 
 **W3-01 Rewrite the isolation proofs for the new shape**  after: W2-02  acceptance: 5
-- Files: scripts/test_loom_plugin_install_layout.py, scripts/test_check_plugin_boundaries.py, loom-code/scripts/check_contract_citations.py, loom-workflow/scripts/test_skill_count.py
+- Files: scripts/test_loom_plugin_install_layout.py, scripts/check_plugin_boundaries.py, scripts/test_check_plugin_boundaries.py, loom-code/scripts/check_contract_citations.py, loom-workflow/scripts/test_skill_count.py
 - Test: A5 positive: code-and-design-suites-green-without-loom-workflow; negative: no-test-still-asserts-a-standalone-memory-plugin.
 - Risk: Agent-decided: the absence case changes meaning — it was "loom-memory absent", it becomes "loom-workflow absent" — so those assertions are rewritten to the new property rather than deleted, and the citation-scan root moves with the skill.
 
 **W3-02 Standing documents, versions, and proof the store did not move**  after: W3-01  acceptance: 2, 3
-- Files: PRINCIPLES.md, loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json, loom-workflow/CHANGELOG.md, docs/loom/maps/family-relocation/MAP.md, docs/loom/BACKLOG.md
+- Files: PRINCIPLES.md, loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json, loom-workflow/CHANGELOG.md, docs/loom/maps/family-relocation/MAP.md, docs/loom/backlog/2026-07-22-loom-memory-store-hardening-deferred-f2-f3-f5-f6.md, docs/loom/backlog/2026-08-07-mechanize-loom-memory-prune-pretriage.md
 - Test: A2 positive: principles-names-three-loom-family-plugins; negative: no-standing-document-still-claims-a-fourth. A3 positive: store-byte-identical-to-trunk; negative: store-still-validates-under-the-relocated-validator.
-- Risk: Agent-decided: the ratification line gained a same-day amendment for the four-plugin wording, so this reverts that clause and records the second amendment rather than overwriting the first silently.
+- Risk: Agent-decided: the ratification line gained a same-day amendment for the four-plugin wording, so this reverts that clause and records the second amendment rather than overwriting the first silently. The two closed/amnestied backlog records above are edited only for the stale `loom-pipeline/` → `loom-workflow/` path in text they already carried — the frozen `status: closed` verdict and body are otherwise untouched.
 
 ## Questions asked
 
