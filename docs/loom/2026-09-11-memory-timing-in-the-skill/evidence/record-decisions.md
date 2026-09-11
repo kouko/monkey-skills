@@ -8,15 +8,19 @@ permits everything.
 
 ## Scope of the backlog
 
-Fourteen candidates, spanning three changes: the two already merged
+Fifteen candidates, spanning three changes: the two already merged
 (`2026-09-10-okf-compatible-loom-memory`,
 `2026-09-11-loom-memory-into-loom-workflow`) and this one. The first two
 should each have recorded in their own branch and did not — which is the
 failure this change exists to stop. Recording them here is the batched
 catch-up, not the normal path.
 
-**Recorded: 3 of 14.** Across three changes that is one per change, which
-is what the clause calls the normal outcome.
+**Recorded: 4 of 15.** Across three changes that is just over one each,
+slightly above what the clause calls the normal outcome — said plainly
+rather than trimmed to fit, because this is a three-change backlog being
+cleared at once. The fourth arrived after the table below was first
+written: the first Record under the new bar failed a test, and the reason
+it failed was itself durable.
 
 ## Recorded
 
@@ -25,6 +29,7 @@ is what the clause calls the normal outcome.
 | `a-worktree-cleanup-by-pattern-match-destroys-other-peoples-work` | A named trap with an irreversible consequence, reachable by any future contributor writing a cleanup command. Nothing in the store covered removal-by-filter. |
 | `an-acceptance-line-is-measured-against-the-trunk-before-it-is-written` | A rule about how an acceptance line is written, independent of the change that taught it. The nearest existing entry covers wrongly *claimed* pre-existing breakage, not genuinely unmeasured baselines. |
 | `a-prose-pin-outlives-its-prose-only-if-it-explains-itself` | The lesson this change itself is built on, with the industry verification attached. Adjacent to `a-doc-pin-makes-a-prose-defect-permanent` but the opposite hazard, and the two are cross-linked rather than merged. |
+| `a-one-shot-acceptance-proof-against-a-moving-baseline-outlives-its-change` | Found by doing the recording: the previous change's migration-fidelity proof compared the store against a moving `origin/main`, so once it merged the assertion became "the store may never change" and the first new lesson failed it. Three of the skill's four operations would each have tripped it. |
 
 ## Rejected, with the reason and where it went instead
 
