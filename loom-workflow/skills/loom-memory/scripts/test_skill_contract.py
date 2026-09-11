@@ -238,15 +238,32 @@ def test_skill_folder_is_flat_no_nested_subfolder() -> None:
     nested directory. That is a fact about the runner's environment, not
     about the layout being shipped, and the generated directory is not
     tracked at all.
+
+    A bare `git ls-files` (without `--recurse-submodules`) reports a git
+    submodule mounted under the skill directory as a single depth-1 gitlink
+    entry, with no visibility into the submodule's own tracked tree — which
+    can nest arbitrarily deep on disk once checked out with
+    `git clone --recurse-submodules`. Rather than recurse into the
+    submodule (which would depend on the clone's own submodule-init state
+    to be meaningful), a gitlink is flagged directly, on the principle a
+    skill ships files, not submodules: `git ls-files --stage` reports each
+    entry's mode, and mode `160000` is exactly a gitlink.
     """
     assert SKILL_DIR.is_dir()
-    tracked = subprocess.run(
-        ["git", "ls-files", "--", SKILL_DIR.as_posix()],
+    staged = subprocess.run(
+        ["git", "ls-files", "--stage", "--", SKILL_DIR.as_posix()],
         cwd=REPO_ROOT, capture_output=True, text=True, check=True,
-    ).stdout.split()
-    assert tracked, "no tracked files under the skill directory"
-    for rel in tracked:
-        depth = Path(rel).relative_to(SKILL_DIR.relative_to(REPO_ROOT)).parts
+    ).stdout.splitlines()
+    assert staged, "no tracked files under the skill directory"
+    skill_rel = SKILL_DIR.relative_to(REPO_ROOT)
+    for line in staged:
+        left, _, rel = line.partition("\t")
+        mode = left.split()[0]
+        assert mode != "160000", (
+            f"{rel} is a git submodule mounted under the skill directory; "
+            "a skill ships files, not submodules"
+        )
+        depth = Path(rel).relative_to(skill_rel).parts
         assert len(depth) <= 2, (
             f"{rel} nests a subfolder inside a skill subfolder; the skill "
             "folder must be SKILL.md plus single-level subfolders"
