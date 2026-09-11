@@ -66,7 +66,15 @@ fi
 # identical because the stricter strip then failed and the missing validator
 # fail-opened. With a single pattern, widening it changes behaviour, which is
 # what makes the near-miss probes in the test suite discriminating.
-REPO_ROOT="${FILE_PATH%/docs/loom/memory/*}"
+#
+# `%%` (longest-suffix removal), not `%` (shortest-suffix removal): when the
+# path contains `/docs/loom/memory/` more than once -- a store-inside-the-
+# store nesting abuse -- a shortest-suffix strip anchors on the LAST
+# occurrence, leaving REPO_ROOT pointed at a subdirectory of the true root
+# (the store itself). The longest-suffix strip anchors on the FIRST
+# occurrence instead, which is always the real repo boundary no matter how
+# the rest of the path repeats the store's own marker segment.
+REPO_ROOT="${FILE_PATH%%/docs/loom/memory/*}"
 # Explicit intent, deliberately untested: removing this line does not change
 # observable behaviour today, because a non-store path leaves REPO_ROOT equal to
 # the file path and the validator lookup then fail-opens on the missing file. It
