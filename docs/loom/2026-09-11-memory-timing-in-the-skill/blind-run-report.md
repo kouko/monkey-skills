@@ -1,97 +1,284 @@
-# 記憶的時機規則要住在 skill 裡 — 我試了什麼、發生了什麼
+# 盲跑報告 — 2026-09-11-memory-timing-in-the-skill
 
-2026-09-11 在乾淨的一份專案副本（024b66141）上試的。我沒有參與這次改動的實作，
-下面每一項都是我自己動手驗證出來的。
+執行對象：commit `6c932df2ea4bad09c9de4b7d55fb1256c98fe706`
+（`fix(loom): scope every assertion to its clause's home`），即這次改動的
+HEAD。工作目錄：`.worktrees/2026-09-11-memory-timing-in-the-skill`（乾淨
+worktree，未動過的樹）。
 
-## 你要求的事，一項一項來看
-
-### 1. 在任何一個裝了 loom-workflow 的專案裡讀記憶 skill，都看得到「什麼時候該記」這條規則，不需要去翻某個 repo 的儲存目錄
-
-- **我怎麼試的**：把 `loom-workflow/skills/loom-memory/` 整個資料夾複製到一個完全獨立的資料夾（不帶這個 repo 的任何其他東西，尤其不帶 `docs/` 目錄），模擬「只裝了這個 skill」的情境，然後只讀複製出來的檔案。
-- **發生了什麼**：複製出來的 `SKILL.md` 裡，「Record」這個操作區塊本身就完整寫著「什麼時候該記」——分支關閉前就已經知道的事，要落在同一個分支，不要為此另開一個合併後的分支，那是純粹的多餘負擔。整段規則不引用、不依賴這個 repo 才有的任何檔案。
-- **證據**：複製後的目錄結構與 `SKILL.md` 全文（我在自己的工作暫存目錄下確認過），規則落在 `## Record` 底下的「When」段落。
-- **結論：works** — 規則確實住在 skill 本體裡，裝了這個 plugin 的任何專案都讀得到，不必去翻某個特定 repo 的資料檔。
-
-### 2. 規則講得夠具體，讓一個沒讀過這段歷史的 agent 照著做就會在分支還開著的時候記錄，而不是事後另開 PR
-
-- **我怎麼試的**：我先只憑「Record」段落的文字，自己在心裡模擬一個不知道 #515／#780 這段歷史的讀者會怎麼做；確認完自己的判斷後，才去讀這個 skill 自帶的凍結評測 `evals/record-timing.md` 與 `evals/record-timing-cases.json`。
-- **發生了什麼**：我自己的判斷是——文字會讓人在分支關閉前就記錄，且「幾乎沒有東西夠格被記錄」這句話會擋掉大多數候選。讀完凍結評測後，它的結論與我一致：一個全新、沒有工具、沒有這個 repo 存取權的 sonnet agent，被單獨餵給「Record」段落與 11 個候選案例後，答對了時機（在同一個開著的分支上記錄）、答對了那個例外（只有第 11 個案例被歸類為「合併後才能觀察到，應批次處理」），而且候選中只挑出 1 條該記的，並且自己主動核對這個數字符不符合契約講的「正常結果是零到一條」。評測文件裡誠實記了一個與 ground truth 不同的判斷（候選 1 該記卻被讀者判退），並解釋這個分歧其實是規則刻意偏向「拒絕」在起作用，不是規則失靈。
-- **證據**：`evals/record-timing.md` 的「Reference run — 2026-09-11」區塊，三項判準全部 PASS。
-- **結論：works，且我同意評測的結論** — 它的判定方式（把段落單獨抽出來、給一個完全陌生的讀者、要求讀者自己核對數量）確實測到了「規則會不會被稀釋」這件事，而不只是「關鍵字還在不在」。
-
-### 3. 那一個例外（只有合併後／安裝後才觀察得到的事實）同樣寫清楚，而且說明那種情況要批次處理，不是一個發現開一個 PR
-
-- **我怎麼試的**：對照上面複製出來的 `SKILL.md` 全文找例外句子。
-- **發生了什麼**：「Record」段落明白寫著：「The one exception is a fact only confirmable by observing real post-merge or installed behavior; that genuinely needs a follow-up branch, and those are batched rather than one pull request per discovery.」（唯一的例外，是只有在真正合併後或安裝後的行為裡才能確認的事實；這種情況確實需要一個後續分支，但這些要批次處理，而不是一個發現開一個 PR。）
-- **證據**：同一份 `SKILL.md`；上面第 2 項的評測也把候選 11（「新發佈的 plugin 版本能不能從市集正確安裝」）正確歸類為這個例外並批次處理。
-- **結論：works**
-
-### 4. 規則的兩半（時機／稀少性）各由一個機制守住：刪除靠回歸測試、稀釋靠冷讀評測，而且測試本身要自我解釋
-
-- **我怎麼試的**：讀 `loom-workflow/skills/loom-memory/scripts/test_skill_contract.py` 裡守住 Acceptance 4 的那幾條測試，以及上面已經讀過的凍結評測。
-- **發生了什麼**：
-  - **刪除守衛**：`test_record_contract_states_when_to_record`、`test_record_contract_states_how_much_to_record`、`test_both_halves_live_in_the_record_section_itself` 三條測試各自釘住時機半段與稀少性半段的必要元素（例如「before the branch closes」「zero to one durable lesson per change」），而且是把空白壓平之後比對關鍵片語，不是比對整句——也就是說換句話說但保留精神的改寫仍會過，只有真的刪掉才會紅。
-  - **稀釋守衛**：就是上面第 2 項讀過的 `evals/record-timing.md` + `record-timing-cases.json`，明確標成「不自動跑、不進 CI，改變這兩個子句時要重跑」。
-  - **自我解釋**：這幾條測試前面有一大段註解，講清楚 2026-07-08（#515）這條規則第一次被寫進強制指示，2026-07 的 loom 1.0 大砍版本（#780）把當時的 skill 與測試一起刪掉，規則因此只剩散文留在資料檔裡；並且明講「如果這條測試變紅，問題不是怎麼把它改綠，而是這個子句是不是真的被拿掉了，拿掉是一個需要走 intent 的契約變更」。這段解釋同時出現在該區塊的標頭註解，也重複進每一條斷言失敗時印出的訊息（`_A4_WHY`）。
-- **證據**：`scripts/test_skill_contract.py` 中「Acceptance A4」標頭區塊的完整註解，以及三條對應測試；`evals/record-timing.md` 的方法論表格「刪除→回歸測試 / 稀釋→這份評測」。
-- **結論：works** — 兩種失效各有各的守法，測試本身確實把「為什麼在這裡」講清楚了，不是一句孤立的斷言。
-
-### 5. closing review 走到收斂之後、產生 attestation 之前，看得到一句同時講時機與稀少性、不點名 plugin、不呼叫工具的話
-
-- **我怎麼試的**：在 `loom-code/skills/review/SKILL.md` 裡找這段話，確認它相對於 `<!-- gate: review.bounded-episode -->` 這個收斂區塊與後面「## 5. Finalize」（產生 attestation 的地方）的相對位置；並跑 `python3 loom-code/scripts/check_mechanisms.py --baseline origin/main`。
-- **發生了什麼**：這段話（以「Convergence is also the last moment when recording a lesson is free.」開頭）出現在 `<!-- /gate -->`（收斂那個 gate 區塊的結束標記，第 155 行）之後、「## 5. Finalize」（開始寫 attestation 的地方，第 168 行）之前。逐項核對四個性質：
-  1. 位置在收斂之後、attestation 產生之前——符合。
-  2. 不點名任何 plugin——整段只提到 `docs/loom/memory/` 這個路徑，沒有出現任何 plugin 名稱。
-  3. 不呼叫任何工具——段落本身沒有指令、沒有程式碼區塊，而且它自己明講「it invokes nothing, requires no plugin to be installed, and asks for no decision from the user」。
-  4. 不帶 gate 標記——這段話落在兩個 `<!-- gate: ... -->` / `<!-- /gate -->` 區塊之外，前一個 gate 已經在它之前關閉，後面直到「## 5. Finalize」都沒有新的 gate 開啟。
-  `check_mechanisms.py` 的結果：`net mechanism count (excl. host-hygiene): 118`，與 `baseline net count: 118` 完全相同；`prose-gate` 一項是 `15 / 15`（跟 baseline 一致），代表沒有新增任何一個機制或 gate，跟這條改動宣稱的「不新增 checker 規則、不新增閘門」一致。
-- **證據**：`loom-code/skills/review/SKILL.md` 第 155–167 行左右；`check_mechanisms.py --baseline origin/main` 的完整輸出（`all clear`）。
-- **結論：works**
-
-### 6. 記憶 skill 的既有行為沒有改變：四個操作、儲存格式、驗證器都照舊；沒有任何 loom 站台因此變成會自動呼叫記憶
-
-- **我怎麼試的**：跑 `git diff origin/main..HEAD -- loom-workflow/skills/loom-memory/scripts/loom_memory.py`；另外看了 `references/operations.md`、整體改動的檔案清單，並確認 review 站那段話本身沒有呼叫語法。
-- **發生了什麼**：`loom_memory.py` 的 diff 是空的（0 行），驗證器與四個操作的實作完全沒動。`references/operations.md` 的改動只是在「Record」小節前面加了兩段說明（時機＋稀少性），原本的四個編號步驟一字未改。這次改動實際碰到的檔案只有 `SKILL.md`（+17 行）、`evals/` 兩個新檔、`operations.md`（+10 行）、`scripts/test_skill_contract.py`（新增）、`scripts/test_store_fidelity.py`（刪除，見下方）——沒有任何一個 loom 站台的呼叫流程被改動成會主動叫記憶。
-- **證據**：`git diff origin/main..HEAD -- loom-workflow/skills/loom-memory/scripts/loom_memory.py`（空輸出）；`git diff --stat origin/main..HEAD -- loom-workflow/skills/loom-memory/`。
-- **結論：works**
-
-## 附帶查證的兩件事
-
-- **`python3 -m pytest docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/probes/ -q`**：7 個測試全過（`7 passed in 2.22s`）。這些是這次改動自己寫的對抗測試，逐一驗證：刪掉時機或稀少性任一半會讓釘子變紅、失敗訊息會告訴刪除者他刪了什麼、保留兩半精神的改寫仍是綠的、把那段話搬到 Finalize 之後會變紅、把那段話標成 gate 會變紅、在那段話裡點名一個 plugin 會變紅。
-- **`uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q`**：全部通過，結束碼 0。逐段摘要：`1112 passed, 2 skipped`（loom-code 主體）、`183 passed, 1 skipped`（loom-design）、`48 passed`、`28 passed`、`244 passed`、`115 passed`（loom-workflow 幾個 Python 套件），以及 15 支 shell 探針腳本（`test-git-memory-*`、`test-loom-memory-charter-pins`、`test-memory-grep-*`、`test-privacy-*`）全部回報 PASS、0 FAIL。
-
-## 被刪掉的那支測試：`scripts/test_store_fidelity.py`
-
-這支測試在這個分支上被刪掉了。查證下來，它守的是另一個更早的改動（把記憶 store 從舊資料夾搬到現在位置那次）的驗收條件——「搬移前後 293 筆內容逐位元組一致」，比對對象是一個會移動的 `origin/main`。它跟「什麼時候該記」這條時機規則沒有關係：這次改動的六條驗收線都不依賴它、也沒有任何一條測到它守的東西。它的刪除有自己的一則說明（記在 `docs/loom/memory/` 裡），大意是「一次性的驗收證明釘在一個會移動的基準上，遲早會開始擋正常操作（因為 Record／Reconcile／Retire 三個操作本來就會改動這個 store）」，這個說法我核對過是事實：如果保留它，這次改動一旦用 Record 操作真的記一條教訓，這支測試就會變紅。
-
-**結論：它的消失沒有讓任何一條 Acceptance（1–6）少了保障。**
-
-## 對你既有的資料做了什麼
-
-沒有動到你既有的資料。這次改動只新增、修改、刪除了 skill 與 review 站的散文檔與測試檔（`SKILL.md`、`references/operations.md`、新的 `evals/` 與 `test_skill_contract.py`、review 的 `SKILL.md`），刪除的 `test_store_fidelity.py` 是一支已經完成階段性任務的測試，不是資料。任何既有的記憶 store 內容（`docs/loom/memory/` 下的教訓檔案）一個字都沒有被改動，`loom_memory.py` 驗證器與儲存格式的程式碼零變更。
-
-## Review summary
-
-我沒有拿到這次改動的 review 站正式裁決（`docs/loom/2026-09-11-memory-timing-in-the-skill/` 目錄下目前只有 `plan.md` 與 `evidence/`，還沒有 `attestation.json`）。因此沒有任何 review 階段的「嚴重度 important 以上被駁回的發現」可以轉告你——如果之後補上了 review 紀錄，其中任何一條 important 以上被駁回的發現都應該補進這份報告的「我幫你做的決定」一節。
-
-## 我幫你做的決定
-
-- 沒有需要幫你決定的事。六條驗收線都能用你能自己查證的事實直接判定（複製出來的檔案、diff、跑測試的結果），沒有遇到需要我代替你選邊站的模糊地帶。
-
-## Questions I asked you（我認為你該留意的問題）
-
-- 沒有。六條驗收線全部 works，沒有查出需要你回答的開放問題。
+說明：本報告完全依我自己在這棵樹上的操作寫成，**沒有讀取**先前那份針對舊樹跑
+出的 `blind-run-report.md`（也沒有先讀 plan.md 或 commit 訊息內容——只在確認
+HEAD 時看過一行 commit 標題，這是取得 SHA 的必要副產品，不影響下面每一條的
+獨立驗證）。
 
 ---
 
-### 語言規則核對表（各項工件是否遵守英文／模板規則）
+## Acceptance 1 — 規則要能只靠複製出去的資料夾讀到
 
-| 工件 | 規則 | 是否遵守 |
-|---|---|---|
-| `docs/loom/intent/2026-09-11-memory-timing-in-the-skill.md`（意圖） | 用使用者語言（繁中）撰寫 | 是，全篇繁體中文 |
-| `loom-workflow/skills/loom-memory/SKILL.md`、`references/operations.md`（出貨散文） | 英文撰寫 | 是 |
-| `loom-workflow/skills/loom-memory/evals/record-timing.md`、`record-timing-cases.json`（評測） | 英文撰寫 | 是 |
-| `loom-code/skills/review/SKILL.md`（review 站那段提醒） | 英文撰寫 | 是 |
-| `loom-workflow/skills/loom-memory/scripts/test_skill_contract.py`（回歸測試） | 英文撰寫；測試名稱應為 `test_<單元>_<狀態>_<預期>` | 內容英文，遵守；測試函式名稱是完整敘述句（如 `test_record_contract_states_when_to_record`），不是嚴格的三段式 `test_<unit>_<state>_<expected>` 格式，但語意等價（單元＋狀態＋預期都能從名字讀出） |
-| `docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/probes/test_adversarial_clause_guards.py`（對抗探針） | docstring 用英文；測試名稱同上格式 | docstring 英文，遵守；測試名稱同樣是完整敘述句而非嚴格三段式（如 `test_deleting_either_half_turns_the_pin_red`），語意等價 |
-| 這份 blind-run 報告 | 使用者語言（繁中） | 是 |
+**做法**：把 `loom-workflow/skills/loom-memory/` 整個資料夾複製到 repo 外的暫存
+目錄（`scratchpad/a1-copy/`），確認裡面沒有任何 `docs/` 目錄，再單獨讀複製出去
+的 `SKILL.md`。
+
+**觀察**：複製出去的資料夾裡完全沒有 `docs`（`find … -iname docs` 沒有任何輸
+出）。`SKILL.md` 的 `### Record` 一節裡就寫著「**When:** before the branch
+closes. A fact already known while the branch is still open … belongs in that
+same branch, never a separate post-merge branch」,不必翻任何 repo 資料檔就讀
+得到。
+
+**結論：PASS。**
+
+---
+
+## Acceptance 2 — Record 文字本身講得夠具體、evals 報告誠不誠實
+
+**先自己判斷再看報告**：在讀 `evals/record-timing.md` 之前，我自己讀了
+`SKILL.md` 的 Record 一節。它明確給出三件事——時機（分支關閉前）、例外（只有
+合併後/安裝後才觀察得到的事實，且要求批次處理）、量的門檻(「幾乎沒有東西夠格」
+「每個 change 正常是零到一條」)。一個沒讀過 2026-07 那段歷史的讀者,照著這段文
+字走,應該會在分支還開著時就記,而且會拒掉大多數候選——這是我讀完文字後、看報
+告前的判斷。
+
+**再看 `evals/record-timing.md`**：裡面記了兩次跑法（11 候選 / 12 候選），兩次
+都判定 PASS,但報告誠實地列出兩次彼此不合、也都跟「地面真相」不完全一致的表格
+（例如候選 2、候選 12 兩次結果不同）,並且明講「兩次跑法都往拒絕的方向偏,而不
+是往浮濫記錄的方向偏——這正是這條款要防的失效方向」。特別是候選 12(「斷言釘的
+範圍比它要守的條款寬」——也就是這次改動自己審查中反覆出現的那個缺陷)第二次跑
+被判 REJECT,報告自己承認「如果之後的跑法也拒絕它,代表這條款低估了『同一缺陷
+出現四次』這種復發訊號」——這是把對自己不利的結果講出來,不是硬拗成通過。
+
+**結論：PASS。** 文字本身足以在無歷史脈絡下引導讀者往正確方向,兩次評測結果不
+一致但報告誠實揭露、未美化。
+
+---
+
+## Acceptance 3 — 例外與批次處理寫清楚
+
+已在上面 SKILL.md 引文中看到：「The one exception is a fact only confirmable by
+observing real post-merge or installed behavior; that genuinely needs a
+follow-up branch, and those are batched rather than one pull request per
+discovery.」以及緊接著補一句涵蓋「審查已無可再讀內容之後才浮現的教訓」也算同
+一種情況、一樣批次搭下一個 change 的便車。
+
+**結論：PASS。**
+
+---
+
+## Acceptance 4 — 時機 / 稀少性兩半各自有機制守住 + 守衛自我解釋 + intent/plan 不描述機制性質
+
+**① 刪除擋得住（親手做突變,不採信現成測試）**
+我自己在 `SKILL.md` 的 Record 段落裡把片語「pure overhead」改成「extra work」
+（跨行片語,用 Edit 工具精確替換),然後在 `loom-workflow/skills/loom-memory`
+下跑 `pytest scripts/test_skill_contract.py`。結果：
+`test_record_contract_states_when_to_record` 和
+`test_record_section_matches_the_digest_the_cold_reader_eval_was_run_against`
+兩支具名測試都轉紅,錯誤訊息點名「the Record contract no longer states 'pure
+overhead'」並附上完整的 #515／loom 1.0 誤刪歷史說明。驗證完立刻用 Edit 改回原
+字、清掉測試殘留的 `__pycache__`,`git status` 確認樹乾淨。
+
+**② 稀釋擋得住**
+稀釋這一半不是靠字串測試(文件自己承認字面片語斷言測不到稀釋),而是靠
+`evals/record-timing.md` 的冷讀跑法——見上面 Acceptance 2 的分析,兩次跑法都
+在分支還開著時記錄、也都拒掉大多數候選,方向正確。而且 `Record` 段落一改動,
+`test_record_section_matches_the_digest_the_cold_reader_eval_was_run_against`
+就會因為 sha256 摘要對不上而轉紅——我上面的突變測試已經同時證明了這一點:同
+一次刪字就讓摘要測試也紅了,逼下一個編輯者去重跑冷讀而不是只改字串清單。
+
+**③ 守衛自我解釋**
+`test_skill_contract.py` 裡在這四支測試之前有一大段註解,標題直接寫
+「READ THIS BEFORE YOU EDIT OR DELETE ANYTHING BELOW」,講清楚 2026-07-08
+(#515)怎麼建立、loom 1.0(#780)怎麼把指示跟測試一起誤刪、紅燈時該做的三步
+驟。每支測試失敗訊息裡也附上 `_A4_WHY`,同樣點名這段歷史。這符合「失敗訊息要
+說明這段話為什麼在這裡」的要求。
+
+**④ 機制性質只能在測試模組裡敘述——grep intent 與 plan**
+- `intent` 裡第 31 行明確寫「這幾個機制各自的性質只在實作它們的測試模組裡敘述
+  (匹配的是字面還是語意…)。這份 intent 只說結果」——intent 本身只是在**聲明
+  這條原則**,沒有另外斷言匹配機制是字面還是語意,乾淨。
+- 但 `plan.md` 沒有這麼乾淨。W1-02 那一列的 Risk 寫著:「A phrase-presence
+  assertion is a golden test at string granularity, and its documented failure
+  mode is that a red test gets updated rather than investigated」——這句話直
+  接描述了這個機制「是什麼粒度的比對(字串層級的 phrase-presence)」以及「它的
+  已知失效模式」,這正是 Acceptance 4 第四點要求「只能在測試模組裡敘述」的東
+  西,卻同時出現在 plan.md 裡。
+
+**結論：前三點 PASS,第四點 PARTLY——`plan.md`(非 intent)仍含有對機制性質
+(字串粒度比對、已知失效模式)的敘述,不是零。**
+
+---
+
+## Acceptance 5 — closing review 裡的那段話
+
+**位置**：`loom-code/skills/review/SKILL.md` 裡,那段話緊接在
+`## 4. Converge within one bounded episode` 區塊的 `<!-- /gate -->` 之後、
+`## 5. Finalize` 之前——確實落在收斂已關閉、Finalize(產生 attestation)尚未開
+始的窗口裡。
+
+**內容檢查**：
+- 不點名任何 plugin——只提到路徑 `docs/loom/memory/`,沒有出現
+  「loom-workflow」「loom-memory」等 plugin 名稱。
+- 不呼叫任何工具——整段是敘述性散文,沒有指令、沒有程式碼區塊。
+- 沒有 gate marker——它在 `<!-- /gate -->` 之後,不在任何 `<!-- gate: … -->`
+  區塊內。
+
+**跑 `check_mechanisms.py`**,原文輸出逐字如下：
+
+```
+class          recomputed registered
+skill                  18         18
+checker-rule           19         19
+hook                    4          3
+contract               63         63
+prose-gate             15         15
+net mechanism count (excl. host-hygiene): 118
+baseline net count: 118
+exempt from net count: PostToolUse:Skill:language-anchor.py
+all clear
+```
+
+net mechanism count 與 baseline 相同(118 = 118),腳本回報 `all clear`。（`hook`
+一列 recomputed 4 / registered 3 有落差,但腳本判定不影響「all clear」的整體結
+論,且與這次改動的檔案無關,我沒有進一步追查它是否為既有基線瑕疵。）
+
+**結論：PASS。**
+
+---
+
+## Acceptance 6 — 記憶腳本本體完全沒被動過
+
+```
+git diff origin/main..HEAD -- loom-workflow/skills/loom-memory/scripts/loom_memory.py
+```
+輸出為空(0 行)。
+
+**結論：PASS。**
+
+---
+
+## 兩個必跑指令的逐字結果
+
+### 1. 套件測試（loom-family）
+
+```
+uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q
+```
+此指令跑超過 120 秒背景執行,以 Monitor 等到完成,**exit code 0**。因為原指令
+自帶 `| tail -80`,終端只保留輸出的最後 80 行,逐字如下(節錄結尾摘要區塊,全
+部是 PASS,沒有任何 FAIL 字樣)：
+
+```
+PASS — --verify with no ref exits 1 (usage error)
+Unresolvable ref: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef
+PASS — --verify on unresolvable ref exits 2
+No memory trailer found in feef0105a0c25b6a60c05c46b36c0fdd0fcd8bd9
+PASS — --verify on Related-only commit C exits 4
+
+================================================================
+Summary: 5 PASS / 0 FAIL
+================================================================
+PASS — compose-commit.md exists
+PASS — Privacy gate neighborhood present and runs layer-1 privacy-scan.py
+PASS — Privacy gate neighborhood conditionally dispatches the layer-2 judge via privacy-judge-spec.md
+PASS — Privacy gate neighborhood states an explicit fail-closed -> BLOCK branch
+PASS — Quality advisory neighborhood present (quality_note, non-blocking, points at privacy-judge-spec.md)
+
+================================================================
+Summary: 5 PASS / 0 FAIL
+================================================================
+PASS — Privacy gate neighborhood present (layer-1 script + layer-2 SSOT pointer)
+PASS — Privacy gate neighborhood specifies the BLOCKED + escalate-to-human verdict
+PASS — Privacy gate neighborhood pins the explicit fail-closed branch (script error / dispatch failure / non-conforming -> BLOCK)
+PASS — Privacy gate neighborhood correctly omits the commit-only quality_note block
+PASS — Privacy gate heading (line 261) precedes the 'gh pr create' hand-off (line 291)
+
+================================================================
+Summary: 5 PASS / 0 FAIL
+================================================================
+PASS — privacy-judge-spec.md exists
+PASS — Dispatch instruction neighborhood present (fresh-context + content-not-commands guard)
+PASS — Categories neighborhood lists all four categories + secrets carve-out
+PASS — Output schema neighborhood specifies PASS|BLOCK + findings (category/quoted span/why)
+PASS — quality_note neighborhood present (optional, commit-only, non-blocking, never escalates)
+PASS — Fail-closed neighborhood present (explicit dispatch-failure + non-conforming → BLOCK)
+
+================================================================
+Summary: 6 PASS / 0 FAIL
+================================================================
+PASS — privacy-scan.py exists
+denylist: not configured
+PASS — clean text → exit 0, empty JSON list
+denylist: not configured
+PASS — planted AWS key → exit 3, finding names aws_access_key
+denylist: not configured
+PASS — planted PEM private-key header → exit 3, finding names pem_private_key
+denylist: not configured
+PASS — planted Slack bot token → exit 3, finding names slack_token
+denylist: not configured
+PASS — planted generic secret assignment → exit 3, finding names generic_secret_assignment
+PASS — redaction: full AWS key literal absent from stdout
+denylist: not configured
+PASS — stdin path (no --text-file) → exit 0, empty JSON list
+PASS — planted deny-list term (via --denylist) → exit 3, finding names denylist
+PASS — deny-list term matches differently-cased text (case-insensitive) → exit 3
+PASS — short deny-list term ('Visa') never revealed in full in stdout
+
+================================================================
+Summary: 11 PASS / 0 FAIL
+================================================================
+```
+
+跑完後在 `loom-code/scripts/__pycache__` 與
+`loom-workflow/skills/loom-memory/scripts/__pycache__` 留下殘留,已清除
+（`git status --porcelain` 確認乾淨）。
+
+### 2. 這次改動的對抗探針
+
+```
+PYTHONDONTWRITEBYTECODE=1 python3 -m pytest docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/probes/ -q -p no:cacheprovider
+```
+逐字輸出：
+```
+...........                                                              [100%]
+11 passed in 3.23s
+```
+跑完後在 `evidence/probes/__pycache__` 留下殘留,已清除。
+
+---
+
+## 判斷題:同一缺陷(斷言釘的範圍比它守的條款寬)被抓到四次,現在的守衛範圍對了嗎?
+
+**我的判斷：對了,而且我不是只看說法,是自己重現過。** 理由：
+
+1. `test_skill_contract.py` 裡四支守住 Record 兩半的測試,全部改成先用
+   `_section(text, "Record")` 把比對範圍切到 `SKILL.md` 裡 `### Record` 這一
+   節本身,而不是整份 skill 文字的聯集;針對 `operations.md` 的那支測試也是直
+   接讀 `operations.md` 單一檔案,不混進 `SKILL.md` 的內容。測試模組的註解明講
+   「against the union an adversarial probe showed the pin staying green while
+   the shipped contract was rewritten, because references/operations.md still
+   carried the phrases」——這正是「釘的範圍比條款寬」這個缺陷的具體樣子:條款
+   已經被改壞,但因為斷言掃了整份文字聯集,舊版措辭還殘留在別的檔案裡,測試看
+   不出來。
+2. 我自己動手把 Record 段落裡的「pure overhead」換成「extra work」,只改了
+   `SKILL.md` 一個檔案、一個片語,結果兩支測試(片語測試 + digest 測試)當場
+   轉紅,而且失敗訊息指名的正是我改動的那個片語——沒有「改了條款但測試沒發
+   現」的漏網情況。
+3. commit 標題(`fix(loom): scope every assertion to its clause's home`)與
+   `docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/probes/` 底下那支
+   探針,都獨立佐證這是這次改動最後一輪處理的問題——我自己的突變結果與這些旁
+   證方向一致。
+
+我沒有驗證的部分:我沒有另外重新跑一次 `evals/record-timing.md` 的冷讀評測(那
+需要另外派一個 agent,而我被要求不能派 subagent),所以「稀釋」這一半的正確性
+仍然只能建立在既有的兩次紀錄報告(見 Acceptance 2)之上,不是我自己的第三次獨
+立冷讀。
+
+---
+
+## 六條 Acceptance 總表
+
+| # | 結果 |
+|---|------|
+| 1 | PASS |
+| 2 | PASS |
+| 3 | PASS |
+| 4 | PARTLY — 前三點通過;第四點(intent/plan 不得描述機制性質)在 `plan.md` W1-02 的 Risk 欄位仍殘留「字串粒度斷言」「已知失效模式」等機制性質敘述 |
+| 5 | PASS |
+| 6 | PASS |

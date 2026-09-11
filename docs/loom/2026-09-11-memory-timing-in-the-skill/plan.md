@@ -22,7 +22,7 @@ intent: 2026-09-11-memory-timing-in-the-skill@f55785199
 - Files: loom-workflow/skills/loom-memory/scripts/test_skill_contract.py
 - Test: A4 positive: both-halves-pinned-timing-and-scarcity; negative: deleting-either-half-turns-the-test-red; boundary: the-guard-s-own-tolerances-are-documented-in-the-test-module-not-here. A4 positive: failure-message-and-docstring-name-the-2026-07-deletion; negative: no-bare-assert-without-a-reason.
 - Risk: Agent-decided: the test lives beside the skill it pins, not in the repo-root suite, so the plugin keeps proving its own contract in an isolated install.
-- Risk: Agent-decided: the test carries its own justification in the docstring and in every failure message. A phrase-presence assertion is a golden test at string granularity, and its documented failure mode is that a red test gets updated rather than investigated — which is how the 2026-07 instruction and its test were removed together. No tooling defends against that; only a message that tells the next editor what they are about to delete.
+- Risk: Agent-decided: the guard carries its own justification in the docstring and in every failure message, because the way this kind of check dies is that a red one is re-approved rather than investigated — which is how the 2026-07 instruction and its test were removed together. What the matcher does, what it tolerates and what to do when it reds is stated in that module and nowhere else, this plan included.
 
 **W1-03 Freeze a cold-reader eval that catches dilution**  after: W1-01  acceptance: 2, 4
 - Files: loom-workflow/skills/loom-memory/evals/record-timing.md, loom-workflow/skills/loom-memory/evals/record-timing-cases.json
