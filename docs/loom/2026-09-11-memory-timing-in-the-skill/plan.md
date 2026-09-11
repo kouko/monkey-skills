@@ -1,5 +1,5 @@
 # Memory timing in the skill — plan
-intent: 2026-09-11-memory-timing-in-the-skill@ae70e8e0f
+intent: 2026-09-11-memory-timing-in-the-skill@f55785199
 
 ## Current State Evidence
 
@@ -20,8 +20,14 @@ intent: 2026-09-11-memory-timing-in-the-skill@ae70e8e0f
 
 **W1-02 Pin both halves of the rule from inside loom-workflow**  after: W1-01  acceptance: 4
 - Files: loom-workflow/skills/loom-memory/scripts/test_skill_contract.py
-- Test: A4 positive: both-halves-pinned-timing-and-scarcity; negative: deleting-either-half-turns-the-test-red.
+- Test: A4 positive: both-halves-pinned-timing-and-scarcity; negative: deleting-either-half-turns-the-test-red; boundary: rewording-that-keeps-both-halves-stays-green. A4 positive: failure-message-and-docstring-name-the-2026-07-deletion; negative: no-bare-assert-without-a-reason.
 - Risk: Agent-decided: the test lives beside the skill it pins, not in the repo-root suite, so the plugin keeps proving its own contract in an isolated install.
+- Risk: Agent-decided: the test carries its own justification in the docstring and in every failure message. A phrase-presence assertion is a golden test at string granularity, and its documented failure mode is that a red test gets updated rather than investigated — which is how the 2026-07 instruction and its test were removed together. No tooling defends against that; only a message that tells the next editor what they are about to delete.
+
+**W1-03 Freeze a cold-reader eval that catches dilution**  after: W1-01  acceptance: 2, 4
+- Files: loom-workflow/skills/loom-memory/evals/record-timing.md, loom-workflow/skills/loom-memory/evals/record-timing-cases.json
+- Test: A4 positive: fresh-agent-given-only-the-record-contract-and-one-real-case-records-in-branch; negative: same-agent-rejects-the-majority-of-candidates. A2 positive: baseline-run-recorded-with-its-verdict; boundary: eval-is-a-frozen-reference-run-not-a-ci-job.
+- Risk: Agent-decided: follows the shape `loom-workflow/skills/critique/evals/` already uses — a machine-readable case file plus a frozen reference run — rather than inventing a harness. An agent cannot run in CI, so the eval is re-validated when the contract text changes, and the regression test is what runs every push.
 
 ### Wave 2 — The flow asks at the right moment
 
@@ -49,6 +55,7 @@ intent: 2026-09-11-memory-timing-in-the-skill@ae70e8e0f
 - 1 — what — 這次要不要用 Codex 當第二位讀者？
 - 1 — what — 機制放在 loom-memory 裡還是 loom-code 裡？
 - 1 — what — review 產生的 memory 會不會是一堆零散的實作錯誤？
+- 1 — consequence — Acceptance 4 要一支測試同時擋刪除與稀釋，但字串斷言測不到稀釋：要拆成兩個機制（測試擋刪除、冷讀評測擋稀釋），還是把「或被稀釋」拿掉？
 
 ## Risks
 
@@ -56,4 +63,5 @@ intent: 2026-09-11-memory-timing-in-the-skill@ae70e8e0f
 2. user-decided — kouko declined a second vendor for this change.
 3. The store grows at roughly two entries a day with no prompt at all. A prompt that carried only timing would raise that; the text has to lower it, and W3-01 is where that claim is first tested against real candidates.
 4. The review station is loom-code's, and memory is loom-workflow's. A sentence that names the plugin, or a test that reads across, rebuilds the coupling the previous change removed — each half is pinned from inside its own plugin for that reason.
-5. An unmarked paragraph is not a gate and cannot block. Nothing here guarantees the rule is followed; it guarantees the question is asked at the moment when answering it is free.
+5. The regression test is itself the thing most likely to be edited away. Verified 2026-09-11: asserting that prose still contains required phrases has no established industry practice, and the nearest documented relative — golden and snapshot testing — fails by being blindly re-approved. W1-02 answers this with wording, not tooling, because no tooling exists for it.
+6. An unmarked paragraph is not a gate and cannot block. Nothing here guarantees the rule is followed; it guarantees the question is asked at the moment when answering it is free.
