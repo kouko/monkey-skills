@@ -54,11 +54,6 @@ on:
       # Same, for the third plugin: its skills count toward the mechanism
       # recompute and its prose is in the doc-citation scope.
       - 'loom-workflow/**'
-      # Fourth plugin, added at 2026-09-10-okf-compatible-loom-memory: this
-      # job also runs the `memory` pytest group and its boundary check, so a
-      # loom-memory-only edit must fire this workflow too, or both would go
-      # ungated (fail-open) — the same rule as the two triggers above.
-      - 'loom-memory/**'
       # scripts/test_loom_design_ci_unified_root.py guards the single unified
       # loom-design pytest step in loom-design-ci.yml, but it is collected
       # only by THIS workflow's `scripts/` step -- so the whole workflow dir
@@ -80,7 +75,6 @@ on:
       # Same repo-root drift-guard rationale as the pull_request trigger above.
       - 'loom-design/**'
       - 'loom-workflow/**'
-      - 'loom-memory/**'
       # Same fail-open rationale as the pull_request trigger above.
       - '.github/workflows/**'
 
@@ -120,22 +114,10 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 scripts/run_package_tests.py --loom-family --only code -v
 
-      - name: Run pytest suite (loom-memory)
-        # loom-memory is the fourth plugin in this repo (added at
-        # 2026-09-10-okf-compatible-loom-memory) and installs independently
-        # of loom-code, so its own `scripts/` suite runs as a separate
-        # session here rather than folding into the `code` group above —
-        # the same reasoning `run_package_tests.py`'s module docstring gives
-        # for keeping the `design` group its own session.
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 scripts/run_package_tests.py --loom-family --only memory -v
-
       - name: Verify standalone plugin filesystem boundaries
         run: |
           python3 scripts/check_plugin_boundaries.py loom-code
           python3 scripts/check_plugin_boundaries.py loom-design
-          python3 scripts/check_plugin_boundaries.py loom-memory
 
       - name: Codex manifest drift gate (all plugins)
         # Each CODEX_ELIGIBLE plugin's .codex-plugin/plugin.json is generated
@@ -153,6 +135,14 @@ jobs:
         # `budget-exception:` CHANGELOG line is red, and a mechanism with no
         # working `eval:` is red. Blocking since W3-04 — the transitional
         # continue-on-error came off with the old skill directories.
+        #
+        # --changelog/--version: the R3 net-count check's `budget-exception:`
+        # line lives in whichever plugin's CHANGELOG introduced the rise, not
+        # always loom-code's own (the tool's own defaults). The
+        # 2026-09-11-loom-memory-into-loom-workflow change is the first
+        # mechanism rise owned by loom-workflow, so it is recorded in
+        # loom-workflow/CHANGELOG.md under loom-workflow's own version —
+        # point the gate there for this recompute.
         run: python3 loom-code/scripts/check_mechanisms.py --baseline origin/main
 
       - name: Measure the loom surface

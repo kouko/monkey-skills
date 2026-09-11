@@ -94,6 +94,9 @@ mechanisms:
   - id: critique
     class: skill
     eval: "loom-workflow/scripts/test_critique_compaction.py"
+  - id: loom-memory
+    class: skill
+    eval: "loom-workflow/skills/loom-memory/scripts/test_skill_contract.py"
 
   # --- checker-rule (19; loom_checker.py --list-rules) ---
   - id: contract.charter-complete

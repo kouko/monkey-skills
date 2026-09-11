@@ -1,7 +1,7 @@
 {
   "name": "loom-workflow",
-  "version": "4.1.4",
-  "description": "Loom workflow tools around the loom stations — persistent Outcome Maps, git memory, critique (proposal | complexity), recap, handoff, session distill, CoT explainers, cross-executor second opinion, plus the standalone goal-create and dbt-model-style skills.",
+  "version": "4.2.0",
+  "description": "Loom workflow tools around the loom stations — persistent Outcome Maps, git memory, loom-memory (recall / record / reconcile / retire durable repository lessons), critique (proposal | complexity), recap, handoff, session distill, CoT explainers, cross-executor second opinion, plus the standalone goal-create and dbt-model-style skills.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -12,6 +12,7 @@
   "keywords": [
     "decision-map",
     "git-memory",
+    "loom-memory",
     "critique",
     "developer-workflow",
     "distill-sessions",
@@ -26,7 +27,7 @@
   "interface": {
     "displayName": "loom-workflow",
     "shortDescription": "Process skills for the work around the code",
-    "longDescription": "Skills for the engineering work that surrounds writing code — decision-map (start or resume a persistent Outcome Map v3 whose delivery arcs are intents), git-memory (record why a decision was made into commit/PR memory trailers, then recall it later), critique (one skill, `mode: proposal` triages a list or plan and `mode: complexity` weighs one change by a deletion-first, YAGNI lens), recap-state and handoff (re-orient mid-session or save state for the next session), distill-sessions (mine past transcripts for friction patterns), independent-advisor (a second opinion from another executor), cot-explain (a reasoning-chain page), and the standalone goal-create and dbt-model-style skills. Use them to decide well, remember why, and hand off cleanly. Bundles a PostToolUse hook that validates skill folder structure on edit.",
+    "longDescription": "Skills for the engineering work that surrounds writing code — decision-map (start or resume a persistent Outcome Map v3 whose delivery arcs are intents), git-memory (record why a decision was made into commit/PR memory trailers, then recall it later), loom-memory (recall, record, reconcile, or retire a durable repository lesson in the OKF v0.2-compatible memory store), critique (one skill, `mode: proposal` triages a list or plan and `mode: complexity` weighs one change by a deletion-first, YAGNI lens), recap-state and handoff (re-orient mid-session or save state for the next session), distill-sessions (mine past transcripts for friction patterns), independent-advisor (a second opinion from another executor), cot-explain (a reasoning-chain page), and the standalone goal-create and dbt-model-style skills. Use them to decide well, remember why, and hand off cleanly. Bundles a PostToolUse hook that validates skill folder structure on edit.",
     "developerName": "kouko",
     "category": "Coding",
     "capabilities": [

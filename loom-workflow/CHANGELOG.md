@@ -4,6 +4,23 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.2.0] — 2026-09-11 — loom-memory relocated from its own plugin
+
+Minor. The independently-installable `loom-memory` plugin (#821) is
+retired; its skill, references, scripts, and OKF v0.2-compatible store
+template move into `loom-workflow/skills/loom-memory/`, a tool in this
+toolbox alongside `git-memory`, `decision-map`, and `handoff`. Storage
+format, the four operations (Recall, Record, Reconcile, Retire), and the
+293 already-migrated lesson concepts under `docs/loom/memory/` are
+unchanged — only the skill's address moved. `PRINCIPLES.md`'s Fixed
+choices reverts to three loom-family plugins.
+
+budget-exception: loom-memory — the relocated skill becomes visible to
+check_mechanisms.py's skill recompute for the first time (the retired
+standalone `loom-memory` plugin sat outside the loom-code/loom-design/
+loom-workflow scan entirely, so it was never registered); no new behavior
+is added, one skill mechanism is newly counted.
+
 ## [4.1.4] — 2026-09-09 — caller-owned Loom PR composition
 
 Patch. Let Ship own Loom's contextual PR schema and publication consent, so

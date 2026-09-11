@@ -6,7 +6,7 @@
 # Why: `docs/loom/memory/` keeps one fact per file, and its generated
 # `index.md` must be exactly what a fresh regeneration from every entry's
 # frontmatter would produce (OKF v0.2-compatible Loom profile — see
-# `loom-memory/scripts/loom_memory.py`). Editing an entry's frontmatter
+# `loom-workflow/skills/loom-memory/scripts/loom_memory.py`). Editing an entry's frontmatter
 # without regenerating the index leaves the store invalid: `index.md` still
 # carries the OLD name/description/type for that entry. That drift shipped
 # undetected twice before being caught by CI after push — under a job whose
@@ -28,9 +28,9 @@
 # file as a `nested-document` offender. The store's charter is one flat file
 # per fact, and an edit that nests one is caught here, not silently missed.
 #
-# Portability: the store is portable (`loom-code:loom-memory` fires in any
+# Portability: the store is portable (`loom-workflow:loom-memory` fires in any
 # repo carrying `docs/loom/memory/README.md`) but this validator ships inside
-# the `loom-memory` plugin, not every consumer. When it is absent, no-op —
+# the `loom-workflow` plugin, not every consumer. When it is absent, no-op —
 # never let a "No such file" become a phantom store violation.
 #
 # Exit codes:
@@ -66,7 +66,15 @@ fi
 # identical because the stricter strip then failed and the missing validator
 # fail-opened. With a single pattern, widening it changes behaviour, which is
 # what makes the near-miss probes in the test suite discriminating.
-REPO_ROOT="${FILE_PATH%/docs/loom/memory/*}"
+#
+# `%%` (longest-suffix removal), not `%` (shortest-suffix removal): when the
+# path contains `/docs/loom/memory/` more than once -- a store-inside-the-
+# store nesting abuse -- a shortest-suffix strip anchors on the LAST
+# occurrence, leaving REPO_ROOT pointed at a subdirectory of the true root
+# (the store itself). The longest-suffix strip anchors on the FIRST
+# occurrence instead, which is always the real repo boundary no matter how
+# the rest of the path repeats the store's own marker segment.
+REPO_ROOT="${FILE_PATH%%/docs/loom/memory/*}"
 # Explicit intent, deliberately untested: removing this line does not change
 # observable behaviour today, because a non-store path leaves REPO_ROOT equal to
 # the file path and the validator lookup then fail-opens on the missing file. It
@@ -74,7 +82,7 @@ REPO_ROOT="${FILE_PATH%/docs/loom/memory/*}"
 # downstream accident.
 [ "$REPO_ROOT" != "$FILE_PATH" ] || exit 0
 
-VALIDATOR="$REPO_ROOT/loom-memory/scripts/loom_memory.py"
+VALIDATOR="$REPO_ROOT/loom-workflow/skills/loom-memory/scripts/loom_memory.py"
 [ -f "$VALIDATOR" ] || exit 0   # portable store, non-portable plugin → harmless no-op
 
 STORE="$REPO_ROOT/docs/loom/memory"
@@ -107,11 +115,11 @@ $REPORT
 
 Fix: correct the named entry's frontmatter, then regenerate index.md from it:
 
-    python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory
+    python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory
 
 then re-run the check:
 
-    python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory
+    python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py validate docs/loom/memory
 
 If regenerate-index itself refuses instead of writing, its output names the file and the problem; fix that file, then repeat both steps.
 EOF

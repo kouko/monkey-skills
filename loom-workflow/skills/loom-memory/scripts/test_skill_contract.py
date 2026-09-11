@@ -16,10 +16,11 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-SKILL_DIR = REPO_ROOT / "loom-memory" / "skills" / "loom-memory"
+SKILL_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = SKILL_DIR.parents[2]
 SKILL_MD = SKILL_DIR / "SKILL.md"
 REFERENCES_DIR = SKILL_DIR / "references"
 OKF_PROFILE = REFERENCES_DIR / "okf-profile.md"
@@ -190,18 +191,24 @@ def test_no_host_specific_path_or_private_api() -> None:
 
 
 def test_no_bare_repo_root_relative_script_path() -> None:
-    """A `loom-memory/scripts/...` path resolves only relative to THIS
-    repository's root — a project that installs the plugin (per
-    `loom-memory/README.md`'s documented layout) has no `loom-memory/`
+    """A `skills/loom-memory/scripts/...` path resolves only relative to
+    THIS repository's root — a project that installs the plugin (per
+    `loom-workflow/README.md`'s documented layout) has no `loom-workflow/`
     directory at its root, so that path cannot resolve there. The only
-    portable form is `${CLAUDE_PLUGIN_ROOT}/scripts/loom_memory.py` (or its
-    plain-language restatement); a bare repo-root-relative path must never
-    reappear in the shipped skill text."""
+    portable form is `${CLAUDE_PLUGIN_ROOT}/skills/loom-memory/scripts/loom_memory.py`
+    (or its plain-language restatement); a bare repo-root-relative path must
+    never reappear in the shipped skill text — every paragraph naming the
+    script path must always pair it with the `${CLAUDE_PLUGIN_ROOT}`
+    substitution token somewhere in that same paragraph (prose wraps the
+    token and its plain-language restatement across physical lines, so the
+    pairing is checked per blank-line-delimited paragraph, not per physical
+    line)."""
     text = _all_skill_text()
-    for line in text.splitlines():
-        assert "loom-memory/scripts/" not in line, (
-            f"bare repo-root-relative script path resurfaced in skill text: {line!r}"
-        )
+    for paragraph in re.split(r"\n\s*\n", text):
+        if "skills/loom-memory/scripts/" in paragraph:
+            assert "${CLAUDE_PLUGIN_ROOT}" in paragraph, (
+                f"bare repo-root-relative script path resurfaced in skill text: {paragraph!r}"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -222,13 +229,45 @@ def test_legacy_store_reported_needing_explicit_migration_without_modification()
 
 
 def test_skill_folder_is_flat_no_nested_subfolder() -> None:
+    """The flat-folder rule governs what the skill SHIPS, so this asks Git
+    what is tracked rather than what happens to sit on disk.
+
+    Walking the filesystem instead made the test report a failure whenever
+    anyone had run pytest in the skill directory without
+    `PYTHONDONTWRITEBYTECODE`, because the resulting `__pycache__` is a
+    nested directory. That is a fact about the runner's environment, not
+    about the layout being shipped, and the generated directory is not
+    tracked at all.
+
+    A bare `git ls-files` (without `--recurse-submodules`) reports a git
+    submodule mounted under the skill directory as a single depth-1 gitlink
+    entry, with no visibility into the submodule's own tracked tree — which
+    can nest arbitrarily deep on disk once checked out with
+    `git clone --recurse-submodules`. Rather than recurse into the
+    submodule (which would depend on the clone's own submodule-init state
+    to be meaningful), a gitlink is flagged directly, on the principle a
+    skill ships files, not submodules: `git ls-files --stage` reports each
+    entry's mode, and mode `160000` is exactly a gitlink.
+    """
     assert SKILL_DIR.is_dir()
-    for entry in SKILL_DIR.iterdir():
-        if entry.is_dir():
-            for nested in entry.iterdir():
-                assert not nested.is_dir(), (
-                    f"{entry} must not contain a nested subfolder ({nested})"
-                )
+    staged = subprocess.run(
+        ["git", "ls-files", "--stage", "--", SKILL_DIR.as_posix()],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    assert staged, "no tracked files under the skill directory"
+    skill_rel = SKILL_DIR.relative_to(REPO_ROOT)
+    for line in staged:
+        left, _, rel = line.partition("\t")
+        mode = left.split()[0]
+        assert mode != "160000", (
+            f"{rel} is a git submodule mounted under the skill directory; "
+            "a skill ships files, not submodules"
+        )
+        depth = Path(rel).relative_to(skill_rel).parts
+        assert len(depth) <= 2, (
+            f"{rel} nests a subfolder inside a skill subfolder; the skill "
+            "folder must be SKILL.md plus single-level subfolders"
+        )
 
 
 def test_skill_md_under_token_budget() -> None:
@@ -258,16 +297,18 @@ def test_references_exist_and_are_referenced() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Plugin manifest sanity: skills mount point exists, matching the plugin.json
-# `"skills": "./skills/"` declaration this task builds under.
+# Plugin manifest sanity: this skill lives under loom-workflow's default
+# skills mount (no explicit `"skills"` key — loom-workflow relies on the
+# host's default `./skills/` convention, unlike the retired standalone
+# loom-memory plugin).
 # ---------------------------------------------------------------------------
 
 
 def test_skills_mount_declared_in_claude_manifest() -> None:
     manifest = json.loads(
-        (REPO_ROOT / "loom-memory" / ".claude-plugin" / "plugin.json").read_text(
+        (REPO_ROOT / "loom-workflow" / ".claude-plugin" / "plugin.json").read_text(
             encoding="utf-8"
         )
     )
-    assert manifest.get("skills") == "./skills/"
-    assert (REPO_ROOT / "loom-memory" / "skills").is_dir()
+    assert manifest.get("name") == "loom-workflow"
+    assert (REPO_ROOT / "loom-workflow" / "skills" / "loom-memory").is_dir()

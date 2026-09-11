@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.3] — 2026-09-11 — memory skill relocated into loom-workflow
+
+- Widened the contract-citation scan to the relocated memory skill's new home,
+  so the gate keeps covering its runtime prose after the move.
+
+budget-exception: loom-memory — the skill retired out of its own plugin and
+  into loom-workflow becomes visible to the family-wide skill recount, raising
+  the net mechanism population by one. No new mechanism was built: the same
+  skill is counted at a new address.
+
 ## [2.1.2] — 2026-09-11 — repository-memory ownership retired
 
 - Removed the repository-memory coupling this plugin used to own: the

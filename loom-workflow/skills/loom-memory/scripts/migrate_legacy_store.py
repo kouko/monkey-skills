@@ -57,7 +57,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
-REPO_ROOT_DEFAULT = SCRIPTS_DIR.parent.parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import loom_memory as lm  # noqa: E402
@@ -216,6 +215,25 @@ def _migrate_concept_frontmatter(
 # ---------------------------------------------------------------------------
 
 
+def _discover_repo_root(store: Path) -> Path:
+    """Walk upward from the store path for the git repository that owns it,
+    rather than assuming a fixed number of hops up from this script's own
+    location. A fixed hop count is only correct at the exact depth this
+    script happens to sit at in a git checkout
+    (`<repo>/loom-workflow/skills/loom-memory/scripts/`); a versioned plugin
+    install (`<plugin>/<version>/skills/loom-memory/scripts/`) sits one hop
+    deeper, and the store being migrated lives in the caller's project repo
+    anyway, not the plugin's own install tree — so deriving from the store
+    path itself is the only shape that is correct in both layouts."""
+    for candidate in (store, *store.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    raise MigrationError(
+        f"could not find a git repository above {store} (no '.git' found "
+        "in any ancestor); pass --repo-root explicitly"
+    )
+
+
 def is_legacy_store(store: Path) -> bool:
     """True only for the known legacy README-indexed shape this command
     alone reads (REQ-23): a README.md carrying a `## Index` heading and no
@@ -240,7 +258,13 @@ def migrate(store: Path, repo_root: Path) -> MigrationResult:
 
     readme_path = store / "README.md"
     readme_text = readme_path.read_text(encoding="utf-8")
-    store_rel = store.relative_to(repo_root)
+    try:
+        store_rel = store.relative_to(repo_root)
+    except ValueError as exc:
+        raise MigrationError(
+            f"store path {store} is not inside repo root {repo_root} — "
+            "pass the correct --repo-root explicitly"
+        ) from exc
 
     lesson_paths = sorted(p for p in store.glob("*.md") if p.name not in ("README.md", "index.md"))
 
@@ -305,9 +329,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     store = Path(args.store).resolve()
-    repo_root = Path(args.repo_root).resolve() if args.repo_root else REPO_ROOT_DEFAULT
 
     try:
+        repo_root = Path(args.repo_root).resolve() if args.repo_root else _discover_repo_root(store)
         result = migrate(store, repo_root)
     except MigrationError as exc:
         print(f"migrate_legacy_store: FAIL — {exc}")

@@ -1,0 +1,68 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-11-loom-memory-into-loom-workflow",
+  "content_digest": "527308fb7a6de7c2994bfec76700f2f5976314b4",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_boundary_checker_decoy_bypass.py -q",
+      "artifact": "docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_boundary_checker_decoy_bypass.py",
+      "result": "pass",
+      "command_digest": "8d7b501df3da94257a6fb882e5a4c29d7cda786256f4080d96eb44e39060bcb1"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_flat_folder_submodule_bypass.py -q",
+      "artifact": "docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_flat_folder_submodule_bypass.py",
+      "result": "pass",
+      "command_digest": "d6e0156db27333c8499b03a785c9685fd02e8859c614c29d36b532057139a2c7"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_hook_fail_open_duplicate_path_segment.py -q",
+      "artifact": "docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_hook_fail_open_duplicate_path_segment.py",
+      "result": "pass",
+      "command_digest": "79d38118607a372a5c5bb4d3d3952fdcefec28f8be92dc0edd19110d6cb0c4d9"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_migrate_repo_root_installed_copy.py -q",
+      "artifact": "docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_migrate_repo_root_installed_copy.py",
+      "result": "pass",
+      "command_digest": "ab50f83f458e94cc5a48f2574cf47a8d583ba3a09be7038a97341c7e5bd8d706"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_store_fidelity_silent_skip.py -q",
+      "artifact": "docs/loom/2026-09-11-loom-memory-into-loom-workflow/evidence/probes/test_adversarial_store_fidelity_silent_skip.py",
+      "result": "pass",
+      "command_digest": "9cea83c483ac41964b295a42b37a655132952d17c133d41871b10154def74379"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-code-lens",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "closing-docs-spec-lens",
+      "vendor": "anthropic",
+      "model": "claude-sonnet-5",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

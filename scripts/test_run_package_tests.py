@@ -1,6 +1,7 @@
 """fix:W1-05 — the package-tests runner runs one pytest session per group."""
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -65,19 +66,20 @@ def test_loom_family_preset_covers_every_ci_test_surface() -> None:
     assert actual_skill_dirs == expected_skill_dirs
 
 
-def test_loom_family_preset_includes_memory_group() -> None:
+def test_loom_family_preset_discovers_relocated_memory_skill_tests() -> None:
     commands = loom_family_commands(REPO, verbosity="-q")
     rendered = [" ".join(command) for command in commands]
-    assert any("loom-memory/scripts/" in command for command in rendered)
+    assert any("loom-workflow/skills/loom-memory/scripts" in command for command in rendered)
 
 
-def test_loom_family_only_accepts_memory_group() -> None:
-    result = subprocess.run(
-        [sys.executable, str(RUNNER), "--loom-family", "--only", "memory", "-q"],
-        capture_output=True,
-        text=True,
-        cwd=REPO,
+def test_relocated_memory_skill_tests_pass_through_the_workflow_python_command() -> None:
+    commands = loom_family_commands(REPO, verbosity="-q", only="workflow-python")
+    memory_command = next(
+        command for command in commands
+        if "loom-workflow/skills/loom-memory/scripts" in command[3]
     )
+    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+    result = subprocess.run(memory_command, capture_output=True, text=True, cwd=REPO, env=env)
     assert result.returncode == 0, result.stdout + result.stderr
 
 

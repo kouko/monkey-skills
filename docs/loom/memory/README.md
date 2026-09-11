@@ -86,7 +86,7 @@ sources:
 
 `name`, `description`, `type`, and at least one `sources[].resource` are
 required (the OKF v0.2-compatible Loom profile checked by
-`loom-memory/scripts/loom_memory.py`); any other frontmatter key is
+`loom-workflow/skills/loom-memory/scripts/loom_memory.py`); any other frontmatter key is
 preserved as-is and never rejected.
 
 **The `description` states the durable rule; it never states which tools
@@ -106,7 +106,7 @@ it is body content. If no, it may stay.
 **Why the description and not the body.** The body can be corrected in the
 same commit that changes the tooling, and the reader meets the correction
 in context. The description cannot: `index.md` is generated from it
-(`python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory`),
+(`python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory`),
 it is the only text a pull-time grep surfaces before the file is opened, and
 nothing mechanically compares it against the body. A
 description asserting an open leak therefore outlives the commit that
@@ -130,8 +130,8 @@ entry file's frontmatter, followed by regenerating the index (run from
 the repo root):
 
 ```
-python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory            # validate every invariant, index drift included
-python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory    # rewrite index.md from every concept file's frontmatter
+python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py validate docs/loom/memory            # validate every invariant, index drift included
+python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory    # rewrite index.md from every concept file's frontmatter
 ```
 
 A hand-edit to `index.md` is drift: `validate` compares a fresh

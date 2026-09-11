@@ -1,7 +1,8 @@
 """Behavioral tests for the memory-store integrity PostToolUse hook.
 
 The hook (``check-memory-store-integrity.sh``) is a shift-left guard for the
-CI step that runs ``loom-memory/scripts/loom_memory.py validate``. It must:
+CI step that runs ``loom-workflow/skills/loom-memory/scripts/loom_memory.py
+validate``. It must:
 
 - fire for any edit under ``docs/loom/memory/``, including the store's own
   ``README.md`` (README is itself a store concept file — frontmatter
@@ -14,9 +15,9 @@ CI step that runs ``loom-memory/scripts/loom_memory.py validate``. It must:
   agent at the edit instead of after push,
 - no-op (exit 0) for any path outside the store,
 - no-op (exit 0) when the validator is ABSENT — the store is portable
-  (``loom-code:loom-memory`` fires in any repo carrying
+  (``loom-workflow:loom-memory`` fires in any repo carrying
   ``docs/loom/memory/README.md``) while the validator ships inside the
-  ``loom-memory`` plugin, not every consumer, so a consuming repo must not
+  ``loom-workflow`` plugin, not every consumer, so a consuming repo must not
   be blocked by a missing-file error.
 
 Why this hook exists: an entry edited without regenerating ``index.md`` was
@@ -39,7 +40,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HOOK = REPO_ROOT / ".claude" / "hooks" / "check-memory-store-integrity.sh"
-VALIDATOR = REPO_ROOT / "loom-memory" / "scripts" / "loom_memory.py"
+VALIDATOR = REPO_ROOT / "loom-workflow" / "skills" / "loom-memory" / "scripts" / "loom_memory.py"
 
 sys.path.insert(0, str(VALIDATOR.parent))
 import loom_memory as lm  # noqa: E402
@@ -93,7 +94,7 @@ def _make_store(tmp_path: Path, *, indexed: bool, with_checker: bool = True) -> 
     Returns the path to the entry file (what the hook is fed).
     """
     if with_checker:
-        dest = tmp_path / "loom-memory" / "scripts"
+        dest = tmp_path / "loom-workflow" / "skills" / "loom-memory" / "scripts"
         dest.mkdir(parents=True)
         shutil.copy(VALIDATOR, dest / "loom_memory.py")
 
@@ -133,16 +134,19 @@ def test_blocks_when_the_store_is_invalid(tmp_path: Path) -> None:
     #
     # The re-run assertion below pins "then re-run the check:" together with
     # its command line, NOT the bare command string — the bare command
-    # ("python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory")
-    # is a substring of neither other line, so deleting only the re-run line
-    # turns this assertion red independently of the regen-command assertion.
+    # ("python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py
+    # validate docs/loom/memory") is a substring of neither other line, so
+    # deleting only the re-run line turns this assertion red independently
+    # of the regen-command assertion.
     assert (
-        "python3 loom-memory/scripts/loom_memory.py regenerate-index docs/loom/memory"
+        "python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py "
+        "regenerate-index docs/loom/memory"
         in result.stderr
     ), "the fix-hint must give the regenerate-index command"
     assert (
         "then re-run the check:\n\n"
-        "    python3 loom-memory/scripts/loom_memory.py validate docs/loom/memory\n"
+        "    python3 loom-workflow/skills/loom-memory/scripts/loom_memory.py "
+        "validate docs/loom/memory\n"
         in result.stderr
     ), "the fix-hint must give the re-run command, distinct from the regen line"
     # regenerate-index itself can refuse (bad frontmatter, missing fields)
@@ -200,9 +204,9 @@ def test_no_ops_when_the_validator_is_absent(tmp_path: Path) -> None:
     """Portability: the store travels to other repos, the validator does not.
 
     A consuming repo with a store but no
-    ``loom-memory/scripts/loom_memory.py`` must not be blocked by the missing
-    file — that would turn a 'No such file' error into a phantom store
-    violation.
+    ``loom-workflow/skills/loom-memory/scripts/loom_memory.py`` must not be
+    blocked by the missing file — that would turn a 'No such file' error
+    into a phantom store violation.
     """
     entry = _make_store(tmp_path, indexed=False, with_checker=False)
 
@@ -215,7 +219,8 @@ def test_no_ops_when_the_validator_is_absent(tmp_path: Path) -> None:
 
 
 # NOTE — there is deliberately no test for the hook's `PYTHONDONTWRITEBYTECODE=1`.
-# A first draft asserted that no `loom-memory/scripts/__pycache__` appears
+# A first draft asserted that no
+# `loom-workflow/skills/loom-memory/scripts/__pycache__` appears
 # after a run, and whole-branch review proved it an equivalent mutant:
 # removing the env var from the hook keeps the suite green, because CPython
 # never caches the `__main__` script and the validator imports stdlib only,
