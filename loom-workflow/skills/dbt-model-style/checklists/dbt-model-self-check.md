@@ -34,7 +34,7 @@ After writing or editing a dbt model, tick each item. **Any MUST ✗ = non-confo
 
 ## MUST — column comments
 
-- [ ] every `final` column has a purpose comment
+- [ ] every `final` column has a purpose comment that **names the column in full and states how it is computed** (`<column>：<meaning>，<derivation>`), in plain text — no emoji, no `≠`/`−`-style symbol standing in for a word, no `=== X ===` section decoration
 - [ ] 4-space indent, SELECT columns vertically aligned, inline comments aligned
 
 ## MUST — SQL syntax / config

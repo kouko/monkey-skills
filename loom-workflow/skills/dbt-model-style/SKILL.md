@@ -96,7 +96,11 @@ Choose among four cases:
 
 - **MUST** — 4-space indent; vertically align `SELECT` columns and inline `--` comments.
 
-- **MUST** — every `final` column has a purpose comment; group columns with section headers.
+- **MUST** — every `final` column has a purpose comment; group columns with section headers, written as plain text (no glyph runs such as `=== X ===`).
+
+- **MUST — a `final` column comment names the column and says how it is computed.** Shape: `<full_column_name>：<what it means>，<how it is derived>`. The derivation must be traceable — the upstream columns or the aggregate that produced it — not a restatement of the name. `-- 淨額（銷售 − 退款）` fails twice: it identifies no column, and a reader still cannot tell which upstream columns were summed. `-- credit_card__net_amount：綁定信用卡的淨額，SUM(三個通路的 *__credit_card__net_amount)，退款為負` passes. This carries real weight wherever a schema generator publishes these comments (see the `(adapt)` item below): they are what a downstream reader gets instead of the SQL.
+
+- **MUST — plain text in column comments.** No emoji, no symbol standing in for a word: write 「減」/「不等於」, not `−`/`≠`. Notation that *is* the calculation (`SUM(...)`, `COUNT(DISTINCT ...)`, `+`) stays, because it is the answer to "how is this computed". A warning stays a warning — state it in words ("不可與其他類別相加"), not as a glyph.
 
 - **MAY** — continue long column comments on aligned `--` lines so they remain attached to the column.
 
