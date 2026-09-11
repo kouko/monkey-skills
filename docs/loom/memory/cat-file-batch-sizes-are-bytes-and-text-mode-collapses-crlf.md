@@ -2,7 +2,8 @@
 name: cat-file-batch-sizes-are-bytes-and-text-mode-collapses-crlf
 description: A git `cat-file --batch` header declares each blob's size in bytes; slicing a `text=True` subprocess stdout by that size is wrong twice — a multi-byte character makes the str shorter than the byte count, and universal-newline translation has already turned every CRLF into one character — so a batched blob reader runs in bytes mode and decodes each blob afterwards, applying the same newline translation the text-mode reader would have
 type: gotcha
-origin: 2026-09-07-loom-script-performance (abandoned before merge; the lesson outlived the branch) — two fix rounds on a batched fog-history reader, the CJK case caught by an orchestrator's diff read and the CRLF case by a hand-built repro; the change's own adversary had probed non-ASCII filenames only
+sources:
+  - resource: 2026-09-07-loom-script-performance (abandoned before merge; the lesson outlived the branch) — two fix rounds on a batched fog-history reader, the CJK case caught by an orchestrator's diff read and the CRLF case by a hand-built repro; the change's own adversary had probed non-ASCII filenames only
 ---
 
 Replacing one `git show` per file with a single `git cat-file --batch`

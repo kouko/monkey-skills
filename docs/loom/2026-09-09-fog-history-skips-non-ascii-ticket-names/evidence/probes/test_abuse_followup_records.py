@@ -2,19 +2,24 @@
 
 The branch carries no executable behaviour: one memory-store entry and one
 open intent. What can still be wrong is the machine-read shape of those
-records -- an entry the generated index does not list, frontmatter the
-store's own integrity check rejects, an intent the checker refuses, or a
-`needs-design:` line that does not appear verbatim in the commit that
-decided it. Each probe below attacks one of those, by running the real
-checkers rather than by reading the files and agreeing with them.
+records -- frontmatter the store's own validator rejects, an index that
+has drifted from what a fresh regeneration produces, an intent the
+contract checker refuses, a `needs-design:` line that does not appear
+verbatim in the commit that decided it, or a status line confirmed
+without the user. The first two run the repository's real validators;
+the last three read git and the file because no checker owns those facts
+-- each is written to fail on the mistake it names, not to restate the
+file.
 
 Run: python3 -m pytest docs/loom/2026-09-09-fog-history-skips-non-ascii-ticket-names/evidence/probes/test_abuse_followup_records.py -q
 """
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[5]
@@ -24,7 +29,8 @@ ENTRY = (
     / "docs/loom/memory/cat-file-batch-sizes-are-bytes-and-text-mode-collapses-crlf.md"
 )
 CHECKER = REPO / "loom-code/scripts/loom_checker.py"
-INTEGRITY = REPO / "scripts/check_loom_memory_integrity.py"
+MEMORY_CLI = REPO / "loom-workflow/skills/loom-memory/scripts/loom_memory.py"
+STORE = REPO / "docs/loom/memory"
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -33,34 +39,34 @@ def _run(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_memory_store_integrity_accepts_the_new_entry() -> None:
-    """The store's own integrity check passes with the entry in place.
+def test_memory_store_validator_accepts_the_new_entry() -> None:
+    """The store's own OKF v0.2 validator passes with the entry in place.
 
-    It fails when an entry's frontmatter is malformed or when the
-    generated index does not carry a line for it, which is the failure
-    mode a hand-written entry reaches most often.
+    It fails when an entry's frontmatter is malformed or missing a
+    required field -- `name` matching the filename stem, a single-line
+    `description`, a `type`, at least one `sources[].resource` -- which
+    is the failure mode a hand-written entry reaches most often, and the
+    exact one this entry hit when the store moved to the OKF profile.
     """
-    result = _run(str(INTEGRITY))
+    result = _run(str(MEMORY_CLI), "validate", str(STORE.relative_to(REPO)))
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_memory_index_lists_the_new_entry_by_its_own_slug() -> None:
-    """The index line is keyed by the entry's `name:` slug.
+def test_memory_index_matches_a_fresh_regeneration() -> None:
+    """The committed index is byte-identical to a regenerated one.
 
-    A file whose frontmatter slug and filename disagree indexes under one
-    name and is opened under another; the store's format rule exists to
-    make those the same string.
+    The validator treats index drift as a failure rather than a silent
+    divergence, so an entry added without regenerating the index -- or an
+    index hand-edited afterwards -- is caught here. Regenerating into a
+    scratch copy keeps this probe read-only against the real store.
     """
-    readme = (REPO / "docs/loom/memory/README.md").read_text(encoding="utf-8")
-    slug = "cat-file-batch-sizes-are-bytes-and-text-mode-collapses-crlf"
-    assert ENTRY.name == f"{slug}.md"
-    assert f"{slug}.md" in readme
-    frontmatter_name = next(
-        line.split(":", 1)[1].strip()
-        for line in ENTRY.read_text(encoding="utf-8").splitlines()
-        if line.startswith("name:")
-    )
-    assert frontmatter_name == slug
+    with tempfile.TemporaryDirectory() as tmp:
+        scratch = Path(tmp) / "memory"
+        shutil.copytree(STORE, scratch)
+        committed = (scratch / "index.md").read_text(encoding="utf-8")
+        result = _run(str(MEMORY_CLI), "regenerate-index", str(scratch))
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert (scratch / "index.md").read_text(encoding="utf-8") == committed
 
 
 def test_intent_passes_the_contract_checker() -> None:
