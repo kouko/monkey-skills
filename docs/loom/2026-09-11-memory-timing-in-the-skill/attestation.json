@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-11-memory-timing-in-the-skill",
-  "content_digest": "86b7aea896d393a8ff0c5a169f59621b50671856",
+  "content_digest": "25ee41519a5e0e5af5ce7f21501a789729875e80",
   "executions": [
     {
       "kind": "package-tests",
