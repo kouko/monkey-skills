@@ -1,0 +1,59 @@
+# Memory timing in the skill — plan
+intent: 2026-09-11-memory-timing-in-the-skill@ae70e8e0f
+
+## Current State Evidence
+
+- Forward: `docs/loom/memory/README.md` under `## When to record` carries the rule in full, in this repository's data, where a project installing the plugin never reads it.
+- Reverse: `loom-workflow/skills/loom-memory/SKILL.md` under `**Steps:**` for Record classifies what qualifies but says nothing about when to record relative to the branch.
+- Error: `loom-code/skills/review/SKILL.md` mentions memory nowhere across its six sections, so the station that surfaces lessons never asks whether any were kept.
+- Data: `docs/loom/memory/` holds 289 lesson concepts, grown at roughly two a day with no systematic prompt; the change must not raise that rate.
+- Boundary: `loom-code/scripts/test_simplified_station_text.py` reads `loom-workflow/` prose, the cross-plugin coupling this family already pays for; a new test must not add another, so each plugin's text is pinned by a test inside that same plugin.
+
+## Task DAG
+
+### Wave 1 — The rule travels with the plugin
+
+**W1-01 Put timing and scarcity into the memory skill's Record contract**  after: --  acceptance: 1, 2, 3, 6
+- Files: loom-workflow/skills/loom-memory/SKILL.md, loom-workflow/skills/loom-memory/references/operations.md
+- Test: A1 positive: rule-readable-from-the-installed-skill-alone; negative: no-dependency-on-a-repository-store-file. A2 positive: fresh-agent-records-in-branch; boundary: rule-states-the-cost-of-the-late-branch. A3 positive: post-merge-exception-and-batching-stated; negative: exception-not-widened-beyond-observed-after-merge. A6 positive: four-operations-unchanged; negative: no-station-invocation-added.
+- Risk: Agent-decided: the rule's wording is carried over from the store charter rather than rewritten, because the intent fixes its content and only moves its home; a reworded rule would be a second drift surface against the charter.
+
+**W1-02 Pin both halves of the rule from inside loom-workflow**  after: W1-01  acceptance: 4
+- Files: loom-workflow/skills/loom-memory/scripts/test_skill_contract.py
+- Test: A4 positive: both-halves-pinned-timing-and-scarcity; negative: deleting-either-half-turns-the-test-red.
+- Risk: Agent-decided: the test lives beside the skill it pins, not in the repo-root suite, so the plugin keeps proving its own contract in an isolated install.
+
+### Wave 2 — The flow asks at the right moment
+
+**W2-01 State the moment and the bar in the closing review**  after: W1-02  acceptance: 5
+- Files: loom-code/skills/review/SKILL.md
+- Test: A5 positive: text-sits-between-convergence-and-finalize; negative: names-no-plugin-and-invokes-nothing; boundary: no-gate-marker-so-the-mechanism-count-is-unchanged.
+- Risk: Agent-decided: placed at the end of the convergence section rather than in Finalize, because the sentence must be read before the attestation exists — recording after it is generated invalidates it, which is the excuse that pushed the two previous changes past the line.
+
+**W2-02 Pin the review station's text from inside loom-code**  after: W2-01  acceptance: 4, 5
+- Files: loom-code/scripts/test_simplified_station_text.py
+- Test: A4 positive: review-text-pinned-in-loom-codes-own-suite; negative: no-new-cross-plugin-read. A5 positive: pin-covers-both-timing-and-scarcity; boundary: pin-tolerates-rewording-that-keeps-both-halves.
+- Risk: Agent-decided: extends the station-prose test this plugin already owns rather than adding a module, and pins meaning rather than a literal sentence so a later rewording that keeps both halves does not go red.
+
+### Wave 3 — The change obeys its own rule
+
+**W3-01 Record this session's lessons under the new bar**  after: W2-02  acceptance: 2
+- Files: docs/loom/memory/, docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/
+- Test: A2 positive: lessons-land-in-this-branch-not-a-follow-up; negative: candidates-rejected-by-the-scarcity-bar-are-named-with-their-reason and the recorded count is smaller than the candidate count.
+- Risk: Agent-decided: the change applies its own rule to itself as the first real exercise; every rejected candidate is named with the reason so the bar's effect is visible rather than asserted.
+
+## Questions asked
+
+- 1 — what — 你要的是：把「什麼時候記憶體」這條規則從這個 repo 的資料檔，搬進記憶 skill 自己的契約。對嗎？
+- 1 — consequence — 要不要給它牙齒：只寫進 skill（不擋人、零機制成本）還是再加 checker 規則（擋得住，但判準是判斷、會誤報，且永久多一個機制加 budget exception）。
+- 1 — what — 這次要不要用 Codex 當第二位讀者？
+- 1 — what — 機制放在 loom-memory 裡還是 loom-code 裡？
+- 1 — what — review 產生的 memory 會不會是一堆零散的實作錯誤？
+
+## Risks
+
+1. user-decided — kouko chose option A2: the rule in the skill's contract plus a non-invoking sentence in the review station, protected by regression tests, with no checker rule. The rule's own criterion is a judgement, and a gate built on a judgement misfires often enough to be learned and ignored.
+2. user-decided — kouko declined a second vendor for this change.
+3. The store grows at roughly two entries a day with no prompt at all. A prompt that carried only timing would raise that; the text has to lower it, and W3-01 is where that claim is first tested against real candidates.
+4. The review station is loom-code's, and memory is loom-workflow's. A sentence that names the plugin, or a test that reads across, rebuilds the coupling the previous change removed — each half is pinned from inside its own plugin for that reason.
+5. An unmarked paragraph is not a gate and cannot block. Nothing here guarantees the rule is followed; it guarantees the question is asked at the moment when answering it is free.
