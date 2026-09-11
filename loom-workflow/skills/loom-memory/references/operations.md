@@ -30,6 +30,16 @@ the compact steps there are not enough, not on every invocation.
 
 ## Record
 
+Record runs while the branch is still open. A fact already known before
+the branch closes belongs in that same branch; a separate post-merge
+branch opened only to write it down is pure overhead. Only a fact
+confirmable by observing real post-merge or installed behavior earns a
+follow-up branch, and those are batched.
+
+Almost nothing reaches step 3. Most of what a change surfaces is not a
+durable lesson, and zero to one durable lesson per change is the normal
+outcome — step 1 is where that is decided, one candidate at a time.
+
 1. Classify the candidate against this filter before anything else. It
    must be a durable repository lesson — knowledge that stays true and
    useful after this change is long forgotten. It fails the filter, and

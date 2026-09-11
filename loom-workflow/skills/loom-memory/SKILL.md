@@ -78,6 +78,25 @@ experience is needed for the task at hand.
 **Trigger:** explicit request, or the agent judges a discovery is worth
 keeping past this change.
 
+**When:** before the branch closes. A fact already known while the branch
+is still open — one that did not require the merge to observe — belongs in
+that same branch, never a separate post-merge branch: a branch and a pull
+request opened only to write down something already known is pure overhead
+the close-out should have absorbed. The one exception is a fact only
+confirmable by observing real post-merge or installed behavior; that
+genuinely needs a follow-up branch, and those are batched rather than one
+pull request per discovery. A lesson that surfaces only after a closing
+review has spent its last reviewed content is the same case: it rides the
+next change's branch batched, which is still not a branch opened to record.
+
+**How much:** almost nothing qualifies. Most of what a change surfaces is
+not a durable lesson — a one-off implementation slip belongs in its commit
+message, a verification result belongs in the change's evidence, an
+unfinished item belongs in an intent or a backlog entry. Zero to one
+durable lesson per change is the normal outcome. The filter below judges
+one candidate at a time, so it cannot see the other signal: wanting to
+record eight things at once means the filter has not been applied yet.
+
 **Steps:**
 1. Classify the candidate first. It qualifies only as a durable repository
    lesson — not an open task, a change narrative, a verification record, a

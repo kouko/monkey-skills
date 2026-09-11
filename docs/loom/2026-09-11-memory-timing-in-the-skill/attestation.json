@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-11-memory-timing-in-the-skill",
+  "content_digest": "25ee41519a5e0e5af5ce7f21501a789729875e80",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/probes/test_adversarial_clause_guards.py -q -p no:cacheprovider",
+      "artifact": "docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/probes/test_adversarial_clause_guards.py",
+      "result": "pass",
+      "command_digest": "b2abddea29f7fda28d48fca3c36bb8f7e2cc8e8ae5803ac2fc972cd7bf6b1c82"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "round3-code",
+      "vendor": "claude-code",
+      "model": "opus",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "round3-docs-spec",
+      "vendor": "claude-code",
+      "model": "opus",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

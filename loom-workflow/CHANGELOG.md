@@ -4,6 +4,20 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.3.0] — 2026-09-11 — Record states when and how much
+
+- The memory skill's Record contract now states when a lesson is written down
+  (before the branch closes, with the one post-merge exception and its batching
+  rule) and how much qualifies (zero to one durable lesson per change). The rule
+  previously lived only in one repository's store charter, where a project
+  installing the plugin never read it.
+- Added `skills/loom-memory/evals/record-timing.*`: a frozen cold-reader run
+  guarding those clauses against dilution.
+- Removed `skills/loom-memory/scripts/test_store_fidelity.py`. It proved the
+  relocation change's byte-identity acceptance against a moving `origin/main`;
+  once that change was the trunk it asserted the store may never change, which
+  three of the skill's four operations do.
+
 ## [4.2.1] — 2026-09-11 — dbt-model-style: `final` 不得改名，欄位註解是商業定義
 
 Patch. Two `dbt-model-style` rules tightened, both surfaced by writing real
