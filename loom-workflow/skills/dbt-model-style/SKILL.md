@@ -96,11 +96,14 @@ Choose among four cases:
 
 - **MUST** — 4-space indent; vertically align `SELECT` columns and inline `--` comments.
 
-- **MUST** — every `final` column has a purpose comment; group columns with section headers, written as plain text (no glyph runs such as `=== X ===`).
+- **MUST** — every `final` column has a purpose comment; group columns with section headers.
 
-- **MUST — a `final` column comment names the column and says how it is computed.** Shape: `<full_column_name>：<what it means>，<how it is derived>`. The derivation must be traceable — the upstream columns or the aggregate that produced it — not a restatement of the name. `-- 淨額（銷售 − 退款）` fails twice: it identifies no column, and a reader still cannot tell which upstream columns were summed. `-- credit_card__net_amount：綁定信用卡的淨額，SUM(三個通路的 *__credit_card__net_amount)，退款為負` passes. This carries real weight wherever a schema generator publishes these comments (see the `(adapt)` item below): they are what a downstream reader gets instead of the SQL.
+- **MUST — a `final` column comment leads with the column's human-readable name, then says how it is computed.** Shape: `<human-readable name, in the project's comment language>：<what it means / how it is derived>`. Two failure modes it rules out:
+  - `-- 淨額（銷售 − 退款）` — no name a reader can anchor on, and no way to tell which upstream columns were summed.
+  - `-- credit_card__net_amount：綁定信用卡的淨額，…` — the technical identifier is already printed on that same line; repeating it spends the comment's first words on something the reader can see, instead of on the name they cannot.
+  Passing: `-- 綁定信用卡淨額：寬表三個通路的 credit_card__net_amount 相加（銷售減退款）`. Upstream identifiers **inside** the derivation stay technical — they are the answer to "how is this computed", not prose. This carries real weight wherever a schema generator publishes these comments (see the `(adapt)` item below): they are what a downstream reader gets instead of the SQL.
 
-- **MUST — plain text in column comments.** No emoji, no symbol standing in for a word: write 「減」/「不等於」, not `−`/`≠`. Notation that *is* the calculation (`SUM(...)`, `COUNT(DISTINCT ...)`, `+`) stays, because it is the answer to "how is this computed". A warning stays a warning — state it in words ("不可與其他類別相加"), not as a glyph.
+- **MUST — no emoji in column comments.** A warning is stated in words (「不可與其他類別相加」), never carried by a `⚠️`: the glyph survives copy-paste into a schema catalogue, a BI tooltip or a terminal that renders it as tofu, and it says nothing the sentence does not. Ordinary symbols are fine — ASCII operators, and notation that *is* the calculation (`SUM(...)`, `COUNT(DISTINCT ...)`, `+`, `×`) — since that is the answer to "how is this computed".
 
 - **MAY** — continue long column comments on aligned `--` lines so they remain attached to the column.
 
