@@ -143,7 +143,7 @@ jobs:
         # mechanism rise owned by loom-workflow, so it is recorded in
         # loom-workflow/CHANGELOG.md under loom-workflow's own version —
         # point the gate there for this recompute.
-        run: python3 loom-code/scripts/check_mechanisms.py --baseline origin/main --changelog loom-workflow/CHANGELOG.md --version 4.2.0
+        run: python3 loom-code/scripts/check_mechanisms.py --baseline origin/main
 
       - name: Measure the loom surface
         # concept-model §11's measurement half: skill count, artifact-type
