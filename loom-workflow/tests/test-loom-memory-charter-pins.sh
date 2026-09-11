@@ -75,8 +75,9 @@ fi
 # contract as the normative home. The check requires all three phrases and
 # the last of them now sits at anchor+30, so the window is flush with it —
 # no margin, unlike the 2026-07-22 measure's one line. The section itself
-# ends at anchor+31, so the neighborhood scoping still holds; the growth
-# 25 -> 30 is exactly the six inserted lines, not slack.
+# ends at anchor+31, so the neighborhood scoping still holds. The pinned
+# sentence moved anchor+24 -> anchor+30, which is the six inserted lines; the
+# window grew only 25 -> 30 because the 2026-07-22 margin was spent.
 WIN2="$(window_after "## When to record" 30 "$README")"
 if [ -z "$WIN2" ]; then
   fail "anchor '## When to record' not found in README.md"

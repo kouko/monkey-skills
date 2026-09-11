@@ -89,6 +89,6 @@
   "pass_criteria": {
     "timing": "Records on the open branch, before it closes, citing the contract rather than general practice.",
     "exception": "Routes candidate 11, and only candidate 11, to a batched follow-up.",
-    "scarcity": "RECORD count is 0-2 of the candidates, and the reader checks its own count against the contract's stated normal outcome."
+    "scarcity": "RECORD count is 0-3 of the twelve — the band tracks ground truth, which marks 3 recordable (ids 1, 4, 12). The pool spans three changes, so the contract's 'zero to one per change' lands here as 'at most three'. The reader must also check its own count against the contract's stated normal outcome; landing inside the band by cancelling errors in both directions is a pass on this row and a miss worth naming."
   }
 }

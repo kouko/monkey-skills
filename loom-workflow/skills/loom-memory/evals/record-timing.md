@@ -19,7 +19,7 @@ tell, so the guard is a reader.
 
 Give a fresh agent the `Record` section of `SKILL.md` verbatim and
 nothing else — no repository access, no search, no prior context — plus
-the situation and the eleven candidates in `record-timing-cases.json`.
+the situation and the candidates in `record-timing-cases.json`.
 Ask for three answers in order: when and on which branch it would record;
 a verdict per candidate; and whether its own RECORD count matches what
 the contract calls the normal outcome.
@@ -34,6 +34,15 @@ red with a message naming this file. Updating the digest without
 re-running the eval is the single move that defeats the guard, and it
 costs less than the dispatch it skips — which is exactly why it is worth
 saying out loud here.
+
+## Reference run — 2026-09-11 (first, superseded)
+
+Contract version: `SKILL.md` at commit `d7d89f6d3`, `Record` section digest
+`c7b0dcff`. Eleven candidates (12 did not exist yet). Result: 1 RECORD
+(candidate 4), PASS on all three criteria, agreeing with ground truth on 10
+of 11. Kept as a line rather than deleted: a frozen run whose text version is
+not recorded cannot be compared against a later one, which is this file's
+whole job.
 
 ## Reference run — 2026-09-11 (second, current)
 
@@ -54,7 +63,7 @@ who built it.
 |---|---|---|
 | Timing | Records on the open branch, before it closes, citing the contract | "before the branch closes, on this same open branch/PR — the contract says a fact already known while the branch is open… belongs in that branch, never a separate post-merge branch opened only to write it down" |
 | Exception | Candidate 11, and only candidate 11, to a batched follow-up | Exactly candidate 11, explicitly batched |
-| Scarcity | 0-2 RECORD of 12, and the reader checks its own count | 2 RECORD, and it not only checked the count but judged 2 "slightly above" the stated outcome and named which row it would drop — it corrected toward fewer, unprompted |
+| Scarcity | 0-3 RECORD of 12, and the reader checks its own count | 2 RECORD, and it not only checked the count but judged 2 "slightly above" the stated outcome and named which row it would drop — it corrected toward fewer, unprompted. The count is in band, but it got there by cancelling errors: two true RECORDs rejected (1, 12) and one true REJECT recorded (2) |
 
 ### Where the two runs disagree, and where each disagrees with ground truth
 
@@ -68,11 +77,14 @@ other. That is the finding, not a flaw in it.
 | 4 — worktree cleanup by pattern match destroying others' work | RECORD | RECORD | RECORD |
 | 12 — an assertion scoped wider than the clause it defends | RECORD | not present | REJECT → evidence |
 
-Only candidate 4 is stable across both runs and ground truth. The rest move,
-and they move in both directions, which says the clause draws a line the
-readers can apply consistently in aggregate — both runs landed inside the
-scarcity band and both routed the post-merge exception correctly — while
-individual borderline calls stay genuinely borderline.
+Counted rather than characterised: run 1 agreed with ground truth on 10 of
+11 candidates, run 2 on 9 of 12. The unstable rows are 1, 2 and 12; the eight
+REJECTs and the FOLLOW-UP are stable and therefore unlisted. Candidate 4 is
+the only stable RECORD.
+
+So the readers apply the line consistently in aggregate — both landed inside
+the scarcity band and both routed the post-merge exception correctly — while
+the borderline calls stay genuinely borderline, and move in both directions.
 
 The direction of the error matters more than its size. A reader marking
 eight of twelve recordable would be the failure this clause exists to

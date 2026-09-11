@@ -49,12 +49,22 @@ defect four times, which is what turns a defect into a lesson.
 | Marketplace publishes by version, so an unbumped skill change is a silent no-op | REJECT | already recorded — `feedback_skill_content_pr_requires_plugin_version_bump` covers it |
 | Whether the published plugin version installs correctly from the marketplace | FOLLOW-UP | only confirmable after merge and publish; batched with other post-merge checks, not a branch of its own |
 
-## The one the cold reader and ground truth disagreed on
+## Where the cold reader and ground truth disagreed
 
-The eval's reader marked the acceptance-line candidate REJECT, routing it
-to evidence; ground truth marks it RECORD. Both readings are defensible —
-the incident is bound to one change, the rule it teaches is not. It is
-recorded here, and the disagreement is kept in
-`loom-workflow/skills/loom-memory/evals/record-timing.md` rather than
-resolved, because the clause's bias runs toward rejection and that is the
-direction it was written to push.
+Three candidates, not one, and in both directions. The per-candidate table
+lives in `loom-workflow/skills/loom-memory/evals/record-timing.md`; it is not
+restated here.
+
+- **The acceptance-line candidate** — ground truth RECORD, both runs REJECT
+  to evidence. Defensible either way: the incident is bound to one change,
+  the rule it teaches is not.
+- **The CI fetch-depth candidate** — ground truth REJECT, run 2 RECORD.
+- **The assertion-scope candidate** — ground truth RECORD, run 2 REJECT as a
+  bug fixed inside the change. Recorded against that verdict, with the
+  criterion named (recurrence across four independent sites, one of them
+  inside the fix for another) and a falsifier attached in the eval.
+
+None is resolved here. The clause's bias runs toward rejection and that is
+the direction it was written to push; what the disagreements show is that
+the borderline stays borderline, which is a property of the judgement, not a
+defect in the wording.
