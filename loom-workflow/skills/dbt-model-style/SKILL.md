@@ -40,7 +40,7 @@ Use the complete runnable model in `references/example-model.sql`. Write inside-
 1. **Decide `grain` and `keys` first** — what one row represents, the primary / join keys. This shapes the whole model.
 2. Write the **reference CTE** (UPPERCASE, `SELECT *` off the upstream).
 3. Write the **intermediate transform CTEs** — one CTE per step, **all calculation/logic lives here**.
-4. Write **`final`** — explicit column list + aligned comments + tags, **no logic**.
+4. Write **`final`** — explicit column list + aligned comments + tags, **no logic and no `AS` aliases** (every column arrives already named).
 5. Close with `SELECT * FROM final`, add `config`.
 6. Backfill both headers: `summary`/`purpose`/`sources`/`related` and business rules.
 
@@ -58,9 +58,11 @@ Use the complete runnable model in `references/example-model.sql`. Write inside-
 
 ### 1.2 The `final` CTE iron law (highest priority)
 
-**MUST — the `final` CTE must contain no business logic.** Only column selection + aliases + comments. Every `CASE`, `WHERE` filter, rename computation, or arithmetic moves up into a dedicated preceding CTE.
+**MUST — the `final` CTE must contain no business logic and no renaming.** Only column selection + comments. Every `CASE`, `WHERE` filter, arithmetic expression, **and every output-name alias (`x AS y`)** moves up into a dedicated preceding CTE: a column reaches `final` already carrying the name it will have in the table.
 
-Move every `CASE`, `WHERE`, arithmetic expression, and computed rename into a preceding CTE. This makes `final` a stable, directly diffable column-schema contract.
+Move every `CASE`, `WHERE`, arithmetic expression, and rename into a preceding CTE. This makes `final` a stable, directly diffable column-schema contract.
+
+Renaming counts as logic here even though SQL treats an alias as free. An `AS` in `final` means the published column name exists nowhere upstream in the model, so a reader who greps the file for the name they saw in the warehouse lands on one line — the alias — and has to re-read the whole model to find where the value came from. It also breaks the diff property: `final` should compare line-for-line against the table's column list, and an alias makes the two sides disagree by design. Name the column in the CTE that computes it.
 
 ---
 
@@ -72,7 +74,7 @@ Choose among four cases:
 
 - Single source: use `SOURCE_CTE.*` plus derived columns.
 - JOIN: `JOIN ... USING (key)` plus unqualified `SELECT *` keeps one key; `a.*, b.*` duplicates it.
-- Few renames: select renamed columns explicitly and use `source_cte.*` for the rest.
+- Few renames: rename them in the preceding CTE (§1.2 forbids `AS` in `final`), then `source_cte.*` passes everything through.
 - Fall back to an explicit list for value collisions or differently named keys.
 
 > **When a CTE JOINs ≥2 sources and you intend `.*` passthrough, read `references/dotstar-passthrough.md` in full before writing it** — that file holds the exact `USING` + unqualified-`*` rule, the duplicate-column trap, and the fallback chain. (Single-source passthrough — the common case — doesn't need it.)
@@ -229,8 +231,8 @@ FROM (
 
 | Anti-pattern | Fix |
 |---|---|
-| `CASE` / `WHERE` / rename computation inside `final` | Move into a dedicated preceding CTE; `final` selects only (§1.2) |
-| Declaring every column just to rename a few | Renamed columns explicit + `.*` for the rest (§2) |
+| `CASE` / `WHERE` / arithmetic / any `AS` alias inside `final` | Move into a dedicated preceding CTE; `final` selects only (§1.2) |
+| Declaring every column just to rename a few | Rename in the preceding CTE + `.*` for the rest (§1.2 §2) |
 | Renaming a CTE / using short aliases `t` `o` | Keep the CTE name; qualify columns with the full CTE name (§1.1 §3) |
 | Cosmetically renaming an already-pushed column | Change the display label; keep the technical id (§3) |
 | Forgetting to close `/* ==` | Every `/*` needs a `*/` (§5) |

@@ -6,7 +6,7 @@ After writing or editing a dbt model, tick each item. **Any MUST ✗ = non-confo
 
 ## MUST — structure
 
-- [ ] `final` CTE has **zero business logic**: no `CASE` / `WHERE` filter / rename computation / arithmetic — only column selection + aliases + comments
+- [ ] `final` CTE has **zero business logic and zero renaming**: no `CASE` / `WHERE` filter / arithmetic / `AS` alias — only column selection + comments (every column arrives already named)
 - [ ] the CTE first referencing an external model is **UPPERCASE** + `stg_/int_/mart_` prefix dropped + body is `SELECT *`
 - [ ] CTE names are **not renamed** (kept so they trace back to the referenced model)
 - [ ] intermediate transform CTEs use **lowercase descriptive** names
