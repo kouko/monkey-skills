@@ -312,3 +312,92 @@ def test_skills_mount_declared_in_claude_manifest() -> None:
     )
     assert manifest.get("name") == "loom-workflow"
     assert (REPO_ROOT / "loom-workflow" / "skills" / "loom-memory").is_dir()
+
+
+# ---------------------------------------------------------------------------
+# Acceptance A4 — the timing and scarcity halves of the Record contract
+#
+# READ THIS BEFORE YOU EDIT OR DELETE ANYTHING BELOW.
+#
+# These assertions pin two clauses of the shipped Record contract. They are
+# not style checks and they are not a snapshot of prose someone liked.
+#
+# History, because it has already happened once: the timing clause was
+# enforced from 2026-07-08 (#515) by five lines inside the
+# `finishing-a-development-branch` skill plus a test pinning them. The
+# loom 1.0 cutover (#780) deleted that skill, and the instruction and its
+# test went out together. Nobody noticed, because nothing was left to go
+# red. The rule survived only as prose in one repository's own store
+# charter, which no project installing this plugin ever reads.
+#
+# A phrase-presence assertion is a golden test at string granularity, and
+# the documented way golden tests die is that a red one gets updated
+# instead of investigated. That is exactly the failure above. So: if one
+# of these goes red, the question is not "how do I make this green".
+# The question is whether the clause it names is still in the shipped
+# contract, and if you are removing it on purpose, that is a change to
+# what this plugin promises — it needs an intent, not an edit here.
+#
+# The assertions pin required ELEMENTS after whitespace flattening, never
+# whole sentences, so rewording that keeps both halves stays green.
+# ---------------------------------------------------------------------------
+
+_A4_WHY = (
+    "This clause is part of the Record contract (timing + scarcity). It was "
+    "lost once already when loom 1.0 deleted the skill carrying it along with "
+    "its test. Removing it deliberately is a contract change and needs an "
+    "intent; see this section's header comment."
+)
+
+
+def _flat(text: str) -> str:
+    """Whitespace-flattened, lowercased text — prose wraps, meaning does not."""
+    return " ".join(text.split()).lower()
+
+
+TIMING_ELEMENTS = (
+    "before the branch closes",
+    "that same branch",
+    "separate post-merge branch",
+    "pure overhead",
+    "only confirmable by observing",
+    "batched",
+)
+
+SCARCITY_ELEMENTS = (
+    "not a durable lesson",
+    "belongs in its commit",
+    "belongs in the change's evidence",
+    "belongs in an intent",
+    "zero to one durable lesson per change",
+)
+
+
+def test_record_contract_states_when_to_record() -> None:
+    """Timing half: a fact known before the branch closes lands in that branch."""
+    flat = _flat(_all_skill_text())
+    for element in TIMING_ELEMENTS:
+        assert element in flat, (
+            f"the Record contract no longer states {element!r}. {_A4_WHY}"
+        )
+
+
+def test_record_contract_states_how_much_to_record() -> None:
+    """Scarcity half: most of what a change surfaces is not a durable lesson."""
+    flat = _flat(_all_skill_text())
+    for element in SCARCITY_ELEMENTS:
+        assert element in flat, (
+            f"the Record contract no longer states {element!r}. {_A4_WHY}"
+        )
+
+
+def test_both_halves_live_in_the_record_section_itself() -> None:
+    """Neither half may drift into an unrelated section, where a reader
+    following Record would not meet it."""
+    record = _flat(_section(_skill_md_text(), "Record"))
+    assert "before the branch closes" in record, (
+        "the timing clause left the Record section of SKILL.md. " + _A4_WHY
+    )
+    assert "not a durable lesson" in record, (
+        "the scarcity clause left the Record section of SKILL.md. " + _A4_WHY
+    )
