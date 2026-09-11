@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0] — 2026-09-11 — the recording moment stated at the end of review
+
+- The closing review's convergence section now ends with an inert paragraph
+  stating when a lesson is recorded and how little qualifies. It sits before
+  Finalize because a store edit after the attestation exists invalidates it.
+- The paragraph carries no gate marker, names no plugin, and invokes nothing, so
+  the mechanism count is unchanged and no budget exception is needed.
+
 ## [2.1.3] — 2026-09-11 — memory skill relocated into loom-workflow
 
 - Widened the contract-citation scan to the relocated memory skill's new home,
