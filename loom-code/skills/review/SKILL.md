@@ -154,6 +154,22 @@ ledger or committed state schema. Wording-only publication edits do not reopen
 Review.
 <!-- /gate -->
 
+Convergence is also the last moment when recording a lesson is free.
+Whatever this branch taught has surfaced by now — through a finding, a
+probe, or the blind run — and a lesson written down here is covered by the
+attestation this episode is about to generate, while the same lesson
+written down after the merge costs a branch and a pull request for
+something already known. When this repository has a `docs/loom/memory/`
+directory, that is where such a lesson belongs.
+
+Almost nothing qualifies. Most of what a review surfaces is not a durable
+lesson: a one-off implementation slip belongs in its commit message, a
+verification result in this change's evidence, an unfinished item in an
+intent or a backlog entry. Zero to one durable lesson per change is the
+normal outcome. This paragraph states the moment and the bar; it invokes
+nothing, requires no plugin to be installed, and asks for no decision from
+the user.
+
 ## 5. Finalize
 
 Write reviewer output and adversarial command declarations to a temporary JSON
