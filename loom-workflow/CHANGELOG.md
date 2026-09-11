@@ -14,6 +14,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Added `skills/loom-memory/evals/record-timing.*`: a frozen cold-reader run
   guarding those clauses against dilution, which a string assertion cannot
   detect.
+- Removed `skills/loom-memory/scripts/test_store_fidelity.py`. It proved the
+  relocation change's byte-identity acceptance against a moving `origin/main`;
+  once that change was the trunk it asserted the store may never change, which
+  three of the skill's four operations do.
 
 ## [4.2.1] — 2026-09-11 — dbt-model-style: `final` 不得改名，欄位註解是商業定義
 

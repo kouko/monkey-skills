@@ -39,6 +39,12 @@ sources:
 
 ## When to record
 
+> Normative home: the `Record` operation's **When** and **How much**
+> clauses in the memory skill's own `SKILL.md`, which travel with the
+> plugin and are pinned by its contract test. The text below is the
+> charter's standalone restatement; when the two differ, the shipped
+> contract wins and this paragraph is the one to correct.
+
 A fact already known before the branch closes (not merge-required to
 observe) MUST land in that same branch/PR, never a separate post-merge
 branch — a post-merge branch+PR just to record something you already

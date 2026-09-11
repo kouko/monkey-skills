@@ -27,9 +27,18 @@ the contract calls the normal outcome.
 Re-run this whenever the **When** or **How much** clause changes, and
 update the run below with the new result and an explicit reason.
 
+Nothing about prose makes that re-run happen on its own, so it is wired
+to a digest. `scripts/test_skill_contract.py` pins the sha256 of the
+whitespace-flattened `Record` section; any edit to it turns that test
+red with a message naming this file. Updating the digest without
+re-running the eval is the single move that defeats the guard, and it
+costs less than the dispatch it skips — which is exactly why it is worth
+saying out loud here.
+
 ## Reference run — 2026-09-11
 
-Contract version: `SKILL.md` as of commit `d7d89f6d3`. Reader: one
+Contract version: `SKILL.md` as of commit `d7d89f6d3`; `Record` section
+digest `c7b0dcff`, the value pinned in `scripts/test_skill_contract.py`. Reader: one
 fresh-context `sonnet` agent, no tools used.
 
 **Verdict: PASS on all three criteria.**

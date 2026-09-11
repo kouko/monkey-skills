@@ -6,7 +6,7 @@ intent: 2026-09-11-memory-timing-in-the-skill@f55785199
 - Forward: `docs/loom/memory/README.md` under `## When to record` carries the rule in full, in this repository's data, where a project installing the plugin never reads it.
 - Reverse: `loom-workflow/skills/loom-memory/SKILL.md` under `**Steps:**` for Record classifies what qualifies but says nothing about when to record relative to the branch.
 - Error: `loom-code/skills/review/SKILL.md` mentions memory nowhere across its six sections, so the station that surfaces lessons never asks whether any were kept.
-- Data: `docs/loom/memory/` holds 289 lesson concepts, grown at roughly two a day with no systematic prompt; the change must not raise that rate.
+- Data: `docs/loom/memory/` holds 293 lesson concepts, grown at roughly two a day with no systematic prompt; the change must not raise that rate.
 - Boundary: `loom-code/scripts/test_simplified_station_text.py` reads `loom-workflow/` prose, the cross-plugin coupling this family already pays for; a new test must not add another, so each plugin's text is pinned by a test inside that same plugin.
 
 ## Task DAG
@@ -44,7 +44,7 @@ intent: 2026-09-11-memory-timing-in-the-skill@f55785199
 ### Wave 3 — The change obeys its own rule
 
 **W3-01 Record this session's lessons under the new bar**  after: W2-02  acceptance: 2
-- Files: docs/loom/memory/, docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/
+- Files: docs/loom/memory/, docs/loom/2026-09-11-memory-timing-in-the-skill/evidence/, loom-workflow/skills/loom-memory/scripts/test_store_fidelity.py (deleted — it compared the store against a moving origin/main, so post-merge it forbade the store from ever changing)
 - Test: A2 positive: lessons-land-in-this-branch-not-a-follow-up; negative: candidates-rejected-by-the-scarcity-bar-are-named-with-their-reason and the recorded count is smaller than the candidate count.
 - Risk: Agent-decided: the change applies its own rule to itself as the first real exercise; every rejected candidate is named with the reason so the bar's effect is visible rather than asserted.
 

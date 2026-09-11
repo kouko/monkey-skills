@@ -60,44 +60,81 @@ def test_reviewer_yaml_is_converted_to_finalization_json() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Acceptance A4/A5 — the recording moment stated at the end of convergence
+# Acceptance A4/A5 — the recording passage at the end of convergence
 #
 # READ THIS BEFORE YOU EDIT OR DELETE ANYTHING BELOW.
 #
-# The paragraph these tests pin says two things: a lesson this branch
-# already taught is written down now, while recording is still free, and
+# The passage these tests pin says three things: a lesson this branch already
+# taught is written down while a round can still absorb it, a recorded lesson
+# is ordinary functional content and never justifies a fourth digest, and
 # almost nothing qualifies. It is deliberately inert — it names no plugin,
-# calls no tool, and sits OUTSIDE the `review.bounded-episode` gate markers
-# so it registers no mechanism and needs no budget exception.
+# calls no tool, and sits OUTSIDE the `review.bounded-episode` gate markers so
+# it registers no mechanism and needs no budget exception.
 #
-# It has been lost once. From 2026-07-08 (#515) the timing half was carried
-# by the `finishing-a-development-branch` skill and pinned by a test; the
-# loom 1.0 cutover (#780) deleted that skill, and the instruction and its
-# test went out together. Nothing was left to go red, so nobody noticed,
-# and two consecutive changes afterwards reached merge before anyone
-# thought about memory at all.
+# It has been lost once. From 2026-07-08 (#515) the timing half was carried by
+# the `finishing-a-development-branch` skill and pinned by a test; the loom 1.0
+# cutover (#780) deleted that skill, and the instruction and its test went out
+# together. Nothing was left to go red, so nobody noticed, and two consecutive
+# changes afterwards reached merge before anyone thought about memory at all.
 #
-# A phrase-presence assertion is a golden test at string granularity, and
-# golden tests die by being re-approved rather than investigated. If one of
-# these goes red, do not make it green. Check whether the paragraph is
-# still in the station text; removing it on purpose is a change to what
-# this station promises and needs an intent.
+# WHAT KIND OF TEST THIS IS, stated accurately because the previous wording
+# here overclaimed it: this is a LITERAL-PHRASE pin. Whitespace is flattened
+# first, so prose may rewrap freely — but the phrases below are matched
+# literally, and a faithful rewrite that says "goes in the commit message"
+# instead of "belongs in its commit message" WILL go red. That is not a defect
+# and it is not a reason to delete the pin. The correct response to a red is:
 #
-# The assertions pin required elements after whitespace flattening, never
-# whole sentences, so rewording that keeps both halves stays green.
+#   1. check the clause is still in the passage and still says the same thing;
+#   2. if it is, update the phrase list below in the same commit as the
+#      rewrite, and say in that commit that the meaning was preserved;
+#   3. if it is not, you are removing a station contract — that needs an
+#      intent, not an edit here.
+#
+# Step 2 is the one that looks like the anti-pattern every reviewer is trained
+# to stop. It is not, provided the commit shows the clause survived. Deleting
+# the assertion is what the 2026-07 cutover did.
 # ---------------------------------------------------------------------------
 
 _WHY = (
-    "This element belongs to the recording-moment paragraph at the end of "
-    "convergence. It was lost once already when loom 1.0 deleted the skill "
-    "carrying it along with its test. Removing it deliberately is a station "
-    "contract change and needs an intent; see this section's header comment."
+    "This element belongs to the recording passage at the end of convergence. "
+    "It was lost once already when loom 1.0 deleted the skill carrying it "
+    "along with its test. If the passage was reworded and still says this, "
+    "update the phrase here in the same commit; if the clause is gone, that is "
+    "a station contract change and needs an intent. See this section's header."
 )
 
 
+def _recording_passage() -> str:
+    """The whole passage between the convergence gate's close and Finalize.
+
+    Selecting one `\n\n` block was a real gap: the scarcity paragraph sat
+    outside it, so a plugin name or a gate marker could be added there with
+    every test staying green. Acceptance 5 is a property of the passage.
+    """
+    finalize = REVIEW.index("\n## 5. Finalize")
+    closes_episode = REVIEW.rindex("<!-- /gate -->", 0, finalize)
+    return REVIEW[closes_episode + len("<!-- /gate -->") : finalize]
+
+
 def test_convergence_states_the_recording_moment() -> None:
-    """Timing half: record now, not after the merge."""
-    for element in ("recording a lesson is free", "already known", "docs/loom/memory/"):
+    """Timing half: record while a round can still read it, not after merge."""
+    for element in (
+        "after the merge costs a branch",
+        "docs/loom/memory/",
+        "a digest the reviewers read",
+    ):
+        assert element in REVIEW_WORDS, (
+            f"the review station no longer states {element!r}. {_WHY}"
+        )
+
+
+def test_convergence_forbids_spending_an_extra_digest_on_a_lesson() -> None:
+    """Recording is not free: a memory entry is functional content, so the
+    passage must say where it lands and that it never buys another round."""
+    for element in (
+        "functional content",
+        "never justifies exceeding this episode's digests",
+    ):
         assert element in REVIEW_WORDS, (
             f"the review station no longer states {element!r}. {_WHY}"
         )
@@ -115,27 +152,25 @@ def test_convergence_states_the_scarcity_bar() -> None:
         )
 
 
-def test_recording_moment_invokes_nothing_and_registers_no_mechanism() -> None:
-    """The paragraph must stay inert: no plugin name, no tool call, and
-    outside the gate markers so the mechanism count is unchanged."""
-    where = REVIEW.find("recording a lesson is free")
-    assert where != -1, "the recording-moment paragraph is gone. " + _WHY
-    closes_episode = REVIEW.rfind("<!-- /gate -->", 0, where)
-    finalize = REVIEW.find("\n## 5. Finalize")
-    assert closes_episode != -1 and closes_episode < where < finalize, (
-        "the paragraph must sit between the end of the convergence gate and "
-        "Finalize: after Finalize the attestation exists, and a store edit "
-        "then invalidates it. " + _WHY
+def test_recording_passage_invokes_nothing_and_registers_no_mechanism() -> None:
+    """The whole passage must stay inert: no plugin name, no tool call, and no
+    gate marker anywhere in it, so the mechanism count is unchanged."""
+    passage = _recording_passage()
+    assert "cheap to keep" in passage, (
+        "the recording passage is gone from the end of convergence. " + _WHY
     )
-    paragraph = next(
-        p for p in REVIEW.split("\n\n") if "recording a lesson is free" in p
-    )
-    assert "<!-- gate:" not in paragraph, (
-        "the paragraph must not be marked as a gate: the charter forbids a "
+    assert "<!-- gate:" not in passage, (
+        "the passage must not be marked as a gate: the charter forbids a "
         "prose-only gate, and its criterion is a judgement. " + _WHY
     )
     for plugin in ("loom-memory", "loom-workflow", "git-memory"):
-        assert plugin not in paragraph, (
-            f"the paragraph must not name {plugin!r}; it points at a store "
-            "path that can be checked for existence, not at an install. " + _WHY
+        assert plugin not in passage, (
+            f"the passage must not name {plugin!r}; it points at a store path "
+            "that can be checked for existence, not at an install. " + _WHY
+        )
+    for invocation in ("Invoke", "invoke the", "Use `"):
+        assert invocation not in passage, (
+            f"the passage must not instruct an invocation ({invocation!r}); "
+            "#821 REQ-4 forbids a station calling memory by virtue of being "
+            "reached. " + _WHY
         )

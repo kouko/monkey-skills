@@ -127,27 +127,96 @@ def test_the_failure_message_tells_the_deleter_what_they_are_deleting(tmp_path) 
     assert "loom 1.0" in out, f"failure message does not carry the deletion history:\n{out}"
 
 
-# --- Acceptance 4 boundary: rewording is NOT caught --------------------------
+# --- Acceptance 4 boundary: what the literal pin does and does not tolerate ---
+#
+# The first version of this section claimed to prove "a rewording that keeps
+# both halves stays green" and proved nothing of the sort: it rewrapped
+# whitespace without changing a single word. The real boundary is narrower and
+# is written out here rather than papered over — a literal-phrase pin tolerates
+# reflowing and nothing else.
 
 
-def test_rewording_that_keeps_both_halves_stays_green(tmp_path) -> None:
-    """The pin must survive legitimate editing. A pin that fires on a
-    faithful rewrite trains its reader to ignore it."""
+def test_reflowing_the_whole_skill_stays_green(tmp_path) -> None:
+    """Prose wraps. The pin flattens whitespace first, so rewrapping every
+    paragraph onto one physical line must not turn it red."""
     root = _memory_sandbox(tmp_path)
     skill_md = root / MEMORY_SKILL / "SKILL.md"
     text = skill_md.read_text(encoding="utf-8")
-    # Rewrap every paragraph onto one physical line and re-punctuate lightly.
     reflowed = "\n\n".join(
         " ".join(block.split()) if not block.lstrip().startswith(("#", "-", "|", "`"))
         else block
         for block in text.split("\n\n")
     )
-    assert reflowed != text, "probe did not actually reword anything"
+    assert reflowed != text, "probe did not actually reflow anything"
     skill_md.write_text(reflowed, encoding="utf-8")
 
     result = _run(root, MEMORY_TEST, "::test_record_contract_states_when_to_record")
     assert result.returncode == 0, (
         f"a whitespace-only rewrap turned the pin red:\n{result.stdout}{result.stderr}"
+    )
+
+
+def test_a_faithful_synonym_rewrite_does_turn_the_pin_red(tmp_path) -> None:
+    """The honest half of the boundary.
+
+    This rewrite preserves the clause exactly — same rule, same exception,
+    same bar — and changes only the wording. The pin goes red anyway, because
+    it matches literal phrases. That is the known cost of the only mechanism
+    available for this, and the test asserts it so no future reader mistakes
+    the pin for something smarter than it is.
+
+    When this fires in real life the answer is in the test module's header:
+    confirm the clause survived, then update the phrase list in the same
+    commit. It is NOT to delete the assertion.
+    """
+    root = _memory_sandbox(tmp_path)
+    skill_md = root / MEMORY_SKILL / "SKILL.md"
+    text = skill_md.read_text(encoding="utf-8")
+    rewrites = {
+        "belongs in\nthat same branch": "goes into that same branch",
+        "pure overhead": "wasted work",
+        "only\nconfirmable by observing": "verifiable only by watching",
+    }
+    for before, after in rewrites.items():
+        assert before in text, f"probe anchor missing: {before!r}"
+        text = text.replace(before, after)
+    skill_md.write_text(text, encoding="utf-8")
+
+    result = _run(root, MEMORY_TEST, "::test_record_contract_states_when_to_record")
+    assert result.returncode != 0, (
+        "a synonym rewrite left the pin green — the pin is not the literal "
+        "matcher this project documents it to be:\n"
+        f"{result.stdout}{result.stderr}"
+    )
+    assert "needs an intent" in result.stdout, (
+        "the red gave no guidance, which is how a legitimate reword becomes a "
+        f"deleted assertion:\n{result.stdout}"
+    )
+
+
+def test_editing_the_record_section_demands_the_eval_be_rerun(tmp_path) -> None:
+    """A literal pin cannot see dilution. The digest test is what makes a
+    clause edit visible to the cold-reader eval at all, so prove it fires and
+    that it names the eval."""
+    root = _memory_sandbox(tmp_path)
+    (root / MEMORY_SKILL / "evals").mkdir(parents=True, exist_ok=True)
+    skill_md = root / MEMORY_SKILL / "SKILL.md"
+    text = skill_md.read_text(encoding="utf-8")
+    softened = text.replace(
+        "belongs in\nthat same branch, never a separate post-merge branch",
+        "should usually go in that same branch rather than a post-merge branch",
+    )
+    assert softened != text, "probe anchor missing"
+    skill_md.write_text(softened, encoding="utf-8")
+
+    node = "::test_record_section_matches_the_digest_the_cold_reader_eval_was_run_against"
+    result = _run(root, MEMORY_TEST, node)
+    assert result.returncode != 0, (
+        f"the Record section was softened and the digest stayed green:\n"
+        f"{result.stdout}{result.stderr}"
+    )
+    assert "record-timing" in result.stdout, (
+        f"the red does not name the eval that must be re-run:\n{result.stdout}"
     )
 
 
@@ -169,7 +238,7 @@ def test_moving_the_paragraph_past_finalize_turns_the_pin_red(tmp_path) -> None:
     root = _review_sandbox(tmp_path)
     md = root / REVIEW_SKILL
     text = md.read_text(encoding="utf-8")
-    start = text.index("Convergence is also the last moment")
+    start = text.index("Convergence is where a lesson")
     end = text.index("\n## 5. Finalize")
     paragraph = text[start:end]
     moved = text[:start] + text[end:]
@@ -189,8 +258,8 @@ def test_marking_the_paragraph_as_a_gate_turns_the_pin_red(tmp_path) -> None:
     md = root / REVIEW_SKILL
     text = md.read_text(encoding="utf-8")
     text = text.replace(
-        "Convergence is also the last moment",
-        "<!-- gate: review.record-the-lesson -->\nConvergence is also the last moment",
+        "Convergence is where a lesson",
+        "<!-- gate: review.record-the-lesson -->\nConvergence is where a lesson",
     )
     md.write_text(text, encoding="utf-8")
 

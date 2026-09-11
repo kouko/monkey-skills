@@ -14,6 +14,7 @@ scope for this task.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -330,23 +331,36 @@ def test_skills_mount_declared_in_claude_manifest() -> None:
 # red. The rule survived only as prose in one repository's own store
 # charter, which no project installing this plugin ever reads.
 #
-# A phrase-presence assertion is a golden test at string granularity, and
-# the documented way golden tests die is that a red one gets updated
-# instead of investigated. That is exactly the failure above. So: if one
-# of these goes red, the question is not "how do I make this green".
-# The question is whether the clause it names is still in the shipped
-# contract, and if you are removing it on purpose, that is a change to
-# what this plugin promises — it needs an intent, not an edit here.
+# WHAT KIND OF TEST THIS IS, stated accurately because the previous wording
+# here overclaimed it: this is a LITERAL-PHRASE pin. Whitespace is flattened
+# first, so the prose may rewrap freely — but the phrases below are matched
+# literally, and a faithful rewrite that says "goes in the commit message"
+# instead of "belongs in its commit message" WILL go red. That is the known
+# cost of the only mechanism available here; it is not a defect, and it is
+# not a reason to delete the pin. The correct response to a red is:
 #
-# The assertions pin required ELEMENTS after whitespace flattening, never
-# whole sentences, so rewording that keeps both halves stays green.
+#   1. check the clause is still in the contract and still says the same;
+#   2. if it is, update the phrase list below in the same commit as the
+#      rewrite, and say in that commit that the meaning was preserved;
+#   3. if it is not, you are removing part of what this plugin promises —
+#      that needs an intent, not an edit here.
+#
+# Step 2 looks like the anti-pattern every reviewer is trained to stop. It is
+# not, provided the commit shows the clause survived. Deleting the assertion
+# is what the 2026-07 cutover did.
+#
+# A literal pin cannot see DILUTION — a clause kept but drained of force
+# passes every assertion here. That half is guarded by `evals/record-timing.md`,
+# a frozen cold-reader run, and by the digest test at the end of this file
+# which makes a clause edit demand that run be repeated.
 # ---------------------------------------------------------------------------
 
 _A4_WHY = (
     "This clause is part of the Record contract (timing + scarcity). It was "
     "lost once already when loom 1.0 deleted the skill carrying it along with "
-    "its test. Removing it deliberately is a contract change and needs an "
-    "intent; see this section's header comment."
+    "its test. If the contract was reworded and still says this, update the "
+    "phrase here in the same commit; if the clause is gone, removing it is a "
+    "contract change and needs an intent. See this section's header comment."
 )
 
 
@@ -372,10 +386,21 @@ SCARCITY_ELEMENTS = (
     "zero to one durable lesson per change",
 )
 
+# sha256 of the whitespace-flattened Record section of SKILL.md. Its only job
+# is to go red when that section changes at all, so the dilution guard cannot
+# fall silently out of date behind a literal pin that still passes.
+RECORD_SECTION_DIGEST = "c7b0dcffb2124286c75e5438c05e01db462690a6923417eae9dff58617626f7e"
+
 
 def test_record_contract_states_when_to_record() -> None:
-    """Timing half: a fact known before the branch closes lands in that branch."""
-    flat = _flat(_all_skill_text())
+    """Timing half: a fact known before the branch closes lands in that branch.
+
+    Scoped to SKILL.md's own Record section, not the union of the skill text.
+    Against the union an adversarial probe showed the pin staying green while
+    the shipped contract was rewritten, because `references/operations.md`
+    still carried the phrases — the reference copy was propping up a clause
+    that had left the surface a reader actually follows."""
+    flat = _flat(_section(_skill_md_text(), "Record"))
     for element in TIMING_ELEMENTS:
         assert element in flat, (
             f"the Record contract no longer states {element!r}. {_A4_WHY}"
@@ -383,21 +408,46 @@ def test_record_contract_states_when_to_record() -> None:
 
 
 def test_record_contract_states_how_much_to_record() -> None:
-    """Scarcity half: most of what a change surfaces is not a durable lesson."""
-    flat = _flat(_all_skill_text())
+    """Scarcity half: most of what a change surfaces is not a durable lesson.
+
+    Scoped to SKILL.md's Record section for the reason given above."""
+    flat = _flat(_section(_skill_md_text(), "Record"))
     for element in SCARCITY_ELEMENTS:
         assert element in flat, (
             f"the Record contract no longer states {element!r}. {_A4_WHY}"
         )
 
 
-def test_both_halves_live_in_the_record_section_itself() -> None:
-    """Neither half may drift into an unrelated section, where a reader
-    following Record would not meet it."""
-    record = _flat(_section(_skill_md_text(), "Record"))
-    assert "before the branch closes" in record, (
-        "the timing clause left the Record section of SKILL.md. " + _A4_WHY
+def test_the_reference_copy_still_carries_both_halves() -> None:
+    """`references/operations.md` restates the rule for the reader who opens
+    the detailed procedure instead of the summary. It is a second surface, so
+    it drifts: pin one phrase from each half there too, and keep the pin above
+    scoped to SKILL.md so neither copy can stand in for the other."""
+    operations = _flat(_read(OPERATIONS))
+    assert "before\nthe branch closes".replace("\n", " ") in operations, (
+        "operations.md no longer states when Record runs. " + _A4_WHY
     )
-    assert "not a durable lesson" in record, (
-        "the scarcity clause left the Record section of SKILL.md. " + _A4_WHY
+    assert "not a durable lesson" in operations, (
+        "operations.md no longer states the scarcity bar. " + _A4_WHY
+    )
+
+
+def test_record_section_matches_the_digest_the_cold_reader_eval_was_run_against() -> None:
+    """A literal pin passes a softening rewrite, so nothing else makes an edit
+    to this section visible to the dilution guard.
+
+    This assertion is deliberately brittle: ANY edit to Record turns it red.
+    The red means `evals/record-timing.md` describes a version of the contract
+    that no longer exists, so re-run that eval against the new text, record the
+    result, and update the digest here in the same commit. Updating the digest
+    without re-running the eval is the one move that defeats the guard — the
+    eval takes one dispatch."""
+    actual = hashlib.sha256(
+        _flat(_section(_skill_md_text(), "Record")).encode("utf-8")
+    ).hexdigest()
+    assert actual == RECORD_SECTION_DIGEST, (
+        "the Record section changed since the cold-reader eval was run "
+        f"(expected {RECORD_SECTION_DIGEST}, got {actual}). Re-run "
+        "`evals/record-timing.md`'s method against the new text, update that "
+        "file's reference run, then set this digest in the same commit."
     )
