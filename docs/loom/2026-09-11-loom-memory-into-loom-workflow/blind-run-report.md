@@ -66,35 +66,38 @@
 - **證據**：`loom_memory validate: OK` 的輸出；背景檢查程式裡的路徑變數；空的搜尋結果。
 - **判定**：符合。
 
-### 5. loom-code 與 loom-design 在完全沒裝 loom-workflow 的情況下，各自的測試仍然全綠
+### 5. 這次改動沒有讓「沒裝 loom-workflow」這件事變得更糟：loom-design 在沒有 loom-workflow 時測試全綠；loom-code 的測試套件在改動前後以完全相同的方式失敗（同一組既有的跨 plugin 讀檔），而且沒有新增任何 loom-code 或 loom-design 對 loom-workflow 的依賴
 
-**部分成立——loom-design 全綠，loom-code 不是。** 我另外開了一份乾淨的專案副本，把整個 `loom-workflow` 資料夾從這份副本裡刪掉（原本的 repo 完全沒有動），然後在「`loom-workflow` 完全不存在」的狀態下，把 `loom-code` 和 `loom-design` 各自的完整測試組跑過一遍。
+**先說一件事：這條驗收標準的文字，是在我第一次盲跑之後被改過的。** 我原本試的第 5 條寫的是「loom-code 與 loom-design 在完全沒裝 loom-workflow 時各自測試全綠」，我盲跑出來是部分成立——loom-design 全綠，但 loom-code 有 4 支測試因為寫死要讀 loom-workflow 底下的檔案而跑不起來。這個結果讓 kouko（這個 repo 的負責人）發現，這條標準本身問錯了：那 4 支測試在改動之前、這個 repo 從未真正「沒裝 loom-workflow」跑起來過的狀態下，其實就已經是這樣，所以「全綠」是一條這個 repo 從來沒有滿足過的性質，寫的人（上一輪）沒有先量過基準線就寫下去了。kouko 在同一天把這條標準改成上面這個可以被證明的版本，把「每個 plugin 完全獨立可測」這個更大的目標留給另一次改動。讀者應該知道，這不是我事後幫忈動了目標，是委託人自己把靶子移到量得出來的地方。
 
-`loom-design` 的測試組完全通過，沒有任何一項因為找不到 `loom-workflow` 而出錯。但 `loom-code` 的測試組沒有全綠：有 4 支測試會在收集階段就直接報錯或失敗，原因都是它們裡面寫死了要去讀 `loom-workflow` 資料夾底下的特定檔案（例如某個站的說明文件、某支背景規則清單），一旦 `loom-workflow` 不在，這些測試連跑都跑不起來。
+**這條改過的標準，我自己重新量了一遍，成立。** 這次我沒有沿用自己上次的數字，也沒有先看已經寫好的測量紀錄，而是從頭做了一份獨立的度量：分別用兩份完整的 git 副本（一份是這次改動完成後的版本、一份是改動之前的主幹版本），各自把 `loom-workflow` 整個資料夾拿掉，然後把 `loom-code` 和 `loom-design` 的完整測試組分開跑（兩個套件裡有同名的測試檔案，混在一起跑會因為工具本身的限制而互相打架，所以一定要分開跑，這是這個 repo 自己的測試執行方式，不是我的偏好）。
 
-我額外核對過：這 4 支測試的內容，在這次改動出發之前的主幹版本上就已經長這樣，這次改動完全沒有碰過它們——換句話說，這不是「搬記憶功能」這個動作造成的新問題，是這個 repo 原本就存在、這次改動之前就有的一個舊有耦合。但驗收標準問的是「測試仍然全綠」這個結果，而結果確實不是全綠，所以我如實回報為不成立，而不是因為找到了原因就自動算過關。
+- **loom-design**：拿掉 loom-workflow 之後，改動前、改動後都是 183 個通過、1 個跳過，完全沒有紅燈。
+- **loom-code**：拿掉 loom-workflow 之後，改動前、改動後都是同樣的 3 支測試失敗、1 支測試連收集階段都進不去、824 個通過、2 個跳過——而且逐支核對失敗訊息的文字，改動前後一字不差。失敗的原因都是同一組早就存在的問題：一支測試會去跑一支背景檢查程式，那支程式的「已知違規清單」裡登記了幾筆現在已經不再違規的舊項目；一支測試會去核對一份規則清單裡登記的每個測試檔案是否存在；一支測試會去讀幾個站別的說明文件；還有一支測試在收集階段就因為讀不到一份協定文件而直接報錯。這四個問題全部指向同一件事——這個 repo 原本就有幾處會去讀 `loom-workflow` 裡檔案的測試，跟這次「搬記憶功能」這個動作無關，改動前後長得一模一樣。
+- 我也核對過這次改動有沒有偷偷幫 loom-code 或 loom-design 增加新的、指向 loom-workflow 的依賴：把改動前後的差異限定在這兩個資料夾裡看過一遍，裡面提到 loom-workflow 的地方只有一行說明文字（記在變更紀錄裡，說明記憶功能搬家後這個既有的掃描範圍現在也涵蓋到它的新家）和一行程式碼被拿掉（移除的是「舊獨立 plugin 位址」那一行，不是新增）；原本就存在、指向 loom-workflow 的那一行掃描設定，這次改動完全沒有動它。沒有新增依賴。
+
+**跟已經寫好的那份測量紀錄比對，數字不一樣，但結論一致，而且我認為我的方法更可靠。** 委託人指的那份既有紀錄用的是「打包匯出一份程式碼快照」的方式做副本，這種副本裡沒有 `.git` 資料夾；而 loom-code、loom-design 裡有幾支測試本身就會呼叫 git 指令去讀版本紀錄，副本裡沒有 `.git` 就會讓這些測試用另一種方式壞掉（是量測方式本身造成的假象，不是程式碼的問題），所以那份紀錄看到的失敗清單跟我看到的不同，而且它把 loom-design 也算進「有失敗」——但那筆失敗一樣是「沒有 `.git`」這個量測方式造成的假象，不是 loom-design 真的有問題。我這次改用「完整的 git 副本」而不是「程式碼快照」，兩邊都留著 `.git`，量出來的 loom-design 確實全綠，跟這條標準的文字直接吻合；loom-code 那 4 個問題，也正好跟我自己第一次盲跑量到的那 4 個問題對得上。也就是說：兩份測量都同意「改動前後沒有變糟」這個核心結論，但既有紀錄裡的具體失敗清單，是它自己量測方式的產物，不是這次改動真正呈現的樣子。
 
 - **我怎麼試的**：
   ```
-  git worktree add <乾淨副本> HEAD
-  cd <乾淨副本>
-  git rm -r loom-workflow        # 這份副本裡完全沒有 loom-workflow 了
-  cd loom-design && python3 -m pytest scripts -q
-  cd ../loom-code && python3 -m pytest scripts -q
-  # 額外核對：這幾支失敗測試在改動前的主幹版本上是不是本來就長這樣
-  git diff origin/main...HEAD -- loom-code/scripts/test_simplified_station_text.py
-  git diff origin/main...HEAD -- loom-code/scripts/test_check_contract_citations.py
-  git diff origin/main...HEAD -- loom-code/scripts/test_check_mechanisms.py
-  git diff origin/main...HEAD -- loom-code/scripts/test_legacy_contract_removed.py
+  git worktree add <改動後副本> HEAD
+  git worktree add <改動前副本> origin/main
+  cd <改動後副本> && git rm -r loom-workflow
+  cd <改動前副本> && git rm -r loom-workflow
+  # 兩份副本分別執行
+  cd loom-design && PYTHONDONTWRITEBYTECODE=1 python3 -m pytest scripts -q
+  cd ../loom-code && PYTHONDONTWRITEBYTECODE=1 python3 -m pytest scripts -q --continue-on-collection-errors
+  # 核對這次改動有沒有新增 loom-workflow 依賴
+  git diff origin/main...HEAD -- loom-code loom-design | grep -n "loom-workflow"
   ```
 - **看到的結果**：
   ```
-  loom-design: 183 passed, 1 skipped   # loom-workflow 完全不存在的情況下
-  loom-code:   824 passed, 2 skipped, 3 failed, 1 collection error
+  loom-design（改動前／改動後皆同）：183 passed, 1 skipped
+  loom-code（改動前／改動後皆同）：824 passed, 2 skipped, 3 failed, 1 collection error
   ```
-  4 支出問題的測試，逐一核對下來在這次改動出發前的主幹版本上內容完全相同（每一支的差異都是 0 行）——證實這 4 個問題不是這次「搬記憶功能」造成的，而是這個 repo 一直以來就有的舊狀況。
-- **證據**：兩次 pytest 完整輸出；4 支測試檔案的 `git diff` 皆為 0 行差異的紀錄。
-- **判定**：loom-design 這一半符合；loom-code 這一半不符合（原因是舊有問題，不是這次改動造成的新問題，但驗收標準要求的結果沒有達成）。
+  3 支失敗與 1 支收集錯誤的測試名稱、失敗訊息文字，改動前後逐字相同；差異比對裡沒有找到任何新增的 loom-workflow 依賴，只有一行既有掃描設定被沿用、一行舊路徑設定被刪除。
+- **證據**：四次 pytest 完整輸出（改動前後各兩個套件）；`git diff origin/main...HEAD` 限定在 loom-code、loom-design 兩個資料夾裡搜尋 loom-workflow 字樣的比對結果；已委託人接受、同日寫入 intent 文件 Amendments 段落的標準修訂紀錄。
+- **判定**：符合（依修訂後的標準）。這條標準本身在盲跑過程中被改過一次，讀者應該知道原先的版本問的是這個 repo 從未具備過的性質。
 
 ## 對你既有的資料做了什麼
 
