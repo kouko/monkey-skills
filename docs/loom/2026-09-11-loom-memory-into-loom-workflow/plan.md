@@ -39,7 +39,7 @@ intent: 2026-09-11-loom-memory-into-loom-workflow@3e136a4de
 
 **W3-01 Rewrite the isolation proofs for the new shape**  after: W2-02  acceptance: 5
 - Files: scripts/test_loom_plugin_install_layout.py, scripts/check_plugin_boundaries.py, scripts/test_check_plugin_boundaries.py, loom-code/scripts/check_contract_citations.py, loom-workflow/scripts/test_skill_count.py
-- Test: A5 positive: code-and-design-suites-green-without-loom-workflow; negative: no-test-still-asserts-a-standalone-memory-plugin.
+- Test: A5 positive: absent-workflow-failure-set-identical-before-and-after; negative: no-test-still-asserts-a-standalone-memory-plugin.
 - Risk: Agent-decided: the absence case changes meaning — it was "loom-memory absent", it becomes "loom-workflow absent" — so those assertions are rewritten to the new property rather than deleted, and the citation-scan root moves with the skill.
 
 **W3-02 Standing documents, versions, and proof the store did not move**  after: W3-01  acceptance: 2, 3
