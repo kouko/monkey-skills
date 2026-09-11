@@ -13,9 +13,17 @@ scripts/...`, a legitimate content change this test must not flag.
 Uses `git ls-tree -z` (not a bare `--name-only` scan) so a non-ASCII lesson
 filename is never silently dropped by git's default quoting of "unusual"
 path bytes (a documented gotcha in this repo's own memory).
+
+A missing baseline used to be a silent `skipif` — in CI, where GitHub
+Actions always sets the `CI` env var, a shallow checkout with no
+`origin/main` made this proof vanish as "1 skipped" rather than report
+anything wrong. Outside CI (a local single-branch clone with no remote)
+the proof still cannot run, but that is expected there, so it stays a
+skip — one whose reason says plainly that the proof did not run.
 """
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -60,11 +68,25 @@ def _working_paths() -> set[str]:
     }
 
 
-@pytest.mark.skipif(
-    not _baseline_available(),
-    reason=f"{BASELINE_REF} is not available in this checkout",
-)
+def _in_ci() -> bool:
+    """GitHub Actions (and every CI provider this repo targets) always sets
+    a non-empty ``CI`` env var; a bare local shell normally does not."""
+    return bool(os.environ.get("CI"))
+
+
 def test_memory_store_is_byte_identical_to_trunk_except_readme() -> None:
+    if not _baseline_available():
+        message = (
+            f"{BASELINE_REF} is not available in this checkout — the "
+            "store-fidelity proof did not run"
+        )
+        if _in_ci():
+            pytest.fail(
+                message + " (CI must fetch it, e.g. checkout with "
+                "fetch-depth: 0)"
+            )
+        pytest.skip(message)
+
     baseline_paths = _baseline_paths()
     working_paths = _working_paths()
 
