@@ -1,27 +1,32 @@
 """Adversarial probe (surface 4): the memory-integrity hook's fail-open path.
 
-`.claude/hooks/check-memory-store-integrity.sh` derives the repo root with a
-single bash suffix-strip:
+`.claude/hooks/check-memory-store-integrity.sh` used to derive the repo
+root with a single bash SHORTEST-suffix strip:
 
     REPO_ROOT="${FILE_PATH%/docs/loom/memory/*}"
 
 `%pattern` removes the SHORTEST matching suffix. When the edited file's
-absolute path contains the literal substring `/docs/loom/memory/` more than
-once — which happens exactly when someone nests a duplicate `docs/loom/
-memory` subtree INSIDE the real store (the very `nested-document` abuse the
-hook's own docstring says `validate` exists to catch) — the shortest-suffix
-match anchors on the LAST occurrence, so `REPO_ROOT` resolves to a
-subdirectory of the true repository root (the store directory itself, not
-its ancestor).
+absolute path contained the literal substring `/docs/loom/memory/` more
+than once — which happens exactly when someone nests a duplicate `docs/
+loom/memory` subtree INSIDE the real store (the very `nested-document`
+abuse the hook's own docstring says `validate` exists to catch) — the
+shortest-suffix match anchored on the LAST occurrence, so `REPO_ROOT`
+resolved to a subdirectory of the true repository root (the store
+directory itself, not its ancestor).
 
-The hook then builds `VALIDATOR="$REPO_ROOT/loom-workflow/skills/loom-
-memory/scripts/loom_memory.py"` from that wrong root. The path doesn't
-exist there, so `[ -f "$VALIDATOR" ] || exit 0` takes the "validator
+The hook then built `VALIDATOR="$REPO_ROOT/loom-workflow/skills/loom-
+memory/scripts/loom_memory.py"` from that wrong root. The path didn't
+exist there, so `[ -f "$VALIDATOR" ] || exit 0` took the "validator
 absent, portable store, harmless no-op" branch documented for a repo that
-never shipped `loom-workflow` at all — except here the real validator DOES
-exist, one level up, and the real store IS invalid (proven directly against
-`loom_memory.py validate`). The hook silently reports success on a
-genuinely broken store.
+never shipped `loom-workflow` at all — except the real validator DID
+exist, one level up, and the real store WAS invalid (proven directly
+against `loom_memory.py validate`). The hook silently reported success on
+a genuinely broken store.
+
+The fix swaps the strip to `%%` (LONGEST-suffix removal), which anchors on
+the FIRST occurrence of `/docs/loom/memory/` instead — always the true repo
+boundary, however many times the rest of the path repeats the store's own
+marker segment.
 
 Run:
     PYTHONDONTWRITEBYTECODE=1 python3 -m pytest \
@@ -105,12 +110,12 @@ def test_validate_directly_confirms_the_store_is_genuinely_broken(tmp_path):
     assert "nested-document" in result.stdout
 
 
-def test_hook_exits_zero_on_a_broken_store_when_edited_path_repeats_the_store_marker(tmp_path):
-    """The actual attack: invoke the real hook script, unmodified, as the
-    host harness would — JSON on stdin naming the nested duplicate file as
-    the just-edited `file_path` — and show it reports success (exit 0,
-    empty stderr) despite the real validator being present and the real
-    store carrying multiple invariant violations."""
+def test_hook_exits_two_on_a_broken_store_when_edited_path_repeats_the_store_marker(tmp_path):
+    """The former attack, now closed: invoke the real hook script,
+    unmodified, as the host harness would — JSON on stdin naming the
+    nested duplicate file as the just-edited `file_path` — and show it now
+    reaches the real validator and reports the violation (exit 2, naming
+    the offenders), instead of silently no-opping."""
     root, nested_file = _build_repo_with_broken_store_and_duplicate_path(tmp_path)
 
     payload = json.dumps({"tool_input": {"file_path": str(nested_file)}})
@@ -122,22 +127,21 @@ def test_hook_exits_zero_on_a_broken_store_when_edited_path_repeats_the_store_ma
         env={"PATH": "/usr/bin:/bin"},
     )
 
-    assert result.returncode == 0, (
-        f"expected the fail-open defect (exit 0); got {result.returncode}, "
-        f"stderr={result.stderr!r}"
+    assert result.returncode == 2, (
+        f"expected the fixed longest-suffix strip to reach the real "
+        f"validator (exit 2); got {result.returncode}, stderr={result.stderr!r}"
     )
-    assert result.stderr == "", (
-        "expected NO integrity report at all (silent no-op), proving the "
-        f"hook never even reached the validator; stderr={result.stderr!r}"
-    )
+    assert "loom memory-store integrity violated" in result.stderr
+    assert "nested-document" in result.stderr
+    assert "bad.md" in result.stderr
 
 
 def test_hook_exits_two_on_the_same_broken_store_via_the_top_level_file(tmp_path):
     """Control: the SAME broken repo, but the edited path is the ordinary
     top-level `bad.md` (no duplicated store-marker segment). REPO_ROOT
     resolves correctly, the real validator is found, and the hook reports
-    the violation as designed — isolating the defect to the duplicate-
-    path-segment computation, not to the store or validator."""
+    the violation as designed — isolating the (now-fixed) defect to the
+    duplicate-path-segment computation, not to the store or validator."""
     root, _nested_file = _build_repo_with_broken_store_and_duplicate_path(tmp_path)
     ordinary_file = root / "docs" / "loom" / "memory" / "bad.md"
 

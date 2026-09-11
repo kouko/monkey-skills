@@ -1,9 +1,9 @@
 """Adversarial probe (surface 5): the flat-folder test's `git ls-files` blind spot.
 
 `loom-workflow/skills/loom-memory/scripts/test_skill_contract.py::
-test_skill_folder_is_flat_no_nested_subfolder` asks `git ls-files -- <skill
-dir>` for what is tracked, then checks each tracked path is at most two
-segments below the skill directory (`SKILL.md` plus one level of
+test_skill_folder_is_flat_no_nested_subfolder` used to ask `git ls-files --
+<skill dir>` for what is tracked, then check each tracked path is at most
+two segments below the skill directory (`SKILL.md` plus one level of
 subfolder). This is deliberately git-aware instead of filesystem-aware, to
 avoid false positives from an untracked `__pycache__`.
 
@@ -11,12 +11,18 @@ avoid false positives from an untracked `__pycache__`.
 submodule's own tracked tree — it reports the submodule's mount point as
 ONE gitlink entry, e.g. `skills/loom-memory/sub`, with no indication of
 anything nested inside it. A skill directory that ships a submodule at
-exactly one level of nesting therefore reads as depth 1 to this test's
-logic — passing cleanly — while the submodule's own tree, checked out by
-any ordinary `git clone --recurse-submodules` (or a later `git submodule
-update --init`), can nest arbitrarily deep on disk. The flat-folder
-contract this test exists to enforce is violated by real shipped content
-the test never sees.
+exactly one level of nesting therefore used to read as depth 1 to this
+test's logic — passing cleanly — while the submodule's own tree, checked
+out by any ordinary `git clone --recurse-submodules` (or a later `git
+submodule update --init`), can nest arbitrarily deep on disk. The
+flat-folder contract this test exists to enforce was violated by real
+shipped content the test never saw.
+
+The fix uses `git ls-files --stage` instead, which reports each tracked
+entry's mode, and flags a gitlink (mode `160000`) directly as a violation —
+a skill ships files, not submodules — rather than trying to recurse into
+it (which would depend on the clone's own submodule-init state to mean
+anything).
 
 Run:
     PYTHONDONTWRITEBYTECODE=1 python3 -m pytest \
@@ -47,35 +53,42 @@ def _init_repo(path: Path) -> None:
 
 
 def _skill_folder_flat_check(repo_root: Path, skill_dir_rel: str) -> list[str]:
-    """The exact logic under
-    `test_skill_folder_is_flat_no_nested_subfolder`, reimplemented against
-    an arbitrary (repo_root, skill_dir) pair so it can be pointed at a
-    synthetic repo. Returns the list of tracked paths that violate the
-    depth<=2 rule — empty means "test would pass"."""
-    tracked = subprocess.run(
-        ["git", "ls-files", "--", skill_dir_rel],
+    """The exact fixed logic under
+    `test_skill_folder_is_flat_no_nested_subfolder` (`git ls-files
+    --stage`, flagging a mode-`160000` gitlink directly), reimplemented
+    against an arbitrary (repo_root, skill_dir) pair so it can be pointed
+    at a synthetic repo. Returns the list of tracked paths that violate
+    either the gitlink rule or the depth<=2 rule — empty means "test would
+    pass"."""
+    staged = subprocess.run(
+        ["git", "ls-files", "--stage", "--", skill_dir_rel],
         cwd=repo_root,
         capture_output=True,
         text=True,
         env={"PATH": "/usr/bin:/bin"},
         check=True,
-    ).stdout.split()
+    ).stdout.splitlines()
     violations = []
-    for rel in tracked:
+    for line in staged:
+        left, _, rel = line.partition("\t")
+        mode = left.split()[0]
+        if mode == "160000":
+            violations.append(rel)
+            continue
         depth = Path(rel).relative_to(skill_dir_rel).parts
         if len(depth) > 2:
             violations.append(rel)
     return violations
 
 
-def test_flat_folder_ls_files_check_misses_deeply_nested_content_inside_a_submodule(tmp_path):
+def test_flat_folder_gitlink_check_now_catches_a_submodule_mounted_under_the_skill(tmp_path):
     """A skill directory ships a git submodule one level down. The
     submodule's own history contains a file nested four levels deep. `git
-    ls-files` on the host repo reports only the submodule's single gitlink
-    entry, so the depth check the real test performs sees no violation —
-    while `git clone --recurse-submodules` (the standard way to pull a
-    repo with submodules) genuinely checks out that four-deep file inside
-    the skill directory."""
+    ls-files` (plain) on the host repo reports only the submodule's single
+    gitlink entry — no visibility into what a `--recurse-submodules` clone
+    would check out inside it — but the fixed check reads `git ls-files
+    --stage` and flags that gitlink entry (mode `160000`) directly,
+    without ever needing to see inside it."""
     submodule_src = tmp_path / "submodule-src"
     _init_repo(submodule_src)
     deep_dir = submodule_src / "deep" / "nested" / "dir"
@@ -128,15 +141,15 @@ def test_flat_folder_ls_files_check_misses_deeply_nested_content_inside_a_submod
         check=True,
     ).stdout.split()
 
-    # The defect: ls-files reports the submodule as a single shallow
-    # entry, so the depth check finds nothing to flag.
+    # Plain `git ls-files` still reports the submodule as a single shallow
+    # entry with no visibility into its own nested tree — the fixed check
+    # does not rely on seeing that tree; it flags the gitlink itself.
     assert "skills/loom-memory/sub" in ls_files_output
     assert not any("deep" in line for line in ls_files_output), (
-        "expected git ls-files to never mention the submodule's own "
+        "expected plain git ls-files to never mention the submodule's own "
         "nested tree at all"
     )
-    assert violations == [], (
-        "expected the ls-files-based depth check to miss the submodule's "
-        "real four-level nesting (this documents the surviving gap); if "
-        "this now fails, the check has been hardened against submodules"
+    assert violations == ["skills/loom-memory/sub"], (
+        "expected the fixed --stage-based check to flag the submodule's "
+        "gitlink directly; if this fails, the gitlink hardening regressed"
     )
