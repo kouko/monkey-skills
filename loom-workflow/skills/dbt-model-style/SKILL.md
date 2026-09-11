@@ -98,10 +98,11 @@ Choose among four cases:
 
 - **MUST** — every `final` column has a purpose comment; group columns with section headers.
 
-- **MUST — a `final` column comment leads with the column's human-readable name, then says how it is computed.** Shape: `<human-readable name, in the project's comment language>：<what it means / how it is derived>`. Two failure modes it rules out:
-  - `-- 淨額（銷售 − 退款）` — no name a reader can anchor on, and no way to tell which upstream columns were summed.
-  - `-- credit_card__net_amount：綁定信用卡的淨額，…` — the technical identifier is already printed on that same line; repeating it spends the comment's first words on something the reader can see, instead of on the name they cannot.
-  Passing: `-- 綁定信用卡淨額：寬表三個通路的 credit_card__net_amount 相加（銷售減退款）`. Upstream identifiers **inside** the derivation stay technical — they are the answer to "how is this computed", not prose. This carries real weight wherever a schema generator publishes these comments (see the `(adapt)` item below): they are what a downstream reader gets instead of the SQL.
+- **MUST — a `final` column comment is the column's business definition, written for someone who only ever sees this `final` CTE.** Shape: `<human-readable name>：<what the number means in business terms>`. Assume the reader has the published schema and nothing else — no upstream model, no column list, no idea what your internal buckets or channel prefixes are — because that is literally what a schema catalogue or a BI tooltip gives them. Three failure modes:
+  - `-- 淨額（銷售 − 退款）` — no name to anchor on, and nothing about what this number covers.
+  - `-- credit_card__net_amount：綁定信用卡的淨額，…` — opens by repeating the technical identifier already printed on that same line.
+  - `-- 綁定信用卡淨額：將寬表對應三個通路的 net_amount 欄位在這一週涵蓋的每一天加總` — assembly instructions over upstream columns. Accurate, and useless to the reader: they cannot see those columns, and it still does not say what the number means.
+  Passing: `-- 綁定信用卡淨額：這一週顧客用綁定信用卡付掉的金額，已扣掉退款`. Say what the number counts, what moves it, and what the reader must not do with it (「不可與其他類別相加」). Name an upstream identifier only when the reader genuinely needs it to act — not to show your work.
 
 - **MUST — no emoji in column comments.** A warning is stated in words (「不可與其他類別相加」), never carried by a `⚠️`: the glyph survives copy-paste into a schema catalogue, a BI tooltip or a terminal that renders it as tofu, and it says nothing the sentence does not. Ordinary symbols are fine — ASCII operators, and notation that *is* the calculation (`SUM(...)`, `COUNT(DISTINCT ...)`, `+`, `×`) — since that is the answer to "how is this computed".
 

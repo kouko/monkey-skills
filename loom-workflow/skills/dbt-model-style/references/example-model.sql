@@ -77,19 +77,19 @@ with_month AS (
 /* == 最終輸出（零邏輯，只選欄 + 註解）======================================== */
 final AS (
     SELECT -- 識別欄位
-           metric_date,                          -- 指標日期：取自來源的當地時間日界
-           entity_id,                            -- 實體識別碼：來源 A 與來源 B 共用
-           sub_id,                               -- 子識別碼：僅 source 為 source_b 時有值，否則為 NULL
+           metric_date,                          -- 指標日期：這一列統計的是哪一天，以當地時區的日界切分
+           entity_id,                            -- 實體識別碼：這一列代表的實體，兩個來源共用同一組編碼
+           sub_id,                               -- 子識別碼：來源 B 才有的細分編碼，來源 A 的列為空值
 
            -- 主要輸出
-           metric_month,                         -- [OUTPUT] 指標月份：由 metric_date 截月得到
-           daily_value,                          -- [OUTPUT] 當日值：COALESCE(daily_value__from_source_b, daily_value__from_source_a)，
-                                                 -- 亦即來源 B 優先、無對應時以來源 A fallback，兩來源皆已換算成同一單位
-           source,                               -- [OUTPUT] 來源旗標：daily_value 取自哪一邊，值為 source_b 或 source_a
+           metric_month,                         -- [OUTPUT] 指標月份：這一列所屬的月份，方便直接做月彙總
+           daily_value,                          -- [OUTPUT] 當日值：這一天認列的金額，兩個來源都有時以來源 B 為準，
+                                                 -- 只有來源 A 時用來源 A；兩者皆已換算成同一單位，可直接相加
+           source,                               -- [OUTPUT] 來源旗標：當日值實際採用了哪一個來源
 
            -- 對帳 / 稽核欄位
-           daily_value__from_source_a,           -- [AUDIT] 來源 A 原始攤提值：同一列來源 A 的攤提值，無對應時為 NULL
-           daily_value__from_source_b            -- [AUDIT] 來源 B 原始攤提值：同一列來源 B 的攤提值，無對應時為 NULL
+           daily_value__from_source_a,           -- [AUDIT] 來源 A 原始攤提值：對帳用，來源 A 對這一天認列多少；沒有對應資料時為空值
+           daily_value__from_source_b            -- [AUDIT] 來源 B 原始攤提值：對帳用，來源 B 對這一天認列多少；沒有對應資料時為空值
     FROM with_month
 )
 
