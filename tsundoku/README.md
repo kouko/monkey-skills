@@ -38,6 +38,7 @@ The split between `kobo-*` (Kobo-platform-specific) and `book-*` (format-agnosti
 | [`kobo-library`](skills/kobo-library/SKILL.md) | source-platform (`kobo-*`) | Search the Kobo library by title / author / series / publication date / category / description text / reading status / language; download chosen books as DRM-free EPUBs |
 | [`book-extract`](skills/book-extract/SKILL.md) | format-agnostic (`book-*`) | EPUB → chunked-by-chapter Markdown via NCX-driven splitting; CJK-safe |
 | [`book-distill`](skills/book-distill/SKILL.md) | format-agnostic (`book-*`) | Markdown → atomic SKILL.md set via RIA-TV++ (Adler analytical read → 5 parallel extractors → triple verification → RIA++ render → Zettelkasten linking → adversarial pressure test) |
+| [`book-audify`](skills/book-audify/SKILL.md) | format-agnostic (`book-*`) | Chunked Markdown → personal `.m4b` audiobook with chapter bookmarks (clean → validated hard gate → edge-tts → ffmpeg merge); optional translate-for-listening for foreign-language books |
 
 **Naming convention**: `kobo-*` skills are bound to the Kobo platform (auth, library API, kobodl binary). `book-*` skills work on any EPUB or chunked Markdown, with no Kobo dependency. This means `book-extract` and `book-distill` are reusable on books you obtained any other way (manual EPUB drop, library loan, public domain).
 
