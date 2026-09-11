@@ -1,6 +1,6 @@
 {
   "name": "loom-workflow",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Loom workflow tools around the loom stations — persistent Outcome Maps, git memory, loom-memory (recall / record / reconcile / retire durable repository lessons), critique (proposal | complexity), recap, handoff, session distill, CoT explainers, cross-executor second opinion, plus the standalone goal-create and dbt-model-style skills.",
   "author": {
     "name": "kouko",
