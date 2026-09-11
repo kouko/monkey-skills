@@ -18,7 +18,7 @@ publication: automatic — authorized 2026-09-11 by kouko
 2. `loom-memory` 這個獨立 plugin 不存在了：marketplace 清單裡沒有它，plugin 目錄也沒有它。
 3. 已經遷移好的 293 條 lesson 與那份索引，內容一個位元組都沒變。
 4. 驗證儲存庫記憶格式的指令仍然可用，指向 loom-workflow 裡的新位置；舊位置沒有留下任何還能跑的殘骸。
-5. loom-code 與 loom-design 在完全沒裝 loom-workflow 的情況下，各自的測試仍然全綠。
+5. 這次改動沒有讓「沒裝 loom-workflow」這件事變得更糟：loom-design 在沒有 loom-workflow 時測試全綠；loom-code 的測試套件在改動前後以完全相同的方式失敗（同一組既有的跨 plugin 讀檔），而且沒有新增任何 loom-code 或 loom-design 對 loom-workflow 的依賴。
 
 ## Constraints
 - 記憶的儲存格式（OKF v0.2 相容 profile）、四個操作的行為、以及 293 條 lesson 的內容都不重新設計，這次只搬家。
@@ -35,3 +35,6 @@ publication: automatic — authorized 2026-09-11 by kouko
 
 ## Open questions
 - none
+
+## Amendments
+- 2026-09-11：Acceptance 5 原寫「loom-code 與 loom-design 在完全沒裝 loom-workflow 時測試全綠」。盲跑發現 loom-code 有 4 處既有的跨 plugin 讀檔（git-memory 的 PR 協定、decision-map 的 SKILL.md、機制重算與契約引用檢查的掃描根），在 origin/main 上以相同方式失敗，亦即這條性質這個 repo 從未滿足過，是撰寫時未先驗基準線的錯誤。kouko 於同日選擇把該條收斂為可證的真話（見上），並將「每個 plugin 可獨立測試」留給另一個 intent。
