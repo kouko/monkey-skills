@@ -20,7 +20,7 @@ intent: 2026-09-11-memory-timing-in-the-skill@f55785199
 
 **W1-02 Pin both halves of the rule from inside loom-workflow**  after: W1-01  acceptance: 4
 - Files: loom-workflow/skills/loom-memory/scripts/test_skill_contract.py
-- Test: A4 positive: both-halves-pinned-timing-and-scarcity; negative: deleting-either-half-turns-the-test-red; boundary: rewording-that-keeps-both-halves-stays-green. A4 positive: failure-message-and-docstring-name-the-2026-07-deletion; negative: no-bare-assert-without-a-reason.
+- Test: A4 positive: both-halves-pinned-timing-and-scarcity; negative: deleting-either-half-turns-the-test-red; boundary: the-guard-s-own-tolerances-are-documented-in-the-test-module-not-here. A4 positive: failure-message-and-docstring-name-the-2026-07-deletion; negative: no-bare-assert-without-a-reason.
 - Risk: Agent-decided: the test lives beside the skill it pins, not in the repo-root suite, so the plugin keeps proving its own contract in an isolated install.
 - Risk: Agent-decided: the test carries its own justification in the docstring and in every failure message. A phrase-presence assertion is a golden test at string granularity, and its documented failure mode is that a red test gets updated rather than investigated — which is how the 2026-07 instruction and its test were removed together. No tooling defends against that; only a message that tells the next editor what they are about to delete.
 
@@ -38,8 +38,8 @@ intent: 2026-09-11-memory-timing-in-the-skill@f55785199
 
 **W2-02 Pin the review station's text from inside loom-code**  after: W2-01  acceptance: 4, 5
 - Files: loom-code/scripts/test_review_convergence_contract.py
-- Test: A4 positive: review-text-pinned-in-loom-codes-own-suite; negative: no-new-cross-plugin-read. A5 positive: pin-covers-both-timing-and-scarcity; boundary: pin-tolerates-rewording-that-keeps-both-halves.
-- Risk: Agent-decided: extends the test that already pins this same station's same section, not `test_simplified_station_text.py` — that module reads `loom-workflow/` prose and is one of the four cross-plugin couplings the previous change worked to stop deepening. Pins the required elements after whitespace flattening rather than a literal sentence, so a rewording that keeps both halves does not go red.
+- Test: A4 positive: review-text-pinned-in-loom-codes-own-suite; negative: no-new-cross-plugin-read. A5 positive: pin-covers-both-timing-and-scarcity; boundary: every-assertion-scoped-to-the-passage-never-to-the-whole-station-file.
+- Risk: Agent-decided: extends the test that already pins this same station's same section, not `test_simplified_station_text.py` — that module reads `loom-workflow/` prose and is one of the four cross-plugin couplings the previous change worked to stop deepening. How the matcher behaves — what it tolerates, what falsely reds, what to do about it — is stated in that module and nowhere else; this plan states the outcome only, because a mechanism's properties restated across documents drift the moment one is corrected.
 
 ### Wave 3 — The change obeys its own rule
 

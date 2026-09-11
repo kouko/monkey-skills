@@ -389,7 +389,7 @@ SCARCITY_ELEMENTS = (
 # sha256 of the whitespace-flattened Record section of SKILL.md. Its only job
 # is to go red when that section changes at all, so the dilution guard cannot
 # fall silently out of date behind a literal pin that still passes.
-RECORD_SECTION_DIGEST = "c7b0dcffb2124286c75e5438c05e01db462690a6923417eae9dff58617626f7e"
+RECORD_SECTION_DIGEST = "33a407721f339b9d2c0967766e50341d8ccb4716fecea7cf49372d221d25631e"
 
 
 def test_record_contract_states_when_to_record() -> None:
@@ -424,7 +424,7 @@ def test_the_reference_copy_still_carries_both_halves() -> None:
     it drifts: pin one phrase from each half there too, and keep the pin above
     scoped to SKILL.md so neither copy can stand in for the other."""
     operations = _flat(_read(OPERATIONS))
-    assert "before\nthe branch closes".replace("\n", " ") in operations, (
+    assert "before the branch closes" in operations, (
         "operations.md no longer states when Record runs. " + _A4_WHY
     )
     assert "not a durable lesson" in operations, (

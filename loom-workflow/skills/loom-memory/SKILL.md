@@ -85,7 +85,9 @@ request opened only to write down something already known is pure overhead
 the close-out should have absorbed. The one exception is a fact only
 confirmable by observing real post-merge or installed behavior; that
 genuinely needs a follow-up branch, and those are batched rather than one
-pull request per discovery.
+pull request per discovery. A lesson that surfaces only after a closing
+review has spent its last reviewed content is the same case: it rides the
+next change's branch batched, which is still not a branch opened to record.
 
 **How much:** almost nothing qualifies. Most of what a change surfaces is
 not a durable lesson — a one-off implementation slip belongs in its commit

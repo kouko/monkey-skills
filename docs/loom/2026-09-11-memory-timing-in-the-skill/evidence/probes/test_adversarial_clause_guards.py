@@ -287,3 +287,59 @@ def test_naming_a_plugin_in_the_paragraph_turns_the_pin_red(tmp_path) -> None:
         f"the paragraph named a plugin and the pin stayed green:\n"
         f"{result.stdout}{result.stderr}"
     )
+
+
+def test_naming_a_plugin_in_the_SCARCITY_paragraph_turns_the_pin_red(tmp_path) -> None:
+    """The Round 1 gap was here, and nothing committed exercised it.
+
+    The inertness guard used to select one `\n\n` block — the first — so the
+    scarcity paragraph was unguarded and a plugin name or a gate marker could
+    be added to it with every test green. The guard now spans the whole
+    passage, but until this probe existed, narrowing it back would have left
+    all nine probes passing. The fix and the evidence for the fix are not the
+    same artifact.
+    """
+    root = _review_sandbox(tmp_path)
+    md = root / REVIEW_SKILL
+    text = md.read_text(encoding="utf-8")
+    mutated = text.replace(
+        "Almost nothing qualifies. Most of what a review surfaces",
+        "<!-- gate: review.record -->\nAlmost nothing qualifies. Invoke the "
+        "loom-workflow loom-memory skill. Most of what a review surfaces",
+    )
+    assert mutated != text, "probe anchor missing in the scarcity paragraph"
+    md.write_text(mutated, encoding="utf-8")
+
+    result = _run(root, REVIEW_TEST)
+    assert result.returncode != 0, (
+        "a gate marker and a plugin invocation were added to the scarcity "
+        f"paragraph and every test stayed green:\n{result.stdout}{result.stderr}"
+    )
+
+
+def test_widening_an_assertion_to_the_whole_station_file_is_caught(tmp_path) -> None:
+    """The defect this episode kept producing, in probe form.
+
+    `functional content` occurs four times in the station text outside the
+    passage. Asserted against the whole file, the test passed while the
+    sentence it names was deleted — found by mutation in Round 2, in a test
+    written by the commit that had just fixed the same defect elsewhere.
+    Replace the passage's sentence and the scoped assertion must red.
+    """
+    root = _review_sandbox(tmp_path)
+    md = root / REVIEW_SKILL
+    text = md.read_text(encoding="utf-8")
+    mutated = text.replace(
+        "A recorded lesson is functional content like anything else committed",
+        "A recorded lesson is an ordinary commit",
+    )
+    assert mutated != text, "probe anchor missing"
+    md.write_text(mutated, encoding="utf-8")
+
+    node = "::test_convergence_forbids_spending_an_extra_digest_on_a_lesson"
+    result = _run(root, REVIEW_TEST, node)
+    assert result.returncode != 0, (
+        "the passage's sentence was replaced and the assertion stayed green — "
+        "it is reading the whole station file again:\n"
+        f"{result.stdout}{result.stderr}"
+    )

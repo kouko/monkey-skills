@@ -116,39 +116,61 @@ def _recording_passage() -> str:
     return REVIEW[closes_episode + len("<!-- /gate -->") : finalize]
 
 
+def _flat_passage() -> str:
+    """The passage with whitespace flattened — every clause assertion in this
+    section runs against THIS, never against the whole station file.
+
+    Every defect this episode found was one assertion reading a wider text
+    than the clause it defends: the clause survived somewhere else in the
+    file and the test stayed green while its subject was deleted. Widening
+    the scope of an assertion here does not make it stricter, it makes it
+    about something other than its name.
+    """
+    return " ".join(_recording_passage().split())
+
+
 def test_convergence_states_the_recording_moment() -> None:
     """Timing half: record while a round can still read it, not after merge."""
+    passage = _flat_passage()
     for element in (
         "after the merge costs a branch",
         "docs/loom/memory/",
         "a digest the reviewers read",
     ):
-        assert element in REVIEW_WORDS, (
-            f"the review station no longer states {element!r}. {_WHY}"
+        assert element in passage, (
+            f"the recording passage no longer states {element!r}. {_WHY}"
         )
 
 
 def test_convergence_forbids_spending_an_extra_digest_on_a_lesson() -> None:
     """Recording is not free: a memory entry is functional content, so the
-    passage must say where it lands and that it never buys another round."""
+    passage must say where it lands and that it never buys another round.
+
+    Scoped to the passage. Against the whole file this test passed while the
+    sentence it names was deleted, because `functional content` occurs four
+    more times in the station text — the same union-scoping defect this
+    episode had just fixed elsewhere, reintroduced in the commit that fixed
+    it."""
+    passage = _flat_passage()
     for element in (
         "functional content",
         "never justifies exceeding this episode's digests",
     ):
-        assert element in REVIEW_WORDS, (
-            f"the review station no longer states {element!r}. {_WHY}"
+        assert element in passage, (
+            f"the recording passage no longer states {element!r}. {_WHY}"
         )
 
 
 def test_convergence_states_the_scarcity_bar() -> None:
     """Scarcity half: almost nothing surfaced by a review is durable."""
+    passage = _flat_passage()
     for element in (
         "Almost nothing qualifies",
         "belongs in its commit message",
         "Zero to one durable lesson per change",
     ):
-        assert element in REVIEW_WORDS, (
-            f"the review station no longer states {element!r}. {_WHY}"
+        assert element in passage, (
+            f"the recording passage no longer states {element!r}. {_WHY}"
         )
 
 

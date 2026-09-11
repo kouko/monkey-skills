@@ -175,7 +175,6 @@ normal outcome. This passage states the moment and the bar; it invokes
 nothing, requires no plugin to be installed, and asks for no decision from
 the user.
 
-
 ## 5. Finalize
 
 Write reviewer output and adversarial command declarations to a temporary JSON

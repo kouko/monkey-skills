@@ -72,8 +72,11 @@ fi
 # anchor+24; 25 keeps the measured-neighborhood scoping intact.
 # Re-measured 2026-09-11: the timing rule moved into the shipped skill's
 # Record contract, and this section gained a six-line note naming that
-# contract as the normative home, pushing the pinned sentence to anchor+28.
-# 30 keeps the scoping tight while leaving the same two-line margin.
+# contract as the normative home. The check requires all three phrases and
+# the last of them now sits at anchor+30, so the window is flush with it —
+# no margin, unlike the 2026-07-22 measure's one line. The section itself
+# ends at anchor+31, so the neighborhood scoping still holds; the growth
+# 25 -> 30 is exactly the six inserted lines, not slack.
 WIN2="$(window_after "## When to record" 30 "$README")"
 if [ -z "$WIN2" ]; then
   fail "anchor '## When to record' not found in README.md"

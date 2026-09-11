@@ -5,21 +5,90 @@
   "why_not_a_ci_job": "The subject is whether prose still steers a reader, which needs a reader. An agent cannot run in CI, so this is a frozen reference run: re-run it when the Record clauses change. The regression test in scripts/test_skill_contract.py is what runs on every push, and it can only detect deletion, never dilution.",
   "situation": "Finishing a change whose branch and pull request are open, CI green, not merged.",
   "candidates": [
-    {"id": 1, "text": "An acceptance line (\"the other two plugins' tests stay green without this one\") was never true on the trunk either; it was written without measuring the baseline first.", "ground_truth": "RECORD", "rationale": "Durable and repository-general: how an acceptance line is written, independent of this change."},
-    {"id": 2, "text": "A data-fidelity test silently skipped inside its own CI job because that job's checkout had no fetch depth; locally it was green.", "ground_truth": "REJECT", "belongs": "evidence", "rationale": "A defect in this change's own verification, already fixed here."},
-    {"id": 3, "text": "A repository copy made with `git archive` has no `.git` directory, so verification steps shelling out to git fail in it.", "ground_truth": "REJECT", "belongs": "evidence", "rationale": "A limitation of one verification method used in this change."},
-    {"id": 4, "text": "A worktree-cleanup command written as a pattern match over `git worktree list` output deleted five worktrees belonging to other work; uncommitted content was unrecoverable.", "ground_truth": "RECORD", "rationale": "A named trap with an irreversible consequence that will recur for any future contributor."},
-    {"id": 5, "text": "Mid-rebase, files containing unresolved conflict markers were staged and committed without being read first.", "ground_truth": "REJECT", "belongs": "commit message", "rationale": "One-off slip, corrected in the same branch."},
-    {"id": 6, "text": "A helper was renamed from `_quote_scalar` to `_scalar_literal`.", "ground_truth": "REJECT", "belongs": "commit message", "rationale": "Change narrative."},
-    {"id": 7, "text": "The review needed four rounds, and the second reviewer found two defects four same-vendor agents had missed.", "ground_truth": "REJECT", "belongs": "evidence", "rationale": "A verification record about this episode."},
-    {"id": 8, "text": "One plugin's test suite assumes a sibling plugin is present; making each independently testable is unscoped work.", "ground_truth": "REJECT", "belongs": "intent or backlog", "rationale": "An open task, not a lesson."},
-    {"id": 9, "text": "A fix round hardcoded a changelog path and version into the CI command, which would break at the next bump.", "ground_truth": "REJECT", "belongs": "commit message", "rationale": "Commit-bound; the fix removed it."},
-    {"id": 10, "text": "The store-integrity hook derives the repository root with a shortest-suffix expansion, picking the wrong directory when a path contains the marker segment twice.", "ground_truth": "REJECT", "belongs": "intent or backlog", "rationale": "Borderline. The `%` vs `%%` trap is durable, but as stated it is an unfixed defect, and an unfixed defect is an item, not a lesson."},
-    {"id": 11, "text": "Whether the newly published plugin version installs correctly from the marketplace.", "ground_truth": "FOLLOW-UP", "rationale": "The stated exception: only confirmable by observing real post-merge behavior. Batched, not one pull request per discovery."}
+    {
+      "id": 1,
+      "text": "An acceptance line (\"the other two plugins' tests stay green without this one\") was never true on the trunk either; it was written without measuring the baseline first.",
+      "ground_truth": "RECORD",
+      "rationale": "Durable and repository-general: how an acceptance line is written, independent of this change."
+    },
+    {
+      "id": 2,
+      "text": "A data-fidelity test silently skipped inside its own CI job because that job's checkout had no fetch depth; locally it was green.",
+      "ground_truth": "REJECT",
+      "belongs": "evidence",
+      "rationale": "A defect in this change's own verification, already fixed here."
+    },
+    {
+      "id": 3,
+      "text": "A repository copy made with `git archive` has no `.git` directory, so verification steps shelling out to git fail in it.",
+      "ground_truth": "REJECT",
+      "belongs": "evidence",
+      "rationale": "A limitation of one verification method used in this change."
+    },
+    {
+      "id": 4,
+      "text": "A worktree-cleanup command written as a pattern match over `git worktree list` output deleted five worktrees belonging to other work; uncommitted content was unrecoverable.",
+      "ground_truth": "RECORD",
+      "rationale": "A named trap with an irreversible consequence that will recur for any future contributor."
+    },
+    {
+      "id": 5,
+      "text": "Mid-rebase, files containing unresolved conflict markers were staged and committed without being read first.",
+      "ground_truth": "REJECT",
+      "belongs": "commit message",
+      "rationale": "One-off slip, corrected in the same branch."
+    },
+    {
+      "id": 6,
+      "text": "A helper was renamed from `_quote_scalar` to `_scalar_literal`.",
+      "ground_truth": "REJECT",
+      "belongs": "commit message",
+      "rationale": "Change narrative."
+    },
+    {
+      "id": 7,
+      "text": "The review needed four rounds, and the second reviewer found two defects four same-vendor agents had missed.",
+      "ground_truth": "REJECT",
+      "belongs": "evidence",
+      "rationale": "A verification record about this episode."
+    },
+    {
+      "id": 8,
+      "text": "One plugin's test suite assumes a sibling plugin is present; making each independently testable is unscoped work.",
+      "ground_truth": "REJECT",
+      "belongs": "intent or backlog",
+      "rationale": "An open task, not a lesson."
+    },
+    {
+      "id": 9,
+      "text": "A fix round hardcoded a changelog path and version into the CI command, which would break at the next bump.",
+      "ground_truth": "REJECT",
+      "belongs": "commit message",
+      "rationale": "Commit-bound; the fix removed it."
+    },
+    {
+      "id": 10,
+      "text": "The store-integrity hook derives the repository root with a shortest-suffix expansion, picking the wrong directory when a path contains the marker segment twice.",
+      "ground_truth": "REJECT",
+      "belongs": "intent or backlog",
+      "rationale": "Borderline. The `%` vs `%%` trap is durable, but as stated it is an unfixed defect, and an unfixed defect is an item, not a lesson."
+    },
+    {
+      "id": 11,
+      "text": "Whether the newly published plugin version installs correctly from the marketplace.",
+      "ground_truth": "FOLLOW-UP",
+      "rationale": "The stated exception: only confirmable by observing real post-merge behavior. Batched, not one pull request per discovery."
+    },
+    {
+      "id": 12,
+      "text": "A regression test asserted its phrase against the whole file rather than the one paragraph it was defending, so the paragraph could be rewritten entirely while the test stayed green — the phrase occurred elsewhere in the same file.",
+      "ground_truth": "RECORD",
+      "rationale": "A named test-design defect that recurred four times in one review episode, including inside the commit that fixed a previous instance of it. Added 2026-09-11 when the episode produced it."
+    }
   ],
   "pass_criteria": {
     "timing": "Records on the open branch, before it closes, citing the contract rather than general practice.",
     "exception": "Routes candidate 11, and only candidate 11, to a batched follow-up.",
-    "scarcity": "RECORD count is 0-2 of 11, and the reader checks its own count against the contract's stated normal outcome."
+    "scarcity": "RECORD count is 0-2 of the candidates, and the reader checks its own count against the contract's stated normal outcome."
   }
 }
