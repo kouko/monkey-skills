@@ -22,7 +22,9 @@ BOUNDARY_PATCH_ID = "318d5c908216621a81a2e56e785a08f4a404cea9"
 APPROVED_SHA256 = {
     "corpus-manifest.json": "6619f680c47fbc6cdcbbdc5fa3451c3eecfc8b2d1f538a7b5a4b2429f23a32a0",
     "input.txt": "0e9a021e6dbfceaa4103a79fa2c672fcdad344c18cf890c3a05b3cb6de39cf84",
+    "oracle.json": "5ffa0ae400946c95b043387d3919d9a5ae6d0986df6df6586abb672d71c4b745",
     "prompt.txt": "e9b154b6cb1c71e060795b935b4fc1861d9bc5feab9c397f6f4ca60c9da8bb8d",
+    "provenance.md": "18e497eb5ab81500accfa24ac447613fe6639f5a5e136d0e8bab9a77d98d5828",
     "run-1.json": "12ee1d85550e48818a1a5d4557a7c94ccaa9009bc2e835895904995a6882b1d2",
     "run-2.json": "0e01c940ac75d6881b193fc7f7be5cc8712a9cc771e6315027f9dc15e4bf7aa9",
 }
@@ -63,6 +65,11 @@ def sha256(path: Path) -> str:
 
 
 def git(repo: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
+    # Grounding: https://git-scm.com/docs/git documents `-C`.
+    # https://git-scm.com/docs/git-rev-parse and
+    # https://git-scm.com/docs/git-cat-file document object resolution.
+    # https://git-scm.com/docs/git-show and
+    # https://git-scm.com/docs/git-patch-id document stable patch identities.
     completed = subprocess.run(
         ["git", "-C", str(repo), *args],
         input=input_bytes,
@@ -98,70 +105,17 @@ def verify_lineage(root: Path, repo: Path, manifest: dict) -> None:
     for label, (path, blob, digest) in DOCUMENTS.items():
         expected = {"label": label, "path": path, "git_blob": blob, "sha256": digest}
         require(entries[label] == expected, f"{label} manifest entry changed")
-        require(hashlib.sha256(git(repo, "cat-file", "blob", blob)).hexdigest() == digest, f"{label} blob digest changed")
+        blob_digest = hashlib.sha256(git(repo, "cat-file", "blob", blob)).hexdigest()
+        require(blob_digest == digest, f"{label} blob digest changed")
         for birth in (PRE_REBASE_BIRTH, PRESERVED_BIRTH):
             resolved = git(repo, "rev-parse", f"{birth}:{path}").decode().strip()
             require(resolved == blob, f"{label} blob differs at {birth}")
 
     require(stable_patch_id(repo, PRE_REBASE_BOUNDARY) == BOUNDARY_PATCH_ID, "pre-rebase boundary patch changed")
     require(stable_patch_id(repo, PRESERVED_BOUNDARY) == BOUNDARY_PATCH_ID, "preserved boundary patch changed")
-    provenance = (root / "provenance.md").read_text(encoding="utf-8")
-    for identifier in (PRE_REBASE_BIRTH, PRESERVED_BIRTH, PRE_REBASE_BOUNDARY, PRESERVED_BOUNDARY, BOUNDARY_PATCH_ID):
-        require(identifier in provenance, f"provenance omits {identifier}")
 
 
-def verify_metrics(root: Path, oracle: dict, metrics: dict, runs: list[dict]) -> None:
-    require([run["run_id"] for run in runs] == ["luna-repeat-1", "luna-repeat-2"], "run population changed")
-    require(all(run["returncode"] == 0 for run in runs), "a replay did not succeed")
-    require(all(run["requested_model"] == "gpt-5.6-luna" for run in runs), "requested model changed")
-
-    expected = {item["id"] for item in oracle["expected_findings"]}
-    require(expected == {"O1", "O2", "O3", "O4"}, "oracle population changed")
-    require(all(item["origin"] == "initial-authoring" for item in oracle["expected_findings"]), "oracle origin changed")
-    adjudication = oracle["adjudication"]
-    matched = {run["run_id"]: set(adjudication[run["run_id"]]["matched"]) for run in runs}
-    unmatched = {run["run_id"]: adjudication[run["run_id"]].get("unmatched_observations", []) for run in runs}
-    require(adjudication["luna-repeat-1"]["unmatched_adjudication"] == "not adjudicated false", "unmatched observation was reclassified")
-
-    valid_runs = sum(run["returncode"] == 0 for run in runs)
-    observations = {run["run_id"]: len(run["raw_output"]["findings"]) for run in runs}
-    matched_total = sum(len(items) for items in matched.values())
-    unmatched_total = sum(len(items) for items in unmatched.values())
-    opportunity_total = len(expected) * valid_runs
-    observation_total = sum(observations.values())
-
-    require(metrics["population"] == {
-        "runs": len(runs), "documents_per_run": len(DOCUMENTS),
-        "expected_findings_per_run": len(expected), "observations": observation_total,
-        "valid_runs": valid_runs, "invalid_runs": len(runs) - valid_runs,
-    }, "population metrics differ")
-    require(metrics["finding_rate"] == {
-        "numerator": matched_total, "denominator": opportunity_total,
-        "value": matched_total / opportunity_total, "exclusions": [],
-    }, "finding rate differs")
-    require(metrics["unmatched_observation_rate"] == {
-        "numerator": unmatched_total, "denominator": observation_total,
-        "value": unmatched_total / observation_total, "exclusions": [],
-        "adjudication": "not adjudicated false",
-    }, "unmatched observation rate differs")
-
-    intersection = len(matched["luna-repeat-1"] & matched["luna-repeat-2"])
-    union = len(matched["luna-repeat-1"] | matched["luna-repeat-2"])
-    require(metrics["repeat_agreement"] == {
-        "formula": "Jaccard agreement over matched oracle IDs",
-        "intersection": intersection, "union": union, "value": intersection / union,
-    }, "repeat agreement differs")
-
-    expected_per_run = {}
-    for run in runs:
-        run_id = run["run_id"]
-        expected_per_run[run_id] = {
-            "finding_rate": len(matched[run_id]) / len(expected),
-            "unmatched_observation_rate": len(unmatched[run_id]) / observations[run_id],
-            "observations": observations[run_id],
-        }
-    require(metrics["per_run"] == expected_per_run, "per-run metrics differ")
-
+def verify_cost(metrics: dict, runs: list[dict]) -> None:
     expected_cost = {"elapsed_seconds_total": sum(run["elapsed_seconds"] for run in runs)}
     for key in ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens"):
         expected_cost[f"{key}_total"] = sum(run["usage"][key] for run in runs)
@@ -173,10 +127,78 @@ def verify_metrics(root: Path, oracle: dict, metrics: dict, runs: list[dict]) ->
             require(metrics["cost"][key] == value, f"{key} differs")
 
 
+def verify_agreement(metrics: dict, matched: dict[str, set[str]]) -> None:
+    intersection = len(matched["luna-repeat-1"] & matched["luna-repeat-2"])
+    union = len(matched["luna-repeat-1"] | matched["luna-repeat-2"])
+    require(metrics["repeat_agreement"] == {
+        "formula": "Jaccard agreement over matched oracle IDs",
+        "intersection": intersection, "union": union, "value": intersection / union,
+    }, "repeat agreement differs")
+
+
+def verify_rates(
+    metrics: dict,
+    expected: set[str],
+    matched: dict,
+    unmatched: dict,
+    observations: dict,
+    runs: list[dict],
+) -> None:
+    valid_runs = sum(run["returncode"] == 0 for run in runs)
+    matched_total = sum(len(items) for items in matched.values())
+    unmatched_total = sum(len(items) for items in unmatched.values())
+    observation_total = sum(observations.values())
+    require(metrics["population"] == {
+        "runs": len(runs), "documents_per_run": len(DOCUMENTS),
+        "expected_findings_per_run": len(expected), "observations": observation_total,
+        "valid_runs": valid_runs, "invalid_runs": len(runs) - valid_runs,
+    }, "population metrics differ")
+    require(metrics["finding_rate"] == {
+        "numerator": matched_total, "denominator": len(expected) * valid_runs,
+        "value": matched_total / (len(expected) * valid_runs), "exclusions": [],
+    }, "finding rate differs")
+    require(metrics["unmatched_observation_rate"] == {
+        "numerator": unmatched_total, "denominator": observation_total,
+        "value": unmatched_total / observation_total, "exclusions": [],
+        "adjudication": "not adjudicated false",
+    }, "unmatched observation rate differs")
+    expected_per_run = {
+        run["run_id"]: {
+            "finding_rate": len(matched[run["run_id"]]) / len(expected),
+            "unmatched_observation_rate": len(unmatched[run["run_id"]]) / observations[run["run_id"]],
+            "observations": observations[run["run_id"]],
+        }
+        for run in runs
+    }
+    require(metrics["per_run"] == expected_per_run, "per-run metrics differ")
+
+
+def verify_metrics(root: Path, oracle: dict, metrics: dict, runs: list[dict]) -> None:
+    require([run["run_id"] for run in runs] == ["luna-repeat-1", "luna-repeat-2"], "run population changed")
+    require(all(run["returncode"] == 0 for run in runs), "a replay did not succeed")
+    require(all(run["requested_model"] == "gpt-5.6-luna" for run in runs), "requested model changed")
+    expected = {item["id"] for item in oracle["expected_findings"]}
+    require(expected == {"O1", "O2", "O3", "O4"}, "oracle population changed")
+    require(all(item["origin"] == "initial-authoring" for item in oracle["expected_findings"]), "oracle origin changed")
+    adjudication = oracle["adjudication"]
+    matched = {run["run_id"]: set(adjudication[run["run_id"]]["matched"]) for run in runs}
+    unmatched = {run["run_id"]: adjudication[run["run_id"]].get("unmatched_observations", []) for run in runs}
+    require(
+        adjudication["luna-repeat-1"]["unmatched_adjudication"]
+        == "not adjudicated false",
+        "unmatched observation was reclassified",
+    )
+    observations = {run["run_id"]: len(run["raw_output"]["findings"]) for run in runs}
+    verify_rates(metrics, expected, matched, unmatched, observations, runs)
+    verify_agreement(metrics, matched)
+    verify_cost(metrics, runs)
+
+
 def verify_record(root: Path, repo: Path) -> None:
     verify_fixed_files(root)
     verify_lineage(root, repo, load(root, "corpus-manifest.json"))
-    verify_metrics(root, load(root, "oracle.json"), load(root, "metrics.json"), [load(root, "run-1.json"), load(root, "run-2.json")])
+    runs = [load(root, "run-1.json"), load(root, "run-2.json")]
+    verify_metrics(root, load(root, "oracle.json"), load(root, "metrics.json"), runs)
 
 
 def mutate_json(root: Path, name: str, mutate: Callable[[dict], None]) -> None:
@@ -202,14 +224,53 @@ def run_mutation_cases(repo: Path) -> None:
     def coupled_input_manifest(root: Path) -> None:
         changed = (root / "input.txt").read_bytes() + b"\nchanged"
         (root / "input.txt").write_bytes(changed)
-        mutate_json(root, "corpus-manifest.json", lambda value: value.__setitem__("input_sha256", hashlib.sha256(changed).hexdigest()))
+        mutate_json(
+            root,
+            "corpus-manifest.json",
+            lambda value: value.__setitem__(
+                "input_sha256", hashlib.sha256(changed).hexdigest()
+            ),
+        )
+
+    def adjudication_membership(root: Path) -> None:
+        def mutate(value: dict) -> None:
+            value["adjudication"]["luna-repeat-1"]["matched"][-1] = "X"
+
+        mutate_json(root, "oracle.json", mutate)
+
+    def swap_lineage_targets(root: Path) -> None:
+        path = root / "provenance.md"
+        text = path.read_text(encoding="utf-8")
+        placeholder = "f" * 40
+        text = text.replace(PRESERVED_BIRTH, placeholder)
+        text = text.replace(PRESERVED_BOUNDARY, PRESERVED_BIRTH)
+        path.write_text(text.replace(placeholder, PRESERVED_BOUNDARY), encoding="utf-8")
 
     cases = {
         "coupled input and manifest": coupled_input_manifest,
-        "published metric": lambda root: mutate_json(root, "metrics.json", lambda value: value["finding_rate"].__setitem__("value", 0.5)),
-        "raw observation": lambda root: mutate_json(root, "run-1.json", lambda value: value["raw_output"]["findings"].pop()),
-        "human adjudication": lambda root: mutate_json(root, "oracle.json", lambda value: value["adjudication"]["luna-repeat-1"].__setitem__("unmatched_adjudication", "false alarm")),
-        "lineage mapping": lambda root: (root / "provenance.md").write_text((root / "provenance.md").read_text().replace(PRESERVED_BIRTH, "0" * 40), encoding="utf-8"),
+        "published metric": lambda root: mutate_json(
+            root,
+            "metrics.json",
+            lambda value: value["finding_rate"].__setitem__("value", 0.5),
+        ),
+        "raw observation": lambda root: mutate_json(
+            root,
+            "run-1.json",
+            lambda value: value["raw_output"]["findings"].pop(),
+        ),
+        "human adjudication": lambda root: mutate_json(
+            root,
+            "oracle.json",
+            lambda value: value["adjudication"]["luna-repeat-1"].__setitem__(
+                "unmatched_adjudication", "false alarm"
+            ),
+        ),
+        "adjudication membership": adjudication_membership,
+        "lineage mapping": lambda root: (root / "provenance.md").write_text(
+            (root / "provenance.md").read_text().replace(PRESERVED_BIRTH, "0" * 40),
+            encoding="utf-8",
+        ),
+        "swapped lineage targets": swap_lineage_targets,
     }
     for label, mutate in cases.items():
         expect_mutation_rejected(repo, mutate, label)
@@ -219,7 +280,7 @@ def main() -> None:
     repo = repository_root()
     verify_record(ROOT, repo)
     run_mutation_cases(repo)
-    print("PASS: fixed evidence, complete metrics, lineage, and 5 mutations verified")
+    print("PASS: fixed evidence, complete metrics, lineage, and 7 mutations verified")
 
 
 if __name__ == "__main__":
