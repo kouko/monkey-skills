@@ -1,5 +1,5 @@
 # Publish sanitized capture-intent evidence — plan
-intent: 2026-09-12-publish-sanitized-capture-evidence@f5c6db6981f36096a25b5a70cbea5a204fc916ea
+intent: 2026-09-12-publish-sanitized-capture-evidence@0c91b22ae85f2d6fcc62fe34605d9505daae8fee
 charter: 1.0
 
 ## Current State Evidence
