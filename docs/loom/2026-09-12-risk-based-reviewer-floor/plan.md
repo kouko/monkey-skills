@@ -26,9 +26,9 @@ charter: 1.0
 - Risk: agent-decided — keep operational instructions in Review and replace other reviewer counts with references; do not duplicate the allowlist outside checker tests.
 
 **W2-02 Remove contradictory reviewer counts from design stations**  after: W1-01  acceptance: 4,5
-- Files: loom-design/skills/capture-intent/SKILL.md, loom-design/skills/write-spec/SKILL.md, loom-design/skills/product-principles/SKILL.md, loom-design/skills/design-system/SKILL.md, loom-code/scripts/test_simplified_station_text.py
+- Files: PRINCIPLES.md, loom-design/skills/capture-intent/SKILL.md, loom-design/skills/write-spec/SKILL.md, loom-design/skills/product-principles/SKILL.md, loom-design/skills/design-system/SKILL.md, loom-code/scripts/test_simplified_station_text.py
 - Test: A4 positive: station-flow-unchanged; boundary: no-new-user-stop. A5 positive: all-summaries-policy-neutral; negative: stale-small-full-counts.
-- Risk: agent-decided — station summaries name the installed Review policy without restating eligibility, keeping standalone plugin boundaries intact.
+- Risk: agent-decided — align the ratified quality floor and make station summaries policy-neutral; the user's intent confirmation authorizes replacing the obsolete lane exception.
 
 ### Wave 3 — package truth and integration
 
@@ -44,3 +44,4 @@ charter: 1.0
 1. A broad allowlist could hide risky documentation or configuration changes; eligibility therefore uses narrow positive evidence and makes mixed or unrecognized paths require two reviewers.
 2. Finalization and publication could disagree if they compute from different inputs; both must call one function over the same repository and selected commit.
 3. Historical lane prose may imply obsolete behavior; operative station text will become policy-neutral while historical records remain untouched.
+4. Scope correction — `PRINCIPLES.md` is an operative standing contract whose zero-reviewer gate-only clause contradicts Acceptance #2; W2-02 must align it with the confirmed intent.

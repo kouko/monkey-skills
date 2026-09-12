@@ -20,6 +20,36 @@ CAPTURE_PROSE = " ".join(CAPTURE.split())
 PLAN_PROSE = " ".join(PLAN.split())
 
 
+def test_review_uses_one_computed_reviewer_floor_without_prose_allowlist() -> None:
+    review_prose = " ".join(REVIEW.split())
+    assert "loom_checker.py reviewer-count <change-id>" in review_prose
+    assert "computed reviewer floor" in review_prose
+    assert "Every change: two fresh-context reviewers" not in REVIEW
+    assert "tests only" not in review_prose
+    assert "docs only" not in review_prose
+
+
+def test_station_summaries_do_not_duplicate_reviewer_counts() -> None:
+    stations = [
+        CAPTURE,
+        PLAN,
+        *((ROOT / "loom-design/skills" / name / "SKILL.md").read_text(encoding="utf-8")
+          for name in ("write-spec", "product-principles", "design-system")),
+    ]
+    for station in stations:
+        flat = " ".join(station.split())
+        assert "reviewer count comes from the installed Review policy" in flat
+        assert "one in the small lane, two or more in the full lane" not in flat
+
+
+def test_principles_require_the_mechanically_computed_reviewer_floor() -> None:
+    principles = " ".join(PRINCIPLES.split())
+    assert "mechanically computed reviewer floor" in principles
+    assert "one reviewer only when the checker proves the whole change is narrow and low-risk" in principles
+    assert "two reviewers for every other or undecidable change" in principles
+    assert "zero reviewers" not in principles
+
+
 def test_review_generates_attestation_without_ledger_ceremony() -> None:
     assert "finalize-review" in REVIEW
     assert "attestation.json" in REVIEW

@@ -2,7 +2,7 @@
 # Consumers: loom-design and loom-workflow read this file; only loom-code writes it.
 # Recomputed by check_mechanisms.py: every station / tool / action / artifact
 # field below is a mechanism and must be listed in docs/loom/evidence/mechanisms.yaml.
-version: 2.1.0
+version: 2.2.0
 
 # Paths matched here are publication metadata. They do not change the
 # functional content identity that executions and reviews attest to.
@@ -57,7 +57,7 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "parallel implementers may use isolated git worktrees; the branch integrates before closing review."
   - name: read
     owner: review
-    summary: "≥2 fresh-context reviewers apply the lens for the artifact type (code 11 dims / docs 5 dims / spec- design- principles-conformance)."
+    summary: "fresh-context reviewers apply the artifact lens; reviewer-count mechanically computes a floor of one only for a narrow low-risk whole delta and two for every other or undecidable delta."
   - name: blind-run
     owner: review
     summary: "an agent that never touched the change builds/runs it in a clean environment and writes the blind-run report against every Acceptance line (plus UI flows for product)."

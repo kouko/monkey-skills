@@ -2,7 +2,7 @@
 name: review
 description: |
   Runs the one closing review over completed functional content, executes package and adversarial verification once, and generates a content-bound attestation. Use when Build is complete or a functional change invalidates prior evidence.
-version: 1.4.0
+version: 1.5.0
 ---
 
 # Review
@@ -19,7 +19,7 @@ cumulative diff. If only publication metadata changed and a matching
 attestation already exists, stop: the evidence is still valid and Ship owns
 the remaining work.
 
-## 2. Choose the risk lane
+## 2. Compute review depth
 
 Before every host-native dispatch, the station must read the
 [shared dispatch profile](../../references/dispatch-profile.md), classify the
@@ -43,7 +43,17 @@ meets the contract's checkable definition; describe rejected routing
 parameters as a pre-execution host rejection, which selects the one atomic
 fallback instead of model escalation.
 
-- Every change: two fresh-context reviewers from distinct agents.
+After Build commits completed functional content, run:
+
+```text
+python3 <loom-code>/scripts/loom_checker.py reviewer-count <change-id>
+```
+
+The output is the computed reviewer floor: dispatch exactly that many
+fresh-context reviewers with distinct agent identities. The checker derives the
+floor from the cumulative branch delta and fails closed to two when it cannot
+classify the whole change. `finalize-review` and publication validation
+recompute the same policy; the orchestrator never declares or overrides it.
 - A selected second vendor remains required. Resolve it from the standing
   fixed CLI, the per-change `ask` answer, or a `selection-confirmed` line
   naming the second vendor in the plan's `## Risks` section; the
