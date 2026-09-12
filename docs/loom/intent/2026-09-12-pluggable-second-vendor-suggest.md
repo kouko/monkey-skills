@@ -14,8 +14,8 @@ publication: automatic — authorized 2026-09-12 by kouko
 
 ## Acceptance
 1. 使用 `second-vendor: suggest` 時，Loom 不會為了第二供應商選擇而等待回答；沒有明確同意時，本次變更以 `none` 繼續。
-2. full lane 命中安全、隱私、公開契約、跨系統整合、驗證機制自我修改，或關鍵行為無法由自動測試充分覆蓋等高風險證據，而且可用的異供應商 CLI 通過既有存在性檢查時，Loom 發出一次包含原因的非阻塞建議。
-3. small lane、未命中風險、或沒有可執行的異供應商 CLI 時不發出建議，並保留可檢查的決策原因。
+2. full lane 只要異供應商 CLI 通過既有存在性檢查，Loom 就發出一次非阻塞訊息；高風險時訊息明確建議使用並說明風險原因，一般風險時只告知工具可用。
+3. small lane 在異供應商 CLI 可用時只告知工具可用，但不允許為該次變更新增第二 reviewer；沒有可執行的異供應商 CLI 時不發出訊息，所有路徑都保留可檢查的決策原因。
 4. 使用者在 Closing Review 開始前明確同意時，本次變更採用該第二供應商；拒絕或未回覆維持 `none`。Review 開始後的同意不改變本次 reviewer 身分，僅提示可套用到下一個變更。
 5. `none`、`ask` 與固定 CLI 的既有語意保持不變；`suggest` 是獨立且向後相容的新模式。
 6. `suggest` 的判斷核心是無 I/O、輸入輸出明確的單一模組；skill、hook 與 checker 不複製風險判斷，未來可替換策略而不重寫整條 Loom 流程。
