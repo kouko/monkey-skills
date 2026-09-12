@@ -333,7 +333,7 @@ def test_ProbenameHelper_SyntheticParagraphs_Discriminates():
 
 def test_checker_rulecount_pinned():
     """GREEN pin: `loom_checker.py --list-rules`, resolved inside REPO (not
-    the installed plugin cache), prints exactly 19 lines today. A
+    the installed plugin cache), prints exactly 20 lines today. A
     regression here means the checker's rule surface moved without this
     change touching it, which is out of scope."""
     assert LOOM_CHECKER.is_file(), f"loom_checker.py not found at {LOOM_CHECKER}"
@@ -348,8 +348,8 @@ def test_checker_rulecount_pinned():
     assert result.returncode == 0, (
         f"loom_checker.py --list-rules exited {result.returncode}: {result.stderr}"
     )
-    assert len(lines) == 19, (
-        f"--list-rules printed {len(lines)} non-empty lines, expected 19:\n"
+    assert len(lines) == 20, (
+        f"--list-rules printed {len(lines)} non-empty lines, expected 20:\n"
         + "\n".join(lines)
     )
 
