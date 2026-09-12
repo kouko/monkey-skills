@@ -25,7 +25,8 @@ cost-saving substitute for `standard/medium`, nor does it define final routing.
 - Per-run hard budget: USD 1.00
 - Quality oracle: the nine blocking changes in
   `../2026-09-09-loom-main-relative-dispatch-plan/claude-independent-review.md`
-- Raw result, stderr, and invocation metadata are retained beside this report.
+- Raw result, stderr, and invocation metadata are retained beside this report;
+  session identifiers are removed before publication.
 
 This is a controlled policy-review pilot, not a formal `SKILL.md` activation
 dogfood. No `dogfood-pass` marker is warranted.
@@ -40,10 +41,11 @@ dogfood. No `dogfood-pass` marker is warranted.
 | O2 | opus / low | claude-opus-5 | low |
 
 The result JSON's `modelUsage.canonicalModel` supplies the model evidence. The
-persisted session JSONL matching each recorded session id supplies the effort;
-generated answer text was not accepted as configuration evidence. Claude also
-used a small Haiku structured-output helper on every arm; its USD 0.00313-ish
-cost is included consistently in every total below.
+persisted session JSONL matched each session id before publication-time
+redaction and supplied the effort; generated answer text was not accepted as
+configuration evidence. Claude also used a small Haiku structured-output
+helper on every arm; its USD 0.00313-ish cost is included consistently in every
+total below.
 
 ## Cost and latency
 
