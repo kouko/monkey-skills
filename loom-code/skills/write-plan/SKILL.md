@@ -154,6 +154,12 @@ the user named a change, match the slug.
   the section to have content, so with nothing open write exactly `- none`
   under the heading rather than leaving it blank.
 
+<!-- gate: write-plan.no-plan-without-confirmed-intent -->
+**No plan is written without a confirmed intent.** If `status:` is not
+`confirmed <date>` by the end of step 3, you stop; you do not draft a plan
+"provisionally" and you do not confirm on the user's behalf. The checker
+enforces the same rule at step 4 (`intake.confirmed`), so a plan written
+early cannot be shipped anyway.
 When this station performs code-only intake, use the same capture boundary:
 ask only for missing required-field content, never a fixed intake question
 quota; existing decision points remain unchanged.
@@ -168,17 +174,17 @@ outcome or scope choices. After drafting, make one author pass: **Keep,
 neutralize, defer, reopen, or delete**. Behaviour defers to spec, method to
 plan, and unsupported detail is deleted. This pass creates no field, ID,
 requirement, scenario, product behaviour, or review loop.
-
-<!-- gate: write-plan.no-plan-without-confirmed-intent -->
-**No plan is written without a confirmed intent.** If `status:` is not
-`confirmed <date>` by the end of step 3, you stop; you do not draft a plan
-"provisionally" and you do not confirm on the user's behalf. The checker
-enforces the same rule at step 4 (`intake.confirmed`), so a plan written
-early cannot be shipped anyway.
+Publication and second-reviewer authorisation never enter Problem, Proposed
+outcome, Acceptance, Constraints, or Out of scope. Keep publication
+authorisation in the intent's `publication:` frontmatter line and preserve the
+question list for this plan's `## Questions asked` section.
+Visible effects with an unknown surface and no spec require
+`needs-design: yes` with a surface-neutral reason; internal files alone do not.
 Complete the code-only altitude pass before confirmation. A material outcome
 or scope fork needs an explicit answer; accepting the restatement is
 insufficient; reopen means move it to Open questions, stop confirmation, and
 the intent must remain `open`.
+<!-- /gate -->
 
 ## Step 2 — Standing documents
 
@@ -300,7 +306,8 @@ limit on rounds here; there is on guessing.
 Read the intent's `needs-design:` line. It is `yes` when either holds:
 
 - **(a)** the change touches a surface the user reads or types into — a
-  GUI, a TUI, CLI arguments and output, an external API — and no
+  GUI, a TUI, CLI arguments and output, an external API, or a file artifact a
+  user or external system depends on — and no
   `DESIGN.md` or ui-flows document already covers that surface; or
 - **(b)** the behaviour is multi-state or multi-object, and there is no
   spec for it.

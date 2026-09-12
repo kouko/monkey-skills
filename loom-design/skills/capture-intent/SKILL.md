@@ -1,7 +1,7 @@
 ---
 name: capture-intent
 description: |
-  Interview the user and write a confirmed intent at docs/loom/intent/<change-id>.md. Use when someone describes a problem, desired outcome, feature idea, or recurring bug they want changed and no intent file exists yet — including when they have not chosen the product behaviour or implementation. This is the entry station for every change when loom-design is installed.
+  Interview the user and write a confirmed intent at docs/loom/intent/<change-id>.md. Use when someone requests a new change and no intent file exists yet — including a problem, desired outcome, or feature idea, whether or not product behaviour or implementation has been chosen. Incidents, regressions, post-delivery bugs, and dogfood failures route to maintain.
 version: 1.0.0
 ---
 
@@ -190,18 +190,8 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
   heading. An empty section is a schema failure, not a statement that there
   are no questions.
 
-After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or
-delete**. Defer behaviour to spec and method to plan; reopen under the gate
-below; delete unsupported detail. This self-check creates no fields, IDs,
-requirements, scenarios, product behaviour, or review loop.
-
-Publication and second-reviewer authorisation never enter Problem, Proposed
-outcome, Acceptance, Constraints, or Out of scope. Keep publication
-authorisation in the intent's `publication:` frontmatter line and the question
-list in the step-5 hand-off.
-
-Visible effects with an unknown surface and no spec require
-`needs-design: yes` with a surface-neutral reason; internal files alone do not.
+The confirmation gate below performs the altitude pass after this list has
+been filled.
 
 <!-- gate: capture-intent.product-problem-plain-words -->
 <!-- The `gate:` markers in this file are prose gates: rules this station must follow, registered in the mechanism population and checked by cold-read evals — not checker rule ids. The checker rules are the `intent.*` / `standing.*` / `contract.*` ids named in the commands. -->
@@ -347,6 +337,19 @@ quieter than it is.
 
 <!-- gate: capture-intent.no-confirmed-without-restatement -->
 **No intent becomes `confirmed` without the restatement being answered.**
+After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or
+delete**. Defer behaviour to spec and method to plan; delete unsupported
+detail. This self-check creates no fields, IDs, requirements, scenarios, or
+product behaviour.
+
+Publication and second-reviewer authorisation never enter Problem, Proposed
+outcome, Acceptance, Constraints, or Out of scope. Keep publication
+authorisation in the intent's `publication:` frontmatter line and the question
+list in the step-5 hand-off.
+
+Visible effects with an unknown surface and no spec require
+`needs-design: yes` with a surface-neutral reason; internal files alone do not.
+
 Use only user-supplied product claims: add no product nouns, interfaces, states,
 scope dimensions, or guarantees. Put only unresolved outcome/scope choices or
 missing required content in Open questions; either keeps the intent `open`.
@@ -360,6 +363,7 @@ and the intent must remain `open`. Only an explicit answer makes it
 You do not write `status: confirmed` because the request seemed clear, and
 you never confirm on the user's behalf. On "no" or a correction, rewrite
 the intent and restate again; there is no limit on rounds here.
+<!-- /gate -->
 
 **On "yes":**
 

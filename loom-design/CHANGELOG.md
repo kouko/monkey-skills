@@ -12,6 +12,15 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.1.3] — 2026-09-12 — intent content boundaries
+
+Patch. `capture-intent` now defines the altitude of every existing intent
+field, asks only for missing information, and performs one post-draft author
+self-check. Material outcome or scope forks require an explicit answer before
+becoming `user-decided`; accepting a restatement is not enough. Incidents and
+post-delivery regressions remain owned by `maintain`. The change adds no field,
+identifier, checker rule, station, subagent, or review loop.
+
 ## [2.1.2] — 2026-09-12 — reviewer-policy-neutral station summaries
 
 Station summaries now defer the Closing Review reviewer count to loom-code's
@@ -35,14 +44,6 @@ routing, and leaves risk and response decisions in loom-code so loom-design
 remains independently installable.
 This release requires loom contract 2.1 so an older loom-code installation
 cannot misread `suggest` as a fixed CLI.
-
-## [2.0.2] — 2026-09-12 — intent content boundaries
-
-Patch. `capture-intent` now defines the altitude of every existing intent
-field, asks only for missing information, and performs one post-draft author
-self-check. Material outcome or scope forks require an explicit answer before
-becoming `user-decided`; accepting a restatement is not enough. The change adds
-no field, identifier, checker rule, station, subagent, or review loop.
 
 ## [2.0.1] — 2026-09-09 — explicit publication authorization
 

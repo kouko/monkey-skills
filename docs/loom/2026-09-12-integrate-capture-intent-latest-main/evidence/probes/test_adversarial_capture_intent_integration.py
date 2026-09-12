@@ -51,10 +51,14 @@ def test_capture_release_after_merge_advances_current_version() -> None:
     codex = json.loads(read("loom-code/.codex-plugin/plugin.json"))
     changelog = read("loom-code/CHANGELOG.md")
 
-    assert claude["version"] == "2.2.2"
-    assert codex["version"] == "2.2.2"
-    assert "## [2.2.2]" in changelog
-    assert "## [2.2.1]" in changelog
+    assert claude["version"] == codex["version"]
+    headings = [
+        line.removeprefix("## [").split("]", 1)[0]
+        for line in changelog.splitlines()
+        if line.startswith("## [")
+    ]
+    assert headings
+    assert headings[0] == claude["version"]
 
 
 if __name__ == "__main__":

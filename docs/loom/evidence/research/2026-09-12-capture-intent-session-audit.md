@@ -46,12 +46,11 @@ write.
 | `f14c84f2-522e-46bf-aa65-553a2642d167` | 0 |
 | `f513c7aa-2f0a-4ef6-b372-c90d3aad24e7` | 0 |
 
-This confirms that the observed station did not execute the documented
+This confirms that the observed station did not execute the then-documented
 engineering four-to-six or product eight-to-ten interview counts literally.
-The operative contract states those counts at
-`loom-design/skills/capture-intent/SKILL.md:102` and separately says to stop
-when the five fields can be filled without guessing at
-`loom-design/skills/capture-intent/SKILL.md:129`.
+The pre-change contract at `25a3b935e:loom-design/skills/capture-intent/SKILL.md`
+carried both the fixed counts and the instruction to stop when the five fields
+could be filled without guessing; this change removes the counts.
 
 ## Interpretation
 

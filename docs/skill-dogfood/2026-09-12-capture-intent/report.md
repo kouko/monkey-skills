@@ -13,7 +13,8 @@
 
 ## Probe matrix
 
-- Should fire: a new product idea, a newly reported recurring bug, or an engineering change with no intent.
+- Should fire: a new product idea or engineering change with no intent.
+- Should route to maintain: an incident, regression, post-delivery bug, or dogfood failure.
 - Should not fire: refining an existing confirmed intent, writing a spec, writing a plan, implementing a plan, reviewing a completed change, or maintaining an incident already routed to an intent.
 - Workflow bar: use existing context first; ask only missing intent-field content; keep Acceptance outcome-level; require explicit answers for material outcome/scope forks; run one altitude pass; never invent IDs, spec behaviour, plan method, or a review loop.
 - Highest-risk untested axis: multi-turn product ambiguity. Prediction: an executor may either over-question after fields are sufficient or silently promote a plausible visible behaviour instead of keeping the intent open.

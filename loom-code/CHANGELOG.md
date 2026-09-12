@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.1] — 2026-09-12 — shared intent content boundaries
+
+- Give code-only intake the same gap-driven field boundaries and one-pass
+  author self-check as `capture-intent`.
+- Clarify the shared intent template and charter without adding fields, IDs,
+  checker rules, stations, or review loops.
+- Keep incident intake with `maintain`, and treat user- or external-system
+  dependent file artifacts as visible surfaces in both installation shapes.
+
 ## [3.1.0] — 2026-09-12 — risk-based reviewer floor
 
 - Compute Closing Review's reviewer floor from the complete branch delta: one
@@ -143,13 +152,6 @@ dispatch-time policy gate instead of duplicating routing mechanisms per station
   unattributed failure automatically.
 - Keep active unmerged CI failures out of Maintain and reuse an attestation only
   for pull-request data that was not committed to the repository.
-
-## [2.0.10] — 2026-09-12 — shared intent content boundaries
-
-- Give code-only intake the same gap-driven field boundaries and one-pass
-  author self-check as `capture-intent`.
-- Clarify the shared intent template and charter without adding fields, IDs,
-  checker rules, stations, or review loops.
 
 ## [2.0.9] — 2026-09-10 — faster required-check observation
 

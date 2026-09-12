@@ -28,10 +28,6 @@ question count merely to make the interview look complete.
    pay for, a data format we cannot move?
 6. **(what)** What is explicitly out of scope this time?
 
-Three to five lines of intent is a complete engineering intent. Stop when
-Problem, Proposed outcome, Acceptance, Constraints and Out of scope can be
-filled in without guessing.
-
 ## Product question bank
 
 1. **(what)** Who is this for? Describe one of them.

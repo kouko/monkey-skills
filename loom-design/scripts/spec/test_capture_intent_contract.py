@@ -96,6 +96,17 @@ def test_description_within_cap() -> None:
     assert len(description) <= DESCRIPTION_CAP, len(description)
 
 
+def test_description_routes_incidents_to_maintain() -> None:
+    description = " ".join(
+        line.strip()
+        for line in re.search(r"^description: \|\n((?:  .*\n)+)", _text(), re.M).group(1).splitlines()
+    ).lower()
+    assert "new change" in description
+    for routed in ("incident", "regression", "post-delivery bug", "maintain"):
+        assert routed in description
+    assert "entry station for every change" not in description
+
+
 def test_body_within_word_cap() -> None:
     words = len(_body(_text()).split())
     assert words <= WORD_CAP, words
@@ -123,22 +134,25 @@ def test_unsupported_claims_and_open_questions_have_operational_boundaries() -> 
 
 
 def test_workflow_authorisation_names_its_existing_carriers() -> None:
-    drafting = " ".join(_section(_text(), "## Step 2 — Write the intent").split())
-    low = drafting.lower()
-    assert "`publication:` frontmatter line" in drafting
-    assert "step-5 hand-off" in drafting
+    gate = " ".join(
+        _gate(_text(), "capture-intent.no-confirmed-without-restatement").split()
+    )
+    low = gate.lower()
+    assert "`publication:` frontmatter line" in gate
+    assert "step-5 hand-off" in gate
     for field in ("Problem", "Proposed outcome", "Acceptance", "Constraints", "Out of scope"):
         assert field.lower() in low
 
 
 def test_unknown_observable_surface_still_routes_to_write_spec() -> None:
-    drafting = _section(_text(), "## Step 2 — Write the intent")
-    low = " ".join(drafting.lower().split())
+    text = _text()
+    gate = _gate(text, "capture-intent.no-confirmed-without-restatement")
+    low = " ".join(gate.lower().split())
 
     assert re.search(r"unknown surface.*require `needs-design: yes`", low)
     assert "surface-neutral reason" in low
     assert "internal files alone" in low
-    criterion = re.search(r"\*\*\(a\)\*\*(.*?); or", drafting, re.S)
+    criterion = re.search(r"\*\*\(a\)\*\*(.*?); or", text, re.S)
     assert criterion
     assert "file artifact a user or external system depends on" in " ".join(
         criterion.group(1).split()
@@ -360,9 +374,9 @@ def test_reviewer_policy_summary_has_patch_release_metadata() -> None:
         (REPO / "loom-design/.codex-plugin/plugin.json").read_text(encoding="utf-8")
     )
     changelog = (REPO / "loom-design/CHANGELOG.md").read_text(encoding="utf-8")
-    assert claude_manifest["version"] == "2.1.2"
-    assert codex_manifest["version"] == "2.1.2"
-    assert "## [2.1.2]" in changelog
+    assert claude_manifest["version"] == "2.1.3"
+    assert codex_manifest["version"] == "2.1.3"
+    assert "## [2.1.3]" in changelog
 
 
 def test_plugin_declares_requires_contract() -> None:
@@ -439,24 +453,27 @@ def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
 
 
 def test_material_choice_rules_live_inside_existing_confirmation_gates() -> None:
-    capture_gate = _text().split(
-        "<!-- gate: capture-intent.no-confirmed-without-restatement -->", 1
-    )[1]
-    plan_gate = WRITE_PLAN.read_text(encoding="utf-8").split(
-        "<!-- gate: write-plan.no-plan-without-confirmed-intent -->", 1
-    )[1]
+    capture_gate = _gate(
+        _text(), "capture-intent.no-confirmed-without-restatement"
+    )
+    plan_gate = _gate(
+        WRITE_PLAN.read_text(encoding="utf-8"),
+        "write-plan.no-plan-without-confirmed-intent",
+    )
 
     for gate in (capture_gate, plan_gate):
         assert "altitude pass" in gate
         assert "explicit answer" in gate
         assert "must remain `open`" in gate
+        assert "Publication and second-reviewer authorisation" in gate
+        assert "unknown surface" in gate
 
 
 def test_altitude_pass_runs_after_the_fill_in_list_exists() -> None:
     drafting = _section(_text(), "## Step 2 — Write the intent")
     assert drafting.index("- `## Open questions`") < drafting.index(
-        "After drafting, make one altitude pass"
+        "confirmation gate below performs the altitude pass"
     )
-    assert "reopen it" in drafting + _section(
-        _text(), "## Step 4 — Decision point ①: restate and confirm"
-    )
+    gate = _gate(_text(), "capture-intent.no-confirmed-without-restatement")
+    assert "After drafting, make one altitude pass" in gate
+    assert "reopen it" in gate

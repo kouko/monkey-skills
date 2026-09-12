@@ -283,3 +283,11 @@ def test_code_only_field_boundaries_keep_problem_and_value_semantics() -> None:
     assert "who it affects, and the consequence" in PLAN_PROSE
     assert "beneficiary, urgency, and GO/NO-GO" in PLAN_PROSE
     assert "engineering intent omits obvious value" in PLAN_PROSE
+
+
+def test_code_only_surface_routing_matches_capture_intent() -> None:
+    normalized = " ".join(PLAN_PROSE.split())
+    assert "file artifact a user or external system depends on" in normalized
+    assert "Visible effects with an unknown surface and no spec require" in normalized
+    assert "surface-neutral reason" in normalized
+    assert "internal files alone do not" in normalized
