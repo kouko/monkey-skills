@@ -9,6 +9,7 @@ plan commit, and the template's one-sentence spec-change-path comment.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -159,7 +160,35 @@ def test_ask_still_asks_once_per_full_lane_change() -> None:
     flat = " ".join(text.split())
     assert "second-vendor: ask" in flat
     assert "every full-lane change" in flat
-    assert "這次要不要用" in text
+    assert "AskUserQuestion" in text
+    assert "request_user_input" in text
+    assert "render both choices in the user's current conversation language" in flat
+    assert "decline this change" in flat
+    assert "https://code.claude.com/docs/en/tools-reference" in text
+    assert "https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs" in text
+    assert "這次不使用" not in text
+    assert "recommended" in flat
+
+
+def test_ask_is_host_aware_and_has_complete_fallbacks() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "On Codex, probe `claude` then `gemini`" in flat
+    assert "On Claude Code, probe `codex` then `gemini`" in flat
+    assert "blocking plain-language Markdown question" in flat
+    assert "no runnable different-model-family CLI" in flat
+    assert "continue without asking" in flat
+    assert "第二位讀者" not in text
+    assert "second reader" not in text.lower()
+
+
+def test_suggest_uses_one_cell_markdown_table_with_spacing() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "exactly two blank lines before and after" in flat
+    assert "| <heading> |\n|---|\n| <description> |" in text
+    assert "one heading and one descriptive cell" in flat
+    assert "raw Markdown" in text
 
 
 def test_small_lane_suggest_is_information_only() -> None:
@@ -186,3 +215,16 @@ def test_confirmed_selection_is_recorded_for_closing_review() -> None:
     assert "`plan-maintained`" in flat
     assert "commit that plan edit" in flat
     assert "before committing the plan" not in flat
+
+
+def test_host_aware_prompt_fix_has_patch_release_metadata() -> None:
+    claude_manifest = json.loads(
+        (REPO / "loom-code/.claude-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    codex_manifest = json.loads(
+        (REPO / "loom-code/.codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    changelog = (REPO / "loom-code/CHANGELOG.md").read_text(encoding="utf-8")
+    assert claude_manifest["version"] == "3.0.1"
+    assert codex_manifest["version"] == "3.0.1"
+    assert "## [3.0.1]" in changelog

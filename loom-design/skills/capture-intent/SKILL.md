@@ -275,17 +275,15 @@ twice, and this is the only stop this station makes.
    program will not read it; I will keep a backup at ___ first. Is that
    OK?"
 
-3. **The second-reviewer question, only for `second-vendor: ask`.** Read
+3. **The cross-model review question, only for `second-vendor: ask`.** Read
    `references/second-vendor.md` for mode routing and the availability
    probe. A missing line is initialized as `second-vendor: suggest`; it
    adds no question here. The downstream notice may explain that reviewing
    with a second vendor costs a few minutes and some quota, and that five of the seven
    serious problems in this system's own spec review were found by
    only one of the two vendors. When the defaults carry `second-vendor: ask`,
-   ask one plain sentence in this same message —
-   「這次要不要用 Codex 當第二位讀者？」
-   ("Do you want to use Codex as the second reader this time?") — and the
-   answer governs this change only. In the small lane there is only one
+   use the reference's host-aware native question or fallback in this same
+   message; the answer governs this change only. In the small lane there is only one
    reader, so this question is not asked. A fixed CLI also adds no question.
 
 4. **The principles confirmation**, if step 3 ran the interview — restated

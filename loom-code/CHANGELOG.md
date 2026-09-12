@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.0.1] — 2026-09-12 — host-aware cross-model review prompts
+
+- Select ask-mode candidates from the active host's different model families
+  instead of hard-coding Codex, and never offer the host itself.
+- Prefer each host's native question interface with `do not use` as the
+  conservative recommendation; retain a blocking Markdown fallback when the
+  native control is unavailable and report-and-continue when no candidate runs.
+- Render non-blocking suggest notices as a single-column Markdown table with
+  one heading, one descriptive cell, and two blank lines on either side.
+
 ## [3.0.0] — 2026-09-12 — non-blocking second-vendor suggestions
 
 Breaking. Replace the silent `second-vendor: none` setting with `suggest`:
