@@ -1,5 +1,5 @@
 # Close semantic-boundary integration regressions — plan
-intent: 2026-09-12-close-semantic-boundary-integration-regressions@823e64e37557a06e6f87afd059992047b433789d
+intent: 2026-09-12-close-semantic-boundary-integration-regressions@17bf330ee14bba707e857517865adb504e8296bc
 charter: 1.0
 
 ## Current State Evidence
