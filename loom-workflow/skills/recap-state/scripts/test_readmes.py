@@ -208,3 +208,7 @@ def test_tri_lang_readmes_show_localized_goal_grounded_alignment_loop():
         assert "```mermaid" in text, f"{language} README lacks Mermaid loop diagram"
         for label in labels:
             assert label in text, f"{language} README lacks localized label: {label}"
+
+    assert "7-block schema" not in readmes["en"][0]
+    assert "7 ブロックスキーマ" not in readmes["ja"][0]
+    assert "7 格式" not in readmes["zh-TW"][0]

@@ -178,3 +178,6 @@ def test_l3_contract_defines_goal_grounded_natural_output() -> None:
     l3_template = text[l3_template_start:l3_template_end]
     for forbidden in ("<thinking>", "</thinking>", "<recap>", "</recap>", "Block "):
         assert forbidden not in l3_template
+
+    assert "Renumber the rendered output" not in text
+    assert "instead of the 7 blocks" not in text

@@ -159,10 +159,10 @@ contingency planning.
 every message the user sent in this session, verbatim. No filtering. No
 paraphrasing. No selection of "important" ones.
 
-**At L3 (this skill): skip Block 4 entirely.** Renumber the rendered output to
-6 blocks. Spec-critical user phrases (file paths, error messages, named
-constraints) belong in Block 2 (Background) via the quote-not-paraphrase
-principle — that's where the anti-drift discipline lives at L3.
+**At L3 (this skill): skip this item entirely.** Render the six natural
+sections without block numbers or internal names. Spec-critical user phrases
+(file paths, error messages, named constraints) belong in Essential background
+via the quote-not-paraphrase principle.
 
 **WHY**: This block has different value at L3 (in-session, human warm reader)
 vs L2 (cross-session, AI cold reader). The full verbatim list — inherited from
@@ -246,8 +246,8 @@ twice can scan it in 30 seconds because they know where each piece of informatio
 lives ("expected location" principle from information design).
 
 **Failure mode**: Agent produces a "quick summary" paragraph instead of the
-7 blocks. User has to hunt for the assessment and misses that the pending
-list changed.
+six natural sections. User has to hunt for the assessment and misses that the
+pending list changed.
 
 ---
 
