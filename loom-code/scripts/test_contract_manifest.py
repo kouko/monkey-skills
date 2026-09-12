@@ -127,6 +127,15 @@ def test_kickoff_defaults_keys_declared(manifest):
             "interface-surfaces", "artifact-types"} <= keys
 
 
+def test_second_vendor_modes_remove_none_and_default_to_suggest(manifest):
+    entry = next(k for k in manifest["kickoff_defaults"] if k["name"] == "second-vendor")
+    template = (TEMPLATES / "KICKOFF-DEFAULTS.md").read_text(encoding="utf-8")
+
+    assert entry["grammar"] == "<cli> | ask | suggest"
+    assert "second-vendor: suggest" in template
+    assert "second-vendor: none" not in template
+
+
 def test_manifest_declares_publication_only_paths(manifest):
     patterns = manifest["publication_only_paths"]
     assert patterns == [

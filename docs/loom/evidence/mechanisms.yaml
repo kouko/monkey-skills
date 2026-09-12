@@ -150,6 +150,9 @@ mechanisms:
   - id: standing.product-principles-reject
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_standing.py::test_product_without_principles_is_rejected
+  - id: standing.second-vendor-valid
+    class: checker-rule
+    eval: loom-code/scripts/test_loom_checker_standing.py::test_removed_second_vendor_none_is_rejected_with_migration
   - id: standing.silence
     class: checker-rule
     eval: loom-code/scripts/test_loom_checker_standing.py::test_waiver_silences_the_warn

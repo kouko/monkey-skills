@@ -264,6 +264,37 @@ def test_an_unrelated_kickoff_key_does_not_silence(tmp_path: Path) -> None:
     assert len(warn_lines(run_checker("standing", str(intent), cwd=repo))) == 3
 
 
+def test_removed_second_vendor_none_is_rejected_with_migration(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path)
+    path = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "# Kickoff Defaults\n\n- second-vendor: none — legacy (2026-09-02)\n",
+        encoding="utf-8",
+    )
+
+    result = run_checker("standing", str(intent), cwd=repo)
+
+    assert result.returncode == 1
+    assert "standing.second-vendor-valid" in blocked_rules(result)
+    assert "replace it with `second-vendor: suggest`" in result.stderr
+
+
+def test_second_vendor_suggest_is_accepted(tmp_path: Path) -> None:
+    repo, intent = make_repo(tmp_path)
+    path = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "# Kickoff Defaults\n\n- second-vendor: suggest — visible (2026-09-12)\n",
+        encoding="utf-8",
+    )
+
+    result = run_checker("standing", str(intent), cwd=repo)
+
+    assert result.returncode == 0
+    assert "standing.second-vendor-valid" not in blocked_rules(result)
+
+
 # --- operands --------------------------------------------------------------
 
 
