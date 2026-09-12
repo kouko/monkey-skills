@@ -154,16 +154,6 @@ language, since it is spoken to them rather than read by a checker.
     The list shows each task's due date beside its title → Acceptance #2
   ```
 
-  Preserve the exact Acceptance count, order, and owner number from the
-  confirmed intent. A continuing observable result may be stated in temporal
-  language: keep the original action as the `WHEN` trigger and put subsequent
-  effects in its response. Do not invent a named state, lifecycle, storage, or
-  persistence mechanism to explain it.
-
-  Treat the intent's Out of scope as not designed, not implemented, and not
-  verified in this change. Do not promote an exclusion into a claim that the
-  capability does not exist, is prohibited, irreversible, or one-way.
-
 - **`## Design decision`** — what you are doing, what you are not, and
   why. Every fork you resolved yourself carries one sentence of reason and
   the tag `agent-decided`; every one-way door the user answered carries
@@ -178,9 +168,7 @@ language, since it is spoken to them rather than read by a checker.
   `Forward: N/A — nothing exists yet` — rather than deleting it.
 - **`## UI flows`** — every operation and the system's reaction, in the
   user's words. Grammar, the four variants every surface owes, and the
-  `N/A` form are in `references/ui-flows.md`. Include only reactions explicitly
-  supplied by the confirmed intent; do not invent an interface, control, or
-  status presentation to make a flow look complete.
+  `N/A` form are in `references/ui-flows.md`.
 
 Forms: reference `references/spec-forms.md` before reaching for a table, a
 state list or a diagram — it says which shape carries which content, and
@@ -271,6 +259,22 @@ exists, that piece of work stops and is reported as not done.
 <!-- gate: write-spec.product-visible-behaviour-confirmed-before-review -->
 **A product spec does not reach a required review or planning before the
 user has confirmed its visible behaviour.** On "yes", write
+
+Before presenting the behaviour, preserve the exact count, order, and
+`→ Acceptance #<n>` mapping from the confirmed intent. A continuing observable result may use temporal
+language: keep the original action as the `WHEN` trigger and put subsequent
+effects in its response. Do not invent a named state, lifecycle, storage, or
+persistence mechanism to explain it.
+
+Treat the intent's Out of scope as not designed, not implemented, and not
+verified in this change. Do not promote Out of scope into a claim that the
+capability does not exist, is prohibited, irreversible, or one-way.
+
+Do not invent an interface, control, or status presentation the confirmed
+intent did not authorise. When it authorises a surface, still give it the four
+variants `references/ui-flows.md` requires; when a variant's content is
+unsupplied, write it as an Open question for decision point ② instead of
+inventing it.
 
 ```
 confirmed-behavior: <date> @<spec sha7>

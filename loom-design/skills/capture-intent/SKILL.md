@@ -103,10 +103,10 @@ install or update `loom-code`; do not create a repository-local copy.
 
 ## Step 1 — Interview
 
-Read `references/interview.md`; ask only for missing required-field content.
-When prior conversation and evidence are already sufficient, draft directly.
-Product intake may need a value decision; neither kind owes an intake question
-quota, and existing decision points remain unchanged.
+Read `references/interview.md`; ask only for missing required content.
+Draft directly when already sufficient. No intake question quota applies.
+Problems/outcomes are valid before choosing features or implementation.
+Existing decision points remain unchanged.
 
 Cover, in the user's own words and with no jargon:
 
@@ -123,9 +123,6 @@ Cover, in the user's own words and with no jargon:
   existing tool, and what concretely loses the time. End with GO or NO-GO
   and one reason. A NO-GO is a real outcome: write the intent with
   `status: withdrawn — <reason>` and stop.
-
-Use only user-supplied product claims. Add no product nouns, interfaces,
-states, scope dimensions, or guarantees; `write-spec` owns unchosen decisions.
 
 **Every question you ask must be of type `what`** — what do you want, what
 happens today, what would you be able to do. Nothing about how it should
@@ -152,9 +149,9 @@ Keep every field at intent altitude:
   with obvious value.
 - **Out of scope** — excluded capabilities, actors, systems, or data; no
   deferred implementation list.
-- **Open questions** — unresolved choices or missing required fields; the intent
-  must remain `open`. Delegate a spec question or engineering question without
-  answering it.
+- **Open questions** — unresolved choices changing fields or scope, and missing
+  required content. Missing required content keeps the intent `open`; a
+  downstream spec or engineering question does not.
 
 ## Step 2 — Write the intent
 
@@ -172,16 +169,15 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 - `needs-design:` — `yes` when either holds, and the line always carries
   the reason:
   - **(a)** the change touches a surface the user reads or types into — a
-    GUI, a TUI, CLI arguments and output, an external API — and no
-    `DESIGN.md` or ui-flows document already covers that surface; or
+    GUI, a TUI, CLI arguments and output, an external API, or a file artifact a
+    user or external system depends on — and no `DESIGN.md` or ui-flows
+    document already covers that surface; or
   - **(b)** the behaviour is multi-state or multi-object and there is no
     spec for it.
 
-  Otherwise `no — <reason>`. The same rule applies to both kinds. You do
-  not get the last word on `no`: the checker recomputes it
-  (`intent.needs-design-recompute`) against this repo's declared
-  interface-surface globs, and a change that touches one while the intent
-  says `no` is blocked later.
+  Otherwise `no — <reason>`. This applies to both kinds. The checker recomputes
+  `no` (`intent.needs-design-recompute`) against the repo's interface-surface
+  globs and blocks a mismatch.
 
   Worked example — "CLI todo gains a due date": adding a due date changes
   the arguments the user types and the list they read back, and no
@@ -194,16 +190,17 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
   heading. An empty section is a schema failure, not a statement that there
   are no questions.
 
-After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or delete**.
-Keep supported intent; neutralize overcommitment; defer behaviour to spec or
-method to plan; reopen as defined by the confirmation gate below; delete
-unsupported detail. This author self-check is not a review loop and creates no
-fields, IDs, requirements, scenarios, or product behaviour.
+After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or
+delete**. Defer behaviour to spec and method to plan; reopen under the gate
+below; delete unsupported detail. This self-check creates no fields, IDs,
+requirements, scenarios, product behaviour, or review loop.
 
-Keep workflow authorisation outside product fields in its existing carrier.
+Publication and second-reviewer authorisation never enter Problem, Proposed
+outcome, Acceptance, Constraints, or Out of scope. Keep publication
+authorisation in the intent's `publication:` frontmatter line and the question
+list in the step-5 hand-off.
 
-Observable means GUI/TUI, CLI input/output, external API, or user-dependent
-file output. Visible effects with an unknown surface and no spec require
+Visible effects with an unknown surface and no spec require
 `needs-design: yes` with a surface-neutral reason; internal files alone do not.
 
 <!-- gate: capture-intent.product-problem-plain-words -->
@@ -349,6 +346,11 @@ quieter than it is.
 
 <!-- gate: capture-intent.no-confirmed-without-restatement -->
 **No intent becomes `confirmed` without the restatement being answered.**
+Use only user-supplied product claims: add no product nouns, interfaces, states,
+scope dimensions, or guarantees. The downstream station owns unchosen
+decisions: `write-spec` for spec, `write-plan` for engineering. Missing
+required-field content must remain `open`; a delegated spec question or
+engineering question does not block confirmation.
 Complete Step 2's altitude pass before confirmation. A fork with materially
 different outcomes for the user or scope needs an explicit answer; an accepted
 restatement is insufficient; reopen it — move it to Open questions, stop confirmation,
@@ -372,6 +374,7 @@ the intent and restate again; there is no limit on rounds here.
 3. Verify:
    `python3 <loom-code>/scripts/loom_checker.py intent docs/loom/intent/<change-id>.md`
    Fix what it names and re-run until it exits 0.
+<!-- /gate -->
 
 ## Step 5 — Hand off
 

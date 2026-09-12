@@ -69,6 +69,16 @@ def _section(text: str, heading: str) -> str:
     return m.group(0)
 
 
+def _gate(text: str, gate_id: str) -> str:
+    m = re.search(
+        rf"<!-- gate: {re.escape(gate_id)} -->(.*?)<!-- /gate -->",
+        text,
+        re.S,
+    )
+    assert m, f"gate {gate_id!r} missing or unclosed"
+    return " ".join(m.group(1).split())
+
+
 def test_skill_file_exists() -> None:
     assert SKILL.is_file(), f"{SKILL} does not exist"
 
@@ -92,42 +102,66 @@ def test_body_within_word_cap() -> None:
 
 
 def test_intent_fields_admit_only_user_supported_product_claims() -> None:
-    text = _text()
-    altitude = " ".join(_section(text, "## Step 1 — Interview").lower().split())
-    drafting = _section(text, "## Step 2 — Write the intent")
-
-    for unsupported in (
-        "product noun",
-        "interface",
-        "state",
-        "scope dimension",
-        "guarantee",
-    ):
-        assert unsupported in altitude, unsupported
-    assert "user-supplied product claims" in altitude
-    assert "workflow authorisation" in drafting
-    assert "existing carrier" in drafting
-    assert "product field" in drafting
+    altitude = " ".join(_section(_text(), "## Step 1 — Interview").lower().split())
     for missing in ("current behaviour", "workaround", "consequence"):
         assert missing in altitude, missing
     assert "do not infer" in altitude
     for missing in ("beneficiary", "urgency", "existing alternative", "displaced work"):
         assert missing in altitude, missing
     assert "count each missing answer separately" in altitude
-    assert "must remain `open`" in altitude
     assert "confirmation of other fields" in altitude
+
+
+def test_unsupported_claims_and_open_questions_have_operational_boundaries() -> None:
+    gate = _gate(_text(), "capture-intent.no-confirmed-without-restatement")
+    low = gate.lower()
+
+    assert re.search(r"add no .*product nouns.*interfaces.*states.*guarantees", low)
+    assert "downstream station owns unchosen decisions" in low
+    assert re.search(r"missing required-field content.*must remain `open`", low)
+    assert "does not block confirmation" in low
+
+
+def test_workflow_authorisation_names_its_existing_carriers() -> None:
+    drafting = " ".join(_section(_text(), "## Step 2 — Write the intent").split())
+    low = drafting.lower()
+    assert "`publication:` frontmatter line" in drafting
+    assert "step-5 hand-off" in drafting
+    for field in ("Problem", "Proposed outcome", "Acceptance", "Constraints", "Out of scope"):
+        assert field.lower() in low
 
 
 def test_unknown_observable_surface_still_routes_to_write_spec() -> None:
     drafting = _section(_text(), "## Step 2 — Write the intent")
     low = " ".join(drafting.lower().split())
 
-    for surface in ("gui", "tui", "cli", "external api", "file output"):
-        assert surface in low, surface
-    assert "unknown surface" in low
-    assert "needs-design: yes" in drafting
+    assert re.search(r"unknown surface.*require `needs-design: yes`", low)
     assert "surface-neutral reason" in low
     assert "internal files alone" in low
+    criterion = re.search(r"\*\*\(a\)\*\*(.*?); or", drafting, re.S)
+    assert criterion
+    assert "file artifact a user or external system depends on" in " ".join(
+        criterion.group(1).split()
+    )
+
+
+def test_semantic_inversions_are_rejected() -> None:
+    """Adversarial replay: the old word-presence tests accepted both mutations."""
+    text = _text()
+    inverted_claims = text.replace("add no product nouns", "add product nouns")
+    claims_gate = _gate(
+        inverted_claims, "capture-intent.no-confirmed-without-restatement"
+    ).lower()
+    assert not re.search(
+        r"add no .*product nouns.*interfaces.*states.*guarantees", claims_gate
+    )
+
+    inverted_route = text.replace(
+        "Visible effects with an unknown surface and no spec require",
+        "Visible effects with an unknown surface and no spec never require",
+    )
+    route = " ".join(_section(inverted_route, "## Step 2 — Write the intent").lower().split())
+    assert not re.search(r"unknown surface.*(?<!never )require `needs-design: yes`", route)
 
 
 def test_station_summary_is_byte_identical_to_write_plan() -> None:
@@ -371,7 +405,7 @@ def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
     assert "ask eight to ten" not in interview
     assert "gap-driven" in interview
     assert "already sufficient" in text
-    assert "Keep, neutralize, defer, reopen, or delete" in text
+    assert re.search(r"Keep, neutralize, defer, reopen, or\s+delete", text)
     assert "must remain `open`" in text
     assert "spec question" in text and "engineering question" in text
     prose = " ".join(text.split())
