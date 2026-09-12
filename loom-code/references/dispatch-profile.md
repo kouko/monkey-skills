@@ -59,8 +59,9 @@ effective `profile`. `success` reports whether the completed work satisfied
 its acceptance conditions. `conforming` reports whether the output is
 structurally usable and contains enough evidence to classify its result;
 `conforming: false` means the output cannot be graded and receives no routing
-escalation. When that output came from a completed execution, retry the same
-effective profile without model or effort escalation. That retry consumes the
+escalation. When `failure_kind` identifies that completed output as
+`malformed-response`, retry the same effective profile without model or effort
+escalation. A missing or different kind fails closed. That retry consumes the
 shared completed-redispatch budget. A completed capability-quality or reasoning-depth failure therefore
 uses `success: false` and `conforming: true` plus its `failure_kind`.
 

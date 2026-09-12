@@ -252,6 +252,7 @@ def test_completed_nonconforming_output_retries_same_profile() -> None:
                 "success": False,
                 "conforming": False,
                 "profile": profile,
+                "failure_kind": "malformed-response",
             },
             "capabilities": CAPABILITIES,
             "inheritance_guaranteed": True,
@@ -276,6 +277,7 @@ def test_nonconforming_output_at_redispatch_limit_fails_closed() -> None:
                 "success": False,
                 "conforming": False,
                 "profile": {"model": "frontier", "effort": "medium"},
+                "failure_kind": "malformed-response",
             },
             "capabilities": CAPABILITIES,
             "inheritance_guaranteed": True,
@@ -285,6 +287,25 @@ def test_nonconforming_output_at_redispatch_limit_fails_closed() -> None:
 
     assert result["outcome"] == "execution-failed"
     assert result["reason"] == "no-legal-redispatch"
+
+
+def test_nonconforming_output_with_unknown_failure_kind_fails_closed() -> None:
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": True,
+            "success": False,
+            "conforming": False,
+            "profile": {"model": "frontier", "effort": "medium"},
+            "failure_kind": "invented-upgrade-reason",
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    with pytest.raises(dispatch_profile.InputError):
+        dispatch_profile.resolve(payload)
 
 
 def test_cli_is_deterministic_json_and_rejects_malformed_input() -> None:

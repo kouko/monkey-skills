@@ -185,6 +185,10 @@ def _after_execution(packet: dict[str, Any], capabilities: dict[str, tuple[str, 
             "completed_redispatches": count,
         }
     if not attempt["conforming"]:
+        if attempt.get("failure_kind") != "malformed-response":
+            raise InputError(
+                "nonconforming last_attempt requires malformed-response failure_kind"
+            )
         result = _decision(
             actual, capabilities, inheritance_guaranteed,
             reason="nonconforming-output-redispatch", count=count,
