@@ -25,15 +25,22 @@ reimplement its risk mapping. That executable belongs to loom-code.
 
 **`ask`** puts one cross-model review question into decision point ① on every
 full-lane change. Probe the host-specific candidates above first. With a
-runnable candidate, prefer the current host's native question tool: Claude Code
-uses `AskUserQuestion` when available in the current agent; Codex uses
-`request_user_input` when available in the active mode. Offer `這次不使用` and
-`使用 <tool>`. If the interface requires a recommended choice, mark
-`這次不使用` as recommended so quota use and repository-data egress remain
-opt-in. If the candidate runs but no native question tool is available, ask one
-blocking plain-language Markdown question with the same choices and no
-fabricated recommendation. If there is no runnable different-model-family CLI,
-state that no such review tool is available and continue without asking.
+runnable candidate, prefer the current host's native question tool. Claude Code
+uses `AskUserQuestion` when available in the current agent; the authoritative
+tool reference names that tool and owns its live schema
+([Claude Code tools reference](https://code.claude.com/docs/en/tools-reference)).
+Codex uses `request_user_input` only when the host exposes it in the active
+mode; its live tool schema owns the valid question shape and availability, and
+the official implementation enforces both mode and root-thread availability
+([Codex handler](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs)).
+Treat the two choice meanings as `decline this change` and `use <tool>`, and
+render both choices in the user's current conversation language. If the
+interface requires a recommended choice, mark `decline this change` as
+recommended so quota use and repository-data egress remain opt-in. If the
+candidate runs but no native question tool is available, ask one blocking
+plain-language Markdown question with the same choices and no fabricated
+recommendation. If there is no runnable different-model-family CLI, state that
+no such review tool is available and continue without asking.
 
 The answer governs this change only and never rewrites the KICKOFF line. Add
 the question to the running list kept in SKILL.md, so it lands in the plan's

@@ -53,11 +53,12 @@ the table. Keep the source readable as raw Markdown:
 
 ```
 
-Use `不同模型系列的獨立 Review` for availability and
-`建議使用不同模型系列進行獨立 Review` for recommendation. Put the vendor,
-grounded reasons when present, opt-in cutoff, and `continue without waiting`
-statement together in the single description cell. Add no second column or
-decorative row.
+Use the semantic heading `Independent review from a different model family`
+for availability and `Independent review from a different model family
+recommended` for recommendation. Render the heading and description in the
+user's current conversation language. Put the vendor, grounded reasons when
+present, opt-in cutoff, and `continue without waiting` statement together in
+the single description cell. Add no second column or decorative row.
 
 When that reevaluation returns `selection-confirmed`, append
 `user-decided — second-vendor selection-confirmed: <vendor>` to the plan's
@@ -79,13 +80,20 @@ next-change-only. No reply means no second vendor for this change.
 user on every full-lane change. The answer governs only that change and never
 rewrites the KICKOFF line. Probe the host-specific candidates above first.
 
-With a runnable candidate, prefer the current host's native question tool:
+With a runnable candidate, prefer the current host's native question tool.
 Claude Code uses `AskUserQuestion` when it is available in the current agent;
-Codex uses `request_user_input` when it is available in the active mode. Ask
-whether to use the named candidate for an independent review by a different
-model family. Offer `這次不使用` and `使用 <tool>` as the two choices. If the
-native interface requires one option to be recommended, mark `這次不使用` as
-recommended so extra quota use and repository-data egress remain opt-in.
+the authoritative tool reference names that tool and owns its live schema
+([Claude Code tools reference](https://code.claude.com/docs/en/tools-reference)).
+Codex uses `request_user_input` only when the host exposes it in the active
+mode; its live tool schema owns the valid question shape and availability, and
+the official implementation enforces both mode and root-thread availability
+([Codex handler](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs)).
+Ask whether to use the named candidate for an independent review by a different
+model family. Treat the two choice meanings as `decline this change` and
+`use <tool>`, and render both choices in the user's current conversation
+language. If the native interface requires one option to be recommended, mark
+`decline this change` as recommended so extra quota use and repository-data
+egress remain opt-in.
 
 When a runnable candidate exists but the native tool is unavailable, ask one
 blocking plain-language Markdown question with the same two choices and no

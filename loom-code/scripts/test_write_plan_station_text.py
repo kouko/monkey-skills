@@ -162,7 +162,11 @@ def test_ask_still_asks_once_per_full_lane_change() -> None:
     assert "every full-lane change" in flat
     assert "AskUserQuestion" in text
     assert "request_user_input" in text
-    assert "這次不使用" in text
+    assert "render both choices in the user's current conversation language" in flat
+    assert "decline this change" in flat
+    assert "https://code.claude.com/docs/en/tools-reference" in text
+    assert "https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs" in text
+    assert "這次不使用" not in text
     assert "recommended" in flat
 
 

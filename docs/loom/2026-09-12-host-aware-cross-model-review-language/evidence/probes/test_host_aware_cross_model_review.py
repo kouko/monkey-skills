@@ -53,7 +53,18 @@ def main() -> int:
             require(text, "Never offer the current host family", name)
             require(text, "`AskUserQuestion`", name)
             require(text, "`request_user_input`", name)
-            require(text, "`這次不使用`", name)
+            require(
+                text,
+                "render both choices in the user's current conversation language",
+                name,
+            )
+            require(text, "decline this change", name)
+            require(text, "https://code.claude.com/docs/en/tools-reference", name)
+            require(
+                text,
+                "https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs",
+                name,
+            )
             require(text, "blocking plain-language Markdown question", name)
             require(text, "no runnable different-model-family CLI", name)
             require(text, "continue without asking", name)
@@ -66,7 +77,7 @@ def main() -> int:
         require(code, "one heading and one descriptive cell", "loom-code-reference.md")
         require(code, "continue without waiting", "loom-code-reference.md")
 
-        forbidden = ("第二位讀者", "second reader", "use Codex as")
+        forbidden = ("第二位讀者", "second reader", "use Codex as", "這次不使用")
         lowered = combined.lower()
         for phrase in forbidden:
             if phrase.lower() in lowered:
