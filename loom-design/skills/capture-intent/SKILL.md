@@ -15,6 +15,8 @@ in their own words, and once they say yes, hand the change to the station
 that plans it. You do not design anything, you do not plan anything, and
 you never ask the user to judge the quality of your work.
 
+## Artifact vocabulary
+
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees happen.
 `kind: engineering` is everything else: refactors, internal plumbing,
@@ -101,14 +103,10 @@ install or update `loom-code`; do not create a repository-local copy.
 
 ## Step 1 — Interview
 
-Read `references/interview.md` and ask from it. How long you spend depends
-on the kind of change:
-
-- **Engineering** — short. Four to six questions; three to five lines of
-  intent is a complete one. Writing it out and reading it back beats a
-  long interview.
-- **Product** — fuller. Eight to ten questions, plus the three value
-  questions, because someone other than the user will live with the result.
+Read `references/interview.md`; ask only for missing required-field content.
+Draft directly when already sufficient. No intake question quota applies.
+Problems/outcomes are valid before choosing features or implementation.
+Existing decision points remain unchanged.
 
 Cover, in the user's own words and with no jargon:
 
@@ -133,14 +131,33 @@ answer, it is not a question for them — decide it yourself later and write
 down why. Keep going until Problem, Proposed outcome, Acceptance,
 Constraints and Out of scope can all be filled in without guessing.
 
+Keep every field at intent altitude:
+
+- **Problem** — present pain, affected people, and consequence; no diagnosis,
+  file list, or fix. Put missing current behaviour, workaround, or consequence
+  in Open questions; do not infer it.
+- **Proposed outcome** — wanted capability or state; no complete scenarios,
+  UI reactions, state transitions, or implementation design.
+- **Acceptance** — numbered observable delivery outcomes with external
+  pass/fail evidence a blind run can produce; no value claim, scenario, test step, UI placement,
+  architecture, or task split.
+- **Constraints** — already-fixed boundaries; no agent preference or
+  speculative guardrail.
+- **Value case** — for a product intent: beneficiary, urgency, existing alternative,
+  displaced work, and GO/NO-GO. Count each missing answer separately;
+  confirmation of other fields is not evidence. Omit for an engineering intent
+  with obvious value.
+- **Out of scope** — excluded capabilities, actors, systems, or data; no
+  deferred implementation list.
+- **Open questions** — only unresolved outcome/scope choices or missing required
+  content; both block confirmation. Carry downstream spec/engineering questions
+  in the hand-off, not this section.
+
 ## Step 2 — Write the intent
 
-The intent file is the user's own words, in the user's language, unlike
-the machine-read internal artifacts later stations own, which are English
-— nothing in it is translated to English, English being the language of the plan,
-the spec, the review record, evidence notes, test docstrings and names,
-and commit messages — while the decision-point dialogue, the blind-run
-report and the pull-request body stay in the user's language.
+Write the intent and decision-point dialogue in the user's language; plans,
+specs, reviews, evidence, tests, and commits are English; blind-run reports
+and PR bodies use the user's language.
 
 Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 `loom-code`'s `contract/templates/` directory. Fill in:
@@ -152,16 +169,15 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 - `needs-design:` — `yes` when either holds, and the line always carries
   the reason:
   - **(a)** the change touches a surface the user reads or types into — a
-    GUI, a TUI, CLI arguments and output, an external API — and no
-    `DESIGN.md` or ui-flows document already covers that surface; or
+    GUI, a TUI, CLI arguments and output, an external API, or a file artifact a
+    user or external system depends on — and no `DESIGN.md` or ui-flows
+    document already covers that surface; or
   - **(b)** the behaviour is multi-state or multi-object and there is no
     spec for it.
 
-  Otherwise `no — <reason>`. The same rule applies to both kinds. You do
-  not get the last word on `no`: the checker recomputes it
-  (`intent.needs-design-recompute`) against this repo's declared
-  interface-surface globs, and a change that touches one while the intent
-  says `no` is blocked later.
+  Otherwise `no — <reason>`. This applies to both kinds. The checker recomputes
+  `no` (`intent.needs-design-recompute`) against the repo's interface-surface
+  globs and blocks a mismatch.
 
   Worked example — "CLI todo gains a due date": adding a due date changes
   the arguments the user types and the list they read back, and no
@@ -174,6 +190,9 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
   heading. An empty section is a schema failure, not a statement that there
   are no questions.
 
+The confirmation gate below performs the altitude pass after this list has
+been filled.
+
 <!-- gate: capture-intent.product-problem-plain-words -->
 <!-- The `gate:` markers in this file are prose gates: rules this station must follow, registered in the mechanism population and checked by cold-read evals — not checker rule ids. The checker rules are the `intent.*` / `standing.*` / `contract.*` ids named in the commands. -->
 **A product Problem section is written in plain words only.** No file
@@ -181,6 +200,7 @@ paths, no function or class identifiers, no script filenames — the section
 is what the user reads to recognise their own problem, and the checker
 rule `intent.product-no-identifiers` rejects the file otherwise.
 Engineering intents may name paths freely.
+<!-- /gate -->
 
 ## Step 3 — Standing documents
 
@@ -317,6 +337,29 @@ quieter than it is.
 
 <!-- gate: capture-intent.no-confirmed-without-restatement -->
 **No intent becomes `confirmed` without the restatement being answered.**
+After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or
+delete**. Defer behaviour to spec and method to plan; delete unsupported
+detail. This self-check creates no fields, IDs, requirements, scenarios, or
+product behaviour.
+
+Publication and second-reviewer authorisation never enter Problem, Proposed
+outcome, Acceptance, Constraints, or Out of scope. Keep publication
+authorisation in the intent's `publication:` frontmatter line and the question
+list in the step-5 hand-off.
+
+Visible effects with an unknown surface and no spec require
+`needs-design: yes` with a surface-neutral reason; internal files alone do not.
+
+Use only user-supplied product claims: add no product nouns, interfaces, states,
+scope dimensions, or guarantees. Put only unresolved outcome/scope choices or
+missing required content in Open questions; either keeps the intent `open`.
+Carry downstream spec/engineering questions in the hand-off.
+Complete Step 2's altitude pass before confirmation. A fork with materially
+different outcomes for the user or scope needs an explicit answer; an accepted
+restatement is insufficient; reopen it — move it to Open questions, stop confirmation,
+and the intent must remain `open`. Only an explicit answer makes it
+`user-decided`. Implementation-only choices defer as
+`agent-decided`.
 You do not write `status: confirmed` because the request seemed clear, and
 you never confirm on the user's behalf. On "no" or a correction, rewrite
 the intent and restate again; there is no limit on rounds here.
@@ -334,6 +377,7 @@ the intent and restate again; there is no limit on rounds here.
 3. Verify:
    `python3 <loom-code>/scripts/loom_checker.py intent docs/loom/intent/<change-id>.md`
    Fix what it names and re-run until it exits 0.
+<!-- /gate -->
 
 ## Step 5 — Hand off
 

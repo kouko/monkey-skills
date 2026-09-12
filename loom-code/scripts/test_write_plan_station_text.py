@@ -28,6 +28,27 @@ SECOND_VENDOR_REFERENCE = (
 )
 
 
+def _section(text: str, heading: str) -> str:
+    match = re.search(rf"^{re.escape(heading)}$.*?(?=^## |\Z)", text, re.M | re.S)
+    assert match, f"section {heading!r} missing"
+    return match.group(0)
+
+
+def test_decision_boundary_owns_implementation_not_product_behaviour() -> None:
+    section = _section(SKILL.read_text(encoding="utf-8"), "## Decision boundary")
+    low = section.lower()
+    for concept in (
+        "confirmed specification",
+        "simplest reversible implementation",
+        "product gap",
+        "clarification",
+        "invent",
+        "product behaviour",
+    ):
+        assert concept in low, concept
+    assert len(section.split()) <= 90
+
+
 def _has_negation(sentence: str) -> bool:
     return bool(NEGATION_RE.search(sentence))
 
@@ -227,6 +248,6 @@ def test_risk_based_reviewer_floor_has_minor_release_metadata() -> None:
         (REPO / "loom-code/.codex-plugin/plugin.json").read_text(encoding="utf-8")
     )
     changelog = (REPO / "loom-code/CHANGELOG.md").read_text(encoding="utf-8")
-    assert claude_manifest["version"] == "3.1.0"
-    assert codex_manifest["version"] == "3.1.0"
-    assert "## [3.1.0]" in changelog
+    assert claude_manifest["version"] == "3.1.1"
+    assert codex_manifest["version"] == "3.1.1"
+    assert "## [3.1.1]" in changelog

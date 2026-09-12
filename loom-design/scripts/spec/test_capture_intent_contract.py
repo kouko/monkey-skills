@@ -69,6 +69,16 @@ def _section(text: str, heading: str) -> str:
     return m.group(0)
 
 
+def _gate(text: str, gate_id: str) -> str:
+    m = re.search(
+        rf"<!-- gate: {re.escape(gate_id)} -->(.*?)<!-- /gate -->",
+        text,
+        re.S,
+    )
+    assert m, f"gate {gate_id!r} missing or unclosed"
+    return " ".join(m.group(1).split())
+
+
 def test_skill_file_exists() -> None:
     assert SKILL.is_file(), f"{SKILL} does not exist"
 
@@ -89,6 +99,95 @@ def test_description_within_cap() -> None:
 def test_body_within_word_cap() -> None:
     words = len(_body(_text()).split())
     assert words <= WORD_CAP, words
+
+
+def test_intent_fields_admit_only_user_supported_product_claims() -> None:
+    altitude = " ".join(_section(_text(), "## Step 1 — Interview").lower().split())
+    for missing in ("current behaviour", "workaround", "consequence"):
+        assert missing in altitude, missing
+    assert "do not infer" in altitude
+    for missing in ("beneficiary", "urgency", "existing alternative", "displaced work"):
+        assert missing in altitude, missing
+    assert "count each missing answer separately" in altitude
+    assert "confirmation of other fields" in altitude
+
+
+def test_unsupported_claims_and_open_questions_have_operational_boundaries() -> None:
+    gate = _gate(_text(), "capture-intent.no-confirmed-without-restatement")
+    low = gate.lower()
+
+    assert re.search(r"add no .*product nouns.*interfaces.*states.*guarantees", low)
+    assert re.search(r"missing required content.*keeps the intent `open`", low)
+    assert "downstream spec/engineering questions in the hand-off" in low
+    assert "not this section" in _section(_text(), "## Step 1 — Interview")
+
+
+def test_workflow_authorisation_names_its_existing_carriers() -> None:
+    gate = " ".join(
+        _gate(_text(), "capture-intent.no-confirmed-without-restatement").split()
+    )
+    low = gate.lower()
+    assert "`publication:` frontmatter line" in gate
+    assert "step-5 hand-off" in gate
+    for field in ("Problem", "Proposed outcome", "Acceptance", "Constraints", "Out of scope"):
+        assert field.lower() in low
+
+
+def test_unknown_observable_surface_still_routes_to_write_spec() -> None:
+    text = _text()
+    gate = _gate(text, "capture-intent.no-confirmed-without-restatement")
+    low = " ".join(gate.lower().split())
+
+    assert re.search(r"unknown surface.*require `needs-design: yes`", low)
+    assert "surface-neutral reason" in low
+    assert "internal files alone" in low
+    criterion = re.search(r"\*\*\(a\)\*\*(.*?); or", text, re.S)
+    assert criterion
+    assert "file artifact a user or external system depends on" in " ".join(
+        criterion.group(1).split()
+    )
+
+
+def test_semantic_inversions_are_rejected() -> None:
+    """Adversarial replay: the old word-presence tests accepted both mutations."""
+    text = _text()
+    claims_gate = _gate(text, "capture-intent.no-confirmed-without-restatement").lower()
+    claim_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", claims_gate)
+        if "add" in sentence and "product nouns" in sentence
+    ]
+    assert claim_sentences and all("add no" in sentence for sentence in claim_sentences)
+
+    inverted_claims = text.replace("add no product nouns", "add product nouns")
+    claims_gate = _gate(
+        inverted_claims, "capture-intent.no-confirmed-without-restatement"
+    ).lower()
+    assert not re.search(
+        r"add no .*product nouns.*interfaces.*states.*guarantees", claims_gate
+    )
+
+    inverted_route = text.replace(
+        "Visible effects with an unknown surface and no spec require",
+        "Visible effects with an unknown surface and no spec never require",
+    )
+    route = " ".join(_section(inverted_route, "## Step 2 — Write the intent").lower().split())
+    assert not re.search(r"unknown surface.*(?<!never )require `needs-design: yes`", route)
+
+    contradicted = text.replace(
+        "scope dimensions, or guarantees.",
+        "scope dimensions, or guarantees. Add product nouns when useful.",
+        1,
+    )
+    contradicted_gate = _gate(
+        contradicted, "capture-intent.no-confirmed-without-restatement"
+    ).lower()
+    claim_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", contradicted_gate)
+        if "add" in sentence and "product nouns" in sentence
+    ]
+    assert any("add no" not in sentence for sentence in claim_sentences)
 
 
 def test_station_summary_is_byte_identical_to_write_plan() -> None:
@@ -264,9 +363,9 @@ def test_reviewer_policy_summary_has_patch_release_metadata() -> None:
         (REPO / "loom-design/.codex-plugin/plugin.json").read_text(encoding="utf-8")
     )
     changelog = (REPO / "loom-design/CHANGELOG.md").read_text(encoding="utf-8")
-    assert claude_manifest["version"] == "2.1.2"
-    assert codex_manifest["version"] == "2.1.2"
-    assert "## [2.1.2]" in changelog
+    assert claude_manifest["version"] == "2.1.3"
+    assert codex_manifest["version"] == "2.1.3"
+    assert "## [2.1.3]" in changelog
 
 
 def test_plugin_declares_requires_contract() -> None:
@@ -278,3 +377,92 @@ def test_interview_reference_within_word_cap() -> None:
     ref = SKILL.parent / "references/interview.md"
     assert ref.is_file()
     assert len(ref.read_text(encoding="utf-8").split()) <= 1200
+
+
+def test_user_decided_forks_require_an_explicit_answer() -> None:
+    """A confirmed restatement cannot silently turn an inferred fork into
+    a user decision. The station must ask only when the alternatives would
+    materially change the outcome, and must not add IDs or a review loop.
+    """
+    text = _text()
+    interview = _section(text, "## Step 1 — Interview")
+    confirmation = _section(text, "## Step 4 — Decision point ①: restate and confirm")
+    rule = " ".join((interview + confirmation).split())
+
+    assert "materially different outcomes" in rule
+    assert "explicit answer" in rule
+    assert "user-decided" in rule
+    assert "accepted restatement" in rule
+    assert "question ID" not in rule
+    assert "review loop" not in rule
+
+
+def test_existing_intent_fields_have_explicit_altitude_boundaries() -> None:
+    text = _text()
+    interview = (SKILL.parent / "references/interview.md").read_text(encoding="utf-8")
+
+    for field in (
+        "Problem",
+        "Proposed outcome",
+        "Acceptance",
+        "Constraints",
+        "Value case",
+        "Out of scope",
+        "Open questions",
+    ):
+        assert f"**{field}**" in text
+
+    assert "observable delivery outcome" in text
+    assert "complete scenarios" in text
+    assert "product intent" in text and "engineering intent" in text
+    assert "field boundaries" in interview
+    assert "blind run" in text
+    assert "blind run" in interview
+    assert '"A task can carry a due date' in " ".join(interview.split())
+
+
+def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
+    text = _text()
+    interview = (SKILL.parent / "references/interview.md").read_text(encoding="utf-8")
+
+    assert "Four to six questions" not in text
+    assert "Eight to ten questions" not in text
+    assert "ask four to six" not in interview
+    assert "ask eight to ten" not in interview
+    assert "gap-driven" in interview
+    assert "already sufficient" in text
+    assert re.search(r"Keep, neutralize, defer, reopen, or\s+delete", text)
+    assert "must remain `open`" in text
+    assert "spec/engineering questions" in text
+    prose = " ".join(text.split())
+    assert "intake question quota" in prose
+    assert "decision points remain unchanged" in prose
+    assert "move it to Open questions" in prose
+    assert "before confirmation" in prose
+
+
+def test_material_choice_rules_live_inside_existing_confirmation_gates() -> None:
+    capture_gate = _gate(
+        _text(), "capture-intent.no-confirmed-without-restatement"
+    )
+    plan_gate = _gate(
+        WRITE_PLAN.read_text(encoding="utf-8"),
+        "write-plan.no-plan-without-confirmed-intent",
+    )
+
+    for gate in (capture_gate, plan_gate):
+        assert "altitude pass" in gate
+        assert "explicit answer" in gate
+        assert "must remain `open`" in gate
+        assert "Publication and second-reviewer authorisation" in gate
+        assert "unknown surface" in gate
+
+
+def test_altitude_pass_runs_after_the_fill_in_list_exists() -> None:
+    drafting = _section(_text(), "## Step 2 — Write the intent")
+    assert drafting.index("- `## Open questions`") < drafting.index(
+        "confirmation gate below performs the altitude pass"
+    )
+    gate = _gate(_text(), "capture-intent.no-confirmed-without-restatement")
+    assert "After drafting, make one altitude pass" in gate
+    assert "reopen it" in gate

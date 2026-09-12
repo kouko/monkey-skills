@@ -9,22 +9,22 @@ publication: automatic — authorized <YYYY-MM-DD> by <name> # optional; only af
 lane: express | gate-only    # optional; absent = repo default (KICKOFF-DEFAULTS.md default-lane); a bare name is never legal — declared form: `lane: <name> — declared <YYYY-MM-DD> by <name>`; switch form: `lane: <name> — switched <YYYY-MM-DD> by <name>, from <wave <n>|round <n>>`; last line wins; only the user writes it
 
 ## Problem
-<the problem and who it affects, in plain language. product: no file paths, function/class identifiers, or script filenames>
+<present pain, who it affects, and consequence; no diagnosis or fix. product: no file paths, function/class identifiers, or script filenames>
 
 ## Proposed outcome
-<direction and shape of the solution>
+<wanted capability or state; no scenario, UI reaction, state transition, or implementation>
 
 ## Acceptance
-1. <what I can do once this is done…; each line provable by a blind run>
+1. <observable delivery outcomes, not scenarios or implementation; each line provable by a blind run>
 
 ## Constraints
-- <…>
+- <already-fixed boundaries, not agent preferences>
 
 ## Value case
-<optional; product's GO/NO-GO and its reasoning>
+<optional; product beneficiary, urgency, and GO/NO-GO; omit obvious engineering value>
 
 ## Out of scope
-- <…>
+- <excluded capabilities, actors, systems, or data; not deferred implementation tasks>
 
 ## Open questions
-- <…>                     # write `- none` when there are none: this section is required, and an empty one is blocked by intent.schema
+- <unresolved outcome or scope choice; delegate spec and engineering questions> # write `- none` when there are none

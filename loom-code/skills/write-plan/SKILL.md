@@ -17,6 +17,15 @@ anything, and you do not ask
 the user to approve the plan: how the work is split is your decision, and
 you write down why.
 
+## Decision boundary
+
+This station chooses the simplest reversible implementation that satisfies the
+confirmed specification. It may split that work into tasks and tests, but it
+must not invent or reinterpret product behaviour. A product gap is returned
+for clarification instead of being silently filled in the plan.
+
+## Workflow setup
+
 When `loom-design` is installed, an upstream station (`capture-intent`)
 has already interviewed the user and confirmed the intent. When it is not
 installed, **you also run that confirmation yourself** — step 3 below.
@@ -35,6 +44,8 @@ prefix; nothing else changes.
 `PLUGIN_ROOT` is provided to Codex plugin hook commands; it is not a general
 skill-shell variable, so Codex stations use the injected skill path shown by
 the host instead of copying Claude's substitution contract.
+
+## Artifact vocabulary
 
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees
@@ -149,6 +160,31 @@ the user named a change, match the slug.
 "provisionally" and you do not confirm on the user's behalf. The checker
 enforces the same rule at step 4 (`intake.confirmed`), so a plan written
 early cannot be shipped anyway.
+When this station performs code-only intake, use the same capture boundary:
+ask only for missing required-field content, never a fixed intake question
+quota; existing decision points remain unchanged.
+Problem holds present pain, who it affects, and the consequence, with no
+diagnosis or fix; Proposed outcome holds the wanted capability;
+Acceptance holds each observable delivery outcome, not value, complete
+scenarios, UI placement, state transitions, test steps, or implementation;
+Constraints are already fixed; product Value case gives beneficiary, urgency,
+and GO/NO-GO, while an engineering intent omits obvious value;
+Out of scope names excluded capability; Open questions contains only unresolved
+outcome or scope choices. After drafting, make one author pass: **Keep,
+neutralize, defer, reopen, or delete**. Behaviour defers to spec, method to
+plan, and unsupported detail is deleted. This pass creates no field, ID,
+requirement, scenario, product behaviour, or review loop.
+Publication and second-reviewer authorisation never enter Problem, Proposed
+outcome, Acceptance, Constraints, or Out of scope. Keep publication
+authorisation in the intent's `publication:` frontmatter line and preserve the
+question list for this plan's `## Questions asked` section.
+Visible effects with an unknown surface and no spec require
+`needs-design: yes` with a surface-neutral reason; internal files alone do not.
+Complete the code-only altitude pass before confirmation. A material outcome
+or scope fork needs an explicit answer; accepting the restatement is
+insufficient; reopen means move it to Open questions, stop confirmation, and
+the intent must remain `open`.
+<!-- /gate -->
 
 ## Step 2 — Standing documents
 
@@ -270,7 +306,8 @@ limit on rounds here; there is on guessing.
 Read the intent's `needs-design:` line. It is `yes` when either holds:
 
 - **(a)** the change touches a surface the user reads or types into — a
-  GUI, a TUI, CLI arguments and output, an external API — and no
+  GUI, a TUI, CLI arguments and output, an external API, or a file artifact a
+  user or external system depends on — and no
   `DESIGN.md` or ui-flows document already covers that surface; or
 - **(b)** the behaviour is multi-state or multi-object, and there is no
   spec for it.

@@ -1,0 +1,59 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-12-close-semantic-boundary-integration-regressions",
+  "content_digest": "4a794426181199295f2fba0606d14a3a1ca39192",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-12-integrate-capture-intent-latest-main/evidence/probes/test_adversarial_capture_intent_integration.py",
+      "artifact": "docs/loom/2026-09-12-integrate-capture-intent-latest-main/evidence/probes/test_adversarial_capture_intent_integration.py",
+      "result": "pass",
+      "command_digest": "c2f069523ee785209d925b970a3c206f3597e4cd9361366077cb29eb83c395cf"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-closing-reviewer-post-rebase",
+      "vendor": "openai",
+      "model": "host-default/unverified",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-code-closing-reviewer-post-rebase",
+      "vendor": "anthropic",
+      "model": "host-default/unverified",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "nit",
+      "dimension": "inconsistency",
+      "anchor": "loom-design/skills/capture-intent/SKILL.md:357",
+      "text": "The altitude pass is referenced as belonging to Step 2 even though the gate defines it later."
+    },
+    {
+      "severity": "nit",
+      "dimension": "ambiguity",
+      "anchor": "loom-code/skills/write-plan/SKILL.md:24",
+      "text": "The product-gap sentence does not name the station that receives the clarification handoff."
+    },
+    {
+      "severity": "nit",
+      "dimension": "ambiguity",
+      "anchor": "loom-code/contract/manifest.yaml:92",
+      "text": "The intent charter must entry describes behavior rather than the content that carries it."
+    }
+  ]
+}

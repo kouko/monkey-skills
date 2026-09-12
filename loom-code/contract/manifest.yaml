@@ -80,7 +80,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
     path: docs/loom/intent/<change-id>.md
     template: intent.md
     charter:
-      answers: "why this change exists and how the user will know it is done"
+      answers: "why this change exists, the value when needed, and which observable delivery outcomes prove it is done"
       readers: ["user at decision point 1", "every later station"]
       must:
         - "Problem in the user's words"
@@ -89,6 +89,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "Constraints"
         - "Out of scope"
         - "Open questions"
+        - "Material user-outcome or scope choices remain open; only non-material unsupported detail is deleted"
       must_not:
         - {kind: "requirement-level behaviour", goes_to: spec}
         - {kind: "task split or file lists",     goes_to: plan}

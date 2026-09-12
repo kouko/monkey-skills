@@ -76,6 +76,16 @@ def _body(text: str) -> str:
     return parts[2] if len(parts) == 3 else text
 
 
+def _gate(text: str, gate_id: str) -> str:
+    m = re.search(
+        rf"<!-- gate: {re.escape(gate_id)} -->(.*?)<!-- /gate -->",
+        text,
+        re.S,
+    )
+    assert m, f"gate {gate_id!r} missing or unclosed"
+    return " ".join(m.group(1).split())
+
+
 def _section(text: str, heading: str) -> str:
     m = re.search(rf"^{re.escape(heading)}$.*?(?=^## |\Z)", text, re.M | re.S)
     assert m, f"section {heading!r} missing"
@@ -160,6 +170,89 @@ def test_description_within_cap() -> None:
 def test_body_within_word_cap() -> None:
     words = len(_body(_text()).split())
     assert words <= WORD_CAP, words
+
+
+def test_requirements_preserve_acceptance_ownership_without_invented_state() -> None:
+    low = _gate(_text(), "write-spec.product-visible-behaviour-confirmed-before-review").lower()
+
+    assert "exact count" in low
+    assert "`→ acceptance #<n>` mapping" in low
+    assert "continuing observable result" in low
+    assert "original action as the `when` trigger" in low
+    assert re.search(
+        r"do not invent .*named state.*lifecycle.*storage.*persistence mechanism",
+        low,
+    )
+
+
+def test_out_of_scope_is_not_promoted_to_product_prohibition() -> None:
+    low = _gate(_text(), "write-spec.product-visible-behaviour-confirmed-before-review").lower()
+
+    assert re.search(
+        r"do not promote .*out of scope.*capability does not exist.*prohibited.*irreversible.*one-way",
+        low,
+    )
+    assert re.search(r"out of scope.*not designed.*not implemented.*not verified", low)
+
+
+def test_ui_flows_do_not_invent_visible_reactions() -> None:
+    writing = _gate(
+        _text(), "write-spec.product-visible-behaviour-confirmed-before-review"
+    ).lower()
+
+    assert re.search(r"do not invent an interface, control, or status presentation", writing)
+    assert "four variants `references/ui-flows.md` requires" in writing
+    assert re.search(r"variant's content is unsupplied.*open question", writing)
+
+
+def test_semantic_inversions_are_rejected() -> None:
+    """Adversarial replay: opposite rules may reuse every important noun."""
+    text = _text()
+    gate = _gate(text, "write-spec.product-visible-behaviour-confirmed-before-review").lower()
+    invent_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", gate)
+        if re.search(r"\binvent(?:s|ing)?\b", sentence)
+    ]
+    assert invent_sentences and all(
+        re.search(r"\b(?:do not|instead of)\b.*\binvent", sentence)
+        for sentence in invent_sentences
+    )
+
+    promoted = text.replace("Do not promote Out of scope", "Promote Out of scope")
+    promoted_gate = _gate(
+        promoted, "write-spec.product-visible-behaviour-confirmed-before-review"
+    ).lower()
+    assert not re.search(
+        r"do not promote .*out of scope.*capability does not exist.*prohibited.*irreversible.*one-way",
+        promoted_gate,
+    )
+
+    invented = text.replace("Do not invent an interface", "Invent an interface")
+    invented_gate = _gate(
+        invented, "write-spec.product-visible-behaviour-confirmed-before-review"
+    ).lower()
+    assert not re.search(
+        r"do not invent an interface, control, or status presentation", invented_gate
+    )
+
+    contradicted = re.sub(
+        r"instead of\s+inventing it\.",
+        "instead of inventing it. Invent the control that completes the flow.",
+        text,
+    )
+    contradicted_gate = _gate(
+        contradicted, "write-spec.product-visible-behaviour-confirmed-before-review"
+    ).lower()
+    invent_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", contradicted_gate)
+        if re.search(r"\binvent(?:s|ing)?\b", sentence)
+    ]
+    assert any(
+        not re.search(r"\b(?:do not|instead of)\b.*\binvent", sentence)
+        for sentence in invent_sentences
+    )
 
 
 def test_station_summary_is_byte_identical_to_write_plan() -> None:
