@@ -18,6 +18,20 @@ CORPUS = (
     / "claude-review-packet.md"
 )
 EXPECTED_SHA256 = "eafe902d69b4ff1c0afe311ea76e065b4a4c6af5787cc9c985856d27d4384de2"
+CLAUDE_CLI_REFERENCE = "https://docs.anthropic.com/en/docs/claude-code/cli-usage"
+REQUIRED_FLAGS = (
+    "--safe-mode",
+    "--disable-slash-commands",
+    "--permission-mode",
+    "--permission-prompts",
+    "--allowedTools",
+    "--model",
+    "--effort",
+    "--max-budget-usd",
+    "--output-format",
+    "--json-schema",
+    "--session-id",
+)
 
 INSTRUCTION = """You are an independent architecture and policy reviewer.
 Review the proposal below using only its text. Do not use tools, external files,
@@ -76,23 +90,30 @@ SCHEMA = {
 }
 
 
-def main() -> int:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", choices=("sonnet", "opus"), required=True)
     parser.add_argument("--effort", choices=("low", "medium", "high"), required=True)
     parser.add_argument("--replicate", type=int, choices=(1, 2), required=True)
     parser.add_argument("--max-budget-usd", type=float, default=1.0)
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    corpus = CORPUS.read_bytes()
-    digest = hashlib.sha256(corpus).hexdigest()
-    if digest != EXPECTED_SHA256:
-        raise SystemExit(f"corpus hash mismatch: {digest}")
 
-    prompt = INSTRUCTION.encode() + corpus + b"\n--- END PROPOSAL ---\n"
-    session_id = str(uuid.uuid4())
-    stem = f"{args.model}-{args.effort}-r{args.replicate}"
-    command = [
+def require_cli_contract() -> None:
+    """Fail before the paid call when the installed CLI surface has drifted."""
+    # Grounding: Anthropic's canonical Claude Code CLI reference above.
+    completed = subprocess.run(
+        ["claude", "--help"], capture_output=True, check=False
+    )
+    help_text = completed.stdout.decode(errors="replace")
+    missing = [flag for flag in REQUIRED_FLAGS if flag not in help_text]
+    if completed.returncode != 0 or missing:
+        detail = ", ".join(missing) if missing else "claude --help failed"
+        raise SystemExit(f"Claude CLI missing required flags: {detail}")
+
+
+def build_command(args: argparse.Namespace, session_id: str) -> list[str]:
+    return [
         "claude",
         "-p",
         "--safe-mode",
@@ -116,29 +137,56 @@ def main() -> int:
         "--session-id",
         session_id,
     ]
+
+
+def sanitized(data: bytes, session_id: str) -> bytes:
+    return data.replace(session_id.encode(), b"[redacted-session]")
+
+
+def persist(
+    stem: str,
+    completed: subprocess.CompletedProcess[bytes],
+    metadata: dict[str, object],
+    session_id: str,
+) -> None:
+    (HERE / f"{stem}.stdout.json").write_bytes(sanitized(completed.stdout, session_id))
+    (HERE / f"{stem}.stderr.txt").write_bytes(sanitized(completed.stderr, session_id))
+    (HERE / f"{stem}.metadata.json").write_text(
+        json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def main() -> int:
+    args = parse_args()
+
+    corpus = CORPUS.read_bytes()
+    digest = hashlib.sha256(corpus).hexdigest()
+    if digest != EXPECTED_SHA256:
+        raise SystemExit(f"corpus hash mismatch: {digest}")
+
+    require_cli_contract()
+    prompt = INSTRUCTION.encode() + corpus + b"\n--- END PROPOSAL ---\n"
+    session_id = str(uuid.uuid4())
+    stem = f"{args.model}-{args.effort}-r{args.replicate}"
     completed = subprocess.run(
-        command,
+        build_command(args, session_id),
         input=prompt,
         cwd=HERE,
         capture_output=True,
         check=False,
     )
-    (HERE / f"{stem}.stdout.json").write_bytes(completed.stdout)
-    (HERE / f"{stem}.stderr.txt").write_bytes(completed.stderr)
     metadata = {
         "arm": stem,
         "requested_model": args.model,
         "requested_effort": args.effort,
         "replicate": args.replicate,
-        "session_id": session_id,
         "corpus_sha256": digest,
         "prompt_sha256": hashlib.sha256(prompt).hexdigest(),
         "max_budget_usd": args.max_budget_usd,
         "returncode": completed.returncode,
+        "claude_cli_reference": CLAUDE_CLI_REFERENCE,
     }
-    (HERE / f"{stem}.metadata.json").write_text(
-        json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
-    )
+    persist(stem, completed, metadata, session_id)
     print(json.dumps(metadata))
     return completed.returncode
 

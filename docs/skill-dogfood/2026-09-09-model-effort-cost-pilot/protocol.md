@@ -23,6 +23,9 @@ persisted session record's effort.
 - Same instruction, schema, corpus bytes, tool policy, and per-run budget.
 - Two independent sessions per arm.
 - Per-run hard budget: USD 1.00; total hard budget: USD 4.00.
+- The replay runner verifies its required Claude CLI flags before the paid call
+  and removes its generated session identifier before writing publication
+  artifacts.
 
 ## Pre-registered scoring
 
