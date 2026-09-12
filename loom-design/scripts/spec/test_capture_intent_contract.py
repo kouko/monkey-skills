@@ -207,3 +207,57 @@ def test_interview_reference_within_word_cap() -> None:
     ref = SKILL.parent / "references/interview.md"
     assert ref.is_file()
     assert len(ref.read_text(encoding="utf-8").split()) <= 1200
+
+
+def test_user_decided_forks_require_an_explicit_answer() -> None:
+    """A confirmed restatement cannot silently turn an inferred fork into
+    a user decision. The station must ask only when the alternatives would
+    materially change the outcome, and must not add IDs or a review loop.
+    """
+    text = _text()
+    interview = _section(text, "## Step 1 — Interview")
+    confirmation = _section(text, "## Step 4 — Decision point ①: restate and confirm")
+    rule = interview + confirmation
+
+    assert "materially different outcomes" in rule
+    assert "explicit answer" in rule
+    assert "user-decided" in rule
+    assert "accepted restatement" in rule
+    assert "question ID" not in rule
+    assert "review loop" not in rule
+
+
+def test_existing_intent_fields_have_explicit_altitude_boundaries() -> None:
+    text = _text()
+    interview = (SKILL.parent / "references/interview.md").read_text(encoding="utf-8")
+
+    for field in (
+        "Problem",
+        "Proposed outcome",
+        "Acceptance",
+        "Constraints",
+        "Value case",
+        "Out of scope",
+        "Open questions",
+    ):
+        assert f"**{field}**" in text
+
+    assert "observable delivery outcome" in text
+    assert "complete scenarios" in text
+    assert "product intent" in text and "engineering intent" in text
+    assert "field boundaries" in interview
+
+
+def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
+    text = _text()
+    interview = (SKILL.parent / "references/interview.md").read_text(encoding="utf-8")
+
+    assert "Four to six questions" not in text
+    assert "Eight to ten questions" not in text
+    assert "ask four to six" not in interview
+    assert "ask eight to ten" not in interview
+    assert "gap-driven" in interview
+    assert "already sufficient" in text
+    assert "Keep, neutralize, defer, reopen, or delete" in text
+    assert "must remain `open`" in text
+    assert "spec question" in text and "engineering question" in text
