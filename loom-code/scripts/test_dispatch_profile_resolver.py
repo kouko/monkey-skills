@@ -289,7 +289,7 @@ def test_nonconforming_output_at_redispatch_limit_fails_closed() -> None:
     assert result["reason"] == "no-legal-redispatch"
 
 
-def test_nonconforming_output_with_unknown_failure_kind_fails_closed() -> None:
+def test_nonconforming_output_with_unknown_failure_kind_is_rejected() -> None:
     payload = {
         "event": "after-execution",
         "last_attempt": {
@@ -306,6 +306,91 @@ def test_nonconforming_output_with_unknown_failure_kind_fails_closed() -> None:
 
     with pytest.raises(dispatch_profile.InputError):
         dispatch_profile.resolve(payload)
+
+
+def test_nonconforming_known_nonrouting_failure_is_terminal() -> None:
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": True,
+            "success": False,
+            "conforming": False,
+            "profile": {"model": "frontier", "effort": "medium"},
+            "failure_kind": "timeout",
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["outcome"] == "execution-failed"
+    assert result["reason"] == "non-routing-failure"
+
+
+def test_nonconforming_output_without_failure_kind_is_terminal() -> None:
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": True,
+            "success": False,
+            "conforming": False,
+            "profile": {"model": "frontier", "effort": "medium"},
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["outcome"] == "execution-failed"
+    assert result["reason"] == "no-legal-redispatch"
+
+
+def test_incomplete_attempt_fails_closed() -> None:
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": False,
+            "success": False,
+            "conforming": False,
+            "profile": {"model": "frontier", "effort": "medium"},
+            "failure_kind": "timeout",
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["outcome"] == "execution-failed"
+    assert result["reason"] == "no-legal-redispatch"
+
+
+def test_nonconforming_malformed_output_never_escalates() -> None:
+    profile = {"model": "frontier", "effort": "medium"}
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": True,
+            "success": False,
+            "conforming": False,
+            "profile": profile,
+            "failure_kind": "malformed-response",
+            "failure_trigger": "high-risk-decision-unsettled",
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": 0,
+    }
+
+    result = dispatch_profile.resolve(payload)
+
+    assert result["effective_profile"] == profile
+    assert result["reason"] == "nonconforming-output-redispatch"
 
 
 def test_cli_is_deterministic_json_and_rejects_malformed_input() -> None:

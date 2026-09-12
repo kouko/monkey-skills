@@ -9,6 +9,8 @@
 - Keep YAML validation and Closing Review's stricter one-retry limit in the
   orchestrator while the Claude runner remains a content-agnostic,
   single-attempt transport boundary.
+- Preserve `execution-failed` for missing or known non-retry failure kinds;
+  only an unknown kind is rejected as malformed caller input.
 
 ## [2.2.0] — 2026-09-11 — the recording moment stated at the end of review
 

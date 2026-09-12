@@ -135,7 +135,8 @@ def test_nonconforming_output_retry_keeps_validation_and_retry_ownership_separat
     runner = (PLUGIN / "scripts" / "claude_reviewer.py").read_text(encoding="utf-8")
 
     assert "retry the same effective profile without model or effort escalation" in profile
-    assert "A missing or different kind fails closed" in profile
+    assert "missing kind or another known kind returns `execution-failed`" in profile
+    assert "an unknown kind is malformed input" in profile
     assert "consumes the shared completed-redispatch budget" in profile
     assert "Review orchestrator enforces its stricter one-retry limit" in review
     assert "never parse or validate reviewer YAML" in review
