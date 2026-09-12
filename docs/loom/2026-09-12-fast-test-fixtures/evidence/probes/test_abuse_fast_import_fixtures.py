@@ -113,11 +113,20 @@ def test_shell_fixture_object_id_is_pinned(tmp_path):
     [
         b"Decision: trailing spaces   \nand more   \n",
         b"Decision: trailing blank lines\n\n\n\n",
-        b"Decision: leading blanks\n",
+        b"Decision: single trailing newline\n",
         b"\n\nDecision: body opening with blank lines\n",
         b"Decision: no final newline",
         b"Decision: interior   blank\n\n\n\nlines kept\n",
         b"   \n",
+        # git's `sane_isspace` counts only space/tab/CR/LF, so vertical tab
+        # (0x0b) and form feed (0x0c) are NOT trailing whitespace to git,
+        # while Python's argument-less `bytes.rstrip()` strips both. These
+        # three cases are the differential: interior and trailing together,
+        # then each byte alone in the trailing position, which is the only
+        # position where the two implementations can disagree.
+        b"Decision: vertical tab\x0b\nform feed\x0c\n",
+        b"Decision: trailing vertical tab\x0b",
+        b"Decision: trailing form feed\x0c",
     ],
 )
 def test_cleanup_whitespace_matches_real_git(tmp_path, body):
