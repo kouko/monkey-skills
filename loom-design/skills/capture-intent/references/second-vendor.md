@@ -1,6 +1,6 @@
-# The second-reviewer suggestion
+# Second-vendor mode routing
 
-At most once per change. A second reviewer only counts if it is a
+A second reviewer only counts if it is a
 non-interactive command-line tool from a **different model vendor than
 the host you are running on**: on Claude Code look for `codex` or
 `gemini`, on Codex look for `claude` or `gemini`. Detect it with
@@ -12,25 +12,26 @@ does. Never `which`: it reports shell aliases and stale hashes, and
 suggesting a tool that turns out not to run costs the user a question for
 nothing. Never suggest the host itself.
 
-Include the suggestion only when `docs/loom/KICKOFF-DEFAULTS.md` has no
-`second-vendor:` line and such a tool is present. Say it in one plain
-sentence with the number in it: reviewing with a second vendor costs a
-few minutes and some quota, and when this system's own spec was
-reviewed, five of the seven serious problems were found by only one of
-the two vendors. Whatever the answer, record it in
-`docs/loom/KICKOFF-DEFAULTS.md` as
-`- second-vendor: <cli> | none — <reason> (<date>)` and never ask again;
-if that file does not exist yet, create it first from
-`KICKOFF-DEFAULTS.md` in `loom-code`'s `contract/templates/`. If the line
-already exists, say nothing about it.
+When `docs/loom/KICKOFF-DEFAULTS.md` has no `second-vendor:` line, create
+the file from `KICKOFF-DEFAULTS.md` in loom-code's contract templates if
+needed and record `second-vendor: suggest`. `suggest` adds no question at
+capture-intent. Pass the observed mode forward; write-plan owns the
+post-plan availability or recommendation notice and its response timing.
 
-**`second-vendor: ask`** is a different line from the two above and is
-asked every change, not suggested once: when
+This standalone plugin does not call `second_vendor_policy.py` and does not
+reimplement its risk mapping. That executable belongs to loom-code.
+
+**`ask`** puts one question into decision point ① on every full-lane change:
+when
 `docs/loom/KICKOFF-DEFAULTS.md` carries that value, ask one plain
 sentence in this same message — 「這次要不要用 Codex 當第二位讀者？」
 ("Do you want to use Codex as the second reader this time?") — and the
 answer governs this change only, never rewriting the KICKOFF line. Add
 the question to the running list kept in SKILL.md, so it lands in the
-plan's `## Questions asked`; pass the answer (`<cli>` or `none`) directly
+plan's `## Questions asked`; pass the accepted CLI or the decline directly
 to the closing review. In the small lane there is only one reader, so this
 question is not asked.
+
+A **fixed CLI** is the standing reviewer choice and adds no intent question.
+Probe it with the same availability rule before downstream use; never replace
+it silently with another vendor.

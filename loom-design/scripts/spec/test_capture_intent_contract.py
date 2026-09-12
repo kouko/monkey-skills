@@ -25,6 +25,9 @@ SKILL = REPO / "loom-design/skills/capture-intent/SKILL.md"
 WRITE_PLAN = REPO / "loom-code/skills/write-plan/SKILL.md"
 PLUGIN_JSON = REPO / "loom-design/.claude-plugin/plugin.json"
 MECHANISMS = REPO / "docs/loom/evidence/mechanisms.yaml"
+SECOND_VENDOR_REFERENCE = (
+    REPO / "loom-design/skills/capture-intent/references/second-vendor.md"
+)
 
 WORD_CAP = 3500
 DESCRIPTION_CAP = 400
@@ -196,6 +199,35 @@ def test_openingLinePin_negatedInstruction_rejected() -> None:
 def test_second_vendor_evidence_number_present() -> None:
     text = _text()
     assert "five of the seven" in text
+
+
+def test_suggest_skips_the_intent_decision_point() -> None:
+    text = _text()
+    flat = " ".join(text.split())
+    assert "`suggest` adds no question at capture-intent" in flat
+    assert "write-plan owns its post-plan notice" in flat
+
+
+def test_ask_keeps_the_full_lane_question() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "every full-lane change" in flat
+    assert "這次要不要用" in text
+    assert "small lane" in flat
+
+
+def test_second_vendor_modes_match_loom_code_contract() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    assert "`suggest`" in text
+    assert "`ask`" in text
+    assert "fixed CLI" in text
+    assert "second-vendor: <cli> | none" not in text
+    assert "(` <cli> ` or `none`)" not in text
+
+
+def test_capture_intent_does_not_call_loom_code_policy() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    assert "does not call `second_vendor_policy.py`" in text
 
 
 def test_plugin_declares_requires_contract() -> None:
