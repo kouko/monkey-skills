@@ -27,7 +27,7 @@ charter: 1.0
 - Risk: REQ-1–4; agent-decided — use one pure standard-library state machine and JSON CLI, not a resident resolver service.
 
 **W3-02 Register and reconcile the routing mechanism**  after: W3-01  acceptance: 5
-- Files: docs/loom/evidence/mechanisms.yaml, loom-code/CHANGELOG.md, loom-code/scripts/test_agent_model_frontmatter.py, docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md, loom-code/scripts/test_dispatch_profile_contract.py
+- Files: docs/loom/evidence/mechanisms.yaml, loom-code/CHANGELOG.md, loom-code/scripts/test_agent_model_frontmatter.py, loom-code/scripts/test_dispatch_profile_contract.py, docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/{protocol.md,report.md,run_pilot.py,test_run_pilot.py,*.json,*.txt}, docs/skill-dogfood/2026-09-09-loom-main-relative-dispatch-plan/
 - Test: A5 positive: resolver-matrix-and-mechanism-pass; negative: stale-ledger-or-unregistered-gate; boundary: historical-calibration-not-routing.
 - Risk: REQ-5; agent-decided — register one shared gate and correct stale records instead of adding per-station mechanisms or persistent state.
 

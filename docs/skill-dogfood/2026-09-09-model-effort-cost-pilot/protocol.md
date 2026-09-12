@@ -24,8 +24,9 @@ persisted session record's effort.
 - Two independent sessions per arm.
 - Per-run hard budget: USD 1.00; total hard budget: USD 4.00.
 - The replay runner verifies its required Claude CLI flags before the paid call
-  and removes its generated session identifier before writing publication
-  artifacts.
+  and removes session and UUID fields before writing artifacts. Its default
+  output is a temporary directory outside the repository; publication requires
+  an explicit `--out-dir` followed by the privacy checks used for this snapshot.
 
 ## Pre-registered scoring
 

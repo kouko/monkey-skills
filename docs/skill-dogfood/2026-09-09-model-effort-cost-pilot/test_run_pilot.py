@@ -95,7 +95,10 @@ class RunPilotTest(unittest.TestCase):
             corpus.write_bytes(corpus_bytes)
             session_id = uuid.UUID("12345678-1234-4234-9234-123456789abc")
             raw_stdout = json.dumps(
-                {"session_id": str(session_id), "result": {"verdict": "ACCEPT"}}
+                {
+                    "session_id": str(session_id),
+                    "result": {"uuid": str(session_id), "verdict": "ACCEPT"},
+                }
             ).encode()
             completed = subprocess.CompletedProcess(
                 args=["claude"], returncode=0, stdout=raw_stdout, stderr=b""
@@ -114,6 +117,8 @@ class RunPilotTest(unittest.TestCase):
                 "low",
                 "--replicate",
                 "1",
+                "--out-dir",
+                str(output_dir),
             ]
             stdout = io.StringIO()
 
@@ -146,6 +151,33 @@ class RunPilotTest(unittest.TestCase):
                 (output_dir / "sonnet-low-r1.metadata.json").read_text()
             )
             self.assertNotIn("session_id", metadata)
+            self.assertNotIn("claude_cli_reference", metadata)
+            result = json.loads(
+                (output_dir / "sonnet-low-r1.stdout.json").read_text()
+            )
+            self.assertNotIn("session_id", result)
+            self.assertNotIn("uuid", result["result"])
+
+    def test_persist_rejects_an_unrelated_private_identifier(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            completed = subprocess.CompletedProcess(
+                args=["claude"],
+                returncode=0,
+                stdout=b'{"result":"/Users/private/project"}',
+                stderr=b"",
+            )
+
+            with self.assertRaisesRegex(SystemExit, "unsafe publication artifact"):
+                run_pilot.persist(
+                    output_dir,
+                    "sonnet-low-r1",
+                    completed,
+                    {"arm": "sonnet-low-r1"},
+                    "12345678-1234-4234-9234-123456789abc",
+                )
+
+            self.assertEqual(list(output_dir.glob("sonnet-low-r1.*")), [])
 
 
 if __name__ == "__main__":
