@@ -89,7 +89,7 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "Constraints"
         - "Out of scope"
         - "Open questions"
-        - "Unsupported product decisions remain open or are deleted"
+        - "Material user-outcome or scope choices remain open; only non-material unsupported detail is deleted"
       must_not:
         - {kind: "requirement-level behaviour", goes_to: spec}
         - {kind: "task split or file lists",     goes_to: plan}
