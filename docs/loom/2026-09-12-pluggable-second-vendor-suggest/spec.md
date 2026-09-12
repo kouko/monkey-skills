@@ -40,7 +40,7 @@ The version 1 policy receives exactly these fields:
 - `configured_mode`: `ask`, `suggest`, or `fixed`; `fixed_vendor` is required only for `fixed`.
 - `host_vendor`: `claude`, `codex`, or `gemini`.
 - `lane`: `small` or `full`.
-- `usable_vendors`: a unique set drawn from `claude`, `codex`, and `gemini`, excluding `host_vendor`; the policy orders candidates as Claude, Codex, then Gemini after excluding the host, so caller order cannot change the result.
+- `usable_vendors`: a unique set drawn from `claude`, `codex`, and `gemini`, excluding `host_vendor`. A vendor enters this set only when `command -v <cli>` produces non-empty output and `<cli> --version` exits 0; discovery never installs, authenticates, or invokes a model-backed task. The policy orders candidates as Claude, Codex, then Gemini after excluding the host, so caller order cannot change the result.
 - `risk_evidence`: a unique array of objects shaped `{signal, anchors}`. `signal` is drawn from `security-or-privacy-boundary`, `public-contract-or-persistent-format`, `cross-system-or-provider-integration`, `review-verification-or-publication-mechanism`, `critical-behavior-not-fully-automated`, and `irreversible-data-or-architecture`; `anchors` is a non-empty unique array of `path :: verbatim anchor` strings from the confirmed intent, spec, plan Risk fields, or cumulative diff. The write-plan station supplies observed evidence, while this contract alone maps each canonical signal to notice behavior.
 - `review_started`: boolean.
 - `response`: `pending`, `decline`, or `accept`; `response_vendor` is required only for `accept` and must identify a usable vendor.
@@ -57,7 +57,17 @@ The version 1 policy returns exactly these fields:
 
 For `suggest`, no usable vendor returns `no-notice` with both vendor fields null; otherwise the first canonical candidate becomes `notice_vendor`. A full-lane change with zero evidence objects returns `availability`; one or more validated objects returns `recommendation` with every grounded object in canonical order. A small-lane change returns `availability` with the canonical `notice_vendor`, empty recommendation reasons, and `opt_in_eligible: false` regardless of supplied risk evidence. A full-lane acceptance before Review returns `selection-confirmed` with both vendor fields set to the accepted vendor; decline or no response leaves both vendor fields null. Acceptance after Review starts returns `next-change-only` with `notice_vendor` set to the requested vendor and `effective_vendor` null. The module rejects unknown fields, unknown enum values, duplicate set members or signals, empty or malformed anchors, wrong types, a host vendor in `usable_vendors`, missing mode-dependent fields, unavailable accepted vendors, and other contradictory inputs as `input-error` without emitting a policy decision.
 
-The stable `reason_code` population is `mode-not-suggest`, `no-usable-vendor`, `small-lane-availability-only`, `full-lane-availability`, `full-lane-risk-recommendation`, `selection-accepted`, `selection-declined`, `no-response`, and `response-too-late`. Before Review, `response: pending` produces the initial availability or recommendation notice; after Review starts, the same response produces no notice and `no-response`. A decline produces no notice and `selection-declined`; an acceptance uses `selection-accepted` before Review and `response-too-late` afterward. Skills display the returned notice fields; they do not infer a reason from input fields.
+The stable `reason_code` population is `mode-not-suggest`, `no-usable-vendor`, `small-lane-availability-only`, `small-lane-no-opt-in`, `small-lane-declined`, `full-lane-availability`, `full-lane-risk-recommendation`, `selection-accepted`, `selection-declined`, `no-response`, and `response-too-late`. For a full-lane change before Review, `response: pending` produces the initial availability or recommendation notice; after Review starts, the same response produces no notice and `no-response`. A decline produces no notice and `selection-declined`; an acceptance uses `selection-accepted` before Review and `response-too-late` afterward. Skills display the returned notice fields; they do not infer a reason from input fields.
+
+Small-lane response handling is fixed independently of risk evidence:
+
+| Response | Before Review | After Review starts |
+|---|---|---|
+| `pending` | `availability`, canonical `notice_vendor`, null `effective_vendor`, `opt_in_eligible: false`, `small-lane-availability-only` | `no-notice`, null vendor fields, `opt_in_eligible: false`, `no-response` |
+| `decline` | `no-notice`, null vendor fields, `opt_in_eligible: false`, `small-lane-declined` | same |
+| `accept` | `next-change-only`, requested `notice_vendor`, null `effective_vendor`, `opt_in_eligible: false`, `small-lane-no-opt-in` | same |
+
+Thus a small-lane response can never select or dispatch another reviewer for the active change. `next-change-only` is informational and creates no persisted preference; a later full-lane change evaluates its own repository setting and active-task response.
 
 For `ask` and `fixed`, the policy returns `reason_code: mode-not-suggest` and does not replace their existing orchestration. The removed `none` value is rejected by the kickoff-default grammar with guidance to migrate to `suggest`; the policy never accepts or aliases it.
 
