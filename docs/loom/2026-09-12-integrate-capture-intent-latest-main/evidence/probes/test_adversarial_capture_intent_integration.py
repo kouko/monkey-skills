@@ -12,10 +12,16 @@ def read(relative: str) -> str:
     return (ROOT / relative).read_text(encoding="utf-8")
 
 
+def flatten(text: str) -> str:
+    return " ".join(text.split())
+
+
 def test_capture_contract_after_merge_preserves_scope_boundary() -> None:
-    capture = read("loom-design/skills/capture-intent/SKILL.md")
-    code_only = read("loom-code/skills/write-plan/SKILL.md")
-    interview = read("loom-design/skills/capture-intent/references/interview.md")
+    capture = flatten(read("loom-design/skills/capture-intent/SKILL.md"))
+    code_only = flatten(read("loom-code/skills/write-plan/SKILL.md"))
+    interview = flatten(
+        read("loom-design/skills/capture-intent/references/interview.md")
+    )
     manifest = read("loom-code/contract/manifest.yaml")
 
     for text in (capture, code_only):
