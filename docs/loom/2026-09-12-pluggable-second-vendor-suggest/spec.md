@@ -41,20 +41,23 @@ The version 1 policy receives exactly these fields:
 - `host_vendor`: `claude`, `codex`, or `gemini`.
 - `lane`: `small` or `full`.
 - `usable_vendors`: a unique set drawn from `claude`, `codex`, and `gemini`, excluding `host_vendor`; the policy orders candidates as Claude, Codex, then Gemini after excluding the host, so caller order cannot change the result.
-- `risk_signals`: a unique set drawn from `security-or-privacy-boundary`, `public-contract-or-persistent-format`, `cross-system-or-provider-integration`, `review-verification-or-publication-mechanism`, `critical-behavior-not-fully-automated`, and `irreversible-data-or-architecture`.
+- `risk_evidence`: a unique array of objects shaped `{signal, anchors}`. `signal` is drawn from `security-or-privacy-boundary`, `public-contract-or-persistent-format`, `cross-system-or-provider-integration`, `review-verification-or-publication-mechanism`, `critical-behavior-not-fully-automated`, and `irreversible-data-or-architecture`; `anchors` is a non-empty unique array of `path :: verbatim anchor` strings from the confirmed intent, spec, plan Risk fields, or cumulative diff. The write-plan station supplies observed evidence, while this contract alone maps each canonical signal to notice behavior.
 - `review_started`: boolean.
 - `response`: `none`, `decline`, or `accept`; `response_vendor` is required only for `accept` and must identify a usable vendor.
 
 The version 1 policy returns exactly these fields:
 
 - `effective_vendor`: a vendor id or null.
+- `notice_vendor`: the vendor id the skill names, or null when no notice is emitted.
 - `notice_kind`: `none`, `availability`, `recommendation`, `selection-confirmed`, or `next-change-only`.
-- `recommendation_reasons`: the matched risk signals in the canonical order listed above.
+- `recommendation_reasons`: the validated `{signal, anchors}` objects in the canonical signal order listed above; the skill presents these returned anchors and does not classify or reconstruct risk.
 - `opt_in_eligible`: boolean.
 - `wait_for_user`: always false for `suggest`.
 - `reason_code`: one stable machine-readable value describing the selected path.
 
-For `suggest`, no usable vendor returns `none`; otherwise the first canonical candidate is selected for the notice. A full-lane change with zero signals returns `availability`; one or more signals returns `recommendation` with every matched signal in canonical order. A small-lane change returns `availability` with `opt_in_eligible: false` regardless of signals. A full-lane acceptance before Review returns `selection-confirmed` and the accepted vendor; decline or no response leaves `effective_vendor` null. Acceptance after Review starts returns `next-change-only` with no effective vendor. The module rejects unknown fields, unknown enum values, duplicate set members, wrong types, a host vendor in `usable_vendors`, missing mode-dependent fields, unavailable accepted vendors, and other contradictory inputs as `input-error` without emitting a policy decision.
+For `suggest`, no usable vendor returns `none` with both vendor fields null; otherwise the first canonical candidate becomes `notice_vendor`. A full-lane change with zero evidence objects returns `availability`; one or more validated objects returns `recommendation` with every grounded object in canonical order. A small-lane change returns `availability` with the canonical `notice_vendor`, empty recommendation reasons, and `opt_in_eligible: false` regardless of supplied risk evidence. A full-lane acceptance before Review returns `selection-confirmed` with both vendor fields set to the accepted vendor; decline or no response leaves both vendor fields null. Acceptance after Review starts returns `next-change-only` with `notice_vendor` set to the requested vendor and `effective_vendor` null. The module rejects unknown fields, unknown enum values, duplicate set members or signals, empty or malformed anchors, wrong types, a host vendor in `usable_vendors`, missing mode-dependent fields, unavailable accepted vendors, and other contradictory inputs as `input-error` without emitting a policy decision.
+
+The stable `reason_code` population is `mode-not-suggest`, `no-usable-vendor`, `small-lane-availability-only`, `full-lane-availability`, `full-lane-risk-recommendation`, `selection-accepted`, `selection-declined`, `no-response`, and `response-too-late`. Before Review, `response: none` produces the initial availability or recommendation notice; after Review starts, the same response produces no notice and `no-response`. A decline produces no notice and `selection-declined`; an acceptance uses `selection-accepted` before Review and `response-too-late` afterward. Skills display the returned notice fields; they do not infer a reason from input fields.
 
 For `none`, `ask`, and `fixed`, the policy returns `reason_code: mode-not-suggest` and does not replace their existing orchestration. This keeps their behavior stable while ensuring only the `suggest` path owns risk classification.
 
