@@ -35,3 +35,4 @@ charter: 1.0
 2. A fixture rewrite can quietly make an assertion vacuous — the class of bug this file's own comment at `:101` records. Every task's negative case mutates the fixture and demands the shape assertion go red.
 3. CI's `check_mechanisms.py --baseline origin/main` blocks a new mechanism without a budget exception. This change adds no file and no mechanism; it rewrites three existing builders.
 4. `fast-import` writes refs directly, so a fixture repo can end up with an unpopulated worktree. Each builder must leave the tracked file present, as the `--path` cases read it.
+5. The version gate counts any change under a plugin's `skills/` tree as skill content, so the touched fixtures oblige a loom-workflow bump plus manifest sync. That pair rides in its own commit and owns no Acceptance line.
