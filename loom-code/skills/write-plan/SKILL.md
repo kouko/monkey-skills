@@ -143,6 +143,22 @@ the user named a change, match the slug.
   the section to have content, so with nothing open write exactly `- none`
   under the heading rather than leaving it blank.
 
+When this station performs code-only intake, use the same capture boundary:
+ask only for missing required-field content, never a fixed intake question
+quota; existing decision points remain unchanged.
+Problem holds present pain; Proposed outcome holds the wanted capability;
+Acceptance holds each observable delivery outcome, not value, complete
+scenarios, UI placement, state transitions, test steps, or implementation;
+Constraints are already fixed; product Value case explains why and GO/NO-GO;
+Out of scope names excluded capability; Open questions contains only unresolved
+outcome or scope choices. After drafting, make one author pass: **Keep,
+neutralize, defer, reopen, or delete**. Behaviour defers to spec, method to
+plan, and unsupported detail is deleted; reopen means move it to Open questions
+and stop confirmation. A material fork needs an explicit answer before confirmation;
+accepting the restatement is insufficient. If unresolved, the intent
+must remain `open`. This pass creates no field, ID, requirement, scenario,
+product behaviour, or review loop.
+
 <!-- gate: write-plan.no-plan-without-confirmed-intent -->
 **No plan is written without a confirmed intent.** If `status:` is not
 `confirmed <date>` by the end of step 3, you stop; you do not draft a plan

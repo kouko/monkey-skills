@@ -261,3 +261,8 @@ def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
     assert "Keep, neutralize, defer, reopen, or delete" in text
     assert "must remain `open`" in text
     assert "spec question" in text and "engineering question" in text
+    prose = " ".join(text.split())
+    assert "intake question quota" in prose
+    assert "decision points remain unchanged" in prose
+    assert "move it to Open questions" in prose
+    assert "before confirmation" in prose
