@@ -36,6 +36,14 @@ remains independently installable.
 This release requires loom contract 2.1 so an older loom-code installation
 cannot misread `suggest` as a fixed CLI.
 
+## [2.0.2] — 2026-09-12 — intent content boundaries
+
+Patch. `capture-intent` now defines the altitude of every existing intent
+field, asks only for missing information, and performs one post-draft author
+self-check. Material outcome or scope forks require an explicit answer before
+becoming `user-decided`; accepting a restatement is not enough. The change adds
+no field, identifier, checker rule, station, subagent, or review loop.
+
 ## [2.0.1] — 2026-09-09 — explicit publication authorization
 
 Patch. When the user confirms automatic publication with the intent,

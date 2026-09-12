@@ -10,7 +10,12 @@ Ask one question at a time and let the answer choose the next one. Reject
 an aspiration offered as an answer: when the reply stays abstract, ask for
 an example rather than accepting confidence as evidence.
 
-## Engineering — ask four to six
+Treat the questions below as a gap-driven bank, not a checklist. Existing
+conversation and evidence may already be sufficient. Stop when the field boundaries
+in `SKILL.md` can be satisfied without guessing; never ask a fixed
+question count merely to make the interview look complete.
+
+## Engineering question bank
 
 1. **(what)** What goes wrong today, and who notices it?
 2. **(what)** What do you or the team do instead right now, each time it
@@ -27,7 +32,7 @@ Three to five lines of intent is a complete engineering intent. Stop when
 Problem, Proposed outcome, Acceptance, Constraints and Out of scope can be
 filled in without guessing.
 
-## Product — ask eight to ten
+## Product question bank
 
 1. **(what)** Who is this for? Describe one of them.
 2. **(what)** What are they trying to get done, and how do they do it
@@ -44,7 +49,7 @@ filled in without guessing.
 10. **(what)** Is there anything you already know users will ask for next,
     that we are deliberately not doing now?
 
-## Value case — ask all three, product only
+## Value case question bank — product only
 
 1. **(what)** Why now rather than later or never? What changes if you wait?
 2. **(what)** Why build it rather than use something that already exists,
@@ -82,10 +87,11 @@ real competing commitment, or reveals there is none.
 
 ## Writing the answers down
 
-Acceptance lines are the load-bearing output: each one must be provable by
-someone who has never seen the change, running it in a clean environment.
-Rewrite anything that is not. "The code is cleaner" fails. "I can set a due
-date when I add a task, and see it in the list" passes.
+Acceptance lines are the load-bearing output: each one states an observable
+delivery outcome for which external evidence can decide pass or fail. Rewrite
+anything that is not. "The code is cleaner" fails. Do not expand the outcome
+into complete scenarios, UI placement, state transitions, or test steps; those
+belong to spec or later verification.
 
 Keep a running list of every question you actually asked, with its type, to
 pass forward at hand-off.
