@@ -288,7 +288,7 @@ def test_user_decided_forks_require_an_explicit_answer() -> None:
     text = _text()
     interview = _section(text, "## Step 1 — Interview")
     confirmation = _section(text, "## Step 4 — Decision point ①: restate and confirm")
-    rule = interview + confirmation
+    rule = " ".join((interview + confirmation).split())
 
     assert "materially different outcomes" in rule
     assert "explicit answer" in rule
@@ -337,3 +337,17 @@ def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
     assert "decision points remain unchanged" in prose
     assert "move it to Open questions" in prose
     assert "before confirmation" in prose
+
+
+def test_material_choice_rules_live_inside_existing_confirmation_gates() -> None:
+    capture_gate = _text().split(
+        "<!-- gate: capture-intent.no-confirmed-without-restatement -->", 1
+    )[1]
+    plan_gate = WRITE_PLAN.read_text(encoding="utf-8").split(
+        "<!-- gate: write-plan.no-plan-without-confirmed-intent -->", 1
+    )[1]
+
+    for gate in (capture_gate, plan_gate):
+        assert "altitude pass" in gate
+        assert "explicit answer" in gate
+        assert "must remain `open`" in gate

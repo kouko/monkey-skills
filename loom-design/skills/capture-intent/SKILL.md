@@ -147,14 +147,6 @@ Keep every field at intent altitude:
 - **Open questions** — unresolved choices changing the other fields or scope;
   delegate a spec question or engineering question instead of answering it.
 
-Before treating a fork as `user-decided`, check whether its concrete choices
-would produce materially different outcomes for the user or the agreed scope.
-When they would, state the two outcomes in plain language and obtain an
-explicit answer before confirmation. A choice merely present in an accepted restatement is not
-evidence that the fork itself was asked. When the difference is only an
-implementation detail the user would need to read code to judge, do not ask;
-leave it for a later station as `agent-decided`.
-
 ## Step 2 — Write the intent
 
 The intent file is the user's own words, in the user's language, unlike
@@ -169,10 +161,10 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 
 After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or delete**.
 Keep supported intent; neutralize overcommitment; defer behaviour to spec or
-method to plan; reopen means move it to Open questions and stop confirmation;
-delete unsupported detail. This author self-check is not a review loop and
+method to plan; reopen as defined by the confirmation gate below; delete
+unsupported detail. This author self-check is not a review loop and
 creates no fields, IDs, requirements, scenarios, or product behaviour. An
-unresolved material choice means the intent must remain `open`.
+unresolved choice stays visible rather than being guessed away.
 
 - `originator: <the user's name>` — or `map:<id>` when a decision map
   raised it.
@@ -346,6 +338,12 @@ quieter than it is.
 
 <!-- gate: capture-intent.no-confirmed-without-restatement -->
 **No intent becomes `confirmed` without the restatement being answered.**
+Complete Step 2's altitude pass before confirmation. A fork with materially
+different outcomes for the user or scope needs an explicit answer; an accepted
+restatement is insufficient; move it to Open questions, stop confirmation,
+and the intent must remain `open`. Only an explicit answer makes it
+`user-decided`. Implementation-only choices defer as
+`agent-decided`.
 You do not write `status: confirmed` because the request seemed clear, and
 you never confirm on the user's behalf. On "no" or a correction, rewrite
 the intent and restate again; there is no limit on rounds here.

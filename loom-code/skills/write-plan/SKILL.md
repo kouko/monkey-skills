@@ -153,11 +153,8 @@ Constraints are already fixed; product Value case explains why and GO/NO-GO;
 Out of scope names excluded capability; Open questions contains only unresolved
 outcome or scope choices. After drafting, make one author pass: **Keep,
 neutralize, defer, reopen, or delete**. Behaviour defers to spec, method to
-plan, and unsupported detail is deleted; reopen means move it to Open questions
-and stop confirmation. A material fork needs an explicit answer before confirmation;
-accepting the restatement is insufficient. If unresolved, the intent
-must remain `open`. This pass creates no field, ID, requirement, scenario,
-product behaviour, or review loop.
+plan, and unsupported detail is deleted. This pass creates no field, ID,
+requirement, scenario, product behaviour, or review loop.
 
 <!-- gate: write-plan.no-plan-without-confirmed-intent -->
 **No plan is written without a confirmed intent.** If `status:` is not
@@ -165,6 +162,10 @@ product behaviour, or review loop.
 "provisionally" and you do not confirm on the user's behalf. The checker
 enforces the same rule at step 4 (`intake.confirmed`), so a plan written
 early cannot be shipped anyway.
+Complete the code-only altitude pass before confirmation. A material outcome
+or scope fork needs an explicit answer; accepting the restatement is
+insufficient; reopen means move it to Open questions, stop confirmation, and
+the intent must remain `open`.
 
 ## Step 2 — Standing documents
 
