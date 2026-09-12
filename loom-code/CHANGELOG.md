@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.2.1] — 2026-09-12 — malformed reviewer output can use its promised retry
+
+- Let a completed non-conforming reviewer response redispatch the same
+  effective profile within the shared budget instead of terminating as
+  `no-legal-redispatch`; malformed output remains ineligible for model or
+  effort escalation.
+- Keep YAML validation and Closing Review's stricter one-retry limit in the
+  orchestrator while the Claude runner remains a content-agnostic,
+  single-attempt transport boundary.
+
 ## [2.2.0] — 2026-09-11 — the recording moment stated at the end of review
 
 - The closing review's convergence section now ends with an inert paragraph

@@ -177,13 +177,20 @@ def _after_execution(packet: dict[str, Any], capabilities: dict[str, tuple[str, 
             "outcome": "routed", "reason": "execution-succeeded",
             "completed_redispatches": count,
         }
-    if not attempt["completed"] or not attempt["conforming"] or count >= 2:
+    if not attempt["completed"] or count >= 2:
         return {
             "task_class": None, "uncertainty": None, "requested_profile": None,
             "overrides": None, "effective_profile": actual,
             "outcome": "execution-failed", "reason": "no-legal-redispatch",
             "completed_redispatches": count,
         }
+    if not attempt["conforming"]:
+        result = _decision(
+            actual, capabilities, inheritance_guaranteed,
+            reason="nonconforming-output-redispatch", count=count,
+        )
+        result["next_redispatch"] = count + 1
+        return result
 
     kind = attempt.get("failure_kind")
     if kind not in {"capability-quality", "reasoning-depth", *NON_ROUTING_FAILURES}:

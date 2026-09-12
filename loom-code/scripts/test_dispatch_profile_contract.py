@@ -129,6 +129,18 @@ def test_failure_observations_define_conformance_and_trigger_requirements() -> N
     assert "`failure_trigger` is required only for a transition into `high` or `xhigh`" in flat
 
 
+def test_nonconforming_output_retry_keeps_validation_and_retry_ownership_separate() -> None:
+    profile = _flat(_contract())
+    review = _flat((PLUGIN / "skills" / "review" / "SKILL.md").read_text(encoding="utf-8"))
+    runner = (PLUGIN / "scripts" / "claude_reviewer.py").read_text(encoding="utf-8")
+
+    assert "retry the same effective profile without model or effort escalation" in profile
+    assert "consumes the shared completed-redispatch budget" in profile
+    assert "Review orchestrator enforces its stricter one-retry limit" in review
+    assert "never parse or validate reviewer YAML" in review
+    assert "never retry or interpret reviewer content" in runner
+
+
 def test_final_allowed_redispatch_success_returns_routed() -> None:
     text = _contract()
 

@@ -78,6 +78,9 @@ produces the Claude login diagnosis; stop without treating it as transient.
 
 The runner executes one Claude attempt and does not retry. Exit 0 carries the
 raw non-empty reviewer output, which must still satisfy `agents/reviewer.md`.
+The runner must never parse or validate reviewer YAML. The Review orchestrator
+enforces its stricter one-retry limit and owns that validation even when the
+shared resolver still has more completed-redispatch budget available.
 Its JSON stderr names `empty-output` for blank stdout and `timeout` when the
 attempt exceeds the bound. Do not run a model-backed preflight. Treat either
 result as the transient executor failure already governed below: invoke the

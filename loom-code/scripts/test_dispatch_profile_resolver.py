@@ -241,6 +241,52 @@ def test_final_allowed_execution_success_is_routed() -> None:
     assert result["effective_profile"] == {"model": "frontier", "effort": "xhigh"}
 
 
+def test_completed_nonconforming_output_retries_same_profile() -> None:
+    profile = {"model": "frontier", "effort": "medium"}
+
+    result = dispatch_profile.resolve(
+        {
+            "event": "after-execution",
+            "last_attempt": {
+                "completed": True,
+                "success": False,
+                "conforming": False,
+                "profile": profile,
+            },
+            "capabilities": CAPABILITIES,
+            "inheritance_guaranteed": True,
+            "completed_redispatches": 0,
+        }
+    )
+
+    assert result["outcome"] == "dispatch"
+    assert result["reason"] == "nonconforming-output-redispatch"
+    assert result["requested_profile"] == profile
+    assert result["overrides"] == profile
+    assert result["effective_profile"] == profile
+    assert result["next_redispatch"] == 1
+
+
+def test_nonconforming_output_at_redispatch_limit_fails_closed() -> None:
+    result = dispatch_profile.resolve(
+        {
+            "event": "after-execution",
+            "last_attempt": {
+                "completed": True,
+                "success": False,
+                "conforming": False,
+                "profile": {"model": "frontier", "effort": "medium"},
+            },
+            "capabilities": CAPABILITIES,
+            "inheritance_guaranteed": True,
+            "completed_redispatches": 2,
+        }
+    )
+
+    assert result["outcome"] == "execution-failed"
+    assert result["reason"] == "no-legal-redispatch"
+
+
 def test_cli_is_deterministic_json_and_rejects_malformed_input() -> None:
     script = SCRIPTS / "dispatch_profile.py"
     payload = initial("standard", "medium")
