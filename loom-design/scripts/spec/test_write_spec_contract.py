@@ -162,21 +162,34 @@ def test_body_within_word_cap() -> None:
     assert words <= WORD_CAP, words
 
 
-def test_decision_boundary_translates_outcomes_without_expanding_scope() -> None:
-    section = _section(_text(), "## Decision boundary")
-    low = section.lower()
-    for concept in (
-        "confirmed outcome",
-        "observable",
-        "verifiable",
-        "product behaviour",
-        "new outcome",
-        "value",
-        "scope",
-        "implementation",
-    ):
-        assert concept in low, concept
-    assert len(section.split()) <= 100
+def test_requirements_preserve_acceptance_ownership_without_invented_state() -> None:
+    writing = _section(_text(), "## Step 2 — Write the spec")
+    low = " ".join(writing.lower().split())
+
+    assert "exact acceptance count, order, and owner number" in low
+    assert "continuing observable result" in low
+    assert "original action as the `when` trigger" in low
+    for invention in ("named state", "lifecycle", "storage", "persistence mechanism"):
+        assert invention in low, invention
+
+
+def test_out_of_scope_is_not_promoted_to_product_prohibition() -> None:
+    writing = _section(_text(), "## Step 2 — Write the spec")
+    low = " ".join(writing.lower().split())
+
+    assert "out of scope" in low
+    for boundary in ("not designed", "not implemented", "not verified"):
+        assert boundary in low, boundary
+    for promotion in ("capability does not exist", "prohibited", "irreversible", "one-way"):
+        assert promotion in low, promotion
+
+
+def test_ui_flows_do_not_invent_visible_reactions() -> None:
+    writing = " ".join(_section(_text(), "## Step 2 — Write the spec").lower().split())
+
+    assert "only reactions explicitly supplied by the confirmed intent" in writing
+    for invention in ("interface", "control", "status presentation"):
+        assert invention in writing, invention
 
 
 def test_station_summary_is_byte_identical_to_write_plan() -> None:

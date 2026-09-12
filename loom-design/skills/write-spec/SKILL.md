@@ -17,14 +17,6 @@ back to the user in plain words and get a yes. High-risk specs then get one
 independent pre-build review; routine specs proceed directly to planning.
 You never ask the user to grade the spec, and you never plan the work.
 
-## Decision boundary
-
-This station translates a confirmed outcome into observable and verifiable
-product behaviour. It may clarify wording needed to describe that behaviour,
-but it does not add a new outcome, value, or scope and does not choose the
-implementation. An unsupported product choice returns to `capture-intent`
-instead of being silently added to the specification.
-
 ## Artifact vocabulary
 
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
@@ -162,6 +154,16 @@ language, since it is spoken to them rather than read by a checker.
     The list shows each task's due date beside its title → Acceptance #2
   ```
 
+  Preserve the exact Acceptance count, order, and owner number from the
+  confirmed intent. A continuing observable result may be stated in temporal
+  language: keep the original action as the `WHEN` trigger and put subsequent
+  effects in its response. Do not invent a named state, lifecycle, storage, or
+  persistence mechanism to explain it.
+
+  Treat the intent's Out of scope as not designed, not implemented, and not
+  verified in this change. Do not promote an exclusion into a claim that the
+  capability does not exist, is prohibited, irreversible, or one-way.
+
 - **`## Design decision`** — what you are doing, what you are not, and
   why. Every fork you resolved yourself carries one sentence of reason and
   the tag `agent-decided`; every one-way door the user answered carries
@@ -176,7 +178,9 @@ language, since it is spoken to them rather than read by a checker.
   `Forward: N/A — nothing exists yet` — rather than deleting it.
 - **`## UI flows`** — every operation and the system's reaction, in the
   user's words. Grammar, the four variants every surface owes, and the
-  `N/A` form are in `references/ui-flows.md`.
+  `N/A` form are in `references/ui-flows.md`. Include only reactions explicitly
+  supplied by the confirmed intent; do not invent an interface, control, or
+  status presentation to make a flow look complete.
 
 Forms: reference `references/spec-forms.md` before reaching for a table, a
 state list or a diagram — it says which shape carries which content, and

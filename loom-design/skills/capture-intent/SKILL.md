@@ -15,15 +15,6 @@ in their own words, and once they say yes, hand the change to the station
 that plans it. You do not design anything, you do not plan anything, and
 you never ask the user to judge the quality of your work.
 
-## Decision boundary
-
-This station captures the **problem**, **desired outcome**, **value**,
-outcome-level success conditions, and scope. A problem or desired outcome is
-valid input before the user chooses a feature or implementation. `Acceptance`
-here means outcome-level success conditions, not a product specification; it
-does not decide interaction steps, UI responses, persistence, error handling,
-or implementation.
-
 ## Artifact vocabulary
 
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
@@ -133,6 +124,9 @@ Cover, in the user's own words and with no jargon:
   and one reason. A NO-GO is a real outcome: write the intent with
   `status: withdrawn — <reason>` and stop.
 
+Use only user-supplied product claims. Add no product nouns, interfaces,
+states, scope dimensions, or guarantees; `write-spec` owns unchosen decisions.
+
 **Every question you ask must be of type `what`** — what do you want, what
 happens today, what would you be able to do. Nothing about how it should
 be built. The test is concrete: if the user would have to read code to
@@ -143,7 +137,8 @@ Constraints and Out of scope can all be filled in without guessing.
 Keep every field at intent altitude:
 
 - **Problem** — present pain, affected people, and consequence; no diagnosis,
-  file list, or fix.
+  file list, or fix. Put missing current behaviour, workaround, or consequence
+  in Open questions; do not infer it.
 - **Proposed outcome** — wanted capability or state; no complete scenarios,
   UI reactions, state transitions, or implementation design.
 - **Acceptance** — numbered observable delivery outcomes with external
@@ -151,21 +146,21 @@ Keep every field at intent altitude:
   architecture, or task split.
 - **Constraints** — already-fixed boundaries; no agent preference or
   speculative guardrail.
-- **Value case** — for a product intent, beneficiary, urgency, and GO/NO-GO;
-  omit it for an engineering intent when value is obvious.
+- **Value case** — for a product intent: beneficiary, urgency, existing alternative,
+  displaced work, and GO/NO-GO. Count each missing answer separately;
+  confirmation of other fields is not evidence. Omit for an engineering intent
+  with obvious value.
 - **Out of scope** — excluded capabilities, actors, systems, or data; no
   deferred implementation list.
-- **Open questions** — unresolved choices changing the other fields or scope;
-  delegate a spec question or engineering question instead of answering it.
+- **Open questions** — unresolved choices or missing required fields; the intent
+  must remain `open`. Delegate a spec question or engineering question without
+  answering it.
 
 ## Step 2 — Write the intent
 
-The intent file is the user's own words, in the user's language, unlike
-the machine-read internal artifacts later stations own, which are English
-— nothing in it is translated to English, English being the language of the plan,
-the spec, the review record, evidence notes, test docstrings and names,
-and commit messages — while the decision-point dialogue, the blind-run
-report and the pull-request body stay in the user's language.
+Write intent and decision-point dialogue in the user's language. Plans, specs,
+reviews, evidence, tests, and commits are English; blind-run reports and PR
+bodies use the user's language.
 
 Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 `loom-code`'s `contract/templates/` directory. Fill in:
@@ -204,6 +199,12 @@ Keep supported intent; neutralize overcommitment; defer behaviour to spec or
 method to plan; reopen as defined by the confirmation gate below; delete
 unsupported detail. This author self-check is not a review loop and creates no
 fields, IDs, requirements, scenarios, or product behaviour.
+
+Keep workflow authorisation outside product fields in its existing carrier.
+
+Observable means GUI/TUI, CLI input/output, external API, or user-dependent
+file output. Visible effects with an unknown surface and no spec require
+`needs-design: yes` with a surface-neutral reason; internal files alone do not.
 
 <!-- gate: capture-intent.product-problem-plain-words -->
 <!-- The `gate:` markers in this file are prose gates: rules this station must follow, registered in the mechanism population and checked by cold-read evals — not checker rule ids. The checker rules are the `intent.*` / `standing.*` / `contract.*` ids named in the commands. -->

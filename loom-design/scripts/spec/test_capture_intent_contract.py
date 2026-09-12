@@ -91,21 +91,43 @@ def test_body_within_word_cap() -> None:
     assert words <= WORD_CAP, words
 
 
-def test_decision_boundary_accepts_problem_before_solution() -> None:
-    section = _section(_text(), "## Decision boundary")
-    low = section.lower()
-    for concept in (
-        "problem",
-        "desired outcome",
-        "value",
-        "success condition",
-        "feature",
-        "implementation",
+def test_intent_fields_admit_only_user_supported_product_claims() -> None:
+    text = _text()
+    altitude = " ".join(_section(text, "## Step 1 — Interview").lower().split())
+    drafting = _section(text, "## Step 2 — Write the intent")
+
+    for unsupported in (
+        "product noun",
+        "interface",
+        "state",
+        "scope dimension",
+        "guarantee",
     ):
-        assert concept in low, concept
-    assert "valid input" in low
-    assert "outcome-level success conditions" in low
-    assert len(section.split()) <= 130
+        assert unsupported in altitude, unsupported
+    assert "user-supplied product claims" in altitude
+    assert "workflow authorisation" in drafting
+    assert "existing carrier" in drafting
+    assert "product field" in drafting
+    for missing in ("current behaviour", "workaround", "consequence"):
+        assert missing in altitude, missing
+    assert "do not infer" in altitude
+    for missing in ("beneficiary", "urgency", "existing alternative", "displaced work"):
+        assert missing in altitude, missing
+    assert "count each missing answer separately" in altitude
+    assert "must remain `open`" in altitude
+    assert "confirmation of other fields" in altitude
+
+
+def test_unknown_observable_surface_still_routes_to_write_spec() -> None:
+    drafting = _section(_text(), "## Step 2 — Write the intent")
+    low = " ".join(drafting.lower().split())
+
+    for surface in ("gui", "tui", "cli", "external api", "file output"):
+        assert surface in low, surface
+    assert "unknown surface" in low
+    assert "needs-design: yes" in drafting
+    assert "surface-neutral reason" in low
+    assert "internal files alone" in low
 
 
 def test_station_summary_is_byte_identical_to_write_plan() -> None:
