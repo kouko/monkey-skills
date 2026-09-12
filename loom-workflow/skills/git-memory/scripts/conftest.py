@@ -166,7 +166,15 @@ def fast_import_commits(
     commit.gpgsign=false, which this function deliberately does not touch).
     The worktree is populated by a final hard reset, so a caller can read the
     tracked files afterwards exactly as it could after a `git commit`.
+
+    An empty `specs` is a clean no-op: it returns no shas, runs no git, and
+    leaves `branch` unborn. Without this guard the wave loop is skipped but
+    the final hard reset still runs and dies on `fatal: ambiguous argument
+    'refs/heads/main'`, turning "nothing to import" into a confusing crash.
     """
+    if not specs:
+        return []
+
     resolved: dict[int, str] = {}
     marks_path = repo / ".git" / "fixture-fast-import-marks"
     index = 0
