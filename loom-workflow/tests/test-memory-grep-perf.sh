@@ -64,10 +64,12 @@ trap cleanup EXIT
 # previous `git commit -m` loop produced for the same index.
 #
 # The stream's field order (commit, mark, author, committer, data, then
-# the optional `from` and the filemodify commands) and the fact that the
-# LF after a `data <n>` payload is optional are both fixed by
+# the optional `from` and the filemodify commands) is fixed by
 # git-fast-import(1), "commit":
 # https://git-scm.com/docs/git-fast-import#_commit
+# The LF after a `data <n>` payload being optional is stated in that
+# page's own "data" section instead:
+# https://git-scm.com/docs/git-fast-import#_data
 # The Python mirror of this emitter cites the same section — see
 # `_commit_block` in
 # loom-workflow/skills/git-memory/scripts/conftest.py.

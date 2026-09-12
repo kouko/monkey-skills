@@ -148,11 +148,13 @@ def _commit_block(
     "commit" (https://git-scm.com/docs/git-fast-import#_commit): `commit
     <ref>`, then optional `mark`, `original-oid`, `author`, then the
     required `committer`, then `data`, then the optional `from`/`merge`,
-    then the filemodify and friends. That section also states the `data`
-    command's trailing LF is optional but recommended; this emitter omits
-    it, so the next command's own line starts immediately after the payload
-    — which is why a message that already ends in LF must not gain a second
-    one here.
+    then the filemodify and friends. The `data` command's trailing LF is
+    optional but recommended — that sentence lives in its own section,
+    git-fast-import(1), "data"
+    (https://git-scm.com/docs/git-fast-import#_data), not in "commit".
+    This emitter omits that LF, so the next command's own line starts
+    immediately after the payload — which is why a message that already
+    ends in LF must not gain a second one here.
     """
     msg = spec.subject.encode()
     if body:

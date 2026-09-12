@@ -10,17 +10,25 @@ non-zero group), so a whole-suite figure is only meaningful when no group fails.
 
 ## Measured at
 
-`670ef7913`, after the round-2 fix batch. Nothing but this file and
-`loom-workflow/CHANGELOG.md` lands after it, and neither is executed by any
-group.
+Runs 1 and 2 below were taken at `670ef7913`, after the round-2 fix batch. Three
+paths landed after it — this file, `plan.md` and `loom-workflow/CHANGELOG.md` —
+and the changelog is **not** inert: the git-memory group binds its top heading to
+the plugin version at
+`loom-workflow/skills/git-memory/scripts/test_memory_grep_version.py:51`, which
+is how the missing entry turned the suite red earlier on this branch. So the
+declared suite was run again over the tree that contains the final changelog and
+plan — `d00bc970a` — and exited 0 in 60.69s with the same 2148 assertions. The
+only path landing after that run is this evidence file, and `grep` over every
+`test_*.py` and `test-*.sh` in the repo finds no reference to it.
 
-An earlier revision of this file reported runs taken at `992fab34f`, before the
+A first revision of this file reported runs taken at `992fab34f`, before the
 version bump, and presented them as the branch HEAD. Both branch-end reviewers
-caught that independently: at the sha those numbers were labelled with, the
-suite was red — the bump had moved `loom-workflow`'s manifests to 4.3.1 and left
-the root README's version cell at 4.3.0, which
-`loom-workflow/scripts/test_independent_advisor_plugin_readmes.py:54` binds. The
-figures below are a fresh measurement of the fixed tree.
+caught that independently: at the sha those numbers were labelled with, the suite
+was red — the bump had moved `loom-workflow`'s manifests to 4.3.1 and left the
+root README's version cell at 4.3.0, which
+`loom-workflow/scripts/test_independent_advisor_plugin_readmes.py:54` binds. Both
+also caught the first attempt at this very section, which claimed the changelog
+was executed by nothing.
 
 ## Totals
 
@@ -29,8 +37,15 @@ figures below are a fresh measurement of the fixed tree.
 | baseline | `89cf5d224` (branch base) | 154.58s | 2148 | no |
 | after, run 1 | `670ef7913` | 63.00s | 2148 | no |
 | after, run 2 | `670ef7913` | 58.48s | 2148 | no |
+| after, run 3 | `d00bc970a` | 60.69s | 2148 | no |
 
-Both runs sit under the intent's 95s Acceptance bound, and the pass count is
+The baseline row was measured in this change's first sitting, against the same
+base tree; runs 1 through 3 are fresh measurements of the fixed tree. A reviewer
+who tried to re-measure the baseline reported that the base tree does not
+complete in a fresh clone — two `loom-memory` tests unrelated to this branch fail
+there — so that row stands on its original sitting alone.
+
+All three post-change runs sit under the intent's 95s Acceptance bound, and the pass count is
 unchanged at 2148. The adversarial probe file this change also commits is not
 part of that count: `scripts/run_package_tests.py` declares no group under
 `docs/loom/**`, so `finalize-review` is what executes it.
@@ -111,10 +126,19 @@ than once by hand.
 
 Storage layout. `fast-import` writes a packfile where 2,000 `git commit` calls
 wrote loose objects, and that difference is invisible to commit ids. A
-branch-end reviewer measured it instead of assuming: `memory-grep.sh`'s own
-timed run over the 2,000-commit fixture takes 0.218s against the loose-object
-build and 0.148s against the packed one, so the 2.0s bound keeps about 13x
-headroom where it had about 9x. The perf assertion still means what it meant,
+branch-end reviewer measured it instead of assuming, and the measurement was
+then reproduced. To redo it: build the fixture from a checkout of each sha with
+`bash loom-workflow/tests/test-memory-grep-perf.sh` — run it from inside that
+checkout, since the extracted builder cannot find `memory-grep.sh` from
+elsewhere and silently produces a nonsense timing — and read the script's own
+timed line, expecting `12 PASS / 0 FAIL`. The reviewer's pair, 0.218s loose
+against 0.148s packed, is two single runs in different cache states (a cold
+fresh clone against a warm worktree), so neither is an average. Driving
+`memory-grep.sh` directly against both fixtures in the same warm tree gives
+0.208 / 0.212 / 0.212s over the loose build and 0.132 / 0.136 / 0.139s over the
+packed one, with 6000 loose objects and no packfile on one side and no loose
+objects and two packfiles on the other. So the 2.0s bound keeps roughly 15x
+headroom where it had about 10x. The perf assertion still means what it meant,
 and the script reads nothing layout-sensitive — no reflog, `for-each-ref`,
 `count-objects` or `cat-file --batch-all-objects`. Index and worktree state, the
 other output outside the object graph, is restored by the builders' final
