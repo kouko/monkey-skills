@@ -62,6 +62,12 @@ structurally usable and contains enough evidence to classify its result;
 escalation. A completed capability-quality or reasoning-depth failure therefore
 uses `success: false` and `conforming: true` plus its `failure_kind`.
 
+When `failure_kind` identifies completed non-conforming output as
+`malformed-response`, retry the same effective profile without model or effort
+escalation. That retry consumes the shared completed-redispatch budget. A
+missing kind or another known kind returns `execution-failed`; an unknown kind
+is malformed input and exits non-zero.
+
 A capability-quality failure means the completed task omitted a checkable
 obligation, produced an oracle-verifiable wrong result, or failed to connect
 required system relationships; it is not a provider error. `failure_trigger`
