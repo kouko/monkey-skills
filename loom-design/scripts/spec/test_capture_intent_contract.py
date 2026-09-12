@@ -256,15 +256,15 @@ def test_capture_intent_does_not_call_loom_code_policy() -> None:
     assert "does not call `second_vendor_policy.py`" in text
 
 
-def test_host_aware_prompt_fix_has_patch_release_metadata() -> None:
+def test_reviewer_policy_summary_has_patch_release_metadata() -> None:
     claude_manifest = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))
     codex_manifest = json.loads(
         (REPO / "loom-design/.codex-plugin/plugin.json").read_text(encoding="utf-8")
     )
     changelog = (REPO / "loom-design/CHANGELOG.md").read_text(encoding="utf-8")
-    assert claude_manifest["version"] == "2.1.1"
-    assert codex_manifest["version"] == "2.1.1"
-    assert "## [2.1.1]" in changelog
+    assert claude_manifest["version"] == "2.1.2"
+    assert codex_manifest["version"] == "2.1.2"
+    assert "## [2.1.2]" in changelog
 
 
 def test_plugin_declares_requires_contract() -> None:

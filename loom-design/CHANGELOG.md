@@ -12,6 +12,12 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.1.2] — 2026-09-12 — reviewer-policy-neutral station summaries
+
+Station summaries now defer the Closing Review reviewer count to loom-code's
+installed executable policy instead of repeating stale small/full-lane counts.
+No capture, spec, principles, or design-system behavior changes.
+
 ## [2.1.1] — 2026-09-12 — host-aware cross-model review prompts
 
 Capture-intent now selects only runnable tools from a model family different
