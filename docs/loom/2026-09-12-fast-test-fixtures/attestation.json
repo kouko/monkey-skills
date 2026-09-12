@@ -1,0 +1,185 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-12-fast-test-fixtures",
+  "content_digest": "a7d8de387234efe8f79056bf83816e9b975b69b0",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-12-fast-test-fixtures/evidence/probes/test_abuse_fast_import_fixtures.py -q",
+      "artifact": "docs/loom/2026-09-12-fast-test-fixtures/evidence/probes/test_abuse_fast_import_fixtures.py",
+      "result": "pass",
+      "command_digest": "a92a25e87ebd679f33fab523c7893e9e050cb609d88ac42dd612ae1acf87fafc"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "rev-fixtures-a",
+      "vendor": "anthropic",
+      "model": "inherited-main",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "rev-fixtures-b",
+      "vendor": "anthropic",
+      "model": "inherited-main",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "fatal",
+      "anchor": "README.md:14",
+      "text": "issue (blocking): the version bump moved both loom-workflow manifests to 4.3.1 and left the root README's version cell at 4.3.0, which test_independent_advisor_plugin_readmes.py:54 binds; the declared runner is fail-fast, so the whole suite aborted there and Acceptance 1 could not be measured at all",
+      "fix": "set the cell to 4.3.1 and re-run the declared command end to end",
+      "raised_by": "rev-fixtures-a, rev-fixtures-b",
+      "resolved": "fixed in 1195ae5eb; both reviewers re-ran the declared suite to exit 0 and confirmed in round 2"
+    },
+    {
+      "severity": "fatal",
+      "anchor": "loom-workflow/skills/git-memory/scripts/conftest.py:131",
+      "text": "issue (blocking): the change's whole mechanism is git fast-import's stream grammar and its --export-marks semantics, a CLI contract the author does not own, and the delta cited nothing for it while this repo cites git-scm.com for far less obscure git flags in nine places",
+      "fix": "cite git-fast-import(1) for the field order and the marks semantics, and mirror the citation in the shell emitter",
+      "raised_by": "rev-fixtures-a",
+      "resolved": "fixed in 1195ae5eb and refined in 610d8f6f5; the reviewer checked the cited spans against the local man page and confirmed the commit/data section split in round 3"
+    },
+    {
+      "severity": "important",
+      "anchor": "loom-workflow/skills/git-memory/scripts/conftest.py:108",
+      "text": "issue: _cleanup_whitespace used bare bytes.rstrip(), which strips 0x0b and 0x0c; git's sane_isspace does not, so the docstring's claim to reproduce --cleanup=whitespace was broader than the code delivered. A 2019-case differential fuzz against real git commit -F - found 910 mismatches, all of that one class",
+      "fix": "rstrip only git's whitespace set and scope the docstring's claim to it",
+      "raised_by": "rev-fixtures-a",
+      "resolved": "fixed in 1195ae5eb; the reviewer re-ran the identical 2019-case fuzz in round 2 and reports zero mismatches"
+    },
+    {
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-12-fast-test-fixtures/evidence/probes/test_abuse_fast_import_fixtures.py:113",
+      "text": "issue: the probe case whose purpose is to catch the whitespace divergence could not see it — its seven bodies contained only spaces and newlines, so the 0x0b/0x0c class passed through the oracle untested",
+      "fix": "add bodies carrying both bytes, including each alone in a trailing position, and observe them red before the fix",
+      "raised_by": "rev-fixtures-a",
+      "resolved": "fixed in 1195ae5eb; three cases added, seen red against the pre-fix implementation and green after, and the reviewer independently confirmed all three are the discriminating set"
+    },
+    {
+      "severity": "important",
+      "anchor": "loom-workflow/skills/git-memory/scripts/test_probes_memory_grep_single_pass.py:352",
+      "text": "issue: the rebuilt builders' shape read-back compared output against the builder's own parameters, so it held for any value of them; four perturbations of the contracted 200/40/5 shape, including the one the comment named as its worked example, all built with nothing firing, contradicting the memory entry this same change commits",
+      "fix": "make the read-back absolute — module constants and required arguments, with the caller passing the contracted sizes",
+      "raised_by": "rev-fixtures-a, rev-fixtures-b",
+      "resolved": "fixed in 1195ae5eb; both reviewers re-ran all four perturbations in round 2 and each now fires with a named message, while the contracted shape still builds and every fixture stays byte-identical"
+    },
+    {
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-12-fast-test-fixtures/evidence/suite-timing.md:14",
+      "text": "issue: the timing evidence attributed its runs to the branch HEAD when they were taken five commits earlier, at a tree where the suite was in fact red, and its diff list was stale — so the record offered as proof of Acceptance 1, 2 and 5 no longer reproduced, which is why the red suite reached the review station unseen",
+      "fix": "re-run the declared command on the fixed tree and rewrite the totals, the per-group table and the path list against the sha actually measured",
+      "raised_by": "rev-fixtures-a, rev-fixtures-b",
+      "resolved": "rewritten in d00bc970a, corrected again in 610d8f6f5 and restated as a property rather than a path list in 40a929290; both reviewers ran the declared suite themselves at the final sha and confirmed exit 0 under the bound"
+    },
+    {
+      "severity": "important",
+      "anchor": "loom-workflow/CHANGELOG.md:18",
+      "text": "issue: three of the four figures in the published changelog entry appeared nowhere else in the repo and the entry cited a command the repository does not declare, so none of them could be checked against a recorded run",
+      "fix": "quote only figures the evidence file records and cite the declared command",
+      "raised_by": "rev-fixtures-b",
+      "resolved": "fixed in d00bc970a; the reviewer checked each of the seven figures against the evidence file's own tables in round 2"
+    },
+    {
+      "severity": "important",
+      "anchor": "loom-workflow/CHANGELOG.md:14",
+      "text": "issue: the entry said conftest.py is new when the file existed at the branch base, contradicting the plan's own risk that the change adds no file — the statement that settles whether the mechanism-count gate is owed a budget exception",
+      "fix": "say the importer was added to the existing file",
+      "raised_by": "rev-fixtures-a, rev-fixtures-b",
+      "resolved": "fixed in d00bc970a; confirmed by both reviewers in round 2"
+    },
+    {
+      "severity": "important",
+      "anchor": "docs/loom/memory/a-count-probe-does-not-bind-its-fixtures-shape.md:12",
+      "text": "issue: the durable memory entry misdescribed one of the two probes it was built on, giving both the same 200/40/5 fixture when the jq-call probe builds 20 and 200 commits with every commit memory-worthy and no supersession, and credited the perturbation experiment to a builder that has no such parameter",
+      "fix": "state the two shapes separately and narrow the sources line to the builder actually perturbed",
+      "raised_by": "rev-fixtures-b",
+      "resolved": "fixed in 670ef7913; the reviewer re-checked both descriptions against the code, re-ran the store validator and confirmed the wikilinks resolve in round 2"
+    },
+    {
+      "severity": "important",
+      "anchor": "docs/loom/2026-09-12-fast-test-fixtures/plan.md:38",
+      "text": "issue: a reviewer held that no test binds the changelog's top entry to the manifest version, making the plan's risk a documented guarantee that does not exist",
+      "fix": "narrow the claim to what is enforced",
+      "raised_by": "rev-fixtures-a",
+      "resolved": "dismissed by rev-fixtures-a — withdrawn on evidence in round 2. Perturbing the changelog's top heading turns the git-memory group red via test_memory_grep_version.py:51; the reviewer reproduced that itself in a scratch clone and reported its negative claim came from a head-truncated search it had described as exhaustive"
+    },
+    {
+      "severity": "nit",
+      "anchor": "loom-workflow/skills/git-memory/scripts/conftest.py:152",
+      "text": "nitpick: the trailing-LF sentence was attributed to git-fast-import(1)'s commit section when it lives in the data section",
+      "fix": "cite #_data for that half and keep #_commit for the field order",
+      "raised_by": "rev-fixtures-a",
+      "resolved": "fixed in 610d8f6f5 in both the Python emitter and its shell mirror; the reviewer verified the section boundaries against the local man page in round 3"
+    },
+    {
+      "severity": "nit",
+      "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:154",
+      "text": "nitpick: an out-of-contract argument pair made the first import wave empty, so the builder died on a bare KeyError from the marks lookup instead of naming the bad argument, while the Python side already raised a named assertion",
+      "fix": "guard the argument before any import runs",
+      "raised_by": "rev-fixtures-a",
+      "resolved": "fixed in 1195ae5eb; the reviewer confirmed the named message and that valid shapes still build"
+    },
+    {
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-12-fast-test-fixtures/evidence/probes/test_abuse_fast_import_fixtures.py:116",
+      "text": "nitpick: a parametrize case labelled as the leading-blanks body contained no leading blank lines, so a reader auditing coverage from the labels would count a shape that is not tested",
+      "fix": "relabel it as what it is",
+      "raised_by": "rev-fixtures-a",
+      "resolved": "fixed in 1195ae5eb; confirmed in round 2"
+    },
+    {
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-12-fast-test-fixtures/evidence/suite-timing.md:29",
+      "text": "nitpick: the baseline column was carried over verbatim from the discredited revision while every after column was re-measured, under a heading dating the file to one sitting, and the intent quotes a third figure for the same tree",
+      "fix": "state the baseline row's own sitting and reconcile the intent's figure",
+      "raised_by": "rev-fixtures-a, rev-fixtures-b",
+      "resolved": "fixed in 610d8f6f5 and 40a929290, including the reviewer's report that the base tree does not complete in a fresh clone so that row stands on its original sitting alone"
+    },
+    {
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-12-fast-test-fixtures/evidence/suite-timing.md:116",
+      "text": "nitpick: the loose-versus-packed headroom figures rested on one reviewer's unrepeated pair taken in two different cache states, and no committed artifact builds the loose-object side",
+      "fix": "name the reproducing command and mark the pair unrepeated",
+      "raised_by": "rev-fixtures-b, rev-fixtures-a",
+      "resolved": "fixed in 610d8f6f5: the command is named with the trap that produces a spurious timing, the pair is marked as two single runs, and a repeated three-runs-per-side measurement with object counts was added"
+    },
+    {
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-12-fast-test-fixtures/evidence/suite-timing.md:21",
+      "text": "nitpick: the provenance sentence enumerated the paths landing after the measured sha and went stale three times, once on the very commit that fixed it, and its stated verification method — a grep for filename references — would have called conftest.py inert too",
+      "fix": "state the property instead of the list, and name the diff-against-group-inventory test that settles it",
+      "raised_by": "rev-fixtures-b, rev-fixtures-a",
+      "resolved": "fixed in 40a929290, which touches no file any group runs"
+    },
+    {
+      "severity": "nit",
+      "anchor": "loom-workflow/tests/test-memory-grep-perf.sh:73",
+      "text": "nitpick: after the citation was split across two man-page sections, the following sentence's phrase the same section has two candidate antecedents",
+      "fix": "say both sections",
+      "raised_by": "rev-fixtures-b",
+      "resolved": "dismissed by the orchestrator — deliberately not fixed. The file is executed by one of the runner's groups, so a one-word comment edit would move the functional content away from the tree both reviewers gave PASS on, for a wording ambiguity inside a comment. Recorded here and in the pull request rather than fixed"
+    },
+    {
+      "severity": "nit",
+      "anchor": "loom-workflow/skills/git-memory/scripts/test_probes_memory_grep_render.py:111",
+      "text": "thought: the constants refactor moves the self-reference up one level rather than eliminating it — editing the constant still moves the assertion with the caller, so a deliberate edit passes; what binds absolutely is the pinned object id, and the pytest fixtures have no equivalent frozen oracle",
+      "fix": "no change required",
+      "raised_by": "rev-fixtures-b, rev-fixtures-a",
+      "resolved": "dismissed by rev-fixtures-b, which raised it and marked it no-change-required so the residual is on the record rather than in the code"
+    }
+  ]
+}

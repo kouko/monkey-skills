@@ -4,6 +4,30 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.3.1] — 2026-09-13 — Probe fixtures build in one git process
+
+- The two git-memory probe fixtures and the `test-memory-grep-perf.sh` fixture
+  no longer spend one `git commit` process per commit; each history is now
+  written by `git fast-import`, one process per supersession link instead of
+  one per commit. The fixtures are byte-identical: every commit object id
+  matches what the per-commit builders produced.
+- The existing `skills/git-memory/scripts/conftest.py` now also holds the shared
+  importer, its commit spec, and a `git log` read-back the rebuilt builders
+  assert their own output against — the pre-change probes bound invocation
+  counts only, so a fixture that drifted to the wrong record shape left them
+  green. The read-back asserts the fixtures' contracted sizes as constants, not
+  as the builder's own parameters.
+- `_cleanup_whitespace` reproduces git's `--cleanup=whitespace` over git's own
+  whitespace set (space, tab, CR, LF) and no longer strips 0x0b or 0x0c, which
+  git keeps.
+- Measured with the command this repository declares in
+  `docs/loom/KICKOFF-DEFAULTS.md`: the whole Loom suite went from 154.58 s to
+  63.00 s and 58.48 s over two runs, `test-memory-grep-perf.sh` from 77.25 s to
+  4.39 s, and the git-memory group from 28.63 s to 11.54 s. Nothing under test
+  changed and the assertion count is unchanged at 2148. Every figure here comes
+  from the same runs recorded in
+  `docs/loom/2026-09-12-fast-test-fixtures/evidence/suite-timing.md`.
+
 ## [4.3.0] — 2026-09-11 — Record states when and how much
 
 - The memory skill's Record contract now states when a lesson is written down
