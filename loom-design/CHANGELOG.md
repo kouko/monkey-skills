@@ -12,6 +12,14 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.1.1] — 2026-09-12 — host-aware cross-model review prompts
+
+Capture-intent now selects only runnable tools from a model family different
+from the active host, prefers the host's native question interface, and uses a
+conservative `do not use` recommendation when one is required. A missing
+native control keeps a blocking Markdown fallback; no runnable candidate is
+reported without presenting an invalid choice.
+
 ## [2.1.0] — 2026-09-12 — route non-blocking second-vendor suggestions
 
 Capture-intent now treats `suggest` as a downstream, non-blocking notice and

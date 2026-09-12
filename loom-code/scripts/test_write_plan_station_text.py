@@ -9,6 +9,7 @@ plan commit, and the template's one-sentence spec-change-path comment.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -210,3 +211,16 @@ def test_confirmed_selection_is_recorded_for_closing_review() -> None:
     assert "`plan-maintained`" in flat
     assert "commit that plan edit" in flat
     assert "before committing the plan" not in flat
+
+
+def test_host_aware_prompt_fix_has_patch_release_metadata() -> None:
+    claude_manifest = json.loads(
+        (REPO / "loom-code/.claude-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    codex_manifest = json.loads(
+        (REPO / "loom-code/.codex-plugin/plugin.json").read_text(encoding="utf-8")
+    )
+    changelog = (REPO / "loom-code/CHANGELOG.md").read_text(encoding="utf-8")
+    assert claude_manifest["version"] == "3.0.1"
+    assert codex_manifest["version"] == "3.0.1"
+    assert "## [3.0.1]" in changelog
