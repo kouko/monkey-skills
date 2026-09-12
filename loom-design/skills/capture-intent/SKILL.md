@@ -363,7 +363,6 @@ and the intent must remain `open`. Only an explicit answer makes it
 You do not write `status: confirmed` because the request seemed clear, and
 you never confirm on the user's behalf. On "no" or a correction, rewrite
 the intent and restate again; there is no limit on rounds here.
-<!-- /gate -->
 
 **On "yes":**
 
