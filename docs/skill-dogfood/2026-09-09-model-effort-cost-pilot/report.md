@@ -22,10 +22,12 @@ cost-saving substitute for `standard/medium`, nor does it define final routing.
   `c15d68169ddf4d140c46e21a1bc79558e662b7a4c8f44667df3a6d0d9e123524`
 - Replicates: two independent sessions per profile
 - Tools and prior sessions: disabled by prompt and CLI permission controls
-- Per-run hard budget: USD 1.00
+- Per-run hard budget: USD 1.00 for the initial four arms; USD 2.00 for
+  Stage 1, as registered in `protocol.md`.
 - Quality oracle: the nine blocking changes in
   `../2026-09-09-loom-main-relative-dispatch-plan/claude-independent-review.md`
-- Raw result, stderr, and invocation metadata are retained beside this report.
+- Raw result, stderr, and invocation metadata are retained beside this report;
+  session identifiers are removed before publication.
 
 This is a controlled policy-review pilot, not a formal `SKILL.md` activation
 dogfood. No `dogfood-pass` marker is warranted.
@@ -40,10 +42,11 @@ dogfood. No `dogfood-pass` marker is warranted.
 | O2 | opus / low | claude-opus-5 | low |
 
 The result JSON's `modelUsage.canonicalModel` supplies the model evidence. The
-persisted session JSONL matching each recorded session id supplies the effort;
-generated answer text was not accepted as configuration evidence. Claude also
-used a small Haiku structured-output helper on every arm; its USD 0.00313-ish
-cost is included consistently in every total below.
+persisted session JSONL matched each session id before publication-time
+redaction and supplied the effort; generated answer text was not accepted as
+configuration evidence. Claude also used a small Haiku structured-output
+helper on every arm; its USD 0.00313-ish cost is included consistently in every
+total below.
 
 ## Cost and latency
 
@@ -152,6 +155,9 @@ Keep the planned ordering, with a tighter economic interpretation:
 After the initial interpretation, the pre-registered staged extension added
 two independent `standard/high` runs and two independent `frontier/medium`
 runs. Corpus, prompt hash, schema, isolation, and oracle remained identical.
+Each effort was matched against the persisted session JSONL before
+publication-time redaction; that effort check is not reproducible from the
+retained artifacts alone.
 
 ### Verified execution and measurements
 
