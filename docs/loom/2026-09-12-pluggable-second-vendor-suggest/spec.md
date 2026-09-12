@@ -1,6 +1,6 @@
 # Pluggable second-vendor suggestion — spec
 intent: 2026-09-12-pluggable-second-vendor-suggest@a725da6bb6da7fe842b0f901aa5a9b93d4241712
-confirmed-behavior: 2026-09-12 @c74fd56
+confirmed-behavior: 2026-09-12 @95dfbbe
 pre-build-review: required — changes the public workflow contract and coordinates behavior across independently installable plugins
 
 ## Requirements
