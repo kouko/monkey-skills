@@ -1,0 +1,73 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-09-fog-history-skips-non-ascii-ticket-names",
+  "content_digest": "b306bed918b69e635d4f7f3795a287757c3150c2",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest docs/loom/2026-09-09-fog-history-skips-non-ascii-ticket-names/evidence/probes/test_abuse_followup_records.py -q",
+      "artifact": "docs/loom/2026-09-09-fog-history-skips-non-ascii-ticket-names/evidence/probes/test_abuse_followup_records.py",
+      "result": "pass",
+      "command_digest": "c35ccd0165ab4d294cc99616e25634e99c540efbf007899116b427ab52f4ece1"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "rev-followups-a",
+      "vendor": "anthropic",
+      "model": "inherited-main",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "rev-followups-b",
+      "vendor": "anthropic",
+      "model": "inherited-main",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "important",
+      "anchor": "docs/loom/intent/2026-09-09-fog-history-skips-non-ascii-ticket-names.md:13",
+      "text": "issue (blocking): the intent told an implementer to update the adversarial probes that pinned the quoting behaviour, but those probes left with the abandoned PR #801 and nothing in this tree pins it; Acceptance 4 covered only the existing tests, so the new pin could silently never be written",
+      "fix": "state that the change it was found in was abandoned and its probes are gone, ask for a NEW regression test in Proposed outcome 4, and name that test in Acceptance 4",
+      "raised_by": "rev-followups-a, rev-followups-b",
+      "resolved": "fixed in 8ed2178c6; both reviewers confirmed fixed in round 2"
+    },
+    {
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-09-fog-history-skips-non-ascii-ticket-names/evidence/probes/test_abuse_followup_records.py:9",
+      "text": "nitpick (non-blocking): the module docstring miscounted which cases run a real validator and claimed no checker owned the needs-design fact, which rule intent.needs-design-reason does own",
+      "fix": "describe the split honestly",
+      "raised_by": "rev-followups-a, rev-followups-b",
+      "resolved": "fixed in 8ed2178c6 (three validators, one file read), confirmed in round 2"
+    },
+    {
+      "severity": "nit",
+      "anchor": "docs/loom/2026-09-09-fog-history-skips-non-ascii-ticket-names/evidence/probes/test_abuse_followup_records.py:98",
+      "text": "suggestion (non-blocking): the case searching a fixed window of recent commits for the needs-design line pinned a branch-moment fact and was strictly weaker than the checker case it duplicated",
+      "fix": "delete it and record why in the docstring",
+      "raised_by": "rev-followups-b",
+      "resolved": "deleted in 8ed2178c6; confirmed in round 2, no dead import left"
+    },
+    {
+      "severity": "nit",
+      "anchor": "docs/loom/intent/2026-09-09-fog-history-skips-non-ascii-ticket-names.md:9",
+      "text": "suggestion (non-blocking): the Problem never named the listing command or the suffix test, so a reader who never saw the abandoned change could not reproduce the silent skip",
+      "fix": "name git ls-tree -r --name-only, core.quotepath and the endswith test",
+      "raised_by": "rev-followups-b",
+      "resolved": "named in 8ed2178c6; confirmed in round 2"
+    }
+  ]
+}
