@@ -308,6 +308,31 @@ def test_nonconforming_output_with_unknown_failure_kind_is_rejected() -> None:
         dispatch_profile.resolve(payload)
 
 
+@pytest.mark.parametrize(
+    ("completed", "completed_redispatches"),
+    [(False, 0), (True, 2)],
+)
+def test_unknown_failure_kind_is_rejected_before_terminal_guards(
+    completed: bool, completed_redispatches: int,
+) -> None:
+    payload = {
+        "event": "after-execution",
+        "last_attempt": {
+            "completed": completed,
+            "success": False,
+            "conforming": False,
+            "profile": {"model": "frontier", "effort": "medium"},
+            "failure_kind": "invented-upgrade-reason",
+        },
+        "capabilities": CAPABILITIES,
+        "inheritance_guaranteed": True,
+        "completed_redispatches": completed_redispatches,
+    }
+
+    with pytest.raises(dispatch_profile.InputError):
+        dispatch_profile.resolve(payload)
+
+
 def test_nonconforming_known_nonrouting_failure_is_terminal() -> None:
     payload = {
         "event": "after-execution",

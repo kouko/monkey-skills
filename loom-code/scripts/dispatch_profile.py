@@ -178,6 +178,9 @@ def _after_execution(packet: dict[str, Any], capabilities: dict[str, tuple[str, 
             "outcome": "routed", "reason": "execution-succeeded",
             "completed_redispatches": count,
         }
+    kind = attempt.get("failure_kind")
+    if kind is not None and kind not in FAILURE_KINDS:
+        raise InputError("last_attempt.failure_kind is unknown")
     if not attempt["completed"] or count >= 2:
         return {
             "task_class": None, "uncertainty": None, "requested_profile": None,
@@ -186,9 +189,6 @@ def _after_execution(packet: dict[str, Any], capabilities: dict[str, tuple[str, 
             "completed_redispatches": count,
         }
     if not attempt["conforming"]:
-        kind = attempt.get("failure_kind")
-        if kind is not None and kind not in FAILURE_KINDS:
-            raise InputError("last_attempt.failure_kind is unknown")
         if kind == "malformed-response":
             result = _decision(
                 actual, capabilities, inheritance_guaranteed,
@@ -207,7 +207,6 @@ def _after_execution(packet: dict[str, Any], capabilities: dict[str, tuple[str, 
             "completed_redispatches": count,
         }
 
-    kind = attempt.get("failure_kind")
     if kind not in FAILURE_KINDS:
         raise InputError("last_attempt.failure_kind is unknown")
     if kind in NON_ROUTING_FAILURES:
