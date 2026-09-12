@@ -17,6 +17,16 @@ back to the user in plain words and get a yes. High-risk specs then get one
 independent pre-build review; routine specs proceed directly to planning.
 You never ask the user to grade the spec, and you never plan the work.
 
+## Decision boundary
+
+This station translates a confirmed outcome into observable and verifiable
+product behaviour. It may clarify wording needed to describe that behaviour,
+but it does not add a new outcome, value, or scope and does not choose the
+implementation. An unsupported product choice returns to `capture-intent`
+instead of being silently added to the specification.
+
+## Artifact vocabulary
+
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees happen;
 `kind: engineering` is everything else. A **decision point** is one of the

@@ -1,7 +1,7 @@
 ---
 name: capture-intent
 description: |
-  Interview the user and write a confirmed intent at docs/loom/intent/<change-id>.md. Use when someone describes something they want built or changed — "I want…", a feature idea, a bug they keep hitting — and no intent file exists yet. This is the entry station for every change when loom-design is installed.
+  Interview the user and write a confirmed intent at docs/loom/intent/<change-id>.md. Use when someone describes a problem, desired outcome, feature idea, or recurring bug they want changed and no intent file exists yet — including when they have not chosen the product behaviour or implementation. This is the entry station for every change when loom-design is installed.
 version: 1.0.0
 ---
 
@@ -14,6 +14,17 @@ one short document — `docs/loom/intent/<change-id>.md` — restate it back
 in their own words, and once they say yes, hand the change to the station
 that plans it. You do not design anything, you do not plan anything, and
 you never ask the user to judge the quality of your work.
+
+## Decision boundary
+
+This station captures the **problem**, **desired outcome**, **value**,
+outcome-level success conditions, and scope. A problem or desired outcome is
+valid input before the user chooses a feature or implementation. `Acceptance`
+here means outcome-level success conditions, not a product specification; it
+does not decide interaction steps, UI responses, persistence, error handling,
+or implementation.
+
+## Artifact vocabulary
 
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees happen.

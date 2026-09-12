@@ -162,6 +162,23 @@ def test_body_within_word_cap() -> None:
     assert words <= WORD_CAP, words
 
 
+def test_decision_boundary_translates_outcomes_without_expanding_scope() -> None:
+    section = _section(_text(), "## Decision boundary")
+    low = section.lower()
+    for concept in (
+        "confirmed outcome",
+        "observable",
+        "verifiable",
+        "product behaviour",
+        "new outcome",
+        "value",
+        "scope",
+        "implementation",
+    ):
+        assert concept in low, concept
+    assert len(section.split()) <= 100
+
+
 def test_station_summary_is_byte_identical_to_write_plan() -> None:
     ours = _section(_text(), "## Station summary")
     theirs = _section(WRITE_PLAN.read_text(encoding="utf-8"), "## Station summary")

@@ -17,6 +17,15 @@ anything, and you do not ask
 the user to approve the plan: how the work is split is your decision, and
 you write down why.
 
+## Decision boundary
+
+This station chooses the simplest reversible implementation that satisfies the
+confirmed specification. It may split that work into tasks and tests, but it
+must not invent or reinterpret product behaviour. A product gap is returned
+for clarification instead of being silently filled in the plan.
+
+## Workflow setup
+
 When `loom-design` is installed, an upstream station (`capture-intent`)
 has already interviewed the user and confirmed the intent. When it is not
 installed, **you also run that confirmation yourself** — step 3 below.
@@ -35,6 +44,8 @@ prefix; nothing else changes.
 `PLUGIN_ROOT` is provided to Codex plugin hook commands; it is not a general
 skill-shell variable, so Codex stations use the injected skill path shown by
 the host instead of copying Claude's substitution contract.
+
+## Artifact vocabulary
 
 **Vocabulary you need.** `kind: product` means the user-visible behaviour
 of a product changes — what someone using it reads, types, or sees
