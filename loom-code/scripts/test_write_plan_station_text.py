@@ -159,7 +159,31 @@ def test_ask_still_asks_once_per_full_lane_change() -> None:
     flat = " ".join(text.split())
     assert "second-vendor: ask" in flat
     assert "every full-lane change" in flat
-    assert "這次要不要用" in text
+    assert "AskUserQuestion" in text
+    assert "request_user_input" in text
+    assert "這次不使用" in text
+    assert "recommended" in flat
+
+
+def test_ask_is_host_aware_and_has_complete_fallbacks() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "On Codex, probe `claude` then `gemini`" in flat
+    assert "On Claude Code, probe `codex` then `gemini`" in flat
+    assert "blocking plain-language Markdown question" in flat
+    assert "no runnable different-model-family CLI" in flat
+    assert "continue without asking" in flat
+    assert "第二位讀者" not in text
+    assert "second reader" not in text.lower()
+
+
+def test_suggest_uses_one_cell_markdown_table_with_spacing() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "exactly two blank lines before and after" in flat
+    assert "| <heading> |\n|---|\n| <description> |" in text
+    assert "one heading and one descriptive cell" in flat
+    assert "raw Markdown" in text
 
 
 def test_small_lane_suggest_is_information_only() -> None:

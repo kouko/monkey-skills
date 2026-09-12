@@ -5,10 +5,12 @@ This file owns CLI availability probes and the user-facing behavior for
 
 ## Availability probe
 
-A second reviewer only counts if it is a non-interactive command-line tool
-from a **different model vendor than the host you are running on**: on
-Claude Code look for `codex` or `gemini`, on Codex look for `claude` or
-`gemini`. Detect it with `command -v <cli>` **and** a probe that it runs —
+An independent cross-model review only counts if it uses a non-interactive
+command-line tool from a **different model family than the current host**.
+Host identity comes from the environment running this skill, never from which
+executables happen to be installed. On Codex, probe `claude` then `gemini`.
+On Claude Code, probe `codex` then `gemini`. Never offer the current host
+family. Detect a candidate with `command -v <cli>` **and** a probe that it runs —
 `<cli> --version` must exit 0. In zsh `command -v` may print an alias or a
 function body rather than a path; do not try to parse it. **Any non-empty
 output plus a `<cli> --version` that exits 0 counts as present**, and
@@ -37,6 +39,26 @@ waiting. There is no background listener, reminder, or persistent opt-in
 state: only a reply received in the active task before Closing Review causes
 one policy reevaluation.
 
+Render either suggest result as a one-column Markdown table with exactly one
+heading and one descriptive cell. Emit exactly two blank lines before and after
+the table. Keep the source readable as raw Markdown:
+
+```markdown
+
+
+| <heading> |
+|---|
+| <description> |
+
+
+```
+
+Use `不同模型系列的獨立 Review` for availability and
+`建議使用不同模型系列進行獨立 Review` for recommendation. Put the vendor,
+grounded reasons when present, opt-in cutoff, and `continue without waiting`
+statement together in the single description cell. Add no second column or
+decorative row.
+
 When that reevaluation returns `selection-confirmed`, append
 `user-decided — second-vendor selection-confirmed: <vendor>` to the plan's
 `## Risks` section and commit that plan edit before Closing Review starts.
@@ -53,20 +75,26 @@ next-change-only. No reply means no second vendor for this change.
 
 ## `second-vendor: ask`
 
-`ask` is a standing choice that puts the question to the user on every
-full-lane change. The answer governs only that change and never rewrites the
-KICKOFF line.
+`ask` is a standing choice that puts one cross-model review question to the
+user on every full-lane change. The answer governs only that change and never
+rewrites the KICKOFF line. Probe the host-specific candidates above first.
 
-When `docs/loom/KICKOFF-DEFAULTS.md` carries `second-vendor: ask`, ask one
-plain sentence, in the same decision-point-① message as everything else:
+With a runnable candidate, prefer the current host's native question tool:
+Claude Code uses `AskUserQuestion` when it is available in the current agent;
+Codex uses `request_user_input` when it is available in the active mode. Ask
+whether to use the named candidate for an independent review by a different
+model family. Offer `這次不使用` and `使用 <tool>` as the two choices. If the
+native interface requires one option to be recommended, mark `這次不使用` as
+recommended so extra quota use and repository-data egress remain opt-in.
 
-> 這次要不要用 Codex 當第二位讀者？
->
-> (Do you want to use Codex as the second reader this time?)
+When a runnable candidate exists but the native tool is unavailable, ask one
+blocking plain-language Markdown question with the same two choices and no
+fabricated recommendation. When there is no runnable different-model-family CLI,
+state that no such review tool is currently available and continue without asking.
 
 Add the question to the running list kept in step 3, so it lands in the
 plan's `## Questions asked` section and the intent's decision record. That
-answer names a CLI or declines a second vendor for this change.
+answer names a CLI or declines cross-model review for this change.
 
 **In the small lane**, there is only one reader, so this question is not
 asked at all.

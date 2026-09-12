@@ -212,8 +212,30 @@ def test_ask_keeps_the_full_lane_question() -> None:
     text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
     flat = " ".join(text.split())
     assert "every full-lane change" in flat
-    assert "這次要不要用" in text
+    assert "AskUserQuestion" in text
+    assert "request_user_input" in text
+    assert "這次不使用" in text
+    assert "recommended" in flat
     assert "small lane" in flat
+
+
+def test_ask_excludes_host_and_defines_unavailable_paths() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "On Codex, probe `claude` then `gemini`" in flat
+    assert "On Claude Code, probe `codex` then `gemini`" in flat
+    assert "blocking plain-language Markdown question" in flat
+    assert "no runnable different-model-family CLI" in flat
+    assert "continue without asking" in flat
+    assert "第二位讀者" not in text
+    assert "second reader" not in text.lower()
+
+
+def test_ask_and_fixed_never_silently_substitute_the_host() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "Never offer the current host family" in flat
+    assert "never replace it silently" in flat
 
 
 def test_second_vendor_modes_match_loom_code_contract() -> None:

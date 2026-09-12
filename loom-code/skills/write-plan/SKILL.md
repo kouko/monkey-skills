@@ -207,11 +207,12 @@ twice.
    inside this same message ("this will rewrite your ___, I am doing it the
    way you said: ___"), so the user sees it without being stopped for it.
 
-3. **The second-reviewer question, only for `second-vendor: ask`.** Load
+3. **The cross-model review question, only for `second-vendor: ask`.** Load
    `references/second-vendor-ask-and-docs-lint.md` before composing this
    message. A missing line is initialized as `second-vendor: suggest`; it
    does not add a question. In a full lane, `ask` puts its per-change
-   question here and records the answer in the intent decision record. In a
+   host-aware question here using the native interface or documented fallback,
+   and records the answer in the intent decision record. In a
    small lane it is omitted. A fixed CLI and `suggest` add no question here.
 
 4. **The principles interview**, if step 2 demanded it.
