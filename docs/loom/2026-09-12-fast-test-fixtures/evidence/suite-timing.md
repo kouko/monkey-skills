@@ -17,9 +17,17 @@ the plugin version at
 `loom-workflow/skills/git-memory/scripts/test_memory_grep_version.py:51`, which
 is how the missing entry turned the suite red earlier on this branch. So the
 declared suite was run again over the tree that contains the final changelog and
-plan — `d00bc970a` — and exited 0 in 60.69s with the same 2148 assertions. The
-only path landing after that run is this evidence file, and `grep` over every
-`test_*.py` and `test-*.sh` in the repo finds no reference to it.
+plan — `d00bc970a` — and exited 0 in 60.69s with the same 2148 assertions.
+
+Every path landing after that run is either a loom record no group executes, or a
+comment-only edit to a file whose groups were re-run green. That is the property
+this paragraph claims, stated as a property rather than as a list of paths: an
+earlier revision enumerated them instead, and went stale three times — including
+once on the very commit that fixed it, because fixing it touched a file. The test
+that settles it is `git diff --name-only <measured sha>..HEAD` read against the
+runner's own group inventory, not a grep for filename references: a grep finds no
+test naming `conftest.py` either, and pytest loads that file for the whole
+git-memory group regardless.
 
 A first revision of this file reported runs taken at `992fab34f`, before the
 version bump, and presented them as the branch HEAD. Both branch-end reviewers
@@ -43,7 +51,11 @@ The baseline row was measured in this change's first sitting, against the same
 base tree; runs 1 through 3 are fresh measurements of the fixed tree. A reviewer
 who tried to re-measure the baseline reported that the base tree does not
 complete in a fresh clone — two `loom-memory` tests unrelated to this branch fail
-there — so that row stands on its original sitting alone.
+there — so that row stands on its original sitting alone. The intent's Acceptance
+1 quotes 144.9s for the same base tree and the same command; that was a third,
+earlier sitting, and 154.58s is the figure taken alongside the post-change runs.
+Both are far above the 95s bound, so the gap changes nothing but is worth naming
+rather than leaving a reader to find it.
 
 All three post-change runs sit under the intent's 95s Acceptance bound, and the pass count is
 unchanged at 2148. The adversarial probe file this change also commits is not
