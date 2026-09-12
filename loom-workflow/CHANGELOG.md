@@ -4,6 +4,22 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.3.1] — 2026-09-13 — Probe fixtures build in one git process
+
+- The two git-memory probe fixtures and the `test-memory-grep-perf.sh` fixture
+  no longer spend one `git commit` process per commit; each history is now
+  written by `git fast-import`, one process per supersession link instead of
+  one per commit. The fixtures are byte-identical: every commit object id
+  matches what the per-commit builders produced.
+- `skills/git-memory/scripts/conftest.py` is new and holds the shared importer,
+  its commit spec, and a `git log` read-back the rebuilt builders assert their
+  own output against — the pre-change probes bound invocation counts only, so a
+  fixture that drifted to the wrong record shape left them green.
+- Measured with `python3 scripts/run_package_tests.py --loom-family -q`: the
+  whole Loom suite went from 154.58 s to 68.70 s, `test-memory-grep-perf.sh`
+  from 72.01 s to 4.31 s, and the git-memory group from 27.73 s to 11.28 s.
+  Nothing under test changed and the assertion count is unchanged at 2148.
+
 ## [4.3.0] — 2026-09-11 — Record states when and how much
 
 - The memory skill's Record contract now states when a lesson is written down
