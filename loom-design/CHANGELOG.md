@@ -12,6 +12,14 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.1.0] — 2026-09-12 — route non-blocking second-vendor suggestions
+
+Capture-intent now treats `suggest` as a downstream, non-blocking notice and
+asks about a second vendor only when a full-lane repository explicitly uses
+`ask`. It initializes missing defaults to `suggest`, preserves fixed-CLI
+routing, and leaves risk and response decisions in loom-code so loom-design
+remains independently installable.
+
 ## [2.0.1] — 2026-09-09 — explicit publication authorization
 
 Patch. When the user confirms automatic publication with the intent,
