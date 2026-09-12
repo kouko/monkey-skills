@@ -174,3 +174,11 @@ def test_reference_has_no_none_mode_or_per_change_none_answer() -> None:
     text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
     assert "second-vendor: <cli> | none" not in text
     assert "`<cli>` / `none`" not in text
+
+
+def test_confirmed_selection_is_recorded_for_closing_review() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "selection-confirmed" in flat
+    assert "plan's `## Risks` section" in flat
+    assert "Closing Review consumes" in flat

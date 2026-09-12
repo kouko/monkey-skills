@@ -20,7 +20,7 @@ attributing their prompt to Loom.
 At the start of a change:
 
 1. Resolve the injected plugin root and run
-   `python3 <plugin-root>/scripts/loom_checker.py contract --require 2.0`.
+   `python3 <plugin-root>/scripts/loom_checker.py contract --require 2.1`.
 2. Confirm `python3 <plugin-root>/scripts/loom_checker.py --list-rules`
    includes `push.attestation`.
 3. If Codex presents a trust prompt for a new or modified installed definition,

@@ -57,3 +57,4 @@ charter: 1.0
 2. Removing `none` is intentionally breaking; its new checker rule needs mechanism registration, a regression eval, and the same-version CHANGELOG budget exception.
 3. Non-blocking replies live only in active task context; no persistent listener, preference ledger, background wait, or reviewer-identity mutation after Review may appear.
 4. Recommendation evidence must remain anchored and machine-readable; free-form risk interpretation outside the policy module would defeat replaceability.
+5. user-decided — second-vendor selection-confirmed: claude

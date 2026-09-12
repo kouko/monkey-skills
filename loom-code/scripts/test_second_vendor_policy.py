@@ -127,6 +127,7 @@ def test_resolve_existing_modes_are_not_reimplemented(mode: str) -> None:
 
     assert result["reason_code"] == "mode-not-suggest"
     assert result["notice_kind"] == "no-notice"
+    assert result["wait_for_user"] is False  # field is meaningful only for suggest
 
 
 @pytest.mark.parametrize(

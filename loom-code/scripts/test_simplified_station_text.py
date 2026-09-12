@@ -87,6 +87,12 @@ def test_review_uses_one_observable_claude_attempt_and_existing_retry() -> None:
     assert "Do not run a model-backed preflight." in review_prose
 
 
+def test_review_consumes_every_second_vendor_selection_source() -> None:
+    review_prose = " ".join(REVIEW.split())
+    for source in ("fixed CLI", "per-change `ask` answer", "`selection-confirmed`"):
+        assert source in review_prose
+
+
 def test_ship_uses_one_publish_command_after_acceptance() -> None:
     assert "publish --confirm-authorized" in SHIP
     assert "one publication command" in SHIP

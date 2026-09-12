@@ -53,7 +53,8 @@ def test_live_consumers_require_contract_two() -> None:
     for path in consumers:
         text = path.read_text(encoding="utf-8")
         if "contract --require" in text:
-            assert "contract --require 2.0" in text, path
+            expected = "2.0" if "loom-workflow" in str(path) else "2.1"
+            assert f"contract --require {expected}" in text, path
             assert "contract --require 1.0" not in text, path
 
 

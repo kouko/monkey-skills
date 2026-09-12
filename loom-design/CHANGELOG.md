@@ -19,6 +19,8 @@ asks about a second vendor only when a full-lane repository explicitly uses
 `ask`. It initializes missing defaults to `suggest`, preserves fixed-CLI
 routing, and leaves risk and response decisions in loom-code so loom-design
 remains independently installable.
+This release requires loom contract 2.1 so an older loom-code installation
+cannot misread `suggest` as a fixed CLI.
 
 ## [2.0.1] — 2026-09-09 — explicit publication authorization
 

@@ -53,7 +53,7 @@ checkout on this host:
 Then run, with that directory in place of `<loom-code>`:
 
 ```
-python3 <loom-code>/scripts/loom_checker.py contract --require 2.0
+python3 <loom-code>/scripts/loom_checker.py contract --require 2.1
 ```
 
 Exit 0: continue. Anything else, the rule is `contract.requires`: print

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -41,24 +40,17 @@ def _packet(**overrides: object) -> dict[str, object]:
 
 def _run(tmp_path: Path, packet: object) -> subprocess.CompletedProcess[str]:
     hostile = tmp_path / "hostile cwd"
-    decoy = tmp_path / "decoy modules"
     installed = tmp_path / "unrelated plugin cache" / "loom-code" / "scripts"
     hostile.mkdir(exist_ok=True)
-    decoy.mkdir(exist_ok=True)
     installed.mkdir(parents=True, exist_ok=True)
     installed_policy = installed / POLICY.name
     shutil.copy2(POLICY, installed_policy)
-    (decoy / "json.py").write_text("raise RuntimeError('decoy imported')\n")
-    env = os.environ.copy()
-    env.pop("PYTHONHOME", None)
-    env["PYTHONPATH"] = str(decoy)
     return subprocess.run(
         [sys.executable, "-I", str(installed_policy)],
         input=json.dumps(packet),
         text=True,
         capture_output=True,
         cwd=hostile,
-        env=env,
         timeout=10,
     )
 

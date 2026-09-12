@@ -15,6 +15,8 @@ their prior behavior.
   duplicating classification.
 - Reject old `second-vendor: none` defaults with migration guidance to
   `suggest`, and make `suggest` the repository and template default.
+- Publish contract 2.1 and require it from loom-design so mixed installs
+  cannot treat `suggest` as a fixed executable name.
 
 budget-exception: standing.second-vendor-valid — makes removal of the silent-off
   mode mechanically enforceable instead of relying on prose or silently

@@ -37,6 +37,12 @@ waiting. There is no background listener, reminder, or persistent opt-in
 state: only a reply received in the active task before Closing Review causes
 one policy reevaluation.
 
+When that reevaluation returns `selection-confirmed`, append
+`user-decided — second-vendor selection-confirmed: <vendor>` to the plan's
+`## Risks` section before committing the plan. Closing Review consumes that
+line as the selected reviewer; it is a result record, not a fabricated entry
+in `## Questions asked`.
+
 In the small lane the notice is informational only and the active change
 cannot gain another reviewer. If the user accepts anyway, report the policy's
 `next-change-only` result; it does not mutate the current reviewer identity or

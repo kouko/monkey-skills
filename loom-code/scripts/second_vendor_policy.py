@@ -34,6 +34,8 @@ def _result(
     reasons: list[dict[str, object]] | None = None,
     eligible: bool = False,
 ) -> dict[str, object]:
+    # This shared result shape is interpreted only by suggest callers. Ask and
+    # fixed orchestration ignore its notice, eligibility, and waiting fields.
     return {
         "effective_vendor": effective_vendor,
         "notice_vendor": notice_vendor,

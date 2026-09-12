@@ -136,6 +136,12 @@ def test_second_vendor_modes_remove_none_and_default_to_suggest(manifest):
     assert "second-vendor: none" not in template
 
 
+def test_restate_action_routes_only_ask_at_decision_point_one(manifest):
+    action = next(a for a in manifest["actions"] if a["name"] == "restate-and-confirm")
+    assert "second-vendor: ask" in action["summary"]
+    assert "once-per-change second-vendor suggestion" not in action["summary"]
+
+
 def test_manifest_declares_publication_only_paths(manifest):
     patterns = manifest["publication_only_paths"]
     assert patterns == [
