@@ -15,7 +15,7 @@ lane: express | gate-only    # optional; absent = repo default (KICKOFF-DEFAULTS
 <wanted capability or state; no scenario, UI reaction, state transition, or implementation>
 
 ## Acceptance
-1. <observable delivery outcomes, not scenarios or implementation; each line externally provable>
+1. <observable delivery outcomes, not scenarios or implementation; each line provable by a blind run>
 
 ## Constraints
 - <already-fixed boundaries, not agent preferences>

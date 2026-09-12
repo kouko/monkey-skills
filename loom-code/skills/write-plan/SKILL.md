@@ -146,10 +146,12 @@ the user named a change, match the slug.
 When this station performs code-only intake, use the same capture boundary:
 ask only for missing required-field content, never a fixed intake question
 quota; existing decision points remain unchanged.
-Problem holds present pain; Proposed outcome holds the wanted capability;
+Problem holds present pain, who it affects, and the consequence, with no
+diagnosis or fix; Proposed outcome holds the wanted capability;
 Acceptance holds each observable delivery outcome, not value, complete
 scenarios, UI placement, state transitions, test steps, or implementation;
-Constraints are already fixed; product Value case explains why and GO/NO-GO;
+Constraints are already fixed; product Value case gives beneficiary, urgency,
+and GO/NO-GO, while an engineering intent omits obvious value;
 Out of scope names excluded capability; Open questions contains only unresolved
 outcome or scope choices. After drafting, make one author pass: **Keep,
 neutralize, defer, reopen, or delete**. Behaviour defers to spec, method to
