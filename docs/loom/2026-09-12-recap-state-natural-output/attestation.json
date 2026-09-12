@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-12-recap-state-natural-output",
-  "content_digest": "5de0d66a1e922314deb8a8423210d5ae34ee30cf",
+  "content_digest": "8e434f742bb233dfce59c1380bf90dbb511cea18",
   "executions": [
     {
       "kind": "package-tests",
