@@ -99,7 +99,7 @@ v0.1 から意図的に外したもの：
 ## Files
 
 ```
-recap/
+recap-state/
 ├── README.md           <- English README
 ├── README.ja.md        <- 本ファイル（日本語）
 ├── README.zh-TW.md     <- 繁體中文 README

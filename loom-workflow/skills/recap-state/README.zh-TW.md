@@ -93,7 +93,7 @@ session** 時觸發（away summary）。那是跨 session 的工具。
 ## Files
 
 ```
-recap/
+recap-state/
 ├── README.md           <- English README
 ├── README.ja.md        <- 日本語 README
 ├── README.zh-TW.md     <- 本檔（繁體中文）

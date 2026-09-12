@@ -212,3 +212,6 @@ def test_tri_lang_readmes_show_localized_goal_grounded_alignment_loop():
     assert "7-block schema" not in readmes["en"][0]
     assert "7 ブロックスキーマ" not in readmes["ja"][0]
     assert "7 格式" not in readmes["zh-TW"][0]
+    for language, (text, _) in readmes.items():
+        assert "recap-state/" in text, f"{language} README uses a stale directory root"
+        assert "\nrecap/\n" not in text, f"{language} README names a nonexistent directory"

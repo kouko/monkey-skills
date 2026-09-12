@@ -47,6 +47,7 @@ def test_entrypoint_preserves_goal_grounded_sections_and_synthesis_gate():
             "real topology",
             "known to render Mermaid",
             "unknown or terminal client",
+            "Support counts as known only",
             "ASCII",
         ],
         "synthesis stop": [

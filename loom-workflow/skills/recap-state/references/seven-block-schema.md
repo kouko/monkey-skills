@@ -1,6 +1,6 @@
 # Recap Alignment Schema — Reference Bundle
 
-> **SSOT for `loom-workflow:recap` v0.1**
+> **SSOT for `loom-workflow:recap-state` v0.1**
 > This file is the authoritative source for the L3 Goal-Grounded Alignment Loop,
 > the historical seven-block lineage shared with L2, and the 5
 > 共通核心原則. SKILL.md routes here; do not duplicate content in SKILL.md.
@@ -8,6 +8,10 @@
 > + `2026-05-26-recap-v0.1-brief.md` (5th principle).
 
 ---
+
+The L3 renderer keeps planning private. Never output `<thinking>` or `<recap>` tags
+or their closing forms. Never expose `Block N` labels. The numbered model below
+records the source lineage and L2 mapping; its identifiers are not L3 headings.
 
 ## L3 user-visible template
 
@@ -47,13 +51,6 @@ Restate the purpose, current position, and proposed next step. Ask the user to
 confirm or redirect, and do not continue until they respond. If the purpose is
 unknown, ask only for the purpose.
 
----
-
-The L3 renderer keeps planning private. Never output `<thinking>` or `<recap>` tags
-or their closing forms. Never expose `Block N` labels. The numbered model
-below records the source lineage and L2 mapping; its identifiers are not L3
-headings.
-
 ## 1 — The Seven Blocks
 
 Each block has a one-line WHY. The WHY is sourced from the V1 template in the
@@ -90,7 +87,7 @@ flattens 3 sub-bullets into 3 rows wins; a table with 1 row or a chart for 3
 unrelated items adds framing without compressing.
 
 Per-section guidance — adapted from the 2026-05-27 dogfood finding that
-that some blocks (especially Block 3 Assessment, Block 5 Why-this-question,
+some blocks (especially Block 3 Assessment, Block 5 Why-this-question,
 Block 6 Pending) read meaningfully better with a small table:
 
 | Section | Default form | Upgrade to table / diagram when… |
@@ -105,8 +102,10 @@ Block 6 Pending) read meaningfully better with a small table:
 **Diagrams**: useful only when there is real topology — a pipeline, dependency
 graph, or state machine the human needs to see spatially. Use Mermaid only when
 the client is known to render it; use ASCII for an unknown or terminal client.
-An explicit user format request wins. Most recaps are flat state snapshots, so
-the six sections normally need no diagram.
+An explicit user format request wins. Support counts as known only when the
+user or current runtime instructions explicitly state Mermaid rendering
+support; never infer it from a product name. Most recaps are flat state
+snapshots, so the six sections normally need no diagram.
 
 **Anti-pattern**: a 1-row table, a 2-row table whose rows are unrelated, or
 an ASCII chart for a 3-item list. These add boxes around text without
@@ -281,7 +280,7 @@ Spec-critical user phrases (file paths, error messages, named constraints, exact
 tool / command names) are preserved by principle 2 (`quote-not-paraphrase`)
 inside Block 2 (Background) — that's where the anti-drift duty lives at L3. If
 the user explicitly wants a verbatim listing of their messages at L3, they ask
-outside the recap schema; the recap stays focused on the 6 blocks the L3 reader
+outside the recap schema; the recap stays focused on the six sections the L3 reader
 actually scans.
 
 **WHY**: The user's intent is ground truth — that part of Anthropic's
@@ -382,9 +381,9 @@ bundle file does not exist yet.
 
 ### Essential background
 
-- Decided to put the test in `loom-workflow/skills/recap/scripts/` (flat per CLAUDE.md rule)
+- Decided to put the test in `loom-workflow/skills/recap-state/scripts/` (flat per CLAUDE.md rule)
 - Rejected putting the test at plugin root — that would need a subfolder which the hook blocks
-- Bundle path: `loom-workflow/skills/recap/references/seven-block-schema.md`
+- Bundle path: `loom-workflow/skills/recap-state/references/seven-block-schema.md`
 - Quote from plan: "RED: `pytest ...::test_all_seven_blocks_and_five_principles_present -v` fails initially because file does not exist"
 
 ### Gap and current assessment

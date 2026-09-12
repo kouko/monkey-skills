@@ -174,10 +174,17 @@ def test_l3_contract_defines_goal_grounded_natural_output() -> None:
     assert not missing, f"L3 natural-output contract missing: {missing}"
 
     l3_template_start = text.index("## L3 user-visible template")
-    l3_template_end = text.index("## ", l3_template_start + 3)
+    next_h2 = re.search(r"^## (?!#)", text[l3_template_start + 3 :], re.MULTILINE)
+    assert next_h2, "L3 template must be followed by another H2 section"
+    l3_template_end = l3_template_start + 3 + next_h2.start()
     l3_template = text[l3_template_start:l3_template_end]
+    assert "### Purpose and current position" in l3_template
+    assert "### Align purpose and next step" in l3_template
     for forbidden in ("<thinking>", "</thinking>", "<recap>", "</recap>", "Block "):
         assert forbidden not in l3_template
 
     assert "Renumber the rendered output" not in text
     assert "instead of the 7 blocks" not in text
+    assert "`loom-workflow:recap-state`" in text
+    assert "loom-workflow/skills/recap-state/scripts/" in text
+    assert "Support counts as known only" in text

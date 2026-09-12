@@ -103,7 +103,7 @@ These are deliberate omissions from v0.1:
 ## Files
 
 ```
-recap/
+recap-state/
 ├── README.md           <- English (this file)
 ├── README.ja.md        <- 日本語
 ├── README.zh-TW.md     <- 繁體中文

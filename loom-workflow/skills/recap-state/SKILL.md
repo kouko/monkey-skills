@@ -106,7 +106,9 @@ Use tables or diagrams only when they compress information:
 - Use a diagram only for real topology such as a pipeline, dependency graph,
   or state machine. When the client is known to render Mermaid, prefer
   Mermaid; for an unknown or terminal client, use ASCII. An explicit user
-  format request overrides this fallback.
+  format request overrides this fallback. Support counts as known only when
+  the user or current runtime instructions explicitly state Mermaid rendering
+  support; never infer it from a product name.
 
 Do not add decorative visuals. Tables must flatten ≥3 sub-items or
 compare ≥2 options; a one-row table or boxes around an unrelated list add cost.
@@ -135,6 +137,6 @@ error, constraint, or command is more damaging than a slightly abrupt quote.
 
 ## See also
 
-- `references/seven-block-schema.md` — authoritative template, block rules,
+- `references/seven-block-schema.md` — authoritative template, section rules,
   principles, visual guidance, and examples. Read it before rendering every
   recap.
