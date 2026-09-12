@@ -194,3 +194,17 @@ def test_tri_lang_readmes_consistent():
         f"SKILL.md description does not contain >=3 zh-TW trigger phrases; "
         f"found {zhtw_in_skill}"
     )
+
+
+def test_tri_lang_readmes_show_localized_goal_grounded_alignment_loop():
+    readmes = {
+        "en": (_read(README_EN), ("Purpose and current position", "Align purpose and next step")),
+        "ja": (_read(README_JA), ("目的と現在地", "目的と次の一歩をそろえる")),
+        "zh-TW": (_read(README_ZHTW), ("目的與現在的位置", "對齊目的與下一步")),
+    }
+
+    for language, (text, labels) in readmes.items():
+        assert "Goal-Grounded Alignment Loop" in text, f"{language} README lacks loop name"
+        assert "```mermaid" in text, f"{language} README lacks Mermaid loop diagram"
+        for label in labels:
+            assert label in text, f"{language} README lacks localized label: {label}"
