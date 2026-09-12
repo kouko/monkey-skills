@@ -4,12 +4,14 @@ The branch carries no executable behaviour: one memory-store entry and one
 open intent. What can still be wrong is the machine-read shape of those
 records -- frontmatter the store's own validator rejects, an index that
 has drifted from what a fresh regeneration produces, an intent the
-contract checker refuses, a `needs-design:` line that does not appear
-verbatim in the commit that decided it, or a status line confirmed
-without the user. The first two run the repository's real validators;
-the last three read git and the file because no checker owns those facts
--- each is written to fail on the mistake it names, not to restate the
-file.
+contract checker refuses, or a status line confirmed without the user.
+The first three run the repository's real validators; the last reads the
+file because no checker owns a status line's value. Each is written to
+fail on the mistake it names, not to restate the file. The
+`needs-design:` line's verbatim-in-the-commit obligation is deliberately
+NOT probed here: rule `intent.needs-design-reason` already owns it, and
+a probe that searched a fixed window of recent commits for that line
+would pin a branch-moment fact and go red when the trunk moved.
 
 Run: python3 -m pytest docs/loom/2026-09-09-fog-history-skips-non-ascii-ticket-names/evidence/probes/test_abuse_followup_records.py -q
 """
@@ -80,28 +82,6 @@ def test_intent_passes_the_contract_checker() -> None:
     """
     result = _run(str(CHECKER), "intent", str(INTENT.relative_to(REPO)))
     assert result.returncode == 0, result.stdout + result.stderr
-
-
-def test_intent_needs_design_line_appears_verbatim_in_its_commit() -> None:
-    """The deciding commit carries the needs-design line unchanged.
-
-    Re-wrapping or translating that line in the commit message is the
-    ordinary way this rule is broken, and it is invisible to a reader
-    who only opens the intent file.
-    """
-    line = next(
-        raw
-        for raw in INTENT.read_text(encoding="utf-8").splitlines()
-        if raw.startswith("needs-design:")
-    )
-    log = subprocess.run(
-        ["git", "log", "--format=%B", "-n", "20"],
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=300,
-    ).stdout
-    assert line in log.splitlines()
 
 
 def test_intent_status_stays_open_until_a_decision_point() -> None:
