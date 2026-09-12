@@ -3,7 +3,8 @@
 > **SSOT for `loom-workflow:recap-state` v0.1**
 > This file is the authoritative source for the L3 Goal-Grounded Alignment Loop,
 > the historical seven-block lineage shared with L2, and the 5
-> 共通核心原則. SKILL.md routes here; do not duplicate content in SKILL.md.
+> shared core principles. SKILL.md routes here; do not duplicate content in
+> SKILL.md.
 > Source research: `AI Agent Recap 框架研究` (2026-05-25) + `對話接續綜論` (2026-05-25)
 > + `2026-05-26-recap-v0.1-brief.md` (5th principle).
 
@@ -224,7 +225,7 @@ proceeding, but any "yes / 對 / go / continue / 繼続" counts as confirmation.
 
 ---
 
-## 2 — The Five 共通核心原則
+## 2 — The Five Shared Core Principles
 
 These 5 principles are the normative contract behind the 7 blocks.
 Each has: name, one-line definition, one-line WHY, one short failure-mode example.
@@ -390,10 +391,10 @@ bundle file does not exist yet.
 
 | | |
 |---|---|
-| **距離目的還缺** | create the bundle that satisfies the test |
-| **假設** | directory structure is correct and pytest can discover the test |
-| **信心** | high — ran `ls` to verify paths |
-| **卡住** | nothing; the test runs and fails cleanly (expected RED state) |
+| **Gap** | create the bundle that satisfies the test |
+| **Assumption** | directory structure is correct and pytest can discover the test |
+| **Confidence** | high — ran `ls` to verify paths |
+| **Blocker** | nothing; the test runs and fails cleanly (expected RED state) |
 
 *(2-col key:value table per §1.5 — assessment defaults to this form; reads
 cleaner than 3 separate sub-bullets.)*

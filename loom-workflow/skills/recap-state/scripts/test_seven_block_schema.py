@@ -1,10 +1,10 @@
 """
-Tests for loom-workflow/skills/recap/references/seven-block-schema.md
+Tests for loom-workflow/skills/recap-state/references/seven-block-schema.md
 
 Asserts:
   - 7 H2/H3 block headings (Situation, Background, Assessment, User messages,
     Why-this-question, Pending, Synthesis-check) are present (case-insensitive)
-  - 5 共通核心原則 anchors present: structured-schema, quote-not-paraphrase,
+  - 5 shared-core-principle anchors present: structured-schema, quote-not-paraphrase,
     all-user-messages, synthesis-check, plain-language
   - 1 good-example block + 1 bad-example block
   - Bad example demonstrates BOTH paraphrase-creep AND jargon-creep
@@ -65,7 +65,7 @@ def test_all_seven_blocks_and_five_principles_present() -> None:
     """
     Verify the bundle ships:
       1. All 7 V1 block headings (case-insensitive; multilingual-friendly)
-      2. All 5 共通核心原則 anchors
+      2. All 5 shared-core-principle anchors
       3. A good-example block
       4. A bad-example block
       5. Bad example mentions BOTH paraphrase-creep AND jargon-creep
@@ -104,7 +104,7 @@ def test_all_seven_blocks_and_five_principles_present() -> None:
             f"must appear as section headings."
         )
 
-    # ── 5 共通核心原則 anchors ───────────────────────────────────────────────
+    # ── 5 shared-core-principle anchors ─────────────────────────────────────
     required_anchors = [
         "structured-schema",
         "quote-not-paraphrase",
@@ -115,7 +115,7 @@ def test_all_seven_blocks_and_five_principles_present() -> None:
     for anchor in required_anchors:
         assert anchor_present(text, anchor), (
             f"Expected principle anchor '{anchor}' not found.\n"
-            f"All 5 共通核心原則 (structured-schema / quote-not-paraphrase / "
+            f"All 5 shared core principles (structured-schema / quote-not-paraphrase / "
             f"all-user-messages / synthesis-check / plain-language) must be "
             f"present. The 5th (plain-language) is skill-specific per the "
             f"2026-05-26 brief amendment."
@@ -188,3 +188,21 @@ def test_l3_contract_defines_goal_grounded_natural_output() -> None:
     assert "`loom-workflow:recap-state`" in text
     assert "loom-workflow/skills/recap-state/scripts/" in text
     assert "Support counts as known only" in text
+
+
+def test_english_reference_keeps_localized_text_to_explicit_quotations() -> None:
+    text = load_bundle()
+
+    # The reference is English. Localized source titles, verbatim user feedback,
+    # confirmation examples, and quoted repository rules remain valid evidence,
+    # but prose headings and English example fields must not drift across languages.
+    forbidden_prose_labels = (
+        "The Five 共通核心原則",
+        "the 5 共通核心原則",
+        "**距離目的還缺**",
+        "**假設**",
+        "**信心**",
+        "**卡住**",
+    )
+    present = [label for label in forbidden_prose_labels if label in text]
+    assert not present, f"Localized labels leaked into English reference prose: {present}"
