@@ -33,6 +33,31 @@ REQ-7 — Repository adoption
 - user-decided — Configure this repository for `suggest`, with `none` as the effective default unless the user opts in before Closing Review.
 - user-decided — Use Claude Code as the second-vendor reviewer for this change's Closing Review.
 
+### Policy contract
+The version 1 policy receives exactly these fields:
+
+- `contract_version`: integer `1`.
+- `configured_mode`: `none`, `ask`, `suggest`, or `fixed`; `fixed_vendor` is required only for `fixed`.
+- `host_vendor`: `claude`, `codex`, or `gemini`.
+- `lane`: `small` or `full`.
+- `usable_vendors`: a unique set drawn from `claude`, `codex`, and `gemini`, excluding `host_vendor`; the policy orders candidates as Claude, Codex, then Gemini after excluding the host, so caller order cannot change the result.
+- `risk_signals`: a unique set drawn from `security-or-privacy-boundary`, `public-contract-or-persistent-format`, `cross-system-or-provider-integration`, `review-verification-or-publication-mechanism`, `critical-behavior-not-fully-automated`, and `irreversible-data-or-architecture`.
+- `review_started`: boolean.
+- `response`: `none`, `decline`, or `accept`; `response_vendor` is required only for `accept` and must identify a usable vendor.
+
+The version 1 policy returns exactly these fields:
+
+- `effective_vendor`: a vendor id or null.
+- `notice_kind`: `none`, `availability`, `recommendation`, `selection-confirmed`, or `next-change-only`.
+- `recommendation_reasons`: the matched risk signals in the canonical order listed above.
+- `opt_in_eligible`: boolean.
+- `wait_for_user`: always false for `suggest`.
+- `reason_code`: one stable machine-readable value describing the selected path.
+
+For `suggest`, no usable vendor returns `none`; otherwise the first canonical candidate is selected for the notice. A full-lane change with zero signals returns `availability`; one or more signals returns `recommendation` with every matched signal in canonical order. A small-lane change returns `availability` with `opt_in_eligible: false` regardless of signals. A full-lane acceptance before Review returns `selection-confirmed` and the accepted vendor; decline or no response leaves `effective_vendor` null. Acceptance after Review starts returns `next-change-only` with no effective vendor. The module rejects unknown fields, unknown enum values, duplicate set members, wrong types, a host vendor in `usable_vendors`, missing mode-dependent fields, unavailable accepted vendors, and other contradictory inputs as `input-error` without emitting a policy decision.
+
+For `none`, `ask`, and `fixed`, the policy returns `reason_code: mode-not-suggest` and does not replace their existing orchestration. This keeps their behavior stable while ensuring only the `suggest` path owns risk classification.
+
 ## Alternatives considered
 - Redefine `none` to permit risk suggestions — rejected because it would silently change an existing explicit opt-out.
 - Keep the complete decision tree in skill prose — rejected because the same risk logic would drift across hosts and independently installed plugins.
