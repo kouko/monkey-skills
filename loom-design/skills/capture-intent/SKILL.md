@@ -103,7 +103,8 @@ install or update `loom-code`; do not create a repository-local copy.
 
 Read `references/interview.md`; ask only for missing required-field content.
 When prior conversation and evidence are already sufficient, draft directly.
-Product intake may need a value decision; neither kind owes a question quota.
+Product intake may need a value decision; neither kind owes an intake question
+quota, and existing decision points remain unchanged.
 
 Cover, in the user's own words and with no jargon:
 
@@ -149,7 +150,7 @@ Keep every field at intent altitude:
 Before treating a fork as `user-decided`, check whether its concrete choices
 would produce materially different outcomes for the user or the agreed scope.
 When they would, state the two outcomes in plain language and obtain an
-explicit answer. A choice merely present in an accepted restatement is not
+explicit answer before confirmation. A choice merely present in an accepted restatement is not
 evidence that the fork itself was asked. When the difference is only an
 implementation detail the user would need to read code to judge, do not ask;
 leave it for a later station as `agent-decided`.
@@ -168,7 +169,7 @@ Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 
 After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or delete**.
 Keep supported intent; neutralize overcommitment; defer behaviour to spec or
-method to plan; reopen for an unanswered material outcome or scope choice;
+method to plan; reopen means move it to Open questions and stop confirmation;
 delete unsupported detail. This author self-check is not a review loop and
 creates no fields, IDs, requirements, scenarios, or product behaviour. An
 unresolved material choice means the intent must remain `open`.

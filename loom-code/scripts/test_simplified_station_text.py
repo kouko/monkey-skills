@@ -18,6 +18,8 @@ MEMORY_PR = (
 SHIP_PROSE = " ".join(SHIP.split())
 CAPTURE_PROSE = " ".join(CAPTURE.split())
 PLAN_PROSE = " ".join(PLAN.split())
+INTENT_TEMPLATE = (ROOT / "loom-code/contract/templates/intent.md").read_text(encoding="utf-8")
+CONTRACT_MANIFEST = (ROOT / "loom-code/contract/manifest.yaml").read_text(encoding="utf-8")
 
 
 def test_review_uses_one_computed_reviewer_floor_without_prose_allowlist() -> None:
@@ -244,3 +246,30 @@ def test_build_has_no_evidence_accounting() -> None:
     assert "finalize-review" in BUILD
     assert "Build never writes `attestation.json`" in BUILD
     assert "review.json" not in BUILD
+
+
+def test_capture_intent_boundaries_are_shared_with_code_only_intake() -> None:
+    for phrase in (
+        "ask only for missing required-field content",
+        "observable delivery outcome",
+        "complete scenarios",
+        "Keep, neutralize, defer, reopen, or delete",
+        "must remain `open`",
+        "explicit answer",
+        "decision points remain unchanged",
+        "move it to Open questions",
+        "before confirmation",
+    ):
+        assert phrase in CAPTURE_PROSE
+        assert phrase in PLAN_PROSE
+
+    assert "question quota" in CAPTURE_PROSE
+    assert "question quota" in PLAN_PROSE
+
+
+def test_shared_intent_contract_names_altitude_without_new_schema() -> None:
+    assert "observable delivery outcomes, not scenarios or implementation" in INTENT_TEMPLATE
+    assert "unsupported product decisions" in CONTRACT_MANIFEST
+    assert "why this change exists, the value when needed" in CONTRACT_MANIFEST
+    assert "source-id" not in CONTRACT_MANIFEST
+    assert "question-id" not in CONTRACT_MANIFEST

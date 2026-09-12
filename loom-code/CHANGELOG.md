@@ -144,6 +144,13 @@ dispatch-time policy gate instead of duplicating routing mechanisms per station
 - Keep active unmerged CI failures out of Maintain and reuse an attestation only
   for pull-request data that was not committed to the repository.
 
+## [2.0.10] — 2026-09-12 — shared intent content boundaries
+
+- Give code-only intake the same gap-driven field boundaries and one-pass
+  author self-check as `capture-intent`.
+- Clarify the shared intent template and charter without adding fields, IDs,
+  checker rules, stations, or review loops.
+
 ## [2.0.9] — 2026-09-10 — faster required-check observation
 
 - Poll required checks every 10 seconds while keeping the 60-minute pending
