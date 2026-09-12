@@ -103,7 +103,7 @@ install or update `loom-code`; do not create a repository-local copy.
 
 ## Step 1 — Interview
 
-Read `references/interview.md`; ask only for missing required content.
+Read `references/interview.md`; ask only for missing required-field content.
 Draft directly when already sufficient. No intake question quota applies.
 Problems/outcomes are valid before choosing features or implementation.
 Existing decision points remain unchanged.
@@ -155,9 +155,9 @@ Keep every field at intent altitude:
 
 ## Step 2 — Write the intent
 
-Write intent and decision-point dialogue in the user's language. Plans, specs,
-reviews, evidence, tests, and commits are English; blind-run reports and PR
-bodies use the user's language.
+Write the intent and decision-point dialogue in the user's language; plans,
+specs, reviews, evidence, tests, and commits are English; blind-run reports
+and PR bodies use the user's language.
 
 Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 `loom-code`'s `contract/templates/` directory. Fill in:

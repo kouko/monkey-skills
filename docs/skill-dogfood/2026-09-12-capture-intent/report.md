@@ -303,6 +303,9 @@ Claude executor after implementation.**
 
 ## Raw outputs appendix
 
+The `raw/` streams below are local to the authoring environment and deliberately
+not committed; these paths name the local run, not repository content.
+
 ### A. Activation runs
 
 Raw stream JSONL files and the machine-readable summary are under `raw/`:
