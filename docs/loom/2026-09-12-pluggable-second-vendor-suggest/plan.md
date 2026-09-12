@@ -15,7 +15,7 @@ charter: 1.0
 ### Wave 1 — contract consumers
 
 **W1-01 Remove none and adopt suggest in kickoff contracts**  after: W0-01  acceptance: 5,7
-- Files: loom-code/contract/manifest.yaml, loom-code/contract/templates/KICKOFF-DEFAULTS.md, docs/loom/KICKOFF-DEFAULTS.md, loom-code/scripts/test_contract_manifest.py, loom-code/scripts/test_loom_checker_standing.py
+- Files: loom-code/contract/manifest.yaml, loom-code/contract/templates/KICKOFF-DEFAULTS.md, docs/loom/KICKOFF-DEFAULTS.md, loom-code/scripts/loom_checker.py, loom-code/scripts/test_contract_manifest.py, loom-code/scripts/test_loom_checker_standing.py, docs/loom/evidence/mechanisms.yaml
 - Test: A5 positive: suggest-grammar; negative: none-rejected-with-migration. A7 positive: repository-default-suggest; boundary: template-default-suggest.
 - Risk: Immediate removal breaks old configs by design; user-decided — reject with actionable migration text and never alias or silently rewrite none.
 
@@ -54,6 +54,6 @@ charter: 1.0
 
 ## Risks
 1. `suggest` spans two standalone plugins; only loom-code may execute the resolver, while loom-design must remain a prose-only mode router with no sibling runtime dependency.
-2. Removing `none` is intentionally breaking; every grammar, template, fixture, example, and repository default must reject or replace it consistently.
+2. Removing `none` is intentionally breaking; its new checker rule needs mechanism registration, a regression eval, and the same-version CHANGELOG budget exception.
 3. Non-blocking replies live only in active task context; no persistent listener, preference ledger, background wait, or reviewer-identity mutation after Review may appear.
 4. Recommendation evidence must remain anchored and machine-readable; free-form risk interpretation outside the policy module would defeat replaceability.
