@@ -304,8 +304,11 @@ Claude executor after implementation.**
 
 ## Raw outputs appendix
 
-The `raw/` streams below are local to the authoring environment and deliberately
-not committed; these paths name the local run, not repository content.
+The `raw/` directory contains the committed, sanitized execution evidence.
+Sanitization removes JSONL system-init snapshots and replaces local paths,
+session UUIDs, email addresses, connector state, tool inventories, and other
+host metadata with placeholders. The unsanitized streams remain local to the
+authoring environment and are not repository content.
 
 ### A. Activation runs
 

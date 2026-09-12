@@ -1,0 +1,37 @@
+Simulated only — no files written, no commands run, per your instruction. Below is the product-behaviour portion of the spec and the confirmation message that decision point ② would present.
+
+---
+
+## Spec excerpt — `docs/loom/<change-id>/spec.md` (product-behaviour sections only)
+
+### Requirements
+
+**REQ-1 — Muting stops activity emails**
+WHEN a user mutes a project, the system shall stop sending activity emails for that project → Acceptance #1
+
+**REQ-2 — In-app notifications unaffected**
+WHILE a project is muted, the system shall continue delivering in-app notifications for that project unchanged → Acceptance #2
+
+**REQ-3 — Global settings unaffected**
+WHERE a project is muted, the system shall leave the user's global notification settings unchanged → Acceptance #3
+
+### UI flows
+
+1. **Mute a project** — the user mutes a project → activity emails for that project stop arriving from then on.
+2. **While muted, in-app** — the project is muted → in-app notifications for that project keep appearing exactly as they did before muting.
+3. **While muted, global settings** — the project is muted → the user's global notification settings show no change.
+4. **Reverse** — N/A — unmuting is out of scope for this change; no reverse flow exists.
+
+*(No new goal, actor, scope, UI control/placement, persistence method, technical component, or error presentation was introduced — none of those were specified in the confirmed intent, so none appear above.)*
+
+---
+
+## Decision point ② — confirmation message (as it would be shown to you)
+
+> You mute a project, and from then on you stop getting activity emails for it. While it's muted, your in-app notifications for that project keep showing up exactly as before, and your global notification settings don't change at all. Unmuting isn't part of this change — is that right?
+
+**One-way doors:** none apply. Muting doesn't rewrite or delete any existing data, so class (e) doesn't trigger; there's no fork between competing implementations put to you here (classes a–d), so no option-A/B question is needed.
+
+---
+
+Note: per your "simulate only" instruction, I did not run `loom_checker.py` (contract/intake checks), did not commit, and did not hand off to `write-plan` — this output is the artifact content only, for your review.

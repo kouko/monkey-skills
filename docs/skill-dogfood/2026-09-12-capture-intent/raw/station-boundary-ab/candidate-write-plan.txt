@@ -1,0 +1,68 @@
+## Plan (simulated — not written to disk)
+
+**change-id:** `2026-09-12-project-mute-stops-activity-emails`
+
+I did not run any checker, git, or file commands — this is the plan content only, per the simulate-only instruction. One honesty note up front: this sandbox has no actual repository (`is a git repo: false`, empty directory), so I have no real files to cite paths/line-anchors against. Rather than invent plausible-looking paths, the Current State Evidence below names only the constructs the confirmed spec already asserts exist (`ProjectNotificationPolicy`, the email dispatch path, the in-app dispatch path) and marks path/anchor as **not available in this sandbox** rather than fabricating them. In a real run, step 5's evidence-gathering would resolve these before the plan could pass `loom_checker.py plan`.
+
+---
+
+```markdown
+---
+intent: 2026-09-12-project-mute-stops-activity-emails@<sha-not-available>
+---
+
+# Plan: project mute stops activity emails
+
+## Current State Evidence
+
+- Forward — the project mute action already exists and is invokable; its
+  current effect is not respecified here beyond what the spec confirms.
+  Path/anchor: not available (no repository present in this sandbox).
+- Reverse — email dispatch and in-app dispatch are already separate paths
+  (per spec). Path/anchor: not available (no repository present in this sandbox).
+- Error — not addressed: spec states no new error behaviour.
+- Data — `ProjectNotificationPolicy` already exists as the place mute state
+  is expected to live/be read from (per spec). Path/anchor: not available.
+- Boundary — global notification settings and in-app notifications are the
+  explicit non-targets (per spec). Path/anchor: not available.
+
+## Questions asked
+
+(none — spec supplied as already confirmed; no decision-point interview run
+in this simulation)
+
+## Tasks
+
+### Wave 1
+
+**W1-01 — Suppress email dispatch for muted projects**
+`acceptance: 1, 2`
+- Files: email dispatch path (only) — consults `ProjectNotificationPolicy`
+  mute state for the project before sending an activity email
+- Test:
+  A1 positive: muted-project-email-suppressed; negative: unmuted-project-email-still-sent
+  A2 negative: muted-project-in-app-notification-still-delivered
+- Risk: agent-decided — email path only reads existing mute state; no write
+  to `ProjectNotificationPolicy`, no touch to the in-app dispatch path or
+  global settings, since those are explicitly unchanged behaviour
+
+## Risks
+
+- Unmute is out of scope (per spec) — this plan does not add, stub, or
+  reserve any unmute task, field, or ID.
+- No task touches global settings or in-app dispatch; both are asserted
+  unchanged, not verified-unchanged by new tests, since the spec does not
+  ask for regression coverage on unrelated paths — only W1-01's negative
+  case (A2) checks in-app delivery is untouched, because that is the one
+  adjacent behaviour explicitly named in Acceptance.
+```
+
+---
+
+Notes on what I deliberately left out, since the constraints forbid adding or reinterpreting behaviour:
+- No UI task (spec gives no UI surface to touch).
+- No persistence/schema task (`ProjectNotificationPolicy` is asserted to already exist).
+- No error-handling task (spec states none).
+- No review step (excluded per your instruction).
+- No unmute-adjacent task or ID (explicitly out of scope).
+- Single wave, single task — nothing else in the spec traces to separate work.
