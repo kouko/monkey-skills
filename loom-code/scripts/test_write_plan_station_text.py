@@ -182,3 +182,7 @@ def test_confirmed_selection_is_recorded_for_closing_review() -> None:
     assert "selection-confirmed" in flat
     assert "plan's `## Risks` section" in flat
     assert "Closing Review consumes" in flat
+    assert "before Closing Review starts" in flat
+    assert "`plan-maintained`" in flat
+    assert "commit that plan edit" in flat
+    assert "before committing the plan" not in flat

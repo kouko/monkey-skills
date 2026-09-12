@@ -39,9 +39,11 @@ one policy reevaluation.
 
 When that reevaluation returns `selection-confirmed`, append
 `user-decided — second-vendor selection-confirmed: <vendor>` to the plan's
-`## Risks` section before committing the plan. Closing Review consumes that
-line as the selected reviewer; it is a result record, not a fabricated entry
-in `## Questions asked`.
+`## Risks` section and commit that plan edit before Closing Review starts.
+The plan charter's `plan-maintained` edits-after rule authorizes this update
+even when the initial plan commit already exists. Closing Review consumes
+that line as the selected reviewer; it is a result record, not a fabricated
+entry in `## Questions asked`.
 
 In the small lane the notice is informational only and the active change
 cannot gain another reviewer. If the user accepts anyway, report the policy's
