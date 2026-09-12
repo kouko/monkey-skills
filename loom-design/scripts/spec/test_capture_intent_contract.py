@@ -221,6 +221,8 @@ def test_ask_keeps_the_full_lane_question() -> None:
     assert "這次不使用" not in text
     assert "recommended" in flat
     assert "small lane" in flat
+    assert "reviewer floor is computed later and independently" in flat
+    assert "there is only one reader" not in flat
 
 
 def test_ask_excludes_host_and_defines_unavailable_paths() -> None:

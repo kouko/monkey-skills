@@ -169,6 +169,9 @@ def test_reviewer_floor_is_one_only_for_narrow_low_risk_paths() -> None:
         "PRINCIPLES.md",
         "unknown.bin",
         f"docs/loom/{CHANGE}/../../src.py",
+        "tests/skills/SKILL.md",
+        "tests/hooks/hooks.json",
+        "tests/contract/manifest.yaml",
     ):
         assert loom_checker.reviewer_floor_for_paths(
             change_paths | {protected}, CHANGE
@@ -192,6 +195,22 @@ def test_matching_low_risk_attestation_accepts_one_reviewer(tmp_path: Path) -> N
 
 def test_reviewer_floor_fails_closed_when_branch_base_is_unknown(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
+
+    assert loom_checker.required_reviewer_count(repo, CHANGE) == 2
+
+
+def test_reviewer_floor_sees_both_sides_of_a_protected_file_rename(
+    tmp_path: Path,
+) -> None:
+    repo = repo_with_content(tmp_path)
+    runtime = repo / "runtime.py"
+    runtime.write_text("VALUE = 1\n", encoding="utf-8")
+    commit(repo, "runtime")
+    git(repo, "switch", "-q", "-c", "feature")
+    guide = repo / "docs/guide.md"
+    guide.parent.mkdir(parents=True, exist_ok=True)
+    runtime.rename(guide)
+    commit(repo, "rename runtime as docs")
 
     assert loom_checker.required_reviewer_count(repo, CHANGE) == 2
 

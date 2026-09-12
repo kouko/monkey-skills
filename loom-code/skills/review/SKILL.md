@@ -58,6 +58,8 @@ recompute the same policy; the orchestrator never declares or overrides it.
   fixed CLI, the per-change `ask` answer, or a `selection-confirmed` line
   naming the second vendor in the plan's `## Risks` section; the
   last form is write-plan's active-task handoff for a timely `suggest` opt-in.
+  The selected vendor fills one computed reviewer slot; it does not add a
+  reviewer beyond the floor.
 
 Reviewer independence is a quality requirement, not a ledger field. Give each
 reviewer the branch base, changed paths, intent, spec when present, plan, and

@@ -638,6 +638,8 @@ def reviewer_floor_for_paths(paths: set[str], change_id: str) -> int:
             return 2
         parts = {part.casefold() for part in pure.parts}
         name = pure.name.casefold()
+        if parts.intersection(_REVIEW_PROTECTED_PARTS) or name in _REVIEW_PROTECTED_NAMES:
+            return 2
         if path == intent_path or path.startswith(change_store):
             continue
         if path.startswith(evidence_store):
@@ -646,8 +648,6 @@ def reviewer_floor_for_paths(paths: set[str], change_id: str) -> int:
             continue
         if (
             pure.suffix.casefold() in _LOW_RISK_DOC_EXTENSIONS
-            and not parts.intersection(_REVIEW_PROTECTED_PARTS)
-            and name not in _REVIEW_PROTECTED_NAMES
             and not path.startswith("docs/loom/")
         ):
             continue
@@ -664,7 +664,12 @@ def required_reviewer_count(
         base = branch_base(repo)
         paths = {
             line.strip()
-            for line in git_text(repo, "diff", "--name-only", base, selected).splitlines()
+            # Git documents --no-renames as disabling rename detection even
+            # when config enables it, so both delete/add endpoints are exposed:
+            # https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---no-renames
+            for line in git_text(
+                repo, "diff", "--name-only", "--no-renames", base, selected
+            ).splitlines()
             if line.strip() and not _is_host_plumbing(line.strip())
         }
     except (OSError, UsageError):

@@ -197,6 +197,8 @@ def test_small_lane_suggest_is_information_only() -> None:
     assert "small lane" in flat
     assert "informational only" in flat
     assert "next-change-only" in flat
+    assert "reviewer floor is computed later and independently" in flat
+    assert "there is only one reader" not in flat
 
 
 def test_reference_has_no_none_mode_or_per_change_none_answer() -> None:

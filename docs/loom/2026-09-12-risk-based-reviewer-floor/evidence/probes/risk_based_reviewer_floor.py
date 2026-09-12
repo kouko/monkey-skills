@@ -42,6 +42,9 @@ def main() -> int:
         "unknown.bin",
         f"docs/loom/{CHANGE}/../../runtime.py",
         "docs/loom/another-change/plan.md",
+        "tests/skills/SKILL.md",
+        "tests/hooks/hooks.json",
+        "tests/contract/manifest.yaml",
     )
     for attack in attacks:
         assert checker.reviewer_floor_for_paths(allowed | {attack}, CHANGE) == 2, attack

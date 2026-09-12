@@ -283,8 +283,9 @@ twice, and this is the only stop this station makes.
    serious problems in this system's own spec review were found by
    only one of the two vendors. When the defaults carry `second-vendor: ask`,
    use the reference's host-aware native question or fallback in this same
-   message; the answer governs this change only. In the small lane there is only one
-   reader, so this question is not asked. A fixed CLI also adds no question.
+   message; the answer governs this change only. In the small lane omit this
+   opt-in question; Review computes the reviewer floor later from the complete
+   branch delta. A fixed CLI also adds no question.
 
 4. **The principles confirmation**, if step 3 ran the interview — restated
    in the same message, confirmed by the same yes.

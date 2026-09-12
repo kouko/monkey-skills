@@ -21,12 +21,12 @@ charter: 1.0
 ### Wave 2 — one policy, consistent guidance
 
 **W2-01 Make Closing Review consume the executable floor**  after: W1-01  acceptance: 3,4,5
-- Files: loom-code/skills/review/SKILL.md, loom-code/skills/write-plan/SKILL.md, loom-code/contract/manifest.yaml, loom-code/scripts/test_simplified_station_text.py, loom-code/scripts/test_write_plan_station_text.py
+- Files: loom-code/skills/review/SKILL.md, loom-code/skills/write-plan/SKILL.md, loom-code/skills/write-plan/references/second-vendor-ask-and-docs-lint.md, loom-code/contract/manifest.yaml, loom-code/scripts/test_simplified_station_text.py, loom-code/scripts/test_write_plan_station_text.py
 - Test: A3 positive: review-invokes-policy; negative: prose-declared-count. A4 positive: safeguards-retained; boundary: no-new-state. A5 positive: contract-pins-SSOT; negative: fixed-floor-text.
 - Risk: agent-decided — keep operational instructions in Review and replace other reviewer counts with references; do not duplicate the allowlist outside checker tests.
 
 **W2-02 Remove contradictory reviewer counts from design stations**  after: W1-01  acceptance: 4,5
-- Files: PRINCIPLES.md, loom-design/skills/capture-intent/SKILL.md, loom-design/skills/write-spec/SKILL.md, loom-design/skills/product-principles/SKILL.md, loom-design/skills/design-system/SKILL.md, loom-code/scripts/test_simplified_station_text.py
+- Files: PRINCIPLES.md, loom-design/skills/capture-intent/SKILL.md, loom-design/skills/capture-intent/references/second-vendor.md, loom-design/skills/write-spec/SKILL.md, loom-design/skills/product-principles/SKILL.md, loom-design/skills/design-system/SKILL.md, loom-code/scripts/test_simplified_station_text.py
 - Test: A4 positive: station-flow-unchanged; boundary: no-new-user-stop. A5 positive: all-summaries-policy-neutral; negative: stale-small-full-counts.
 - Risk: agent-decided — align the ratified quality floor and make station summaries policy-neutral; the user's intent confirmation authorizes replacing the obsolete lane exception.
 
