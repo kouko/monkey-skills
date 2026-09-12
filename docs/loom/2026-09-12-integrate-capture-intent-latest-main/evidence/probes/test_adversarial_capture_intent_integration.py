@@ -15,13 +15,23 @@ def read(relative: str) -> str:
 def test_capture_contract_after_merge_preserves_scope_boundary() -> None:
     capture = read("loom-design/skills/capture-intent/SKILL.md")
     code_only = read("loom-code/skills/write-plan/SKILL.md")
+    interview = read("loom-design/skills/capture-intent/references/interview.md")
     manifest = read("loom-code/contract/manifest.yaml")
 
     for text in (capture, code_only):
         assert "altitude pass" in text
         assert "explicit answer" in text
         assert "must remain `open`" in text
-    assert "Unsupported product decisions remain open or are deleted" in manifest
+        assert "question quota" in text
+    assert "accepted restatement is insufficient" in capture
+    assert "accepting the restatement is insufficient" in code_only
+    assert "blind run in a clean environment" in interview
+    assert '"The code is cleaner" fails' in interview
+    assert '"A task can carry a due date' in interview
+    assert (
+        "Material user-outcome or scope choices remain open; only non-material "
+        "unsupported detail is deleted"
+    ) in manifest
 
 
 def test_capture_contract_after_merge_keeps_retry_fix() -> None:

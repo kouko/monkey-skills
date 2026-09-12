@@ -1,7 +1,7 @@
-# `write-spec` complexity-control dogfood — rounds 1–11
+# `write-spec` complexity-control dogfood — rounds 1–12
 
 - **Date:** 2026-09-10 to 2026-09-11
-- **Status:** completed research through round 11; no production skill, template, checker, or
+- **Status:** completed research through round 12; no production skill, template, checker, or
   workflow change authorized by this record
 - **Question:** can a small stage-local rule prevent `write-spec` completeness
   checks from expanding a confirmed intent into unnecessary Requirements,
