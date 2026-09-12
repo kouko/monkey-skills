@@ -1,0 +1,52 @@
+## Simulated — no files written, no commands run
+
+Per your instruction I ran only the drafting steps (spec write-up + decision-point-② script) and skipped intake checks, contract checks, commit, and hand-off. Below is exactly the product-behaviour slice you asked for, built only from what the confirmed intent states.
+
+---
+
+### `## Requirements`
+
+```
+REQ-1 — Mute stops project emails
+  WHEN a user mutes a project, the system shall stop sending activity
+  emails for that project → Acceptance #1
+
+REQ-2 — In-app notifications unchanged
+  WHILE a project is muted, the system shall continue delivering
+  in-app notifications for that project unchanged → Acceptance #2
+
+REQ-3 — Global settings unchanged
+  WHILE a project is muted, the system shall leave the user's global
+  notification settings unchanged → Acceptance #3
+```
+
+I did not add a requirement asserting unmute is absent/blocked — "out of scope" only means this change doesn't build it, not that it's forbidden or permanent, so it isn't asserted as a system behavior.
+
+### `## UI flows`
+
+```
+Operation: Mute a project
+  Normal:   You mute a project → you stop receiving activity emails
+            for that project.
+  Boundary: N/A — not addressed by the confirmed intent.
+  Error:    N/A — not addressed by the confirmed intent.
+  Unaffected: Your in-app notifications for that project, and your
+            global notification settings, stay as they were.
+
+Operation: Unmute
+  N/A — out of scope for this change.
+```
+
+No control, placement, toggle, page, or persistence mechanism is named anywhere above — none was in the confirmed intent, so none is asserted.
+
+---
+
+### Decision point ② — confirmation message (would be sent to you)
+
+> You mute one project → its activity emails stop. Your in-app notifications for that project, and your global settings, stay exactly as they are. This change doesn't add a way to unmute. Is that right?
+
+No one-way-door clause is attached: nothing in the intent supports a cost, a hard-to-reverse technical commitment, or an irreversible action on your existing data, so none is claimed.
+
+---
+
+**Not done, by design of your instruction**: no `spec.md` file, no frontmatter (`intent:`, `pre-build-review:`, `confirmed-behavior:`), no Design-decision/Alternatives/Current-state-evidence sections, no commit, no checker runs, no hand-off to write-plan. Say the word if you want me to actually run the station for real.

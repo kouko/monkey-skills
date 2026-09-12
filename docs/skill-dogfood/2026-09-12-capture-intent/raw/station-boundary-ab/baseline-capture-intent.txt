@@ -1,0 +1,96 @@
+Ran the **capture-intent** skill in simulate-only mode — no files written, no shell/tool calls executed. Everything below is the artifact I would produce and the hand-off I would send; nothing has actually been committed to disk.
+
+## Step 0 — contract check (simulated)
+This working directory isn't a git repo and has no `loom-code` plugin checkout to point at, so the actual `loom_checker.py contract --require 2.0` call can't run here. Noting this as a caveat rather than pretending it passed — a real run must execute this check before anything is treated as final.
+
+## Step 1 — Interview
+Your context already answers every required field, so no further questions were needed:
+
+| Field | Answer |
+|---|---|
+| Who's affected | Project members getting repeatedly interrupted by activity email from one specific project |
+| Done looks like | They can mute that one project so it stops emailing them, with in-app notifications and global settings untouched |
+| Constraints | Only the email channel changes; nothing else about notification delivery changes |
+| Out of scope | Un-muting (reverting a muted project back to email) |
+| Kind | `product` — changes what a member sees/receives |
+
+## Step 3 — Standing check (simulated)
+No `PRINCIPLES.md` exists in this (non-)repo to check, and no `docs/loom/KICKOFF-DEFAULTS.md` to read the second-vendor default from. In a real repo this would run `loom_checker.py standing …` and print any WARN lines verbatim, and would ask the once-per-change second-vendor question if the defaults file says `ask`. Flagging both as skipped rather than assuming an answer.
+
+## Step 4 — Decision point ① (restatement, one-way door, confirmation)
+
+**Restatement:**
+> 你要的是：讓一個專案的活動通知不要再寄 email 給專案成員；做完後你可以把某個專案設成不寄 email，但那個專案的站內通知，以及你的全域通知設定，都完全不受影響。之後 email 也不會再打擾你這件事之外的其他專案。對嗎？
+> (You want one project's activity to stop generating email for its members; when done you can mute one project's email while its in-app notifications and your global settings stay exactly as they are, and your other projects' email is unaffected.)
+
+**One-way door surfaced (class c — limits future action):** once a project is muted, there is currently no way for a member to un-mute it themselves — reversing this needs a separate future change, since building un-mute is explicitly out of scope here. You've already called out that un-muting is out of scope, so I'm treating that as your answer, not asking it again.
+
+**Publication:** per your instruction, you're opting out of automatic PR publication — so the `publication:` field is **omitted** (not `automatic`), per the contract rule that an opt-out leaves it absent.
+
+**Your answer:** yes, confirmed.
+
+## Final intent artifact (would be written to `docs/loom/intent/2026-09-12-mute-project-email-notifications.md`)
+
+```markdown
+---
+change-id: 2026-09-12-mute-project-email-notifications
+originator: kouko
+kind: product
+needs-design: yes — touches the project notification-settings surface; no DESIGN.md or ui-flows document exists yet covering it
+status: confirmed 2026-09-12
+---
+
+## Problem
+Members of a project keep getting interrupted by activity email from that
+project. There is currently no way to reduce just those emails without
+turning off notifications more broadly.
+
+## Proposed outcome
+A project member can mute one project so its activity no longer generates
+email for them, while everything else about how they're notified — in-app
+notifications for that project, and their global notification settings —
+stays exactly as it is today. Email for their other, non-muted projects is
+unaffected.
+
+## Acceptance
+1. After a member mutes a project, no further activity email arrives for
+   that project.
+2. In-app notifications for that project keep arriving unchanged.
+3. The member's global notification settings remain unchanged.
+4. Activity email for the member's other (non-muted) projects keeps
+   arriving unchanged.
+
+## Constraints
+- Only the email channel is affected by muting a project; nothing else
+  about notification delivery changes.
+
+## Out of scope
+- Un-muting a project (reverting it back to sending email) is not part of
+  this change.
+
+## Value case
+Beneficiary: project members currently interrupted by repeated activity
+email from one project. Urgency: the interruptions are ongoing today.
+GO — confirmed by the user.
+
+## Open questions
+- none
+```
+
+(Commit message that would accompany it: `docs(loom): intent 2026-09-12-mute-project-email-notifications confirmed`, body containing the `needs-design:` line verbatim, followed by `python3 <loom-code>/scripts/loom_checker.py intent …` to verify — not actually run here.)
+
+## Step 5 — Hand-off
+
+`needs-design: yes` → this change goes to **`loom-design:write-spec`**, not `write-plan`.
+
+**Hand-off message to write-spec:**
+> Change-id: `2026-09-12-mute-project-email-notifications`. Intent is `status: confirmed`, `publication` field intentionally absent (user opted out of automatic PR publication) — do not re-run decision point ①. Decision point ② ("you type ___, you see ___") is yours to run next, product-only. `## Questions asked` for the plan file:
+> - decision point ① — what — "You want project-activity email muted per project, in-app/global untouched — is that right?"
+> - decision point ① — consequence — "Once muted there's no self-service un-mute; you already scoped that out — confirmed."
+> - decision point ① — consequence (publication) — "Yes authorizes automatic PR publication after review unless you opt out now — you opted out."
+
+**Caveats for the record (since this was simulated in a non-repo, tool-free environment):**
+- No `loom-code` contract version check actually ran.
+- No `PRINCIPLES.md` / standing-docs check actually ran (this is `kind: product`, so a real run must verify a ratified `PRINCIPLES.md` exists or interview for one before this can truly reach `confirmed`).
+- The second-vendor question was not actually asked (no `KICKOFF-DEFAULTS.md` to read).
+- Nothing was written to disk and no checker/commit commands were executed — this is a dry-run artifact only.

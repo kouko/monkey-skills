@@ -1,0 +1,416 @@
+{
+  "claude_version": "2.1.268 (Claude Code)",
+  "model": "sonnet",
+  "results": [
+    {
+      "id": "t01",
+      "query": "我想新增一個功能，先幫我把真正要做的事情釐清。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t02",
+      "query": "這個 bug 一直發生，我想正式修掉，但目前還沒有 intent。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "maintain"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t03",
+      "query": "我想讓專案通知可以靜音，先確認需求範圍。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t04",
+      "query": "有個新的工程重構想做，請先整理目標和完成條件。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t05",
+      "query": "我希望 CLI 支援匯出 CSV，這是一個還沒建立 intent 的新變更。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t06",
+      "query": "這個流程太常讓使用者卡住，我想改，但還沒決定具體行為。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 0,
+          "routed": [],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t07",
+      "query": "先訪談我，把這個新功能整理成可確認的 intent。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t08",
+      "query": "幫我捕捉這次改動的目的、限制和驗收成果。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t09",
+      "query": "新的 API 行為想法還很粗，先收斂我真正要的結果。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t10",
+      "query": "我想改善登入失敗的體驗，這個 change 還沒有任何 Loom 文件。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t11",
+      "query": "I want to add project archiving; no intent exists yet. Help me clarify the outcome and scope.",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t12",
+      "query": "Start a new Loom change for a recurring sync failure and capture what done means.",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "maintain"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t13",
+      "query": "I have a feature idea but not a specification yet. First confirm the intent with me.",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t14",
+      "query": "Turn this rough request into a confirmed intent before planning anything.",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 0,
+          "routed": [],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t15",
+      "query": "We keep losing filters after refresh. I want that fixed; there is no intent file.",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t16",
+      "query": "この新機能について、仕様を書く前に目的と範囲を整理して確認して。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t17",
+      "query": "繰り返し起きる不具合を直したい。まだ intent はないので、まず意図をまとめて。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t18",
+      "query": "新しい変更を始めたいので、完了条件と対象外を私に確認して。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t19",
+      "query": "アイデア段階の要望を Loom の intent として確定したい。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "capture-intent"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "t20",
+      "query": "まだ設計はしないで、この変更で得たい結果だけを聞き取って。",
+      "should_trigger": true,
+      "expected": null,
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 0,
+          "routed": [],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "n01",
+      "query": "既に確認済みの intent から spec.md を書いて、画面上の挙動を整理して。",
+      "should_trigger": false,
+      "expected": "write-spec",
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "write-spec"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "n02",
+      "query": "The intent is confirmed. Break it into an implementation plan with task dependencies.",
+      "should_trigger": false,
+      "expected": "write-plan",
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "write-plan"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "n03",
+      "query": "Implement the committed plan test-first and run focused verification.",
+      "should_trigger": false,
+      "expected": "build",
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "loom-code:build"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "n04",
+      "query": "Review the completed branch and generate its closing attestation.",
+      "should_trigger": false,
+      "expected": "review",
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "review"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "n05",
+      "query": "本番で再発した障害を既存 intent と照合して maintenance として処理して。",
+      "should_trigger": false,
+      "expected": "maintain",
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "maintain"
+          ],
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "id": "n06",
+      "query": "產品原則還沒建立，請訪談我並產生 PRINCIPLES.md。",
+      "should_trigger": false,
+      "expected": "product-principles",
+      "runs": [
+        {
+          "run": 1,
+          "returncode": 1,
+          "routed": [
+            "product-principles"
+          ],
+          "stderr": ""
+        }
+      ]
+    }
+  ]
+}

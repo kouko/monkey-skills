@@ -1,0 +1,54 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-13-harden-sanitized-evidence-probe",
+  "content_digest": "c4d26ffb3ec9ec97ebd237167e61e0e4841ac53d",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 docs/loom/2026-09-12-publish-sanitized-capture-evidence/evidence/probes/test_sanitized_evidence_public_safe.py",
+      "artifact": "docs/loom/2026-09-12-publish-sanitized-capture-evidence/evidence/probes/test_sanitized_evidence_public_safe.py",
+      "result": "pass",
+      "command_digest": "83d4691358b00823a838f27713600e9d02e2684fd5e3398d79816fc948d5abe2"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-probe-maintenance-reviewer",
+      "vendor": "openai",
+      "model": "host-default/unverified",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-code-probe-maintenance-reviewer",
+      "vendor": "anthropic",
+      "model": "host-default/unverified",
+      "lens": "docs",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": [
+        {
+          "severity": "nit",
+          "dimension": "ambiguity",
+          "anchor": "docs/loom/intent/2026-09-13-harden-sanitized-evidence-probe.md :: Acceptance 3",
+          "text": "The metadata-key obligation can be read as applying to all text evidence, while the direct 17-key object check applies to parsed JSON and JSONL; current Markdown and text evidence contain none of those keys."
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "nit",
+      "dimension": "ambiguity",
+      "anchor": "docs/loom/intent/2026-09-13-harden-sanitized-evidence-probe.md :: Acceptance 3",
+      "text": "The metadata-key obligation can be read as applying to all text evidence, while the direct 17-key object check applies to parsed JSON and JSONL; current Markdown and text evidence contain none of those keys."
+    }
+  ]
+}

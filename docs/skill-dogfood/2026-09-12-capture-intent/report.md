@@ -304,8 +304,14 @@ Claude executor after implementation.**
 
 ## Raw outputs appendix
 
-The `raw/` streams below are local to the authoring environment and deliberately
-not committed; these paths name the local run, not repository content.
+The `raw/` directory contains the committed, sanitized execution evidence.
+Sanitization removes all JSONL system, hook, and rate-limit events; deletes
+session, request, hook, connector, tool-inventory, plugin-inventory, and
+thinking-signature fields; and replaces absolute local paths, UUID strings,
+email addresses, message IDs, and tool-use IDs with placeholders. Empty
+thinking fields may remain, but no signed or non-empty thinking content is
+published. The unsanitized streams remain local to the authoring environment
+and are not repository content.
 
 ### A. Activation runs
 
@@ -421,8 +427,8 @@ report or an earlier output.
 
 | Executor | Fixture | Acceptance mapping | Unauthorised state or mechanism | Out-of-scope promotion | Result |
 |---|---|---:|---|---|---|
-| Codex `gpt-5.6-sol`, ephemeral/read-only, session `01a095d3-ba2a-7ac1-85b0-de7a3e42851b` | GUI project-email mute | 3 → 3, ordered | none | none | PASS |
-| Codex `gpt-5.6-sol`, same session | CLI `sync --dry-run` | 3 → 3, ordered | none | none | PASS |
+| Codex `gpt-5.6-sol`, ephemeral/read-only run | GUI project-email mute | 3 → 3, ordered | none | none | PASS |
+| Codex `gpt-5.6-sol`, same run | CLI `sync --dry-run` | 3 → 3, ordered | none | none | PASS |
 | Claude Code, sandbox-outside runner | GUI project-email mute | 3 → 3, ordered | none | none | PASS |
 | Claude Code, same run | CLI `sync --dry-run` | 3 → 3, ordered | none | none | PASS |
 

@@ -1,0 +1,58 @@
+## Simulated `write-plan` run — no files written, no commands executed
+
+Per your instruction, I walked the station's steps mentally against the input you gave (treated as an already-confirmed spec) and produced the plan content below without touching disk or running `loom_checker.py`. Here's what that walkthrough looked like:
+
+- **Step 0/1**: skipped for real (no git repo, no intent file exists in this sandbox) — treated your message as the confirmed spec input directly.
+- **Step 3/4 (decision points ①②)**: not re-run — you told me the spec is already confirmed, so I did not fabricate a restatement or ask anything.
+- **Claim admission pass**: checked every clause in your spec against what's stated vs. implied. Result below only encodes what you said; I did not add UI, state, persistence, error handling, or IDs.
+
+Change-id (simulated): `2026-09-12-mute-stops-project-emails`
+
+---
+
+### `docs/loom/2026-09-12-mute-stops-project-emails/plan.md` (content, not written)
+
+```markdown
+---
+intent: 2026-09-12-mute-stops-project-emails (confirmed spec, provided directly)
+kind: product
+---
+
+## Current State Evidence
+
+- Forward: `ProjectNotificationPolicy` exists and already models per-project
+  notification state; the project mute action already exists and invokes it.
+- Reverse: no code path currently causes muting a project to change email
+  dispatch — email and in-app dispatch are separate paths (per given spec).
+- Error: N/A — no new failure mode is introduced or claimed.
+- Data: no new persisted field is claimed by the spec; whatever state the
+  existing mute action already writes is reused, not extended.
+- Boundary: in-app dispatch path and global notification settings are
+  explicitly out of scope for any change.
+
+(Note: this repo has no actual source tree in this sandbox, so no
+file:line anchors are cited — a real run would anchor each line above to
+the actual `ProjectNotificationPolicy` and dispatch-path files.)
+
+## Wave 1
+
+- **W1-01** — acceptance: 1
+  Files: email dispatch path; `ProjectNotificationPolicy` (read-only consumer, no new field)
+  Test: A1 positive: project muted → no activity email dispatched for that project; negative: project not muted → activity email dispatched as before
+  Risk: agent-decided — email dispatch path consults the mute state the existing action already sets on `ProjectNotificationPolicy`; no new field, flag, or persistence added, since the spec states the action already exists and only its effect on email dispatch is new.
+
+## Questions asked
+
+- none — spec was provided pre-confirmed; no decision-point interaction was simulated.
+
+## Risks
+
+- The plan assumes a single email dispatch choke point per project (per "separate email and in-app dispatch paths" in the given spec). If more than one email dispatch entry point exists, W1-01 covers only the point the spec identifies — agent-decided, conservative scope, not expanded beyond what was stated.
+- In-app notifications and global settings are asserted unchanged as a negative/boundary test claim only — no task touches them, and their un-changed status is not itself treated as a new guarantee beyond this change's scope.
+```
+
+---
+
+**What this simulation deliberately did *not* do**: run `loom_checker.py` (contract/standing/intake/plan), create a branch, write the file, or commit. Also did not invent a second task for "in-app unaffected" or "global settings unaffected" — those are covered as negative/boundary test cases on the one real task, not separate work, since neither requires a code change per your spec.
+
+One thing worth flagging, not deciding for you: this reads as a `kind: product` change (users see fewer emails), which in the real flow would need decision point ② confirmation of visible behavior before a plan is buildable — I skipped that here only because you told me to simulate against an already-confirmed spec.
