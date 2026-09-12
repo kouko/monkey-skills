@@ -152,3 +152,29 @@ def test_all_seven_blocks_and_five_principles_present() -> None:
         "Bad example must mention 'jargon' (jargon-creep vice). "
         "This provides visible coverage for principle 5 (plain-language)."
     )
+
+
+def test_l3_contract_defines_goal_grounded_natural_output() -> None:
+    text = load_bundle()
+
+    required = (
+        "Goal-Grounded Alignment Loop",
+        "Purpose and current position",
+        "Essential background",
+        "Gap and current assessment",
+        "Why confirmation is needed now",
+        "Pending work",
+        "Align purpose and next step",
+        "broader purpose only when explicitly established",
+        "purpose is not yet aligned",
+        "Never output `<thinking>` or `<recap>` tags",
+        "Never expose `Block N` labels",
+    )
+    missing = [needle for needle in required if needle not in text]
+    assert not missing, f"L3 natural-output contract missing: {missing}"
+
+    l3_template_start = text.index("## L3 user-visible template")
+    l3_template_end = text.index("## ", l3_template_start + 3)
+    l3_template = text[l3_template_start:l3_template_end]
+    for forbidden in ("<thinking>", "</thinking>", "<recap>", "</recap>", "Block "):
+        assert forbidden not in l3_template

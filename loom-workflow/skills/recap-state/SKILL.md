@@ -15,81 +15,63 @@ either sibling workflow.
 ## What to do
 
 1. Read `references/seven-block-schema.md` fully before rendering **every
-   recap**. It contains the full V1 template, the block rules, and the five
+   recap**. It contains the full L3 template, the section rules, and the five
    principles. Do not render from memory.
 
-2. Output exactly two sibling top-level tags:
+2. Keep planning internal. Before writing, identify the current purpose,
+   spec-critical phrases, useful visual forms, the most recent agent question,
+   and the expected next step. Never output `<thinking>` or `<recap>` tags,
+   their closing tags, or any planning scratchpad. Never expose `Block N` labels.
+   Address the user directly under natural headings in the conversation language,
+   following this order:
 
-   The first output character is `<`. Do not add prose before `<thinking>` or
-   after `</recap>`. Do not wrap either tag in a Markdown fence.
+   ### Purpose and current position
+   ### Essential background
+   ### Gap and current assessment
+   ### Why confirmation is needed now
+   ### Pending work
+   ### Align purpose and next step
 
-   <thinking>
-   [Private planning: identify spec-critical phrases, useful visual forms,
-   the most recent agent question, and the expected next step.]
-   </thinking>
+   Adapt these headings naturally rather than translating them word for word.
+   The structure is fixed; its internal names are not user-visible labels.
 
-   <recap>
-   [Conversational explanation addressed to the user.]
+   The current purpose is mandatory; ground it in explicit conversation evidence.
+   State the broader purpose only when explicitly established by the user or a
+   confirmed goal or intent, and do not invent short-, medium-, or long-term goals
+   to fill a hierarchy. If the evidence does not establish the
+   current purpose, say that the purpose is not yet aligned and make that the
+   only question in the final section.
 
-   ### Block 1 — Situation
-   ### Block 2 — Background
-   ### Block 3 — Assessment
-   ### Block 5 — Why-this-question
-   ### Block 6 — Pending
-   ### Block 7 — Synthesis-check
-   </recap>
+3. Apply the Goal-Grounded Alignment Loop through the six sections:
 
-   `<thinking>` is planning; `<recap>` is the user-facing explanation. Do not
-   blend their tones or content. At L3 render these six blocks in this order.
-   Block 4 is L2-only and must not appear inside the recap.
+   - **Purpose and current position**: state the grounded current purpose,
+     any explicitly established broader purpose, and where the work stands
+     relative to that purpose.
+   - **Essential background**: give 3–5 bullets with decisions, rejected
+     options, and critical strings. Preserve spec-critical user phrases
+     verbatim: file paths, error messages, named constraints, exact tool names and
+     command names.
+   - **Gap and current assessment**: name what remains between the current
+     position and purpose, the working assumption, confidence, and unknown or
+     blocker. Gap and assessment defaults to 2-col key:value form.
+   - **Why confirmation is needed now**: explain the most recent agent
+     question, why it matters, and the options and trade-offs. If there is no
+     pending question, say so briefly; do not invent one.
+   - **Pending work**: list unfinished work that closes the stated gap.
+   - **Align purpose and next step**: restate the purpose, current position, and proposed next step,
+     then ask the user to confirm or redirect.
 
-   In `<thinking>`, make a short extraction pass before writing the recap:
-
-   - Locate exact user wording that controls the work. Prioritize paths,
-     errors, named constraints, and command or tool names; these belong in
-     Block 2 without normalization.
-   - Identify the agent's most recent question. That question, rather than a
-     generic status update, determines Block 5.
-   - Infer the next step the agent currently expects. Treat it as an
-     assumption to check, not authorization to continue.
-   - Choose a table or diagram only if the schema's compression threshold is
-     met. Do not let visual planning delay a short recap.
-
-   The user can see `<thinking>`, but it remains telegraphic agent-to-self
-   planning. Switch deliberately to explanation-style prose inside `<recap>`.
-   This tag boundary prevents internal shorthand from leaking into the text
-   meant to restore the user's mental model.
-
-3. Render the six L3 blocks:
-
-   - **Block 1 — Situation**: one sentence locating the work and current snag.
-   - **Block 2 — Background**: 3–5 bullets with decisions, rejected options,
-     and critical strings. Preserve spec-critical user phrases verbatim:
-     file paths, error messages, named constraints, exact tool names and
-     command names. Quote directly; do not rewrite.
-   - **Block 3 — Assessment**: current assumption, confidence, and unknown or
-     blocker. Block 3 Assessment defaults to 2-col key:value form.
-   - **Block 5 — Why-this-question**: explain the most recent agent question,
-     why it matters, and the user's options and trade-offs.
-   - **Block 6 — Pending**: checklist of unfinished work.
-   - **Block 7 — Synthesis-check**: state the expected next direction in one
-     sentence, then ask the user to confirm or redirect.
-
-   Block 4 is skipped because an in-session human already remembers their own
-   turns. A full message dump pushes the useful question and pending work out
-   of view. If a user phrase affects behavior, retain that exact phrase in
-   Block 2 instead. The displayed numbering remains 1, 2, 3, 5, 6, 7; do not
-   renumber the six blocks to hide the deliberate L3/L2 distinction.
+   A full user-message dump adds no signal for an in-session reader. If a user
+   phrase affects behavior, retain it exactly in Essential background instead.
 
 4. Apply the five principles defined in the schema:
 
-   - **structured-schema**: use the fixed six-block L3 structure, never a
+   - **structured-schema**: use the fixed six-section L3 structure, never a
      free-form substitute.
-   - **quote-not-paraphrase**: Block 2 carries original spec-critical strings
-     exactly. At L3, it performs the preservation duty that Block 4 performs
-     at L2.
-   - **all-user-messages**: dormant at L3. Do not render Block 4 or dump every
-     user turn. If explicitly requested, list messages outside this schema.
+   - **quote-not-paraphrase**: Essential background carries original
+     spec-critical strings exactly.
+   - **all-user-messages**: dormant at L3. Do not dump every user turn. If
+     explicitly requested, list messages outside this schema.
    - **synthesis-check**: finish with a directed question; the agent
      does not continue until user responds.
    - **plain-language**: explain TO the user in conversational second-person
@@ -103,7 +85,7 @@ either sibling workflow.
    Preserve a user-introduced technical term when precision depends on it;
    plain-language is not permission to paraphrase exact strings.
 
-5. Wait. Do not continue until the user responds to Block 7. Any clear
+5. Wait. Do not continue until the user responds to the final alignment check. Any clear
    confirmation (`yes`, `對`, `go`, `continue`, `繼続`, `はい`, `proceed`) opens
    this soft gate. If the user redirects, follow the redirect.
 
@@ -115,36 +97,38 @@ handled as the user's current instruction.
 
 ## Visual aids
 
-Use tables or ASCII only when they compress information:
+Use tables or diagrams only when they compress information:
 
-- Block 3 Assessment defaults to 2-col key:value.
-- Block 5 uses a comparison table for 2+ options.
-- Block 6 uses a table when items have metadata; otherwise use a checklist.
-- Blocks 1 and 7 stay one-sentence prose.
-- Use ASCII only for real topology such as a pipeline, dependency graph, or
-  state machine.
+- Gap and assessment defaults to 2-col key:value.
+- Why confirmation is needed now uses a comparison table for 2+ options.
+- Pending work uses a table when items have metadata; otherwise use a checklist.
+- The opening and final sections stay concise prose.
+- Use a diagram only for real topology such as a pipeline, dependency graph,
+  or state machine. When the client is known to render Mermaid, prefer
+  Mermaid; for an unknown or terminal client, use ASCII. An explicit user
+  format request overrides this fallback.
 
 Do not add decorative visuals. Tables must flatten ≥3 sub-items or
 compare ≥2 options; a one-row table or boxes around an unrelated list add cost.
 
-Block-specific defaults matter: Situation and Synthesis-check are direct prose;
-Background is normally bullets; Assessment is normally a compact table;
-Why-this-question becomes a table only for a real comparison; Pending remains
-a checklist unless owner, priority, dependency, or due-date metadata would be
-lost. ASCII is for spatial relationships, never a list with arrows added.
+Section defaults matter: the opening and alignment check are direct prose;
+Essential background is normally bullets; Gap and current assessment is a
+compact table; the confirmation explanation becomes a table only for a real
+comparison; Pending work remains a checklist unless metadata would be lost.
+Mermaid and ASCII are for spatial relationships, never a list with arrows.
 
 ## Hard boundaries
 
 - Chat only: do not write the recap to a file.
 - Current session only: cross-session work belongs to HANDOFF.
 - Do not replace the built-in `/recap` away-summary.
-- Do not render Block 4 at L3. Put necessary direct quotes in Block 2.
-- Do not paraphrase spec-critical user phrases in Block 2.
+- Do not dump all user messages at L3. Put necessary direct quotes in Essential background.
+- Do not paraphrase spec-critical user phrases in Essential background.
 - Do not continue after the recap; wait for the Synthesis-check response.
 
 A free-form paragraph that covers similar facts is not equivalent to the six
-blocks: predictable placement is what makes re-orientation fast. Likewise, do
-not resurrect Block 4 when the user asks for message history. Supply that
+sections: predictable placement is what makes re-orientation fast. Likewise, do
+not resurrect the user-message dump when the user asks for message history. Supply that
 listing separately, leaving the recap schema unchanged. Never weaken verbatim
 preservation to make the prose sound smoother; invisible drift in a path,
 error, constraint, or command is more damaging than a slightly abrupt quote.

@@ -9,7 +9,7 @@ SCHEMA_PATH = (
 )
 
 
-def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate():
+def test_entrypoint_preserves_goal_grounded_sections_and_synthesis_gate():
     text = SKILL_PATH.read_text(encoding="utf-8")
 
     essence = {
@@ -19,17 +19,15 @@ def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate():
             "cross-session",
             "HANDOFF",
         ],
-        "sibling tags": [
-            "exactly two sibling top-level tags",
-            "<thinking>",
-            "<recap>",
-            "The first output character is `<`",
-            "Do not add prose before `<thinking>`",
-            "Do not wrap either tag in a Markdown fence",
+        "natural output boundary": [
+            "Keep planning internal",
+            "Never output `<thinking>` or `<recap>` tags",
+            "Never expose `Block N` labels",
+            "natural headings in the conversation language",
         ],
         "schema before every recap": [
             "Read `references/seven-block-schema.md`",
-            "full V1 template",
+            "full L3 template",
             "What to do",
         ],
         "verbatim preservation": [
@@ -41,12 +39,15 @@ def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate():
             "verbatim",
         ],
         "visual thresholds": [
-            "Block 3 Assessment defaults to 2-col key:value",
+            "Gap and assessment defaults to 2-col key:value",
             "2+ options",
             "items have metadata",
             "flatten ≥3 sub-items",
             "compare ≥2 options",
             "real topology",
+            "known to render Mermaid",
+            "unknown or terminal client",
+            "ASCII",
         ],
         "synthesis stop": [
             "Synthesis-check",
@@ -67,22 +68,38 @@ def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate():
         assert not missing, f"{contract} missing from entrypoint: {missing}"
 
     schema_read = text.index("Read `references/seven-block-schema.md`")
-    render_contract = text.index("exactly two sibling top-level tags")
+    render_contract = text.index("natural headings in the conversation language")
     assert schema_read < render_contract
 
-    template_start = text.index("<recap>", render_contract)
-    template_lead = text[text.index("2. Output exactly", schema_read) : template_start]
-    assert "```" not in template_lead, "literal output skeleton must not model a fence"
-    blocks = (
-        "### Block 1 — Situation",
-        "### Block 2 — Background",
-        "### Block 3 — Assessment",
-        "### Block 5 — Why-this-question",
-        "### Block 6 — Pending",
-        "### Block 7 — Synthesis-check",
+    template_start = text.index("### Purpose and current position", render_contract)
+    template_end = text.index("3. Apply", template_start)
+    rendered_template = text[template_start:template_end]
+    sections = (
+        "### Purpose and current position",
+        "### Essential background",
+        "### Gap and current assessment",
+        "### Why confirmation is needed now",
+        "### Pending work",
+        "### Align purpose and next step",
     )
-    positions = [text.index(block, template_start) for block in blocks]
+    positions = [text.index(section, template_start) for section in sections]
     assert positions == sorted(positions)
-    assert "### Block 4" not in text[template_start : text.index("</recap>", template_start)]
+    for forbidden in ("<thinking>", "</thinking>", "<recap>", "</recap>", "Block "):
+        assert forbidden not in rendered_template
 
     assert SCHEMA_PATH.is_file()
+
+
+def test_entrypoint_grounds_goal_and_closes_the_alignment_loop():
+    text = SKILL_PATH.read_text(encoding="utf-8")
+
+    required = (
+        "current purpose is mandatory",
+        "ground it in explicit conversation evidence",
+        "broader purpose only when explicitly established",
+        "do not invent short-, medium-, or long-term goals",
+        "purpose is not yet aligned",
+        "purpose, current position, and proposed next step",
+    )
+    missing = [needle for needle in required if needle not in text]
+    assert not missing, f"goal-grounded loop contract missing: {missing}"
