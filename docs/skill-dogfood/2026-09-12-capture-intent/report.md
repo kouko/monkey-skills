@@ -405,3 +405,37 @@ The corrected sequential artifacts are under
 
 Two independent blind reviews returned PASS/PASS for both artifacts and the
 integrated boundary. No external provider cost applies.
+
+### L. Post-implementation dual-host chain — `354ca9207`
+
+After the final functional digest, fresh Codex and sandbox-outside Claude Code
+each read only `capture-intent/SKILL.md`, `capture-intent/references/interview.md`,
+and `write-spec/SKILL.md`. Each executor ran the same confirmed GUI and CLI
+fixtures through capture-intent and then write-spec in memory. The capture
+artifact was the sole product input to its spec. Neither run inspected this
+report or an earlier output.
+
+| Executor | Fixture | Acceptance mapping | Unauthorised state or mechanism | Out-of-scope promotion | Result |
+|---|---|---:|---|---|---|
+| Codex `gpt-5.6-sol`, ephemeral/read-only, session `01a095d3-ba2a-7ac1-85b0-de7a3e42851b` | GUI project-email mute | 3 → 3, ordered | none | none | PASS |
+| Codex `gpt-5.6-sol`, same session | CLI `sync --dry-run` | 3 → 3, ordered | none | none | PASS |
+| Claude Code, sandbox-outside runner | GUI project-email mute | 3 → 3, ordered | none | none | PASS |
+| Claude Code, same run | CLI `sync --dry-run` | 3 → 3, ordered | none | none | PASS |
+
+The GUI outputs retained the supplied Settings-page control without inventing
+its type, label, status display, storage, lifecycle, or a named muted state.
+The continuing result stayed attached to the original mute action. Unmuting
+and mobile UI remained not designed or implemented in this change, not absent,
+prohibited, irreversible, or one-way.
+
+The CLI outputs retained `sync --dry-run`, stdout, the existing human-readable
+format, and the no-file-modification result. They introduced no preview state,
+transaction, rollback, temporary copy, exit code, output ordering, or broader
+side-effect guarantee. Applying changes, JSON output, and another output format
+remained outside this change rather than prohibited.
+
+Both executors put unsupplied GUI/error/empty reactions in Open questions or
+marked them N/A instead of inventing visible behaviour. Publication opt-out
+remained workflow context and did not enter the product fields. This closes the
+earlier concept-only limitation at line 299: the result above exercises the
+post-implementation skill text on both hosts and both semantic shapes.
