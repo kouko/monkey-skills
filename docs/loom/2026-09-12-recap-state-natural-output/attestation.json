@@ -1,0 +1,54 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-12-recap-state-natural-output",
+  "content_digest": "2903267313ce2f4eb23d55cce86a9c37197528d8",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-workflow/scripts/test_recap_state_compaction.py -q",
+      "artifact": "loom-workflow/scripts/test_recap_state_compaction.py",
+      "result": "pass",
+      "command_digest": "03a9d199a905afe7397dc4aecb549b8f1af00a7abb39eecbb4472d8ef57f4ce7"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-workflow/skills/recap-state/scripts/test_seven_block_schema.py -q",
+      "artifact": "loom-workflow/skills/recap-state/scripts/test_seven_block_schema.py",
+      "result": "pass",
+      "command_digest": "634107e9272d3d04bd401844eed503d8fc43b010ae2967579ccbff7371968ae4"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-workflow/skills/recap-state/scripts/test_readmes.py -q",
+      "artifact": "loom-workflow/skills/recap-state/scripts/test_readmes.py",
+      "result": "pass",
+      "command_digest": "ca3c02346451cf0a2f9e946557c8bec4212c321d744b24b26028bf487882588b"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "codex-fresh-context",
+      "vendor": "openai",
+      "model": "inherited-unobservable",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "claude-fresh-context",
+      "vendor": "anthropic",
+      "model": "host-default-unverified",
+      "lens": "skill",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
