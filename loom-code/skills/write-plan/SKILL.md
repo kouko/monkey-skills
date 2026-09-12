@@ -69,9 +69,9 @@ non-decision authorisation stop, the first time this repo is used (step
 2. **Any choice that is expensive to undo** — asked in the same message,
    as consequences ("from then on it only runs on ___, ___ per month"),
    never as jargon.
-3. **Once per change, if a second AI command-line tool is installed here** —
-   whether to use it as a second reviewer. Your answer is remembered and
-   never asked again.
+3. **When this repo uses `second-vendor: ask` in the full lane** — whether
+   to use the available other-vendor tool for this change. `suggest` is not
+   a question: its notice comes after the plan exists and never pauses work.
 4. **If this is a product change and this repo has no product principles
    yet** — about ten minutes of questions, in the same conversation as
    question 1, confirmed together with it.
@@ -207,18 +207,12 @@ twice.
    inside this same message ("this will rewrite your ___, I am doing it the
    way you said: ___"), so the user sees it without being stopped for it.
 
-3. **The second-reviewer suggestion, at most once per change**, and
-   `second-vendor: ask`. Load `references/second-vendor-ask-and-docs-lint.md`
-   before composing this message whenever `docs/loom/KICKOFF-DEFAULTS.md`
-   has no `second-vendor:` line, or has `second-vendor: ask` — it owns the
-   detection rule, the suggestion wording (the number to say: five of the seven
-   serious problems this system's own spec review found were caught by only
-   one of the two vendors), and the standing `ask` question
-   (「這次要不要用 Codex 當第二位讀者？」, asked every change, answer written
-   to the intent's decision record). In the
-   small lane there is only one reader, so `second-vendor: ask` is not
-   asked and that field is omitted. If a `second-vendor:` line other than
-   `ask` already exists, say nothing about it.
+3. **The second-reviewer question, only for `second-vendor: ask`.** Load
+   `references/second-vendor-ask-and-docs-lint.md` before composing this
+   message. A missing line is initialized as `second-vendor: suggest`; it
+   does not add a question. In a full lane, `ask` puts its per-change
+   question here and records the answer in the intent decision record. In a
+   small lane it is omitted. A fixed CLI and `suggest` add no question here.
 
 4. **The principles interview**, if step 2 demanded it.
 
@@ -434,6 +428,25 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/loom_checker.py intake write-plan <change-
 The second run is when `intake.test-case-pair` can inspect the completed
 Task DAG and block missing ownership, empty case pairs, or unresolved intent
 questions. A pre-plan intake pass cannot substitute for this readiness run.
+
+### Resolve `second-vendor: suggest`
+
+Run this after the plan's Risk lines exist and both checks pass. Load
+`references/second-vendor-ask-and-docs-lint.md`. Probe only the eligible
+other-vendor CLIs described there, then pass the observed mode, lane, host,
+usable vendors, anchored risk evidence, response state, and whether Closing
+Review has started as JSON on stdin to:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/second_vendor_policy.py
+```
+
+On Codex, use the injected loom-code plugin root as in step 0. Treat the
+JSON result as the decision: render its `notice_kind`, `notice_vendor`, and
+`recommendation_reasons`; do not reproduce the risk mapping in prose. A
+notice is commentary, not a decision point, and work continues without
+waiting. The reference owns response timing, small-lane behavior, and the
+no-listener boundary.
 
 **Forks you decided yourself.** Every one gets a one-line reason on its
 task: what you chose and why. Any one-way door that surfaces now — after

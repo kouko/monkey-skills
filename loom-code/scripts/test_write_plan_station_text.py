@@ -17,6 +17,14 @@ from prose_pin import NEGATION_RE
 REPO = Path(__file__).resolve().parents[2]
 SKILL = REPO / "loom-code" / "skills" / "write-plan" / "SKILL.md"
 TEMPLATE = REPO / "loom-code" / "contract" / "templates" / "plan.md"
+SECOND_VENDOR_REFERENCE = (
+    REPO
+    / "loom-code"
+    / "skills"
+    / "write-plan"
+    / "references"
+    / "second-vendor-ask-and-docs-lint.md"
+)
 
 
 def _has_negation(sentence: str) -> bool:
@@ -123,3 +131,46 @@ def test_matcher_engineering_spec_sentence_negated_rejected() -> None:
         "line."
     )
     assert _has_negation(sentence)
+
+
+# --- W1-02 -- suggest is visible after risk evidence, without becoming a
+# fourth decision point ----------------------------------------------------
+
+
+def test_suggest_runs_policy_after_plan_risk_evidence_exists() -> None:
+    text = SKILL.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "second_vendor_policy.py" in flat
+    assert "after the plan's Risk lines exist" in flat
+    assert "recommendation_reasons" in flat
+    assert "notice_kind" in flat
+
+
+def test_suggest_is_non_blocking_and_has_no_background_listener() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "continue without waiting" in flat
+    assert "no background listener" in flat
+    assert "do not reclassify risk" in flat
+
+
+def test_ask_still_asks_once_per_full_lane_change() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "second-vendor: ask" in flat
+    assert "every full-lane change" in flat
+    assert "這次要不要用" in text
+
+
+def test_small_lane_suggest_is_information_only() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    flat = " ".join(text.split())
+    assert "small lane" in flat
+    assert "informational only" in flat
+    assert "next-change-only" in flat
+
+
+def test_reference_has_no_none_mode_or_per_change_none_answer() -> None:
+    text = SECOND_VENDOR_REFERENCE.read_text(encoding="utf-8")
+    assert "second-vendor: <cli> | none" not in text
+    assert "`<cli>` / `none`" not in text
