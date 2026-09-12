@@ -96,17 +96,6 @@ def test_description_within_cap() -> None:
     assert len(description) <= DESCRIPTION_CAP, len(description)
 
 
-def test_description_routes_incidents_to_maintain() -> None:
-    description = " ".join(
-        line.strip()
-        for line in re.search(r"^description: \|\n((?:  .*\n)+)", _text(), re.M).group(1).splitlines()
-    ).lower()
-    assert "new change" in description
-    for routed in ("incident", "regression", "post-delivery bug", "maintain"):
-        assert routed in description
-    assert "entry station for every change" not in description
-
-
 def test_body_within_word_cap() -> None:
     words = len(_body(_text()).split())
     assert words <= WORD_CAP, words
