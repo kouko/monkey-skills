@@ -51,6 +51,35 @@ trap cleanup EXIT
 # $4 — how many of those memory-worthy commits also carry Supersedes:
 # (pointing at an earlier memory commit). Every commit touches the same
 # tracked file so a --path pathspec matches all of them.
+#
+# The history is imported with `git fast-import` (W1-01) instead of one
+# `git commit` process per commit: the 2,000-commit fixture cost 66s of
+# this suite's 72s wall clock that way. TWO import passes are needed,
+# because the last `supersede_count` memory commits cite the SHA of one
+# of the earliest ones in a `Supersedes:` trailer and a SHA is only
+# known once its commit exists — pass 1 writes every commit up to the
+# first superseding one and exports its marks, pass 2 resolves the
+# cited SHAs from that marks file and writes the rest. Messages,
+# identities and per-index dates are byte-identical to what the
+# previous `git commit -m` loop produced for the same index.
+#
+# The stream's field order (commit, mark, author, committer, data, then
+# the optional `from` and the filemodify commands) is fixed by
+# git-fast-import(1), "commit":
+# https://git-scm.com/docs/git-fast-import#_commit
+# The LF after a `data <n>` payload being optional is stated in that
+# page's own "data" section instead:
+# https://git-scm.com/docs/git-fast-import#_data
+# The Python mirror of this emitter cites the same section — see
+# `_commit_block` in
+# loom-workflow/skills/git-memory/scripts/conftest.py.
+#
+# `supersede_count` ($4) must stay BELOW `memory_count` ($3): the first
+# pass covers commits [0, memory_count - supersede_count), so an equal
+# or larger supersede_count makes it empty, exports no marks, and leaves
+# pass 2's cited SHAs unresolvable. The emitter asserts that with a
+# named message before importing anything, exactly as the Python builder
+# does in conftest.py's wave loop.
 build_perf_repo() {
   local dir="$1" n="$2" memory_count="$3" supersede_count="$4"
   mkdir -p "$dir"
@@ -60,61 +89,99 @@ build_perf_repo() {
   git -C "$dir" config user.name "Fixture Bot"
   git -C "$dir" config commit.gpgsign false
 
-  local i=0 memory_shas="" msha_count=0
-  while [ "$i" -lt "$n" ]; do
-    local year=$((2015 + i / 336))
-    local month=$(( (i / 28) % 12 + 1 ))
-    local day=$(( i % 28 + 1 ))
-    local date
-    date="$(printf '%04d-%02d-%02d' "$year" "$month" "$day")"
-    echo "content at commit $i" > "$dir/content.txt"
-    git -C "$dir" add content.txt
+  # python3 is already a dependency of this script (the monotonic clock
+  # below), so emitting the stream from it adds no new tool and no new
+  # file. Parameters travel in the environment: the heredoc is quoted,
+  # so nothing in the program below is shell-expanded.
+  FIXTURE_DIR="$dir" FIXTURE_N="$n" FIXTURE_MEMORY="$memory_count" \
+    FIXTURE_SUPERSEDE="$supersede_count" python3 - <<'PY'
+import os
+import subprocess
+from datetime import datetime, timezone
 
-    local msg="chore: commit $i (#$((i + 1000)))"
-    if [ "$i" -lt "$memory_count" ]; then
-      local supersede_target=""
-      if [ "$i" -ge "$((memory_count - supersede_count))" ]; then
-        # Pair up the last `supersede_count` memory commits with the
-        # earliest `supersede_count` memory shas recorded so far.
-        local idx=$((i - (memory_count - supersede_count)))
-        supersede_target="$(printf '%s\n' "$memory_shas" | sed -n "$((idx + 1))p")"
-      fi
-      if [ -n "$supersede_target" ]; then
-        msg="fix: superseding decision $i (#$((i + 1000)))
+d = os.environ["FIXTURE_DIR"]
+N = int(os.environ["FIXTURE_N"])
+MEM = int(os.environ["FIXTURE_MEMORY"])
+SUP = int(os.environ["FIXTURE_SUPERSEDE"])
 
-Gotcha: superseding decision $i
-Supersedes: $supersede_target"
-      else
-        msg="feat: memory decision $i (#$((i + 1000)))
+assert SUP == 0 or SUP < MEM, (
+    "supersede_count=%d must be less than memory_count=%d: the first import "
+    "pass would be empty, so its marks file cannot supply the SHAs the "
+    "superseding commits cite" % (SUP, MEM)
+)
 
-Decision: memory decision number $i"
-      fi
-    fi
 
-    GIT_AUTHOR_DATE="${date}T00:00:00+0000" \
-      GIT_COMMITTER_DATE="${date}T00:00:00+0000" \
-      git -C "$dir" commit -q -m "$msg"
+def ident(i):
+    # The same per-index date the shell loop derived, in the raw
+    # "<epoch> +0000" form fast-import wants. The old loop handed
+    # "<date>T00:00:00+0000" to GIT_{AUTHOR,COMMITTER}_DATE, so the
+    # epoch is computed in UTC — a local-time conversion here would
+    # shift every commit date by the runner's offset.
+    year = 2015 + i // 336
+    month = (i // 28) % 12 + 1
+    day = i % 28 + 1
+    ts = int(datetime(year, month, day, tzinfo=timezone.utc).timestamp())
+    return "Fixture Bot <fixture@example.com> %d +0000" % ts
 
-    if [ "$i" -lt "$memory_count" ]; then
-      local sha
-      sha="$(git -C "$dir" rev-parse HEAD)"
-      # No leading newline: an accumulator that always prepends "\n$sha"
-      # to an initially-empty string leaves a BLANK first line, so
-      # `sed -n '1p'` on it returns "" instead of the first sha — the
-      # earliest paired supersession silently got an empty
-      # Supersedes: target and fell back to a plain Decision: commit
-      # instead (wave-end:1-04 found this: 300 memory-worthy records
-      # but only 19, not 20, actually superseded).
-      if [ -z "$memory_shas" ]; then
-        memory_shas="$sha"
-      else
-        memory_shas="$memory_shas
-$sha"
-      fi
-      msha_count=$((msha_count + 1))
-    fi
-    i=$((i + 1))
-  done
+
+def message(i, supersedes):
+    if i >= MEM:
+        return "chore: commit %d (#%d)\n" % (i, i + 1000)
+    if supersedes:
+        return ("fix: superseding decision %d (#%d)\n\n"
+                "Gotcha: superseding decision %d\n"
+                "Supersedes: %s\n" % (i, i + 1000, i, supersedes))
+    return ("feat: memory decision %d (#%d)\n\n"
+            "Decision: memory decision number %d\n" % (i, i + 1000, i))
+
+
+def stream(lo, hi, cited):
+    out = []
+    for i in range(lo, hi):
+        supersedes = ""
+        if SUP > 0 and MEM - SUP <= i < MEM:
+            # Pair the last `SUP` memory commits with the earliest
+            # `SUP` memory SHAs, exactly as the shell loop did.
+            supersedes = cited[i - (MEM - SUP)]
+        body = message(i, supersedes).encode()
+        who = ident(i).encode()
+        out.append(b"commit refs/heads/main\nmark :%d\nauthor %s\n"
+                   b"committer %s\ndata %d\n" % (i + 1, who, who, len(body)))
+        out.append(body)
+        if i == lo and lo > 0:
+            # A fresh fast-import process needs the branch's existing
+            # tip named explicitly as this commit's parent.
+            out.append(b"from refs/heads/main^0\n")
+        blob = ("content at commit %d\n" % i).encode()
+        out.append(b"M 100644 inline content.txt\ndata %d\n" % len(blob))
+        out.append(blob)
+        out.append(b"\n")
+    return b"".join(out)
+
+
+def fast_import(payload, export_marks=None):
+    cmd = ["git", "-C", d, "fast-import", "--quiet"]
+    if export_marks:
+        cmd.append("--export-marks=" + export_marks)
+    subprocess.run(cmd, input=payload, check=True)
+
+
+split = MEM - SUP if SUP > 0 else N
+marks_path = os.path.join(d, "fixture-marks")
+fast_import(stream(0, min(split, N), []), export_marks=marks_path)
+if split < N:
+    marks = {}
+    with open(marks_path) as fh:
+        for line in fh:
+            mark, sha = line.split()
+            marks[int(mark[1:])] = sha
+    fast_import(stream(split, N, [marks[i + 1] for i in range(SUP)]))
+os.remove(marks_path)
+# fast-import only moves the ref; give the repo a populated index and
+# worktree, as the `git commit` loop left behind.
+subprocess.run(["git", "-C", d, "reset", "-q", "--hard", "refs/heads/main"],
+               check=True)
+PY
 }
 
 # ── git-call-count shim: a PATH-prepended dir with one `git` shim that
