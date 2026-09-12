@@ -117,9 +117,9 @@ def test_unsupported_claims_and_open_questions_have_operational_boundaries() -> 
     low = gate.lower()
 
     assert re.search(r"add no .*product nouns.*interfaces.*states.*guarantees", low)
-    assert "downstream station owns unchosen decisions" in low
-    assert re.search(r"missing required-field content.*must remain `open`", low)
-    assert "does not block confirmation" in low
+    assert re.search(r"missing required content.*keeps the intent `open`", low)
+    assert "downstream spec/engineering questions in the hand-off" in low
+    assert "not this section" in _section(_text(), "## Step 1 — Interview")
 
 
 def test_workflow_authorisation_names_its_existing_carriers() -> None:
@@ -148,6 +148,14 @@ def test_unknown_observable_surface_still_routes_to_write_spec() -> None:
 def test_semantic_inversions_are_rejected() -> None:
     """Adversarial replay: the old word-presence tests accepted both mutations."""
     text = _text()
+    claims_gate = _gate(text, "capture-intent.no-confirmed-without-restatement").lower()
+    claim_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", claims_gate)
+        if "add" in sentence and "product nouns" in sentence
+    ]
+    assert claim_sentences and all("add no" in sentence for sentence in claim_sentences)
+
     inverted_claims = text.replace("add no product nouns", "add product nouns")
     claims_gate = _gate(
         inverted_claims, "capture-intent.no-confirmed-without-restatement"
@@ -162,6 +170,21 @@ def test_semantic_inversions_are_rejected() -> None:
     )
     route = " ".join(_section(inverted_route, "## Step 2 — Write the intent").lower().split())
     assert not re.search(r"unknown surface.*(?<!never )require `needs-design: yes`", route)
+
+    contradicted = text.replace(
+        "scope dimensions, or guarantees.",
+        "scope dimensions, or guarantees. Add product nouns when useful.",
+        1,
+    )
+    contradicted_gate = _gate(
+        contradicted, "capture-intent.no-confirmed-without-restatement"
+    ).lower()
+    claim_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", contradicted_gate)
+        if "add" in sentence and "product nouns" in sentence
+    ]
+    assert any("add no" not in sentence for sentence in claim_sentences)
 
 
 def test_station_summary_is_byte_identical_to_write_plan() -> None:
@@ -407,7 +430,7 @@ def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
     assert "already sufficient" in text
     assert re.search(r"Keep, neutralize, defer, reopen, or\s+delete", text)
     assert "must remain `open`" in text
-    assert "spec question" in text and "engineering question" in text
+    assert "spec/engineering questions" in text
     prose = " ".join(text.split())
     assert "intake question quota" in prose
     assert "decision points remain unchanged" in prose

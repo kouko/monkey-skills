@@ -149,9 +149,9 @@ Keep every field at intent altitude:
   with obvious value.
 - **Out of scope** — excluded capabilities, actors, systems, or data; no
   deferred implementation list.
-- **Open questions** — unresolved choices changing fields or scope, and missing
-  required content. Missing required content keeps the intent `open`; a
-  downstream spec or engineering question does not.
+- **Open questions** — only unresolved outcome/scope choices or missing required
+  content; both block confirmation. Carry downstream spec/engineering questions
+  in the hand-off, not this section.
 
 ## Step 2 — Write the intent
 
@@ -210,6 +210,7 @@ paths, no function or class identifiers, no script filenames — the section
 is what the user reads to recognise their own problem, and the checker
 rule `intent.product-no-identifiers` rejects the file otherwise.
 Engineering intents may name paths freely.
+<!-- /gate -->
 
 ## Step 3 — Standing documents
 
@@ -347,10 +348,9 @@ quieter than it is.
 <!-- gate: capture-intent.no-confirmed-without-restatement -->
 **No intent becomes `confirmed` without the restatement being answered.**
 Use only user-supplied product claims: add no product nouns, interfaces, states,
-scope dimensions, or guarantees. The downstream station owns unchosen
-decisions: `write-spec` for spec, `write-plan` for engineering. Missing
-required-field content must remain `open`; a delegated spec question or
-engineering question does not block confirmation.
+scope dimensions, or guarantees. Put only unresolved outcome/scope choices or
+missing required content in Open questions; either keeps the intent `open`.
+Carry downstream spec/engineering questions in the hand-off.
 Complete Step 2's altitude pass before confirmation. A fork with materially
 different outcomes for the user or scope needs an explicit answer; an accepted
 restatement is insufficient; reopen it — move it to Open questions, stop confirmation,

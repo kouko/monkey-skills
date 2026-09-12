@@ -208,6 +208,17 @@ def test_ui_flows_do_not_invent_visible_reactions() -> None:
 def test_semantic_inversions_are_rejected() -> None:
     """Adversarial replay: opposite rules may reuse every important noun."""
     text = _text()
+    gate = _gate(text, "write-spec.product-visible-behaviour-confirmed-before-review").lower()
+    invent_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", gate)
+        if re.search(r"\binvent(?:s|ing)?\b", sentence)
+    ]
+    assert invent_sentences and all(
+        re.search(r"\b(?:do not|instead of)\b.*\binvent", sentence)
+        for sentence in invent_sentences
+    )
+
     promoted = text.replace("Do not promote Out of scope", "Promote Out of scope")
     promoted_gate = _gate(
         promoted, "write-spec.product-visible-behaviour-confirmed-before-review"
@@ -223,6 +234,24 @@ def test_semantic_inversions_are_rejected() -> None:
     ).lower()
     assert not re.search(
         r"do not invent an interface, control, or status presentation", invented_gate
+    )
+
+    contradicted = re.sub(
+        r"instead of\s+inventing it\.",
+        "instead of inventing it. Invent the control that completes the flow.",
+        text,
+    )
+    contradicted_gate = _gate(
+        contradicted, "write-spec.product-visible-behaviour-confirmed-before-review"
+    ).lower()
+    invent_sentences = [
+        sentence
+        for sentence in re.split(r"(?<=[.!?])\s+", contradicted_gate)
+        if re.search(r"\binvent(?:s|ing)?\b", sentence)
+    ]
+    assert any(
+        not re.search(r"\b(?:do not|instead of)\b.*\binvent", sentence)
+        for sentence in invent_sentences
     )
 
 
