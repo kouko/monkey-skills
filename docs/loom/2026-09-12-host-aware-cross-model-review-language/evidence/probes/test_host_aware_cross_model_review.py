@@ -23,6 +23,13 @@ def require(text: str, fragment: str, source: str) -> None:
         raise AssertionError(f"{source}: missing {fragment!r}")
 
 
+def reject_forbidden(text: str, phrases: tuple[str, ...], source: str) -> None:
+    prose = " ".join(text.split()).lower()
+    for phrase in phrases:
+        if phrase.lower() in prose:
+            raise AssertionError(f"{source}: retains {phrase!r}")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="loom-cross-model-") as temp:
         root = Path(temp)
@@ -84,10 +91,14 @@ def main() -> int:
         require(code_prose, "continue without waiting", "loom-code-reference.md")
 
         forbidden = ("第二位讀者", "second reader", "use Codex as", "這次不使用")
-        lowered = combined.lower()
-        for phrase in forbidden:
-            if phrase.lower() in lowered:
-                raise AssertionError(f"packaged runtime retains {phrase!r}")
+        reject_forbidden(combined, forbidden, "packaged runtime")
+
+        try:
+            reject_forbidden("wrapped second\nreader", forbidden, "wrapped fixture")
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("wrapped forbidden phrase was not rejected")
     return 0
 
 
