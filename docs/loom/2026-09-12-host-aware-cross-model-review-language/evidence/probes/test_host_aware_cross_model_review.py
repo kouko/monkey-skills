@@ -74,9 +74,14 @@ def main() -> int:
             "```markdown\n\n\n"
             "| <heading> |\n|---|\n| <description> |\n\n\n```"
         )
+        code_prose = " ".join(code.split())
         require(code, table, "loom-code-reference.md")
-        require(code, "one heading and one descriptive cell", "loom-code-reference.md")
-        require(code, "continue without waiting", "loom-code-reference.md")
+        require(
+            code_prose,
+            "one heading and one descriptive cell",
+            "loom-code-reference.md",
+        )
+        require(code_prose, "continue without waiting", "loom-code-reference.md")
 
         forbidden = ("第二位讀者", "second reader", "use Codex as", "這次不使用")
         lowered = combined.lower()
