@@ -62,6 +62,16 @@ def pytest_sessionfinish(session, exitstatus):  # noqa: ARG001  (pytest signatur
 # the next wave continues on the same ref. A supersession chain therefore
 # costs one process per link rather than one per commit (the 200-commit perf
 # fixture needs four).
+#
+# Grounding for the marks behaviour this relies on: git-fast-import(1),
+# `--export-marks=<file>` (https://git-scm.com/docs/git-fast-import) — the
+# option "dumps the internal marks table to <file> when complete", i.e. the
+# marks defined during *that* run. Because no wave passes `--import-marks`,
+# each wave's marks file holds only its own commits, and the `mark :<n>`
+# numbering (spec index + 1) is what maps a line back to its spec. The file
+# is therefore overwritten, not appended, on every wave — the wave loop reads
+# it straight after the run that wrote it and accumulates into `resolved`
+# itself.
 
 DEFAULT_IDENTITY = "Fixture Bot <fixture@example.com>"
 
@@ -104,8 +114,14 @@ def _cleanup_whitespace(msg: bytes) -> bytes:
     trailing empty lines, collapses runs of empty lines, and terminates the
     message with a newline. Applying it here is what keeps a fast-imported
     commit byte-identical to the same commit made with the per-commit helper.
+
+    "Whitespace" here is git's own set, not Python's: git strips only space,
+    tab, CR and LF (its `sane_isspace` excludes vertical tab 0x0b and form
+    feed 0x0c, which Python's argument-less `bytes.rstrip()` would strip),
+    so this function strips exactly `b" \\t\\r\\n"` and leaves 0x0b/0x0c in
+    place the way git does. Equivalence is claimed for that set only.
     """
-    lines = [line.rstrip() for line in msg.split(b"\n")]
+    lines = [line.rstrip(b" \t\r\n") for line in msg.split(b"\n")]
     out: list[bytes] = []
     for line in lines:
         if not line and (not out or not out[-1]):
@@ -128,8 +144,15 @@ def _commit_block(
 ) -> bytes:
     """One `commit` command in fast-import stream syntax.
 
-    Field order is fixed by fast-import's grammar: commit, mark, author,
-    committer, data, from, then the filemodify commands.
+    Field order is fixed by fast-import's grammar — git-fast-import(1),
+    "commit" (https://git-scm.com/docs/git-fast-import#_commit): `commit
+    <ref>`, then optional `mark`, `original-oid`, `author`, then the
+    required `committer`, then `data`, then the optional `from`/`merge`,
+    then the filemodify and friends. That section also states the `data`
+    command's trailing LF is optional but recommended; this emitter omits
+    it, so the next command's own line starts immediately after the payload
+    — which is why a message that already ends in LF must not gain a second
+    one here.
     """
     msg = spec.subject.encode()
     if body:
@@ -209,6 +232,10 @@ def fast_import_commits(
             index += 1
         assert wave, f"no progress importing spec {index}: unresolvable supersession"
 
+        # `--export-marks` writes only this run's marks (no `--import-marks`
+        # anywhere here), so the file is read immediately below and its
+        # contents accumulated into `resolved` — see the marks grounding in
+        # this module's "shared bulk fixture builder" comment block.
         subprocess.run(
             ["git", "-C", str(repo), "fast-import", "--quiet", f"--export-marks={marks_path}"],
             input=b"".join(wave),

@@ -62,6 +62,22 @@ trap cleanup EXIT
 # cited SHAs from that marks file and writes the rest. Messages,
 # identities and per-index dates are byte-identical to what the
 # previous `git commit -m` loop produced for the same index.
+#
+# The stream's field order (commit, mark, author, committer, data, then
+# the optional `from` and the filemodify commands) and the fact that the
+# LF after a `data <n>` payload is optional are both fixed by
+# git-fast-import(1), "commit":
+# https://git-scm.com/docs/git-fast-import#_commit
+# The Python mirror of this emitter cites the same section — see
+# `_commit_block` in
+# loom-workflow/skills/git-memory/scripts/conftest.py.
+#
+# `supersede_count` ($4) must stay BELOW `memory_count` ($3): the first
+# pass covers commits [0, memory_count - supersede_count), so an equal
+# or larger supersede_count makes it empty, exports no marks, and leaves
+# pass 2's cited SHAs unresolvable. The emitter asserts that with a
+# named message before importing anything, exactly as the Python builder
+# does in conftest.py's wave loop.
 build_perf_repo() {
   local dir="$1" n="$2" memory_count="$3" supersede_count="$4"
   mkdir -p "$dir"
@@ -85,6 +101,12 @@ d = os.environ["FIXTURE_DIR"]
 N = int(os.environ["FIXTURE_N"])
 MEM = int(os.environ["FIXTURE_MEMORY"])
 SUP = int(os.environ["FIXTURE_SUPERSEDE"])
+
+assert SUP == 0 or SUP < MEM, (
+    "supersede_count=%d must be less than memory_count=%d: the first import "
+    "pass would be empty, so its marks file cannot supply the SHAs the "
+    "superseding commits cite" % (SUP, MEM)
+)
 
 
 def ident(i):

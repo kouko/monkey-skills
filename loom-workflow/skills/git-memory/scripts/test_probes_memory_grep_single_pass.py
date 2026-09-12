@@ -281,7 +281,19 @@ def test_extract_commits_folded_continuation_joined_single_space(tmp_path):
 
 # ─── 6. subprocess count contract (EXPECTED RED today) ─────────────
 
-def _build_perf_repo(repo: Path, bulk, n_commits: int = 200, memory_count: int = 40) -> None:
+# The perf fixture's contracted shape. These are the numbers the probes
+# below were written against, so the shape self-assertion in
+# `_build_perf_repo` compares the built history against THESE rather than
+# against the builder's own arguments — an argument-relative assertion holds
+# for every argument and therefore binds nothing. `perf_repo` passes them
+# explicitly and the builder takes no defaults, so a caller that perturbs
+# the shape fails the read-back instead of silently building something else.
+PERF_COMMITS = 200
+PERF_MEMORY_WORTHY = 40
+PERF_SUPERSEDED = 5
+
+
+def _build_perf_repo(repo: Path, bulk, n_commits: int, memory_count: int) -> None:
     """200 commits, 40 memory-worthy (Decision:), 5 of those also carry
     Supersedes: pointing at an earlier memory commit. Every commit
     touches the same tracked file so a --path pathspec matches all of
@@ -333,8 +345,9 @@ def _build_perf_repo(repo: Path, bulk, n_commits: int = 200, memory_count: int =
     # Shape self-assertion. The probes below bind git-call COUNTS, which a
     # fixture with the wrong record shape would still satisfy — verified:
     # dropping memory_count to 39 left both of them green. So the fixture
-    # asserts its own observable shape here, and a rewrite that quietly
-    # stopped producing 200/40/5 fails loudly at build time.
+    # asserts its own observable shape here against the PERF_* literals
+    # above, and a rewrite (or a caller) that quietly stopped producing
+    # 200/40/5 fails loudly at build time.
     records = bulk.read_shape(repo)
     shas_so_far: set[str] = set()
     memory_worthy = superseded = 0
@@ -349,17 +362,21 @@ def _build_perf_repo(repo: Path, bulk, n_commits: int = 200, memory_count: int =
                     f"Supersedes: in {sha} cites {target}, which is not an earlier commit"
                 )
         shas_so_far.add(sha)
-    assert len(records) == n_commits, f"expected {n_commits} commits, got {len(records)}"
-    assert memory_worthy == memory_count, (
-        f"expected {memory_count} memory-worthy commits, got {memory_worthy}"
+    assert len(records) == PERF_COMMITS, (
+        f"expected {PERF_COMMITS} commits, got {len(records)}"
     )
-    assert superseded == 5, f"expected 5 Supersedes: commits, got {superseded}"
+    assert memory_worthy == PERF_MEMORY_WORTHY, (
+        f"expected {PERF_MEMORY_WORTHY} memory-worthy commits, got {memory_worthy}"
+    )
+    assert superseded == PERF_SUPERSEDED, (
+        f"expected {PERF_SUPERSEDED} Supersedes: commits, got {superseded}"
+    )
     touching = subprocess.run(
         ["git", "-C", str(repo), "log", "--format=%H", "--", "content.txt"],
         capture_output=True, text=True, check=True,
     ).stdout.split()
-    assert len(touching) == n_commits, (
-        f"expected all {n_commits} commits to touch content.txt, got {len(touching)}"
+    assert len(touching) == PERF_COMMITS, (
+        f"expected all {PERF_COMMITS} commits to touch content.txt, got {len(touching)}"
     )
 
 
@@ -382,7 +399,7 @@ def _count_shim_dir(tmp_path: Path, tool: str, log_path: Path) -> Path:
 def perf_repo(tmp_path_factory, bulk_history):
     repo = tmp_path_factory.mktemp("perf-repo") / "repo"
     repo.mkdir()
-    _build_perf_repo(repo, bulk_history)
+    _build_perf_repo(repo, bulk_history, PERF_COMMITS, PERF_MEMORY_WORTHY)
     return repo
 
 
