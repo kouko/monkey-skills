@@ -2,7 +2,8 @@
 name: deletion-task-review-packet-fails-the-cat-file-existence-check
 description: SDD's per-task reviewer fan-out requires `git cat-file -e <reviewed_sha>:<path>` for every declared `Files touched`, so a task whose whole job is deleting files can never satisfy it — the paths are absent at every SHA after the deletion commit; dispatch the reviewers with the deletion commit as scope (cross-read the removed bytes at `<commit>~1:<path>`, prove absence at `<commit>:<path>`), record the deviation in the plan's Decision Log, and keep the immutable-SHA rule intact
 type: gotcha
-origin: branch loom-script-refactor-phase2 (2026-08-31) — Task 4 (`git rm claim_ticket.py test_claim_ticket.py`) hit it at the first individual review fan-out; recorded as plan DL-1
+sources:
+  - resource: branch loom-script-refactor-phase2 (2026-08-31) — Task 4 (`git rm claim_ticket.py test_claim_ticket.py`) hit it at the first individual review fan-out; recorded as plan DL-1
 ---
 
 `subagent-driven-development` Step 3 says: for every declared path run

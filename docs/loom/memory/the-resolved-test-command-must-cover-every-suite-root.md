@@ -1,6 +1,9 @@
 ---
 name: the-resolved-test-command-must-cover-every-suite-root
 description: this repo runs two pytest suites (repo-root scripts/ and loom-code/scripts, ~310 + ~1870 tests) — a "suite green" claim resolved from only the root suite let two version-pin failures and a compaction-pin failure ride three tasks undetected until a reviewer independently ran both; resolve the package test command as BOTH invocations, and treat any single-suite green claim as unverified
+type: Memory
+sources:
+  - resource: introducing commit ae8449b6376409f296057e05bfbf8cc1339e1072
 ---
 
 The SDD orchestrator resolved the package test command once as

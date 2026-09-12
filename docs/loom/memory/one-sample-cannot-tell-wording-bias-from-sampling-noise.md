@@ -2,7 +2,8 @@
 name: one-sample-cannot-tell-wording-bias-from-sampling-noise
 description: A cold-read that scores a contract on a fixed item list is a distribution, not a number; one run per revision cannot separate a wording defect from model noise, so an attribution question is answered by N runs per contract with a stated rule for "systematic" (same item wrong in at least half the scored runs, same wrong label in at least half, N at least three) and by measuring the control contract with the same fixture
 type: practice
-origin: 2026-09-04-adversary-three-way-attribution-measured — four N=10 baselines (2026-09-05), following the single-sample cold reads of #787 and #789
+sources:
+  - resource: 2026-09-04-adversary-three-way-attribution-measured — four N=10 baselines (2026-09-05), following the single-sample cold reads of #787 and #789
 ---
 
 Three single-sample cold reads of the adversary contract scored 7/8,

@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-12-complete-malformed-reviewer-retry",
+  "content_digest": "95cc656b31063101b839362715559295fcca1b98",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_dispatch_profile_resolver.py -q",
+      "artifact": "loom-code/scripts/test_dispatch_profile_resolver.py",
+      "result": "pass",
+      "command_digest": "c4cb438ff42f7fc85a88f80509fa0915e7ec444785f4941442995b318535e130"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing-review-v2-1",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "closing-review-v2-2",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    }
+  ],
+  "findings": []
+}

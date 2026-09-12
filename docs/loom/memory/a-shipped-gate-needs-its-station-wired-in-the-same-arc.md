@@ -2,7 +2,8 @@
 name: a-shipped-gate-needs-its-station-wired-in-the-same-arc
 description: A mechanical checker can ship fully built, tested, and registered — and still be dead code, because no workflow station's prose ever runs it; "wired the same way existing checkers are wired" means a named unconditional-gate paragraph in the consuming SKILL plus the reviewer check row instructing the run, and the wiring belongs in the same arc as the checker, verified by grepping for a caller
 type: practice
-origin: seam-contracts arc (2026-08-25) — check_seam_coverage.py landed with 9 passing tests and a fail-loud registration, while plan-format.md claimed in present tense it "is checked mechanically"; no station invoked it. Both whole-branch docs reviewers flagged it (one 🔴, citing the brief's own BI-5 "wired the same way existing plan/brief checkers are wired"); the fix round added the writing-plans unconditional Seam-coverage gate and recast Check 20 into the run-the-script sole-authority form
+sources:
+  - resource: seam-contracts arc (2026-08-25) — check_seam_coverage.py landed with 9 passing tests and a fail-loud registration, while plan-format.md claimed in present tense it "is checked mechanically"; no station invoked it. Both whole-branch docs reviewers flagged it (one 🔴, citing the brief's own BI-5 "wired the same way existing plan/brief checkers are wired"); the fix round added the writing-plans unconditional Seam-coverage gate and recast Check 20 into the run-the-script sole-authority form
 ---
 
 The checker existed, passed its tests, and was reachable by nothing. Prose

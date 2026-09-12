@@ -2,7 +2,8 @@
 name: a-successful-gate-command-can-mutate-the-reviewed-tree
 description: An executable quality gate can mutate the reviewed tree synchronously or after its process exits, so a safe release boundary needs final state recomputation plus an immutable published object and a shell-stable canonical command
 type: gotcha
-origin: 2026-09-06-reuse-branch-end-suite-result — W0-02 adversarial probes
+sources:
+  - resource: 2026-09-06-reuse-branch-end-suite-result — W0-02 adversarial probes
 ---
 
 A package suite or adversarial probe is an executable program, not a passive

@@ -2,7 +2,8 @@
 name: evidence-measured-on-one-external-surface-does-not-transfer
 description: A key/field name measured on ONE surface of an external library is not evidence about another surface of the same library — a reviewer correctly measured `dim_*` column spellings on edgartools' FACT rows, the fix was applied to its PRESENTATION rows, and the widened match then deleted the top line of every statement that discloses segments
 type: gotcha
-origin: branch feat-spine-chain-coverage (as-filed statement reconstruction, 2026-07-26) — the `dim` substring widening
+sources:
+  - resource: branch feat-spine-chain-coverage (as-filed statement reconstruction, 2026-07-26) — the `dim` substring widening
 ---
 
 A predicate rejected a presentation row when any key whose name contained

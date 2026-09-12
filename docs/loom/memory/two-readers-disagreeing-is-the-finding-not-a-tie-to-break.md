@@ -2,7 +2,8 @@
 name: two-readers-disagreeing-is-the-finding-not-a-tie-to-break
 description: At the memory-grep wave-end checkpoint one reader ran every suite, found them all green and passed the change, while the other ran nothing, read the new field encoding and found a subject byte that silently dropped a record — the reader who executed the tests was the one who missed the defect, so a split verdict is evidence that the two lenses looked at different things, never a tie to average away
 type: practice
-origin: 2026-09-06 memory-grep-single-pass (loom-workflow 4.1.0) — wave-end:1 round 1, Codex NEEDS_REVISION versus Claude PASS_WITH_NOTES
+sources:
+  - resource: 2026-09-06 memory-grep-single-pass (loom-workflow 4.1.0) — wave-end:1 round 1, Codex NEEDS_REVISION versus Claude PASS_WITH_NOTES
 ---
 
 The review station stores both verdicts whole and takes the worst one; it

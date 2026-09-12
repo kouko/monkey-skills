@@ -176,9 +176,127 @@ def test_archival_markdown_is_outside_the_install_runtime_scan(tmp_path):
 
 
 def test_real_loom_plugins_pass_the_install_boundary_gate():
+    """W3-01: `loom-memory` is no longer an independent plugin — its sibling
+    is now `loom-workflow`, which ships the relocated `loom-memory` skill
+    among its own files. The property under test is unchanged (every real
+    loom-family plugin root is boundary-clean); only the third plugin's
+    identity changed."""
     import check_plugin_boundaries as checker
 
     repo = Path(__file__).resolve().parents[1]
 
     assert checker.find_boundary_violations(repo / "loom-code") == []
     assert checker.find_boundary_violations(repo / "loom-design") == []
+    assert checker.find_boundary_violations(repo / "loom-workflow") == []
+
+
+def test_own_skill_folder_named_like_a_sibling_plugin_is_not_flagged(tmp_path):
+    """W3-01 regression guard: `loom-workflow` ships a skill literally named
+    `loom-memory` (the plugin `loom-memory` retired into it). The generic
+    sibling-name regex would otherwise mistake that skill's own internal
+    `skills/loom-memory/scripts/...` path for a reference to a sibling
+    plugin's private tree. A match is internal, not a sibling reference,
+    when it resolves to a real path inside the plugin's own root."""
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-workflow"
+    _write(
+        plugin / "skills" / "loom-memory" / "scripts" / "loom_memory.py",
+        "# real file\n",
+    )
+    _write(
+        plugin / "skills" / "loom-memory" / "SKILL.md",
+        "Validation lives at `skills/loom-memory/scripts/loom_memory.py` "
+        "and at `/skills/loom-memory/scripts/loom_memory.py` inside this "
+        "skill's own directory.\n",
+    )
+
+    assert checker.find_boundary_violations(plugin) == []
+
+
+def test_reports_sibling_internal_path_naming_loom_memory(tmp_path):
+    """W4-01: the generic sibling-plugin regex must catch `loom-memory`
+    specifically, not just the two plugins every other fixture in this file
+    names — a plugin-name-shaped regex proven only against `loom-design`/
+    `loom-code` could still miss a real third name."""
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-code"
+    source = _write(
+        plugin / "skills" / "ship" / "SKILL.md",
+        "Read `loom-memory/scripts/loom_memory.py` before recording.\n"
+        "[private](../../../loom-memory/skills/loom-memory/SKILL.md)\n",
+    )
+
+    assert checker.find_boundary_violations(plugin) == [
+        f"{source}:1: sibling internal path: loom-memory/scripts/loom_memory.py",
+        f"{source}:2: escaping relative link: ../../../loom-memory/skills/loom-memory/SKILL.md",
+    ]
+
+
+def test_reports_sibling_internal_path_when_loom_memory_is_the_plugin_under_test(tmp_path):
+    """The reverse direction: loom-memory itself must not reference a
+    sibling's private path either — its own name is excluded from the
+    detector, its siblings' names are not."""
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-memory"
+    _write(
+        plugin / ".claude-plugin" / "plugin.json",
+        json.dumps({"name": "loom-memory"}),
+    )
+    source = _write(
+        plugin / "skills" / "loom-memory" / "SKILL.md",
+        "Run `loom-code/scripts/loom_checker.py` to cross-check a citation.\n",
+    )
+
+    assert checker.find_boundary_violations(plugin) == [
+        f"{source}:1: sibling internal path: loom-code/scripts/loom_checker.py",
+    ]
+
+
+def test_decoy_nested_tree_does_not_launder_a_real_sibling_reference(tmp_path):
+    """A file planted inside the plugin at a sibling's path shape must not
+    make a genuine sibling-private reference read as internal.
+
+    The first version of the internal-path exemption asked only whether the
+    target resolved to something that exists under the plugin root. That let
+    a decoy defeat the gate: create `<root>/loom-code/scripts/loom_checker.py`
+    and a prose reference to the real `loom-code` plugin's private script
+    stops being reported. The exemption now requires the target to live under
+    this plugin's own `skills/<name>/`, so the decoy is still a violation.
+    """
+    import check_plugin_boundaries as checker
+
+    plugin = tmp_path / "loom-workflow"
+    _write(plugin / ".claude-plugin" / "plugin.json", '{"name": "loom-workflow"}\n')
+    _write(plugin / "skills" / "loom-memory" / "scripts" / "loom_memory.py", "# real\n")
+    _write(plugin / "loom-code" / "scripts" / "loom_checker.py", "# decoy\n")
+    _write(
+        plugin / "skills" / "handoff" / "SKILL.md",
+        "Run `skills/loom-memory/scripts/loom_memory.py` for the store.\n"
+        "See `loom-code/scripts/loom_checker.py` for the rules.\n",
+    )
+
+    violations = checker.find_boundary_violations(plugin)
+
+    assert any("loom_checker.py" in v for v in violations), violations
+    assert not any("loom_memory.py" in v for v in violations), violations
+
+
+def test_a_real_sibling_plugin_name_is_never_exempt(tmp_path):
+    """Even a same-named skill cannot exempt a name that is a real sibling
+    plugin: when `<repo>/loom-design/.claude-plugin/plugin.json` exists, a
+    `loom-design/...` reference stays a violation whatever sits inside."""
+    import check_plugin_boundaries as checker
+
+    _write(tmp_path / "loom-design" / ".claude-plugin" / "plugin.json", '{"name": "loom-design"}\n')
+    plugin = tmp_path / "loom-workflow"
+    _write(plugin / ".claude-plugin" / "plugin.json", '{"name": "loom-workflow"}\n')
+    _write(plugin / "skills" / "loom-design" / "scripts" / "x.py", "# same-named skill\n")
+    _write(
+        plugin / "skills" / "handoff" / "SKILL.md",
+        "See `skills/loom-design/scripts/x.py` for details.\n",
+    )
+
+    assert any("x.py" in v for v in checker.find_boundary_violations(plugin))

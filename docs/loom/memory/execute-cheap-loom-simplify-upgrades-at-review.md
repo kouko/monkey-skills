@@ -2,7 +2,8 @@
 name: execute-cheap-loom-simplify-upgrades-at-review
 description: When a LOOM-SIMPLIFY marker's recorded upgrade turns out one-line-cheap at review time, execute it on the spot instead of leaving the marker
 type: practice
-origin: PR #479 (loom-pipeline conductor v0.1, 2026-07-04)
+sources:
+  - resource: PR #479 (loom-pipeline conductor v0.1, 2026-07-04)
 ---
 
 `LOOM-SIMPLIFY:` is loom-code's in-code marker for a deliberate,

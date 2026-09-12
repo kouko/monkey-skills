@@ -2,7 +2,8 @@
 name: git-diff-name-only-hides-renames-from-path-gates
 description: git diff --name-only silently collapses a rename to its NEW path only, so any gate that classifies changed files by path can be bypassed by renaming a guarded file into an exempt directory — enumerate with --no-renames (or parse --name-status both sides)
 type: gotcha
-origin: 2026-08-11 review-cost-reduction arc — record-only exemption 🔴, reproduced end-to-end pre-fix (loom_gate_markers.py, fixed in the same arc with a rename-fixture test)
+sources:
+  - resource: 2026-08-11 review-cost-reduction arc — record-only exemption 🔴, reproduced end-to-end pre-fix (loom_gate_markers.py, fixed in the same arc with a rename-fixture test)
 ---
 
 Git's rename detection is ON by default: `git mv guarded/file.md

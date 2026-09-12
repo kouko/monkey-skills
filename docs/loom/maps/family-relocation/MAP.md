@@ -35,7 +35,7 @@ user-ratified: kouko, 2026-08-29
 - F-1: 搬遷後 loom-code 舊路徑的相容層要維持多久（deprecation 窗口與其守衛）？
 - F-2: kumiko-zaiku 等 adopting repos 的遷移由誰觸發、排在搬遷的哪個階段？
 - F-3: marketplace／manifest 對 plugin 間依賴的支援邊界（目前 manifest 測試明文禁止 mandatory sibling dependency）。
-- F-4: loom-memory 的搬遷排序（已定：獨立於 hooks、於 feasibility probe 之後裁定）——殘餘問題只剩它與 queue 層是否同批。
+- F-4: loom-memory 的搬遷排序（已定：獨立於 hooks、於 feasibility probe 之後裁定）——殘餘問題已解決：未與 queue 層同批，獨立搬遷；`loom-memory` 已於 2026-09-11 從獨立 plugin 併入 loom-workflow（docs/loom/intent/2026-09-11-loom-memory-into-loom-workflow.md），無殘留問題。
 - F-5: 跨 plugin 介面耦合的降級語意——loom-workflow 缺席時哪些閘變 N/A、哪些流程照跑，要寫成可驗規則而非散文；缺了它，「安裝獨立」會名存實亡（feasibility probe 的 exit-3 優雅降級只證明機制存在，未定義語意）。
 - F-6: 跨 plugin 呼叫的單向性守衛——只允許 loom-code → loom-workflow，反向回呼即循環依賴；由哪個測試層（boundary 測試？contract-citation checker？）機械把守。
 - F-7: Codex 側執行期 sibling-root 探索無任何機制（官方 docs 無 placeholder 變數、無安裝登記檔——research 票查證）；鏡射骨架現靠單版本 cache 目錄 glob，正式解法未定。（路由依據：擋的是本圖 Destination 的「adopting repo 無 patch 採用」跨 host 條件，故入本圖 fog 而非 backlog）

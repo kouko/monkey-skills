@@ -2,7 +2,8 @@
 name: a-recorded-package-hash-is-only-valid-as-the-last-edit
 description: A fingerprint of a package recorded inside a document is stale the moment anything else in that package changes, so recomputing it and then editing a changelog, manifest, or any other packaged file commits a hash that describes a tree that no longer exists — and a test run made before that last edit is a verification claim about the wrong tree
 type: gotcha
-origin: codex/standardize-complexity-gate (stage-specific complexity gates, close-out, 2026-08-27)
+sources:
+  - resource: codex/standardize-complexity-gate (stage-specific complexity gates, close-out, 2026-08-27)
 ---
 
 A behaviour-evidence report records SHA-256 fingerprints of the cold-install

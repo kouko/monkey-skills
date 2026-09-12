@@ -2,7 +2,8 @@
 name: preamble-wording-is-contract-surface
 description: In prompt-artifact work, a station preamble's vocabulary steers downstream machine classification — treat preamble word choice like an API field name
 type: gotcha
-origin: PR #487 (loom-pipeline v1.1 driver debts, 2026-07-04)
+sources:
+  - resource: PR #487 (loom-pipeline v1.1 driver debts, 2026-07-04)
 ---
 
 In prompt-artifact work — where the shipped artifact is prompt text

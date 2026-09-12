@@ -2,7 +2,8 @@
 name: a-correction-issued-in-a-dispatch-packet-evaporates
 description: Withdrawing a wrong acceptance criterion in the implementer's dispatch prompt instead of in the plan itself leaves the durable document still asserting it — the implementer obeys the correction, the artifact reflects it, and the next reviewer then enforces the withdrawn wording against a correct artifact; cost three review rounds before anyone looked at where the criterion actually lived
 type: process
-origin: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — Task 1, spec-review rounds 2 and 3
+sources:
+  - resource: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — Task 1, spec-review rounds 2 and 3
 ---
 
 A task's GREEN criterion said a pre-existing test "still passes". A review

@@ -2,7 +2,8 @@
 name: assertion-must-encode-the-property-it-claims
 description: A guard whose docstring claims an ORDERING/relational property but whose assertion only tests membership ("before" in text and "candidate round" in text) is vacuous — it passes on the violated state; read each guard's own claim and ask "would this fail if the claimed property broke?" — and the relational predicate you add will over-fire on a valid re-rendering, so decide which residual to keep rather than tightening again: a false alarm is loud and cheap, the hole it guards is silent
 type: practice
-origin: branch feat-visual-anchor-realignment (2026-07-12) — whole-branch review caught a vacuous ordering pin the SDD triad had passed
+sources:
+  - resource: branch feat-visual-anchor-realignment (2026-07-12) — whole-branch review caught a vacuous ordering pin the SDD triad had passed
 ---
 
 An implementer's guard carried the docstring *"the derivation must be

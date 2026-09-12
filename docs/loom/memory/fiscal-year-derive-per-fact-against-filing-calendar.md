@@ -2,7 +2,8 @@
 name: fiscal-year-derive-per-fact-against-filing-calendar
 description: a fact's fiscal year comes from its OWN period_end measured against the filing's dei calendar — neither period_end[:4] (calendar year) nor the filing's DocumentFiscalYearFocus stamped on every fact is correct
 type: gotcha
-origin: operational-kpi scope-B quarterly rebuild (feat-operational-kpi-quarterly, 2026-07-17)
+sources:
+  - resource: operational-kpi scope-B quarterly rebuild (feat-operational-kpi-quarterly, 2026-07-17)
 ---
 
 Labeling an XBRL dimensional-revenue fact with its fiscal year has TWO

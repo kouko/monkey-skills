@@ -2,7 +2,8 @@
 name: a-deletion-rule-must-say-the-remainder-still-stands-alone
 description: A writing rule that says WHAT to delete and never says the remainder must still read on its own licenses a stranded qualifier — a clause whose antecedent was just deleted — as a clean removal; a rule can be perfectly decidable sentence-by-sentence and still damage the artifact, because decidability is a property of each sentence in isolation and readability is a property of what is left after the cut
 type: gotcha
-origin: code-as-spec-writing-rule (2026-08-21) — two implementers, no contact, same defect on different files
+sources:
+  - resource: code-as-spec-writing-rule (2026-08-21) — two implementers, no contact, same defect on different files
 ---
 
 The code-as-spec writing rule told implementers to delete any sentence

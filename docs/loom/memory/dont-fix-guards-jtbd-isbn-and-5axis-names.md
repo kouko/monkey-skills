@@ -2,7 +2,8 @@
 name: dont-fix-guards-jtbd-isbn-and-5axis-names
 description: Don't-fix guards — the JTBD 1997 ISBN 978-0875845852 in four-dx-coach is CORRECT (Innovator's Dilemma context, not Competing Against Luck), and the 5-axis long/short names in loom-code brainstorming (Alternatives vs Alternatives Considered) are deliberate description-vs-body usage, not drift
 type: practice
-origin: PR #465 (loom-* consistency audit, 2026-07-01)
+sources:
+  - resource: PR #465 (loom-* consistency audit, 2026-07-01)
 ---
 
 Two audit-confirmed "looks wrong, is right" facts — do not "fix"

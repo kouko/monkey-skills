@@ -2,7 +2,8 @@
 name: python-path-parent-resolve-gotcha
 description: Python pathlib — Path(".").parent is still ".", so resolve() before any parent-directory lookup on a relative path
 type: gotcha
-origin: PR #472 (ui-flows per-change folder validator, 2026-07-02)
+sources:
+  - resource: PR #472 (ui-flows per-change folder validator, 2026-07-02)
 ---
 
 In Python's `pathlib`, `Path(".").parent` evaluates to `Path(".")` —

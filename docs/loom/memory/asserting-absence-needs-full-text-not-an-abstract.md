@@ -2,7 +2,8 @@
 name: asserting-absence-needs-full-text-not-an-abstract
 description: A reviewer finding that says "the source does not contain X" is only as strong as the depth it was checked at — two arms independently called a correct citation unconfirmable after reading only the paper's abstract, the fix they triggered hardened that into an affirmative false denial, and the whole exchange cost two review rounds and shipped a defect worse than the one flagged; assert absence only from full text, and treat a fix prompt that authorises a shallow re-check as the orchestrator's own defect
 type: practice
-origin: feat-docs-review-blocking-class whole-branch review (2026-07-30), rounds 1-3
+sources:
+  - resource: feat-docs-review-blocking-class whole-branch review (2026-07-30), rounds 1-3
 ---
 
 A `docs/loom/BACKLOG.md` entry cited ICSE 2026 (*Are "Solved Issues" in

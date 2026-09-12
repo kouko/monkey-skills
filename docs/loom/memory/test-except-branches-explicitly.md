@@ -2,7 +2,8 @@
 name: test-except-branches-explicitly
 description: A green suite can hide a crash in an except branch with zero coverage — e.g. catching tokenize.TokenizeError, which is not a real stdlib name (it's TokenError)
 type: practice
-origin: PR #454 (living-spec index capstone G PR-1, 2026-06-24)
+sources:
+  - resource: PR #454 (living-spec index capstone G PR-1, 2026-06-24)
 ---
 
 A fully green test suite can hide a guaranteed crash inside an

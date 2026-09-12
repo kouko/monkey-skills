@@ -70,7 +70,15 @@ fi
 # Window re-measured 2026-07-22: PR #596 inserted the recall-staleness
 # caveat paragraph into this section, pushing the pinned sentence to
 # anchor+24; 25 keeps the measured-neighborhood scoping intact.
-WIN2="$(window_after "## When to record" 25 "$README")"
+# Re-measured 2026-09-11: the timing rule moved into the shipped skill's
+# Record contract, and this section gained a six-line note naming that
+# contract as the normative home. The check requires all three phrases and
+# the last of them now sits at anchor+30, so the window is flush with it —
+# no margin, unlike the 2026-07-22 measure's one line. The section itself
+# ends at anchor+31, so the neighborhood scoping still holds. The pinned
+# sentence moved anchor+24 -> anchor+30, which is the six inserted lines; the
+# window grew only 25 -> 30 because the 2026-07-22 margin was spent.
+WIN2="$(window_after "## When to record" 30 "$README")"
 if [ -z "$WIN2" ]; then
   fail "anchor '## When to record' not found in README.md"
 elif echo "$WIN2" | grep -qF "grep the store for entries the new fact contradicts" \

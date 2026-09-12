@@ -2,7 +2,8 @@
 name: an-experiment-you-designed-cannot-reopen-a-decision-it-never-tested
 description: Using your own experiment to argue that an earlier decision of yours was weakly grounded is a shape that demands checking whether the experiment exercised that decision's actual failure mode — the code-as-spec arc cited a mechanism-versus-intent dogfood as grounds for reopening a checker dropped for load-bearing-superlative judgment, and only one of the six planted defects contained a superlative at all
 type: gotcha
-origin: 2026-08-22 code-as-spec-writing-rule arc — the agent that dropped Checker 1 later used its own dogfood to argue the drop was weakly grounded; an independent cross-model assessor caught the category error, and the trigger-word count confirmed it in one grep
+sources:
+  - resource: 2026-08-22 code-as-spec-writing-rule arc — the agent that dropped Checker 1 later used its own dogfood to argue the drop was weakly grounded; an independent cross-model assessor caught the category error, and the trigger-word count confirmed it in one grep
 ---
 
 Reversing your own earlier call is not suspicious by itself — it is what

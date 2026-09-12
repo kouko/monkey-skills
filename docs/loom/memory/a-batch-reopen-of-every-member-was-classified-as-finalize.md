@@ -2,7 +2,8 @@
 name: a-batch-reopen-of-every-member-was-classified-as-finalize
 description: plan_card.py derived a batch transition's direction from which KEYS changed between the ledger and the replacement dict (set(replacements) == members), not from what the VALUES changed TO — a full-membership REOPEN (every member's status moved backward) touches exactly the same key set as a full-membership finalize, so the heuristic misclassified the first live full reopen as a finalize and the batch was unrecoverable until fixed
 type: gotcha
-origin: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — first live full-membership reopen (station-prose batch, 2026-08-31), fixed at d1fa5e07
+sources:
+  - resource: adversarial-audit-station arc, docs/loom/plans/2026-08-31-adversarial-audit-station.md — first live full-membership reopen (station-prose batch, 2026-08-31), fixed at d1fa5e07
 ---
 
 `plan_card.py`'s batch-transition classifier compared the SET of task

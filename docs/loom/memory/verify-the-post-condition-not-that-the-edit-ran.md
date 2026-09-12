@@ -2,7 +2,8 @@
 name: verify-the-post-condition-not-that-the-edit-ran
 description: A scripted edit can report success on every observable signal — the assert passed, the script printed its summary, the citation checker stayed green — while having produced a structurally broken artifact; `text.replace("## Notes", block + "## Notes", 1)` matched an inline mention inside a task's own Description, split that task in two and created a dependency cycle, and only the next reviewer saw it
 type: gotcha
-origin: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — plan-document-reviewer round that returned five cascading gaps
+sources:
+  - resource: branch docs-reuse-adequacy-brief-and-backlog (loom-code 0.43.0, 2026-08-01) — plan-document-reviewer round that returned five cascading gaps
 ---
 
 A new task block was inserted into a plan with

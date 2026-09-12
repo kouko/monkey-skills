@@ -2,7 +2,8 @@
 name: a-weak-model-reporting-it-ran-a-silent-self-check-is-not-evidence-the-check-worked
 description: A prose instruction telling a weak model to silently run a self-check before returning buys behavioral compliance (the agent says it swept and can describe the sweep) but not the outcome (the defect the sweep targets is still shipped) — the two are decoupled, so a self-reported silent check cannot be trusted as a gate and a visible/verbalized form does not fix it either
 type: practice
-origin: 2026-09-01 — prose-edit self-sweep arc, two blind A/B rounds (silent vs none; silent vs written checklist) over 24 drafts; Arm-B agents confirmed they ran rule 14's sweep (6/8, describing the grep) yet those same drafts still shipped stale-neighbour defects, and the written-checklist variant scored no better than silent (n=2, variance-dominated); results in docs/loom/dogfood/2026-09-01-prose-selfsweep-ab/
+sources:
+  - resource: 2026-09-01 — prose-edit self-sweep arc, two blind A/B rounds (silent vs none; silent vs written checklist) over 24 drafts; Arm-B agents confirmed they ran rule 14's sweep (6/8, describing the grep) yet those same drafts still shipped stale-neighbour defects, and the written-checklist variant scored no better than silent (n=2, variance-dominated); results in docs/loom/dogfood/2026-09-01-prose-selfsweep-ab/
 ---
 
 Rule 14 told the implementer to silently sweep for stale restatements

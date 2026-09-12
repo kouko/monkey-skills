@@ -2,7 +2,8 @@
 name: a-behavioral-ab-binds-the-exact-wording-it-tested
 description: A behavioral A/B on a prompt artifact (trigger card, agent contract, template sentence) validates only the EXACT wording that ran — a post-A/B reword, even one that "just clarifies" a reviewer-found ambiguity, ships an untested variant and silently discards the evidence; the disposition that survives review is to ship the tested wording with the ambiguity recorded as debt and schedule the reword WITH its own fresh A/B leg
 type: practice
-origin: feat/ascii-graph-generative-trigger (2026-08-12) — docs arm found "lead the explanation with the generated diagram" two-readings-ambiguous AFTER the A/B (candidate 2/2 loose reading, 0/2 strict); rewording then would have unshipped the 2/2 evidence, so the wording shipped as-tested and the reword rides the telemetry re-run arc; the same reviewer adjudicated the disposition acceptable
+sources:
+  - resource: feat/ascii-graph-generative-trigger (2026-08-12) — docs arm found "lead the explanation with the generated diagram" two-readings-ambiguous AFTER the A/B (candidate 2/2 loose reading, 0/2 strict); rewording then would have unshipped the 2/2 evidence, so the wording shipped as-tested and the reword rides the telemetry re-run arc; the same reviewer adjudicated the disposition acceptable
 ---
 
 The generative-trigger arc A/B-tested the card sentence (candidate 2/2,

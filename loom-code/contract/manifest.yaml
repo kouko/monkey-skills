@@ -8,7 +8,6 @@ version: 2.0.0
 # functional content identity that executions and reviews attest to.
 publication_only_paths:
   - docs/loom/<change-id>/attestation.json
-  - docs/loom/memory/**
 
 stations:            # produce one per-change artifact each (§3)
   - {name: capture-intent, owner: loom-design, produces: intent,  decision_point: 1}
@@ -68,9 +67,6 @@ actions:             # executable steps inside a station; not skills (§3)
   - name: checkpoint
     owner: review
     summary: "one closing review after Build; fixes return to Build, and finalize-review generates a fresh content-bound attestation only after reviewers and checks pass."
-  - name: memory
-    owner: ship
-    summary: "git-memory trailers on the commit plus docs/loom/memory/ entries (templates/memory-README.md) before push."
   - name: alert-to-intent
     owner: maintain
     summary: "an alert or incident becomes evidence on the matching open intent or a new intent with originator maintenance-loop; every incident becomes an eval in mechanisms.yaml."
@@ -99,7 +95,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "task split or file lists",     goes_to: plan}
         - {kind: "design rationale",             goes_to: spec}
         - {kind: "verification history",         goes_to: attestation}
-        - {kind: "lessons",                      goes_to: memory}
       signoff: capture-intent
       edits_after:
         - {id: delivery-derived-from-default, text: "delivery is derived from canonical evidence on the selected remote-default snapshot; the intent remains confirmed"}
@@ -140,7 +135,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "the intent restated", goes_to: intent}
         - {kind: "task ordering",       goes_to: plan}
         - {kind: "review findings",     goes_to: attestation}
-        - {kind: "lessons",             goes_to: memory}
       signoff: write-spec
       edits_after:
         - {id: changed-req-reruns-decision-point-2, text: "a changed REQ re-runs decision point 2 and recomputes confirmed-behavior"}
@@ -170,7 +164,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - {kind: "scenario lists inside Test",    goes_to: spec}
         - {kind: "design rationale",              goes_to: spec}
         - {kind: "verification diary",             goes_to: attestation}
-        - {kind: "lessons",                       goes_to: memory}
         - {kind: "verification identity",          goes_to: attestation}
       signoff: write-plan
       edits_after:
@@ -196,8 +189,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "findings"
       must_not:
         - {kind: "design reasoning", goes_to: spec}
-        - {kind: "process accounting", goes_to: memory}
-        - {kind: "lessons",          goes_to: memory}
       signoff: review
       edits_after:
         - {id: regenerate-after-functional-change, text: "the checker replaces the whole attestation after functional content changes and verification passes again"}
@@ -223,32 +214,11 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "What this did to existing data"
         - "I decided for you"
       must_not:
-        - {kind: "diff commentary", goes_to: memory}
         - {kind: "design rationale", goes_to: spec}
         - {kind: "internal ids",     goes_to: attestation}
       signoff: ship
       edits_after:
         - {id: regenerated-after-functional-change, text: "functional content changed after finalization"}
-  memory:
-    path: docs/loom/memory/<slug>.md
-    template: memory-README.md
-    fields: []
-    charter:
-      answers: "what this repository learned that outlives the change"
-      readers: ["future changes", "git-memory recall"]
-      must:
-        - "one lesson per entry in the store README format"
-        - "the trigger"
-        - "the correct path"
-      must_not:
-        - {kind: "change narrative", goes_to: intent}
-        - {kind: "verification identity", goes_to: attestation}
-        - {kind: "task lists",       goes_to: plan}
-      signoff: build
-      edits_after:
-        - {id: memory-entries-appended,               text: "entries are appended"}
-        - {id: superseded-entry-gains-replacement-pointer, text: "a superseded entry gains a pointer to its replacement"}
-        - {id: memory-index-regenerated,               text: "the index is regenerated"}
   kickoff-defaults:
     path: docs/loom/KICKOFF-DEFAULTS.md
     template: KICKOFF-DEFAULTS.md
@@ -260,7 +230,6 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "one line per key with value, reason and date"
       must_not:
         - {kind: "per-change decisions", goes_to: plan}
-        - {kind: "lessons",              goes_to: memory}
       signoff: capture-intent
       edits_after:
         - {id: kickoff-line-replaced-with-value-reason-date, text: "a line is replaced with a new value, reason and date"}
@@ -290,7 +259,6 @@ artifact_types:      # §6 type mapping; KICKOFF-DEFAULTS artifact-types is rese
   - {glob: "PRINCIPLES.md",              type: standing}
   - {glob: "DESIGN.md",                  type: standing}
   - {glob: "docs/loom/KICKOFF-DEFAULTS.md", type: standing}
-  - {glob: "docs/loom/memory/**",        type: memory}
   - {glob: "**/evidence/**",             type: evidence}
   - {glob: "**/SKILL.md",                type: skill}
   - {glob: "**/agents/*.md",             type: skill}

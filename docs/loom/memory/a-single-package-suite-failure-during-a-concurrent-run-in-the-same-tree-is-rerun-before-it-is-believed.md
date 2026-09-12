@@ -2,7 +2,8 @@
 name: a-single-package-suite-failure-during-a-concurrent-run-in-the-same-tree-is-rerun-before-it-is-believed
 description: A test that patches a real repo file in place (the contract manifest, restored in a finally block) makes every other worker that reads that file fail during the patch window — under xdist or a concurrent run in the same tree that shows up as exactly one failure no rerun reproduces; give the checker an override (env var or flag) so tests point it at a scratch copy, and never write into the tree from a test
 type: gotcha
-origin: 2026-09-05-artifact-charter-boundaries-and-edit-rights — three checkpoints in one day each showed "1 failed" while a fresh reviewer was running the same command in the same tree; every solo rerun was green (1656, 1687, 1716 passed)
+sources:
+  - resource: 2026-09-05-artifact-charter-boundaries-and-edit-rights — three checkpoints in one day each showed "1 failed" while a fresh reviewer was running the same command in the same tree; every solo rerun was green (1656, 1687, 1716 passed)
 ---
 
 At three separate checkpoints the orchestrator's package run and a

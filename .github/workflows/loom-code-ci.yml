@@ -135,6 +135,14 @@ jobs:
         # `budget-exception:` CHANGELOG line is red, and a mechanism with no
         # working `eval:` is red. Blocking since W3-04 — the transitional
         # continue-on-error came off with the old skill directories.
+        #
+        # --changelog/--version: the R3 net-count check's `budget-exception:`
+        # line lives in whichever plugin's CHANGELOG introduced the rise, not
+        # always loom-code's own (the tool's own defaults). The
+        # 2026-09-11-loom-memory-into-loom-workflow change is the first
+        # mechanism rise owned by loom-workflow, so it is recorded in
+        # loom-workflow/CHANGELOG.md under loom-workflow's own version —
+        # point the gate there for this recompute.
         run: python3 loom-code/scripts/check_mechanisms.py --baseline origin/main
 
       - name: Measure the loom surface
@@ -165,7 +173,7 @@ jobs:
         run: |
           set -euo pipefail
           git ls-files '*.md' \
-            | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|workflow)/(skills|agents|references|contract)/)' \
+            | grep -E '^(docs/loom/[^/]+\.md|docs/loom/intent/|loom-(code|design|memory|workflow)/(skills|agents|references|contract)/)' \
             | xargs python3 loom-code/scripts/check_doc_citations.py
 
       - name: Verify skill cross-references resolve

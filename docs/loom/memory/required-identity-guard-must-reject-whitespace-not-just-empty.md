@@ -2,7 +2,8 @@
 name: required-identity-guard-must-reject-whitespace-not-just-empty
 description: A "must be non-empty" guard written `if not value:` admits a WHITESPACE-ONLY string (" " is truthy) — for an authorization/identity boundary this is a real bypass (a caller supplies a blank-looking identity and passes). Use `if not (value and value.strip()):`, and pin the whitespace case with a RED-first test.
 type: gotcha
-origin: 2026-07-14 session — investing-toolkit analysis-kpi review_queue slice 2, adversarial code-quality review caught the auth-seam bypass
+sources:
+  - resource: 2026-07-14 session — investing-toolkit analysis-kpi review_queue slice 2, adversarial code-quality review caught the auth-seam bypass
 ---
 
 The operational-kpi review-queue's anti-fabrication seam requires a HUMAN

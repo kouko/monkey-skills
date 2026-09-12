@@ -2,7 +2,8 @@
 name: durable-store-mirrors-cache-util-not-imports-it
 description: A new durable/append-only store in an analysis skill must NOT reuse data-markets' cache_util — resolve_cache_dir returns the EVICTABLE cache dir (wrong for irreplaceable history: root under XDG_DATA_HOME instead) and a direct cross-skill import breaches the analysis↔data-markets layer boundary (the repo pattern is subprocess, not import); mirror the sanitize + atomic-write PATTERN in self-contained helpers.
 type: practice
-origin: 2026-07-14 session — investing-toolkit analysis-kpi slice 1 (bitemporal KPI store); caught in brainstorming grounding + whole-branch review
+sources:
+  - resource: 2026-07-14 session — investing-toolkit analysis-kpi slice 1 (bitemporal KPI store); caught in brainstorming grounding + whole-branch review
 ---
 
 When adding a NEW persistence layer to an `analysis-*` skill in investing-toolkit,

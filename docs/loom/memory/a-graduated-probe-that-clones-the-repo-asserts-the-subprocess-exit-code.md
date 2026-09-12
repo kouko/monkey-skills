@@ -2,7 +2,8 @@
 name: a-graduated-probe-that-clones-the-repo-asserts-the-subprocess-exit-code
 description: A probe that shells out to a test run and then inspects its output for `FAILED` lines passes vacuously when that run never collected anything (an import error, a missing interpreter, pytest exit 5, a missing test path swallowed by xdist), so it asserts `returncode == 0` first with stdout and stderr in the message, and the rehearsal script it wraps refuses an empty default glob and never adds `-n auto`, because xdist hides the "file or directory not found" collection error
 type: practice
-origin: 2026-09-05-graduated-probes-independent-of-local-history — Codex reader fatal finding wave-end:1-02 and the W1-01 implementer's xdist measurement (2026-09-05/06)
+sources:
+  - resource: 2026-09-05-graduated-probes-independent-of-local-history — Codex reader fatal finding wave-end:1-02 and the W1-01 implementer's xdist measurement (2026-09-05/06)
 ---
 
 Three ways a "zero FAILED lines" check goes green while nothing ran:

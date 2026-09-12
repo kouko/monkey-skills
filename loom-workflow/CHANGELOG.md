@@ -4,6 +4,60 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.3.0] — 2026-09-11 — Record states when and how much
+
+- The memory skill's Record contract now states when a lesson is written down
+  (before the branch closes, with the one post-merge exception and its batching
+  rule) and how much qualifies (zero to one durable lesson per change). The rule
+  previously lived only in one repository's store charter, where a project
+  installing the plugin never read it.
+- Added `skills/loom-memory/evals/record-timing.*`: a frozen cold-reader run
+  guarding those clauses against dilution.
+- Removed `skills/loom-memory/scripts/test_store_fidelity.py`. It proved the
+  relocation change's byte-identity acceptance against a moving `origin/main`;
+  once that change was the trunk it asserted the store may never change, which
+  three of the skill's four operations do.
+
+## [4.2.1] — 2026-09-11 — dbt-model-style: `final` 不得改名，欄位註解是商業定義
+
+Patch. Two `dbt-model-style` rules tightened, both surfaced by writing real
+models in a downstream repo.
+
+`final` 的零邏輯鐵律現在涵蓋改名（§1.2）。原文明文允許 `AS` 別名，代價是對外
+公布的欄名在整個 model 裡只出現在 `final` 那一行：讀者從倉儲看到欄名回頭 grep
+只會撞到別名本身，而 `final` 逐行對照實體表欄位清單的 diff 性質也壞掉。欄位現在
+必須在計算它的那個 CTE 就取好最終名字。
+
+欄位註解改為**商業定義**（§4）。原文只要求「有用途註解」，於是長出
+`-- 淨額（銷售 − 退款）` 這種既沒說是哪一欄、也沒說數字是什麼的寫法。在有 schema
+產生器的專案裡這行是下游讀者唯一看得到的東西——他沒有上游 model、沒有欄位清單。
+形狀定為 `<人看得懂的名稱>：<這個數字是什麼、什麼會讓它變動、不可以拿它做什麼>`，
+並列出三種失敗寫法，其中一種是上游欄位的組裝說明（正確但無用）。另加：欄位註解
+不用 emoji，警告寫成文字；ASCII 符號與 `SUM(...)`、`×` 這類記法保留。
+
+連帶更新 self-check 清單、`references/example-model.sql`（參考實作本身原本就違反
+新規則）、§2 的 few-renames 案例、quick path 第 4 步與 anti-pattern 表。
+
+四輪 cold-reader 驗證，第四輪專測「不得寫成上游組裝說明」——前三輪都沒測到真正
+上線的那條規則，是下游 repo 的 docs reviewer 抓出來的。
+
+## [4.2.0] — 2026-09-11 — loom-memory relocated from its own plugin
+
+Minor. The independently-installable `loom-memory` plugin (#821) is
+retired; its skill, references, scripts, and OKF v0.2-compatible store
+template move into `loom-workflow/skills/loom-memory/`, a tool in this
+toolbox alongside `git-memory`, `decision-map`, and `handoff`. Storage
+format, the four operations (Recall, Record, Reconcile, Retire), and the
+293 already-migrated lesson concepts under `docs/loom/memory/` are
+unchanged — only the skill's address moved. `PRINCIPLES.md`'s Fixed
+choices reverts to three loom-family plugins.
+
+budget-exception: loom-memory — the relocated skill becomes visible to
+check_mechanisms.py's skill recompute for the first time (the retired
+standalone `loom-memory` plugin sat outside the loom-code/loom-design/
+loom-workflow scan entirely, so it was never registered); no new behavior
+is added, one skill mechanism is newly counted.
+
 ## [4.1.4] — 2026-09-09 — caller-owned Loom PR composition
 
 Patch. Let Ship own Loom's contextual PR schema and publication consent, so

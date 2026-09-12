@@ -2,7 +2,8 @@
 name: a-test-can-pin-behaviour-with-a-false-rationale
 description: A test can assert exactly what the code does, fail honestly if that changes, and still be wrong — when its stated REASON for the behaviour is false and the production scope was designed from that reason. The assertion is not vacuous, so every "would this fail if the property broke?" check passes; what nobody checks is whether the property is the right size. Read a guard's justification as a claim to verify, not as context — and verify it on every axis the boundary depends on, because a one-axis probe re-introduces the same error pointing the other way.
 type: gotcha
-origin: company total (top-line) revenue arc (branch feat-total-revenue-lane, investing-toolkit 2.36.0, 2026-07-25) — found by whole-branch review after eleven per-task review triads passed it
+sources:
+  - resource: company total (top-line) revenue arc (branch feat-total-revenue-lane, investing-toolkit 2.36.0, 2026-07-25) — found by whole-branch review after eleven per-task review triads passed it
 ---
 
 The top-line backfill lane skips any annual row whose period end sits near

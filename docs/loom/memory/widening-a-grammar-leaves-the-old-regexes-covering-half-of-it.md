@@ -2,7 +2,8 @@
 name: widening-a-grammar-leaves-the-old-regexes-covering-half-of-it
 description: When a language gains a new token class, every regex written against the old class keeps matching and silently stops covering the new half — no test fails, because the old cases still pass; `r1 --> r2 & r3` satisfied BOTH a multi-destination refusal and a boundary check that were each written against `[A-Z]`, and was still wrong; after widening a grammar, grep for every pattern that encodes the old endpoint/token shape and re-decide each one, rather than waiting for the shapes nobody thought to write
 type: practice
-origin: 2026-08-19 cot-explain arc (dev-workflow 2.27.0) — the diagram edge grammar gained subgraph ids alongside node ids; two guards kept their `[A-Z]` patterns and left the new form unpoliced
+sources:
+  - resource: 2026-08-19 cot-explain arc (dev-workflow 2.27.0) — the diagram edge grammar gained subgraph ids alongside node ids; two guards kept their `[A-Z]` patterns and left the new form unpoliced
 ---
 
 Widening a grammar feels additive: the old sentences still parse, the old

@@ -26,14 +26,16 @@ STATIONS = {
 }
 ARTIFACTS = {
     "intent", "spec", "plan", "attestation",
-    "blind-run-report", "memory", "kickoff-defaults",
+    "blind-run-report", "kickoff-defaults",
 }
-# The four W0-01 additions declare no `fields:` schema of their own (their
+# The W0-01 additions declare no `fields:` schema of their own (their
 # content is free-form prose rather than a frontmatter/section/json-key
-# schema) and two of them (blind-run-report,
-# blind-run-report has no template file -- it is a per-change artifact
-# charter rows, not new template-backed schemas.
-ARTIFACTS_WITHOUT_FIELDS_SCHEMA = {"blind-run-report", "memory", "kickoff-defaults", "dispatch"}
+# schema) -- blind-run-report has no template file -- it is a per-change
+# artifact charter row, not a new template-backed schema. (`memory` was
+# retired from this contract by REQ-24 of
+# 2026-09-10-okf-compatible-loom-memory -- the repository memory store is
+# now owned solely by the independent `loom-memory` plugin.)
+ARTIFACTS_WITHOUT_FIELDS_SCHEMA = {"blind-run-report", "kickoff-defaults", "dispatch"}
 ID_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -129,7 +131,6 @@ def test_manifest_declares_publication_only_paths(manifest):
     patterns = manifest["publication_only_paths"]
     assert patterns == [
         "docs/loom/<change-id>/attestation.json",
-        "docs/loom/memory/**",
     ]
 
 

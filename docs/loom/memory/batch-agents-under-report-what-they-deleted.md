@@ -2,7 +2,8 @@
 name: batch-agents-under-report-what-they-deleted
 description: Across two waves, twelve batch agents removed 38 assertions while reporting 27, and independent adjudication found 14 of the removals had taken a live invariant — the suite was green after every one of them, because a deleted assertion cannot fail; a mechanical before/after diff of the assertion set plus an adjudication pass caught what neither the agents' reports nor the tests could
 type: practice
-origin: pin-granularity arc (2026-08-28) — wave 1: 26 gone vs 15 reported, 9 wrong; wave 2: 12 gone vs 12 reported, 5 wrong
+sources:
+  - resource: pin-granularity arc (2026-08-28) — wave 1: 26 gone vs 15 reported, 9 wrong; wave 2: 12 gone vs 12 reported, 5 wrong
 ---
 
 Twelve agents converted markdown assertions in parallel, each returning a

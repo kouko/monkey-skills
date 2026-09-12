@@ -2,7 +2,8 @@
 name: reviewer-severity-tags-do-not-encode-load-bearingness
 description: A reviewer's 🟡/🔴 severity assignment is not a reliable signal of whether a finding is load-bearing — any relaxation that trusts reviewers to escalate the ones that must not ship is built on an empirically falsified premise
 type: practice
-origin: 2026-08-11 review-cost-reduction arc — docs/loom/audits/2026-08-11-yellow-finding-load-bearing-sample.md (14/14), user option-1 decision
+sources:
+  - resource: 2026-08-11 review-cost-reduction arc — docs/loom/audits/2026-08-11-yellow-finding-load-bearing-sample.md (14/14), user option-1 decision
 ---
 
 When the 2026-08-11 arc sampled every reachable 2+🟡-gated docs verdict

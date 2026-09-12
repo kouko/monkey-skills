@@ -2,7 +2,8 @@
 name: a-longer-identity-is-a-change-to-every-derived-name
 description: Making a durable identity string LONGER is a change to every name derived downstream from it — filenames, lock paths, temp paths — and filesystem limits are a constraint no unit test models; a 14-byte digest added to a kpi_id took one filer's series filename from 243 to 257 bytes against a 255-byte limit and aborted its entire ingest while 1084 tests stayed green
 type: gotcha
-origin: PR arc kpi_id injective identity (feat-kpi-id-consolidation-axis, 2.37.0, 2026-07-26)
+sources:
+  - resource: PR arc kpi_id injective identity (feat-kpi-id-consolidation-axis, 2.37.0, 2026-07-26)
 ---
 
 `derive_kpi_id` gained a 12-hex digest suffix (`__` + 12 = 14 bytes) to make the

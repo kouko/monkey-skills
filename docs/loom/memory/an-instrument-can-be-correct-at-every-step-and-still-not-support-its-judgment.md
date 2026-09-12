@@ -2,7 +2,8 @@
 name: an-instrument-can-be-correct-at-every-step-and-still-not-support-its-judgment
 description: A measurement mechanism can be correct at every step it performs and still be structurally unable to answer the question it was built for — this one enforced and verified but never collected, sampled only the rounds that found nothing serious (0 of 24 severity-🔴 findings ever reached it), and would have fed a pre-registered stop rule a null result that was the sampling rule restating itself; check the whole chain from defect to conclusion for attrition and bias before shipping, not just each link's correctness
 type: process
-origin: the finding-origin-attribution arc (loom-code 0.45.0, 2026-08-02) — six shipped tasks, then a user-requested soundness review that re-cut the design and added four more
+sources:
+  - resource: the finding-origin-attribution arc (loom-code 0.45.0, 2026-08-02) — six shipped tasks, then a user-requested soundness review that re-cut the design and added four more
 ---
 
 The arc built an `origin:` field: a reviewer names the upstream document

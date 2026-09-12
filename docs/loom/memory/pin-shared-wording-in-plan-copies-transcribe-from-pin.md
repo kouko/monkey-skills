@@ -2,7 +2,8 @@
 name: pin-shared-wording-in-plan-copies-transcribe-from-pin
 description: When one wording must ship in N places (a hook card + a SKILL.md SSOT, parallel tasks), PIN the canonical text in the plan's ## Notes and have every task transcribe VERBATIM from the pin — never from each other and never re-derived; the pin survived four review-driven fixups with zero drift on first use, and reviewers can verify each copy character-level against the pin instead of judging semantic closeness between copies
 type: practice
-origin: feat/mid-task-ask-layered-defense (2026-07-14) — ask-triage card + SDD gate-① arms
+sources:
+  - resource: feat/mid-task-ask-layered-defense (2026-07-14) — ask-triage card + SDD gate-① arms
 ---
 
 The layered-defense branch needed the same three-way triage wording in two
