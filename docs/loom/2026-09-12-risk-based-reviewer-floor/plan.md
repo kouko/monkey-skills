@@ -14,7 +14,7 @@ charter: 1.0
 ### Wave 1 — executable policy
 
 **W1-01 Add a fail-closed reviewer-floor computation**  after: none  acceptance: 1,2,3
-- Files: loom-code/scripts/loom_checker.py, loom-code/scripts/test_loom_attestation.py, docs/loom/evidence/risk-based-reviewer-floor.py
+- Files: loom-code/scripts/loom_checker.py, loom-code/scripts/test_loom_attestation.py, docs/loom/2026-09-12-risk-based-reviewer-floor/evidence/probes/risk_based_reviewer_floor.py
 - Test: A1 positive: allowed-low-risk-delta; boundary: mixed-or-unknown-delta. A2 positive: protected-path-two; boundary: malformed-base-two. A3 positive: finalize-one-when-eligible; negative: validate-under-floor.
 - Risk: agent-decided — reuse branch-base and changed-path primitives in the checker; default to two on every classification or Git error instead of adding lane state.
 

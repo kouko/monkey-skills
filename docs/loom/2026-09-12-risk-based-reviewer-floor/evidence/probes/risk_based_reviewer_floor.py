@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-REPO = Path(__file__).resolve().parents[3]
+REPO = Path(__file__).resolve().parents[5]
 CHECKER = REPO / "loom-code/scripts/loom_checker.py"
 CHANGE = "2026-09-12-example"
 
