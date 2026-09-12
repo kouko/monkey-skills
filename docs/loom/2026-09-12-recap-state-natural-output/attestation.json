@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-12-recap-state-natural-output",
-  "content_digest": "2903267313ce2f4eb23d55cce86a9c37197528d8",
+  "content_digest": "5de0d66a1e922314deb8a8423210d5ae34ee30cf",
   "executions": [
     {
       "kind": "package-tests",
@@ -34,7 +34,7 @@
   ],
   "verdicts": [
     {
-      "reviewer": "codex-fresh-context",
+      "reviewer": "codex-fresh-context-fix-verification",
       "vendor": "openai",
       "model": "inherited-unobservable",
       "lens": "skill",
@@ -42,9 +42,9 @@
       "findings": []
     },
     {
-      "reviewer": "claude-fresh-context",
+      "reviewer": "claude-fresh-context-fix-verification",
       "vendor": "anthropic",
-      "model": "host-default-unverified",
+      "model": "sonnet",
       "lens": "skill",
       "verdict": "PASS",
       "findings": []
