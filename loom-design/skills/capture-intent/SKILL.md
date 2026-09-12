@@ -36,7 +36,7 @@ one good way to produce them. Everything it writes is read back by
 | write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
 | write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-ready`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
 | build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
-| review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; one in the small lane, two or more in the full lane | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
+| review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; reviewer count comes from the installed Review policy | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
 | ship | diff / PR — the pushed change branch and its pull request | automatic for canonical intent authorization; one user decision for a legacy intent; merge is separate | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
 | maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
 
@@ -283,8 +283,9 @@ twice, and this is the only stop this station makes.
    serious problems in this system's own spec review were found by
    only one of the two vendors. When the defaults carry `second-vendor: ask`,
    use the reference's host-aware native question or fallback in this same
-   message; the answer governs this change only. In the small lane there is only one
-   reader, so this question is not asked. A fixed CLI also adds no question.
+   message; the answer governs this change only. In the small lane omit this
+   opt-in question; Review computes the reviewer floor later from the complete
+   branch delta. A fixed CLI also adds no question.
 
 4. **The principles confirmation**, if step 3 ran the interview — restated
    in the same message, confirmed by the same yes.

@@ -15,6 +15,7 @@ Sub-commands (the CLI contract other stations depend on):
     loom_checker.py push [--head <ref>] [--hook]
     loom_checker.py publish --intent <absolute-path> --title <text> --body-file <absolute-path>
     loom_checker.py publish --confirm-authorized --title <text> --body-file <absolute-path>
+    loom_checker.py reviewer-count <change-id>
     loom_checker.py finalize-review <change-id> --input <review-input.json>
     loom_checker.py standing <path-to-intent>
     loom_checker.py contract --require <major.minor>
@@ -369,8 +370,10 @@ def validate_attestation(
         return [(rule, "attestation records no reviewer verdict")]
     reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts if isinstance(v, dict)}
     reviewers.discard("")
-    if len(reviewers) < 2:
-        return [(rule, "attestation needs two distinct reviewers")]
+    reviewer_floor = required_reviewer_count(repo, change_id, head_sha)
+    if len(reviewers) < reviewer_floor:
+        needed = "two" if reviewer_floor == 2 else "one"
+        return [(rule, f"attestation needs {needed} distinct reviewers")]
     for verdict in verdicts:
         if not isinstance(verdict, dict) or verdict.get("verdict") not in {
             "PASS", "PASS_WITH_NOTES"
@@ -607,6 +610,82 @@ def changed_paths(repo: Path) -> set[str]:
             if line.strip() and not _is_host_plumbing(line):
                 paths.add(line)
     return paths
+
+
+_LOW_RISK_DOC_EXTENSIONS = frozenset({".md", ".mdx", ".rst", ".txt"})
+_REVIEW_PROTECTED_PARTS = frozenset(
+    {"agents", "api", "cli", "commands", "contract", "hooks", "skills", "templates"}
+)
+_REVIEW_PROTECTED_NAMES = frozenset(
+    {"agents.md", "claude.md", "design.md", "kickoff-defaults.md", "principles.md", "skill.md"}
+)
+
+
+def reviewer_floor_for_paths(paths: set[str], change_id: str) -> int:
+    """Return one only for a complete, narrow, mechanically low-risk delta.
+
+    This is a positive allowlist. Anything not recognized here, including a
+    mixed delta with one protected path, keeps the default floor of two.
+    """
+    if not paths:
+        return 2
+    intent_path = f"docs/loom/intent/{change_id}.md"
+    change_store = f"docs/loom/{change_id}/"
+    evidence_store = "docs/loom/evidence/"
+    for path in paths:
+        pure = Path(path)
+        if pure.is_absolute() or ".." in pure.parts:
+            return 2
+        parts = {part.casefold() for part in pure.parts}
+        name = pure.name.casefold()
+        if parts.intersection(_REVIEW_PROTECTED_PARTS) or name in _REVIEW_PROTECTED_NAMES:
+            return 2
+        if path == intent_path or path.startswith(change_store):
+            continue
+        if path.startswith(evidence_store):
+            continue
+        if _TEST_NAME_RE.fullmatch(pure.name) or "tests" in parts:
+            continue
+        if (
+            pure.suffix.casefold() in _LOW_RISK_DOC_EXTENSIONS
+            and not path.startswith("docs/loom/")
+        ):
+            continue
+        return 2
+    return 1
+
+
+def required_reviewer_count(
+    repo: Path, change_id: str, head_sha: str | None = None
+) -> int:
+    """Compute the reviewer floor from the selected branch delta, failing closed."""
+    try:
+        selected = head_sha or git_text(repo, "rev-parse", "HEAD")
+        base = branch_base(repo)
+        paths = {
+            line.strip()
+            # Git documents --no-renames as disabling rename detection even
+            # when config enables it, so both delete/add endpoints are exposed:
+            # https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---no-renames
+            for line in git_text(
+                repo, "diff", "--name-only", "--no-renames", base, selected
+            ).splitlines()
+            if line.strip() and not _is_host_plumbing(line.strip())
+        }
+    except (OSError, UsageError):
+        return 2
+    return reviewer_floor_for_paths(paths, change_id)
+
+
+def cmd_reviewer_count(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
+    """Print the reviewer floor Closing Review and finalization must use."""
+    if len(args) != 1 or not args[0].strip():
+        raise UsageError("reviewer-count needs one change-id.")
+    repo = repo_root(Path.cwd())
+    if git_text(repo, "status", "--porcelain"):
+        raise UsageError("reviewer-count needs a clean tree with completed functional content.")
+    out.write(f"{required_reviewer_count(repo, args[0])}\n")
+    return 0
 
 
 def cmd_intent(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
@@ -4376,6 +4455,11 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         raise UsageError(f"cannot read review input: {exc}") from exc
     if not isinstance(review_input, dict):
         raise UsageError("review input must be a JSON object.")
+    repo = repo_root(Path.cwd())
+    head_sha = git_text(repo, "rev-parse", "HEAD")
+    status_before = git_text(repo, "status", "--porcelain")
+    if status_before:
+        return report([("finalize.clean-tree", "commit functional content before finalizing review")], err)
     verdicts = review_input.get("verdicts")
     findings = review_input.get("findings", [])
     adversarial = review_input.get("adversarial", [])
@@ -4387,19 +4471,19 @@ def cmd_finalize_review(args: list[str], out=sys.stdout, err=sys.stderr) -> int:
         return report([("finalize.verdicts", "every reviewer verdict must pass")], err)
     reviewers = {str(v.get("reviewer", "")).strip() for v in verdicts}
     reviewers.discard("")
-    if len(reviewers) < 2:
-        return report([("finalize.verdicts", "two distinct reviewers are required")], err)
+    reviewer_floor = required_reviewer_count(repo, change_id, head_sha)
+    if len(reviewers) < reviewer_floor:
+        needed = "two" if reviewer_floor == 2 else "one"
+        return report(
+            [("finalize.verdicts", f"{needed} distinct reviewers are required")],
+            err,
+        )
     if not isinstance(findings, list) or not isinstance(adversarial, list):
         return report([("finalize.schema", "findings and adversarial must be lists")], err)
     if not adversarial:
         return report([("finalize.adversarial", "at least one adversarial artifact is required")], err)
 
-    repo = repo_root(Path.cwd())
     manifest = load_manifest()
-    head_sha = git_text(repo, "rev-parse", "HEAD")
-    status_before = git_text(repo, "status", "--porcelain")
-    if status_before:
-        return report([("finalize.clean-tree", "commit functional content before finalizing review")], err)
     config_before = git_text(repo, "config", "--list", "--null")
     package_command, source = declared_test_command(repo)
     if package_command is None or package_command.strip().lower() == NO_PACKAGE_TESTS:
@@ -4479,6 +4563,7 @@ COMMANDS = {
     "contract": cmd_contract,
     "charter": cmd_charter,
     "plan": cmd_plan,
+    "reviewer-count": cmd_reviewer_count,
     "finalize-review": cmd_finalize_review,
 }
 

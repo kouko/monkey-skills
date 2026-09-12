@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.1.0] — 2026-09-12 — risk-based reviewer floor
+
+- Compute Closing Review's reviewer floor from the complete branch delta: one
+  reviewer only for narrow test, evidence, per-change Loom record, and
+  non-operative documentation changes; two for protected, mixed, unknown, or
+  undecidable changes.
+- Make Review query that policy before dispatch while `finalize-review` and
+  publication validation independently recompute it from the selected commit.
+- Keep package execution, adversarial programs, content-bound attestation, and
+  publication safety unchanged; no review lane state or user declaration is
+  added.
+
+Contract 2.2 adds the `reviewer-count` query and makes its executable policy
+the source of truth for review depth.
+
 ## [3.0.1] — 2026-09-12 — host-aware cross-model review prompts
 
 - Select ask-mode candidates from the active host's different model families

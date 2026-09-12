@@ -150,6 +150,88 @@ def test_attestation_requires_two_reviewers_and_adversarial_execution(tmp_path: 
     assert any("adversarial execution" in reason for _, reason in failures)
 
 
+def test_reviewer_floor_is_one_only_for_narrow_low_risk_paths() -> None:
+    change_paths = {
+        f"docs/loom/intent/{CHANGE}.md",
+        f"docs/loom/{CHANGE}/plan.md",
+        "loom-code/scripts/test_example.py",
+        "docs/guide.md",
+    }
+    assert loom_checker.reviewer_floor_for_paths(change_paths, CHANGE) == 1
+
+    for protected in (
+        "src.py",
+        "loom-code/skills/review/SKILL.md",
+        "loom-code/agents/reviewer.md",
+        "loom-code/contract/manifest.yaml",
+        "loom-code/hooks/hooks.json",
+        "docs/loom/KICKOFF-DEFAULTS.md",
+        "PRINCIPLES.md",
+        "unknown.bin",
+        f"docs/loom/{CHANGE}/../../src.py",
+        "tests/skills/SKILL.md",
+        "tests/hooks/hooks.json",
+        "tests/contract/manifest.yaml",
+    ):
+        assert loom_checker.reviewer_floor_for_paths(
+            change_paths | {protected}, CHANGE
+        ) == 2
+
+
+def test_matching_low_risk_attestation_accepts_one_reviewer(tmp_path: Path) -> None:
+    repo = repo_with_content(tmp_path)
+    git(repo, "switch", "-q", "-c", "feature")
+    guide = repo / "docs/guide.md"
+    guide.parent.mkdir(parents=True, exist_ok=True)
+    guide.write_text("Clarified usage.\n", encoding="utf-8")
+    commit(repo, "docs")
+    attestation = matching_attestation(repo)
+    attestation["verdicts"] = attestation["verdicts"][:1]
+
+    assert loom_checker.validate_attestation(
+        repo, git(repo, "rev-parse", "HEAD"), CHANGE, attestation, manifest()
+    ) == []
+
+
+def test_reviewer_floor_fails_closed_when_branch_base_is_unknown(tmp_path: Path) -> None:
+    repo = repo_with_content(tmp_path)
+
+    assert loom_checker.required_reviewer_count(repo, CHANGE) == 2
+
+
+def test_reviewer_floor_sees_both_sides_of_a_protected_file_rename(
+    tmp_path: Path,
+) -> None:
+    repo = repo_with_content(tmp_path)
+    runtime = repo / "runtime.py"
+    runtime.write_text("VALUE = 1\n", encoding="utf-8")
+    commit(repo, "runtime")
+    git(repo, "switch", "-q", "-c", "feature")
+    guide = repo / "docs/guide.md"
+    guide.parent.mkdir(parents=True, exist_ok=True)
+    runtime.rename(guide)
+    commit(repo, "rename runtime as docs")
+
+    assert loom_checker.required_reviewer_count(repo, CHANGE) == 2
+
+
+def test_reviewer_count_command_reports_the_computed_floor(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = repo_with_content(tmp_path)
+    git(repo, "switch", "-q", "-c", "feature")
+    guide = repo / "docs/guide.md"
+    guide.parent.mkdir(parents=True, exist_ok=True)
+    guide.write_text("Clarified usage.\n", encoding="utf-8")
+    commit(repo, "docs")
+    monkeypatch.chdir(repo)
+    out, err = StringIO(), StringIO()
+
+    assert loom_checker.cmd_reviewer_count([CHANGE], out, err) == 0
+    assert out.getvalue() == "1\n"
+    assert err.getvalue() == ""
+
+
 def test_stale_attestation_fails_closed(tmp_path: Path) -> None:
     repo = repo_with_content(tmp_path)
     attestation = matching_attestation(repo)
@@ -224,6 +306,35 @@ def test_finalize_review_runs_and_writes_matching_attestation(tmp_path: Path) ->
     assert [run["kind"] for run in attestation["executions"]] == [
         "package-tests", "adversarial"
     ]
+
+
+def test_finalize_review_accepts_one_reviewer_for_low_risk_change(tmp_path: Path) -> None:
+    repo = repo_with_content(tmp_path)
+    kickoff = repo / "docs/loom/KICKOFF-DEFAULTS.md"
+    kickoff.write_text("- package-tests: python3 -c pass — fixture (2026-09-08)\n")
+    commit(repo, "declare tests")
+    git(repo, "switch", "-q", "-c", "feature")
+    guide = repo / "docs/guide.md"
+    guide.parent.mkdir(parents=True, exist_ok=True)
+    guide.write_text("Clarified usage.\n", encoding="utf-8")
+    commit(repo, "docs")
+    review_input = tmp_path / "review-input.json"
+    review_input.write_text(json.dumps({
+        "verdicts": [{
+            "reviewer": "reviewer-1", "vendor": "openai", "model": "test",
+            "lens": "docs", "verdict": "PASS", "findings": [],
+        }],
+        "findings": [],
+        "adversarial": [{"command": "python3 src.py", "artifact": "src.py"}],
+    }), encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(Path(loom_checker.__file__)), "finalize-review", CHANGE,
+         "--input", str(review_input)],
+        cwd=repo, capture_output=True, text=True, env=os.environ.copy(),
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_push_reuses_matching_attestation_without_subprocesses(
