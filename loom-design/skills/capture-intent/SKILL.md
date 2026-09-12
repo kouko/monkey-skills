@@ -51,9 +51,9 @@ nothing else in the change stops for them.
 2. **Here, any choice that is expensive to undo** — asked in the same
    message, as consequences ("from then on it only runs on ___, ___ per
    month"), never as jargon.
-3. **Here, once per change, if a second AI command-line tool is installed
-   on this machine** — whether to use it as a second reviewer. Your answer
-   is remembered and never asked again.
+3. **Here, only when the repo uses `second-vendor: ask` in the full lane**
+   — whether to use another vendor for this change. `suggest` adds no
+   question at capture-intent; write-plan owns its post-plan notice.
 4. **Here, if this is a product change and this repo has no product
    principles yet** — about ten minutes of questions, in this same
    conversation, confirmed together with question 1.
@@ -88,7 +88,7 @@ checkout on this host:
 Then run, with that directory in place of `<loom-code>`:
 
 ```
-python3 <loom-code>/scripts/loom_checker.py contract --require 2.0
+python3 <loom-code>/scripts/loom_checker.py contract --require 2.1
 ```
 
 Exit 0: continue. Anything else, the rule is `contract.requires`: print
@@ -275,18 +275,18 @@ twice, and this is the only stop this station makes.
    program will not read it; I will keep a backup at ___ first. Is that
    OK?"
 
-3. **The second-reviewer suggestion, at most once per change.** Read
-   `references/second-vendor.md` for detection, wording, and the
-   KICKOFF-DEFAULTS.md recording rule — the suggestion says, in one plain
-   sentence with the number in it, that reviewing with a second vendor
-   costs a few minutes and some quota, and when this system's own spec
-   was reviewed, five of the seven serious problems were found by only
-   one of the two vendors. When `docs/loom/KICKOFF-DEFAULTS.md` carries
-   `second-vendor: ask`, ask one plain sentence in this same message —
+3. **The second-reviewer question, only for `second-vendor: ask`.** Read
+   `references/second-vendor.md` for mode routing and the availability
+   probe. A missing line is initialized as `second-vendor: suggest`; it
+   adds no question here. The downstream notice may explain that reviewing
+   with a second vendor costs a few minutes and some quota, and that five of the seven
+   serious problems in this system's own spec review were found by
+   only one of the two vendors. When the defaults carry `second-vendor: ask`,
+   ask one plain sentence in this same message —
    「這次要不要用 Codex 當第二位讀者？」
    ("Do you want to use Codex as the second reader this time?") — and the
    answer governs this change only. In the small lane there is only one
-   reader, so this question is not asked and the field is omitted.
+   reader, so this question is not asked. A fixed CLI also adds no question.
 
 4. **The principles confirmation**, if step 3 ran the interview — restated
    in the same message, confirmed by the same yes.

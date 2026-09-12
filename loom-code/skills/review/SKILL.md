@@ -44,7 +44,10 @@ parameters as a pre-execution host rejection, which selects the one atomic
 fallback instead of model escalation.
 
 - Every change: two fresh-context reviewers from distinct agents.
-- A configured second vendor remains required when the repository asks for it.
+- A selected second vendor remains required. Resolve it from the standing
+  fixed CLI, the per-change `ask` answer, or a `selection-confirmed` line
+  naming the second vendor in the plan's `## Risks` section; the
+  last form is write-plan's active-task handoff for a timely `suggest` opt-in.
 
 Reviewer independence is a quality requirement, not a ledger field. Give each
 reviewer the branch base, changed paths, intent, spec when present, plan, and

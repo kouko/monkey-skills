@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.0.0] — 2026-09-12 — non-blocking second-vendor suggestions
+
+Breaking. Replace the silent `second-vendor: none` setting with `suggest`:
+an available other-vendor CLI is now surfaced after plan risk evidence exists,
+while work continues without it unless the user opts in before Closing Review.
+High-risk full-lane changes receive an anchored recommendation; ordinary full
+lanes and small lanes receive availability information, with small lanes never
+adding another reviewer to the active change. `ask` and fixed CLI modes retain
+their prior behavior.
+
+- Put all lane, risk, timing, response, and vendor selection decisions in one
+  deterministic no-I/O policy module; skills present its result without
+  duplicating classification.
+- Reject old `second-vendor: none` defaults with migration guidance to
+  `suggest`, and make `suggest` the repository and template default.
+- Publish contract 2.1 and require it from loom-design so mixed installs
+  cannot treat `suggest` as a fixed executable name.
+
+budget-exception: standing.second-vendor-valid — makes removal of the silent-off
+  mode mechanically enforceable instead of relying on prose or silently
+  changing old configurations
+
 ## [2.2.1] — 2026-09-12 — malformed reviewer output can use its promised retry
 
 - Let a completed non-conforming reviewer response redispatch the same

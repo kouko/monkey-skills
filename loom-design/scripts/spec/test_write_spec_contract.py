@@ -276,4 +276,4 @@ def test_plugin_declares_requires_contract() -> None:
     data = json.loads(
         (REPO / "loom-design/.claude-plugin/plugin.json").read_text(encoding="utf-8")
     )
-    assert data["requires-contract"] == ">=2.0"
+    assert data["requires-contract"] == ">=2.1"

@@ -2,7 +2,7 @@
 # Consumers: loom-design and loom-workflow read this file; only loom-code writes it.
 # Recomputed by check_mechanisms.py: every station / tool / action / artifact
 # field below is a mechanism and must be listed in docs/loom/evidence/mechanisms.yaml.
-version: 2.0.0
+version: 2.1.0
 
 # Paths matched here are publication metadata. They do not change the
 # functional content identity that executions and reviews attest to.
@@ -36,7 +36,7 @@ tools:               # user-invoked, or raised by a station on a mechanical cond
 actions:             # executable steps inside a station; not skills (§3)
   - name: restate-and-confirm
     owner: write-plan          # also executed by capture-intent when loom-design is installed
-    summary: "decision point ① — restate Problem/Acceptance in plain words; merge one-way doors, the once-per-change second-vendor suggestion and a missing-PRINCIPLES interview into the same dialogue; write `status: confirmed <date>`."
+    summary: "decision point ① — restate Problem/Acceptance in plain words; merge one-way doors, any `second-vendor: ask` question and a missing-PRINCIPLES interview into the same dialogue; write `status: confirmed <date>`."
   - name: one-way-door
     owner: write-plan
     summary: "classes (a)–(e) — (e) irreversible actions on existing user data, asked even without a fork — and four gates (check / measure / threshold 20% / merge); asked in consequence form inside decision point ① or ②; answers marked user-decided in spec Design decision."
@@ -242,7 +242,7 @@ standing_docs:       # not per-change (§2a, §8)
     # one shape for the checker to read (wave-end:0-05).
 
 kickoff_defaults:    # grammar: `- <key>: <value> — <reason> (<date>)`
-  - {name: second-vendor,          grammar: "<cli> | none | ask", note: "`ask` defers the choice to the confirmed intent or plan; the small lane never asks"}
+  - {name: second-vendor,          grammar: "<cli> | ask | suggest", note: "`ask` blocks once per full-lane change; `suggest` reports availability without waiting and permits opt-in only before full-lane Review"}
   - {name: docs-lint,              grammar: "<command> | none", note: "declared, not a blocker (W0-02): a declared command runs in CI for its report only; reviewer contract reads it to decide whether style findings are allowed at all"}
   - {name: package-tests,          grammar: "<command> | none", note: "the command finalize-review executes once and push.attestation validates by identity; absent = recomputed from build markers"}
   - {name: standing-docs,          grammar: "waived"}

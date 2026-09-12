@@ -1,7 +1,7 @@
 {
   "name": "loom-code",
-  "version": "2.2.1",
-  "description": "Five stations carry one change from plan to PR with content-bound verification, one closing review, and a fast publication gate. Claude Code + Codex.",
+  "version": "3.0.0",
+  "description": "Five stations carry one change from plan to PR with non-blocking cross-vendor suggestions, content-bound verification, one closing review, and a fast publication gate. Claude Code + Codex.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
