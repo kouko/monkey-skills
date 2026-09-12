@@ -317,6 +317,9 @@ def test_existing_intent_fields_have_explicit_altitude_boundaries() -> None:
     assert "complete scenarios" in text
     assert "product intent" in text and "engineering intent" in text
     assert "field boundaries" in interview
+    assert "blind run" in text
+    assert "blind run" in interview
+    assert '"A task can carry a due date' in " ".join(interview.split())
 
 
 def test_interview_is_gap_driven_and_draft_is_reduced_after_writing() -> None:
@@ -351,3 +354,13 @@ def test_material_choice_rules_live_inside_existing_confirmation_gates() -> None
         assert "altitude pass" in gate
         assert "explicit answer" in gate
         assert "must remain `open`" in gate
+
+
+def test_altitude_pass_runs_after_the_fill_in_list_exists() -> None:
+    drafting = _section(_text(), "## Step 2 — Write the intent")
+    assert drafting.index("- `## Open questions`") < drafting.index(
+        "After drafting, make one altitude pass"
+    )
+    assert "reopen it" in drafting + _section(
+        _text(), "## Step 4 — Decision point ①: restate and confirm"
+    )

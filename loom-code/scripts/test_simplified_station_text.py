@@ -269,7 +269,14 @@ def test_capture_intent_boundaries_are_shared_with_code_only_intake() -> None:
 
 def test_shared_intent_contract_names_altitude_without_new_schema() -> None:
     assert "observable delivery outcomes, not scenarios or implementation" in INTENT_TEMPLATE
-    assert "unsupported product decisions" in CONTRACT_MANIFEST
+    assert "each line provable by a blind run" in INTENT_TEMPLATE
+    assert "Unsupported product decisions remain open or are deleted" in CONTRACT_MANIFEST
     assert "why this change exists, the value when needed" in CONTRACT_MANIFEST
     assert "source-id" not in CONTRACT_MANIFEST
     assert "question-id" not in CONTRACT_MANIFEST
+
+
+def test_code_only_field_boundaries_keep_problem_and_value_semantics() -> None:
+    assert "who it affects, and the consequence" in PLAN_PROSE
+    assert "beneficiary, urgency, and GO/NO-GO" in PLAN_PROSE
+    assert "engineering intent omits obvious value" in PLAN_PROSE

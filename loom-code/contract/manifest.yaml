@@ -89,12 +89,12 @@ artifacts:           # per-change AND standing artifact charters (§2a); fields 
         - "Constraints"
         - "Out of scope"
         - "Open questions"
+        - "Unsupported product decisions remain open or are deleted"
       must_not:
         - {kind: "requirement-level behaviour", goes_to: spec}
         - {kind: "task split or file lists",     goes_to: plan}
         - {kind: "design rationale",             goes_to: spec}
         - {kind: "verification history",         goes_to: attestation}
-        - {kind: "unsupported product decisions", goes_to: "open question or deletion"}
       signoff: capture-intent
       edits_after:
         - {id: delivery-derived-from-default, text: "delivery is derived from canonical evidence on the selected remote-default snapshot; the intent remains confirmed"}

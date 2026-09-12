@@ -136,7 +136,7 @@ Keep every field at intent altitude:
 - **Proposed outcome** — wanted capability or state; no complete scenarios,
   UI reactions, state transitions, or implementation design.
 - **Acceptance** — numbered observable delivery outcomes with external
-  pass/fail evidence; no value claim, scenario, test step, UI placement,
+  pass/fail evidence a blind run can produce; no value claim, scenario, test step, UI placement,
   architecture, or task split.
 - **Constraints** — already-fixed boundaries; no agent preference or
   speculative guardrail.
@@ -158,13 +158,6 @@ report and the pull-request body stay in the user's language.
 
 Write `docs/loom/intent/<change-id>.md` from the `intent.md` template in
 `loom-code`'s `contract/templates/` directory. Fill in:
-
-After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or delete**.
-Keep supported intent; neutralize overcommitment; defer behaviour to spec or
-method to plan; reopen as defined by the confirmation gate below; delete
-unsupported detail. This author self-check is not a review loop and
-creates no fields, IDs, requirements, scenarios, or product behaviour. An
-unresolved choice stays visible rather than being guessed away.
 
 - `originator: <the user's name>` — or `map:<id>` when a decision map
   raised it.
@@ -194,6 +187,12 @@ unresolved choice stays visible rather than being guessed away.
   when the interview left nothing open write exactly `- none` under the
   heading. An empty section is a schema failure, not a statement that there
   are no questions.
+
+After drafting, make one altitude pass: **Keep, neutralize, defer, reopen, or delete**.
+Keep supported intent; neutralize overcommitment; defer behaviour to spec or
+method to plan; reopen as defined by the confirmation gate below; delete
+unsupported detail. This author self-check is not a review loop and creates no
+fields, IDs, requirements, scenarios, or product behaviour.
 
 <!-- gate: capture-intent.product-problem-plain-words -->
 <!-- The `gate:` markers in this file are prose gates: rules this station must follow, registered in the mechanism population and checked by cold-read evals — not checker rule ids. The checker rules are the `intent.*` / `standing.*` / `contract.*` ids named in the commands. -->
@@ -340,7 +339,7 @@ quieter than it is.
 **No intent becomes `confirmed` without the restatement being answered.**
 Complete Step 2's altitude pass before confirmation. A fork with materially
 different outcomes for the user or scope needs an explicit answer; an accepted
-restatement is insufficient; move it to Open questions, stop confirmation,
+restatement is insufficient; reopen it — move it to Open questions, stop confirmation,
 and the intent must remain `open`. Only an explicit answer makes it
 `user-decided`. Implementation-only choices defer as
 `agent-decided`.
