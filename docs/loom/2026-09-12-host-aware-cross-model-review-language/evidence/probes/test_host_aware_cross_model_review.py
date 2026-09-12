@@ -48,26 +48,27 @@ def main() -> int:
             ("loom-code-reference.md", code),
             ("loom-design-reference.md", design),
         ):
-            require(text, "On Codex, probe `claude` then `gemini`", name)
-            require(text, "On Claude Code, probe `codex` then `gemini`", name)
-            require(text, "Never offer the current host family", name)
-            require(text, "`AskUserQuestion`", name)
-            require(text, "`request_user_input`", name)
+            prose = " ".join(text.split())
+            require(prose, "On Codex, probe `claude` then `gemini`", name)
+            require(prose, "On Claude Code, probe `codex` then `gemini`", name)
+            require(prose, "Never offer the current host family", name)
+            require(prose, "`AskUserQuestion`", name)
+            require(prose, "`request_user_input`", name)
             require(
-                text,
+                prose,
                 "render both choices in the user's current conversation language",
                 name,
             )
-            require(text, "decline this change", name)
-            require(text, "https://code.claude.com/docs/en/tools-reference", name)
+            require(prose, "decline this change", name)
+            require(prose, "https://code.claude.com/docs/en/tools-reference", name)
             require(
-                text,
+                prose,
                 "https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs",
                 name,
             )
-            require(text, "blocking plain-language Markdown question", name)
-            require(text, "no runnable different-model-family CLI", name)
-            require(text, "continue without asking", name)
+            require(prose, "blocking plain-language Markdown question", name)
+            require(prose, "no runnable different-model-family CLI", name)
+            require(prose, "continue without asking", name)
 
         table = (
             "```markdown\n\n\n"
