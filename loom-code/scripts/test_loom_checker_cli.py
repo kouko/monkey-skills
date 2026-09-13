@@ -8,6 +8,7 @@ rename is a deliberate, visible edit rather than silent drift.
 from __future__ import annotations
 
 import json
+import runpy
 import subprocess
 import sys
 from pathlib import Path
@@ -179,17 +180,17 @@ def test_no_arguments_exits_2() -> None:
 
 
 def test_publish_is_a_declared_cli_command() -> None:
-    import loom_checker
+    entry = runpy.run_path(str(CHECKER), run_name="_loom_checker_entry")
 
-    assert loom_checker.COMMANDS["publish"] is loom_checker.cmd_publish
-    assert "loom_checker.py publish --confirm-authorized" in loom_checker.__doc__
+    assert entry["COMMANDS"]["publish"] is entry["cmd_publish"]
+    assert "loom_checker.py publish --confirm-authorized" in entry["__doc__"]
 
 
 def test_intents_is_a_declared_cli_command() -> None:
-    import loom_checker
+    entry = runpy.run_path(str(CHECKER), run_name="_loom_checker_entry")
 
-    assert loom_checker.COMMANDS["intents"] is loom_checker.cmd_intents
-    assert "loom_checker.py intents" in loom_checker.__doc__
+    assert entry["COMMANDS"]["intents"] is entry["cmd_intents"]
+    assert "loom_checker.py intents" in entry["__doc__"]
 
 
 def test_intents_lists_only_active_confirmed_intents_by_default(tmp_path: Path) -> None:

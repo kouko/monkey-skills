@@ -6,7 +6,7 @@ import subprocess
 from io import StringIO
 from pathlib import Path
 
-import loom_checker
+from loom_checker.command_handlers import publish as loom_checker
 import pytest
 
 CONTEXT_HEADINGS = (

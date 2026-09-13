@@ -28,12 +28,12 @@ charter: 1.0
 ### Wave 2 — Extract command handlers
 
 **W2-01 Extract intent and planning commands**  after: W1-01  acceptance: 2,4,6
-- Files: loom-code/scripts/loom_checker/commands/__init__.py, loom-code/scripts/loom_checker/commands/intent.py, loom-code/scripts/loom_checker/commands/intake.py, loom-code/scripts/loom_checker/commands/standing.py, loom-code/scripts/loom_checker/commands/contract.py, loom-code/scripts/loom_checker/commands/charter.py, loom-code/scripts/loom_checker/commands/plan.py, loom-code/scripts/test_loom_checker_modules.py
+- Files: loom-code/scripts/loom_checker/command_handlers/__init__.py, loom-code/scripts/loom_checker/command_handlers/intent.py, loom-code/scripts/loom_checker/command_handlers/intake.py, loom-code/scripts/loom_checker/command_handlers/standing.py, loom-code/scripts/loom_checker/command_handlers/contract.py, loom-code/scripts/loom_checker/command_handlers/charter.py, loom-code/scripts/loom_checker/command_handlers/plan.py, loom-code/scripts/test_loom_checker_modules.py
 - Test: A2 positive: command-module-imports; boundary: shared-helper-use. A4 positive: command-golden-cases; negative: usage-errors. A6 positive: focused-command-suite; boundary: direct-import-consumers.
 - Risk: Intent checks share history helpers; agent-decided — keep rule-specific checks beside their owning command and extract only genuinely shared primitives.
 
 **W2-02 Extract publication and finalization commands**  after: W1-01  acceptance: 2,4,6
-- Files: loom-code/scripts/loom_checker/commands/push.py, loom-code/scripts/loom_checker/commands/publish.py, loom-code/scripts/loom_checker/commands/finalize.py, loom-code/scripts/test_loom_publish.py, loom-code/scripts/test_ship_worktree_merge.py, loom-code/scripts/test_loom_attestation.py, loom-code/scripts/test_loom_checker_modules.py
+- Files: loom-code/scripts/loom_checker/command_handlers/push.py, loom-code/scripts/loom_checker/command_handlers/publish.py, loom-code/scripts/loom_checker/command_handlers/finalize.py, loom-code/scripts/test_loom_publish.py, loom-code/scripts/test_ship_worktree_merge.py, loom-code/scripts/test_loom_attestation.py, loom-code/scripts/test_loom_checker_modules.py
 - Test: A2 positive: publication-module-imports; boundary: finalize-separation. A4 positive: publish-contract; negative: fail-closed-paths. A6 positive: publication-suite; boundary: attestation-suite.
 - Risk: Monkeypatch targets can silently stop intercepting calls; agent-decided — update tests to patch the module where each dependency is resolved.
 
@@ -52,3 +52,4 @@ charter: 1.0
 1. User-decided — declined Claude cross-model review for this change; the normal repository reviewer floor remains independently enforced.
 2. Moving names changes monkeypatch lookup locations; tests must patch owning modules and preserve observable command behavior.
 3. Importing a package beside the executable can differ under direct script execution; integration tests must run from a hostile working directory.
+4. Agent-decided — use `command_handlers/`, not `commands/`, because the manifest classifies `**/commands/**` as a user interface despite unchanged CLI behavior.

@@ -900,7 +900,7 @@ def test_only_the_scaffold_plumbing_under_codex_hooks_is_ignored(tmp_path: Path)
     a directory-wide exemption made real gate code invisible to
     push.probes-adversarial and the intent recomputes. Only the scaffold's
     own files are exempt; a hook the user added is content."""
-    import loom_checker as lc
+    from loom_checker.command_handlers import intent as lc
 
     repo = make_repo(tmp_path)
     commit_file(repo, ".codex/hooks/contract/templates/x.md")

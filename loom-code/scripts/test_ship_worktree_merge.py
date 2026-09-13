@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-import loom_checker
+from loom_checker.command_handlers import push as loom_checker
 
 
 SHIP = Path(__file__).resolve().parents[1] / "skills" / "ship" / "SKILL.md"
