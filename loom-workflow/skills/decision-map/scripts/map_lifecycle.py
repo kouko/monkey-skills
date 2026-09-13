@@ -12,6 +12,7 @@ from pathlib import Path
 import delivery_binding
 import map_lock
 import map_store
+import map_persistence
 
 
 class LifecycleError(RuntimeError):
@@ -36,7 +37,7 @@ def _after_state_replace() -> None:
 
 def _atomic_write(path: Path, text: str, *, expected: bytes | None = None) -> None:
     try:
-        map_store._atomic_write(path, text, expected=expected)
+        map_store.atomic_write(path, text, expected=expected)
     except map_store.SchemaViolation as exc:
         raise LifecycleError(str(exc)) from exc
 
@@ -74,8 +75,8 @@ def _retirement_snapshot(map_dir: Path, repo_root: Path) -> dict[str, bytes]:
             continue
         brief_path = repo_root / brief
         try:
-            map_store._assert_no_symlink_components(brief_path)
-            map_store._assert_contained(repo_root, brief_path)
+            map_persistence.assert_no_symlink_components(brief_path)
+            map_persistence.assert_contained(repo_root, brief_path)
             snapshot[str(brief_path.resolve(strict=True))] = brief_path.read_bytes()
         except (OSError, map_store.SchemaViolation) as exc:
             raise LifecycleError(f"cannot snapshot reciprocal Brief: {exc}") from exc
@@ -214,7 +215,7 @@ class RetirementReadiness:
 def prepare_retirement(map_dir: Path, repo_root: Path) -> RetirementReadiness:
     map_dir, repo_root = Path(map_dir), Path(repo_root)
     for path in (repo_root, map_dir, map_dir / "MAP.md", map_dir / "tickets"):
-        map_store._assert_no_symlink_components(path)
+        map_persistence.assert_no_symlink_components(path)
         try:
             path.resolve(strict=False).relative_to(repo_root.resolve(strict=True))
         except (OSError, ValueError) as exc:
@@ -288,7 +289,7 @@ def _rollback_retirement(
         }
         evidence_path = map_dir / ".transactions" / "retirement-recovery.json"
         try:
-            map_store._atomic_write(
+            map_store.atomic_write(
                 evidence_path, json.dumps(evidence, indent=2, sort_keys=True) + "\n"
             )
             suffix = f"; evidence: {evidence_path}"

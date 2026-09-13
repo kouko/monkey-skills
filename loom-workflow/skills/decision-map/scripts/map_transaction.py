@@ -23,6 +23,7 @@ import delivery_evidence
 import map_lifecycle
 import map_lock
 import map_store
+import map_persistence
 
 
 class CloseTransactionError(ValueError):
@@ -159,8 +160,8 @@ def _assert_supported_filesystem(directory: Path) -> None:
         for descriptor in descriptors:
             os.close(descriptor)
         descriptors.clear()
-        map_store._exchange_paths(paths[0], paths[1])
-        map_store._fsync_directory(directory)
+        map_persistence.exchange_paths(paths[0], paths[1])
+        map_persistence.fsync_directory(directory)
     except (OSError, map_store.SchemaViolation) as exc:
         raise CloseTransactionError(
             f"unsupported atomic-replacement assumption for {directory}: {exc}"
@@ -185,7 +186,7 @@ def _exclusive_write(path: Path, text: str) -> None:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
-        map_store._fsync_directory(path.parent)
+        map_persistence.fsync_directory(path.parent)
     except FileExistsError as exc:
         raise CloseTransactionError(
             f"transaction conflict: {path} already exists; re-read before retry"
@@ -345,7 +346,7 @@ def _claim_ticket_locked(
         _prepare_mutation(map_dir, operation_id, intent, expected_revision)
         _require_revision(map_dir, expected_revision)
     try:
-        map_store._atomic_write(ticket_path, updated, expected=original)
+        map_store.atomic_write(ticket_path, updated, expected=original)
     except (OSError, map_store.SchemaViolation) as exc:
         raise CloseTransactionError(str(exc)) from exc
     _require_valid_store(map_dir)
@@ -431,7 +432,7 @@ def _update_blockers_locked(
         _prepare_mutation(map_dir, operation_id, intent, expected_revision)
         _require_revision(map_dir, expected_revision)
     try:
-        map_store._atomic_write(ticket_path, updated, expected=original)
+        map_store.atomic_write(ticket_path, updated, expected=original)
     except (OSError, map_store.SchemaViolation) as exc:
         raise CloseTransactionError(str(exc)) from exc
     _require_valid_store(map_dir)
@@ -443,7 +444,7 @@ def _atomic_write(
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        map_store._atomic_write(path, text, expected=expected)
+        map_store.atomic_write(path, text, expected=expected)
     except map_store.SchemaViolation as exc:
         raise CloseTransactionError(str(exc)) from exc
 
