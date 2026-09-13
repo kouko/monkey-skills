@@ -2,87 +2,86 @@
 
 Date: 2026-09-13  
 Mode: `skill-refactor` package-resource mode  
-Overall verdict: **PROCEED**
+Final verdict: **PROCEED**
 
 ## Frozen baseline
 
 - Revision: `d5548b0d10f15769093c5aa18336395cef0cbaac`
 - Canonical manifest: `/Users/kouko/.codex/baselines/2026-09-13-shrink-three-loom-skill-entrypoints/write-plan/baseline/manifest.json`
 - External manifest SHA-256: `3640966106aca26f5a10075cf25374b216ec466cd9211e06eab40d145e2e6101`
-- `package_gate.py verify`: PASS before candidate comparison.
-- Candidate was edited under `/Users/kouko/.codex/candidates/2026-09-13-shrink-three-loom-skill-entrypoints/write-plan/package` and applied to the worktree only after Q1-Q3 passed.
+- `package_gate.py verify`: PASS before each candidate comparison.
+- `test-prompts.json` is the W0 evaluation input created after the pinned
+  export and, as declared in `baseline.md`, is outside both package totals.
 
-`test-prompts.json` is the W0 evaluation input created after the pinned export;
-as declared in `baseline.md`, it is outside both baseline and candidate package
-totals. Accounting therefore uses the isolated Git-exported package, not the
-worktree directory that also contains this evaluation input.
+## Rejected first candidate
 
-## Refactor
+The first isolated candidate removed `## Station summary` and initially passed
+the write-plan-only checks. Integration then ran
+`loom-design/scripts/spec/test_capture_intent_contract.py`, which requires that
+section to remain byte-identical between `capture-intent` and `write-plan` so a
+cold reader sees the same whole-flow table in either install shape. That was a
+Q3 capability-quality failure. The earlier PROCEED was invalidated; the first
+candidate was not retained as the final implementation.
 
-The round changed only `SKILL.md`; no bundled reference content or dependency
-changed. It deleted the duplicate station-summary table, compressed the
-user-question overview, removed three illustrative implementation-choice rows
-whose governing rule remains, and tightened repeated spec/task-shape prose.
-Every decision, refusal, conservative-default, confirmation, product-behavior,
-and handoff obligation remains in the entrypoint.
+## Final refactor
+
+The final candidate was recreated from the frozen Git export. It preserves
+`## Station summary` byte-for-byte and instead deletes the second, expanded
+whole-station-order table. It also compresses the user-question overview,
+removes illustrative implementation-choice rows whose governing rule remains,
+and tightens repeated spec/task-shape prose. Only `SKILL.md` changed; references
+and dependencies did not. All decision, refusal, confirmation,
+conservative-default, product-behavior, and handoff duties remain in the
+entrypoint.
 
 ## Q1 — behavioral equivalence
 
-The current and candidate packages were replayed through all three confirmed
-prompts before the candidate was applied:
-
-1. confirmed engineering intent and normal plan production;
-2. refusal to plan an unconfirmed intent;
-3. missing product spec handoff to `loom-design:write-spec`.
-
-Normalized captures are outside the repository under the candidate workspace.
-`equivalence_check.py` reported `PASS_LAYER_1`: output type, headings, paths,
-tool sequence, and word-count tolerance all passed. Three independent Codex
-judges used utility, information-completeness, and boundary framings with
-alternating A/B labels; all three returned `equivalent`. No judge identified a
-missing decision, refusal, or handoff behavior.
+Baseline and final candidate were replayed against all three confirmed prompts:
+normal engineering planning, refusal of an unconfirmed intent, and missing
+product-spec handoff. `equivalence_check.py` returned `PASS_LAYER_1` for output
+type, headings, paths, tool sequence, and output size. Three independent Codex
+judges used boundary, utility, and completeness framings with alternating A/B
+labels; all returned `equivalent`. No judge found a missing decision, refusal,
+plan requirement, or handoff.
 
 Verdict: **PASS (3/3 equivalent, high confidence)**.
 
 ## Q2 — whole-package reduction
 
-| Measure | Baseline | Candidate | Reduction |
+| Measure | Baseline | Final candidate | Reduction |
 |---|---:|---:|---:|
-| `SKILL.md` words | 4,498 | 3,737 | 761 (16.92%) |
-| `SKILL.md` bytes | 29,872 | 25,298 | 4,574 (15.31%) |
-| Package words | 6,364 | 5,603 | 761 (11.96%) |
-| Package bytes | 42,124 | 37,550 | 4,574 (10.86%) |
+| `SKILL.md` words | 4,498 | 3,682 | 816 (18.14%) |
+| `SKILL.md` bytes | 29,872 | 25,042 | 4,830 (16.17%) |
+| Package words | 6,364 | 5,548 | 816 (12.82%) |
+| Package bytes | 42,124 | 37,294 | 4,830 (11.47%) |
 
-The package result is below the at-most-5,727-word target. Because references
-were unchanged, all reduction is deletion or compression rather than prose
-relocation.
+The final package is below the at-most-5,727-word target. References are
+unchanged, so the reduction is deletion/compression rather than relocation.
 
 Verdict: **PASS (whole package reduced by at least 10%)**.
 
-## Q3 — invariants
+## Q3 — invariants and capability quality
 
 - Frontmatter `name: write-plan` and `version: 1.0.1` are unchanged.
-- The three reference files are byte-identical to the frozen baseline.
-- Declared checker, template, second-vendor policy, and reference dependencies
-  remain present.
-- Required anchors remain: Decision boundary, both intake gates, Steps 4-6,
-  and the post-decision conservative-default gate.
-- The required phrase that reviewer count comes from the installed Review
-  policy remains in the station-order table.
+- All three bundled references are byte-identical to the frozen baseline.
+- Checker, template, policy, and reference dependencies remain declared.
+- Decision boundary; Steps 4-6; confirmed-intent, confirmed-behavior, and
+  post-decision conservative-default gates remain.
+- `## Station summary` is byte-identical to both the frozen write-plan baseline
+  and the current capture-intent section.
+- The cross-plugin capture-intent contract passes.
 
 Verdict: **PASS**.
 
-## Layered reducer and focused checks
+## Reducer and focused verification
 
 `package_gate.py reduce` returned `PASS` for resource, owning-skill, package,
-and the permitted Codex host replay. Claude Code was not used, per the user's
-instruction.
-
-Commands and results:
+and Codex host evidence. Claude Code was not used.
 
 ```text
-python3 -m pytest loom-code/scripts/test_write_plan_shape_text.py loom-code/scripts/test_write_plan_station_text.py loom-code/scripts/test_simplified_station_text.py loom-code/scripts/test_codex_hook_trust_contract.py -q
-47 passed
+python3 -m pytest <write-plan focused tests> \
+  loom-design/scripts/spec/test_capture_intent_contract.py -q
+80 passed
 
 python3 scripts/check-skill-structure.py loom-code
 All 5 skills PASS
@@ -99,7 +98,3 @@ python3 -m pytest scripts/test_loom_plugin_install_layout.py -q
 git diff --check
 PASS
 ```
-
-An initial isolated test run exposed that deleting the duplicate summary also
-removed the pinned reviewer-policy phrase. The candidate was corrected before
-the gate verdict; the repeated focused run then passed 47/47 tests.
