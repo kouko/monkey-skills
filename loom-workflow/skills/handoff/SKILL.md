@@ -2,7 +2,7 @@
 name: handoff
 version: 0.3.0
 description: |
-  Save session state to a structured HANDOFF file so a future agent resumes cleanly, or load/verify a prior HANDOFF. Use for 'wrap up', 'save state', 'done for today', or 'pick up where we left off'. For in-session re-orientation use recap-state.
+  Save or resume a HANDOFF across sessions. Use for 'wrap up' or 'save state'; in-session re-orientation belongs to recap-state.
 ---
 
 # Handoff

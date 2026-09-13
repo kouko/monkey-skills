@@ -26,7 +26,7 @@
     },
     {
       "name": "loom-workflow",
-      "description": "Loom workflow tools around the loom stations — persistent Outcome Maps, git memory, loom-memory (recall / record / reconcile / retire durable repository lessons), critique (proposal | complexity), recap, handoff, session distill, CoT explainers, cross-executor second opinion, plus the standalone goal-create and dbt-model-style skills.",
+      "description": "Optional using-loom-workflow discovery routing and Loom workflow tools around the loom stations — persistent Outcome Maps, git memory, loom-memory (recall / record / reconcile / retire durable repository lessons), critique (proposal | complexity), recap, handoff, session distill, CoT explainers, cross-executor second opinion, plus the standalone goal-create and dbt-model-style skills.",
       "source": "./loom-workflow/"
     },
     {
@@ -91,7 +91,7 @@
     },
     {
       "name": "loom-code",
-      "description": "Five stations carry one change from plan to PR with non-blocking cross-vendor suggestions, content-bound verification, one closing review, and a fast publication gate. Claude Code + Codex.",
+      "description": "Optional using-loom-code discovery routing and five stations carry one change from plan to PR with non-blocking cross-vendor suggestions, content-bound verification, one closing review, and a fast publication gate. Claude Code + Codex.",
       "source": "./loom-code/"
     },
     {
@@ -106,7 +106,7 @@
     },
     {
       "name": "loom-design",
-      "description": "Two stations — capture-intent, write-spec — turn a rough idea into a confirmed intent and a risk-declared spec, route non-blocking second-vendor suggestions, and provide product-principles and design-system tools. Reads loom-code's contract package. Claude Code + Codex.",
+      "description": "Optional using-loom-design discovery routing and two stations — capture-intent, write-spec — turn a rough idea into a confirmed intent and a risk-declared spec, route non-blocking second-vendor suggestions, and provide product-principles and design-system tools. Reads loom-code's contract package. Claude Code + Codex.",
       "source": "./loom-design/"
     },
     {

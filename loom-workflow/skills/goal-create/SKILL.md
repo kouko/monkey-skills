@@ -2,7 +2,7 @@
 name: goal-create
 version: 0.1.0
 description: |
-  Create a goal condition — SESSION mode validates the four-field goal (Outcome / Constraints / Verification / Stop-when), activates it when the current host accepts it, and gives an honest recovery action otherwise. ARC mode drafts a repository's purpose artifact `Why` / `Done when` for the user to land. Use for 'set a goal', 'give this run a stopping condition', '設一個目標', 'ゴールを立てて'. This skill never fires on its own; it must be invoked by name.
+  Create a session goal or draft repository purpose. This skill never fires on its own; it must be invoked by name.
 ---
 
 # Goal Create

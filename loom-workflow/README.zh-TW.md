@@ -4,7 +4,7 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 
 > 適用 Claude Code 與 Codex 的 loom workflow plugin — 決策 brief、deletion-first critique gate、git-native project memory、recap、handoff 與 session distill。
 
-**Version**：4.0.0 ・ **Part of**：[monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**：MIT
+**Version**：4.3.2 ・ **Part of**：[monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**：MIT
 
 ## Background
 
@@ -25,8 +25,13 @@ plugin 還帶著 `git-memory`（寫進 commit trailer 與 PR 內文的可攜 pro
 
 ## Skills
 
+共 12 個 skills：11 個工具與 1 個可選入口。`using-loom-workflow`
+負責選擇既有工具，每個工具仍可直接呼叫。
+
 | Skill | 角色 |
 |---|---|
+| [`using-loom-workflow`](skills/using-loom-workflow/) | 將廣泛或不明確的 workflow 請求路由到既有工具，再讀入該工具的指示。 |
+| [`loom-memory`](skills/loom-memory/) | 查詢、記錄、核對或淘汰持久的 repository 教訓。 |
 | [`critique`](skills/critique/) | 在動手做之前裁決提案：`mode: proposal` 用 evidence grounding 與 YAGNI 把清單、計畫或散文建議分成 KEEP / DEFER / DROP；`mode: complexity` 用 deletion-first 量一個具體改動——before/after LOC、什麼會 obsolete。 |
 | [`cot-explain`](skills/cot-explain/) | 把已經存在的推理——user 指名的一份文件、或剛完成的工作——渲染成以 CoT 圖為核心的自包含頁面，每條箭頭都標註「為什麼下一步會這樣接」。 |
 | [`dbt-model-style`](skills/dbt-model-style/) | 強制執行 dbt + Redshift model 的 style & structure contract — CTE 角色、zero-logic 的 final CTE、命名、YAML header、註解、syntax。 |
@@ -38,7 +43,7 @@ plugin 還帶著 `git-memory`（寫進 commit trailer 與 PR 內文的可攜 pro
 | [`independent-advisor`](skills/independent-advisor/) | 對當前的 plan 或決策，向**另一個 executor**——更強的 model、更高的 effort，或另一家廠商——取得 second opinion。換的是 executor，不是 critique 的觀點。 |
 | [`recap-state`](skills/recap-state/) | session 內的重新定向——當 user 跟丟話題時，輸出以 Synthesis-check 收尾的結構化 recap。 |
 
-十個 skill 全為 **Active**（八個 loom tool，加上在 loom 流程之外的 `goal-create`、`dbt-model-style` 兩個 standalone skill）。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
+契約仍計入八個工具，以及 `goal-create`、`dbt-model-style` 兩個 standalone skill。`loom-memory` 與可選入口路由維持在契約之外。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique 線
 
@@ -81,13 +86,13 @@ triage：每項判為            gate：三個 deletion-first     上線後的 r
 
 ## Upstream chain
 
-十個 skill 中有一個源自 MIT-licensed 的 upstream。完整 attribution 在該 skill 的 `NOTICE` 檔案。（`skill-creator-advance` 與 `skill-judge` 的 upstream attribution 已隨它們一起搬到 `skill-dev-toolkit`。）
+其中一個 skill 源自 MIT-licensed 的 upstream。完整 attribution 在該 skill 的 `NOTICE` 檔案。（`skill-creator-advance` 與 `skill-judge` 的 upstream attribution 已隨它們一起搬到 `skill-dev-toolkit`。）
 
 | Skill | Upstream chain |
 |---|---|
 | `critique`（`mode: complexity`） | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` 改名為 `complexity-critique`，再併入 `critique`） |
 
-其餘九個 skill 為原創設計，沒有外部 upstream 需要 attribution。詳情見各 skill 的 `NOTICE`（若存在）。
+其他 skill 為原創設計，沒有外部 upstream 需要 attribution。詳情見各 skill 的 `NOTICE`（若存在）。
 
 ## Repository 結構
 
@@ -128,7 +133,7 @@ loom-workflow/
 
 ## 使用
 
-`loom-workflow` 沒有內附 slash command — 十個 skill 全部由自然語言 auto-trigger。例如：
+`loom-workflow` 沒有內附 slash command。skill 可用自然語言呼叫；`goal-create` 等工具仍須明確提出使用要求。例如：
 
 ```
 「critique 這份 12 項的 plan」                     → critique（proposal）

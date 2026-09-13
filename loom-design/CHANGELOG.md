@@ -12,6 +12,12 @@ as the `## Predecessor plugin histories` section at the end, so this file
 is the whole record. Their version numbers never continued here —
 `loom-design` started fresh at 0.1.0.
 
+## [2.1.4] — 2026-09-13 — compact skill discovery
+
+- Add optional `using-loom-design` discovery routing and compress the four
+  leaf descriptions. Direct invocation, drafting procedures, and standalone
+  installation remain unchanged; the router is not a lifecycle station.
+
 ## [2.1.3] — 2026-09-12 — intent content boundaries
 
 Patch. `capture-intent` now defines the altitude of every existing intent

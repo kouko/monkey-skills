@@ -48,14 +48,16 @@ REQUIRED_LOOM_WORKFLOW_SKILLS = {
     "decision-map",
     "git-memory",
     "loom-memory",
+    "using-loom-workflow",
 }
 
-# loom-design 1.0's whole skill surface: two stations and two tools.
+# loom-design's whole skill surface: two stations, two tools, one optional router.
 DESIGN_SKILLS = {
     "capture-intent",
     "write-spec",
     "product-principles",
     "design-system",
+    "using-loom-design",
 }
 
 # The one executable loom-design still ships. No SKILL.md declares an `argv:`

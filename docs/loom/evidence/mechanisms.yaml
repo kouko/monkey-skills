@@ -41,8 +41,17 @@ counting: >
   is not host-hygiene.
 
 mechanisms:
-  # --- skill (17; the 7 stations + 10 non-standalone tools of the
-  #     landed shape, plan §0's convergence table) ---
+  # --- skill (21; 7 stations + 11 non-standalone tools + 3 optional routers;
+  #     the 2 standalone tools are excluded from this population) ---
+  - id: using-loom-code
+    class: skill
+    eval: scripts/test_loom_skill_description_catalog.py
+  - id: using-loom-design
+    class: skill
+    eval: scripts/test_loom_skill_description_catalog.py
+  - id: using-loom-workflow
+    class: skill
+    eval: scripts/test_loom_skill_description_catalog.py
   - id: capture-intent
     class: skill
     eval: "cold-read: docs/loom/2026-09-02-simple-loom-flow/evidence/w2-checkpoint-reviews.md"

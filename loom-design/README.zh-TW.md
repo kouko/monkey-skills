@@ -5,14 +5,17 @@
 > 這裡產出的東西一律由 `loom-code` 的 review 站下 verdict，而且下判斷的 agent
 > 不是寫草稿的那一個。
 
-**Status**: v1.0.0 — 4 個 skill。Breaking：pre-1.0 的 skill、script 與分檔 README
-是刪除，不是改名。見 [CHANGELOG.md](CHANGELOG.md)。
+**Status**: v2.1.4 — 4 個 skill + 1 個可選入口路由。版本與歷史遷移資訊見
+[CHANGELOG.md](CHANGELOG.md)。
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: [`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
 ---
 
 ## 兩個站
+
+[using-loom-design](skills/using-loom-design/SKILL.md) 將較廣泛的產品定義請求分派給
+以下四個 skills。各 skill 仍可直接呼叫並負責既有流程；入口只選擇要讀入的 skill。
 
 | 站 | 產物 | 讀這份 |
 |---|---|---|

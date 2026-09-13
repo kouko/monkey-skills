@@ -1,7 +1,7 @@
 ---
 name: ship
 description: |
-  Publishes a reviewed branch by validating its generated content attestation, running fast publication safety checks, opening the pull request, and verifying CI. Use after Review generated a matching attestation.
+  Publish a reviewed branch and verify PR checks. Use after Review generates a matching content attestation.
 version: 1.1.0
 ---
 

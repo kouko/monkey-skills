@@ -1,7 +1,7 @@
 ---
 name: build
 description: |
-  Implements a committed plan with test-first changes, focused verification, and one integration pass before the closing Review. Use when a confirmed intent and plan are ready to build.
+  Implement a committed plan with test-first changes. Use when a confirmed intent and plan are ready to build.
 version: 1.2.0
 ---
 

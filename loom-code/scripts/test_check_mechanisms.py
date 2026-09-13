@@ -778,3 +778,26 @@ class TestMeasureFailsClosed:
 
     def test_real_repo_measure_is_green(self):
         assert cm.run_measure(REPO) == 0
+
+    def test_twenty_one_counted_skills_fit_admitted_router_budget(self, tmp_path):
+        repo = _measure_repo(tmp_path, words=10,
+                             baseline_line="- session-start-baseline: <sha> 10 — measured")
+        # The fixture already contains two counted skills.
+        for number in range(19):
+            skill = repo / "loom-code" / "skills" / f"skill-{number}" / "SKILL.md"
+            skill.parent.mkdir(parents=True, exist_ok=True)
+            skill.write_text("# Skill\n")
+        assert cm.measure_skill_count(repo) == 21
+        assert cm.run_measure(repo) == 0
+
+    def test_twenty_second_counted_skill_exceeds_budget(self, tmp_path, capsys):
+        repo = _measure_repo(tmp_path, words=10,
+                             baseline_line="- session-start-baseline: <sha> 10 — measured")
+        # The fixture already contains two counted skills.
+        for number in range(20):
+            skill = repo / "loom-code" / "skills" / f"skill-{number}" / "SKILL.md"
+            skill.parent.mkdir(parents=True, exist_ok=True)
+            skill.write_text("# Skill\n")
+        assert cm.measure_skill_count(repo) == 22
+        assert cm.run_measure(repo) == 1
+        assert "skill count 22 exceeds the loom budget of 21" in capsys.readouterr().out

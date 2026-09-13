@@ -4,7 +4,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 
 > Loom workflow plugin for Claude Code and Codex — decision briefs, deletion-first critique gates, git-native project memory, recap, handoff, and session distill.
 
-**Version**: 4.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 4.3.2 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## Background
 
@@ -25,8 +25,13 @@ A skill belongs in `loom-workflow` when it does **cross-station, multi-session c
 
 ## Skills
 
+Twelve skills: eleven tools and one optional router. `using-loom-workflow`
+selects an existing tool; every tool remains directly invocable.
+
 | Skill | Role |
 |---|---|
+| [`using-loom-workflow`](skills/using-loom-workflow/) | Route broad or ambiguous workflow requests to an existing tool, then load that tool's instructions. |
+| [`loom-memory`](skills/loom-memory/) | Recall, record, reconcile, or retire durable repository lessons. |
 | [`critique`](skills/critique/) | Judge a proposal before it is built: `mode: proposal` triages a list, plan, or prose recommendation into KEEP / DEFER / DROP by evidence grounding and YAGNI; `mode: complexity` weighs one specific change deletion-first — before/after LOC and what it obsoletes. |
 | [`cot-explain`](skills/cot-explain/) | Explain how something was reasoned — a named file, or the work just done — as a standalone page built around a chain-of-thought diagram, every arrow labeled with why that step follows. |
 | [`dbt-model-style`](skills/dbt-model-style/) | Enforce a dbt + Redshift model style & structure contract — CTE roles, zero-logic final CTE, naming, YAML header, comments, syntax. |
@@ -38,7 +43,7 @@ A skill belongs in `loom-workflow` when it does **cross-station, multi-session c
 | [`independent-advisor`](skills/independent-advisor/) | Get a second opinion on the current plan or decision from a **different executor** — a stronger model, higher effort, or another vendor. The executor changes, not the critique lens. |
 | [`recap-state`](skills/recap-state/) | In-session re-orientation — a structured recap ending with a Synthesis-check when the user loses the thread. |
 
-All ten skills are **Active** — eight loom tools plus the two standalone skills (`goal-create`, `dbt-model-style`) that sit outside the loom flow. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
+The contract retains eight counted tools and two standalone skills (`goal-create`, `dbt-model-style`). `loom-memory` and the optional discovery router remain outside that contract. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
 ## The critique line
 
@@ -81,13 +86,13 @@ Use `mode: proposal` when handed a backlog or numbered plan. Use `mode: complexi
 
 ## Upstream chain
 
-One of the ten skills derives from an MIT-licensed upstream. Full attribution lives in the skill's `NOTICE` file. (`skill-creator-advance`'s and `skill-judge`'s upstream attributions moved with them to `skill-dev-toolkit`.)
+One skill derives from an MIT-licensed upstream. Full attribution lives in the skill's `NOTICE` file. (`skill-creator-advance`'s and `skill-judge`'s upstream attributions moved with them to `skill-dev-toolkit`.)
 
 | Skill | Upstream chain |
 |---|---|
 | `critique` (`mode: complexity`) | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills (renamed `reducing-entropy` → `complexity-critique`, merged into `critique`) |
 
-The remaining nine skills are original designs with no external upstream to attribute. Details in each skill's `NOTICE` file where one exists.
+The other skills are original designs with no external upstream to attribute. Details live in each skill's `NOTICE` file where one exists.
 
 ## Repository structure
 
@@ -128,7 +133,7 @@ loom-workflow/
 
 ## Usage
 
-`loom-workflow` ships no slash commands — all ten skills auto-trigger from natural language. For example:
+`loom-workflow` ships no slash commands. Skills accept natural-language requests; explicit-only tools such as `goal-create` still require an explicit request. For example:
 
 ```
 "Critique this 12-item plan"                              → critique (proposal)

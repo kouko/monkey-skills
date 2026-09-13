@@ -1,7 +1,7 @@
 ---
 name: design-system
 description: |
-  Interview the user and write a ratified DESIGN.md visual design system — colors, typography, layout, component tokens. Use for a product with a UI, before or during write-spec; never required — DESIGN.md never blocks a change. Triggers: 視覺設計系統 / 設計語言 / デザインシステム.
+  Ratify a visual DESIGN.md. Use for a UI design system: colors, type, layout, and component tokens. 視覺設計系統 / デザインシステム.
 version: 1.0.0
 ---
 

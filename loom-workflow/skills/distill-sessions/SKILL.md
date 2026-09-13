@@ -1,7 +1,7 @@
 ---
 name: distill-sessions
 description: |
-  Mine past Claude Code and Codex session transcripts + /insights for friction patterns → a per-skill improvement-proposals doc. Use to audit skill-activation telemetry, or gather evidence before a refactor. For creating a skill use skill-creator-advance.
+  Mine past Claude Code or Codex sessions for skill improvement proposals. Use to audit activation telemetry or recurring friction.
 version: 0.5.2
 ---
 

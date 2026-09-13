@@ -1,7 +1,7 @@
 ---
 name: loom-memory
 description: |
-  Recall, Record, Reconcile, or Retire a durable repository lesson in the OKF v0.2-compatible loom-memory store. Use only when the user explicitly asks to remember, recall, forget, or reconcile repository knowledge ("記得這個坑", "之前是怎麼解的", "把這個教訓記下來", "這條還準嗎", "remember this", "what did we learn about X", "忘れないで"), or when you independently judge the current task needs a prior repository lesson. Works standalone or alongside loom-code / loom-design; neither requires it. For commit- or PR-bound decisions, learnings, and gotchas, use loom-workflow's git-memory instead.
+  Manage durable repository lessons when asked to remember, recall, reconcile, or forget; also recall when a task needs a prior lesson.
 ---
 
 # loom-memory

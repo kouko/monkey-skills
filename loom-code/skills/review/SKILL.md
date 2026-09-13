@@ -1,7 +1,7 @@
 ---
 name: review
 description: |
-  Runs the one closing review over completed functional content, executes package and adversarial verification once, and generates a content-bound attestation. Use when Build is complete or a functional change invalidates prior evidence.
+  Run closing review and generate an attestation. Use after Build completes or functional changes invalidate prior review evidence.
 version: 1.5.0
 ---
 

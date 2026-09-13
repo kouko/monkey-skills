@@ -1,7 +1,7 @@
 ---
 name: critique
 description: |
-  Judge a proposal before it is built, through one of two lenses. `mode: proposal` triages a list, plan, or prose recommendation into KEEP / DEFER / DROP by evidence grounding and YAGNI. `mode: complexity` weighs one specific change deletion-first: before/after lines, what it obsoletes, and whether a smaller end state exists. Use for 'critique this', 'over-engineered?', 'can this be simpler?', 'worth the lines?', 'what can we delete?', 'should we build this?', '業界證實', '可以簡化嗎'.
+  Judge proposals (mode: proposal) or simplify a change (mode: complexity). Use for 'critique this', 'should we build this?', or 'over-engineered?'.
 ---
 
 # Critique

@@ -7,13 +7,16 @@
 > because the quality comes from machines checking machines — the agent
 > that writes is never the agent that reviews.
 
-**Status**: v2.0.0 — 5 skills. See [CHANGELOG.md](CHANGELOG.md).
+**Skills**: 5 stations + 1 router. See [CHANGELOG.md](CHANGELOG.md) for releases.
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
 ---
 
 ## The five stations
+
+[using-loom-code](skills/using-loom-code/SKILL.md) routes general Loom
+implementation requests to a station below. Each station remains directly callable.
 
 | Station | Produces | Read it |
 |---|---|---|

@@ -2,7 +2,7 @@
 name: independent-advisor
 version: 0.1.0
 description: |
-  Get a second opinion on the current plan or decision from a different executor — a stronger model, a higher effort level, or another vendor — instead of a different critique lens. Use for 'second opinion', 'ask a stronger model', '換一個模型看看', 'コードを別のモデルに見せて'. For a same-executor critique use critique (mode: proposal for a list, mode: complexity for one over-engineered change).
+  Get a second opinion on a plan or decision. Use when asked to consult another model, higher effort, or another vendor.
 ---
 
 # Independent Advisor

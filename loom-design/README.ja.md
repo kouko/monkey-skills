@@ -6,14 +6,18 @@
 > ものへの verdict はすべて `loom-code` の review ステーションが、下書きを書いて
 > いない agent の手で下す。
 
-**Status**: v1.0.0 — skill 4 個。Breaking：pre-1.0 の skill・script・分割 README は
-リネームではなく削除。[CHANGELOG.md](CHANGELOG.md) を参照。
+**Status**: v2.1.4 — 4 skills + 任意のルーター 1 個。リリースと過去の移行は
+[CHANGELOG.md](CHANGELOG.md) を参照。
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: [`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
 ---
 
 ## 2 つのステーション
+
+[using-loom-design](skills/using-loom-design/SKILL.md) は、プロダクト定義に関する
+幅広い依頼を以下の 4 skills に振り分けます。各 skill は引き続き直接呼び出せ、
+既存の手順を担当します。ルーターは読み込む skill の選択だけを行います。
 
 | ステーション | 生成物 | 読む |
 |---|---|---|

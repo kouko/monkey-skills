@@ -1,7 +1,7 @@
 ---
 name: write-plan
 description: |
-  Turn a confirmed intent into a task plan at docs/loom/<change-id>/plan.md. Use when someone asks to plan, start, or implement a change; when an intent file exists but is not confirmed yet; or when there is no intent yet and the work is about to begin. This is the entry station for engineering changes, and the entry station for every change when loom-design is not installed.
+  Plan an engineering change or turn a confirmed intent into implementation tasks. Use when planning or starting work without a plan.
 version: 1.0.1
 ---
 

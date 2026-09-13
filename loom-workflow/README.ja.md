@@ -4,7 +4,7 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 
 > Claude Code と Codex 用の loom workflow plugin — 意思決定 brief、deletion-first critique gate、git-native な project memory、recap、handoff、session distill。
 
-**Version**: 4.0.0 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
+**Version**: 4.3.2 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
 
 ## Background
 
@@ -25,8 +25,13 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 
 ## Skills
 
+12 skills：11 個のツールと任意のルーター 1 個。`using-loom-workflow`
+は既存ツールを選択します。各ツールは引き続き直接呼び出せます。
+
 | Skill | 役割 |
 |---|---|
+| [`using-loom-workflow`](skills/using-loom-workflow/) | 広い・曖昧な workflow の依頼から既存ツールを選び、その手順を読み込む。 |
+| [`loom-memory`](skills/loom-memory/) | リポジトリの永続的な教訓を参照・記録・照合・廃止する。 |
 | [`critique`](skills/critique/) | 作る前に提案を裁く：`mode: proposal` は list・plan・散文の推奨を evidence grounding と YAGNI で KEEP / DEFER / DROP に振り分け、`mode: complexity` は 1 つの具体的変更を deletion-first で量る（before/after の LOC、何が obsolete になるか）。 |
 | [`cot-explain`](skills/cot-explain/) | すでにある推論——指定されたファイル、あるいは直前の作業——を、CoT 図を中心に据えた自己完結型ページに描き出す。各矢印にはその手順が続く理由がラベル付けされる。 |
 | [`dbt-model-style`](skills/dbt-model-style/) | dbt + Redshift モデルの style & structure contract を強制する — CTE の役割、zero-logic な final CTE、命名、YAML header、comment、syntax。 |
@@ -38,7 +43,7 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 | [`independent-advisor`](skills/independent-advisor/) | 現在の plan や決定について、**別の executor**——より強い model、より高い effort、あるいは別ベンダー——から second opinion を取る。変わるのは executor であって、critique の観点ではない。 |
 | [`recap-state`](skills/recap-state/) | session 内での再オリエンテーション — user が話の筋を見失った時、Synthesis-check で締めくくる構造化 recap を出す。 |
 
-10 個の skill はすべて **Active**（loom tool 8 個＋ loom flow の外にある standalone な `goal-create`・`dbt-model-style`）。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
+契約で数えるツールは 8 個、standalone skill は `goal-create`・`dbt-model-style` の 2 個です。`loom-memory` と任意の入口ルーターは契約の対象外です。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique のライン
 
@@ -81,13 +86,13 @@ backlog や番号付きの plan を渡されたら `mode: proposal`。1 つの�
 
 ## Upstream chain
 
-10 個の skill のうち 1 つが MIT-licensed な upstream に由来します。完全な attribution はその skill の `NOTICE` ファイル参照。（`skill-creator-advance` と `skill-judge` の upstream attribution は、移転先の `skill-dev-toolkit` に一緒に移りました。）
+1 つの skill が MIT-licensed な upstream に由来します。完全な attribution はその skill の `NOTICE` ファイル参照。（`skill-creator-advance` と `skill-judge` の upstream attribution は、移転先の `skill-dev-toolkit` に一緒に移りました。）
 
 | Skill | Upstream chain |
 |---|---|
 | `critique`（`mode: complexity`） | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` → `complexity-critique` にリネーム後、`critique` に統合） |
 
-残り 9 個の skill はオリジナル設計で、外部 upstream への attribution はありません。詳細は各 skill の `NOTICE`（存在する場合）参照。
+その他の skill はオリジナル設計で、外部 upstream への attribution はありません。詳細は各 skill の `NOTICE`（存在する場合）参照。
 
 ## Repository 構成
 
@@ -128,7 +133,7 @@ loom-workflow/
 
 ## 使い方
 
-`loom-workflow` は slash command を同梱していません — 10 個の skill はすべて自然言語から auto-trigger します。例：
+`loom-workflow` は slash command を同梱していません。skill は自然言語で呼び出せますが、`goal-create` など明示的な依頼が必要なツールの条件は変わりません。例：
 
 ```
 「この 12 項目の plan を critique して」                  → critique（proposal）

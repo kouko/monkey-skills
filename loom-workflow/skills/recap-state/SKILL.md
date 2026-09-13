@@ -2,7 +2,7 @@
 name: recap-state
 version: 0.1.0
 description: |
-  in-session re-orientation: produce a structured recap ending with a Synthesis-check when the user loses the thread. Use for "where were we", "I'm lost", "我們剛剛在幹嘛", "剛剛講到哪", "我跟丟了", "ちょっと振り返って", "今どこだっけ", "振り返り", or similar requests. The built-in /recap is an away-summary; for cross-session continuation use handoff.
+  Give an in-session recap for 'where were we', '我們剛剛在幹嘛', '剛剛講到哪', '我跟丟了', 'ちょっと振り返って', '今どこだっけ', or '振り返り'. The built-in /recap is an away-summary.
 ---
 
 # Recap
