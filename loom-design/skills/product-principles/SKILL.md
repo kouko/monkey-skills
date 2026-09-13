@@ -1,7 +1,7 @@
 ---
 name: product-principles
 description: |
-  Interview the user and write a ratified PRINCIPLES.md constitution — Who, Non-negotiables, Won't do, Failure we must avoid, Fixed choices. Use when a product change needs principles and the repo has none ratified yet, or when asked what should govern a product/design/engineering trade-off. Triggers: 產品原則 / 設計原則 / 工程原則 / 產品憲章 / プロダクト指針.
+  Ratify PRINCIPLES.md. Use when a product needs principles or someone asks what should govern product, design, or engineering trade-offs.
 version: 1.0.0
 ---
 

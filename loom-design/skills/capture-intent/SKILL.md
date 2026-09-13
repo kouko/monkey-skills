@@ -1,7 +1,7 @@
 ---
 name: capture-intent
 description: |
-  Interview the user and write a confirmed intent at docs/loom/intent/<change-id>.md. Use when someone describes something they want built or changed — "I want…", a feature idea, a bug they keep hitting — and no intent file exists yet. This is the entry station for every change when loom-design is installed.
+  Capture and confirm a change intent. Use when someone wants a feature or change and no intent file exists yet.
 version: 1.0.0
 ---
 

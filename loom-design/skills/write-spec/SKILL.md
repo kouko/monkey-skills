@@ -1,7 +1,7 @@
 ---
 name: write-spec
 description: |
-  Turn a confirmed intent into docs/loom/<change-id>/spec.md, confirm visible product behaviour, declare whether pre-build review is required, and hand high-risk specs to one independent reviewer before planning. Use when an intent says needs-design: yes and no spec exists yet, or when someone asks for a spec or a design of a change.
+  Write a design spec from a confirmed intent. Use for a requested spec or a needs-design: yes intent without one.
 version: 1.0.0
 ---
 
