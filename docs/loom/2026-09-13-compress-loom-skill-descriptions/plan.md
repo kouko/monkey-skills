@@ -44,7 +44,7 @@ charter: 1.0
 - Risk: One model run cannot prove universal routing; agent-decided — report exact model, prompts, outcomes, and bounded claims, reverting descriptions that fail their cases.
 
 **W2-02 Register only passing routers and synchronize releases**  after: W2-01  acceptance: 3, 4
-- Files: docs/loom/evidence/mechanisms.yaml, loom-*/.claude-plugin/plugin.json, loom-*/.codex-plugin/plugin.json, loom-*/CHANGELOG.md, .claude-plugin/marketplace.json
+- Files: docs/loom/evidence/mechanisms.yaml, loom-*/.claude-plugin/plugin.json, loom-*/.codex-plugin/plugin.json, loom-*/CHANGELOG.md, loom-*/README*.md, README*.md, loom-workflow/scripts/test_skill_count.py, .claude-plugin/marketplace.json
 - Test: A3 positive: three-isolated-installs; negative: private-sibling-reference. A4 positive: mechanism-evals-and-version-sync; negative: missing-budget-exception-or-stale-manifest.
 - Risk: Three routers increase the governed mechanism count; agent-decided — admit each only with the shared executable routing eval and an explicit per-router budget exception.
 
