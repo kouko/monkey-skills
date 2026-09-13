@@ -401,19 +401,6 @@ block before the plan exists.
 
 Write `docs/loom/<change-id>/plan.md` from `contract/templates/plan.md`.
 
-### Reassess accumulated boundary validity
-
-<!-- BEGIN cumulative-boundary-screen -->
-For every code change, first identify the current boundary, likely target
-files or symbols, direct callers, state owner, and focused tests.
-Run this screen for every code change: inspect metadata only
-for at most 20 unique commits across the target set. Do not read raw diffs. If current locality or
-history exposes a concrete dependency, state, test, or relevant-context
-warning, load `references/cumulative-boundary-reassessment.md`; only then
-apply its detailed check before sizing tasks. Otherwise preserve the current
-boundary and continue.
-<!-- END cumulative-boundary-screen -->
-
 **Task size.** A task is right-sized when it owns a coherent set of intent
 Acceptance lines, can name a positive case plus a negative or boundary case
 for each, touches one module boundary, and can be done in isolation given

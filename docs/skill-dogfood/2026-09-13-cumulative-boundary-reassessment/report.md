@@ -8,8 +8,22 @@ graded both L1 arms correct; the other graded the baseline insufficient. The
 candidate also loaded its detailed reference in all four cases, and the two
 auditors disagreed on whether its L4 command record proved the three-diff cap.
 
-The runtime contract therefore has no behavioral admission. W2-02 must restore
-the baseline contract while retaining this negative evidence.
+The runtime contract therefore has no behavioral admission. W2-02 restored
+the baseline contract byte for byte, removed the candidate-only reference and
+focused contract test, and retained this negative evidence. Package manifests
+and the changelog remain unchanged because the candidate was not admitted.
+
+## W2-02 disposition
+
+- Restored `loom-code/skills/write-plan/SKILL.md` to SHA-256
+  `e4c249bae4a5badbd15c258fbfe6d4d2d920e9eba58329fa2ee05bfe573c0da4`,
+  matching the frozen baseline revision.
+- Removed the unadmitted
+  `loom-code/skills/write-plan/references/cumulative-boundary-reassessment.md`
+  and `loom-code/scripts/test_cumulative_boundary_contract.py` runtime
+  candidate paths.
+- Preserved the frozen cases, admission probe, normalized evidence, and
+  intentionally failing full-admission check.
 
 ## Identities and execution
 
