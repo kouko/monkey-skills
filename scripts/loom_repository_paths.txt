@@ -64,6 +64,7 @@ docs/skill-dogfood/2026-09-13-cumulative-boundary-reassessment/cases.md
 docs/skill-dogfood/2026-09-13-cumulative-boundary-reassessment/report.md
 docs/skill-dogfood/2026-09-13-replaceable-boundary-standard/report.md
 docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md
+docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md
 # Operative Loom evidence; other project histories require exact reviewed paths.
 docs/loom/KICKOFF-DEFAULTS.md
 docs/loom/evidence/mechanisms.yaml
