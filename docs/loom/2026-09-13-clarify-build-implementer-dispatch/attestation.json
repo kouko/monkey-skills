@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-13-clarify-build-implementer-dispatch",
-  "content_digest": "378c83ce25dd835ae1ffbb89e72afda1f5b2f632",
+  "content_digest": "3bce1171234e28bbe015c8c4791e00e383442055",
   "executions": [
     {
       "kind": "package-tests",
