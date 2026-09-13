@@ -27,7 +27,7 @@ Agent({
   flag): on Claude Code this means no `Agent` tool is available to the
   current agent (a plain in-context worker with no subagent access).
 - **Do not add `name:`** to this dispatch — see
-  `loom-code/skills/using-loom-code/references/environment-gotchas.md`
+  the host's current Claude Code tool documentation
   §A1: naming turns the one-shot blocking call into a persistent
   mailbox-semantics teammate whose output is never delivered.
 

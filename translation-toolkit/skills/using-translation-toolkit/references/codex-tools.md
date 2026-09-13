@@ -3,7 +3,7 @@
 > All 5 active specialist skills phrase subagent dispatch in
 > host-neutral prose. For the verified detail on Codex's `multi_agent`
 > primitive (`spawn_agent`/`wait_agent`/`close_agent`) see
-> `loom-code/skills/using-loom-code/references/codex-tools.md`. This
+> This file is self-contained and follows the host's current Codex tool shape.
 > file only maps `translation-toolkit`'s 2 dispatch points onto it and
 > is **doc-sourced, not session-exercised** against this plugin.
 

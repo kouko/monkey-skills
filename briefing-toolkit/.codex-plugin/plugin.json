@@ -1,6 +1,6 @@
 {
   "name": "briefing-toolkit",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion; needs interactively-authenticated MCP connections).",
   "author": {
     "name": "kouko",

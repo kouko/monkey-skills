@@ -50,7 +50,7 @@ Symlink 方式と plugin 方式の手順は [`.codex/INSTALL.md`](.codex/INSTALL
 ```
 monkey-skills/
 ├── .claude-plugin/
-│   └── marketplace.json          # plugin 登録（8 件）
+│   └── marketplace.json          # plugin 登録
 ├── .codex/
 │   └── INSTALL.md                # Codex 用インストール手順
 ├── .github/workflows/

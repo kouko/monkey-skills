@@ -20,6 +20,6 @@ People who describe what they want in plain words and have only basic software-e
 Work that passes every gate while its quality is insufficient and the user cannot see that it is — the user says "OK" to a blind-run report that hides the problem.
 
 ## Fixed choices
-- Three plugins with one-way dependency on loom-code's versioned contract package. (Briefly four, 2026-09-05 to 2026-09-11, while `loom-memory` shipped as its own independent plugin; retired back into loom-workflow the same day the fourth-plugin wording was ratified.)
+- Plugins in this repository are independently installable; Loom is maintained in the separate `kouko/loom-plugins` repository.
 - Host-installed plugin hooks (Claude Code and Codex), never repository-local or git hooks.
 - Hard cutover: pre-1.0 artifacts are archived in place, never converted.

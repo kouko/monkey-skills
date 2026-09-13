@@ -160,6 +160,42 @@ def test_non_skill_content_change_inside_a_plugin_needs_no_bump(tmp_path):
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+@pytest.mark.parametrize("rel", [
+    "domain-teams/skills/example/SKILL.md",
+    "domain-teams/hooks/hooks.json",
+    "domain-teams/agents/example.md",
+    "domain-teams/references/example.md",
+])
+def test_every_shipped_content_dir_counts_as_skill_content(tmp_path, rel):
+    repo = _init_repo(tmp_path)
+    _manifest(repo, "domain-teams", "1.0.0")
+    _write(repo, rel, "v1\n")
+    base = _commit(repo, "base")
+    _write(repo, rel, "v2\n")
+    head = _commit(repo, "content change, no bump")
+    result = _run(repo, base, head)
+    assert result.returncode != 0
+    assert "domain-teams" in result.stdout
+
+
+def test_shipped_content_moved_out_is_a_violation(tmp_path):
+    repo = _init_repo(tmp_path)
+    _manifest(repo, "domain-teams", "1.0.0")
+    _write(repo, "domain-teams/skills/retired/SKILL.md", "aaa\nbbb\nccc\n")
+    base = _commit(repo, "base")
+    (repo / "docs").mkdir()
+    _git(repo, "mv", "domain-teams/skills/retired/SKILL.md", "docs/retired.md")
+    head = _commit(repo, "move content out, no bump")
+    result = _run(repo, base, head)
+    assert result.returncode != 0
+    assert "domain-teams" in result.stdout
+
+
+def test_scripts_dir_and_test_file_rules_remain_covered():
+    assert plugins_with_skill_content(["domain-teams/scripts/validator.py"]) == {"domain-teams"}
+    assert plugins_with_skill_content(["domain-teams/scripts/test_validator.py"]) == set()
+
+
 def test_changes_outside_any_plugin_are_a_no_op(tmp_path):
     """Root scripts/, .github/, docs/ are not plugins."""
     repo = _init_repo(tmp_path)
