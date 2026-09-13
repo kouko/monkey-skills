@@ -1,0 +1,47 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-13-cumulative-boundary-reassessment",
+  "content_digest": "971440e56bf9e5736dff2da39de1ced930bb338d",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_cumulative_boundary_reassessment.py -q",
+      "artifact": "loom-code/scripts/test_probes_cumulative_boundary_reassessment.py",
+      "result": "pass",
+      "command_digest": "f5751988b98c39f7fd5d2e71b771ef6f8066cdf56d12f00e3ef0b79633bff489"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-code/scripts/test_probes_replaceable_boundary_behavior.py -q",
+      "artifact": "loom-code/scripts/test_probes_replaceable_boundary_behavior.py",
+      "result": "pass",
+      "command_digest": "de69c285471d4c687d5acd32ce4bfdca53018215f5ce22fefe82e3af1b844d95"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "closing_code_review",
+      "vendor": "Codex",
+      "model": "inherited",
+      "lens": "code",
+      "verdict": "PASS_WITH_NOTES",
+      "findings": []
+    },
+    {
+      "reviewer": "closing_docs_review",
+      "vendor": "Codex",
+      "model": "inherited",
+      "lens": "docs",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
