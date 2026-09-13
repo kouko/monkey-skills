@@ -418,10 +418,9 @@ how long it will take.
   multiple implementers concurrently is optional.
 - Task ids are `W<n>-<nn>` and remain stable once written so hand-offs can
   refer to dependencies without ambiguity.
-- Dependencies go on the task line as `after: <ids>`. Tasks in one wave
-  with no dependency between them may run concurrently, but disjoint files
-  are not enough: a shared symbol, a doc that mirrors code, or a
-  producer/consumer pair stays sequential.
+- Dependencies go on the task line as `after: <ids>`. Independent tasks in one
+  wave may run concurrently, but disjoint files alone do not prove independence:
+  shared symbols, mirrored code/docs, and producer/consumer pairs stay sequential.
 - Each non-memory task line carries `acceptance: <numbers>` naming the intent
   Acceptance lines it owns. Each referenced number appears in the task's
   Test line as `A<n> positive: <case-id>; negative: <case-id>` or with

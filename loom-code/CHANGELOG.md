@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.2] — 2026-09-13 — mandatory implementer dispatch
+
+- Require an implementer for every Build task while keeping concurrent
+  scheduling optional.
+- Stop when implementer dispatch is unavailable instead of letting the main
+  agent substitute itself.
+
 ## [3.1.1] — 2026-09-12 — shared intent content boundaries
 
 - Give code-only intake the same gap-driven field boundaries and one-pass
