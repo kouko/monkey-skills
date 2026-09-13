@@ -12,10 +12,10 @@ each isolated round, rather than `wc`'s different tokenization.
 
 | Skill | Baseline `SKILL.md` | Final `SKILL.md` | Entrypoint reduction | Baseline package | Final package | Package reduction | Q1 | Q2 | Q3 |
 |---|---:|---:|---:|---:|---:|---:|---|---|---|
-| `write-plan` | 4,498 | 3,525 | 973 (21.63%) | 6,364 | 5,630 | 734 (11.53%) | PASS, 3/3 equivalent + bounded review verification | PASS, >=10% | PASS |
-| `capture-intent` | 3,553 | 2,698 | 855 (24.06%) | 4,822 | 4,254 | 568 (11.78%) | PASS, 3/3 equivalent + bounded review verification | PASS, >=10% | PASS |
-| `independent-advisor` | 4,035 | 1,962 | 2,073 (51.38%) | 7,620 | 6,819 | 801 (10.51%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
-| **Total** | **12,086** | **8,185** | **3,901 (32.28%)** | **18,806** | **16,703** | **2,103 (11.18%)** | **PASS** | **PASS** | **PASS** |
+| `write-plan` | 4,498 | 3,513 | 985 (21.90%) | 6,364 | 5,618 | 746 (11.72%) | PASS, 3/3 equivalent + bounded review verification | PASS, >=10% | PASS |
+| `capture-intent` | 3,553 | 2,695 | 858 (24.15%) | 4,822 | 4,251 | 571 (11.84%) | PASS, 3/3 equivalent + bounded review verification | PASS, >=10% | PASS |
+| `independent-advisor` | 4,035 | 1,924 | 2,111 (52.32%) | 7,620 | 6,781 | 839 (11.01%) | PASS, 3/3 equivalent + Round 2 verification | PASS, >=10% | PASS |
+| **Total** | **12,086** | **8,132** | **3,954 (32.72%)** | **18,806** | **16,650** | **2,156 (11.46%)** | **PASS** | **PASS** | **PASS** |
 
 Q1 is behavioral equivalence, Q2 is whole-package reduction, and Q3 is
 invariant/capability quality. Every skill passed independently; no reduction
@@ -49,9 +49,9 @@ repetition instead.
 
 | Plugin | Claude manifest | Codex manifest | Marketplace source |
 |---|---:|---:|---|
-| `loom-code` | 3.1.3 | 3.1.3 | `./loom-code/` |
-| `loom-design` | 2.1.4 | 2.1.4 | `./loom-design/` |
-| `loom-workflow` | 4.3.2 | 4.3.2 | `./loom-workflow/` |
+| `loom-code` | 3.1.4 | 3.1.4 | `./loom-code/` |
+| `loom-design` | 2.1.5 | 2.1.5 | `./loom-design/` |
+| `loom-workflow` | 4.3.3 | 4.3.3 | `./loom-workflow/` |
 
 The root marketplace schema has no per-entry `version` field; its three
 entries already exist and point to the correct plugin roots. Version SSOT is
@@ -63,7 +63,7 @@ the plugin's `.claude-plugin/plugin.json`, mirrored into
 The first integration pass ran the planned checks once. Every gate before the
 focused suites passed. The focused suite then found one stale release assertion
 in `loom-code/scripts/test_write_plan_station_text.py`: it still expected
-`3.1.2` after the manifests and changelog advanced to `3.1.3`. The assertion
+`3.1.2` after the manifests and changelog advanced. The assertion
 was corrected as W3 integration scope and the focused suite was rerun.
 
 | Check | Result |

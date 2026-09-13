@@ -50,10 +50,10 @@ Verdict: **PASS (3/3 equivalent, high confidence)**.
 
 | Measure | Baseline | Final candidate | Reduction |
 |---|---:|---:|---:|
-| `SKILL.md` words | 4,498 | 3,525 | 973 (21.63%) |
-| `SKILL.md` bytes | 29,872 | 24,187 | 5,685 (19.03%) |
-| Package words | 6,364 | 5,630 | 734 (11.53%) |
-| Package bytes | 42,124 | 38,425 | 3,699 (8.78%) |
+| `SKILL.md` words | 4,498 | 3,513 | 985 (21.90%) |
+| `SKILL.md` bytes | 29,872 | 24,086 | 5,786 (19.37%) |
+| Package words | 6,364 | 5,618 | 746 (11.72%) |
+| Package bytes | 42,124 | 38,324 | 3,800 (9.02%) |
 
 The corrected package, including `test-prompts.json`, is below the
 at-most-5,727-word target. References are

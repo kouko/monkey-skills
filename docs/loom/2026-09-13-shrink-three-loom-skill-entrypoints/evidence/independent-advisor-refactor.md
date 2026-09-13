@@ -54,10 +54,10 @@ Verdict: **PASS (3/3 equivalent, high confidence)**.
 
 | Measure | Baseline | Candidate | Reduction |
 |---|---:|---:|---:|
-| `SKILL.md` words | 4,035 | 1,962 | 2,073 (51.38%) |
-| `SKILL.md` bytes | 24,828 | 13,340 | 11,488 (46.27%) |
-| Package words | 7,620 | 6,819 | 801 (10.51%) |
-| Package bytes | 54,806 | 64,227 | -9,421 (-17.19%) |
+| `SKILL.md` words | 4,035 | 1,924 | 2,111 (52.32%) |
+| `SKILL.md` bytes | 24,828 | 13,037 | 11,791 (47.49%) |
+| Package words | 7,620 | 6,781 | 839 (11.01%) |
+| Package bytes | 54,806 | 63,924 | -9,118 (-16.64%) |
 
 The package is below the at-most-6,858-word target.
 
