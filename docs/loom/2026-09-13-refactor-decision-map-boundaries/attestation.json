@@ -1,0 +1,40 @@
+{
+  "schema": "loom-attestation/v1",
+  "change_id": "2026-09-13-refactor-decision-map-boundaries",
+  "content_digest": "400ab510c6be7f01d8e15ba9dfcaa3aed1a619e0",
+  "executions": [
+    {
+      "kind": "package-tests",
+      "command": "uv run --isolated --with-requirements requirements-package-tests.lock python scripts/run_package_tests.py --loom-family -q",
+      "artifact": "",
+      "result": "pass",
+      "command_digest": "4f8ee1e92fdd95785fd8b3a24ce6cb1914e66c9ac76f8641bbc5ad42cb6f6a62"
+    },
+    {
+      "kind": "adversarial",
+      "command": "python3 -m pytest loom-workflow/skills/decision-map/scripts/test_map_module_boundaries.py -q",
+      "artifact": "loom-workflow/skills/decision-map/scripts/test_map_module_boundaries.py",
+      "result": "pass",
+      "command_digest": "b6f6dfe3008bbc62d3603b98f545b57c0b1286feeb1b0534eb933b6cdec455c3"
+    }
+  ],
+  "verdicts": [
+    {
+      "reviewer": "decision-map-review-1",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    },
+    {
+      "reviewer": "decision-map-review-2",
+      "vendor": "openai",
+      "model": "gpt-6-astra",
+      "lens": "code",
+      "verdict": "PASS",
+      "findings": []
+    }
+  ],
+  "findings": []
+}
