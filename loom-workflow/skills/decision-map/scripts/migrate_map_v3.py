@@ -10,6 +10,7 @@ from pathlib import Path
 import delivery_binding
 import map_lock
 import map_store
+import map_persistence
 
 
 CLASSIFICATION_EVIDENCE_GUIDANCE = (
@@ -88,7 +89,7 @@ def _safe_preview_path(map_dir: Path, key: str) -> Path:
         raise MigrationConflict(f"invalid preview key: {key!r}")
     path = map_dir / key
     try:
-        map_store._assert_no_symlink_components(path)
+        map_persistence.assert_no_symlink_components(path)
         if not path.is_file() or path.is_symlink():
             raise MigrationConflict(f"preview key is not a regular file: {key}")
         path.resolve(strict=True).relative_to(map_dir.resolve(strict=True))
@@ -110,7 +111,7 @@ def _safe_binding_dependency(repo_root: Path, key: str) -> Path:
         raise MigrationConflict(f"invalid binding dependency key: {key!r}")
     path = repo_root / candidate
     try:
-        map_store._assert_no_symlink_components(path)
+        map_persistence.assert_no_symlink_components(path)
         if not path.is_file() or path.is_symlink():
             raise MigrationConflict(f"binding dependency is not a regular file: {key}")
         path.resolve(strict=True).relative_to(repo_root.resolve(strict=True))
@@ -326,7 +327,7 @@ def _apply_migration_locked(
     ordered_keys = sorted(key for key in preview.candidates if key != "MAP.md")
     for key in ordered_keys:
         path = _safe_preview_path(map_dir, key)
-        map_store._atomic_write(
+        map_store.atomic_write(
             path,
             preview.candidates[key],
             expected=preview.source_texts[key].encode("utf-8"),
@@ -334,7 +335,7 @@ def _apply_migration_locked(
     _before_schema_flip()
     _validate_prepared_batch(map_dir, preview)
     map_path = _safe_preview_path(map_dir, "MAP.md")
-    map_store._atomic_write(
+    map_store.atomic_write(
         map_path,
         preview.candidates["MAP.md"],
         expected=preview.source_texts["MAP.md"].encode("utf-8"),
