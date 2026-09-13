@@ -18,7 +18,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | Reverse-engineer polished artifacts (copy / docs / UI / arguments / products / organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, intentional omissions. Grounded in Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman, with EN/JA/ZH cultural-variant lenses (Hinds kishōtenketsu / 劉勰《文心雕龍》六觀 / Hu/Hwang face-and-favor). BCG「バリュー・チェーンの脱構築」系譜. |
 | [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only SOQL query (data toolset only). macOS only. ⚠️ Not supported in the Cowork sandbox (TTY-bound OAuth); installs on Codex CLI too (MCP auto-registers). |
 
-**Totals:** 84 skills and 42 slash commands across 10 plugins listed (the marketplace ships 18 — table not yet fully synced; see [`marketplace.json`](.claude-plugin/marketplace.json) for the authoritative list).
+The table is a curated overview; [`marketplace.json`](.claude-plugin/marketplace.json) is authoritative for the complete plugin list.
 
 > Plugins marked ⚠️ in their own description (`investing-toolkit`, `tsundoku`, `salesforce-toolkit`, plus the `defuddle` skill in `obsidian`) are not supported in the Cowork sandbox — it blocks their external network access or subprocess use. (`salesforce-toolkit` does install on Codex CLI; its ⚠️ is Cowork-specific, not "Claude Code only".)
 
@@ -87,12 +87,12 @@ To run the test suite from a clean checkout:
 git clone https://github.com/kouko/monkey-skills.git && cd monkey-skills
 python3 -m venv .venv && source .venv/bin/activate
 python3 -m pip install -r requirements-dev.txt
+python3 -m pytest scripts/test_check_skill_structure.py scripts/test_sync_codex_manifests.py -q
 ```
 
 With uv instead: `uv venv .venv && source .venv/bin/activate`, then
 `uv pip install -r requirements-dev.txt`, then the same test command.
 
-Run the plugin-specific test commands documented by each plugin when needed.
 The former Loom plugins now live in the separate [`loom-plugins`](https://github.com/kouko/loom-plugins) repository; `docs/loom/` remains as historical records.
 
 ## License

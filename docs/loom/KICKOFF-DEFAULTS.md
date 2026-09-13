@@ -5,7 +5,7 @@ Keys are declared in loom-code/contract/manifest.yaml `kickoff_defaults`;
 loom_checker.py reads this file. Absent key = default. -->
 
 - second-vendor: suggest — report cross-vendor review availability without blocking; recommend it for grounded high risk and require opt-in before full-lane Review (2026-09-12)
-- package-tests: python3 -m pytest scripts/test_check_skill_structure.py scripts/test_sync_codex_manifests.py -q — current repository-level checks after Loom moved to the independent loom-plugins repository (2026-09-14)
+- package-tests: python3 -m pytest scripts/ -q — repository-level checks after Loom moved to the independent loom-plugins repository (2026-09-14)
 - standing-docs: waived — DESIGN.md never applies to a plugin repo; PRINCIPLES.md exists and is ratified per change kind (2026-09-03)
 - session-start-baseline: 923fb84a 5278 — measured with `bash loom-code/hooks/session-start </dev/null | python3 -c 'import sys;print(len(sys.stdin.read().split()))'` in an empty git repo, merge-base of the loom 1.0 change (Python str.split — wc disagrees between macOS and GNU) (2026-09-03)
 - interface-surfaces: **/cli/**, **/api/**, **/commands/**, **/*.tsx, **/templates/** — manifest default; SKILL.md and hooks are the `skill`/`gate` artifact types, not user interfaces, so skill edits stay engineering (2026-09-03)

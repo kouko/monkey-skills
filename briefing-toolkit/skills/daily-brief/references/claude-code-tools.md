@@ -21,7 +21,7 @@ Agent({subagent_type: "general-purpose", description: "<platform> search", promp
 ```
 
 - **Do not add `name:`** to any of these calls — see
-  `loom-code/skills/using-loom-code/references/environment-gotchas.md`
+  the host's current Claude Code tool documentation
   §A1: naming turns a one-shot blocking dispatch into a persistent
   mailbox-semantics teammate whose output is never delivered as this
   turn's tool result.

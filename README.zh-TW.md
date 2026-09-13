@@ -18,7 +18,7 @@
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | 將外部作品（文案 / 文件 / UI / 論證 / 產品 / 組織）進行逆向解構，揭露設計決策、借用框架、修辭機制、與刻意省略。底座結合 Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman 八大傳統，搭配 EN/JA/ZH 文化變體（Hinds 起承転結 / 劉勰《文心雕龍》六觀 / Hu/Hwang 面子關係）。BCG 價值鏈解構（バリュー・チェーンの脱構築）系譜。 |
 | [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | 將 Salesforce DX MCP server 包裝成 Claude Code plugin — brew-first 安裝、read-only SOQL 查詢（僅 data toolset）。僅支援 macOS。⚠️ 限 Claude Code CLI — 不支援 Cowork sandbox。 |
 
-**總計**：84 個 skill、42 個 slash command（表內列 10 個 plugin；marketplace 出貨 18 個 — 表尚未完整同步；權威來源請見 [`marketplace.json`](.claude-plugin/marketplace.json)）。
+上表是精簡導覽；完整 plugin 清單以 [`marketplace.json`](.claude-plugin/marketplace.json) 為準。
 
 > 在自身 description 中標示 ⚠️ 的 plugin（`investing-toolkit`、`tsundoku`、`salesforce-toolkit`，以及 `obsidian` 中的 `defuddle` skill）必須在 Claude Code CLI 環境執行 — Cowork sandbox 會封鎖其對外網路或 subprocess 操作。
 

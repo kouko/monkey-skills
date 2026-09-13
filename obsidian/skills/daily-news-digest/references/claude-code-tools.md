@@ -2,7 +2,7 @@
 
 > Scoped to this skill's own heavy-day dispatch point
 > (`heavy-day-dispatch.md`). For the general dual-host dispatch pattern
-> this file follows, see `loom-code/skills/using-loom-code/references/claude-code-tools.md`.
+> this file follows the host's current Claude Code tool documentation.
 
 ## Heavy-day parallel fan-out (STEP 6/7)
 
@@ -25,7 +25,7 @@ Agent({subagent_type: "general-purpose", description: "...", prompt: "<cluster n
   after the digest was already written, because a background dispatch
   left the turn "waiting" on results nothing was polling for.
 - **Do not add `name:`** to any of these calls — see
-  `loom-code/skills/using-loom-code/references/environment-gotchas.md`
+  the host's current Claude Code tool documentation
   §A1: naming turns a one-shot blocking call into a persistent
   mailbox-semantics teammate whose output is never delivered as this
   turn's tool result.

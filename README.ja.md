@@ -18,7 +18,7 @@
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | 制作物（コピー / ドキュメント / UI / 論証 / 製品 / 組織）を逆向きに分解し、設計判断・借用フレームワーク・修辞メカニズム・意図的な省略を可視化。Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman に紐付け、EN/JA/ZH 文化バリアント（Hinds 起承転結 / 劉勰《文心雕龍》六観 / Hu/Hwang 面子・関係）。BCG「バリュー・チェーンの脱構築」(Evans & Wurster) と山口周『武器になる哲学』の系譜。 |
 | [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | Salesforce DX MCP server を Claude Code plugin 化 — brew-first installer、read-only な SOQL query（data toolset のみ）。macOS のみ。⚠️ Claude Code CLI 限定 — Cowork sandbox 非対応。 |
 
-**合計**：84 skill、42 slash command（表に並ぶのは 10 plugin；marketplace は 18 plugin 出荷中 — 表は完全同期前。権威ソースは [`marketplace.json`](.claude-plugin/marketplace.json)）。
+上表は概要です。完全な plugin 一覧は [`marketplace.json`](.claude-plugin/marketplace.json) を正とします。
 
 > 各 plugin の description で ⚠️ が付いているもの（`investing-toolkit`、`tsundoku`、`salesforce-toolkit`、および `obsidian` 内の `defuddle` skill）は Claude Code CLI 環境を要求します — Cowork sandbox は外部 network 通信や subprocess 実行を遮断します。
 

@@ -66,7 +66,6 @@ would break agent-portability. The three voters are independent (same claim,
 disjoint `voter_idx`, no shared files), exactly the case the fan-out is for.
 Use the host's native parallel-subagent facility when available. For the concrete per-host call shape this resolves to (including the
 Claude-Code-specific "same assistant message" concurrency detail above), see
-`loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
 
 **Independence is a GATE, not a nicety.** The quorum only means something if
 the three votes come from **independent** contexts — separate parallel

@@ -20,11 +20,13 @@ can find the independent repository, while historical records remain available.
 2. Loom-only CI, hooks, runners, extraction tooling, and tests are absent.
 3. Existing non-Loom plugins retain passing repository checks and valid
    marketplace metadata.
-4. The historical Loom records remain available for reference.
+4. Historical Loom records remain available for reference; only the active
+   package-test default is updated to remove a deleted runner.
 
 ## Constraints
 - Preserve the independent `kouko/loom-plugins` repository and its history.
-- Do not delete or rewrite historical records under `docs/loom/`.
+- Do not delete or rewrite historical records under `docs/loom/`, except the
+  active package-test default needed to remove the deleted runner.
 - Do not merge or publish the branch without the user's separate merge decision.
 
 ## Out of scope

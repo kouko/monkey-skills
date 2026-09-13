@@ -12,8 +12,6 @@ tests.
   Codex manifest from its Claude manifest.
 - `python3 scripts/sync_codex_manifests.py --check <plugin>` checks manifest
   drift without writing.
-- `python3 scripts/check-skill-crossrefs.py` verifies relative links in
-  `SKILL.md` files.
 - `python3 scripts/check-shared-conventions-drift.py` checks shared convention
   copies.
 - `python3 -m pytest scripts/ -q` runs repository-level script tests.

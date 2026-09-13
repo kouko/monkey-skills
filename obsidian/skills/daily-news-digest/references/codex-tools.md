@@ -3,7 +3,7 @@
 > Scoped to this skill's own heavy-day dispatch point
 > (`heavy-day-dispatch.md`). For the verified detail on Codex's
 > `multi_agent` primitive (`spawn_agent`/`wait_agent`/`close_agent`) see
-> `loom-code/skills/using-loom-code/references/codex-tools.md`. This
+> This file documents the host's Codex tool shape. It is self-contained.
 > file only maps the heavy-day dispatch onto it and is **doc-sourced,
 > not session-exercised** against this specific skill.
 

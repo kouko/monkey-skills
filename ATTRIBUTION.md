@@ -33,6 +33,17 @@ License: MIT, Copyright (c) 2025 Axton Liu
 | `obsidian/skills/obsidian-excalidraw-diagram/` | [LICENSE](obsidian/skills/obsidian-excalidraw-diagram/LICENSE) | |
 | `obsidian/skills/obsidian-mermaid-visualizer/` | [LICENSE](obsidian/skills/obsidian-mermaid-visualizer/LICENSE) | |
 
+### skill-creator-advance and skill-judge
+
+These adapted components are now maintained under `skill-dev-toolkit/` after
+the Loom plugins moved to the independent repository. Their upstream licenses
+and notices remain bundled at the component paths.
+
+| Component |
+|-----------|
+| `skill-dev-toolkit/skills/skill-creator-advance/` |
+| `skill-dev-toolkit/skills/skill-judge/` |
+
 ### repo-wiki plugin (conceptual derivation, no code imported)
 
 `repo-wiki/` adapts the conceptual pattern from these prior works. No source files are bundled; the implementation is original to this project. Credited here for transparency on intellectual lineage:
