@@ -2,6 +2,7 @@
 
 import ast
 import importlib
+import inspect
 import sys
 from pathlib import Path
 
@@ -10,6 +11,58 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 
 import map_store
+
+
+@pytest.mark.parametrize("module,names", [
+    ("map_ticket_mutations", ("_claim_ticket_locked", "_update_blockers_locked")),
+    ("map_close_transaction", ("_close_and_rechart_locked", "_apply_map_effects")),
+])
+def test_transaction_implementations_have_distinct_owners(module, names):
+    owner = importlib.import_module(module)
+    facade = importlib.import_module("map_transaction")
+    definitions = {
+        node.name for node in ast.parse(Path(facade.__file__).read_text()).body
+        if isinstance(node, ast.FunctionDef)
+    }
+    for name in names:
+        assert getattr(owner, name).__module__ == module
+        assert name not in definitions
+
+
+@pytest.mark.parametrize("operation,owner,kwargs", [
+    ("claim_ticket", "map_ticket_mutations", dict(owner="worker", claimed_on="2026-09-13", operation_id="claim", expected_revision=None)),
+    ("update_blockers", "map_ticket_mutations", dict(blockers=[], operation_id="blockers", expected_revision=None)),
+    ("close_and_rechart", "map_close_transaction", dict(gist="done", resolution="evidence", unknowns=[])),
+])
+def test_transaction_facade_preserves_api_and_lock_boundary(
+    tmp_path, monkeypatch, operation, owner, kwargs
+):
+    from contextlib import contextmanager
+    facade = importlib.import_module("map_transaction")
+    module = importlib.import_module(owner)
+    seen = []
+    result = object()
+
+    @contextmanager
+    def lock(path):
+        assert path == tmp_path
+        seen.append("locked")
+        yield
+        seen.append("unlocked")
+
+    def implementation(transaction, *args, **forwarded):
+        assert transaction is facade
+        assert seen == ["locked"]
+        assert args[:2] == (tmp_path, "ticket")
+        seen.append("mutation")
+        return result
+
+    public = getattr(facade, operation)
+    assert "transaction" not in inspect.signature(public).parameters
+    monkeypatch.setattr(facade, "_transaction_lock", lock)
+    monkeypatch.setattr(module, f"_{operation}_locked", implementation)
+    assert public(tmp_path, "ticket", **kwargs) is result
+    assert seen == ["locked", "mutation", "unlocked"]
 
 
 DOCUMENT_SYMBOLS = (
