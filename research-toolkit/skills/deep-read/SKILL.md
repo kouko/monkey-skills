@@ -55,8 +55,7 @@ directory (paths below are relative to it).
 ## Portable fan-out convention
 
 The per-chunk extraction (Step 3) does the same work across N independent
-chunks. Do this **in parallel by dispatching N subagents**, per
-Dispatch one fresh independent subagent per chunk,
+chunks. Do this **in parallel by dispatching N independent subagents**, one per
 dispatched in a single assistant message with multiple agent calls so the
 harness runs them concurrently.
 
@@ -66,9 +65,8 @@ fan-out maps onto whatever concurrent-subagent primitive the host agent
 provides (Claude Code, Codex, Cursor, …); binding to one harness's workflow
 primitive would break agent-portability. Each per-chunk subagent is
 independent (disjoint chunk, no shared files) — exactly the case the
-fan-out convention is for. For the concrete per-host call shape this
-resolves to (including the Claude-Code-specific "same assistant
-message" concurrency detail above), see
+fan-out convention is for. Use the host's native dispatch syntax and do not
+hard-code a vendor-specific workflow tool.
 
 ---
 

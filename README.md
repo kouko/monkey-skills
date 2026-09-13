@@ -87,7 +87,7 @@ To run the test suite from a clean checkout:
 git clone https://github.com/kouko/monkey-skills.git && cd monkey-skills
 python3 -m venv .venv && source .venv/bin/activate
 python3 -m pip install -r requirements-dev.txt
-python3 -m pytest scripts/test_check_skill_structure.py scripts/test_sync_codex_manifests.py -q
+python3 -m pytest scripts/ -q
 ```
 
 With uv instead: `uv venv .venv && source .venv/bin/activate`, then
