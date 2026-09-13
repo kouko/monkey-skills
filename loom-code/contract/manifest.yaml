@@ -51,7 +51,7 @@ actions:             # executable steps inside a station; not skills (§3)
     summary: "run the package-level test command once during finalize-review; the generated attestation binds its result to functional content."
   - name: parallel-dispatch
     owner: build
-    summary: "independent tasks may run in parallel when their file sets do not overlap; no dispatch ledger is required."
+    summary: "every implementation task is dispatched to an implementer; scheduling multiple implementers concurrently is optional and requires genuine independence because disjoint files alone do not establish independence; no dispatch ledger is required."
   - name: worktree
     owner: build
     summary: "parallel implementers may use isolated git worktrees; the branch integrates before closing review."

@@ -248,6 +248,24 @@ def test_build_has_no_evidence_accounting() -> None:
     assert "review.json" not in BUILD
 
 
+def test_build_and_plan_require_implementer_dispatch_without_requiring_parallelism() -> None:
+    for station in (BUILD, PLAN):
+        prose = " ".join(station.split())
+        assert "Implementer dispatch is mandatory" in prose
+        assert "Scheduling multiple implementers concurrently is optional" in prose
+        assert "Parallel work is optional" not in station
+
+    build_prose = " ".join(BUILD.split())
+    assert "If implementer dispatch is unavailable, stop and report the blocker" in build_prose
+    assert "The main agent must not substitute itself as implementer" in build_prose
+
+    manifest_prose = " ".join(CONTRACT_MANIFEST.split())
+    assert "every implementation task is dispatched to an implementer" in manifest_prose
+    assert "scheduling multiple implementers concurrently is optional" in manifest_prose
+    assert "disjoint files alone do not establish independence" in manifest_prose
+    assert "no dispatch ledger is required" in manifest_prose
+
+
 def test_capture_intent_boundaries_are_shared_with_code_only_intake() -> None:
     for phrase in (
         "ask only for missing required-field content",
