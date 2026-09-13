@@ -6,8 +6,8 @@
 > grades. Every verdict on what it produces is rendered in `loom-code`'s
 > review station, by an agent that did not write the draft.
 
-**Status**: v1.0.0 — 5 skills. Breaking: the pre-1.0 skills, scripts and
-split READMEs were deleted, not renamed. See [CHANGELOG.md](CHANGELOG.md).
+**Status**: v2.1.4 — 4 leaf skills + 1 optional router. See
+[CHANGELOG.md](CHANGELOG.md) for releases and historical migrations.
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 

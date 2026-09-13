@@ -5,8 +5,8 @@
 > 這裡產出的東西一律由 `loom-code` 的 review 站下 verdict，而且下判斷的 agent
 > 不是寫草稿的那一個。
 
-**Status**: v1.0.0 — 5 個 skill。Breaking：pre-1.0 的 skill、script 與分檔 README
-是刪除，不是改名。見 [CHANGELOG.md](CHANGELOG.md)。
+**Status**: v2.1.4 — 4 個 skill + 1 個可選入口路由。版本與歷史遷移資訊見
+[CHANGELOG.md](CHANGELOG.md)。
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: [`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 

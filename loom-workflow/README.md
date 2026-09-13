@@ -4,7 +4,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 
 > Loom workflow plugin for Claude Code and Codex — decision briefs, deletion-first critique gates, git-native project memory, recap, handoff, and session distill.
 
-**Version**: 4.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 4.3.2 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## Background
 
@@ -43,7 +43,7 @@ selects an existing tool; every tool remains directly invocable.
 | [`independent-advisor`](skills/independent-advisor/) | Get a second opinion on the current plan or decision from a **different executor** — a stronger model, higher effort, or another vendor. The executor changes, not the critique lens. |
 | [`recap-state`](skills/recap-state/) | In-session re-orientation — a structured recap ending with a Synthesis-check when the user loses the thread. |
 
-All ten skills are **Active** — eight loom tools plus the two standalone skills (`goal-create`, `dbt-model-style`) that sit outside the loom flow. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
+The contract retains eight counted tools and two standalone skills (`goal-create`, `dbt-model-style`). `loom-memory` and the optional discovery router remain outside that contract. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
 ## The critique line
 
@@ -133,7 +133,7 @@ loom-workflow/
 
 ## Usage
 
-`loom-workflow` ships no slash commands — all ten skills auto-trigger from natural language. For example:
+`loom-workflow` ships no slash commands. Skills accept natural-language requests; explicit-only tools such as `goal-create` still require an explicit request. For example:
 
 ```
 "Critique this 12-item plan"                              → critique (proposal)

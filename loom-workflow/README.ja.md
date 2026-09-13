@@ -4,7 +4,7 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 
 > Claude Code と Codex 用の loom workflow plugin — 意思決定 brief、deletion-first critique gate、git-native な project memory、recap、handoff、session distill。
 
-**Version**: 4.0.0 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
+**Version**: 4.3.2 ・ **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) ・ **License**: MIT
 
 ## Background
 
@@ -43,7 +43,7 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 | [`independent-advisor`](skills/independent-advisor/) | 現在の plan や決定について、**別の executor**——より強い model、より高い effort、あるいは別ベンダー——から second opinion を取る。変わるのは executor であって、critique の観点ではない。 |
 | [`recap-state`](skills/recap-state/) | session 内での再オリエンテーション — user が話の筋を見失った時、Synthesis-check で締めくくる構造化 recap を出す。 |
 
-10 個の skill はすべて **Active**（loom tool 8 個＋ loom flow の外にある standalone な `goal-create`・`dbt-model-style`）。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
+契約で数えるツールは 8 個、standalone skill は `goal-create`・`dbt-model-style` の 2 個です。`loom-memory` と任意の入口ルーターは契約の対象外です。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique のライン
 
@@ -133,7 +133,7 @@ loom-workflow/
 
 ## 使い方
 
-`loom-workflow` は slash command を同梱していません — 10 個の skill はすべて自然言語から auto-trigger します。例：
+`loom-workflow` は slash command を同梱していません。skill は自然言語で呼び出せますが、`goal-create` など明示的な依頼が必要なツールの条件は変わりません。例：
 
 ```
 「この 12 項目の plan を critique して」                  → critique（proposal）

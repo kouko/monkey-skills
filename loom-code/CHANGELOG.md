@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.1.3] — 2026-09-13 — compact skill discovery
+
+- Add optional `using-loom-code` discovery routing and compress the five leaf
+  descriptions while preserving direct invocation and station procedures.
+- Register all three family routers with the shared catalogue and routing eval;
+  they do not join the lifecycle contract's stations or tools.
+- Raise the counted-skill measurement ceiling from 18 to 21 for these three
+  routers; a twenty-second counted skill still fails the budget check.
+- budget-exception: using-loom-code — optional discovery routing removes repeated family-entry metadata from five leaf descriptions.
+- budget-exception: using-loom-design — optional discovery routing removes repeated product-definition metadata from four leaf descriptions.
+- budget-exception: using-loom-workflow — optional discovery routing removes repeated toolbox-entry metadata from eleven leaf descriptions.
+
 ## [3.1.2] — 2026-09-13 — mandatory implementer dispatch
 
 - Require an implementer for every Build task while keeping concurrent

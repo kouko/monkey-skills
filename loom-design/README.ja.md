@@ -6,8 +6,8 @@
 > ものへの verdict はすべて `loom-code` の review ステーションが、下書きを書いて
 > いない agent の手で下す。
 
-**Status**: v1.0.0 — skill 5 個。Breaking：pre-1.0 の skill・script・分割 README は
-リネームではなく削除。[CHANGELOG.md](CHANGELOG.md) を参照。
+**Status**: v2.1.4 — 4 skills + 任意のルーター 1 個。リリースと過去の移行は
+[CHANGELOG.md](CHANGELOG.md) を参照。
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: [`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
