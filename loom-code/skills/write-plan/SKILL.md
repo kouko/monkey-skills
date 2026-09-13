@@ -414,11 +414,13 @@ how long it will take.
 - Group tasks into **waves** as dependency and integration boundaries. Waves
   do not schedule formal review; after all tasks and package tests pass,
   Build transitions once to the closing `branch-end` review.
+- Implementer dispatch is mandatory for every implementation task. Scheduling
+  multiple implementers concurrently is optional.
 - Task ids are `W<n>-<nn>` and remain stable once written so hand-offs can
   refer to dependencies without ambiguity.
 - Dependencies go on the task line as `after: <ids>`. Tasks in one wave
-  with no dependency between them run in parallel — but disjoint files are
-  not enough: a shared symbol, a doc that mirrors code, or a
+  with no dependency between them may run concurrently, but disjoint files
+  are not enough: a shared symbol, a doc that mirrors code, or a
   producer/consumer pair stays sequential.
 - Each non-memory task line carries `acceptance: <numbers>` naming the intent
   Acceptance lines it owns. Each referenced number appears in the task's

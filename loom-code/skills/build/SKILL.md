@@ -43,8 +43,12 @@ For every behavior change:
 2. Implement the minimum change and run it to GREEN.
 3. Refactor only while the focused suite stays green.
 
-An implementation agent never acts as its own closing reviewer. Parallel work
-is optional and used only for genuinely independent file sets; no dispatch ledger is created.
+Implementer dispatch is mandatory for every implementation task. Scheduling
+multiple implementers concurrently is optional and used only for genuinely
+independent file sets; no dispatch ledger is created. If implementer dispatch
+is unavailable, stop and report the blocker. The main agent must not substitute
+itself as implementer. An implementation agent never acts as its own closing
+reviewer.
 
 Internal plans, commits, and verification evidence are written in English.
 
