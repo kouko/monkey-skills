@@ -4,6 +4,13 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [4.3.3] — 2026-09-13 — Independent advisor entrypoint reduction
+
+- Reduced `independent-advisor`'s behavior-preserving entrypoint from 4,035 to
+  1,962 words and its whole package from 7,620 to 6,819 words by removing
+  duplicated operational prose while retaining the existing dispatch and
+  report contracts.
+
 ## [4.3.2] — 2026-09-13 — compact skill discovery
 
 - Add optional `using-loom-workflow` discovery routing and compress the eleven
