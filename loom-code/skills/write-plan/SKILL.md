@@ -56,18 +56,6 @@ title in kebab-case — for "six scripts share a git helper" started on
 2026-09-02, `2026-09-02-scripts-share-git-helper` (the date is today's
 date, not the example's).
 
-## Station summary
-
-| station | artifact | who decides | checker | checkpoint |
-|---|---|---|---|---|
-| capture-intent | intent — `docs/loom/intent/<change-id>.md`; `PRINCIPLES.md` and `DESIGN.md` at the repo root are side outputs of the tools it calls | user — decision point ① | `intent.schema`, `intent.product-no-identifiers`, `intent.needs-design-reason`, `intent.needs-design-recompute` | N/A |
-| write-spec | spec — `docs/loom/<change-id>/spec.md` | user — decision point ②, product only; agent declares pre-build risk | `intake.confirmed`, `standing.product-principles-reject` | `required`: one independent `spec+adversarial` reviewer, no blind run; `not-required`: none |
-| write-plan | plan — `docs/loom/<change-id>/plan.md` | agent-decided (runs ① itself when loom-design is absent) | `intake.confirmed`, `intake.confirmed-behavior`, `intake.spec-ready`, `intake.test-case-pair` | no formal plan review; invokes the required spec review only when it authored the spec |
-| build | diff — commits on the change branch | agent-decided | task and integration tests | no formal review during Build; one closing review follows completed functional work |
-| review | generated `docs/loom/<change-id>/attestation.json`, plus a blind-run report when needed | fresh-context reviewers; reviewer count comes from the installed Review policy | package suite and adversarial programs execute once during `finalize-review` | branch end, or again only after functional content changes |
-| ship | diff / PR — the pushed change branch and its pull request | automatic for canonical intent authorization; one user decision for a legacy intent; merge is separate | `push.attestation` plus fast publication safety; no functional replay | before push; publication-only fixes reuse matching evidence |
-| maintain | intent — a fresh `docs/loom/intent/<change-id>.md` | agent (dedupe is mechanical) | `intent.schema`, `intent.needs-design-reason`, `intent.needs-design-recompute`, `intent.product-no-identifiers` on a new intent | before hand-off to write-plan |
-
 ## What you will be asked, in plain words
 
 Give the user this list if they ask what is coming. It is the whole list:
@@ -75,23 +63,12 @@ there are no other **decision points**. On Codex there is also one
 non-decision authorisation stop, the first time this repo is used (step
 0b) — it asks for permission to run, not for a decision about the work.
 
-1. **"Is this what you want?"** — I restate the problem and what you will
-   be able to do when it is done. You say yes, or you correct me.
-2. **Any choice that is expensive to undo** — asked in the same message,
-   as consequences ("from then on it only runs on ___, ___ per month"),
-   never as jargon.
-3. **When this repo uses `second-vendor: ask` in the full lane** — whether
-   to use the available other-vendor tool for this change. `suggest` is not
-   a question: its notice comes after the plan exists and never pauses work.
-4. **If this is a product change and this repo has no product principles
-   yet** — about ten minutes of questions, in the same conversation as
-   question 1, confirmed together with it.
-5. **Nothing about the plan itself** — the task split, the wave sizes and
-   the review timing are mine to decide; each judgement call gets a written
-   reason.
-6. **At the end, acceptance** — you read a report that says, for every line
-   of your Acceptance list, how it was tried and what happened, and you say
-   OK or not OK.
+1. At ①, restate the wanted outcome; merge any expensive-to-undo choice,
+   full-lane `second-vendor: ask` question, and required principles interview.
+2. Ask nothing about plan structure; record each agent decision and reason.
+3. At ③, the user accepts or rejects the report against every Acceptance line.
+
+`second-vendor: suggest` only emits a non-blocking notice after the plan exists.
 
 ## The whole station order
 
@@ -105,13 +82,9 @@ shapes.
 | write-spec | `docs/loom/<change-id>/spec.md` (only when `needs-design: yes`) | User — **decision point ②**, product only ("you type X and see Y"). Engineering and pre-build risk: agent-decided. Absent `loom-design`: step 4 writes the minimal spec and runs ② | `standing.product-principles-reject` blocks a product change with no ratified `PRINCIPLES.md`, when the spec is started | `required`: one fresh `spec+adversarial` reviewer and no blind run; `not-required`: none |
 | **write-plan** (here) | `docs/loom/<change-id>/plan.md` | Agent, always. Every judgement call carries a one-line reason | before drafting: `intake.confirmed`, `intake.spec-ready`, `intake.confirmed-behavior`; after drafting: `intake.test-case-pair` and `plan.field-caps` | no formal plan review |
 | build | functional commits (the diff) | Agent | task tests and dependency-boundary integration checks | no formal review during Build; transition once after completed functional work |
-| review | generated `docs/loom/<change-id>/attestation.json`; never written by write-plan | Agent — lane-defined fresh reviewers at branch end | `finalize-review` runs and records functional verification once | after completed functional work |
+| review | generated `docs/loom/<change-id>/attestation.json`; never written by write-plan | Agent — reviewer count comes from the installed Review policy | `finalize-review` runs and records functional verification once | after completed functional work |
 | ship | pull request and merge (git) | automatic for canonical intent authorization; one user decision for a legacy intent; merge is separate | `push.attestation` and fast publication checks | matching evidence exists |
 | maintain | a new or updated `docs/loom/intent/<change-id>.md` | Agent turns an incident into an intent; the user then answers ① for that new change | `intent.schema` and the rest of the `intent.*` family, when that intent is committed | none |
-
-Two install shapes, one table: with `loom-design` the first two rows are
-run by its stations; without it, rows 1 and 2 are steps 3 and 4 of this
-file, and the user sees exactly the same questions.
 
 ---
 
@@ -263,16 +236,9 @@ sending:
 - did it work (acceptance — decision point ③),
 - or the consequence form for a one-way door.
 
-A question that fits none of them is a question the user cannot answer.
-The test is concrete: **if the user would have to read code to answer it,
-it is not a decision-point question** — decide it yourself and mark it
-`agent-decided`. Three that fail the test, and what to do instead:
-
-| Not a question for the user | Why | Instead |
-|---|---|---|
-| "Should the parser be recursive or table-driven?" | They would have to read the grammar and the call sites to have an opinion | Pick the one the existing code already uses; note the reason on the task |
-| "Should this live in `auth/` or a new `session/` module?" | A module boundary is only visible from inside the code | Follow the repo's existing boundaries; note it |
-| "Should the new tests use pytest fixtures or a helper class?" | The answer is whatever the suite already does | Read one existing test and match it |
+A question that fits none is not the user's decision. If answering requires
+reading code, follow repository precedent, decide it yourself, and record the
+reason as `agent-decided`.
 
 The review station has a dimension for exactly this, `user-judgment-leak`,
 and it returns NEEDS_REVISION when it finds one. Ask nothing about spec
@@ -320,11 +286,6 @@ You do not get the last word on `no`: the checker recomputes it
 interface-surface globs, and a diff that touches one of them while the
 intent says `no` is blocked.
 
-Worked example — Task A, "six scripts share a git helper": nothing the
-user reads or types into changes, and it is one object with no states, so
-neither (a) nor (b) holds → `needs-design: no — internal refactor, no
-surface the user reads or types into`.
-
 **`no`** — go to step 5. The plan carries the Current State Evidence
 section instead of a spec.
 
@@ -346,21 +307,14 @@ intake check below.
 **`yes`, spec missing, `loom-design` not installed** — you write a minimal
 spec yourself, from `contract/templates/spec-minimal.md`:
 
-- **Frontmatter** — `intent: <change-id>@<sha>`, where the sha is the
-  commit you made in step 3 confirming the intent, plus
-  `pre-build-review: required|not-required — <reason>`. Use `required` for
-  security or privacy, irreversible data, a public contract, cross-system
-  architecture, or materially ambiguous requirements; otherwise use
-  `not-required`. This is agent-decided, not another user question.
-- **Requirements** — one `REQ-<n> — <name>` per line of the intent's
-  Acceptance list, each ending `→ Acceptance #<n>`. One-to-one; do not
-  merge two Acceptance lines into one requirement.
-- **UI flows** — derived from the surfaces the intent says the user sees
-  or types into: for each, the action and the system's response. `N/A` when
-  the change has no such surface.
-- **Design decision**, **Alternatives considered**, **Current state
-  evidence** (Forward, Reverse, Error, Data, Boundary, each with a path and
-  an anchor) — you fill these in. They are never shown to the user.
+- Set `intent: <change-id>@<confirmation-sha>` and agent-decide
+  `pre-build-review: required|not-required — <reason>`; require review for
+  security/privacy, irreversible data, public contracts, cross-system
+  architecture, or materially ambiguous requirements.
+- Map each Acceptance line one-to-one to `REQ-<n> — <name> → Acceptance #<n>`.
+- Fill UI flows (action and response, or `N/A`), Design decision,
+  Alternatives considered, and path-anchored Forward/Reverse/Error/Data/Boundary
+  evidence. Do not show those internal sections to the user.
 
 Print one line for the user: installing `loom-design` gets them a fuller
 spec than this one. For `pre-build-review: required`, hand the spec to the
@@ -401,13 +355,9 @@ block before the plan exists.
 
 Write `docs/loom/<change-id>/plan.md` from `contract/templates/plan.md`.
 
-**Task size.** A task is right-sized when it owns a coherent set of intent
-Acceptance lines, can name a positive case plus a negative or boundary case
-for each, touches one module boundary, and can be done in isolation given
-only its declared dependencies. The compact case identifiers are the
-starting contract, not a ceiling; scenario detail stays in the spec. If a
-task needs tests for unrelated behaviours, split it. Never size a task by
-how long it will take.
+**Task size.** Each task owns coherent Acceptance lines, one module boundary,
+declared dependencies, and positive plus negative/boundary cases. Split
+unrelated behaviour; keep scenario detail in the spec and never size by time.
 
 **Shape.**
 
