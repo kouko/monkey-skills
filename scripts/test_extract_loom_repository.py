@@ -243,6 +243,7 @@ def test_manifest_includes_shared_dependencies_of_retained_gates():
                  "docs/loom/evidence/outcome-map-v3/proposal.md",
                  "docs/loom/memory/README.md", "docs/loom/memory/index.md"):
         assert extraction.selected(path, paths), path
+    assert extraction.selected("docs/loom/memory/example.md", paths)
 
 
 def test_bootstrap_history_lookup_maps_revisions_but_not_frozen_evidence(tmp_path):
