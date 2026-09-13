@@ -7,14 +7,16 @@
 > 品質の出どころは機械が機械を検査することだからです — 書く agent が
 > レビューする agent になることは決してありません。
 
-**状態**: v1.0.0 — skill 5 個。破壊的変更：1.0 以前の skill・agent・script は
-リネームではなく削除されました。詳細は [CHANGELOG.md](CHANGELOG.md)。
+**Skills**: 5 ステーション + 1 ルーター。リリース情報は [CHANGELOG.md](CHANGELOG.md)。
 **言語**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **リポジトリ**: [`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
 ---
 
 ## 5 つのステーション
+
+[using-loom-code](skills/using-loom-code/SKILL.md) が、ステーション未指定の Loom
+実装依頼を振り分けます。各ステーションは引き続き直接呼び出せます。
 
 | ステーション | 産出物 | 本文 |
 |---|---|---|

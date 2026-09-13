@@ -5,14 +5,16 @@
 > 熟悉這個 plugin：每次變更只問你三個問題，其餘自己決定。因為品質的來源
 > 是機器檢查機器 —— 寫的 agent 永遠不會是審的 agent。
 
-**狀態**：v1.0.0 — 5 個 skill。破壞性變更：1.0 之前的 skill、agent、script
-是刪除而非改名。詳見 [CHANGELOG.md](CHANGELOG.md)。
+**Skills**：5 個站 + 1 個入口路由。版本資訊見 [CHANGELOG.md](CHANGELOG.md)。
 **語言**：[English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **儲存庫**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
 ---
 
 ## 五個站
+
+[using-loom-code](skills/using-loom-code/SKILL.md) 將未指定站點的 Loom 實作請求
+導向下列站點；每個站仍可直接呼叫。
 
 | 站 | 產物 | 內文 |
 |---|---|---|
