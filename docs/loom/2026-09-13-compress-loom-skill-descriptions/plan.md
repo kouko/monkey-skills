@@ -44,7 +44,7 @@ charter: 1.0
 - Risk: One model run cannot prove universal routing; agent-decided — report exact model, prompts, outcomes, and bounded claims, reverting descriptions that fail their cases.
 
 **W2-02 Register only passing routers and synchronize releases**  after: W2-01  acceptance: 3, 4
-- Files: docs/loom/evidence/mechanisms.yaml, loom-*/.claude-plugin/plugin.json, loom-*/.codex-plugin/plugin.json, loom-*/CHANGELOG.md, loom-*/README*.md, README*.md, loom-workflow/scripts/test_skill_count.py, loom-code/scripts/check_mechanisms.py, loom-code/scripts/test_check_mechanisms.py, scripts/test_loom_plugin_install_layout.py, .claude-plugin/marketplace.json
+- Files: docs/loom/evidence/mechanisms.yaml, loom-*/.claude-plugin/plugin.json, loom-*/.codex-plugin/plugin.json, loom-*/CHANGELOG.md, loom-*/README*.md, README*.md, loom-workflow/scripts/test_skill_count.py, loom-code/scripts/check_mechanisms.py, loom-code/scripts/test_check_mechanisms.py, loom-code/scripts/test_contract_manifest.py, loom-code/scripts/test_write_plan_station_text.py, scripts/test_loom_plugin_install_layout.py, .claude-plugin/marketplace.json
 - Test: A3 positive: three-isolated-installs; negative: private-sibling-reference. A4 positive: mechanism-evals, 21-skill measurement ceiling, and version sync; negative: twenty-second-skill, missing-budget-exception, or stale-manifest.
 - Risk: Three routers increase the governed mechanism count and exhaust the old 18-skill measurement ceiling; agent-decided — admit each only with the shared executable routing eval and an explicit per-router budget exception, raise that ceiling exactly to 21, and keep a twenty-second counted skill red.
 
