@@ -25,8 +25,13 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 
 ## Skills
 
+12 skills：11 個のツールと任意のルーター 1 個。`using-loom-workflow`
+は既存ツールを選択します。各ツールは引き続き直接呼び出せます。
+
 | Skill | 役割 |
 |---|---|
+| [`using-loom-workflow`](skills/using-loom-workflow/) | 広い・曖昧な workflow の依頼から既存ツールを選び、その手順を読み込む。 |
+| [`loom-memory`](skills/loom-memory/) | リポジトリの永続的な教訓を参照・記録・照合・廃止する。 |
 | [`critique`](skills/critique/) | 作る前に提案を裁く：`mode: proposal` は list・plan・散文の推奨を evidence grounding と YAGNI で KEEP / DEFER / DROP に振り分け、`mode: complexity` は 1 つの具体的変更を deletion-first で量る（before/after の LOC、何が obsolete になるか）。 |
 | [`cot-explain`](skills/cot-explain/) | すでにある推論——指定されたファイル、あるいは直前の作業——を、CoT 図を中心に据えた自己完結型ページに描き出す。各矢印にはその手順が続く理由がラベル付けされる。 |
 | [`dbt-model-style`](skills/dbt-model-style/) | dbt + Redshift モデルの style & structure contract を強制する — CTE の役割、zero-logic な final CTE、命名、YAML header、comment、syntax。 |

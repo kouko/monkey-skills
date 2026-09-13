@@ -1,7 +1,7 @@
 ---
 name: git-memory
 description: |
-  Mandatory gate before every git commit / gh pr create / gh pr merge — the skill decides whether memory trailers (Decision/Learning/Gotcha) apply; don't pre-judge a commit 'routine'. Also recalls past decisions: 'why did we…', '為什麼', an old branch.
+  Classify commit/PR memory before every git commit, gh pr create, or gh pr merge. Also use to recall why an old Git decision was made.
 ---
 
 # Git Memory

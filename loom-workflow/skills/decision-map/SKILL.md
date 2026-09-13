@@ -2,7 +2,7 @@
 name: decision-map
 version: 3.0.0
 description: |
-  Chart and work through a persistent Outcome Map at docs/loom/maps/<map-id>/ — one long-term outcome-control loop whose fog becomes typed tickets and whose delivery arcs close independently across many sessions. Use for '開地圖' / '開一張決策地圖' / 'chart a decision map' / 'work through the map' / '推進地圖' / 'デシジョンマップを開く' / 'ワークスルー', and to start, resume, claim, re-chart, migrate, retire, or assess a live Map. Not for one self-contained task (use loom-code:write-plan) or one factual question (use research-toolkit).
+  Chart or advance a persistent Outcome Map across sessions. Use for decision maps, '開地圖', '推進地圖', or 'デシジョンマップ'.
 ---
 
 # Decision map

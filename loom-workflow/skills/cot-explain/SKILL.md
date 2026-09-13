@@ -1,12 +1,8 @@
 ---
 name: cot-explain
 version: 0.1.0
-# Over the 250-char soft lint by design: the process-vs-state contrast IS the
-# routing surface. Without it the skill fires on "what does this function do",
-# where the answer is two sentences, not a generated page. Retained surfaces:
-# named-file, this-conversation, process-verbs, and the state counterexample.
 description: |
-  Explains how something was reasoned — a file the user names, or the work just done here — as a standalone page built around a chain-of-thought diagram, every arrow labeled with why that step follows. Use when the request is about a process: how a conclusion was reached, why a design went one way, what was tried and rejected; or when the user asks for the artifact by name — a CoT diagram, a CoT mermaid chart, a reasoning-chain write-up. A request about a state — what a function does, what a file says — is answered directly without this skill, and a request for a diagram that is not a chain of reasoning belongs to a general Mermaid skill.
+  Explain documented reasoning as a page with a CoT diagram. Use for how a conclusion was reached, not what a function does.
 ---
 
 # CoT Explain

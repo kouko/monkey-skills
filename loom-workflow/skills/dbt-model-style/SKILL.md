@@ -1,7 +1,7 @@
 ---
 name: dbt-model-style
 description: |
-  Enforces a dbt + Redshift model style & structure contract — CTE roles, zero-logic final CTE, naming, YAML header, comments, syntax. Use when authoring, editing, or reviewing a .sql dbt model, or '符合規範嗎'. Structure only, not logic/layer design.
+  Apply dbt + Redshift style and structure when writing, editing, or reviewing a dbt SQL model; excludes logic and layer design.
 ---
 
 # dbt Model Style

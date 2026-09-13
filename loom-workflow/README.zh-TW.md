@@ -25,8 +25,13 @@ plugin 還帶著 `git-memory`（寫進 commit trailer 與 PR 內文的可攜 pro
 
 ## Skills
 
+共 12 個 skills：11 個工具與 1 個可選入口。`using-loom-workflow`
+負責選擇既有工具，每個工具仍可直接呼叫。
+
 | Skill | 角色 |
 |---|---|
+| [`using-loom-workflow`](skills/using-loom-workflow/) | 將廣泛或不明確的 workflow 請求路由到既有工具，再讀入該工具的指示。 |
+| [`loom-memory`](skills/loom-memory/) | 查詢、記錄、核對或淘汰持久的 repository 教訓。 |
 | [`critique`](skills/critique/) | 在動手做之前裁決提案：`mode: proposal` 用 evidence grounding 與 YAGNI 把清單、計畫或散文建議分成 KEEP / DEFER / DROP；`mode: complexity` 用 deletion-first 量一個具體改動——before/after LOC、什麼會 obsolete。 |
 | [`cot-explain`](skills/cot-explain/) | 把已經存在的推理——user 指名的一份文件、或剛完成的工作——渲染成以 CoT 圖為核心的自包含頁面，每條箭頭都標註「為什麼下一步會這樣接」。 |
 | [`dbt-model-style`](skills/dbt-model-style/) | 強制執行 dbt + Redshift model 的 style & structure contract — CTE 角色、zero-logic 的 final CTE、命名、YAML header、註解、syntax。 |

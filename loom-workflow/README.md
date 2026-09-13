@@ -25,8 +25,13 @@ A skill belongs in `loom-workflow` when it does **cross-station, multi-session c
 
 ## Skills
 
+Twelve skills: eleven tools and one optional router. `using-loom-workflow`
+selects an existing tool; every tool remains directly invocable.
+
 | Skill | Role |
 |---|---|
+| [`using-loom-workflow`](skills/using-loom-workflow/) | Route broad or ambiguous workflow requests to an existing tool, then load that tool's instructions. |
+| [`loom-memory`](skills/loom-memory/) | Recall, record, reconcile, or retire durable repository lessons. |
 | [`critique`](skills/critique/) | Judge a proposal before it is built: `mode: proposal` triages a list, plan, or prose recommendation into KEEP / DEFER / DROP by evidence grounding and YAGNI; `mode: complexity` weighs one specific change deletion-first — before/after LOC and what it obsoletes. |
 | [`cot-explain`](skills/cot-explain/) | Explain how something was reasoned — a named file, or the work just done — as a standalone page built around a chain-of-thought diagram, every arrow labeled with why that step follows. |
 | [`dbt-model-style`](skills/dbt-model-style/) | Enforce a dbt + Redshift model style & structure contract — CTE roles, zero-logic final CTE, naming, YAML header, comments, syntax. |
