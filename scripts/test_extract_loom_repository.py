@@ -235,7 +235,9 @@ def test_bootstrap_limits_manifests_and_marketplace_to_three_plugins():
 def test_manifest_includes_shared_dependencies_of_retained_gates():
     paths = extraction.read_manifest()
     for path in ("requirements-package-tests.lock", ".claude/hooks/test_check_codex_manifest_drift.py",
-                 "docs/skill-dogfood/2026-09-13-compress-loom-skill-descriptions/cases.md"):
+                 "docs/skill-dogfood/2026-09-13-compress-loom-skill-descriptions/cases.md",
+                 "CLAUDE.md", "PRINCIPLES.md",
+                 "docs/skill-dogfood/2026-09-09-model-effort-cost-pilot/report.md"):
         assert extraction.selected(path, paths), path
 
 
