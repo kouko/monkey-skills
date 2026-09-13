@@ -1,7 +1,7 @@
 {
   "schema": "loom-attestation/v1",
   "change_id": "2026-09-13-clarify-build-implementer-dispatch",
-  "content_digest": "19ac32a83599c0733c1e340d3623ca6bfef37259",
+  "content_digest": "378c83ce25dd835ae1ffbb89e72afda1f5b2f632",
   "executions": [
     {
       "kind": "package-tests",
@@ -24,15 +24,8 @@
       "vendor": "openai",
       "model": "host-default/unverified",
       "lens": "skill",
-      "verdict": "PASS_WITH_NOTES",
-      "findings": [
-        {
-          "severity": "important",
-          "dimension": "inconsistency",
-          "anchor": "loom-code/contract/manifest.yaml:54",
-          "text": "issue (blocking): The existing parallel-dispatch summary still treats non-overlapping files as sufficient for parallel work and does not state mandatory implementer dispatch."
-        }
-      ]
+      "verdict": "PASS",
+      "findings": []
     },
     {
       "reviewer": "codex-closing-reviewer-2",
@@ -43,12 +36,5 @@
       "findings": []
     }
   ],
-  "findings": [
-    {
-      "severity": "important",
-      "dimension": "inconsistency",
-      "anchor": "loom-code/contract/manifest.yaml:54",
-      "text": "issue (blocking): The existing parallel-dispatch summary still treats non-overlapping files as sufficient for parallel work and does not state mandatory implementer dispatch."
-    }
-  ]
+  "findings": []
 }
