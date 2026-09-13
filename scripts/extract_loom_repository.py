@@ -10,6 +10,7 @@ from pathlib import Path, PurePosixPath
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -18,9 +19,25 @@ PLUGIN_ROOTS = ("loom-code/", "loom-design/", "loom-workflow/")
 DEFAULT_MANIFEST = Path(__file__).with_name("loom_repository_paths.txt")
 
 
+def _git_env():
+    """Prevent inherited Git routing/configuration from selecting another repo.
+
+    All GIT_* input is discarded, including numbered config and object-store
+    overrides. Controlled config is inherited by filter-repo's own Git calls.
+    See evidence/external-contracts.md for the upstream contracts.
+    """
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull,
+                "GIT_CONFIG_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0",
+                "GIT_CONFIG_COUNT": "2", "GIT_CONFIG_KEY_0": "core.hooksPath",
+                "GIT_CONFIG_VALUE_0": os.devnull, "GIT_CONFIG_KEY_1": "init.templateDir",
+                "GIT_CONFIG_VALUE_1": "", "GIT_TEMPLATE_DIR": ""})
+    return env
+
+
 def _git(source, *args):
     return subprocess.check_output(
-        ["git", "-C", str(source), *args], text=True, encoding="utf-8"
+        ["git", "-C", str(source), *args], text=True, encoding="utf-8", env=_git_env()
     )
 
 
@@ -148,15 +165,7 @@ def _tree(source, sha, manifest=None):
             (manifest is None or selected(record.split("\t", 1)[1], manifest))}
 
 
-def extract_repository(source, destination, source_commit, manifest, source_ref="origin/main", auxiliary=()):
-    """Build and verify a fresh local clone; a failed candidate is left for inspection.
-
-    All mutations target the new clone. Unrelated-only commits are pruned, but
-    degenerate merges remain to preserve selected ancestry. Verification rejects
-    any touching commit that the filter unexpectedly drops.
-    """
-    source = Path(source).resolve()
-    destination = validate_destination(source, destination)
+def _validate_source(source, source_commit, source_ref):
     if _git(source, "rev-parse", "--is-shallow-repository").strip() != "false":
         raise ValueError("shallow source cannot provide complete development history")
     if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
@@ -166,6 +175,9 @@ def extract_repository(source, destination, source_commit, manifest, source_ref=
         raise ValueError("source ref does not match the fixed source commit")
     if not shutil.which("git-filter-repo"):
         raise ValueError("git-filter-repo is required")
+
+
+def _validate_auxiliary(source, source_commit, manifest, auxiliary):
     auxiliary_tips = []
     for entry in auxiliary:
         tip = entry["commit"]
@@ -186,9 +198,12 @@ def extract_repository(source, destination, source_commit, manifest, source_ref=
             ):
                 raise ValueError(f"auxiliary tip is not justified by current citation: {tip}")
         auxiliary_tips.append(tip)
-    before = source_snapshot(source)
-    evidence = inventory(source, source_commit, manifest, additional_tips=auxiliary_tips)
-    subprocess.run(["git", "clone", "--no-local", "--no-checkout", str(source), str(destination)], check=True)
+    return auxiliary_tips
+
+
+def _clone_and_filter(source, destination, source_commit, manifest, auxiliary_tips, evidence):
+    subprocess.run(["git", "clone", "--no-local", "--no-checkout", "--template=", str(source), str(destination)],
+                   check=True, env=_git_env())
     # Fetch a fixed object directly: the source worktree's local main can lag
     # origin/main. This creates no source ref and never writes its configuration.
     _git(destination, "fetch", "--no-tags", str(source), source_commit)
@@ -199,7 +214,7 @@ def extract_repository(source, destination, source_commit, manifest, source_ref=
             _git(destination, "update-ref", "-d", ref)
     for tip in auxiliary_tips:
         _git(destination, "fetch", "--no-tags", str(source), tip)
-        _git(destination, "update-ref", f"refs/archive/loom-evidence/{tip}", tip)
+        _git(destination, "update-ref", f"refs/tags/loom-evidence/{tip}", tip)
     # filter-repo freshness detection cannot accept the pinning checkout above.
     # --force is restricted to this newly created destination, never the source.
     retained_file = destination / ".git/loom-retained-commits.txt"
@@ -218,6 +233,9 @@ def extract_repository(source, destination, source_commit, manifest, source_ref=
     for path in manifest:
         arguments.extend(["--path", path])
     _git(destination, *arguments)
+
+
+def _read_mapping(destination, evidence, auxiliary_tips):
     raw_map_text = (destination / ".git/filter-repo/commit-map").read_text(encoding="utf-8")
     # filter-repo omits callback-skipped IDs instead of emitting zero rows.
     # Add only IDs independently classified as unrelated before rewriting;
@@ -228,9 +246,13 @@ def extract_repository(source, destination, source_commit, manifest, source_ref=
     map_text = raw_map_text + "".join(f"{old} {'0' * 40}\n" for old in sorted(omitted_unrelated))
     mapping = validate_commit_map(map_text, evidence["all_commits"],
                                   [entry["old"] for entry in evidence["commits"]] + auxiliary_tips)
+    return mapping, map_text, raw_map_text
+
+
+def _verify_filtered(source, destination, source_commit, manifest, evidence, auxiliary_tips, mapping, before):
     for tip in auxiliary_tips:
-        if _git(destination, "rev-parse", f"refs/archive/loom-evidence/{tip}").strip() != mapping[tip]:
-            raise ValueError(f"auxiliary archive ref does not match its mapping: {tip}")
+        if _git(destination, "rev-parse", f"refs/tags/loom-evidence/{tip}").strip() != mapping[tip]:
+            raise ValueError(f"auxiliary evidence tag does not match its mapping: {tip}")
     verified = 0
     for entry in evidence["commits"]:
         old, new = entry["old"], mapping[entry["old"]]
@@ -249,19 +271,10 @@ def extract_repository(source, destination, source_commit, manifest, source_ref=
         raise ValueError("candidate must not have a remote")
     if source_snapshot(source) != before:
         raise ValueError("source changed during extraction")
-    report = {"source_commit": source_commit, "source_ref": source_ref,
-              "filter_repo_version": _git(destination, "filter-repo", "--version").strip(),
-              "auxiliary_history": list(auxiliary),
-              "primary_source_commits": len(_git(source, "rev-list", source_commit).splitlines()),
-              "filtered_commit": _git(destination, "rev-parse", "HEAD").strip(),
-              "source_commits": len(evidence["all_commits"]),
-              "verified_commits": verified,
-              "mixed_commits": sum(entry["mixed"] for entry in evidence["commits"]),
-              "selected_files": len(evidence["files"]),
-              "manifest": list(manifest),
-              "commit_map_sha256": hashlib.sha256(map_text.encode()).hexdigest(),
-              "source_unchanged": True, "destination_remotes": [],
-              "history_policy": "retain reviewed-path changes and explicitly cited evidence tips; preserve their merges and messages; discard unrelated commits"}
+    return verified
+
+
+def _bootstrap_candidate(destination, report, map_text, raw_map_text):
     migration = destination / "docs/migration"
     migration.mkdir(parents=True, exist_ok=True)
     (migration / "commit-map.tsv").write_text(map_text, encoding="utf-8")
@@ -286,8 +299,34 @@ def extract_repository(source, destination, source_commit, manifest, source_ref=
     _git(destination, "-c", "user.name=Loom repository migration", "-c", "user.email=loom-migration@example.invalid",
          "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-m",
          "chore: preserve source history map and extraction evidence")
-    return report
 
+
+def extract_repository(source, destination, source_commit, manifest, source_ref="origin/main", auxiliary=()):
+    """Create a verified isolated candidate; retain failed candidates for inspection."""
+    source = Path(source).resolve()
+    destination = validate_destination(source, destination)
+    _validate_source(source, source_commit, source_ref)
+    auxiliary_tips = _validate_auxiliary(source, source_commit, manifest, auxiliary)
+    before = source_snapshot(source)
+    evidence = inventory(source, source_commit, manifest, additional_tips=auxiliary_tips)
+    _clone_and_filter(source, destination, source_commit, manifest, auxiliary_tips, evidence)
+    mapping, map_text, raw_map_text = _read_mapping(destination, evidence, auxiliary_tips)
+    verified = _verify_filtered(source, destination, source_commit, manifest, evidence, auxiliary_tips, mapping, before)
+    report = {"source_commit": source_commit, "source_ref": source_ref,
+              "filter_repo_version": _git(destination, "filter-repo", "--version").strip(),
+              "auxiliary_history": list(auxiliary),
+              "primary_source_commits": len(_git(source, "rev-list", source_commit).splitlines()),
+              "filtered_commit": _git(destination, "rev-parse", "HEAD").strip(),
+              "source_commits": len(evidence["all_commits"]),
+              "verified_commits": verified,
+              "mixed_commits": sum(entry["mixed"] for entry in evidence["commits"]),
+              "selected_files": len(evidence["files"]),
+              "manifest": list(manifest),
+              "commit_map_sha256": hashlib.sha256(map_text.encode()).hexdigest(),
+              "source_unchanged": True, "destination_remotes": [],
+              "history_policy": "retain reviewed-path changes and explicitly cited evidence tips; preserve their merges and messages; discard unrelated commits"}
+    _bootstrap_candidate(destination, report, map_text, raw_map_text)
+    return report
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

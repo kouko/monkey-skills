@@ -27,7 +27,6 @@ import sys
 from pathlib import Path
 
 import pytest
-from _migration_history import migration_git_args
 
 
 def _find_repo_root(start: Path) -> Path:
@@ -45,6 +44,7 @@ PROBES_DIR = EVIDENCE_DIR / "probes"
 SCRIPTS_DIR = REPO_ROOT / "loom-code" / "scripts"
 
 sys.path.insert(0, str(SCRIPTS_DIR))
+from _migration_history import migration_git_args  # noqa: E402
 import coldread_role_split as m  # noqa: E402
 
 FIXTURE = json.loads((EVIDENCE_DIR / "fixture-coldread-8.json").read_text(encoding="utf-8"))

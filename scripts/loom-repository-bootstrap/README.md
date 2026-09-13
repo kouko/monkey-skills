@@ -47,8 +47,9 @@ Currently committed tests also cite four development commits outside main's
 ancestry, and the measurement gate cites one otherwise empty snapshot boundary
 within main's ancestry. `docs/migration/auxiliary-history.json` enumerates those exact tips and
 their retained citation paths. Their required ancestry is filtered under local
-`refs/archive/loom-evidence/<original-sha>` refs and included in the complete
-map. This preserves main history plus currently referenced Loom development
+`refs/tags/loom-evidence/<original-sha>` tags and included in the complete
+map. Default clones transport these tags without a custom fetch refspec.
+This preserves main history plus currently referenced Loom development
 evidence; it does not import every abandoned branch.
 
 Historical predecessor plugin directories remain in Git history. Current

@@ -1,6 +1,7 @@
 """History extraction safety and provenance contracts, on an actual Git DAG."""
 from pathlib import Path
 import json
+import os
 import runpy
 import subprocess
 
@@ -274,7 +275,10 @@ def test_auxiliary_history_is_referenced_filtered_and_isolated(source, tmp_path)
     mapping = dict(line.split() for line in (destination / "docs/migration/commit-map.tsv").read_text().splitlines()[1:])
     assert tip in mapping and mapping[tip] != "0" * 40
     assert abandoned not in mapping
-    assert git(destination, "rev-parse", f"refs/archive/loom-evidence/{tip}") == mapping[tip]
+    assert git(destination, "rev-parse", f"refs/tags/loom-evidence/{tip}") == mapping[tip]
+    transported = tmp_path / "transported"
+    git(tmp_path, "clone", "--no-local", str(destination), str(transported))
+    assert git(transported, "show", f"refs/tags/loom-evidence/{tip}:loom-code/file.txt") == "auxiliary evidence"
     assert git(destination, "remote") == ""
     assert report["auxiliary_history"][0]["commit"] == tip
     for invalid in ({"commit": "f" * 40, "citations": ["loom-code/citation.md"]},
@@ -301,5 +305,64 @@ def test_referenced_auxiliary_tip_survives_even_without_a_retained_delta(source,
     destination = tmp_path / "candidate"
     extraction.extract_repository(source, destination, head, extraction.PLUGIN_ROOTS,
         auxiliary=[{"commit": tip, "citations": ["loom-code/citation.md"]}])
-    assert git(destination, "show", f"refs/archive/loom-evidence/{tip}:loom-code/file.txt") == "second"
+    assert git(destination, "show", f"refs/tags/loom-evidence/{tip}:loom-code/file.txt") == "second"
     assert not (destination / "unrelated.txt").exists()
+
+
+def test_whole_extraction_ignores_hostile_git_routing(source, tmp_path, monkeypatch):
+    head = git(source, "rev-parse", "HEAD")
+    git(source, "update-ref", "refs/remotes/origin/main", head)
+    decoy = tmp_path / "decoy"
+    git(tmp_path, "clone", "--no-local", str(source), str(decoy))
+    before = extraction.source_snapshot(source)
+    decoy_before = extraction.source_snapshot(decoy)
+    sentinel = tmp_path / "hook-fired"
+    template = tmp_path / "hostile-template"
+    (template / "hooks").mkdir(parents=True)
+    hook = template / "hooks/post-checkout"
+    hook.write_text(f"#!/bin/sh\ntouch '{sentinel}'\n")
+    hook.chmod(0o755)
+    global_config = tmp_path / "hostile-config"
+    global_config.write_text(f"[core]\n hooksPath = {template / 'hooks'}\n worktree = {decoy}\n")
+    hostile = {
+        "GIT_DIR": str(decoy / ".git"), "GIT_COMMON_DIR": str(decoy / ".git"),
+        "GIT_WORK_TREE": str(decoy), "GIT_INDEX_FILE": str(decoy / ".git/index"),
+        "GIT_OBJECT_DIRECTORY": str(decoy / ".git/objects"),
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(source / ".git/objects"),
+        "GIT_CONFIG_GLOBAL": str(global_config), "GIT_CONFIG_SYSTEM": str(global_config),
+        "GIT_CONFIG": str(global_config), "GIT_TEMPLATE_DIR": str(template),
+        "GIT_CONFIG_COUNT": "2", "GIT_CONFIG_KEY_0": "core.worktree", "GIT_CONFIG_VALUE_0": str(decoy),
+        "GIT_CONFIG_KEY_1": "core.hooksPath", "GIT_CONFIG_VALUE_1": str(template / "hooks"),
+        "GIT_CONFIG_PARAMETERS": "'core.worktree'='" + str(decoy) + "'",
+    }
+    with monkeypatch.context() as environment:
+        for key, value in hostile.items():
+            environment.setenv(key, value)
+        extraction.extract_repository(source, tmp_path / "candidate", head, extraction.PLUGIN_ROOTS)
+    assert extraction.source_snapshot(source) == before
+    assert extraction.source_snapshot(decoy) == decoy_before
+    assert not sentinel.exists()
+
+
+def test_filter_repo_is_pinned_in_declared_test_environment():
+    root = Path(extraction.__file__).parents[1]
+    assert "git-filter-repo==2.47.0" in (root / "requirements-dev.txt").read_text()
+    assert "git-filter-repo==2.47.0" in (root / "requirements-package-tests.lock").read_text()
+
+
+def test_historical_probe_imports_in_a_fresh_process(tmp_path):
+    bootstrap = Path(extraction.__file__).with_name("loom-repository-bootstrap")
+    repo = tmp_path / "repo"
+    scripts = repo / "loom-code/scripts"
+    scripts.mkdir(parents=True)
+    (scripts / "coldread_role_split.py").write_text("")
+    (scripts / "_migration_history.py").write_text((bootstrap / "loom-code/scripts/_migration_history.py").read_text())
+    evidence = repo / "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence"
+    evidence.mkdir(parents=True)
+    (evidence / "fixture-coldread-8.json").write_text("{}")
+    probe = evidence / "probes/test_abuse_coldread_branch_end.py"
+    probe.parent.mkdir()
+    probe.write_text((bootstrap / "docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py.template").read_text())
+    result = subprocess.run([os.sys.executable, "-m", "pytest", str(probe), "--collect-only", "-q"],
+                            cwd=tmp_path, capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr

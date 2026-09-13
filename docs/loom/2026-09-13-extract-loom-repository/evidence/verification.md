@@ -45,7 +45,7 @@ only when Git resolves them uniquely to the manifest's full commit ID. The
 bootstrap measurement command resolves this old ID through the same committed
 map before actually running the historical hook. Its baseline limit is unchanged.
 
-## Final W3 candidate
+## W3 candidate before closing-review fixes (superseded)
 
 Local candidate: `/private/tmp/loom-candidate-20260913-w3d`.
 Source commit: `6fc6fef8969f411f81e9cb566539d7068d379e10`.
@@ -68,7 +68,7 @@ history rewrite occurred. Each source plugin remains unchanged until the explici
 bootstrap adaptation layer, which changes only development/test history lookups
 and repository infrastructure; no station/runtime behavior is redesigned.
 
-## Focused integration commands and results
+## W3 focused integration commands and results (superseded)
 
 Commands used the existing Python 3.12 pytest environment; no packages were
 installed. The ambient Python in the temporary directory lacked pytest, so the
@@ -109,3 +109,86 @@ Source-side extraction regression suite: `python3 -m pytest
 scripts/test_extract_loom_repository.py -q` — 31 passed in 6.76s. Collection of
 `scripts/loom-repository-bootstrap` found no tests (expected pytest exit 5),
 proving the `.template` suffix prevents source-side duplicate collection.
+
+## Closing-review Round 2 fixes
+
+The first targeted regression run was RED: five failures covered nontransportable
+archive refs, hostile Git routing, the undeclared filter-repo dependency and
+standalone historical-probe import order. The whole-extraction hostile test
+injects Git directory, worktree, common-dir, index, object-store, config and
+template overrides directed at a decoy repository. It requires extraction to
+succeed while source and decoy snapshots remain unchanged and a hostile hook
+sentinel remains absent. Every Git/clone/filter-repo subprocess now receives a
+fresh controlled environment with inherited `GIT_*` input removed.
+
+The two identical historical probe templates import the migration helper after
+their explicit script-path setup. A fresh pytest process collecting only the
+historical probe verifies this independently of earlier imports.
+
+Evidence tips now use `refs/tags/loom-evidence/<original-sha>`. A normal
+`git clone --no-local` regression proves a branch-only evidence tip survives
+transport and its historical file contents remain available; abandoned refs
+remain excluded. Earlier W3 archive-ref claims above describe superseded runs.
+
+The dependency is pinned as `git-filter-repo==2.47.0` in requirements-dev.txt and
+the existing hash lock was regenerated with its documented `uv pip compile`
+command. The declared isolated environment ran extraction and lock regressions:
+37 passed in 8.77s. Dependencies were downloaded only into a temporary uv cache,
+not a conda environment. The same dependency/lock/test expectations are copied
+into the candidate bootstrap. Primary upstream grounding is recorded in
+`external-contracts.md`, including the distinction between preserving hash text
+inside messages and preserving commit IDs.
+
+The extractor was mechanically separated into source validation, auxiliary
+validation, clone/filter, map-reading, verification and bootstrap helpers. No
+extractor function exceeds 100 lines.
+
+### Final Round 2 candidate and focused results
+
+The current candidate is `/private/tmp/loom-candidate-20260913-review-r2`,
+with bootstrap HEAD `2c34c48151677232007a2c310a805e21158f3a7d`.
+Its source remains `6fc6fef8969f411f81e9cb566539d7068d379e10` and filtered
+main remains `f730d30aa8da935420f6795514d0db4a1710b545`. Counts are unchanged:
+1,709 primary commits, 1,720 complete mapping rows, 489 verified retained/tip
+commits, 323 mixed commits and 562 selected source files. The complete map
+SHA-256 remains `7ff5f7e758f4f12482318318d97a9298f2432dc37f16c32f4a735a041d8537b4`.
+The tool reports `a40bce548d2c`; installed package metadata confirms 2.47.0.
+Git is `2.50.1 (Apple Git-155)`.
+
+The following commands ran with the declared hash-locked dependencies, prefixed
+by `uv --cache-dir /private/tmp/loom-uv-cache run --isolated
+--with-requirements requirements-package-tests.lock`:
+
+```sh
+# Source repository: GREEN after the five targeted RED failures.
+python -m pytest scripts/test_extract_loom_repository.py scripts/test_kickoff_defaults.py -q
+# 37 passed in 8.77s
+# Current candidate:
+python -m pytest scripts/ .claude/hooks/ loom-code/scripts/test_contract_manifest.py loom-code/scripts/test_hooks_json.py loom-code/scripts/test_check_mechanisms.py -q
+# 173 passed in 8.94s
+python -m pytest loom-design/scripts/test_marketplace_entry.py loom-design/scripts/test_ci_workflow.py -q
+# 6 passed in 0.02s
+python -m pytest loom-workflow/scripts/test_handoff_compaction.py loom-workflow/scripts/test_independent_advisor_plugin_readmes.py -q
+# 4 passed in 0.01s
+```
+
+A separate normal `git clone --no-local` into
+`/private/tmp/loom-candidate-20260913-review-r2-transport` received all five
+`refs/tags/loom-evidence/*` tags without a custom refspec. Its local origin
+configuration was removed after cloning. In that transported clone, the same
+declared environment ran:
+
+```sh
+python -m pytest loom-code/scripts/test_probes_cumulative_boundary_reassessment.py loom-code/scripts/test_probes_coldread_abuse_coldread_branch_end.py -q
+# 43 passed, 1 skipped in 4.18s
+python -m pytest docs/loom/2026-09-04-adversary-three-way-attribution-measured/evidence/probes/test_abuse_coldread_branch_end.py -q
+# 16 passed, 1 skipped in 0.05s (independent fresh process)
+python loom-code/scripts/check_mechanisms.py --measure
+# exit 0: 745 current words; actual historical baseline 5,278 words
+```
+
+Both skips are the same pre-existing retired-checker probe in its two copies.
+Both local repositories have clean worktrees and no remotes. Extraction's
+source snapshot comparison passed; no source refs/configuration/worktree were
+changed by extraction. No candidate push, source deletion or source history
+rewrite occurred. Full package tests remain reserved for closing review.

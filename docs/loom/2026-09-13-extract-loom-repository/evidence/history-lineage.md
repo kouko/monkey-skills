@@ -6,7 +6,7 @@ ancestry plus the minimum ancestry of five explicitly cited evidence snapshot
 tips recorded in `scripts/loom-repository-bootstrap/docs/migration/auxiliary-history.json`.
 Four tips are outside main ancestry; one is a primary-ancestry snapshot boundary
 with no retained-path delta. Each tip must exist and be justified by a current
-retained citation, then survive filtering under a local archive ref. Other
+retained citation, then survive filtering under a transportable evidence tag. Other
 branch-only development commits, abandoned branches and GitHub PR discussion
 are not claimed as migrated history. Final counts are in `verification.md`.
 
