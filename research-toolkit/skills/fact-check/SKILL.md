@@ -53,8 +53,7 @@ scripts' flat imports work because Python puts the script's own directory on
 ## Portable fan-out convention
 
 Stage B casts `VOTES_PER_CLAIM = 3` independent verifier votes. Do these **in
-parallel by dispatching 3 subagents**, per
-dispatching independent subagents: one fresh subagent per
+parallel by dispatching 3 independent subagents: one fresh subagent per
 `voter_idx`, dispatched in a single assistant message with multiple agent
 calls so the harness runs them concurrently.
 
@@ -64,8 +63,7 @@ maps onto whatever concurrent-subagent primitive the host agent provides
 (Claude Code, Codex, Cursor, …); binding to one harness's workflow primitive
 would break agent-portability. The three voters are independent (same claim,
 disjoint `voter_idx`, no shared files), exactly the case the fan-out is for.
-Use the host's native parallel-subagent facility when available. For the concrete per-host call shape this resolves to (including the
-Claude-Code-specific "same assistant message" concurrency detail above), see
+Use the host's native parallel-subagent facility when available.
 
 **Independence is a GATE, not a nicety.** The quorum only means something if
 the three votes come from **independent** contexts — separate parallel

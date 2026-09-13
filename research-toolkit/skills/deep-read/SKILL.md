@@ -55,8 +55,8 @@ directory (paths below are relative to it).
 ## Portable fan-out convention
 
 The per-chunk extraction (Step 3) does the same work across N independent
-chunks. Do this **in parallel by dispatching N independent subagents**, one per
-dispatched in a single assistant message with multiple agent calls so the
+chunks. Dispatch one independent subagent per chunk in parallel, issuing the
+dispatches together so the
 harness runs them concurrently.
 
 Describe and dispatch this work **abstractly as "dispatch N subagents"** —

@@ -1,7 +1,7 @@
 # Codex CLI — tool name mapping for `domain-teams`
 
 > This self-contained file maps `domain-teams`' worker/evaluator and
-> parallel-fan-out dispatch points onto the host's current Codex tool shape
+> parallel-fan-out dispatch onto the host's current Codex tool shape.
 > dispatch points onto it and is **doc-sourced, not session-exercised**
 > against this specific plugin.
 

@@ -1,10 +1,7 @@
 # Codex CLI — tool name mapping for `daily-brief`
 
-> The per-platform fan-out step phrases dispatch in host-neutral prose.
-> For the verified detail on Codex's `multi_agent` primitive
-> (`spawn_agent`/`wait_agent`/`close_agent`) see
-> This file documents the host's Codex tool shape. It is self-contained.
-> file only maps `daily-brief`'s per-platform fan-out onto it and is
+> This self-contained file maps `daily-brief`'s host-neutral per-platform
+> fan-out onto the current Codex concurrent-subagent tool shape and is
 > **doc-sourced, not session-exercised** against this plugin.
 
 ## Per-platform parallel fan-out

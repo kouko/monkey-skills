@@ -55,8 +55,8 @@ maps onto whatever concurrent-subagent primitive the host agent provides
 (Claude Code, Codex, Cursor, …); binding to one harness's workflow primitive
 would break agent-portability. Each per-input subagent is independent (disjoint
 inputs, no shared files), which is exactly the case the fan-out convention is
-for. For the concrete per-host call shape this resolves to (including the
-Claude-Code-specific "same assistant message" concurrency detail above), see
+for. Use the host's native parallel-subagent facility and do not hard-code a
+vendor-specific workflow tool.
 
 **File-carrier rule.** Bulk data between stages travels by file path under a
 run-local working directory — created at Stage-1 start as a fresh empty tree

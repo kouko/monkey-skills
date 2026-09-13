@@ -1,10 +1,7 @@
 # Codex CLI — tool name mapping for `daily-news-digest`
 
-> Scoped to this skill's own heavy-day dispatch point
-> (`heavy-day-dispatch.md`). For the verified detail on Codex's
-> `multi_agent` primitive (`spawn_agent`/`wait_agent`/`close_agent`) see
-> This file documents the host's Codex tool shape. It is self-contained.
-> file only maps the heavy-day dispatch onto it and is **doc-sourced,
+> This self-contained file maps this skill's heavy-day dispatch onto the
+> current Codex concurrent-subagent tool shape and is **doc-sourced,
 > not session-exercised** against this specific skill.
 
 ## Heavy-day parallel fan-out (STEP 6/7)
